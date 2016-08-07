@@ -1,0 +1,51 @@
++++
+type = "article"
+title = "Why Haiku Vector Icons are So Small"
+date = "2006-11-13T13:01:00.000Z"
+tags = ["HVIF", "icons"]
++++
+
+<p>How is it that the Haiku vector icons are so small? You might expect great hackery, but actually HVIF is pretty simple. When I tell you all the &quot;secrets&quot;, you might just go &quot;doh!&quot;. The most important thing is that the format is <i>optimized for icons</i>. Once you take this simple assumption and think it through, you find all sorts of ways to reduce the storage space.</p>
+<!--break-->
+<h3>Coordinates</h3>
+
+<p>For example, I decided that icons would have a native resolution of 64 by 64 pixels. For crispness, it is very good to snap vector path coordinates to integer pixels. I thought it wouldn't be a bad idea to be able to have points outside the icon too, so I defined a range of -32 to +95 of valid integer coordinates - and these fit into just 7 bits. If a coordinate is not on an integer pixel, or falls outside the -32+95 range, I'm using the 8th bit to indicate a 2 byte coordinate, with which a much larger range can be expressed. In this case, the range is extended to -128 to +192 and the additional precision is used to encode non-integer coordinates as well.</p>
+
+
+<h3>Paths</h3>
+
+<p>I also realized that it is beneficial to optimize for common forms of vector paths. HVIF distinguishes between three basic types: <b>path with commands</b>, <b>path with straight lines only</b> and <b>path with curves only</b>. An all curves path could represent the other two forms of paths, but it would take the most storage space, because six coordinates need to be stored for each path segment. If a path consists of many straight segments, or even many horizontal and vertical lines, it is better to associate commands with the segments, which greatly reduces the number of coordinates needing to be stored per segment. The SVG format defines many more, but I found four different path commands to be all one would need for the icons. These are <b>horizontal line</b>, <b>vertical line</b>, <b>line</b> and <b>cubic curve</b>. The first two need only one coordinate to be encoded (X or Y), since the other stays the same with regards to the previous point. Line needs 2 coordinates and Curve needs 6. The four path commands can be encoded in 2 bits, and to make things less tricky, I decided to write them separate from the coordinate data, one byte encoding up to four commands. So a simple rectangle aligned to integer pixels needs this storage space:</p>
+
+<ul>
+	<li>
+1 byte for telling how many path points there are (4)
+	</li>
+	<li>
+1 byte for four path commands (2 bits could remain unused, but there is a command (<i>line</i>) encoded for the first point anyways)
+	</li>
+	<li>
+5 bytes for the coordinates (2 bytes for the first point, 3 bytes for the others)
+	</li>
+</ul>
+
+<p>The HVIF implementation does analyze which of the three basic path encodings would take the least amount of storage space. So if a path is mostly curves, or all straight lines anyways, it doesn't need to store a commands section.</p>
+
+
+<h3>Flags</h3>
+
+<p>Most icon objects are encoded with one byte reserved for &quot;flags&quot;, which specify what aspects of it need to be stored in the file. For example, if a shape is not transformed in any way, no transformation matrix is stored for it. So &quot;empty tags&quot; for unneeded things are pretty much avoided.</p>
+
+
+<h3>Matrices</h3>
+
+<p>Speaking of transformation matrices, these can take up quite some space if no extra care is taken. HVIF uses normal affine matrices for transformations, which are normally encoded using 6 doubles (48 bytes) or floats if you don't care so much about precision (24 bytes). To reduce storage requirements even further (because the precision is not needed for icons), HVIF uses it's own floating point format which uses only 3 bytes per value, and so we are down to 18 bytes for a matrix. Many times, a shape is only translated, not rotated, skewed or scaled. In that case, we store only the translation using the same coordinate format used for path points.</p>
+
+
+<h3>Styles</h3>
+
+<p>There are two types of styles: plain color and gradient. The style section can use significant space, so a number of steps is taken to reduce it. Colors or gradients that don't use any alpha don't get it encoded, and grays are encoded with one byte only. Which type of encoding for colors is used is again determined by the flags byte of any given style. There is also a special gradient type for gradients with only two colors, one at 0% and one at 100% offset (a very common type of gradient). Here, the offsets of the colors are not encoded.</p>
+
+
+<p>HVIF data consists of three sections. The first encodes all styles, the second all paths and the last all shapes. Styles and Paths are global to a Haiku icon, so that they may be reused by different shapes. There cannot be more than 256 styles or 256 paths in total. So the shapes can reference them with only one byte again, which represents the index of a style or path in the global lists. Shapes can also have Transformers attached, a Stroke transformer can for example convert a path into an outline. Nothing special was invented to store transformers though.</p>
+
+<p>As you can see, you wouldn't really want to use HVIF to store generic vector graphics. It is really a format that is suited for a very special task only. But as was said before, it will turn out to be beneficial, ultimately in terms of desktop responsiveness. This won't come automatically though. If icons are designed without knowledge of how HVIF works, then a lot of potential is wasted. For example, if vector path points are not snapped to integer pixels or if paths are not reused where they could be, then an icon can take much more space than it should. This is especially true if an SVG icon is imported into Icon-O-Matic and simply saved to HVIF as is. This is not such a good idea. Some work remains to remove redundant or unnecessary information from the icon, but I'm hoping that with the information that I have just given, everyone will take advantage of the optimization tricks when creating icons for Haiku.</p>

@@ -1,0 +1,61 @@
++++
+type = "article"
+title = "Optimization can be your friend"
+date = "2002-07-14T09:00:00.000Z"
+tags = ["optimization"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>Optimization is one of those topics that everyone thinks that they understand a little about, but is often surrounded by platitudes, mystery and rumour. I want to talk a little about when to optimize, why one should optimize and some of the more successful techniques of doing so.</p>
+
+<h3>Keep it simple</h3>
+
+<p>The first rule of optimization is, &quot;Don&#39;t&quot;. As Extreme Programming says, &quot;Do the simplest thing that will work&quot;. If you are working in an OO language, this is often fairly easy because of information hiding. Design your classes well and hide what you can. Put something together with only a little thought about performance. Test it and see that it works. Then consider your expected use. Many times, an inefficient program *MAY* be acceptable.</p>
+
+<p>One of my first C++ programs was a word scrambler that iterated over all of the different orders of letters in a word to find all of the combinations - to solve word jumbles. The first pass at it was a quick hack with some nested loops. I had plans to search for duplicate letters, to reduce the number of combinations, etc. I found, though, that with &quot;normal&quot; words (&lt; 15 characters), it ran in less than a second or two. Piping it to sort -u removed the duplicates and still it ran in very reasonable time.</p>
+
+<p>In a previous job, I spent months trying to optimize a piece of (badly written, hard to understand) code. Finally, I went to management and convinced them to spend less than one month of my salary on a faster machine. The process (which was a backend process only done by one machine ever) went from 15 minutes to 20 seconds.</p>
+
+<h3>Measure results</h3>
+
+<p>The second rule is to test. Everything and often. When you make a class and test it for correctness, throw in a test or two for performance. More tests can be used if the class is important. I often write my tests to say &quot;fail if this function can&#39;t be run between X and Y times per second&quot;. Future implementations are then automatically tested to ensure that you don&#39;t lose performance.</p>
+
+<p>Profiling is the other huge tool for performance. There are a few useful indicators to look at in performance - number of times a function is executed and percentage of time that it takes up. In one application that I was writing, I found that a string constructor was called millions of times. I found that there was an errant copy constructor being used. Once fixed, performance was much better. Percentage of time is very useful, as well.</p>
+
+<p>Often times, the performance of an application, as a whole, is not as relevant as one particular part. In an application that I was working on recently, there is a two minute startup time. This is acceptable, as the application can run for hours. When I worked on optimizing that application, I focused on the &quot;processing&quot; part and ignored the startup time. The profiler was very helpful to me in this case (it was on Solaris), as I could choose particular areas to look at. The caveat here is that sometimes instrumentation can skew results.</p>
+
+<h3>Keep an open mind</h3>
+
+<p>The third rule is to &quot;assume nothing&quot;. This can be more difficult than it sounds - we all have preconceived notions. Some common ones are: &quot;virtual functions are slow&quot;, &quot;unrolling loops makes your code faster&quot;, &quot;some algorithms are better than others&quot;. These are often either not true or are only true in some circumstances. For example:</p>
+
+<ul>
+<li>Virtual functions are, at worst, one memory access more than non-virtual functions, and are often &quot;free&quot;.</li>
+<li>Unrolling loops is rarely a good idea anymore. First, compilers have learned this trick and secondly, staying inside the memory cache is a far bigger issue than it used to be - 100,000 iterations over a loop may well be faster than 1000 iterations over 100 slightly different pieces of code.</li>
+<li>Sometimes linked lists may be more efficient than hash functions and bubble sort may work better than quicksort, depending on the data involved. Of course, this is not usually the case, but sometimes. In that same Solaris app, recently, I switched from a hash function to a binary search on a sorted array and improved performance by a factor of 5.</li>
+</ul>
+
+<h3>Try again</h3>
+
+<p>The fourth rule is to rethink what you are doing. Many times, stepping back from the problem, you can see how you can avoid calling a particular function at all, or less often. Another example from real life - I found that a particular libc function in Solaris was somewhat slow. I was able to write a small class that wrappered that function, caching the previous value, and drastically improved the speed of the code.</p>
+
+<p>One of the key tradeoffs in programming is time vs space. A classic example in gaming is sin/cos/tan functions. You can precompute sine values from 0-45 degrees and compile that &quot;table&quot; into your code. Then trig functions become a look up or two and maybe a division. Did you really need 10 decimals of precision, anyway?  This caching can also be applied at a smaller level, called &quot;collecting common subexpressions&quot;. Code like this:</p>
+
+<pre>for (int i=0;i&lt;strlen(str);i++)<br />    if (str[i]==&quot;X&quot;) {<br />        foundIt=i;<br />        break;<br />        }<br /></pre>
+
+would be much better off as:
+
+<pre>int len=strlen(str);<br />for (int i=0;i&lt;len;i++)<br />    if (str[i]==&quot;X&quot;) {<br />        foundIt=i;<br />        break;<br />        }<br /></pre>
+
+<h3>Use the tools</h3>
+
+<p>The fifth rule is to use the optimizer. Often, especially in OO code, it will help you by eliminating unneeded function calls and performing inlining where it makes sense. Of course, every rule needs a caveat, and this rule is no exception - don&#39;t use more than -O2 with gcc 2.95.</p>
+
+<h3>Allocators</h3>
+
+<p>A final topic needs brief discussion - memory allocation/deallocation. I don&#39;t think that any other issue has been more written about or troublesome in computer science. There is no perfect memory allocator. The fast ones aren&#39;t space efficient. Some work well for small sizes. Others help more with debugging. Others yet are better for low memory situations. If you can *prove* that your memory allocation is hurting you, either in space or size, maybe a custom allocator is for you.</p>
+
+<p>One example of this - malloc on Solaris seems to allocate 8 bytes more than you asked for. As great as this is for debugging, I was working on an app that was allocating more than 3 million separate strings using malloc. Since the wasted space wasn&#39;t on a separate page, even the vm system was no help. I wrote a custom allocator that allocated space a meg at a time and doled it out to the strings as required. Since the usage pattern of this app was that the strings would not be destroyed until the app closed down, I didn&#39;t provide a way to free strings (just the destructor for the pool). This worked very well for that usage.</p>
+
+<h3>Words of wisdom...</h3>
+
+<p>A final few pieces of advice in the form of some quotes. Knuth said &quot;Premature optimization is the root of all evil&quot; and &quot;less than 4 per cent of a program generally accounts for more than half of its running time&quot;. Finally, Amdahl&#39;s Law says that the performance improvement is equal to the percentage of the code that uses the feature times the percentage of time used compared to the original. In other words, a piece of the code that takes 10% of the time can only improve the overal performance time by 10%.</p>
+<br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

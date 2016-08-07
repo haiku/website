@@ -1,0 +1,110 @@
++++
+type = "blog"
+author = "PulkoMandy"
+title = "BeGeistert 028 coding sprint report"
+date = "2014-10-31T08:29:13.000Z"
+tags = ["begeistert", "BG 028"]
++++
+
+Hello world!
+
+As you probably know, I'm reporting from Düsseldorf this week, where the BeGeistert coding sprint is about to end.
+I won't cover the events of the weekend as Humdinger has already written a complete report for it, including videos of all the talks. So let's instead dive into the coding sprint event, and see what we hacked on during the week
+<!--break-->
+<h3>olta&amp;js: bootstrap fixes</h3>
+
+Oliver and Jonathan worked together in getting the Haiku bootstrap process working again. For some time now, the Haiku build relies on external packages for some features. This started with OpenSSL, which was optional, and later with ICU, which is not optional at all as it is used by our C library. The package management system made it possible to outsource even more packages this way.
+
+There is a problem with this however: in order to get Haiku built, you need these packages available. And the packages can only be built from within Haiku using haikuporter. So you have a chicken and egg problem.
+
+The bootstrap process is a way to cross compile the required packages from a Linux host. This uses a modified version of the haikuports repository with a minimal set of packages and recipes tweaked for cross compilation (often removing features to make them easier to compile). These packages are then used to build a minimal Haiku system, on which haikuporter can be run normally to build the actual packages used to populate the repositories.
+
+This is the only way to do a build of Haiku from scratch, without relying on any downloaded precompiled packages. It is needed when porting Haiku to a new architecture, or when upgrading some core component such has OpenSSL, which the standard haikuporter can't do.
+
+However, the bootstrap process has been run only once, about a year ago, to kickstart the package managed Haiku. Other users attempting to do it discovered problems, and we need to fix those as bootstrapping is part of our automated package build system, which should build everything from scratch.
+
+js worked on getting the bootstrap process to run on OS X. This was supposed to take only one or two days, with minor fixes for the different directory layout from Linux and other small changes. However, he ran into problems with the Python recipe which didn't quite work. He updated the bootstrap python to 2.7, which has better cross compiling support. This still needed more hacking to get it running, but now we have a Python recipe that works on both OSX and Suse - a test on Debian, which was known to cause problems, is still pending.
+
+<h3>Bonefish&amp;mmlr: Kernel debug</h3>
+
+mmlr was not at the sprint, but spent some time fixing bugs after getting back from work.
+
+There were some issues in various places in the kernel, such as a problem with lock ownership in scheduler (leading to crashes in python, php, go or haskell), a problem with socket destruction in the network stack (which WebPositive sometimes triggered), and a problem in the VM which was repeatedly happening on Netsurf's continuous integration machine.
+
+Some other non-panic problems were solved, such as the "Killed (by death)" message after running too much Haikuporter. The message now includes a useful error message ("out of file descriptors") and the fd table was increased from 256 to 4096 entries which should make the problem less frequent.
+
+<h3>bonefish: package stuff</h3>
+
+The fixes above took more time than expected, and there was little time left for big tasks. So Ingo decided to add the --debug option to pkgman, which will help finding problems with dependencies resolution, and also wrote a python script for remote command execution (basically, a backdoor) that will be used by the package build bots to remote control haiku slaves. The idea here is to have the package build system build a Haiku image, boot it, and then send commands to it through that little server and get the standard output.
+
+<h3>Ithamar: ARM port</h3>
+
+Ithamar worked on the ARM port as usual. After fixing some issues, he got the frame buffer working again and even some boot icons to light up on the Beagleboard. He then worked on FDT support. The FDT is a way to describe the hardware on an ARM system, and compensates for the lack of a discoverable bus such as PCI, to which you can ask what kind of hardware is available. Ithamar made a talk on this, which you can watch or listen for more information.
+
+The next step was to get timer and interrupts drivers to make use of the FDT support. The FDT bus manager now instantiates the correct driver depending on the given device tree. Ithamar updated the existing Verdex/PXA drive  ,and also wrote one for the BeagleBoard. This finally brings the ARM port back to "cannot find any boot partitions", which means we get far enough for the kernel to try to load its modules.
+
+The next step is to get the USB EHCI driver to work with the FDT bus manager. It is currently hardcoded to work with the PCI one, and the code needs some refactoring and cleanup for this to happen. The ARM efforts stopped there on the kernel side for this year, as this was too boring of a task for the time being.
+
+<h3>Ithamar: GPT/EFI support on Apple hardware</h3>
+
+Ithamar then switched to trying to get Haiku to run on his Apple machine. After some messing around with GPT and EFI, he got to the "cannot find any boot partitions" panic there as well. Not wanting to spend more time on the USB code, he moved on.
+
+<h3>Ithamar: Cosmoe reloaded</h3>
+
+Some months ago there was a discussion on the Mailing List about running the Haiku userland on top of a Linux Kernel. Unfortunately, it turned out to be a (very successful) trolling attempt for the Haiku project, with no actual code to show.
+
+However, it was not the first time such a project was attempted. There were at least two incarnations of this, BlueEyedOS (from scratch rewrite of the BeAPI) and Cosmoe (using OpenBeOS sources). Ithamar recovered the Cosmoe code from the web archive and started merging it with the current Haiku codebase. Cosmoe was last active around 2004, so there is quite a lot of work to do to bring it up to date. but using a Linux or BSD kernel would be an interesting solution in cases where our native kernel doesn't work (for lack or drivers, for example). This can also be used as a way to make BeAPI applications run on Linux, making the API more appealing to 3rd party developers.
+
+<h3>bosii: DVB support</h3>
+
+Colin continued his work on DVB support for Haiku. Unfortunately he had to leave the coding sprint earlier than planned, so there is not much new things to see there yet.
+
+<h3>PulkoMandy: 3rd-party apps</h3>
+
+I worked a bit on keeping some 3rd party applications up and running on Haiku. First I finished my work on updating the DocumentViewer code to work with a current version of muPDF. It was targetting an older version before, which led to not-so-great code and a few crashes. The new release is much more stable, making DocumentViewer a decent PDF viewer. I'm still not fond of the strange user interface but at least the rendering is much faster than in BePDF.
+
+I also worked on getting Abiword to run again. I fixed several issues there and the basic functionality is working again. I converted the main window to layout kit so it is now possible to show and hide toolbars. This will however need a lot more work before it can be considered stable enough for a release. You are welcome to join this project and help Haiku getting a good native word processor.
+
+I used multitalk (available in HaikuDepot) to prepare the slides for my talk. Humdinger requested an export in some readable format for sharing on the Haiku website. I tried the multitalk HTML export feature for the first time and discovered it needed ImageMagick. There is now a recipe available for it.
+
+The network access at the Youth Hostel isn't all that great for our needs, and ssh connections aren't very reliable. So I also ported mosh, which is designed to continue working even in degraded network conditions. This proved quite useful over the weekend, however it doesn't run very well yet. I don't know if this is due to the firewall here not handling UDP packets correctly, or some bug in the Haiku port of mosh. I will have to try this again at home to see what happens. During the work on mosh I also found a small issue with our libstdc++ vectors, which were missing the at() method, so I added that.
+
+I also made recipes for other less interesting stuff such as the avra assembler for AVR, BeHappy (currently broken), and LnLauncher (a very great launcher/dock which I've been using for years, since my BeOS days).
+
+<h3>PulkoMandy: alpha5 bug hunting</h3>
+
+I had a goal of getting the next Haiku release closer during the week. While the main missing part is the package building infrastructure, which Oliver has been working on, there are also a lot of smaller issues that need to be fixed to have a polished release.
+
+I made a change to the partitioning system so it is not possible anymore to format a whole disk as BFS (or another filesystem) while it still has mounted partitions (that would lead to invalid partitions still being mounted).
+
+I modified the Locale Kit B*Format classes so they don't need locking anymore. This should improve the overall performance of the system in places where these are used.
+
+I modified pkgman to use a nicer unicode based progress bar. Not really needed, but it looks cleaner than just printing '#' as a progress indicator.
+
+I made the Sounds preflet resize to its preferred size instead of going fullscreen, and cleaned its UI a bit.
+
+I continued the work on NetworkSetup which finally got all the features the old preflet was offering. This made it possible to finally remove the old network preferences app and replace it with the new NetworkSetup. It provides a more readable list of interfaces with status information, a tab for IPv6 configuration, and a better interface to configure DNS servers. Work on this will continue to allow configuration of network services (ftp/ssh/telnet).
+
+<h3>DeadYak: Debugger expressions and conditional breakpoints</h3>
+
+René wasn't with us there in Düsseldorf as flying from the USA costs too much, but he took a week off work and did a remote sprint. I'm not giving more details since he already posted a nice blog post with everything you need to know about his work.
+
+<h3>Charlie: HaikuPorter test suite</h3>
+
+Charlie Clark, the main BeGeistert organizer, isn't part of the Haiku developer team and is not much into C++. But for the first time this year he decided to contribute some code, in the form of unit tests for HaikuPorter. This will be useful as Oliver is reworking the dependency resolution system used in HaikuPorter, and regression testing will save some debugging time.
+
+<h3>Weekend coding activities</h3>
+
+Some people did not stay for the coding sprint, but still managed to get some work done during the weekend.
+
+stippi continued his work on HaikuDepot, adding support for installing and viewing local packages, and also started work on a "featured package" view to give a more "app store" like feeling to HaikuDepot. Discovering packages by just browsing a list view is not the most convenient way, and having editor picks or even custom suggestions based on what you previously installed will make HaikuDepot the place to promote 3rd-party haiku apps.
+
+During the weekend, axeld also did some work on refactoring VFS handling of permissions and merging the broken implementations in several of our filesystems to a single fully working one. This apparently leads to a slight increase of our score in the Perl testsuite.
+
+Oco was there as well, trying to get freepascal into a package and building Qt4pas and Lazarus with it.
+
+<h3>Closing words</h3>
+
+This was a quite productive week and it was also great fun to be there and work with some other Haiku developers. It would be nice to have more people attending those sprints (even just for part of the week) as working in the same room as the other devs and working full time (and 18 hours days) on Haiku always results in great progress, and also helps better knowing each other much better than over IRC or mailing lists.
+
+It would also be nice to have some 3rd party devs attend the sprint. We are all interested in seeing new apps happen, and having the system developers around when you work on something could come in handy.

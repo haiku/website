@@ -1,0 +1,95 @@
++++
+type = "article"
+title = "Multiboot Installation on GPT Disk"
+date = "2009-11-18T19:54:17.000Z"
+tags = ["efi", "mbr", "gpt"]
++++
+
+<p>My goal was to install Haiku R 1/Alpha 1 on a GPT (<a href="http://en.wikipedia.org/wiki/GUID_Partition_Table" title="GUID Partition Table">GUID Partition Table</a>) formatted disk that already held several operating systems. Along the way to success, I had various difficulties. The basic problem is that Haiku doesn't really handle GPT right now, but a GPT disk sort of looks like an MBR (<a href="http://en.wikipedia.org/wiki/Master_Boot_Record" title="Master boot record">Master Boot Record</a>) disk, and the MBR table may or may not accurately reflect the actual contents. Luckily, there are tools and techniques available to make this work. This article describes the steps I took.</p>
+<!--break-->
+<h3>Arranging the Partitions</h3>
+
+<p>Create or rearrange the partitions on your GPT disk so the partition for Haiku falls within the first four partitions. Remember that the (often-hidden) EFI partition counts. In my case, I started with four partitions as follows:</p>
+
+<ol>
+<li>EFI</li>
+<li>HFS+</li>
+<li>Linux swap</li>
+<li>Linux ext3</li>
+</ol>
+
+<p>Since I was already up to four used partitions, I created a new Linux swap in the fifth position, and switched my Linux system to use it. Then I reformatted the Linux swap in the third position to FAT32 merely as a placehold. All of this was done using GParted (the <a href="http://gparted.sourceforge.net" title="Gnome Partition Editor">Gnome Partition Editor</a>) on the Linux system. When all done, I had the following GPT partitions:</p>
+
+<ol>
+<li>EFI</li>
+<li>HFS+</li>
+<li>FAT32</li>
+<li>Linux ext3</li>
+<li>Linux swap</li>
+</ol>
+
+<h3>Populating the MBR Table</h3>
+
+<p>Now it is necessary to populate the MBR table with the locations and length of up to four partitions that you want Haiku to see. There are various approaches to doing this. I read somewhere that the <a href="http://en.wikipedia.org/wiki/Disk_Utility" title="Mac OS X Disk Utility">Mac OS X Disk Utility</a> application will do this if one of the partitions is FAT32 (apparently this is part of Boot Camp support, so Windows can be installed). I could not get this to work, so I resorted to a different tool: <a href="http://man.cx/gptsync%288%29" title="gptsync manpage">gptsync</a> from the <a href="http://refit.sourceforge.net" title="the rEFIt package">rEFIt package</a>. There are various ways to obtain gptsync; on my system (Ubuntu Intrepid) it was as simple as typing:</p>
+
+<pre class="terminal">
+    sudo apt-get install gptsync
+</pre>
+
+<p>On other systems it may be harder. Of course you can always go to the ReFIT site, download the source and build from scratch. Once you have the gptsync executable installed, follow these steps:</p>
+
+<ol>
+
+<li>Boot your linux system from a different hard drive than the one you wish to modify (this step may be optional, but is generally a good idea).</li>
+
+<li>Determine the device name of the hard drive (/dev/sda, /dev/sdb, etc.). You can generally do this by typing the df command. On my test example, I mounted a USB drive with four partitions:<p>
+
+<pre class="terminal">
+    $ df
+    Filesystem       1K-blocks          Used       Available    Use%    Mounted on
+    /dev/sda4         81703972        4343724      73209860      6%     /
+    /dev/sdb2          3913728          25196       3888532      1%     /media/MacHD
+    /dev/sdb3          3906080            456       3905624      1%     /media/FAT1
+    /dev/sdb5          3568820            456       3568364      1%     /media/FAT3
+    /dev/sdb4          3906080            456       3905624      1%     /media/FAT2
+</pre>
+
+I can see that my drive of interest is /dev/sdb, because I recognize the partitions.</li>
+
+<li>Run the gptsync command, with the device name as argument:<p>
+
+<pre class="terminal">
+    $ sudo gptsync /dev/sdb
+
+    Current GPT partition table:
+     #      Start LBA      End LBA  Type
+     1             40       409639  EFI System (FAT)
+     2         409640      8237095  Mac OS X HFS+
+     3        8501248     16328703  Basic Data
+     4       16328704     24156159  Basic Data
+     5       24156160     31307775  Basic Data
+
+    Current MBR partition table:
+     # A    Start LBA      End LBA  Type
+     1              1       409639  ee  EFI Protective
+     2         409640      8237095  af  Mac OS X HFS+
+     3        8501248     16328703  0b  FAT32 (CHS)
+     4       16328704     24156159  0b  FAT32 (CHS)
+
+    Status: MBR table must be updated.
+
+    Proposed new MBR partition table:
+     # A    Start LBA      End LBA  Type
+     1              1       409639  ee  EFI Protective
+     2         409640      8237095  af  Mac OS X HFS+
+     3 *      8501248     16328703  0c  FAT32 (LBA)
+     4       16328704     24156159  0c  FAT32 (LBA)
+
+    May I update the MBR as printed above? [y/N]
+</pre>
+
+<li>After verifying the correct table, just type <span class="key">y</span> to commit the changes, otherwise type return or <span class="key">N</span> to abort.</li>
+
+</ol>
+
+<p>At this point I was able to boot the Haiku CD, choose Install, go into DriveSetup (the Haiku partitioner), select the new FAT32 partition I created as a placeholder, and reformat it as a BFS partition. After that, the Haiku installation worked just fine.</p>

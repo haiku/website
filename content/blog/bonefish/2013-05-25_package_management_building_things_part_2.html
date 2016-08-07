@@ -1,0 +1,52 @@
++++
+type = "blog"
+author = "bonefish"
+title = "Package Management: Building Things (Part 2)"
+date = "2013-05-25T19:29:21.000Z"
+tags = ["package management", "contract work"]
++++
+
+<p>It's been quite a while since the previous blog post. I've been waiting for an nice occasion, but the more interesting milestones are still a bit away. While nothing flashy can be presented, a lot of work has been done anyway.</p>
+<!--break-->
+<p>At the time of the previous post we had just managed to get haikuporter, our high level package building tool, ready to hierarchically build packages. Since then it has seen a lot of updates:</p>
+<ul>
+ <li><p>Some were of merely aesthetical nature, like refactoring the code base to be more manageable.</p></li>
+ <li><p>Some changes improved the usability, like improved output and new options to better understand what is going on and why. Now haikuporter also makes working on a port easier, since it imports the original sources of the port into a new git repository, commits our Haiku specific patches, and later allows easy extraction of changes. The manual process was rather tedious before.</p></li>
+ <li><p>Some changes improved the correctness -- more precisely: strictness -- of how build dependencies are resolved.</p></li>
+ <li><p>Other changes added missing features. Most notably the possibility to build multiple packages per port, e.g. a development, a documentation, a debug info package etc.</p></li>
+</ul>
+
+<p>A good chunk of our time went into creating build recipes for the various ported software needed for Haiku. While that may sound straight-forward, particularly given that for most ports there were already .bep files (the old recipe format) to start with, it wasn't in many cases. Due to our packages needing to be flexible regarding their installation location, absolute paths must not be built in or, where necessary, must use the package links indirection.</p>
+
+<p>We also reorganized the <a href="http://dev.haiku-os.org/wiki/PackageManagement/DirectoryStructure">directory layout</a> of the installation locations. All kinds of documentation (often man and info pages) is required to go into the "documentation" directory. The contents of the "etc" and "share" directories goes to "data", "documentation", or "settings" as appropriate. "include" is "develop/headers" and development libraries go to "develop/lib". The latter two additionally required changes to the built-in paths in gcc, cmake, python, and various programs and scripts that search for headers or libraries.</p>
+
+<p>A few times we noticed a bit late that there was a problem or something had to be solved differently, requiring us to go back a few packages and build them again. So we had a lot of "fun", but in the end we managed to build (almost) <a href="http://dev.haiku-os.org/wiki/PackageManagement/PackagesStatus">all packages</a> in their respective version used in the Haiku master. As it turned out later we missed a few that the Haiku build system required. Nonetheless that finally allowed us to merge the master in the package management trunk, so we're no longer two years behind the current development.</p>
+
+<p>A few more things have happened since. I just finished updating the format of our package files. The update had been necessary to add a few required features. We wanted the boot loader to be packaged as well, which is now the case. It lives in its own package (haiku_loader.hpkg). The content is uncompressed, so that our stage one boot loader can still load it, but otherwise it works like any other package, so we don't need any special handling for it. Some additional meta information can now be stored in a package as well, like what global settings files are included in the package, what user settings files the software creates, what Unix users and groups the package needs to work (e.g. sshd needs a dedicated user), and what scripts have to be executed after the packages has been activated (e.g. for ssh the host keys need to be created).</p>
+
+<p>I used the format breakage to also optimize the format a bit. Formerly file and attribute data were compressed individually. The reason for that was for packagefs to be able to quickly access the data of a certain file. E.g. a (gz, bzip2, xz, ...) compressed TAR archive wouldn't work at all, since the whole archive would have to be read and decompressed up to the point where the file is stored. The new HPKG format concatenates all data and compresses the result. Since it does that in fixed chunks of 64 KiB size and there is a table of contents which specifies where the data for each file are stored stored exactly, it is still possible to quickly access specific file data. Due to a new cache in packagefs which caches uncompressed chunks, this should even improve the performance.</p>
+
+<p>The new format definitely helps with compression ratios. In my tests those were significantly better than zip (i.e. closer to tar.gz). For downloads this is certainly desirable, even if we're nowhere close to what good compression tools (like xz) can achieve. A thinkable option, should we consider optimizing download sizes further, would be to use no compression when creating the package and compress it with xz for transport.</p>
+
+<p>While I was playing with the package format, Oliver started working on something we hadn't quite anticipated we would need to deal with: cross-compiling packages. Years ago Haiku's source tree would contain the sources for all the software required for a basic Haiku installation. While that was quite nice, since the build was self-contained and targeting a new architecture or changing the (low level) ABI could be done rather comfortably, those are very rare tasks. A common task like building Haiku, however, would take a lot longer. Moreover, keeping the included third-party software up-to-date would also be complicated due to having to maintain a Jam-based build system for them, which had to be kept in sync with the software's native build system (usually based on the GNU auto tools and make). So it was decided to externalize the third-party software, i.e. remove the sources from the Haiku source tree and instead provide pre-built packages that Haiku's build system would download and include in the created Haiku image.</p>
+
+<p>Since some of those packages are required on Haiku to build software (e.g. the compiler) -- including themselves -- or to run Haiku at all, this creates a chicken-and-egg problem: How do we build the packages in the first place, if we need them for building? The solution is cross-compilation, i.e. building the packages for the target Haiku system on some other system (possibly not even Haiku).</p>
+
+<p>A complete bootstrap build for Haiku will work like this:</p>
+<ul>
+ <li><p>Configure the Haiku build as usual, including building a cross compiler.</p></li>
+ <li><p>Build "haiku_cross_devel.hpkg", a package that contains the Haiku headers, libroot, and the glue code, i.e. everything needed to build software for that target Haiku.</p></li>
+ <li><p>Check out the <a href="http://bitbucket.org/haikuports/haikuports.cross">haikuports.cross</a> respository. It contains build recipes for all the external software that we need to bootstrap our Haiku. Cross-build that software using haikuporter together with the haiku_cross_devel package.</p></li>
+ <li><p>Build a minimal Haiku, including the cross-built packages.</p></li>
+ <li><p>Boot this minimal Haiku and build all packages.</p></li>
+ <li><p>Now that all packages are available, build a complete Haiku as usual.</p></li>
+</ul>
+<p>Note that the packages built using the haikuports.cross repository are not the same as the ones for the final Haiku. They are specially patched and built to have only a minimal set of dependencies. E.g. the final grep package will have internationalization support, but we don't need that for the bootstrap grep package.</p>
+
+<p>Oliver has already prepared cross-building patches and recipes for binutils, gcc 2, sed, grep, and gawk. Several more packages are still to be done. Currently Haiku needs to be used as a host platform for cross-building packages (due to packagefs, as well as package and dependency resolution functionality used by haikuporter). It would be nice to eventually support other host platforms as well.</p>
+
+<p>The reason for the whole cross-compilation topic becoming relevant for us now, is that we only have x86 gcc 2 packages ATM. Since we want to build x86 gcc 4 and x86-64 packages some time soon, we are facing the chicken-and-egg problem -- no packages, hence no system to build the packages on. We could work around it by repackaging the existing optional package zip files as HPKGs, but that wouldn't be particularly well-invested time. Moreover we intend to build the hybrid part of Haiku gcc 2/4 and 4/2 hybrid builds in a similar manner (cross-compilation on the same platform).</p>
+
+<p>So, the cross-building topic is going to keep us busy for a bit. The other upcoming task is updating and rebuilding all existing packages for gcc 2, so they use the new package file format and, where necessary, the new features that come with it. This isn't that urgent, since the old format can still be read by packagefs, but it needs to be done eventually.</p>
+
+<p>On a finally note, my contract has ended, actually already about two weeks ago. A new contract has been agreed upon, though, so I will continue development full-steam in June. Oliver still has a few hours left on his contract and he has also agreed to renew it afterward. Matt will post an update with the details soon.</p>

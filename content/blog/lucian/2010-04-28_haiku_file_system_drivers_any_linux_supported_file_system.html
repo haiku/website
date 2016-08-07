@@ -1,0 +1,131 @@
++++
+type = "blog"
+author = "lucian"
+title = "Haiku file system drivers for any Linux supported file system "
+date = "2010-04-28T00:00:42.000Z"
+tags = ["gsoc2010", "gsoc", "lkl-haiku-fsd"]
++++
+
+<p>Haiku has great support for its own file system, but most others are only available read-only or not accessible. Providing reliable read-write support to one such file system is a complex task, and needs to be repeated for each type of file system. 
+</p>
+<p>
+Linux contains state of the art, full featured implementations for a large number of file systems. 
+</p>
+<p>
+lkl-haiku-fsd is a generic driver based on the Linux kernel library (LKL), reusing Linux' optimized and debugged file system implementations.
+</p>
+<!--break-->
+<h4 class="icon-person-medium">Personal Profile</h4>
+<ul>
+<li> <strong> Lucian Adrian Grijincu </strong> </li>
+<li> <strong> Contact </strong> email: <tt>lucian.grijincu✆gmail.com</tt>, IRC:<tt>_gringo</tt>, dev.haiku-os.org: <tt>lucian</tt> </li>
+<li> <strong> Brief bio </strong>
+<p>
+I'm a master's student from Romania and have been a teaching assistant for the last three years at the Operating Systems course at my faculty. I've been employed/interned at a few companies:
+<ul> <li>Kernel developer at IXIACOM - worked on networking optimizations on a custom embedded Linux kernel</li>
+<li>Software engineer at Freescale - added a new front end for the StarCore LLT compiler enabling it to re-optimize it's output and, for the first time, optimize hand-written assembly. </li>
+<li>Cross-platform C/C++ developer at AVIRA - optimized an internally used Linux TCP server, parallelized it (added multi-threaded abilities) and ported it to Windows.</li>
+<li>Software-engineer at Gameloft - wrote games for resource-limited mobile devices.</li>
+</ul>
+</p>
+<p>
+I am part of the Romanian translator teams for Ubuntu and GNOME and I'm a member of the Ubuntu Romania team (organizing Ubuntu events in Romania, solving Romanian-specific issues in Ubuntu, et al.)
+</p>
+<p>
+I am a project manager for <a href="http://github.com/vmchecker/vmchecker">vmchecker</a>, an open-source automated homework testing tool used at my faculty.
+</p>
+<p>
+I've recently ended my job as a Linux kernel developer to be able to concentrate on my master's diploma project: finishing work on an already started open-source Windows file system driver built on top of the Linux kernel library (http://github.com/lkl/) and working on lkl-haiku-fsd :).
+</p>
+</li>
+</ul>
+
+<h4 class="icon-kernel-medium">Project idea information</h4>
+
+<p>
+Haiku has great support for its own file system, but most others are only available read-only or simply not accessible. Providing reliable read-write support to file systems is not an easy task, and the complexity explodes when one takes into account journalization and the myriad of mount options supported by each file system (e.g. ACL, extended attributes).
+
+</p>
+<p>
+Although interoperability with other systems is desired, faulty read-write support can lead to data corruption (mostly of the worst kind: silent data corruption). Because of this, file system code, especially write support, should be heavily reviewed by contributors with deep understanding of the file system internals before being merged. Small scale projects are unable to allocate resources for these kinds of tasks for a few simple file systems (e.g. ext2), let alone for complex ones or a great number of them.
+</p>
+<p>
+
+The Linux kernel contains state of the art read-write implementations for a large number of file systems: ext2, ext3, ext4, resier, minix, fat, ntfs, et. al. with others coming along (namely btrfs – scheduled to become the default file system – and logfs – scheduled to become a default file system for flash devices). Bugs are routinely begin fixed, performance is improving, the internal Virtual File System (VFS) architecture sometimes changes and usually documentation lags behind. For small projects, keeping pace with such fast a development model is very difficult and is usually not considered a priority. This is why we now have very limited open-source support for some of these file systems in other operating systems: Windows, Haiku or *BSD.
+</p>
+<p>
+
+ 
+
+ 
+
+ 
+<h4 class="icon-kernel-medium">Linux kernel library</h4>
+<p>
+Together with Octavian Purdilă, an university professor of mine, I've worked on a project called LKL - the Linux kernel library, which builds the Linux kernel as a portable library. LKL has been used so far in three kinds of applications/environments:<ul>
+<li>LKLFTPD: an FTP daemon that reads/writes files from file system images</li>
+<li>LKLVFS: a file system driver for Windows</li>
+<li>a multi-router simulator making use of the networking stack (this is an ongoing diploma project)</li>
+</ul>
+ 
+</p>
+<p>
+
+I have worked on the core LKL and written most of the code for the FTP daemon (over 60%) and all of the file system driver for Windows (work in progress). Both make use of the Linux Virtual File System. Because file system specific code is implemented inside the Linux kernel and because we only make use of the public interface exposed by Linux (the kernel's implementations of the POSIX file APIs) we remain file system independent and can upgrade very easily: we just need to sync to newer kernel versions and fix the eventual merge conflicts. This provides instant support for newly developed file systems: once one gets into the mainline kernel, a git-merge will bring it in LKL. We also get bug fixes and performance improvements this way for free :)
+
+</p>
+<p>
+ 
+
+ 
+
+The way we built LKL permits us to use it unchanged in a large domain of environments: inside other kernels (e.g. Windows), or inside user space applications as long as those environments provide a basic set of primitives:<ul>
+<li>malloc/free-like memory management routines</li>
+<li>a synchronization mechanism (e.g. semaphores)</li>
+<li>thread creation/destruction</li>
+<li>a timer event generator</li>
+</ul>
+All the requrements are available in the Haiku kernel, so this driver should not require any kinds of changes to the current LKL.
+
+ 
+
+ 
+
+ 
+ 
+<h4 class="icon-kernel-medium">Project Goals</h4>
+<p>
+<ul>
+<li><strong>Implement a Haiku environment for LKL</strong>
+<p>
+For LKL to run inside Haiku we need to implement the four required primitives mentioned earlier
+</p>
+<p>
+There already are environments built for Windows kernel and POSIX or Win32 user space. Building one for Haiku should be easier having been through this three times and having examples.
+</p>
+</li>
+<li><strong>Implement a Linux block device driver mapped to a Haiku device.</strong>
+<p>
+To be able to access disk data we need to build a virtual device driver that translates Linux block device driver request to Haiku driver requests and Haiku responses to Linux block device driver responses. The virtual device driver will be invoked by the Linux VFS to read/write data from the real storage media.
+</p>
+<p>
+I have already built such device drivers working with Windows kernel devices (LKLVFS) and working with file system images (LKLFTPD).
+</p>
+</li>
+<li><strong>Add lkl-haiku-fsd, a generic file system, in <tt>add-ons/kernel/file_systems</tt></strong>
+</p>
+<p>
+The first two goals just set up the LKL environment to be able to run and communicate with the disk driver. Understanding the internal logic of the file system is done inside LKL being as bug-free as on a regular Linux box: we share bugs and features alike. But to be able to call the LKL implementations we must route all file system calls from the Haiku kernel to functions exported by LKL's VFS and convert results back. This is a non-trivial task as I have seen while implementing the Windows file system driver.
+</p>
+<p>
+</li>
+<li><strong>Work out the issues involving two sets of drivers for the same types of file systems.</strong>
+<p>
+Having two file system drivers for the same type of file system (e.g. lkl-haiku-fsd based ext2 driver and the native ext2 driver) may cause problems. We need to investigate how can we make them both work along. For example some users might desire MIT licensed drivers, some might desire native non-LKL drivers while other might want read-write support (through LKL drivers).
+</p>
+</li>
+</ul>
+
+<h4 class="icon-person-medium">Why do I want to work on this project?</h4>
+
+I want to bring robust support for file systems missing in Haiku. Having read/write support for modern file systems is very important to users who want to share information between two systems running on the same box (I know how important it was for me back when I switched from Windows to Linux). I know I have a solution which skips code duplication and leverages the massive amount of top-notch work done upstream in the Linux kernel. I have recently worked on two similar projects and have the necessary knowledge about working with LKL and implementing file system drivers.

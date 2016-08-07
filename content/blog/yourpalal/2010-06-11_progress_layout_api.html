@@ -1,0 +1,99 @@
++++
+type = "blog"
+author = "yourpalal"
+title = "Progress In the Layout API"
+date = "2010-06-11T09:09:43.000Z"
+tags = ["layout gsoc gsoc2010", "layout", "gsoc", "gsoc2010"]
++++
+
+<p>
+Here is my first blog post about my progress so far for my gsoc project, a little later than it should be, but at least it's here!
+So, what have I been working on? Two things, basically: archiving with cross-references, and view-less layouts.
+I've been chatting with my mentor and things are getting revised fairly quickly, so instead of writing about implementation, I'll write about the ideas and results of what I'm working on!
+</p>
+<!--break-->
+<p>
+One of the goals of my gsoc project is to integrate the layout API with the archivable API (BArchivable, instantiate_object(), <a href="http://www.haiku-os.org/legacy-docs/bebook/TheSupportKit_Archiving.html">etc...</a>).
+The tricky part here is that objects end up being referenced in more than one place, and during unarchiving, each object should only be unarchived once.
+The solution I've come up with is to assign tokens to objects as needed. During archival, the first time archival of an object is requested, it is archived and mapped to a token, and any subsequent requests simply retrieve this token.
+During unarchival, the process basically works in reverse, the first time an object (identified by its token) is requested for unarchival, it is unarchived, and any subsequent requests just return the appropriate pointer.
+So, that is the basic idea, but the implementation is still under fairly rapid change, so no patches yet ;)
+</p>
+
+<p>
+Another one of my goals for this summer is to modify the BLayout class
+(and its subclasses) to allow BLayouts that don't manage a specific BView.
+Currently, each layout has to have a BView whose children it lays out, and each BView can only have one BLayout.
+BLayouts position and set the size of BLayoutItems, which can represent anything, but generally represent a BView of some type.
+So, to enable BLayouts that don't manage a BView, we need a BLayoutItem subclass to represent BLayouts.
+Since the BLayout class is not yet finalized, we still have the option of making it a sub-class of BLayoutItem.
+Another option, which is more similar to how other classes do it, is to make a new BLayoutItem subclass to represent BLayouts.
+For the time being I've chosen to work with a separate class, but the two classes can be merged down the line.
+One of the nice things about the layout API is that once you have connected a layout to a BView, adding items to the layout will also take care of adding the BView that item represents to the BView the layout is managing. (still with me??)
+However, if a layout is not directly managing a BView, then items added to it still need to go somewhere, so they go to the nearest BView. Let me explain that with an example. :D
+</p>
+Consider the following scenario:
+
+We have a BView and the BLayout that manages it (we'll call them TopLevelBView and TopLevelBLayout), all very simple.
+<br/>
+<pre>
+#We could represent them like so:
+#TopLevelBView is managed by TopLevelBLayout
+TopLevelBView : TopLevelBLayout
+# --- no children here ---
+</pre>
+If we add a BView (called someBView) to TopLevelBView, a BLayoutItem (someBLayoutItem) is created to represent someBView, which becomes a child of TopLevelBLayout.
+<br/>
+<pre>
+#Now our diagram looks like this:
+TopLevelBView : TopLevelBLayout
+  * someBView <-- * someBLayoutItem
+#someBview is a child of TopLevelBView
+#someBLayoutItem is a child of TopLevelBLayout, and represents someBView
+</pre>
+Suppose we add another BLayout into the mix (called aViewlessBLayout), which we want to nest in TopLevelBLayout.
+<br/>
+<pre>
+#Notice that aViewlessBLayout isn't linked to a BView on the left side of the diagram..
+TopLevelBView : TopLevelBLayout
+  * someBView <-- * someBLayoutItem
+  * nothing   <-- * aViewlessBLayout
+</pre>
+If we then add a BView (called anotherBView), which we want to be laid out by aViewlessBLayout, then our diagram looks like this:
+<pre>
+#take note that anotherBView is also a child of TopLevelBView.
+TopLevelBView : TopLevelBLayout
+  * someBView <-- * someBLayoutItem
+  * nothing   <-- * aViewlessBLayout
+  * anotherBView <--  *anotherBLayoutItem
+</pre>
+If we want to get really fancy, things might look like this:
+<pre>
+TopLevelBView : TopLevelBLayout
+  * someBView <-- * someBLayoutItem
+  * nothing   <-- * aViewlessBLayout
+  * anotherBView <--  *anotherBLayoutItem
+  * nothing      <--  *anotherViewlessBLayout
+  * nothing         <-- *oneMoreViewlessBLayout
+  * yetAnotherBView    <-- *yetAnotherBLayoutItem
+</pre>
+<p>
+I'm sure that you can see that there is no end to how complex of a layout you could make, but all the BViews still end up in the right place! Some classes in the Interface Kit provide separate BLayoutItems to represent different parts of the object on screen (BMenubar, for instance separates its label and pull-down menu this way). Unfortunately, although they represent different visual elements, both BLayoutItems are tied to the same BView, which can only have one parent BView. These classes will benefit from this scheme by being able to add the label and menu into different BLayouts, as long as both layouts lead to the same BView. In the previous example, this could be TopLevelBLayout and oneMoreViewlessBLayout, and we would get this lovely diagram:
+</p>
+<pre>
+TopLevelBView : TopLevelBLayout
+  * someBView <-- * someBLayoutItem
+  * V---------<-- * menuBarLabelItem
+  * | nothing   <-- * aViewlessBLayout
+  * | anotherBView <--  *anotherBLayoutItem
+  * | nothing      <--  *anotherViewlessBLayout
+  * | nothing         <-- *oneMoreViewlessBLayout
+  * | yetAnotherBView    <-- *yetAnotherBLayoutItem
+  * > menuBarBView       <--   *menuBarMenuItem
+#notice the carefully crafted arrow linking menuBarLabelItem to menuBarBView,
+#as well as the one linking menuBarMenuItem.
+</pre>
+<p>
+Just beautiful, isn't it?
+Of course, there are other intricacies and problems that arise from all this, but they aren't nearly as exciting, so I'll reserve them for an even longer, drier and generally harder to follow blog-post. Well, it's time to wrap this all up... if anyone made it this far, then hopefully I will have another blog post for you soon!
+</p>

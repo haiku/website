@@ -1,0 +1,15 @@
++++
+type = "blog"
+author = "paweł_dziepak"
+title = "NFSv4 client: quarter term report"
+date = "2012-06-24T18:09:43.000Z"
+tags = ["gsoc"]
++++
+
+<p>I have already implemented all mandatory hooks (and several others), what means that NFSv4 client now allows to browse directories and read files on remote filesystems. Last several days I spent on improving the existing code and supporting some less usual NFSv4 describes, that includes reclaiming share reservations, support for server migration and volatile filehandles. I also needed to deal with NFSv4 that do not provide file's inode number, that was solved only partially since proper workaround will be much easier to implement when file metadata and directory contents are cached.</p>
+<!--break-->
+<p>The most interesting was definitely writing proper code that deals with opening and closing files. Since version 4 NFS is no longer a stateless protocol. Server remembers which files are opened by client and with what kind of access (NFSv4 specification calls that a share reservation). However, such design makes consequences of server or client reboot much more severe.</p>
+<p>Problems with rebooted client are solved simply by requiring client to periodically renew all share reservations using NFS operation, called RENEW, that tells the server that client is alive. If client fails to send that operation to server then all share reservation and locks it owned are dropped. Currently, there is a thread per connection that periodically sends RENEW request to the server.</p>
+<p>When server reboots it enters so called grace period. This is time for clients to reclaim all share reservations they may earlier acquired. Client is notified that server is in grace period by appropriate error codes (RENEW as well as all file access operations will fail). Then the client reopens all files it had opened. If handled properly user space programs won't notice that server have rebooted.</p>
+<p>I need also to implement support for server migration. At any time NFS request may fail with an error MOVED what means that the resource has been moved to another server. Then, the client should ask the original server about the address of the new one. This location may be either an IP address or host name. The latter requires NFSv4 client to resolve DNS host names what is not straightforward inside the kernel modules. After a discussion on mailing list I decided to write an additional (not connected with NFSv4 client in any way) module that uses an userland application to resolve host names. In general this module just launches that helper program and sends it hostnames, the program resolves them and returns the replies to the module. That's the most common solution to this problem among other operating systems.</p>
+<p>My next goal is to implement write operations and improve several things that still needs it (for instance, there are many hardcoded values in the code that could be made configurable). I also hope to start working on client side caching before the midterm since that what NFSv4 client really needs and that's what prevents me from fixing few (less important) things now.</p>

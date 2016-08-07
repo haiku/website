@@ -1,0 +1,59 @@
++++
+type = "article"
+title = "Device driver basics"
+date = "2002-05-18T09:00:00.000Z"
+tags = ["kernel", "device driver"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>Device drivers are difficult to write. Understanding the hardware can be the hardest part. Often the documentation is hard to read and understand because it is written from a hardware designer&#39;s perspective (that is, if you can get the documentation -- many manufacturers are very reluctant to give it out). Drivers work directly with the kernel - a bad pointer can crash the whole OS. And, finally, you can&#39;t use warm and comfortable debugging tools, since you are working in the kernel.</p>
+
+<p>Still sure that you want to write one? OK. Let&#39;s talk a little bit about the API.</p>
+
+<p>There are 5 (!) functions and one global that you must export. They are:</p>
+<ul>
+<li>status_t init_hardware(void)<br />
+called when the system boots. Must return B_OK if the hardware exists.<br /><br /> </li>
+<li>status_t init_driver(void)<br />
+called to initialize your driver. Must return B_OK, or the attempt to open the driver will fail.<br /><br /></li>
+<li>void uninit_driver(void)<br />
+called when driver is unloaded from memory.<br /><br /></li>
+<li>const char **publish_devices(void)<br />
+returns an array of char *&#39;s that name the devices this driver will export. Names are relative to /dev.<br /><br /></li>
+<li>int api_version<br />this global tells the driver system which version of the API you built with. Populate it with B_CUR_DRIVER_API_VERSION.<br /><br /></li>
+</ul>
+
+<p> and, finally: </p>
+
+<ul>
+<li>device_hooks *find_device(const char *name)<br />
+returns an array of function pointers that provide the dev file system calls to: open, close, free, control, read, write, select, deselect, readv, writev   (in that order)</li>
+</ul>
+
+<p>So, to look at this from a very high level, implement the 5 directly called functions, the global export, and some/all of the device hooks, and you are all set. The API here is very easy to understand.</p>
+
+<p>Let&#39;s talk a little bit about how to build and test these. A simple way to build is to use Be&#39;s makefile-engine. These three example lines demonstrate what needs to be set:</p>
+
+<pre>NAME= usbrawpci<br />TYPE= DRIVER<br />SRCS= usbraw.c <br /></pre>
+
+<p>The driver should be copied into ~/config/add-ons/kernel/drivers/bin. A link should be made from there to the location under ~/config/add-ons/kernel/drivers where you want the driver to show up in devfs (/dev). For example:</p>
+
+<pre>ln -s ~/config/add-ons/kernel/drivers/bin/usbrawpci<br />      ~/config/add-ons/kernel/drivers/dev/bus/usb/usbrawpci<br /></pre>
+
+<p>Debugging is hard. No two ways about that. The best way is with a terminal hooked up to your serial port. Assuming that you do not have such a thing (I don&#39;t), you can enable logging to a file. Look in ~/config/settings/kernel/drivers/sample. There is a file there named &quot;kernel&quot;. It is a sample of a kernel config. Copy it up one level (to the drivers directory) and uncomment the line &quot;syslog_debug_output&quot;. This causes the kernel to write the log to /var/log/syslog. Now you can use dprintf to print data to the syslog - it works pretty much exactly like printf.</p>
+
+<p>Synchronization is important because you could (potentially) have two or more users using the driver at the same time. Imagine 2 apps running on a dual processor box, perfectly timed so that they both start to write to your device at the same time. Both would be in your driver code at the *same time*. That means that all of the setup work that A is doing to get ready to write, B is changing at (nearly) the same time. Very bad. There are a couple of ways to protect your code that are commonly used in BeOS drivers. One is spinlocks. This is conceptually:</p>
+
+<pre>static volatile myLock;<br />init_hardware() {myLock=0;}<br />lock() {while (myLock); myLock=1;}<br /><br /></pre>
+
+<p>I say conceptually, because this would not work in a multi-processor or pre-emptive kernel situation, so special magic is done to make this work right. In any case, I am sure that it is obvious to you that this wastes a lot of CPU cycles. For that reason, it should be used only to protect small, fast bits of code that is happening inside of an interrupt. Fortunately for us, we do not have to write spinlocks. You can create them simply with:</p>
+
+<pre>spinlock foo;             // Create a spinlock<br />cpu_staus old;            // To hold all of the cpu info<br />old=disable_interrupts(); // Shhh - don&#39;t interrupt<br />acquire_spinlock(&amp;foo);   // Get the lock<br />.. do stuff...            // Get done fast<br />release_spinlock(&amp;foo);   // Unlock<br />restore_interrupts(old);  // OK - interrupt me now.<br /></pre>
+
+<p>Final note on spinlocks: consult with the BeBook on what you can and can not do inside spinlocks - your options are very limited. But, then again, you shouldn&#39;t do very much in your interrupt code anyway.</p>
+
+<p>So spinlocks are all fine for interrupt code. What about for non-interrupt code (which most of the driver should be)? Semaphores are your answer. Just like in user land.</p>
+
+<p>This is basically all there is to writing device drivers. The hard part is getting (and understanding) the specifications for the hardware. BeOS makes it very easy to create drivers once you know what the hardware needs.</p>
+
+<p>However, just to make this even a bit easier, I made up a &quot;template&quot;. It is completely untested, but you may find it helpful; feel free to <a href="/files/2002-05-18_mphipps_devdriver_template.zip">download it from here</a>.</p>
+<br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

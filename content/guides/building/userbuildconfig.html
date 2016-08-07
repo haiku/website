@@ -1,0 +1,187 @@
++++
+type = "article"
+title = "UserBuildConfig & BuildProfiles"
+date = "2009-05-07T01:19:05.000Z"
+tags = []
++++
+
+<p>In addition to <a href="/guides/building/configure">configure options</a>, UserBuildConfig is another, very powerful opportunity for customizing your build. As of <a href="http://dev.haiku-os.org/changeset/29161">changeset [29161]</a>, Haiku's build system supports two locations for UserBuildConfig:</p>
+
+<ul>
+<li><b>$(HAIKU_TOP)/build/jam/UserBuildConfig</b><br />
+$(HAIKU_TOP) refers to the top level of your local copy of the Git tree. If you use an <a href="/guides/building/configure/different-generated">external object directory</a>, the UserBuildConfig at this location will apply to all of them.</li>
+
+<li><b>$(HAIKU_OUTPUT_DIR)/UserBuildConfig</b><br />
+Typically, $(HAIKU_OUTPUT_DIR) is $(HAIKU_TOP)/generated. However if you use an <a href="/guides/building/configure/different-generated">external object directory</a>, then it UserBuildConfig is in that top-level directory. The UserBuildConfig in this file applies only to that object directory and over-rides $(HAIKU_TOP)/build/jam/UserBuildConfig.</li>
+</ul>
+
+<h3>Old Method vs Build Profiles</h3>
+
+<p>Essentially, the 'old method' has UserBuildConfig listing all of the statements globally. This can cause unexpected results when used at the same time of build profiles. Ideally, UserBuildConfig files are created using build profiles and contain statements inside a case statement; this will ensure that the statements of one build profile do not affect the statements of another.</p>
+<ul>
+<li><h4>Old Method</h4>
+<pre>
+HAIKU_IMAGE_DIR = /dev ;
+HAIKU_IMAGE_NAME = sda57 ;
+HAIKU_DONT_CLEAR_IMAGE = 1 ;
+</pre>
+</li>
+
+<li><h4>New Method -- Build Profile, example 1</h4>
+<pre>
+DefineBuildProfile partition2 : disk : "/dev/sda57" ;
+DefineBuildProfile my-custom-image : image : "customized-haiku.image" ;
+switch $(HAIKU_BUILD_PROFILE) {
+	case "partition2" : {
+		Echo Building to partition2 ;
+		# additional statements
+	}
+	case "my-*" : {
+		Echo Building to custom image file ;
+		HAIKU_IMAGE_SIZE = 2000 ;
+		# additional statements
+	}
+}
+</pre>
+
+<p>(the actual profile names are up to you to decide) and then issue the following commands:</p>
+
+<pre class="terminal">
+sudo chmod o+r /dev/sda
+sudo chmod o+rw /dev/sda57
+jam -q @partition2 
+</pre>
+</li>
+
+<li><h4>New Method -- Build Profile, example 2</h4>
+<p>The nightly build profiles as defined in <a href="http://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">DefaultBuildProfiles</a> let us create various kinds of image files, but what if we instead want to build the same content directly to a partition?</p>
+<pre>
+DefineBuildProfile nightly-disk : disk : "/dev/sda57" ;
+</pre>
+
+<p>(here, the profile name must start with <em>nightly-</em>) and then issue the following commands:</p>
+
+<pre class="terminal">
+sudo chmod o+r /dev/sda
+sudo chmod o+rw /dev/sda57
+jam -q @nightly-disk 
+</pre>
+</li>
+</ul>
+
+<h3>Build Profiles</h3>
+
+<p>Custom build profiles allow a user to create a limitless number of configurations within the same UserBuildConfig; from a minimal target for creating emergency USB boot sticks, installing directly to partition, a VMware image with more free space, and so on. A particular configuration can then be targeted by running <span class="cli">jam -q @&lt;build-profile-name&gt;</span>.</p>
+
+<p><a href="http://cgit.haiku-os.org/haiku/tree/build/jam/MiscRules#n284">DefineBuildProfile rule</a></p>
+
+<pre>
+rule DefineBuildProfile name : type : path {
+	# DefineBuildProfile &lt;name> : &lt;type&gt; [ : &lt;path&gt; ]
+	#
+	# Makes a build profile known. Build profiles can be used to define
+	# different sets of settings for Haiku images/installations. For each
+	# profile the default actions "build", "update", and "mount" (the latter
+	# only for disks or image types) will be available (i.e. can be specified
+	# as second parameter on the jam command line). They will build an image
+	# or installation, update only given targets, respectively just mount the
+	# image or disk using the bfs_shell.
+	#
+	# &lt;name&gt; - The name of the build profile.
+	# &lt;type&gt; - The type of the build profile. Must be one of "image" (plain
+	#          disk image), "vmware-image" (VMware disk image), "disk"
+	#          (actual partition or hard disk device), "cd-image" (ISO CD
+	#          image), "install" (installation in a directory), or "custom"
+	#          (user-defined).
+	# &lt;path&gt; - The path associated with the profile. Depending on the profile
+	#          type, this is the path to the disk image/VMware image, hard
+	#          disk/partition device, or the installation directory. If the
+	#          parameter is omitted, the value of the HAIKU[_VMWARE]_IMAGE_NAME,
+	#          HAIKU_IMAGE_DIR, respectively HAIKU_INSTALL_DIR or their default
+	#          values will be used instead.
+</pre>
+
+<a name="sample"></a>
+<h3><a href="#sample">Sample UserBuildConfig</a></h3>
+
+<p>The following sample UserBuildConfig is a working example that displays some of the more complex usage. A simpler UserBuildConfig can be just as effective. For more information see <a href="http://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe">UserBuildConfig.ReadMe</a> , which is contained in the Git repository.</p>
+
+<pre>
+# Generate a string that describes the target platform
+# eg,  x86gcc2hybrid,  x86gcc4, arm, ...,
+# This string becomes part of the .image, .vmdk, or .iso filename.
+#
+local partialName = ;
+if $(TARGET_ARCH) = x86 {
+	if $(HAIKU_GCC_VERSION[1]) >= 4 {
+		partialName = $(TARGET_ARCH)gcc4 ;
+	} else {
+		partialName = $(TARGET_ARCH)gcc2 ;
+	}
+	if $(HAIKU_ADD_ALTERNATIVE_GCC_LIBS) && $(HAIKU_ALTERNATIVE_GCC_OUTPUT_DIR) {
+		partialName = $(partialName)hybrid ;
+	}
+} else {
+	partialName = $(TARGET_ARCH) ;
+}
+
+# These are the actual build profiles.
+#
+# Install directly to a partition.
+# See <a href="/guides/building/jam#sudo_jam">/guides/building/jam#sudo_jam</a>.
+DefineBuildProfile walter-sda57 : disk : "/dev/sda57" ;
+# Install to container files. 
+#     image, which can be `dd` to disk or used with Qemu
+#     vmware-image, exclusively for VMWare or can be converted for VirtualBox
+DefineBuildProfile walter-raw : image : "walter-$(partialName).image" ;
+DefineBuildProfile walter-vmware : vmware-image : "walter-$(partialName).vmdk" ;
+DefineBuildProfile bare-raw : image : "bare-$(partialName).image" ;
+DefineBuildProfile bare-vmware : vmware-image : "bare-$(partialName).vmdk" ;
+
+# This switch statement allows you to define settings for each build profile.
+#
+switch $(HAIKU_BUILD_PROFILE) {
+	case "walter-*" : {
+		HAIKU_ROOT_USER_NAME = walter ;
+		HAIKU_ROOT_USER_REAL_NAME = "Walter TheFish" ;
+		AddGroupToHaikuImage party : 101 : user sshd ;
+		HAIKU_IMAGE_HOST_NAME = fishbowl ;
+		HAIKU_IMAGE_SIZE = 600 ;
+
+		Echo Building Walter for $(HAIKU_ROOT_USER_NAME) ;
+		
+		AddOptionalHaikuImagePackages BePDF Firefox Pe Vision VLC WonderBrush ;
+		AddOptionalHaikuImagePackages CVS Development Subversion OpenSSH ;
+		AddOptionalHaikuImagePackages Welcome BeBook ;
+		AddOptionalHaikuImagePackages BeHappy Nano P7zip Python Rsync Tar ;
+		AddFilesToHaikuImage common bin : diff_zip ;
+
+		# Set the defaults for timezone and keymap:
+		#
+		AddSymlinkToHaikuImage home config settings
+			: /boot/system/etc/timezones/Europe/Paris : timezone ;
+		AddFilesToHaikuImage home config settings : &lt;keymap&gt;German 
+			: Key_map ;
+
+		# Zip up your emails between each system update and place the archive into the
+		# user_data folder to be automatically put back when building the new image.
+		# 
+		UnzipArchiveToHaikuImage home
+			: $(HAIKU_TOP)/user_data/mail.zip ;
+	}
+	
+	case "bare-*" : {
+		HAIKU_ROOT_USER_NAME = walter ;
+		HAIKU_ROOT_USER_REAL_NAME = "Walter TheFish" ;
+		AddGroupToHaikuImage party : 101 : user sshd ;
+		HAIKU_IMAGE_HOST_NAME = fishbowl ;
+		HAIKU_IMAGE_SIZE = 300 ;
+
+		Echo Building Walter-barebones for $(HAIKU_ROOT_USER_NAME) ;
+
+		AddOptionalHaikuImagePackages BePDF Links Nano Vision ;
+		AddOptionalHaikuImagePackages Development Subversion OpenSSH ;
+		AddFilesToHaikuImage common bin : diff_zip ;
+	}
+}
+</pre>

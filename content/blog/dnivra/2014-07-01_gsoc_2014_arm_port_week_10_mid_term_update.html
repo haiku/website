@@ -1,0 +1,100 @@
++++
+type = "blog"
+author = "dnivra"
+title = "[GSoC 2014 : ARM Port] Week #10 (mid term update)"
+date = "2014-07-01T06:32:15.000Z"
+tags = ["arm", "gsoc2014", "gsoc"]
++++
+
+Hey everyone!<br />
+Here’s the update for week #10. Sorry about the delay in posting there - I had some issues logging into the website over past few days.<br /><br />
+
+TL;DR - MMU is enabled and now working!
+<!--break-->
+<h3>Status at start of the week</h3>
+The bootstrap-mmc target for jam was added 2 weeks ago which greatly pushed things forward in making it easy for others to build Haiku for beaglebone black. However, the image cannot be booted up successfully because of few problems which will be discussed later. Before I write about the issue, I’ll briefly introduce what MMU is and specific features of ARM’s MMU.
+
+<h3>Memory Management Unit</h3>
+Memory Management Unit(often abbreviated as MMU) is one of the many components that enables a computer to run several programs simultaneously. The MMU’s job is to translate the virtual addresses(what the programs, CPUs and users see) to physical addresses(the actual memory address). Since several memory access requests arrive in quick succession, the translation has to be extremely quick and thus the MMU is usually implemented in hardware.
+
+<h3>MMU unit in ARM</h3>
+The main memory is usually divided into small manageable pieces called pages(to reduce fragmentation of main memory). The MMU unit in ARM supports 4 page sizes - 16MB, 1MB, 64KB and 4KB respectively. The varying sizes enable easy mapping of memory areas of varying sizes(eg: the entire OS code could be mapped in a single entry).<br /><br />
+
+The mappings of addresses of pages is maintained in a page table. In ARMv7A, the page table has a 2 level hierarchy - the larger sized pages(16MB and 1MB) are typically mapped from the first level into memory while the smaller sized pages(64KB and 4KB) are translated using both levels.
+
+<h3>Boot process in Haiku</h3>
+Before we look at the layout of Haiku in memory, here’s a quick overview of Haiku boots up into memory.
+<br /><br />
+As mentioned in previous blog posts, u-boot starts up first which passes control onto haiku_loader, which understands the BFS filesystem and thus can load the kernel into memory.
+<br /><br />
+The entry point for haiku_loader is _start_netbsd[1] which passes control to _start_common[2]. Based on the value set in r4 register, _start_common invokes start_raw or start_netbsd. For the ARM port, control passes onto start_netbsd, which sets up few arguments which invokes start_raw. start_raw sets up a lot of things before passing control over to the loader, which invokes the kernel.
+<br /><br />
+The actions performed by start_raw are(in order)
+
+<ul>
+<li>Initializing(clearing) bss and calling C++ constructors</li>
+<li>Setting up the arguments for loader’s main routine</li>
+<li>Initializing serial and console output</li>
+<li>Initialize the open firmware wrapper and CPU</li>
+<li>Discover uImage if passed as an argument</li>
+<li>Initialize MMU and enabling serial output</li>
+<li>Invoking loader’s main routine</li>
+</ul>
+
+<h3>In-memory layout of Haiku</h3>
+The current memory layout of Haiku is defined in LOADER_MEMORYMAP, which is declared in
+src/system/boot/arch/arm/arch_mmu.cpp within the Haiku source. These virtual addresses are mapped to physical
+addresses in the page table before MMU is enabled.
+
+<table>
+    <tr>
+        <td><strong>Start address</strong></td>
+        <td><strong>End address</strong></td>
+        <td><strong>Content</strong></td>
+    </tr>
+    <tr>
+        <td>0x80000000</td>
+        <td>0x80200000</td>
+        <td>Kernel</td>
+    </tr>
+    <tr>
+        <td>0x48000000</td>
+        <td>0x4A000000</td>
+        <td>Devices</td>
+    </tr>
+    <tr>
+        <td>0x80000000</td>
+        <td>0x800FFFFF</td>
+        <td>Loader</td>
+    </tr>
+    <tr>
+        <td>0x80100000</td>
+        <td>0x801FFFFF</td>
+        <td>Page Table</td>
+    </tr>
+    <tr>
+        <td>0x80200000</td>
+        <td>0x811FFFFF</td>
+        <td>Free memory</td>
+    </tr>
+    <tr>
+        <td>0x81200000</td>
+        <td>0x82000000</td>
+        <td>Stack</td>
+    </tr>
+    <tr>
+        <td>0x82000000</td>
+        <td>0x82500000</td>
+        <td>Initrd</td>
+    </tr>
+</table>
+
+<h3>So what’s next in the ARM port?</h3>
+Over the past week, I learnt about the MMU in ARMv7 and fixed most of the issues in initializing MMU(at least for now). The changes were merged into the Haiku source tree few days ago. Currently, it is believed that the boot process cannot proceed because Haiku does not contain SD card driver. This will require further investigation.
+
+<ol>
+<li><a href="http://cgit.haiku-os.org/haiku/tree/src/system/boot/platform/u-boot/arch/arm/shell.S#n29">
+   http://cgit.haiku-os.org/haiku/tree/src/system/boot/platform/u-boot/arch/arm/shell.S#n29</a></li>
+<li><a href="http://cgit.haiku-os.org/haiku/tree/src/system/boot/platform/u-boot/arch/arm/shell.S#n36">
+   http://cgit.haiku-os.org/haiku/tree/src/system/boot/platform/u-boot/arch/arm/shell.S#n36</a></lie>
+</ol>

@@ -1,0 +1,121 @@
++++
+type = "article"
+title = "Compile them resources"
+date = "2003-03-07T21:00:00.000Z"
+tags = ["resources", "redf"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>All BeOS programs have &quot;resources&quot;. Simply put, a resource is data that is bundled with your application&#39;s executable. Typical examples are the application&#39;s icons and its signature, but you can attach any data you want. Many applications store bitmaps, text, cursors, and even complete user interfaces (dialog boxes, menus, etc.) as resources.</p>
+
+<p>This may sound a lot like attributes; after all, aren&#39;t attributes a way to store additional data alongside your files as well? Yes, but the difference is that resources can only be used with application files, not with just any file. Unlike attributes, they are not intended as general purpose data storage.  Instead, they only provide data that &quot;sticks&quot; to the executable. Although applications can overwrite their own resources, this is not recommended. Resources are typically set during compile time and never change afterwards. This means, for example, that you should not use resources to store user settings.</p>
+
+<p>To see the resources that are bundled with an application, you can drop the executable on a tool like <a href="http://www.bebits.com/app/152">Resourcer</a>. You can also go into a Terminal and type listres <em>filename</em>.</p>
+
+<h2>Making resources</h2>
+
+<p>If you have ever written a BeOS app, you probably used the standard FileTypes tool to create a .rsrc file with the application&#39;s signature, the launch flags, version information, and the icons. You then added the rsrc file to your Makefile or BeIDE project, and when you compiled the app, the resources were automatically copied into the executable. Maybe you have also used a tool like QuickRes or Resourcer to stuff additional resources into the rsrc file.</p>
+
+<p>These tools are not the only way to create resources; you can also use a &quot;resource compiler&quot;. A resource compiler is a (command line) tool that takes a text-based resource script and turns it into an rsrc file. With a resource compiler, you express your resources as ASCII text using a simple scripting language, which makes the resource files much easier to edit and maintain.</p>
+
+<p>BeOS R5 comes with an (experimental) resource compiler called &quot;beres&quot;, and a corresponding decompiler called &quot;deres&quot;. The resource definition language they use is called the &quot;rdef&quot; language. Recently I wrote an open source replacement for these tools, called &quot;rc&quot;. This article demonstrates some of the ways you can use rc to create your own resource files.</p>
+
+<p>Note that rc is not the only resource compiler for BeOS. The source tree of the <a href="http://code.beunited.org/cgi-bin/cvsweb.cgi/?cvsroot=pe">Pe text editor</a> contains an alternative compiler called Rez. Why did I write rc if another open source resource compiler was already available? Mainly because Rez does not understand the rdef language. In addition, several projects (such as  <a href="http://opentracker.sourceforge.net/">OpenTracker</a>), already use rdef files. Since the goal of Haiku is to provide an open source re-creation of BeOS R5, I felt it was important to re-implement the resource compiler as well.</p>
+
+<h2>The rdef language</h2>
+
+<p>The syntax of the rdef language is straightforward, so writing resource scripts is not very difficult. A resource script is a plain text file with one or more resource definition statements. It may also contain C or C++ style comments. By convention, resource script files have the extension &quot;.rdef&quot;.</p>
+
+<p>Here is an example of a simple resource script:</p>
+
+<pre>resource(1) true;      /* this is a comment */<br />resource(2) 123;       // and so is this<br />resource(3) 3.14;<br />resource(4) &quot;hello world&quot;;<br />resource(5) $&quot;0123456789ABCDEF&quot;;</pre>
+
+<p>When compiled, this script produces a resource file with five resources. The above example also illustrates the types of data that resources are allowed to have: boolean, integer, floating point, character string (UTF-8), and raw data buffer (hexadecimal).</p>
+
+<p>By default, integer data is stored as a 32-bit int, and floating point data is stored as a 4-byte float. If you want to change the way the data is stored, you have to cast it. The resource compiler understands many of the native BeOS types, such as int8, int16, size_t, and a whole bunch of others:</p>
+
+<pre>resource(10) (int8) 123;<br />resource(11) (double) 3.14;</pre>
+
+<p>You can also change the resource&#39;s type code. This does not change the way the data is stored, only what it means. The type code gives you, the programmer, a hint as how to interpret the data. To change the type code of a resource:</p>
+
+<pre>resource(12) #&#39;dude&#39; 123;</pre>
+
+<p>For your own convenience, you can also name resources:</p>
+
+<pre>resource(13, &quot;Friday&quot;) &quot;Bad Luck&quot;;</pre>
+
+<p>The resources we have made so far consisted of a single data item, but you can also supply a collection of data values. The simplest of these compound data structures is the array:</p>
+
+<pre>resource(20) array { 1234, 5678 };</pre>
+
+<p>An array is nothing more than a raw data buffer. The above statement takes the two 32-bit integers 1234 and 5678 and stuffs them into a new 64-bit buffer. You can put any kind of data into an array, even other arrays:</p>
+
+<pre>resource(21) array<br />{<br />    &quot;hello&quot;,<br />    3.14,<br />    true,<br />    array { &quot;a&quot;, &quot;nested&quot;, &quot;array&quot; },<br />    $&quot;AABB&quot;<br />};</pre>
+
+<p>It is up to you to remember the structure of this array, because array resources don&#39;t keep track of what kind of values you put into them or where you put these values. For that, we have messages. A message resource is a flattened BMessage. A message has a &quot;what&quot; code and any number of fields:</p>
+
+<pre>resource(22) message(&#39;blah&#39;)<br />{<br />    &quot;Name&quot; = &quot;Santa Claus&quot;,<br />    &quot;Number&quot; = 3.14,<br />    &quot;Small&quot; = (int8) 123,        // use cast to change data type<br />    int16 &quot;Medium&quot; = 12345,      // specify data type<br />    #&#39;dude&#39; &quot;Buffer&quot; = $&quot;00FF&quot;   // specify a new type code<br />};</pre>
+
+<p>Besides arrays and messages, the compiler also supports a number of other data structures from the Be API:</p>
+
+<table border="1">  <tbody><tr><th>type</th><th>corresponds to</th><th>fields</th></tr> <tr><td>point</td><td>BPoint, B_POINT_TYPE</td><td>float x, y</td></tr> <tr><td>rect</td><td>BRect, B_RECT_TYPE</td><td>float left, top, right, bottom</td></tr> <tr><td>rgb_color</td><td>rgb_color, B_RGB_COLOR_TYPE</td><td>uint8 red, green, blue, alpha</td></tr> </tbody></table>
+
+<p>For example, to add a color resource to your script, you can do:</p>
+
+<pre>resource(30) rgb_color { 255, 128, 0, 64 };</pre>
+
+<p>Or you can use the field names, in which case the order of the fields does not matter:</p>
+
+<pre>resource(31) rgb_color<br />{<br />    blue = 0, green = 128, alpha = 64, red = 255<br />};</pre>
+
+<p>The compiler also provides convenient shortcuts for the resources you would normally set from the FileTypes application:</p>
+
+<table border="1">  <tbody><tr><th>type</th><th>corresponds to</th><th>fields</th></tr>  <tr><td>app_signature</td><td>the app&#39;s MIME signature</td><td>string signature</td></tr>  <tr><td>app_flags</td><td>application launch flags</td><td>uint32 flags</td></tr>  <tr><td>app_version</td><td>version information</td><td>uint32 major, middle, minor, variety, internal<br />string short_info, long_info</td></tr>  <tr><td>large_icon</td><td>32x32 icon</td><td>array of 1024 bytes</td></tr>  <tr><td>mini_icon</td><td>16x16 icon</td><td>array of 256 bytes</td></tr>  <tr><td>file_types</td><td>supported file types</td><td>message</td></tr>  </tbody></table>
+
+<p>To conclude this short summary of the rdef language, this is how you would set the application&#39;s signature:</p>
+
+<pre>resource app_signature &quot;application/x-vnd.my.app&quot;;</pre>
+
+<p>As you can see, rc lets you do pretty much everything that the GUI resource tools do. It has several other interesting features, such as the ability to make your own data structures (&quot;user-defined types&quot;), that I haven&#39;t touched on here. The documentation that accompanies rc goes into much more depth, so I suggest you take a look at that if you want to know more.</p>
+
+<h2>Compiling the rdef script</h2>
+
+<p>Once you have written your script, you need to compile it. Since rc is a command line tool, you must run it from a Terminal window. Compiling is as simple as typing:</p>
+
+<pre>rc -o <em>outputfile</em>.rsrc <em>inputfile</em>.rdef</pre>
+
+<p>If your project uses a Makefile or Jamfile, you can add a rule for rc and it will automatically generate the rsrc file for you when you compile the project. Below I will discuss how to do this for projects that are part of the Haiku CVS tree. But first...</p>
+
+<h2>Using the resources in your app</h2>  <p>So you have added a bunch of resources to your application. Now what? You create a BResources object, that&#39;s what. The  BResources class, which is part of the Storage Kit, is initialized with a pointer to a BFile object. For example:</p>
+
+<pre>BFile file(&quot;/boot/home/SomeFile&quot;, B_READ_ONLY);<br /><br />BResources res;<br />if (res.SetTo(&amp;file) == B_OK)<br />{<br />    ...<br />}</pre>  <p>Typically, you only want to look at the resources from your own application, so first you need to make a BFile with the path to your app. The following code snippet illustrates how to do this:</p>  <pre>app_info info;<br />be_app-&gt;GetAppInfo(&amp;info);<br />BFile file(&amp;info.ref, B_READ_ONLY);<br /><br />BResources res;<br />if (res.SetTo(&amp;file) == B_OK)<br />{<br />    ...<br />}</pre>
+
+<p>Now that we have a BResources object, we can call its LoadResource() function to load one of the  resources into memory:</p>
+
+<pre>size_t size;<br />const void* data = res.LoadResource(&#39;type&#39;, id, &amp;size);</pre>
+
+<p>LoadResource() gives you a pointer to a memory buffer and the size of that buffer. This memory belongs to the application and you are not allowed to modify or free it. Otherwise, do with the data as you please. BResources also contains several functions that return information about the resources, which can be handy if you don&#39;t know beforehand which resources are available.</p>
+
+<p>Note that you should only use BResources to look at custom resources. The standard application resources (signature, icons, app flags) should be accessed through the BAppFileInfo class, which is also part of the Storage Kit.</p>
+
+<p>Finally, you can save yourself some trouble if the resources contain images. The Translation Kit&#39;s TranslationUtils helper class can create BBitmap objects straight from the resources:</p>
+
+<pre>BBitmap* bitmap1 = BTranslationUtils::GetBitmap(&#39;type&#39;, &quot;name&quot;);<br />BBitmap* bitmap2 = BTranslationUtils::GetBitmap(&#39;type&#39;, id);</pre>
+
+<p>Refer to the corresponding chapters of the BeBook for more info.</p>
+
+<h2>Switching to rdef</h2>
+
+<p>The plan is to switch all rsrc files from the Haiku CVS tree to rdef in due time. The main reason is that CVS doesn&#39;t handle rsrc files very well, because they are binary. Most of our resource files will be much easier to edit and maintain if they are text-based.</p>
+
+<p>To give you an impression of how easy it is to switch to rdef files, let me relate my experiences with switching over StyledEdit. The <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/open-beos/current/src/apps/stylededit/">source code folder</a> of StyledEdit already contained several rdef scripts. These scripts, however, were not used in the compilation directly, and the project&#39;s maintainer used the old beres compiler by hand to make the rsrc file. Like most other projects, the relevant part of the Jamfile looked like this:</p>
+
+<pre>AddResources StyledEdit :<br />	StyledEdit.rsrc<br />;</pre>  <p>All I had to do to make the switch was change the file names. Jam is smart enough to first compile the rdef scripts into an rsrc file, and then copy those resources in the StyledEdit executable. After the change the Jamfile looks like this:</p>  <pre>AddResources StyledEdit :<br />	StyledEdit.rdef<br />	StyledEdit.icons.rdef<br />	StyledEdit.version.rdef<br />;</pre>
+
+<p>Your project probably doesn&#39;t have an rdef script yet. If you already have an rsrc file, then making the rdef is easy, because rc also includes a decompiler that will take one or more rsrc files (or any file with resources) and produce a ready-to-use rdef script. That should save you some typing.</p>
+
+<p>To decompile, type the following from a Terminal window:</p>
+
+<pre>rc -d -o <em>outputfile</em>.rdef <em>inputfile</em>.rsrc</pre>
+
+<p>Note: Even though it is already possible to replace the rsrc files from the Haiku tree, it can sometimes be a little inconvenient. Some of the resources (such as the application version) are still a little hard to specify because rc&#39;s type mechanism is not advanced enough yet. A future version of the compiler will make this much easier. But don&#39;t let that scare you from experimenting with rc ;-)</p>
+<br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

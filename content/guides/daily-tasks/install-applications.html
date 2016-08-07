@@ -1,0 +1,74 @@
++++
+type = "article"
+title = "Installing applications"
+date = "2013-10-13T07:33:39.000Z"
+tags = ["package management"]
++++
+
+<p>With the recent incorporation of package management (get a <a href="http://www.haiku-files.org/haiku/development/">nightly image</a> to check it out) some things have changed with regard to installing applications. Mind you, it's all still in a bit of flux with bugs being found and fixed and features being refined (this article has been written for hrev46218). Also, keep in mind that I'm not that familiar with the workings of the package management myself. I'd appreciate corrections, additions and tips!</p>
+
+<p>Once repositories and packages are up and HaikuDepot is more feature complete, things will get easier. But until then, this is how I understand things: There are basically three scenarios:</p>
+
+<h2>1. A proper new .hpkg package</h2>
+
+<p>Either installed automatically via HaikuDepot, e.g. WonderBrush, or downloaded off some site. When using HaikuDepot, you're all set. If downloaded somewhere else, just move the .hpkg file into <tt>~/config/packages/</tt> and (in case of an application) it'll appear in <tt>~/config/apps/</tt>.</p>
+
+
+<h2>2. An "old", self-contained archive</h2>
+
+<p>Those come traditionally from sites like <a href="http://www.bebits.com">BeBits</a> or <a href="http://www.haikuware.com">Haikuware</a> in form of a zipped up folder. As before, you can unzip that anywhere in <tt>/boot/home/</tt> (besides <tt>~/config/</tt> which is read-only) and launch the app just like you did before package management.</p>
+
+
+<h2>3. An "old" archive that has files to spread around</h2>
+
+<p>This is the case where you used to unzip the archive anywhere and had to invoke an install script or copy some files to special locations. Think of screen savers, translators or similar things. Since the file system hierarchy has changed a bit and some folders became read-only, those apps don't work any more out-of-the-box. You have two choices to get them working:</p>
+
+<h3>3.1 The non-packaged folder</h3>
+
+<p>Under <tt>~/config/non-packaged/</tt> you can recreate the needed file hierarchy. Let's take for example the very convenient tool <a href="http://haikuware.com/remository/view-details/utilities/desktop-accessories/text-bank">TextBank</a>, that provides a history and templates of the clipboard. After unzipping it to <tt>~/config/non-packaged/apps/</tt> you can launch TextBank, but it doesn't yet do anything. The input_server add-ons <tt>TextBankAssistantPasteSender</tt> and <tt>TextBankAssistantSpy</tt> aren't yet in the right place in the filesystem and therefore aren't picked up by the system.</p>
+<p>TextBank offers to install these files in its preferences, but since the changed hierarchy due to package management, that doesn't work anymore. You'll have to do that manually by creating the needed folders and copying the corresponding file:</p>
+<p></tt>~/config/non-packaged/add-ons/input_server/devices/TextBankAssistantPasteSender</tt><br />
+</tt>~/config/non-packaged/add-ons/input_server/filters/TextBankAssistantSpy</tt></p>
+
+<p>The next time you boot up (or restart the input_server from Terminal with "/system/servers/input_server -q") it should work.</p>
+
+<h3>3.2 Making it into a proper .hpkg package</h3>
+
+<p>The non-packaged folder route is a bit unwieldy if you're updating your system from scratch often. Here is how you create a .hpkg of TextBank:</p>
+
+<p>You create some folder "SomeFolder" and within it the subfolders "<tt>apps</tt>", "<tt>add-ons/input_server/filters/</tt>" and "<tt>add-ons/input_server/devices/</tt>".</p>
+<p>Then unzip the TextBank archive under "apps" and move "TextBankAssistantPasteSender" and "TextBankAssistantSpy" in their corresponding folders you just created.</p>
+<p>Now, the hardest part, you have to create the text file ".PackageInfo" in the top folder "SomeFolder". The exact syntax of that file is described in the <a href="http://dev.haiku-os.org/wiki/PackageManagement/BuildingPackages">PM wiki</a>. Also, .hpkg files opened in Expander (check "Show contents") can be educational. It'll look something like this:</p>
+<pre>
+name			textbank
+version			5.3.2-1
+architecture		x86_gcc2
+
+summary			"A tool to provide clipboard history and more"
+description		"Useful text provision tool (Clipboard history/template/time & date...)"
+
+packager		"Humdinger <humdlinger@gmail.com>"
+vendor			"SHINTA"
+
+copyrights		"SHINTA"
+licenses		"MIT"
+
+provides {
+			textbank = 5.3.2-1
+}
+</pre>
+<p>Note, the license is actually Creative Commons, but that doesn't exist yet under <tt>/system/data/licenses/</tt>. You could create your own of course, but that would lead us astray for this educational example. Hope SHINTA doesn't mind... :)</p>
+
+<p>Finally, let's create the actual .hpkg file. Open a Terminal at "SomeFolder" and type:</p>
+
+<pre class="terminal">package create -b textbank.hpkg</pre>
+
+<p>That creates an empty package with just the .PackageInfo. Continue with:</p>
+
+<pre class="terminal">package add textbank.hpkg apps add-ons</pre>
+
+<p>And there we are. Put into <tt>~/config/packages</tt> to install and TextBank will appear under <tt>~/config/apps/</tt></p>
+<p><br /></p>
+
+<hr />
+<p><i>[Edit 14.10.2013: corrected path, thanks Giovanni.]</i></p>

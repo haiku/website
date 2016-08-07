@@ -1,0 +1,308 @@
++++
+type = "blog"
+author = "mmlr"
+title = "Using malloc_debug to Find Memory Related Bugs"
+date = "2010-02-08T01:17:50.000Z"
+tags = ["malloc_debug", "libroot_debug.so", "heap", "memory", "crash"]
++++
+
+<p>
+	There's plenty of ways to introduce subtle bugs into your code that give you a hard time finding and fixing. In this post I'd like to introduce you to malloc_debug, a heap implementation with added debug helpers, and outline how it can be used to find some of these problems.
+</p>
+<!--break-->
+<h2>Enabling malloc_debug</h2>
+<p>
+	Since the malloc_debug heap implementation does a lot of unconditional error checking and validation it isn't used by default. Instead it is part of libroot_debug.so. To run an application with libroot_debug.so instead of libroot.so, which automatically makes the app use the debug heap, you need to export the environment variable LD_PRELOAD with a value of "libroot_debug.so". The easiest way to do so is to run your app from a Terminal like this:
+	<pre>
+		LD_PRELOAD=libroot_debug.so myApplication
+	</pre>
+	With this you already get most of the malloc_debug features like always initialized memory, overwriting of freed memory and overrun and alignment checks on deallocation.
+</p>
+<h2>Helpful Kernel Debugger Output</h2>
+<p>
+	In general when your app crashes or enters the debugger, the kernel will output relevant information to the syslog. This info most often is more to the point and easier to understand than what gdb will tell you in userland. Therefore I recommend to always keep a Terminal with the syslog output open while debugging things. The easiest is to run tail on the syslog like this:
+<pre>
+	tail -F /var/log/syslog
+</pre>
+<h2>Bug: Using Uninitialized Memory</h2>
+<p>
+	One of the things malloc_debug does for you is to always initialize memory blocks it returns to you to a known value: 0xcc. This helps you find cases where you use allocated memory uninitialized.
+</p>
+<h3>Common Occurrence</h3>
+<p>
+	Commonly this happens when forgetting to initialize class members or structure fields.
+</p>
+<h3>Example</h3>
+<pre>
+	class TheClass {
+		...
+		BWindow *fWindow;
+	};
+
+	TheClass::TheClass()
+		:
+		fMemberA(0),
+		fMemberB(NULL)
+	{
+	}
+
+	...
+
+	TheClass::SomeMthod()
+	{
+		if (fWindow == NULL)
+			fWindow = new BWindow(...);
+		fWindow->Show();
+		...
+	}
+</pre>
+<p>
+	In this example the fWindow member of the class was not initialized in the constructor. When it is later used like in the method SomeMethod(), the assumption is that fWindow happens to be initialized to 0. This may be the case, or it may not, it really is mostly random.
+</p>
+<h3>How To Spot</h3>
+<p>
+	Since the data allocated by malloc() and friends as well as new (including the storage for your object members) is normally not initialized the results of running the buggy code depend on what happens to be in these memory ranges at the time you run it. When running without the debug heap this will usually manifest in random misbehaviour that changes from run to run, it sometimes crashes, it sometimes doesn't. With the debug heap the memory returned by the memory allocation functions is always initialized to 0xcc. This means that if you are comparing uninitialized memory to NULL for example all of these checks will now fail reliably and if you try to execute or access uninitialized pointers your application will reliably crash with a segfault. If you look at the syslog output of such a crash you can easily spot a line similar to this:
+	<pre>
+		KERN: vm_page_fault: vm_soft_fault returned error 'Permission denied' on fault at 0xccccccd4
+	</pre>
+	The fault address (0xccccccd4 here) will vary depending on what exactly you accessed, but it it is still easy to see that the base pointer used here was 0xcccccccc indicating uninitialized memory. The syslog output will also contain a stack trace, so you should have most info you need to fix the problem.
+</p>
+<h3>Recommendations</h3>
+<p>
+	Always initialize all your variables. The only exception are static variables, because these are always initialized to 0. I personally still initialize them to make it absolutely obvious, but that's a matter of taste (or coding style policy).
+</p>
+<h2>Bug: Using Already Freed Memory</h2>
+<p>
+	Another thing malloc_debug does for you is to always fill memory you return to the heap by the means of free() or delete to a different known value: 0xdeadbeef. This helps you find cases where you use already freed memory.
+</p>
+<h3>Common Occurrence</h3>
+<p>
+	Most often this happens when holding pointers to memory blocks in different locations of an application. Like when keeping multiple lists and forgetting to remove a pointer from one of them.<br>
+	It can also happen if a certain process runs through in an order that was not expected. For example event handlers being called while or after a target has already been freed (due to missing locking).<br>
+	Sometimes it is also just a simple oversight like still accessing data inside an object just freed.
+</p>
+<h3>Example</h3>
+<pre>
+	element_data *
+	unlink_and_free(linked_list_element *previous, linked_list_element *element)
+	{
+		previous->next = element->next;
+		free(element);
+		return element->data;
+	}
+
+	void
+	function()
+	{
+		...
+		element_data *data = unlink_and_free(...);
+		if (data->has_something)
+			...
+	}
+</pre>
+<p>
+	When reading closely this is pretty obvious. Still it can easily occur, especially when refactoring code. The thing is that code like this will often work just fine due to the allocator not necessarily doing anything with the memory and not giving it back out quickly enough. Crashes coming from such bugs can be very rare and therefore frustrating to analyze.
+</p>
+<h3>How To Spot</h3>
+<p>
+	When freeing memory malloc_debug will overwrite the block you hand in before returing. The pattern used is 0xdeadbeef and when accessing pointers in freed memory blocks the app will crash with a segfault. The syslog will contain a line similar to this:
+	<pre>
+		KERN: vm_page_fault: vm_soft_fault returned error 'Permission denied' on fault at 0xdeadbeef
+	</pre>
+	The fault address will vary depending on what exactly is accessed. Note though that due to how the heap implementation works internally, the first sizeof(void *) bytes will be used as a free list element and therefore may not contain 0xdeadbeef after returning from free.
+</p>
+<h3>Recommendations</h3>
+<p>
+	Depending on the actual bug. If it is a concurrency issue introduce proper locking, if memory management seems to get difficult consider introducing reference counting or other more advanced memory management techniques. Sometimes is enough to take a good long look at the function the stack trace points to.
+</p>
+<h2>Bug: Double Free</h2>
+<p>
+	Freeing memory twice, i.e. by actually using free() twice or by using delete on already deleted objects.
+</p>
+<h3>Common Occurrence</h3>
+<p>
+	Most often this is just an oversight. It can happen easily when using self-deleting objects and then deleting manually again on exit.
+</p>
+<h3>Example</h3>
+<pre>
+	TheClass::Recycle()
+	{
+		...
+		delete this;
+	}
+
+	void
+	main_function()
+	{
+		TheClass *object = new TheClass();
+		function_that_will_indirectly_cause_a_recycle_of_the_object(object);
+		delete object;
+	}
+</pre>
+<p>
+	With that wording pretty obvious, usually not quite that easy to see.
+</p>
+<h3>How To Spot</h3>
+<p>
+	A double free will cause the debugger to be invoked directly. The debugger message will be similar to this:
+	<pre>
+		free(): address 0x18006000 already exists in page free list (double free)
+	</pre>
+	The line is located in the gdb output right after the gdb copyright, license info and the process group error but before the library loading output. If you have a lot of libraries (directly or indirectly) in use you may need to scroll up to see it. The syslog will also contain the debugger call as well as a stack trace.
+</p>
+<h3>Recommendations</h3>
+<p>
+	Remove the superfluous free() / delete calls. If memory management gets difficult a solution might be to switch to reference counting or other more advanced techniques.
+</p>
+<h2>Bug: Misaligned Free / Free of Unallocated Memory</h2>
+<p>
+	Using free() on an address that is offset from the originally returned address or using free() on an address that wasn't allocated by the heap at all.
+</p>
+<h3>Common Occurrence</h3>
+<p>
+	Misaligned frees can happen when doing pointer arithmetic.
+</p>
+<h3>Example</h3>
+<pre>
+	void
+	some_function()
+	{
+		char *string = strdup("hello");
+		while (string[0] != 'l')
+			string++;
+
+		...
+		free(string);
+	}
+</pre>
+<p>
+	In the example above the string variable has been advanced and therefore doesn't point to the same address the allocation returned.
+</p>
+<h3>How To Spot</h3>
+<p>
+	A misaligned free will cause the debugger to be invoked. The debugger message will be similar to this:
+	<pre>
+		free(): address 0x1800102a does not fall on allocation boundary for page base 0x18001000 and element size 20
+	</pre>
+	The line is again visible both in gdb as well as in the syslog output. The message contains the address that was supplied to free, the page base from where this allocation has been made as well as the element size used to satisfy the allocation request. If relevant, the misalignment can be computed from these numbers:
+	<pre>
+		address - (int((address - base) / elementSize) * elementSize)
+	</pre>
+	When freeing an address that hasn't been allocated by the heap at all, the free() call will fail and the debugger will be invoked with a message similar to this:
+	<pre>
+		free(): free failed for address 0x8000
+	</pre>
+	The address will be the address supplied to free(). Note that this message will be triggered when you continue from a misaligned free as well.
+</p>
+<h3>Recommendations</h3>
+<p>
+	Review the places where you do pointer arithmetic and make proper copies of the originally returned addresses where necessary.
+</p>
+<h2>Bug: Overwriting Memory Past the Allocation</h2>
+<p>
+	When overwriting memory past the allocated size this doesn't necessarily lead to a segfault. If the write stays within the heap address range it will usually just corrupt whatever is overwritten. Sadly malloc_debug cannot tell the exact place where this corruption happens. In some cases it can however tell you that it did happen sooner than you would otherwise notice.
+</p>
+<h3>Common Occurrence</h3>
+<p>
+	Most often the classic buffer overrun by writing more data into an allocated space than fits. It can also happen when (reinterpret) casting memory blocks to the wrong type and then using fields that aren't actually there.
+</p>
+<h3>Example</h3>
+<pre>
+	void
+	some_function(const char *inputString)
+	{
+		char *buffer = new char[64];
+		strcpy(buffer, inputString);
+		...
+		delete[] buffer;
+	}
+</pre>
+<p>
+	The function uses the unsafe strcpy() instead of strncpy() and therefore doesn't tell the function how much space is available in the buffer. Depending on the length of the input string, memory will be corrupted.
+</p>
+<h3>How To Spot</h3>
+<p>
+	When not using interval based wall checking (see below) this form of corruption will be detected on free() / delete of the allocation where certain extra data stored on allocation is verified. Either of these two messages can occur depending on how far the memory has been corrupted:
+	<pre>
+		someone wrote beyond small allocation at 0x18003050; size: 64 bytes; allocated by 9084; value: 0x18003000
+	</pre>
+	This is the so called "wall" value being verified. Currently this is only a very small wall, it consists of exactly sizeof(addr_t) bytes only and stores the address where it is expected to be found. This kind of wall checking is enough for many kinds of buffer overruns, it can't detect more random access like when casting to a wrong type of struct though. A more elaborate wall may be introduced at a later stage. The expected value can be easily calculated by adding the allocation and the size. The value might just give a clue as to what it was that wrote beyond the allocated space.
+</p>
+<p>
+	If the overwriting progresses further it is possible that another debugger call happens:
+	<pre>
+		leak check info has invalid size 1633771873 for element size 80, probably memory has been overwritten past allocation size
+	</pre>
+	This one occurs when the leak checking info is compromised by the overrun and usually indicates the same issue.
+</p>
+<h3>Recommendations</h3>
+<p>
+	Check for places where unsafe string handling is done like with strcpy, strcat, sprintf and replace by the safe counterparts (strncpy, strlcat, snprintf), review sizes to memcpy and memset. Maybe consider to use higher level abstractions for string handling like BString or C++ strings.
+</p>
+<h2>Advanced Use of malloc_debug</h2>
+<p>
+	There are also features present in malloc_debug that aren't enabled by default because of their performance overhead. These features include interval based wall checking and heap validation. There are also reporting features that allow you to request that heap info is dumped for you to manually analyze.
+</p>
+<h3>Accessing Advanced Features</h3>
+<p>
+	The malloc_debug functions are part of the malloc_debug.h header present in the posix header directory (it might not be there yet depending on how recent your installation is, it was introduced in r35431. Note that you can't just copy that header and use these features, as the API was redesigned when adding the header so the functions aren't compatible). Since this API is not present in the normal libroot, you need to explicitly link against libroot_debug.so when building your app with these function calls. So to use:
+	<pre>
+		#include <malloc_debug.h>
+	</pre>
+	And when compiling/linking use:
+	<pre>
+		-lroot_debug
+	</pre>
+</p>
+<h3>Interval Based and Manual Wall Checking</h3>
+<p>
+	Wall checking can be done for you at a certain interval automatically, or you can trigger wall checking manually if you already have a more specific suspicion.
+</p>
+<pre>
+	extern status_t heap_debug_start_wall_checking(int msInterval);
+	extern status_t heap_debug_stop_wall_checking();
+</pre>
+<p>
+	These functions are used to start and stop interval based wall checking. The start function takes an interval in milliseconds (so a value of 1000 will cause a wall check every second). Note that these checks have a certain overhead, so you might not want to use them with too small an interval.
+</p>
+<pre>
+	extern void heap_debug_validate_walls();
+</pre>
+<p>
+	This will trigger a manual validation of the wall values of all allocations. It does the same as the interval based wall checker does.
+</p>
+<p>
+	When either of these methods detect that a wall value has been overwritten a debugger call will be triggered. The output line is the same as for wall checking on free (see above).
+</p>
+<h3>Paranoid and Manual Validation</h3>
+<p>
+	The heap has extensive validation functions which pretty much validate every aspect of the internal heap implementation. If memory corruption is going on and hits any of the data used by the allocator validation will most likely detect it. This feature was mainly used during the heap implementation, but since it can also uncover random memory corruption this has been made available.
+</p>
+<pre>
+	extern void heap_debug_set_paranoid_validation(bool enabled);
+</pre>
+<p>
+	Using this function paranoid validation can be enabled and disabled again. By default it is disabled. Paranoid validation means that after every heap operation (allocation, reallocation, free) a full validation of the corresponding heap will be done. Note that this is very performance intensive, especially when the heap usage gets bigger.
+</p>
+<p>
+<pre>
+	extern void heap_debug_validate_heaps();
+</pre>
+<p>
+	With that function a manual validation of all heaps can be triggered (internally the heap implementation uses different heap classes for the different allocation sizes). If you suspect a specific code part to be problematic you could for example run a wall check and a validation after running through that code.
+</p>
+<h2>Dumping Heap and Allocation Info</h2>
+<p>
+	There are two functions that can be used to dump allocations done by the application and to dump general info about the heap. Note that the dumped info also include allocations done by the system during startup of the application and by the system classes used by the application.
+<pre>
+	extern void heap_debug_dump_allocations(bool statsOnly, thread_id thread);
+</pre>
+<p>
+	The heap keeps certain info when allocating memory. Currently this is only the allocation size as well as the allocating thread. In the future this might be extended by stack traces. Using this function the allocations can be dumpped to stdout. If statsOnly is true it will only print a few stats and not all allocations. If thread is >= 0 it is interpreted as a filter and only allocations done by that thread are dumped. If you want to dump all allocations just provide -1 as the thread argument.
+</p>
+<pre>
+	extern void heap_debug_dump_heaps(bool dumpAreas, bool dumpBins);
+</pre>
+<p>
+	Dumping the heap info gives an idea about the internal structure of the heap and how it is currently used. Usually this info is of little value to the app developer directly and it was added mostly for completeness' sake.
+</p>

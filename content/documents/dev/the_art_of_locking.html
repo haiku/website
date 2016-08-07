@@ -1,0 +1,69 @@
++++
+type = "article"
+title = "The Art of Locking"
+date = "2003-04-17T04:00:00.000Z"
+tags = ["semaphore", "BLocker", "thread"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>I&#39;m sorry, this is not about how to lock Haiku developers into basements to ensure they are most productive--it is a well known fact that this is BGA&#39;s speciality, anyway ;-) --no, I want to talk a bit about multiple threads and how to prevent them from mangling shared resources due to uncontrolled access.</p>
+
+<p>Before you skip to the next article expecting to be bored to death by repetition of well-stressed basics, give me a chance to explain: Instead of wading through the fundamentals on <a href="http://bang.dhs.org/be/bebook/The%20Support%20Kit/Locker.html">BLocker</a> or <a href="http://bang.dhs.org/be/bebook/The%20Kernel%20Kit/SemaphoreConcepts.html">semaphores</a>, I want to discuss a specific locking problem, for which I recently found, as I feel, quite an elegant solution.</p>
+
+<h3>The Problem</h3>
+
+<p>The setting is actually fairly simple: Given are objects, for each of which an individual read-write locking shall be provided. The problem is that the number of objects is or can be very great--think of thousands of them--so that there would be a good chance for the system to run out of semaphores, when reserving one per object. And I don&#39;t even need to mention, that a fair read-write locking strategy (new readers don&#39;t overtake waiting writers) requires not one but three semaphores. So, obviously another solution must be found.</p>
+
+<h3>The Idea</h3>
+
+<p>The solution becomes apparent when considering what the semaphores are needed for in the first place. They provide a means to block a thread, when another thread is in the critical section. Therefore, instead of a semaphore per critical section, a semaphore per thread should be fine just as well. In fact, a semaphore per thread needing to wait is sufficient, but I want to keep it simple for now, and follow the &quot;one semaphore per thread&quot; idea.</p>
+
+<p>The question remains, how to stick the semaphore to a thread (and to do that for each possibly-locking thread). I don&#39;t want to keep you on tenterhooks--the answer is TLS, thread-local storage. Arbitrary data can be associated with a thread, and we want to use that mechanism to store, among other things, the ID of the thread&#39;s blocking semaphore. Thus, when needed, that semaphore is quickly at hand.  </p>    <h3>The Implementation</h3>   <p>  I don&#39;t want to miss pointing to the <a href="http://tfs.cs.tu-berlin.de/~bonefish/download/ThreadLocker.zip">source code</a> of the implementation, which I&#39;m now going to outline. It is accompanied by a bunch of test code, and it passes all of the tests, but in case you find a bug, don&#39;t hesitate to tell me. I&#39;m not going to talk about the test code, since that could make up an article on its own.</p>
+
+<p>The main class ThreadLocker is scarily feature-complete. It supports:</p>
+
+<ul>
+<li>Nested locking: A thread already owning a read or a write lock can obtain more locks of the same kind. Just like BLocker.</li>
+<li>Timeouts: As with BLocker, a timeout can be specified for the locking operation.</li>
+<li>Cross-locking: A thread owning a write lock can acquire a read lock, and vice versa. The latter case is somewhat tricky in combination with timeouts, though. Unlike in the read-write locking <a href="http://ftp.comu.edu.tr/pub2/BeOS/samples/r3/support_kit/MultiLocker.zip">MultiLocker sample code</a> provided with <a href="http://www.beatjapan.org/mirror/www.be.com/aboutbe/benewsletter/volume_II/Issue36.html#Workshop">an old Be Newsletter article</a>, the locks always remain &quot;type-safe&quot;.</li>
+</ul>
+
+<p>Let&#39;s have a look through the code. We have four classes:</p>
+
+<ul>
+<li>Thread: An instance of this class is attached to each thread that runs through the locking code, using TLS.</li>
+<li>ThreadManager: Manages the Thread objects of all threads. This way, it is possible, for instance, to get the object of a thread other than the current thread.</li>
+<li>LockingInfo: Collects all relevant locking data for a thread. An object of this class is associated with each Thread.</li>
+<li>ThreadLocker: The main class. The user needs to utilize this class only. The other classes are used internally.</li>
+</ul>
+
+<p>The Thread/ThreadManager framework is almost a bit overkill, but it&#39;s a clean and extensible solution. It should be very easy to use it also for other purposes. The basic idea is to create a Thread object for a thread when needed, and have a singleton ThreadManager manage the respective objects of all threads. The implicit creation &quot;when needed&quot; is the convenient alternative to having the user explicitly create them before using the ThreadLocker (this would be particularly annoying for BWindow and BLooper threads, which aren&#39;t explicitly spawned by the API user).</p>
+
+<p>The singleton ThreadManager is retrieved via ThreadManager::GetDefault(). Its GetCurrentThread() method returns the Thread object for the current thread, and GetThread() can be used to get that of an arbitrary thread identified by thread ID. GetCurrentThread() always creates a new Thread, if it doesn&#39;t already exist, while GetThread() has to be told to do so via the second, boolean, parameter. GetNextThread() is a typical iteration method. Lock() and Unlock() can be used to explicitly lock the ThreadManager, while GetLock() returns the manager&#39;s BLocker. What the latter is needed for, you&#39;ll learn a couple of lines below.</p>
+
+<p>The last of ThreadManager&#39;s methods, RemoveGoneThreads(), checks whether the threads, whose Thread objects are managed, are still alive, and removes and deletes the obsolete ones. It is not so nice that this has to be done explicitly. In fact, there would be a way to have that done automatically. When a Thread object is created, a callback function could be set via on_exit_thread(), which would remove and delete the Thread object of the dying thread. But since one cannot get the current callback and only one callback per thread is possible, doing so could interfere with other attempts to use this feature. Well, I think, one should be able to live with the current solution, since unless there&#39;s quite a coming and going of threads, only relatively little memory would be wasted, and only if RemoveGoneThreads() is never called, anyway.</p>
+
+<p>The Thread class doesn&#39;t have that many methods either. There&#39;s GetID(), returning the ID of the thread the object belongs to; InitCheck(), with the obvious semantics; SetPrevious(), GetPrevious(), SetNext(), and GetNext(), which are used for managing simple, doubly-linked lists of Threads; and GetLockingInfo(), returning the LockingInfo belonging to the object. Of most interest is the remaining couple, Block() and Unblock(). Block() is called by the thread itself. It uses the semaphore the Thread object has allocated to block the thread, until another thread calls Unblock() or the specified timeout (if any) occurs.</p>
+
+<p>The LockingInfo class is an extended ThreadLocker*-to-int32 map. It counts the number of nested read locks the thread owns per ThreadLocker. The provided methods allow for convenient access to this information. The public flags attribute is used only when the thread is waiting for a lock, indicating whether a write lock was requested and whether the lock has been granted.</p>
+
+<p>Last, but definitely most important, is the ThreadLocker class. On construction a BLocker can be supplied--if none is passed, the BLocker of the ThreadManager singleton instance is used -- which will serve as a mutex for accessing the ThreadLocker&#39;s data. The other public methods, XYZLock(), XYZLockWithTimeout(), XYZUnlock(), and IsXYZLocked() (XYZ being Read or Write) have obvious meanings. The locking methods, with and without a timeout parameter, both call private methods _XYZLock(), which do the actual work.</p>
+
+<p>The structures of _ReadLock() and _WriteLock() are very similar. Both first get the current Thread and check whether it owns a write lock. If that&#39;s the case, the respective nesting counter (fWriterReadNestingCount or fWriterNestingCount) is incremented and the method returns successfully. Otherwise _ReadLock() checks whether the thread already has a read lock and, if it does, it simply increments the nesting count (LockingInfo::CheckAndIncrementNestingCount()), or else locks the ThreadLocker&#39;s data for further investigation; _WriteLock() immediately does the latter. If there are no lock owners at the moment (_WriteLock()) or only readers (_ReadLock()) and no thread is already waiting for a lock (both) the lock can be granted on the spot, and the method returns with success. Otherwise the Thread is appended to the queue of waiting threads, the data are unlocked (_MetaUnlock()) and the thread blocks itself waiting for the lock (_WaitForLock(), using Thread::Block()). When it awakes again, either the lock has been granted--then it can return immediately--or a timeout occurred, which requires some cleanup like removal from the queue of waiting threads.</p>
+
+<p>The remaining work is done in ReadUnlock() and WriteUnlock(). They first check whether the caller does indeed own a matching lock and, if so, decrement the nesting count. When the nesting count has reached 0, the thread has released its last lock, and a bit more has to be done: If there are waiting threads in the queue, _CheckWaiting() is invoked. It iterates through the threads in the queue, waking them up one after another (_UnblockFirstWaiting(), calling Thread::Unblock()) until either the end of the queue or a thread requesting a lock that would clash with a lock currently in possession of another thread is reached.</p>
+
+<p>There are some special cases I didn&#39;t mention--e.g. when a reader acquires a write lock--but those interested in the details can examine <a href="http://tfs.cs.tu-berlin.de/~bonefish/download/ThreadLocker.zip">the source code</a>.</p>
+
+<h3>Optimizations</h3>
+
+<p>Let&#39;s finally have a look at the performance and possible optimizations. I haven&#39;t done any measurements, so be warned, this is rather theoretical. The measurements Stephen Beaulieu has done for <a href="http://www.beatjapan.org/mirror/www.be.com/aboutbe/benewsletter/volume_II/Issue36.html#Workshop">his article</a> show that, for x86, little to nothing can be gained speed-wise by using the described stack_base method. That&#39;s not surprising, if you take a look at the find_thread() implementation in &lt;OS.h&gt;--inline assembler and not exactly a lot of it. The same can be said for tls_get(), hence identifying the thread (every time but the first time) should be reasonably fast.</p>
+
+<p>The second idea implemented in the MultiLocker class, using a max_possible_threads-sized array indexed by thread_id % max_possible_threads for storing thread related data, sounds fast, but unfortunately does not only waste a lot of memory--considering that our starting point was that we have a lot of objects to be locked, we must use as little memory as possible per object--it also doesn&#39;t work in general, since the assumption that thread_id % max_possible_threads generates a unique index is wrong. E.g., within a team there can, at the same time, very well exist two threads with thread_id2 == thread_id1 + max_possible_threads.</p>
+
+<p>The ThreadLocker implementation keeps the read lock nesting count thread-local instead of storing it in a thread -&gt; count mapping in the locker object. This has the advantage that this information can (mostly) be accessed without needing to lock the locker data, e.g. in the case of nested read locking or IsReadLocked(). The used map (LockingData) is kept as small as possible, i.e. when the nesting count reaches 0, the entry is removed. So, unless a thread holds read locks of thousands of objects at the same time, access should be reasonably fast. Even if it does, O(log(n)) complexity is bearable. As a speed optimization a hash map could be used. All other utilized data structures are very lightweight. Well, the only other data structure is the queue of waiting threads, and all accesses to it are apparently O(1).</p>
+
+<p>Consider two extreme situations: The first one is, you have really many objects, like millions of them, and want to save as much memory as possible. ThreadLocker uses 28 bytes on a 32 bit architecture, but some of this can be bargained for performance. fMetaLocker is not really needed; one can always use the locker of the ThreadManager directly. The nesting counts for the writer, fWriterNestingCount and fWriterReadNestingCount, can be omitted. The latter one can be stored in the LockingInfo as done, when the thread isn&#39;t the write lock owner, and the former could be managed similarly to the read lock nesting counts, in a separate map. Furthermore fWriter could be dropped. A simple flag would be sufficient, e.g., in form of a bit in fReaderCount which could be shrunk to 16 bits. Either fLastWaiting or fFirstWaiting can be dropped, sacrificing the O(1) complexity of the waiting thread queue. Only six bytes are left. The other extreme situation occurs when the team runs many threads. In this case one may want to dynamically create and delete the semaphore a thread uses, again with a loss of performance.</p>
+
+<p>A final remark: In a setting where you want to deploy the locker class described in this article, you&#39;ll have to carefully choose a locking policy (e.g. locking multiple objects always in a certain order). Otherwise dead locks are guaranteed.</p>
+
+<p>Have fun, and good lock. ;-)</p><br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

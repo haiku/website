@@ -1,0 +1,11 @@
++++
+type = "blog"
+author = "bebop"
+title = "Progress, Style And More"
+date = "2009-06-06T01:56:22.000Z"
+tags = ["gsoc", "DriveSetup"]
++++
+
+<p>First up, Progress. The GSoC program is around two and a half weeks in and I thought it would be a good time for a few words. First of all a big thanks to Google and Haiku for making the transition from school to summer easy. Last summer I got an internship in a C# shop. For the first part of the summer I was not only trying to get my head around the code base, I was also learning all the in's and out's of the .Net framework. I bring this up because my first couple of weeks working with Haiku has been similar in both frustration and fulfillment. Frustration tends to come from my own lack of understanding of how the system is put together, which makes the moments when things come together seem like the best few minutes of the day. The BeAPI has been fun to learn. I have done some work with Qt, and the Haiku layout management seems to follow the style. Also the BeAPI also seems to take the "less is more" approach (compared to Qt and .Net) which has grown on me daily. 
+<p>Gui programming however is not the meat of the project. For that we have to dig deeper into system. The public API for interaction with the partitioning systems aka "disk_device" API has been more challenging than the interface kit. Luckily there were a couple of examples of how to use the disk_device API in the DriveSetup application. Initialize has worked for some time now and was a good place to start. My first task has been to finish implementation of primary partition creation. Stephan Assmus had checked in the start of a creation method, and from that and the Initialize, I have been able to put together a close-to-functioning create. Deletion is the next thing I am going to finish in DriveSetup so hopefully we can have at least a basic partition editor in the near future. I will try to post a blog with the current status every week, so stay tuned for more of my rambles and updates on DriveSetup!
+Bryce

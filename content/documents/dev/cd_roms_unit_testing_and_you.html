@@ -1,0 +1,38 @@
++++
+type = "article"
+title = "CD-ROMs, Unit Testing, and You"
+date = "2002-01-12T11:00:00.000Z"
+tags = ["kernel", "storage", "unit testing", "cd-rom"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>I will go out on a little bit of a limb and say that the single most important and beneficial step that you can take to improve your code is to test first. Yes, I know. I hate testing, too.</p>
+
+<p>I picked up a few books on <a href="http://www.extremeprogramming.org/" target="_blank">Extreme Programming</a> several months ago. There are far more useful tidbits of knowledge in there than I can explain in a short article, but one of the most simple and useful is to take what you *hate* and do it *more*. The premise to this unusual practice is that the more you perform this task, the more you choose to automate it, because you loathe to spend so much time on it. This dove-tails nicely with the old axiom that programmers are among the world&#39;s laziest people.</p>
+
+<p>Having said that, my current assignment is ATAPI. That is the CD-ROM interface. For those who are interested, it is basically an implementation of the SCSI protocols over an IDE interface. I started to investigate this topic from three sides:</p>
+
+<ol>
+<li>What did Be do? Since there was no documented API, I read the CDButton sample source code.</li>
+<li>What does the standard say? I downloaded the MMC-3 standard and read through it.</li>
+<li>What does OBOS/NewOS require for drivers?</li>
+</ol>
+
+<p>As I started to understand the scope of the driver a bit more, I started building a set of tests. I decided that I would test Be&#39;s driver. That would give me several advantages -- chief among them that I would have a working set of regression tests that I could run against my code. I would also have practice in using the API, so I would *know* the API, because I had *used* the API.</p>
+
+<p>I dove into the CDButton example and realized that user level apps were calling ioctl. For those not so initiated, this is the command to send a command that is not open, close, read, write or create. It is the &quot;and all other stuff goes in here&quot; command. It is also a UNIXism, and in my opinion did/does not belong in a user level API. I know that all of the UNIX folks out there are groaning. Sorry.</p>
+
+<p>So I wrote a simple helper wrapper class. I call it BAudioCD. It&#39;s definition looks like this:</p>
+
+<pre>class BAudioCD<br />{<br />    public:<br />        BAudioCD (char *device);<br />        ~BAudioCD();<br />        bool Eject(void);<br />        bool Load(void);<br />        bool Close(void);<br />        bool Play(uint32 trackNo,uint32 endTrack=99);<br />        bool Pause(void);<br />        bool Resume(void);<br />        bool Stop(void);<br />        BCDRomPosition  GetPosition(void);<br />        status_t  GetMediaStatus(void);<br />        BList *GetTOC(BList *storage);<br />        bool ScanForward(void);<br />        bool ScanBackward(void);<br />        bool StopScanning(void);<br />        bool SetVolume(uint32 volume);<br />        uint32 GetVolume(void);<br />        uint32 getCDDBID(int []);<br />        uint32 getTracks(void);<br />        uint32 getLength(void);<br />};                          <br /></pre>
+
+<p>This is a preliminary -- it should be cleaned up a bit more and become an &quot;official&quot; part of the API. However, this abstraction allowed me to write my test harness for CD-ROM access. It is included at the end of this article. The test harness is very simple. You pass in the device and one command. A BAudioCD is instantiated, that one command is called, then the BAudioCD is detroyed and the application ends. The &quot;parser&quot; is nothing more than a long string of</p>
+
+<pre>if (!strcmp(argv[2],&quot;Pause&quot;)<br />    ...<br />else if ...<br /></pre> 
+
+<p>commands. Efficiency is *not* an issue here. This is easy to write and easy to expand with new commands.</p>
+
+<p>With this test tool complete, we can actually write a test script that calls the test tool. The test script will invoke the test tool repeatedly, trying different commands each time. It should capture the results to a &quot;current run&quot; and diff those results against the &quot;known good&quot;, allowing the tester to replace the &quot;known good&quot; if the results are acceptable. </p>
+
+<p>I hope that this gives everyone some insight into how to design unit tests. There are certainly a good number of additional tests that could be created here. These are the &quot;it works once, under ideal conditions&quot; tests.</p>
+
+<li class="icon-folder-download">The source code can be <a href="/files/2002-01-12_mphipps_BAudioCD.zip">downloaded from here</a>.</li><br /><br /><br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

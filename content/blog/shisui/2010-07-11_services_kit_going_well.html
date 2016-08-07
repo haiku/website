@@ -1,0 +1,148 @@
++++
+type = "blog"
+author = "shisui"
+title = "Services Kit is Going Well"
+date = "2010-07-11T20:02:11.000Z"
+tags = ["gsoc", "gsoc2010", "Services Kit", "HTTP", "network"]
++++
+
+<p>
+  It's been a month and half since the very beginning of the GSoC coding period, and this is
+my first blog post about Services Kit. In fact, it's quite difficult to write interesting things
+for both developers and non-developers, I waited to have some materials before writing a report of
+my work and ... it's time !
+</p>
+
+<p>
+  If you manage to build complex applications over the original BeOS Network Kit, you will quickly
+face a major problem. Indeed, if it's a good C++ wrapper of the BSD sockets API, it's only a
+wrapper, providing useful classes to handle a network link, but no more. Services Kit is here
+to provide a more complete set of useful classes which will let developers to get rid of internet
+protocols and to only think of the good part of a web service client application.
+</p>
+<!--break-->
+<p>
+ After a hard beginning due to some academic schedule conflicts, I have been looking on a proper
+implementation of the Services Kit among the others kits. Thanks to my mentor (Stephan Aßmus) and
+his useful remarks, I've designed what the base classes of the Kit will looks like. <br/>
+ Several things are taken into account while designing such classes : the ease of use from 
+the developer point of view, efficiency of the code, strength of the binary interface, ... 
+I'm more used to take benefits from an API rather than designing it, this Summer of Code is
+therefore very instructive for me, and I hope it will be useful for further network development !
+</p>
+
+<p>
+ Let's take a quick eye on what Services Kit looks like currently <em>(click to view in a new window)</em>:
+</p>
+ 
+<p style="text-align:center">
+  <a alt="Service Kit diagram full view" href="http://img18.imageshack.us/img18/847/serviceskit110710.png" target="_blank">
+  	<img src="http://img18.imageshack.us/img18/847/serviceskit110710.png" alt="Service Kit diagram" style="width:500px; height:370px"/>
+  </a>
+  </span>
+</p>
+
+<p>
+ This diagram contains the classes currently made, which are roughly what the network part of
+Services Kit will look like (excluding further BUrlProtocol child classes).
+</p>
+
+
+<h3>URL ?</h3>
+<p>
+  The <strong>URL</strong> acronym stands for <strong>U</strong>niform <strong>R</strong>esource
+<strong>L</strong>ocator, that is to say it describes where one can find an object, and how to access 
+it.<br/>
+  The <em>BUrl</em> class is here to represents such a URL, the developer can modify each field either
+directly with the <em>SetXXX</em> members or by parsing a URL string.<br/>
+  Did I said URL string ? The URL string is aimed to give all the necessary informations about a
+specific object. Almost all of us are used to handle these strings, via their web browsers for example.
+According to <a href="http://datatracker.ietf.org/doc/rfc3986/" alt="RFC3986">RFC 3986</a>, the URL format 
+is as follows :
+
+ <pre>
+         foo://example.com:8042/over/there?name=ferret#nose
+         \_/   \______________/\_________/ \_________/ \__/
+          |           |            |            |        |
+       scheme     authority       path        query   fragment
+ </pre>
+ 
+ BUrl can parse such an URL string, and explode it into the differents corresponding fields in order
+to make an URL usable programatically.
+</p>
+ 
+ 
+ <h3>Cookies ? Yum yum !</h3>
+ <p>
+  Most of us have already heard about those delicious spies which let a website to track us and save
+our session ID, theme preference, and so on. And no, they can't convey viruses :-}. <br/>
+  In my original project proposal, cookies management was an optional part, but it quickly appears obvious
+that if I went to develop an HTTP client through the BUrlHttpProtocol class, cookie management wouldn't be
+an option, even if cookies are often not used in most web services implementation.</br>
+  The cookies in Services Kit are represented by the BNetworkCookie class, which (again) let the developer
+to either parse a cookie string received from a server and fill the corresponding fields, or fill manually
+these fields, as described in <a href="http://datatracker.ietf.org/doc/rfc2965/" alt="RFC2965">RFC 2965</a>.<br/>
+  BNetworkCookie is also able to determine if a cookie has to be deleted based on the "Expires" and
+"Max-Age" fields which tracks the time to live of a cookie.
+  </p>
+  <p>
+   BNetworkCookies are stored in a BNetworkCookieJar, himself stored in a BUrlContext. The cookie jar
+keeps track of every received cookie during a session and can be saved and later restored when needed, this
+allow, for example, to send authentification data on a bulletin board, save received cookies, and then
+access threads like if we were manually authenticated. This allow an application to act transparently
+like if it was a web browser.
+  </p>
+  
+  
+  <h3>The context</h3>
+  <p>
+ The BUrlContext class is a container keeping track of the environment resulting of the request made. Currently,
+it contains only a cookie jar, but it will eventually also contain a cache to allow faster requests over
+the Internet (principally for the HTTP protocol which greatly takes advantache of caching methods).</br>
+ The context is globally the environment in which requests evolves, a single application can have
+multiple contexts and multiple applications can share a single context.
+  </p>
+  
+  
+  <h3>The most important</h3>
+<p>
+  The most important part of the network part of Services Kit is certainly the BUrlRequest class, in fact it will
+be the most used public class for those who want to perform an URL request. The request initialize itself with an
+URL and identify either if it can handle the URL scheme via the protocol roster or if it can't perform the request. <br/>
+  The BUrlRequest class then launch a BUrlProtocol derived class which contain all the necessary logic to handle a
+request (over the network or not). Currently, the only protocol available is HTTP, which will handle 90% of requests since
+most web services are built over HTTP in order to ease client development.<br/>
+  The developer don't get access to most of the BUrlProtocol child classes directly, he rather call the public SetOption
+member to define some protocol related parameters and tweak the url protocol internals.
+</p>
+
+
+  <h3>Synchonous and asynchronous events</h3>
+<p>
+  The developer can, at contruction time, specify a listener for events emitted during the request processing. The listener
+members will be called at specific instants, such as "connection opened", "data received", "request end", ...  which allow
+a synchronous notification between the url protocol and the rest of the application. An oberver is also available in order 
+to have a asynchronous way to handle these notification. <br/>
+  To react to these events, the developer will only have to derive a class from BUrlProtocolListener and make his own
+mixture.
+</p>
+
+  <h3>A result, finally!</h3>
+<p>
+  When a request is fulfilled, the developer has a direct access to the request results via the BUrlResult class. This class
+contains the raw data received, and other informations when applicable (e.g: HTTP headers, ...). An app can therefore
+build his logic over the data received : this will also be the role of the Service Kit's data layer which will let the
+developer to extract informations in an XML tree or a JSON response for example.
+</p>
+
+  <h3>The next steps</h3>
+<p>
+  My further development concerning the Services Kit will be focused on the enhancement of the existing code, and on the
+data layer of the kit. By enhancement I mean the optimization of existing classes which will require a lot of efficiency
+in order to be widely used (e.g: the BNetworkCookieJar class which is currently using a BList of pointer to BNetworkCookie, 
+a relatively slow method when looking for cookies corresponding to a specific URL across a thousand cookies).<br/>
+ Additionally, some features are not yet implemented, such as the protocol roster and the add-on interface, and are also on
+my todo list for the second part of the Summer of Code.<br/><br/>
+
+ The API interface is likely to change during further development, and many things are to be moved or modified, I'm also open to every remarks or questions ! ;-)
+</p>

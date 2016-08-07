@@ -1,0 +1,62 @@
++++
+type = "article"
+title = "Ufetch: a Basic Web Client"
+date = "2001-12-15T11:00:00.000Z"
+tags = ["network", "web", "http"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>The web has certainly become one of the most ubiquitous and important publishing spaces around. What defines the web, technically, is html and http. Html is the publishing format and http is the transport protocol.</p>
+
+<p>Let&#39;s consider http. This protocol is so simple. Some would say simplistic &#151; it certainly has it share of detractors. While it may not be the most sophisticated protocol around, it gets the job done.</p>
+
+<p>It&#39;s a client/server protocol and, like many internet standards, is text-based. The client sends an http request and the server responds with a reply. There are only a few commands in the repertory: &#39;GET&#39;, &#39;PUT&#39;, &#39;POST&#39;, and a few others. See <a href="ftp://ftp.isi.edu/in-notes/rfc2616.txt">RFC2616</a> for all the details.</p>
+
+<p>The bytes sent out across the network are composed of a header and the data (content). The header is nothing more than a few lines of simple text. The first line contains the command, the remaining lines contain &#39;key: value&#39; pairs. If either server or client don&#39;t understand a particular key, it&#39;s ignored &#151; this leaves quite a bit of leeway for fun.</p>
+
+<p>Normally, you never see these headers. As a counter-example, consider email. Most email clients allow you to see the message headers if you want. This makes it more accessible to understand the mail protocol. But most web clients, such as web browsers, never let you see this stuff. Too bad &#151; it can be interesting and informative.</p>
+
+<p>I wrote a simple web client for just that purpose. Called ufetch, it&#39;s a command line utility that fetches data from web servers. For example, in a Terminal window type:</p>
+
+<pre>ufetch www.bebits.com</pre>
+
+This will download the home page of <a href="http://www.bebits.com">BeBits</a> and put it in a file called <em>f.data</em>. As it runs, it spits out various status info to the screen. <p> You may be familiar with an similar Unix utility called wget. wget is actually more powerful, as it will download from ftp servers as well. But ufetch is simpler, both in its design and its source code. I think this makes it a spiffy tool for learning about various details of the http protocol and web client/server communication.</p>
+
+<p>ufetch was inspired by an old BeOS Newsletter article by Benoit Schillings called <a href="http://www.beatjapan.org/mirror/www.be.com/aboutbe/benewsletter/volume_II/Issue40.html#Insight">Mining the Net</a>. Benoit created a sample C++ program called site_getter for fetching URL resources. I took the code, converted it to C, removed stuff I didn&#39;t need, added other stuff, tweaked, coddled, and massaged the code to my heart&#39;s content. It is so completely modified that I don&#39;t think there&#39;s one line of code remaining in ufetch from Benoit&#39;s original code. But it certainly was inspired by his work and his comments.</p>
+
+<p>It&#39;s really not very hard to implement a web client. The simple text format of the headers makes them trivial to deal with. Most of the work in ufetch involves establishing connections to the web servers and sending/receiving data. Even this, however, is pretty simple because the sockets interface handles all the low-level grunge. If you are a member of the Haiku networking team, then you have the task of implementing the sockets interface. But as a network programmer, you needn&#39;t be concerned with the details and only need to know how to use the sockets themselves.</p>
+
+<p>The sockets interface was originally designed by Unix programmers at Berkeley. Which is why they are often referred to as &quot;berkeley sockets&quot;. This interface has been ported to other platforms such as Windows, often with many changes and alterations. The BeOS sockets interface is very close to the BSD module, but varies slightly (most notably in that sockets are not true file descriptors).</p>
+
+<p>The semantics of socket operations is similar to file operations. You create a socket and then bind or connect it to a network address (similar to &#39;open&#39; for a file). While connected, you cand send and receive data (like the &#39;read&#39; and &#39;write&#39; for files). When finished, you close the socket. You are required to know the IP address of a remote socket in order to connect, but there are database functions for determining the IP address when given a URL.</p>
+
+<h3>Walking thru an example</h3>
+
+<p>Ok, let&#39;s see how this works in practice. Consider the sample command line:</p>
+
+<pre>ufetch <a href="http://www.bebits.com" title="www.bebits.com">www.bebits.com</a></pre>
+
+<p>First, the URL is split into (protocol, host, port, resource). There is no &quot;http://&quot; in the URL, so &#39;http&#39; will be assumed for the protocol. The host is &#39;www.bebits.com&#39;. No port is specified, so it defaults to the standard web port 80. No resource is specified either, so it defaults to &#39;/&#39;.</p>
+
+<p>Next, the IP address of host &#39;www.bebits.com&#39; is looked up using the standard network function gethostbyname(). In this case, it returns 28.245.212.78 (in dotted format).</p>
+
+<p>A socket is created using the socket() function. Then the socket is connected to the web server with the connect() function using port=80 and IP=28.245.212.78. If it&#39;s unable to connect, an error message is sent to the screen and the program exits.</p>
+
+<p>The following request header is generated:</p>
+
+<pre>GET / HTTP/1.1<br />Host: <a href="http://www.bebits.com" title="www.bebits.com">www.bebits.com</a><br />User-Agent: ufetch<br />Accept: */*<br />Connection: close<br /></pre>
+
+<p>The first line is the status line. &#39;GET&#39; is the command and &#39;/&#39; is the requested resource. This is followed by the http version. The remaining lines are standard header tags. The &#39;Accept: */*&#39; line says to accept anything (ufetch is not picky). The &#39;Connection: close&#39; was added after some real world testing: HTTP 1.1 supports persistent connections (unlike 1.0), so you need this tag to avoid a delay in terminating the connection.</p>
+
+<p>This request header is sent using the send() function. Then recv() is called to receive the reply. A block of memory is allocated to hold the incoming data. The reply header will be the first part of this data, followed by the data bytes for the resource. It&#39;s difficult (impossible?) to know exactly how big the header will be, but the end of header is always easy to find &#151; the first blank line in the incoming stream marks the end.</p>
+
+<p>Here&#39;s the header received from the BeBits server for this example:</p>
+
+<pre>HTTP/1.1 200 OK<br />Date: Fri, 14 Dec 2001 19:29:07 GMT<br />Server: Apache/1.3.9 (Unix) TARP/0.42-alpha PHP/4.0.4pl1 secured_by_Raven/1.4.2<br />X-Powered-By: PHP/4.0.4pl1<br />Connection: close<br />Transfer-Encoding: chunked<br />Content-Type: text/html</pre>
+
+<p>A web client might want to parse this header into all the different tags and make use of the info. For the most part, ufetch doesn&#39;t bother. The one exception is for redirects. Often a particular URL simply redirects to another URL. In this case, the response code is 301 or 302 and there&#39;s a tag called &#39;Location:&#39; that identifies the URL to redirect to. This is the only header tag that ufetch cares about.</p>
+
+<p>The header is sent to the screen so that it can be viewed along with the status info. The data bytes, however, are written out to a file called <em>f.data</em>. This makes it easy to find, but it also means that each run of the program will clobber the output of the previous run.</p>
+
+<p>ufetch is certainly limited in what in can do. But it&#39;s loads of fun to use. You can see all kinds of interesting info being returned by web servers. Try it and see how many web sites are sending cookies you didn&#39;t know about. Or snoop on just what software the server is running. It might even be useful as a way to debug connections to certain troublesome servers. Expanding ufetch in any number of ways would not take too much effort. Have fun.</p>
+
+<li class="icon-folder-download">The sources of Ufetch are available for<a href="/files/2001-12-15_d.einhold_ufetch.zip">download from here</a></li><br /><br /><br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

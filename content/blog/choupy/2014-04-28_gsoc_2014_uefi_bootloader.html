@@ -1,0 +1,143 @@
++++
+type = "blog"
+author = "choupy"
+title = "[GSoC 2014] UEFI bootloader"
+date = "2014-04-28T15:09:50.000Z"
+tags = ["gsoc", "gsoc2014", "uefi", "makebootable"]
++++
+
+<h2>Me, myself and I</h2>
+
+<p>Hello everyone, my name is Louis Feuvrier, I am a french student located in
+Paris (GMT+2) studying computer science at EPITA. I am lucky enough to be part
+of a laboratory (LSE) as my curriculum which allows me to work on interesting
+and low-level problems! Here's the one that will keep me awake at night in the
+following months (but hopefully not too much!)</p>
+
+<p>Besides computer stuff, I enjoy listening to music, playing video games,
+watching tv shows or going to gigs.</p>
+<!--break-->
+<h2>The project proposal</h2>
+
+<p>OK, in the end the idea is to get Haiku to be UEFI-compliant, meaning bootable
+on all the x86_64 machines not providing a legacy BIOS. It also means enabling
+UEFI on the other ones as well, as it provides more features regarding the boot
+process via the NvRAM amongst other things.</p>
+
+<p>There are many strategies to enable UEFI on the Haiku kernel. The first that I
+proposed here[1] was resembling the one adopted by the Linux kernel (making the
+bzImage an EFI application, I explain more about this here[2].) As explained in
+the previously mentionned mailing list thread (here[3]), the solution is not
+really appliable in Haiku's case, since the decomposition into two entities
+(kernel and loader) is very advantageous.</p>
+
+<p>The solution decided upon by everybody (as far as I know!) is to have the
+stage2 (the loader, located in both src/system/boot/platform and
+src/system/boot/loader as can be seen here[4]) to be the UEFI application.</p>
+
+<p>An UEFI application is a Portable Executable, which usually resides in the UEFI
+partition. The UEFI partition is often just a primary partition formated in
+fat32 and containing all the UEFI applications. Once the application is placed
+in this partition, it is easy to launch it via an UEFI shell or programmation
+of the NvRAM.</p>
+
+<p>This solution also enables booting via both UEFI and legacy boot at the same
+time, as the user wishes. Indeed, the build could generate both the legacy boot
+stage2 (a RAW image located in the Haiku partition) and an UEFI stage2 (a
+Portable Executable located in the UEFI partition.) This is pretty cool in my
+opinion as it does not break the original booting process.</p>
+
+<p>At run-time, the booting process might look like this, depending on wether one
+boots via the legacy boot process or via UEFI capabilities:</p>
+
+<p><img src="http://i.imgur.com/EVzFYMc.png?1" alt="Boot process alternatives for UEFI and BIOS" /></p>
+
+<h2>The first step</h2>
+
+<p>What I will proceed with right now is booting an EFI image and try to launch
+the kernel with that, using the current stage2 platform-independent code and by
+writing my own platform-dependent UEFI code.</p>
+
+<p>In the diagram above, both stage2 share the same platform-independent code (the
+one located in the src/system/boot/loader folder.) However, each one has its
+own platform-dependent code in the src/system/boot/platform/{efi,bios_ia32}
+subfolder. This gives us the following source tree:</p>
+
+<pre>boot/
+├── loader/
+├── platform/
+│   ├── bios_ia32
+│   ├── efi
+│   ├── pxe_ia32
+│   ├── openfirmware
+│   ...
+...
+</pre>
+
+<p>If, as development advances, lots of code appears common to both the BIOS and
+UEFI modules, then I might factorize the code with a x86 parent folder, as
+follows:</p>
+
+<pre>boot/
+├── loader/
+├── platform/
+│   ├── x86/
+│   │   ├── efi
+│   │   ├── bios_ia32
+│   │   └── pxe_ia32
+│   ├── openfirmware
+│   ...
+...
+</pre>
+
+<p>At first, I wanted to proceed with this factorization first, but the codebase
+is not trivial and I'd much prefer doing it as I go, because the tasks
+currently seems really time-consuming and I am not even clear on what
+platform-dependent features (drivers) I need for the UEFI implementation.</p>
+
+<h2>Second step</h2>
+
+<p>Once the stage2 loader is tuned finely enough for it to boot the Haiku kernel
+correctly via UEFI, most of the hard work is done. But still, to get UEFI
+booting going for the end user, we need configuration tools.</p>
+
+<p>I am not sure at all on exactly what needs to be done on this matter, so I will
+not expand much on it. I can however say for sure that we will need a port or a
+re-write of the efibootmgr of linux, as well as a Haiku module enabling access
+to the NvRAM prior to this, using the RuntimeService designed for this. Currently, linux implements it via a virtual filesystem in something like /sys/firmware/efi via the efivarfs or efivars module, depending on the version
+of the kernel.</p>
+
+<p>These seemingly trivial tasks might however take lots of time, so I need to get
+going on the first step as soon as possible. I will see with the people
+responsible for the package-management capabilities how to incorporate the
+stage2.efi application later down the line.</p>
+
+<h2>Community bonding period</h2>
+
+<p>I looked for a useful task of preparation to this developement but I cannot
+really find any. I know that I need to get more familiar with the build
+system, but this doesn't require a month. I also need to get familiar with what
+is already done in jessicah's UEFI branch and build upon that.</p>
+
+<p>As a matter of fact, my plan is to setup the build on my computer as well as
+the testing facilities in order for the development to be much less painful. I
+will then be able to compile and test on-the-fly, and verify as development
+goes, that everything is working as expected.</p>
+
+<p>So, to me, the development actually starts now. My main goal is to execute code
+from the kernel.</p>
+
+<h2>Conclusion</h2>
+
+<p>I am trying to be as precise as I can regarding the schedule, but it is hard to
+make predictions at this point in the development. Everything will probably
+change as we go, so it is pointless to setup dates and deadlines. I hope I will be able to complete the project in time, and that the result will match the hopes of the future users!</p>
+
+<p>Thanks to you for reading and to jessicah, tqh, axeld and Ingo Weinhold for taking the time to discuss the proposal and the project with me.</p>
+
+<hr/>
+
+<p>[1] http://www.freelists.org/post/haiku/GSOC2014-Haiku-as-a-standalone-UEFI-app<br/>
+[2] http://louis.feuvrier.org/boot.html<br/>
+[3] http://www.freelists.org/post/haiku/GSOC2014-Haiku-as-a-standalone-UEFI-app,3<br/>
+[4] https://github.com/tqh/haiku/tree/efi/src/system/boot</p>

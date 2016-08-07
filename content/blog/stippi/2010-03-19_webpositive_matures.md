@@ -1,0 +1,24 @@
++++
+type = "blog"
+author = "stippi"
+title = "WebPositive matures"
+date = "2010-03-19T12:31:31.000Z"
+tags = ["webpositive", "WebKit", "webcore", "browser", "native", "contract work"]
++++
+
+<!--break-->
+Well... that might be a bit bold for me to say. Obviously WebPositive still has a lot of things missing. On the other hand, this version adds some of the most crucial things, like persistent cookie support, bookmarks and a much improved browsing history implementation. The bookmark implementation is fairly nice, I believe, using Tracker to manage the bookmarks and to sort them into categories as one wishes. It is using the same bookmark format that NetPositive used. Importing bookmarks from other formats has not yet been implemented. Maybe it's also a good idea to simply merge them, instead of doing a one time import. That could faciliate the situation where WebPositive and BeZillaBrowser are used side by side for a while. Among the missing features for bookmarks is using the favicon, if one is available. And there is a known bug where bookmarks fail to be created if the page title contains invalid glyphs for the file system. This should be fixed soon.
+
+Then I've also been working on the Haiku app_server to accomodate some WebKit porting needs, like a new BView::DrawString() version that allows to position each character individually. This used to work in the WebKit port, but very inefficientlay, by drawing one glyph at a time. Meanwhile it was changed to draw the entire string in one go, which broke justified text and CSS3 letter spacing. All this is back in working order now. The other set of features I added to the Interface Kit and app_server is better BShape support, which again enables a few things in the WebKit port, drawing arcs and ellipses. To grasp the enormous importance of this work, consider that the <a href="http://www.kevs3d.co.uk/dev/asteroids/">Asteroids HTML5 demo</a>can now finally display the explosions in WebPositive!
+
+Unfortunately, a lot more work is required on the app_server. Stroke dashing, affine transformations, bitmap fill patterns, clipping paths, alpha masks and powerful compositing modes... the list is long and will take some time to work through.
+
+Still I have not upgraded the WebKit SVN version that the port is being based on, mostly since it seemed the tree is having some problems with reports of changes having caused regressions. I know that currently the login of Facebook is crashing WebPositve, which I believe is another symptom of using the system allocator instead of the WebCore built-in one, misaligned memory accesses being the underlying problem. It seems to trigger only in certain use cases, so that WebPositive crashes reliably instead of randomly (that is, until you know which sites crash it).
+
+Other improvements in this version include support for tracking visited links, although only within the current session, but that allows more tests to pass, like the <a href="http://acid3.acidtests.org">ACID3 test</a> now doesn't display "LINKTEST FAILED" anymore. Another test suit is the <a href="http://www.css3.info/selectors-test/">CSS3 Selectors Test</a>. I've been tracking down various issues exposed via such testing sites. The release of the <a href="http://ie.microsoft.com/testdrive/Default.html">IE9 testing platform</a> by Microsoft was also an interesting event. Naturally, they picked <a href="http://samples.msdn.microsoft.com/ietestcenter/">tests</a> which other browser do not handle well. But a whole range of tests fail for the same underlying missing feature, so that a score of 45% passed tests is not saying much when 40 or so percent of the tests basically test the same feature in various variations (an exaggeration of course). If you're wondering what the red square and the white cross are in the ACID3 tests, that is caused by missing support for custom fonts in our WebKit port. Two other tests do not yet pass, where one of them fails for computational stability problems, and the other one I have not yet tracked down. Just click on the A to get a prompt with the test results if you're interested.
+
+Finally I've improved the consistency in the interface when switching pages. The progress bar and status text update to the page in question. Wrong favicons should be a thing of the past, and I've enabled smooth-scaling for bitmaps. Luckily the bitmap rendering in app_server is quite fast, as can be seen with the <a href="http://ie.microsoft.com/testdrive/Performance/01FlyingImages/Default.html">Flying Bitmaps</a> test.
+
+Since we are at a round revision now, I figured it's time for another post and update! You need an absolutely current Haiku version to run this. :-) Enjoy and have fun!
+
+Download <a href="http://www.yellowbites.com/downloads/WebPositive.zip">WebPositive</a> (svn revision: r444)

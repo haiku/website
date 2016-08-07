@@ -1,0 +1,112 @@
++++
+type = "blog"
+author = "lucian"
+title = "Anatomy of an elf"
+date = "2010-07-08T03:30:54.000Z"
+tags = ["lkl-haiku-fsd gsoc gsoc2010", "lkl-haiku-fsd", "gsoc", "gsoc2010"]
++++
+
+<p>
+Porting LKL to Haiku's kernel API may not have been very hard, but convincing Haiku to <em>load</em> a properly built LKL-based add-on has presented some interesting and challenging problems.
+</p>
+<!--break-->
+<h1>ELF segments</h1>
+
+<p>
+The first thing Haiku does when it encounters something that resembles a file system driver is to load it and inspect the list of modules provided.
+</p>
+
+<p>
+Normally, loading a Haiku add-on means identifying three program headers from the ELF add-on image: the ones corresponding to the <code>.text</code> (code) section, the <code>.data</code> section and a third segment where dynamic linking information can be found.
+</p>
+
+<p>
+We can find information about these segments running:
+<pre>
+$ readelf -l generated/objects/haiku/x86/release/add-ons/kernel/file_systems/iso9660/iso9660
+
+Elf file type is DYN (Shared object file)
+Entry point 0x1070
+There are 3 program headers, starting at offset 52
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x000000 0x00000000 0x00000000 0x04440 0x04440 R E 0x1000
+  LOAD           0x004440 0x00005440 0x00005440 0x00364 0x00384 RW  0x1000
+  DYNAMIC        0x004454 0x00005454 0x00005454 0x000c0 0x000c0 RW  0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .hash .dynsym .dynstr .gnu.version .gnu.version_r .rel.dyn .rel.plt .init .plt .text .fini .rodata .eh_frame 
+   01     .ctors .dtors .data.rel.ro .dynamic .got .data .bss 
+   02     .dynamic 
+</pre>
+As one can easily see, each segment contains more than just the <code>.text</code> and <code>.data</code> sections.
+</p>
+
+<p>
+The <code>PT_LOAD</code> segment corresponding to the <code>.text</code> section is not writable, while the <code>PT_LOAD</code> segment corresponding to the <code>.data</code> section is not executable. These are simple protections against certain types of exploits: e.g. changing the code at runtime to code written by an attacker, or executing (code masked as) data received from the attacker.
+</p>
+<p>
+Haiku uses the segment's protection information to differentiate between the <code>.text</code> section and the <code>.data</code> sections.
+</p>
+
+
+<h1>LKL based ELFs</h1>
+<p>
+Images that link to LKL (at least at this moment) generate a single <code>PT_LOAD</code> segment which encapsulates (among others) both the <code>.text</code> and the <code>.data</code> sections:
+<pre>
+$ readelf -l generated/objects/haiku/x86/release/add-ons/kernel/file_systems/lklhaikufs/lklhaikufs 
+
+Elf file type is DYN (Shared object file)
+Entry point 0x18790
+There are 3 program headers, starting at offset 52
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x000000 0x00000000 0x00000000 0x134520 0x13d310 RWE 0x1000
+  DYNAMIC        0x12c5a4 0x0012c5a4 0x0012c5a4 0x000c8 0x000c8 RW  0x4
+  NOTE           0x000094 0x00000094 0x00000094 0x00024 0x00024 R   0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .note.gnu.build-id .hash .dynsym .dynstr .gnu.version .gnu.version_r .rel.dyn .rel.plt .init .plt .text .cpuinit.text .meminit.text .fini .rodata .eh_frame .ctors .dtors .data.rel.ro .dynamic .got .data .cpuinit.data .meminit.data .bss 
+   01     .dynamic 
+   02     .note.gnu.build-id
+</pre>
+</p>
+
+<p>As we need to be able to execute the <code>.text</code> section and to write data from the <code>.data</code> section at the same time, this <code>PT_LOAD</code> segment must be mapped as <code>RWE</code>.
+</p>
+
+
+<p>
+At first glance, the fix appeared trivial: if a section is executable we'll consider it the <code>.text</code> section and we'll treat it as a special writable <code>.text</code> section. This trick however does not work on all architectures as Ingo Weinhold informed me:
+<pre>
+bonefish@backbone:~/develop/haiku/haiku/generated-ppc> readelf --segments objects/haiku/ppc/release/add-ons/kernel/bus_managers/pci/pci
+
+Elf file type is DYN (Shared object file)
+Entry point 0x3f270
+There are 3 program headers, starting at offset 52
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x000000 0x00000000 0x00000000 0xa5c50 0xa5c50 R E 0x1000
+  LOAD           0x0a5c50 0x000a6c50 0x000a6c50 0x464d0 0x46678 RWE 0x1000
+  DYNAMIC        0x0a5c6c 0x000a6c6c 0x000a6c6c 0x000c0 0x000c0 RW  0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt .init .text .fini .rodata
+   01     .eh_frame .ctors .dtors .data.rel.ro .dynamic .data .got .sdata .sbss .plt .bss
+   02     .dynamic
+
+</pre>
+</p>
+<p>
+On PPC the <code>.data</code> section has the same protection bits as our LKL-based module on x86, namely <tt>RWE</tt>. Because the <code>PT_LOAD</code> program headers can appear in any order in the ELF file, on PPC my solution could have treated <code>.data</code> as program code, and ignore the real program code.
+</p>
+
+<p>
+The problem has been properly <a href="http://dev.haiku-os.org/ticket/6271">fixed</a>, but this means R1/Alpha 1, or R1/Alpha 2 users cannot use LKL.
+</p>

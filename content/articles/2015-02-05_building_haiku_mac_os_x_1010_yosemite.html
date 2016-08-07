@@ -1,0 +1,140 @@
++++
+type = "article"
+title = "Building Haiku on Mac OS X 10.10 Yosemite"
+date = "2015-02-06T01:17:35.000Z"
+tags = ["build"]
++++
+
+This was written by Sambuddha Basu or samgtr on IRC.<br /><br />
+The following was tested on Mac OS X 10.10 (Yosemite).<br />
+<h3>Requirements</h3>
+<ul>
+ <li>At least 3 GB of free space on your hard drive</li>
+ <li>You will need the Xcode Tools: use the installer on your Mac OS X Install DVD, or download the latest version from <a href="https://developer.apple.com/xcode/downloads/">Apple Developer Connection</a> (free registration required)</li>
+ <li>You must be logged in as administrator to install some tools</li>
+ <li><a href="https://www.macports.org/">MacPorts</a> or <a href="http://brew.sh/">Homebrew</a> will also be required</li>
+</ul>
+ 
+Follow the steps in order to build Haiku on Mac OS X.
+<ol>
+ <li><a href="#disk_image">Case-sensitive disk image</a></li>
+ <li><a href="#fetch_source">Fetching the buildtools and the Haiku source code</a></li>
+ <li><a href="#required_software">Install pre-requisite software</a></li>
+ <li><a href="#build_buildtools">Building the buildtools</a></li>
+ <li><a href="#build_haiku">Building Haiku</a></li>
+ <li><a href="#emulating_haiku">Emulating Haiku</a></li>
+</ol>
+ 
+ 
+<h3 id="disk_image">Step 1: Case-sensitive disk image</h3>
+The Mac OS file system, HFS+, is case-insensitive by default. This causes troubles during the build of some Haiku components, because of wrong headers inclusion (“String.h” (from Haiku) instead of “string.h” (from the system) for instance).
+If your Mac OS X partition is not in case-sensitive HFS+ (which is very likely), you need to create a case-sensitive disk image and put Haiku buildtools and source code on it.
+<ol>
+ <li>Open Disk Utility (in /Application/Utilities)</li>
+ <li>Click “New Image”, and enter the following parameters:</li>
+ <ul>
+  <li>Name: Name of the volume. It should not contain special characters or spaces.</li>
+  <li>Size: Haiku sources, compiled objects and the resulting Haiku disk image will take around 2.7 GB, but you should put more (8 GB for instance), especially if you want to add optional packages to the image. Only the consumed space on the image will be used on your hard drive, so don’t be afraid of setting a big value.</li>
+  <li>Format: Mac OS Extended (Case-sensitive)</li>
+  <li>Encryption: none</li>
+  <li>Partitions: No partition map</li>
+  <li>Image Format: sparse disk image</li>
+ </ul>
+</ol>
+The image is automatically mounted on the Desktop. If you want to remount it later, just double-click on the image file.
+ 
+ 
+<h3 id="fetch_source">Step 2: Fetching the buildtools and the Haiku source code</h3>
+Open a Terminal (in /Application/Utilities), and enter:
+<pre class="terminal">cd /Volumes/Haiku/</pre>
+“/Volumes/Haiku” refers here (and in all this tutorial) to the mounted disk image name. In this case, it is named “Haiku”, so if you chose another name, use it instead of “Haiku” after “/Volumes/”.
+ 
+<h4>Checkout the buildtools:</h4>
+<pre class="terminal">git clone git://git.haiku-os.org/buildtools</pre>
+or (if the git protocol is blocked by a firewall, or if you prefer to access the source through an encrypted channel):
+<pre class="terminal">git clone https://git.haiku-os.org/buildtools</pre>
+ 
+<h4>Checkout the source code:</h4>
+<pre class="terminal">git clone git://git.haiku-os.org/haiku</pre>
+or:
+<pre class="terminal">git clone https://git.haiku-os.org/haiku</pre>
+You should now have two folders “haiku” and “buildtools” into the mounted disk image.
+ 
+ 
+<h3 id="required_software">Step 3: Install required software</h3>
+<h5>To install the prerequisite software using Macports do the following:</h5>
+Install <a href="https://www.macports.org/">MacPorts</a> (a standard Installer package is provided). Close your Terminal, and enter in a new one:
+<pre class="terminal">sudo port install cdrtools gawk wget nasm less mpfr gmp libmpc</pre>
+(Also important: make sure you have the latest version of "bison" installed!)<br />
+You will be prompted for the administrator password of the current account. If you get an error “port: command not found”, the MacPorts shell configuration, stored in ~/.profile, is probably not configured correctly. If you’re using Bash, you probably have a ~/.bash_profile or ~/.bash_login file, preventing bash to read ~/.profile. Check the file used by Bash (in the mentioned order) and add these lines to the used file:
+<pre class="terminal">export PATH=/opt/local/bin:$PATH
+export MANPATH=$MANPATH:/opt/local/share/man
+export INFOPATH=$INFOPATH:/opt/local/share/info</pre>
+If you are using another shell, take a look a the shell documentation to see which file is parsed at login, and add the required commands. You can now retry the port install... command in a new Terminal.
+<p>Note: the ARM port is not yet supported for OS X, MacPorts has mtools but is missing sfdisk at least.</p>
+
+<h5>To install the prerequisite software using Homebrew instead, do the following:</h5>
+Install <a href="brew.sh">Homebrew</a> using the ruby command line installer provided on the linked page. Next install the prerequisite software to build Haiku using the following command:
+<pre class="terminal">brew install cdrtools gawk wget nasm homebrew/dupes/less mpfr gmp libmpc</pre>
+Note that you'll need to install gnu less from the dupes repository as OS X comes with BSD less while Haiku requires GNU less.
+<p>Also important: make sure you have the latest version of "bison" installed!)<br />
+To override an older system version of "bison", you enter:</p>
+<pre class="terminal">brew install bison
+brew link bison --force</pre>
+
+After installing the prerequisite softwares, install the modified Haiku jam:
+<pre class="terminal">cd /Volumes/Haiku/buildtools/jam
+make
+sudo ./jam0 install
+[Enter your password]
+</pre>
+Reopen a new Terminal, and enter <code>jam -v</code>.
+You should get:
+<pre class="terminal">Jam 2.5-haiku-20111222. OS=MACOSX. Copyright 1993-2002 Christopher Seiwald</pre>
+ 
+ 
+<h3 id="build_buildtools">Step 4: Building the buildtools</h3>
+Configure a GCC 2.95 Hybrid, from a non-Haiku platform
+<pre class="terminal">mkdir /Volumes/Haiku/haiku/generated
+cd /Volumes/Haiku/haiku/generated
+../configure --use-xattr --build-cross-tools x86_gcc2 ../../buildtools/ --build-cross-tools x86</pre>
+<code>./configure</code> has some more options: use <code>./configure --help</code> to list them.
+After some time, you should get:
+<pre class="terminal">binutils and gcc for cross compilation have been built successfully!</pre>
+ 
+ 
+<h3 id="build_haiku">Step 5: Building Haiku</h3>
+<h5>Compiling a basic raw Haiku disk image</h5>
+This is the most basic build, it generally is good for quickly testing the OS after making modifications as it doesn't contain a lot of extra applications. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
+<pre class="terminal">jam -q -j2 @image</pre>
+ 
+<h5>Compiling raw nightly disk images</h5>
+This is the default nightly image build target. This contains a complete system with an included compiler. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
+<pre class="terminal">jam -q -j2 @nightly-raw</pre>
+ 
+ 
+<h3 id="emulating_haiku">Step 6: Emulating Haiku</h3>
+<h5>Instructions for VirtualBox</h5>
+For emulating Haiku in VirtualBox, follow <a href="https://www.haiku-os.org/guides/virtualizing/virtualbox">this guide</a>.
+ 
+<h5>Installing to the hard drive</h5>
+You can boot Haiku on your Mac. Before installing, please consider the following points:
+<ul>
+ <li>Only do this if you feel confident. There are serious risks of data loss here.</li>
+ <li>You need a Mac with an Intel processor.</li>
+ <li>Haiku must be installed to an internal hard drive. USB or FireWire external drives will not work.</li>
+ <li>You need to create a new partition on your hard drive. The Boot Camp Assistant or Disk Utility may help.</li>
+</ul>
+The first step is to determine the name of the partition where Haiku should be installed. Mac OS X uses the following naming scheme: <code>diskXsY</code>, where X is the disk number (starting with 0), and Y the partition number (starting with 1).
+You can use the <code>diskutil</code> list command to get the list of disks attached to the computer, and their partitions.
+Create or edit the file <code>[Mounted Disk Image]/haiku/build/jam/UserBuildConfig</code>, and add the following line :
+<pre class="terminal">DefineBuildProfile disk : disk : "/dev/diskXsY" ;</pre>
+(with X and Y replaced by the actual partition numbers)
+This will create a “build profile” rule that will install Haiku to the partition. For more information about build profiles, see the file <code>[Mounted Disk Image]/haiku/build/jam/UserBuildConfig.ReadMe</code>.
+After this, start a Terminal, <b>double check the disk and partition numbers</b> and run:
+<pre class="terminal">cd /Volumes/Haiku/haiku
+sudo chmod o+r /dev/diskX
+[enter your password]
+sudo chmod o+rw /dev/diskXsY
+jam -q @disk</pre>
+Haiku is installed on your Mac ! To boot on it, the best way is to install the <a href="http://refit.sourceforge.net/">rEFIt</a> boot manager.

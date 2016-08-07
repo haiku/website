@@ -1,0 +1,88 @@
++++
+type = "blog"
+author = "bonefish"
+title = "Package Management: Building Things"
+date = "2013-04-13T21:19:29.000Z"
+tags = ["package management", "contract work"]
++++
+
+<p>It's been almost three weeks since the previous blog post and some people start wondering what the current status
+is and what were working on exactly, so it's time for an update. Incidentally the time is perfect for an
+update anyway, since we've just reached our first important milestone: haikuporter supports hierarchical
+building of packages.</p>
+<!--break-->
+<p>Given a package name, it can now analyze the HaikuPorts tree containing all the build recipes, recursively
+determine which other packages are required for building the package and build everything that's needed in the
+correct order. Each package is built in a clean <a href="https://en.wikipedia.org/wiki/Chroot">chroot</a>,
+meaning an environment in which only the packages are installed that have explicitly been declared a build
+requirement for the package in question in its build recipe. This way we make it significantly less likely
+that the package we build doesn't declare a requirement to another package that it actually has, which would
+potentially break things when installing it later.</p>
+
+<p>I already wrote in the previous blog entry how we planned to reach the current goal. With a few exceptions we
+followed that plan. haikuporter is still written in Python, though, since unlike we feared there weren't a lot
+of problems with Python in the chroot environments. So far we don't have any translation tool from
+Gentoo-Portage EBuild files to our build recipes. In the long run it might be a good idea, but the number of
+packages we're currently interested in (i.e. the one needed for a regular Haiku release build) isn't that
+great (less than 50), so it isn't worth the work ATM.</p>
+
+<p>While Oliver has done all the work on haikuporter and the required build recipe changes, I worked, as planned,
+on libsolv -- it has been updated to the current state of development and its Haiku port has been brought to
+a working state -- implemented dependency solving support in the package kit -- a few things are still missing
+but it is not far from completion now -- and added a "resolve-dependencies" command in our "pkgman" tool. This
+command is used by haikuporter to resolve the dependencies between the packages that can be built and to
+determine what exactly needs to be installed in the chroot for building a certain package.</p>
+
+<p>Save for fixing a few packagefs and bindfs bugs that was all I needed to contribute to the current milestone,
+so I was free to work on a few other things as well. Most importantly I started working on the package daemon,
+a component of our system design that was entirely missing yet. Essentially it provides the central service
+for managing the actually activated packages. It monitors the packages directories of all installation
+locations and activates packages dropped there by the user and deactivates packages the user removes. That
+functionality was previously implemented in packagefs. The package daemon will, however, also check whether
+all requirements of new packages are fullfilled and, if necessary alert the user when there are conflicts or
+additional packages (e.g. required libraries) have to be installed. This part hasn't been implemented yet,
+though when started the daemon does already verify whether the currently activated package sets are
+consistent.</p>
+
+<p>The package daemon will also perform the activation and deactivation of packages as requested by the package
+manager ("pkgman" and later also the GUI application) via package kit classes. That's something I've already
+started working on. I've also started with an "install" command in "pkgman". Given a set of package names to
+install, it already resolves the dependencies from the configured repositories. Missing yet is the actual downloading of the packages and
+telling the package daemon to activate them. Once "install" is done, "remove" and "update" shouldn't be that
+much work anymore, since although outcome is different, the steps to perform are very similar (resolve
+dependencies, download new packages (if any), tell the daemon what to de-/activate). Once those are done the
+basic "run-time" package management functionality would be usable, i.e. one could manage software repositories
+and install, remove, and update packages.</p>
+
+<p>There's plenty of other work left to do, though. Our next milestone is updating the package management branch
+to the current state of Haiku development. ATM our branch is still based off a two years old Haiku. Since a
+lot of ported software has been updated in the meantime, we first need to build packages for those new
+versions, which in turn require us to create working build recipes for them. That's something Oliver is going
+to work on next.</p>
+
+<p>Our main focus for the remainder of our contracts is to get package management to a point where we can merge
+the branch back into the main development line. We definitely won't be able to complete every aspect of
+package management in the remaining time, but getting the basic functionality on top of solid foundations done
+and having it in the main repository will hopefully encourage other developers to help out filling the gaps.</p>
+
+<p>So what's the foundation work we'd like to get done?</p>
+<ul>
+<li><p>On the package building side there are some more features
+needed in haikuporter, like building multiple packages from a single recipe (e.g. a base, a development, a
+debug info, ... package) and building complete repositories.</p></li>
+
+<li><p>The whole repository infrastructure area needs
+some serious thoughts (we've only done some brainstorming so far) plus tool support.</p></li>
+
+<li><p>The gcc2/gcc4 hybrid support needs to be added back to the build system. It has to work differently from how
+it worked before, so it had been removed two years ago to not get in the way. There are also a few other
+build system issues that need to be addressed (like mimesetting files before packaging them).</p></li>
+
+<li><p>We have several changes to the package format on our TODO list. It might be a good idea to address those
+before "going live". On the other hand that could be done later (bump the format version, keep support for the
+old version around for a while), although that adds some work overhead at that time.</p></li>
+</ul>
+
+<p>Finally, an update to the link list from my previous post: We have cleaned up and consolidated our GitHub
+repositories. Now, owned by the "Haiku" organization, there are a <a href="https://github.com/haiku/HaikuPM">HaikuPM</a> and a
+<a href="https://github.com/haiku/BuildtoolsPM">BuildtoolsPM</a> repository in which both Oliver and I are working.</p>

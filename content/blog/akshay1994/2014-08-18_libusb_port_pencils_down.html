@@ -1,0 +1,79 @@
++++
+type = "blog"
+author = "akshay1994"
+title = "Libusb Port (Pencils Down)"
+date = "2014-08-18T06:47:11.000Z"
+tags = ["libusb", "usb_raw", "usb"]
++++
+
+Hello Everyone! <br/><br/>
+
+<p>
+Today is the firm 'pencils down' date for Google Summer of Code. I write this blog, summing over all the activities/tasks accomplished in the last three months and my journey with Haiku. <code></code>
+</p>
+<!--break-->
+<p>
+As you would know, my project was porting libusb to Haiku. <br/>
+Initially I planned to use USBKit for the Haiku backend, as that was what was used by Pulkomandy in his port of libusbx (and my work thus was to hunt down bugs in this and complete this). 
+</p>
+<p>
+I started tracking the bugs one by one, starting with the Segment Violation on running a Mass Storage test. A null pointer was being accessed. Added a check, which libusb guys mentioned was a wrong way to do things. (I left this as is for a few weeks, completing other functionalities meanwhile. The bug was due to an int function returning no value.)<br/>
+Next, the program hung while fetching string descriptors. A quick control transfer using USBKit told this behaviour was independent of libusb. <br/>
+Dive into the lower layers!! (usb_raw -> bus_manager -> busses[EHCI,UHCI])<br/>
+The problem was with Short Packet transfers. Our usb stack used a trick to avoid this problem: First get the string descriptor length, then query the exact amount. This wouldn’t work with libusb. <br/>
+I was able to fix this for EHCI and Pulkomandy also tested my patch for UHCI.<br/>
+</p>
+<p>
+At this point I decided to use usb_raw instead of USBKit for the port. Next few weeks were spent on writing the backend, fixing issues (a lot more issues popped up as the work progressed), etc. 
+</p>
+<p>
+Post mid-term, I decided to work on the XHCI driver. I list down some of the fixes to the XHCI HC:<br/>
+<ul>
+<li> Add support for hubs in AllocateDevice(). </li>
+<li> Prevent page fault in FinishTransfers(). </li>
+<li> Set fCapabilityLength </li>
+<li> Correction in BIOS ownership code </li>
+<li> Fix context errors in _InsertEndpointForPipe(). </li>
+<li> Update constants according to latest Specification (v1.1) </li>
+<li> Fix SMI code (reference
+http://lkml.iu.edu/hypermail/linux/kernel/1204.2/02460.html). </li>
+<li> Fix Memory/Device-Slot leaks. </li>
+<li> Fix area allocation for TRBs. </li>
+<li> Fix for Intel Lynx Point and Panther Point chipsets. Also move init
+of xhci before ehci, to switch USB 2.0 ports before the ehci module
+discovers them. </li>
+<li> Fix device speed identification. </li>
+<li> Fix Max Packet Size for Full-Speed devices. </li>
+<li> Fix IRQ rate. </li>
+<li> Update slot context for LS/FS devices connected to non-root HS hub. </li>
+<li> Fix Endpoint Context Initialisation (Refer xHCI v1.1 - 6.2.3) </li>
+<li> Fix Interval Calculation (Refer xHCI v1.1 - 6.2.3.6 , USB 2.0 - 9.6.6 page 271) </li>
+<li> Fix MaxBurst, MaxPacketSize Calculation (Refer xHCI v1.1 - 6.2.3.5, USB 2.0 - 9.6.6 page 271) </li>
+<li> Fix MaxESITPayload Calculation (Refer xHCI v1.1 - 4.14.2) </li>
+<li> Remove Link TRBs as they were never being used </li>
+<li> Increase Number of TRBs per endpoint (to utilise the whole area allocated for Device TRBs) </li>
+<li> Fix usage of XHCI_MAX_ENDPOINTS (most of the checks were failing at corner cases) </li>
+</ul>
+I was able to boot from a USB3.0 port, and mass storage devices work (with the logs enabled).
+</p>
+<p>
+At this point I turned back to the libusb port, giving the port finishing touches. <br/>
+I’m now waiting for libusb moderators to merge my work. <br/>
+Pulkomandy tested the port with AVRDude, which works (except for some issues with UHCI). I myself tested this with a PS3 controller, and dfu-programmer (the recipe for which has been added to HaikuPorts), to dump the firmware of an Arduino UNO. 
+</p>
+<p>
+Ending this, I would like to thank everyone for allowing we to work on such an amazing project, and everyone who helped me out, on IRC, on the mailing lists, and everywhere else. :)
+<p>
+<p>
+Thanks a lot.
+<p>
+—<br/>
+Akshay Jaggi
+<br/>
+<br/>
+[1]  https://github.com/akshay1994/libusb <br/>
+[2]  http://cgit.haiku-os.org/haiku/log/?qt=author&q=akshay1994 <br/>
+[3]  https://dev.haiku-os.org/ticket/8954 <br/>
+[4]  https://dev.haiku-os.org/ticket/10867 <br/>
+[5]  https://dev.haiku-os.org/ticket/10915 <br/>
+[6]  http://www.google-melange.com/gsoc/proposal/public/google/gsoc2014/akshay1994/5629499534213120 <br/>

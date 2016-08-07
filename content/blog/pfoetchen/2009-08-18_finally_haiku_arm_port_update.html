@@ -1,0 +1,39 @@
++++
+type = "blog"
+author = "pfoetchen"
+title = "Finally a Haiku ARM port update"
+date = "2009-08-18T13:46:18.000Z"
+tags = ["port", "arm", "haiku_loader", "kernel_arm", "framebuffer"]
++++
+
+<p>After quite some time I finally update my blog ;). A lot has happened in the last few weeks... The Haiku loader that gets loaded by u-boot finally is able to load the kernel and start it and we even have minimal framebuffer support running.</p>
+
+<h3>haiku_loader</h3>
+
+<p>In the previous posts I said that we would use the U-Boot API to write the loader, the problem with that is, that the API is not accessible on most U-Boots so we could not use it on early boot and had to write our own functions for serial output etc. Because of that the kernel is now loaded from a ramdisk instead of directly loading it from the sd-card as planned (but that might change later...). It also has the disadvantage, that the loader code is not completely platform independent anymore so we would have to rewrite it to be used on a PPC board with U-Boot for example.</p>
+
+<p>Since we still need to know where to find the ramdisk for example (unless we hardcode it..) we decided to use the U-Boot image format that allows packing the loader and the ramdisk in one image and tell the loader where everything is and what parameters to pass to the kernel etc.. For this task U-Boot has OS-specific code since there is no standardized way of doing this. Since there was no Haiku specific code we would either have to convince the U-Boot developers to add Haiku support or simply masquerade as an other operating system. We choose the second option and François Revol added support for the netbsd way of booting so that we get the position of the ramdisk and the kernel parameters and some other info that is not yet used. He also created an jamtarget to allow to build an image directly.</p>
+
+<!--break-->
+
+<p>U-Boot does provide a way to inform the kernel of the whole board configuration (where each block of memory is what devices are attached etc.) called "Flattened Device Tree", but it's not yet implemented on ARM so we can not use it yet but probably will use it when it finally is released.</p>
+
+<p>After getting the loader to get loaded the next big thing was to initialize the memory management unit so that the kernel could be loaded where it should be etc.. Since we had a problem with the gumstix boards randomly hanging after some instructions we choose to add support for the (emulated) xscale MMU but it should be easy to change it to use the CortexA8 one as soon as we have some more time to investigate the random hanging problem. We also had to change the kernel linker script quite a bit since the gcc compilers idea of how an elf should be structured is not 100% compatible with the loaders idea...</p>
+
+<p>The toolchain was changed, to build optimized code for both the PXA270 (used on verdex) and the Omap35xx (used on the overo board and on the beagleboard). We could of course build a kernel that runs on almost all common ARM processors (like linux does) but we would have to give up some quite usefull features of the processors and loose a bit off speedup (since some commands are only available on newer processors for example...)</p>
+
+<p>And now for the eye candy: François started writing the support for the framebuffer: <span class="inline inline-left"><a href="/images/haiku_bootsplash_verdex"><img src="http://www.haiku-os.org/files/screenshots/shot_haiku_arm_boot_splash_003.thumbnail.png" alt="Haiku bootsplash on verdex" title="Haiku bootsplash on verdex"  class="image image-thumbnail " width="200" height="160" /></a><span class="caption" style="width: 198px;"><strong>Haiku bootsplash on verdex</strong></span></span> it does show the bootsplash but since we are not sure how to handle the memory allocated to the framebuffer correctly yet it's not activated by default, and the icons are not yet updated. This framebuffer only works on the (emulated) verdex board yet.</p>
+
+<p>So the loader works and loads the kernel and works as it should. There is still some place for improvement for example the kernel args could be parsed but thats for later ;).</p>
+
+<h3>Kernel</h3>
+
+<p>For the kernel I got some steps further than in the previous post it now gets the correct amount of memory  from the bootloader so the "go buy some RAM" error is gone ;) but since it does not yet initialize the memory correctly the kernel does not get much further yet:(.</p>
+
+<p>For the kernel there is still quite a lot to do the first thing is to get the virtual memory system to work correctly and then probably the timers will be needed etc... So it's almost impossible that I can finish it in time for GSoC :( But I will continue working on it even after that and get it to a working state as fast as possible.</p>
+
+<h3>Hardware</h3>
+
+<p>For now most of the development is made on the emulator since it helps debugging quite a lot as we can exactly see whats happening "inside". I got the real hardware now but unfortunately it starts hanging after some instructions and we don't really know why yet (linux works without any problems on it) now that we got a lot further now we will reinvestigate the problem and try to debug it with a gdbstub or something similar if possible...</p>
+
+<p>For those who want to test the thing on qemu there are some <a href="http://www.freelists.org/post/haiku-development/testing-the-ARM-port-was-Re-Haikucommits-r32408-haikutrunksrcsystembootplatformuboot" title="instructions"> instructions </a> that François wrote...</p>

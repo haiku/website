@@ -1,0 +1,28 @@
++++
+type = "blog"
+author = "waddlesplash"
+title = "'Packaging Infrastructure' Contract Weekly Report #1"
+date = "2015-06-05T17:52:37.000Z"
+tags = ["contract work", "package management", "infrastructure"]
++++
+
+Hello world!<br>
+<br>
+This week was rather slow: I've logged only 18 hours of contract time this week. I expected this, partly because I didn't expect to do any work on Monday (as mentioned in <a href="https://www.haiku-os.org/blog/waddlesplash/2015-06-01_beginning_packaging_infrastructure_contract">my first blog post</a>) and partly because I still had some coursework to finish up the semester with. But despite that, I got a <b>ton</b> of stuff done, and the foundations for the following weeks' work are well laid.<br>
+<br>
+<!--break-->
+By the time I got home on Monday and finished up some other things I had to do, it was the evening, so rather than start my contract then I spent the remaining hours of the day getting caught-up on the backlog of patches and small bugs that accumulated since I last had time to spend on Haiku a month or so ago. I committed a number of patches that had been waiting in Trac, such as <a href="https://cgit.haiku-os.org/haiku/commit/?id=88f9012805a53f3067a6da849b5628b3bcb32981">a fix to an off-by-one-error in BMessage</a>, <a href="https://cgit.haiku-os.org/haiku/commit/?id=9fb72ec18e1a861a74575c8e1378477e6e51d5c6">a usability fix in Expander</a>, and <a href="https://cgit.haiku-os.org/haiku/log/?qt=range&q=143edb7460889341714c9df8758ab765997cbcf9..04756e005c52370c74434429229326424b0e814f">some miscellaneous fixes to GCC warnings</a>.<br>
+<br>
+I started the actual work on Tuesday morning. I'd already been discussing with Axel and Oliver what the buildserver needed to do exactly, and the best ways to implement it. As previously mentioned, Python had already been selected as the language the client should be written in for maximum portability across architectures (and stability, as Ruby crashed all the time at that point -- but Hamish Morrison has since <a href="https://bitbucket.org/haikuports/haikuports/commits/744d4b4a5a6621cf1b43724355da4597ea5a3983">fixed the problem in our Ruby port</a>).<br>
+<br>
+What the server should be written in was still up in the air, though. Alexander von Gluck <a href="https://github.com/kallisti5/haikeuken">already had a prototype one written in Ruby, called HaiKeuken</a> and a client to go with it, but I dislike Ruby and thought HaiKeuken was far too bulky and complex for the task it had to do (~7500 lines of code for the server & client combined, not counting CSS -- and all it does is display the contents of the HaikuPorts repository with lint status, essentially). I initially toyed with writing the server in Python, so that the client and the server would be written in the same language, but after some experiments with <a href="http://www.cherrypy.org/">CherryPy</a> and the Python Packaging Infrastructure (which I'd never used before), I quickly gave up and went back to my original idea of writing the server in <a href="https://nodejs.org/">node.js</a>.<br>
+<br>
+For those unfamiliar with Node, it's essentially "JavaScript for the server" -- it's designed for building event-driven web applications. Its package host, <a href="https://www.npmjs.org/">npm</a>, is decidedly more sane than Pip+VirtualEnv, and despite only being a few years old (in contrast to Python, which is nearly 25), it's got a rich featureset and a large number of packages available.<br>
+<br>
+Once I'd picked what I was working with, writing the first parts of the system was a breeze. I wrote a thin Python client that connects using a TLS socket to the buildhost, and waits for JSON messages instructing it to return information or run shell commands. The client is thin on purpose; it is essentially blind to what it's doing, so that the server can be updated to run more tasks while the client doesn't require updates (or if it does, it's technically possible for the server to use the client to update it).<br>
+<br>
+The server is also simple and modular. I reused the web interface's layout and styling that HaiKeuken had (which saved a lot of time), and recreated pretty much all of the functionality of HaiKeuken between Tuesday and Wednesday, as well as enhancing the web interface to also be "thin" (the server just feeds it JSON, and all the HTML page generation happens in your web browser -- the HaikuDepot Web Interface works in much the same way). As of right now, the server is pretty basic -- it only clones and indexes the HaikuPorts tree, and keeps track of what recipes change with each call to <code>git pull</code>, as well as keeping track of builders, but it already does more than HaiKeuken ever did -- in just over 500 lines of code, or <b>less than 1/10</b> of HaiKeuken's 7500 lines of code.<br>
+<br>
+All of my code is now online <a href="https://github.com/waddlesplash/haiku-kitchen">on my GitHub account</a>, where it'll live for at least the next few weeks -- it's unclear where its final home is (on git.haiku-os.org, or at HaikuPorts on BitBucket, or on Haiku's GitHub organization, etc.), but that's a minor detail that'll be straightened out eventually. Over the next week, I plan to start implementing the bulk of the "package rebuild" logic, which includes calculating the least-expensive route to rebuild a specific set of packages, and then working on the logic that actually builds and uploads packages.<br>
+<br>
+See you all next week!

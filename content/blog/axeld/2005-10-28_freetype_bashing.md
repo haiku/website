@@ -1,0 +1,9 @@
++++
+type = "blog"
+author = "axeld"
+title = "FreeType bashing"
+date = "2005-10-28T13:02:00.000Z"
+tags = ["freetype"]
++++
+
+As many of you know, we are using <a href="http://freetype.sourceforge.net/index2.html">FreeType</a> as our font renderer. It is already able to produce very nice font renderings, but the quality of the rendering still seem to improve with every further version.<br /><br />Until today, we were using FreeType in a wrong way, though. That didn't affect the rendering quality, but let the app_server crash pretty regularly (note, it still does that, but for different reasons and even a tiny bit less often 8-)). Somehow we assumed that FreeType was safe to be used in a multi-threaded environment. It even kind of is, but not in the way we used it.<br /><br />FreeType provides an FT_Face object for every font face you are using - these objects are completely separated and can be used from different threads without worries. You just can't share one of these objects between several threads, and that's exactly what we were doing. Of course, that was a more or less stupid oversight on our behalf. But it's also a major pain that FreeType simply doesn't allow you to access a font face in a shared manner - it gives you a very easy to use API, but also a very limited one.<br /><br />We just started discussing this topic in the app_server mailing list, so I don't know yet to what conclusion we'll come. We will probably need to introduce another abstraction layer between FreeType and our font sub-system, so that we can efficiently use FreeType without being locked in its single threaded design. Right now, I've introduced a per font face lock that might not even cover all uses of the object, but greatly lifts the situation.<br /><br />If you know FreeType well, and feel that I missed something looking at the API it provides, feel free to tell me :-)

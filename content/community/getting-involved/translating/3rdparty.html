@@ -1,0 +1,65 @@
++++
+type = "article"
+title = "Localizing an application"
+date = "2015-05-14T08:20:35.000Z"
+tags = ["localization makefile-engine makefile"]
++++
+
+<p>Depending on the kind of application, localization can become much more than having the strings that appear in the GUI available in different languages. If you came to learn about those more in-depth techniques, dealing with formatting and using ICU etc., this isn't the article you seek... This article discusses the relatively simple problem of localizing an app's GUI strings.</p>
+
+<h2>1. Changes to the source code</h2>
+
+<p>The needed changes to the source code are minimal. You just have to include the <tt>Catalog.h</tt> header and use the macros it provides on all the strings that appear in the GUI. The macros are:</p>
+<ul>
+<li><p><b><tt>B_TRANSLATION_CONTEXT</tt></b> gives a hint to the people that later translate your strings where those appear. So entering</p>
+<pre>#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "MainWindow"
+</pre>
+<p>will designate the following strings to belong to the "MainWindow".</p></li>
+
+<li><p><b><tt>B_TRANSLATE_SYSTEM_NAME</tt></b> is reserved for the app's name, e.g. here it's used in the window title of an "AwesomeApp":</p>
+<pre>BWindow(frame, B_TRANSLATE_SYSTEM_NAME("AwesomeApp"), B_TITLED_WINDOW,
+		B_QUIT_ON_WINDOW_CLOSE | B_FRAME_EVENTS | B_CLOSE_ON_ESCAPE)
+</pre></li>
+
+<li><p><b><tt>B_TRANSLATE</tt></b> is the usually deployed macro to mark a string to be translated. For example:</p>
+<pre>BString *string = new BString(B_TRANSLATE("Invert selection"));
+</pre></li>
+
+<li><p><b><tt>B_TRANSLATE_COMMENT</tt></b> allows you to leave an explanatory comment for the translators. For example:</p>
+<pre>BString string = B_TRANSLATE_COMMENT("%s% settings", "Don't translate the variable %s%");
+</pre></li>
+</ul>
+
+<h2>2. Changes to the Makefile</h2>
+
+<p>You find a sample Makefile at <tt>/system/develop/etc/Makefile</tt> that includes Haiku's <i>makefile-engine</i> which greatly simplifies things.</p>
+<ul>
+<li><p>You have to fill in the <tt>APP_MIME_SIG</tt>, e.g. "<tt>APP_MIME_SIG = application/x-vnd.AwesomeApp</tt>".</p></li>
+<li><p>As you have included <tt>Catalog.h</tt> in the source, don't forget to add <tt>localestub</tt> to the <tt>LIBS</tt> section.</p></li>
+<li><p>Under <tt>LOCALES</tt> you list the two-letter language codes you'll provide, e.g. "<tt>LOCALE = en de es fr ja</tt>".</p></li>
+</ul>
+
+<h2>3. Creating "catkeys"</h2>
+
+<p>"catkeys" are the plain text files that contain your strings, the context you assigned, optionally an explanatory comment, and the (to be) translated string.</p>
+<p>You start by creating the English version &ndash; <tt>en.catkeys</tt> &ndash; like this:</p>
+<pre class="terminal">make catkeys</pre>
+<p>This will create a folder <tt>locales</tt> with the <tt>en.catkeys</tt> in it. You'll duplicate this file, rename it to e.g. <tt>de.catkeys</tt> and send it to your German friend for translation. Here are the first lines of a catkeys file:</p>
+<pre>1	English	application/x-vnd.AwesomeApp	680205015
+Add to ignore list					ListView						Add to ignore list
+Found no matches.					ListView						Found no matches.
+Show application path					SetupWindow				Show application path</pre>
+<p>The first line always starts with a "1", then the language, the app's signature, and a checksum. The checksum has to stay the same across all translations!<br />
+Then follow the rows of strings; the 1st column for the original string, the 2nd column shows the context, then optionally a comment, and the translated string last.</p>
+<p>The translator must only work on the last column string (and possibly replace the "English" of the first line with their language name in English, e.g. "German". But that is only for human readers of that file, it doesn't matter when compiling the application).</p>
+<div class="alert alert-info">You and your translators can have a much more convenient and safe way to work with catkeys files by installing <a href="https://depot.haiku-os.org/#/pkg/catkeyseditor">CatKeysEditor</a> from the HaikuDepot. It provides a simple and clean interface to the otherwise confusing string jungle presented when opening catkeys in a text editor...</div>
+
+<h2>4. Compiling the application</h2>
+<p>After you've got back all those translated catkeys and put them in the <tt>locales</tt> folder, you compile your app like this:</p>
+<pre class="terminal">make
+make bindcatalogs</pre>
+<p>So, after the regular built, you do the <tt>make bindcatalogs</tt> to put the catalogs created from the catkeys into the executable's resources.</p>
+<p><br /></p>
+<hr />
+<div class="alert alert-info">There's a thread "<a href="https://www.haiku-os.org/community/forum/catkeys_translators_needed_3rd_party_apps">Catkeys translators needed for 3rd party apps</a>" in the forum. If you need catkeys translations for your apps, you may want to post a request there.</div>

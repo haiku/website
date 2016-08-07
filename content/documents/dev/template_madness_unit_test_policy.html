@@ -1,0 +1,61 @@
++++
+type = "article"
+title = "template < madness > : Unit Test Policy"
+date = "2003-03-19T05:00:00.000Z"
+tags = ["template", "qa"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>Almost all of my recent coding efforts have gone into work on BMessage. Early on, I decided that wanted to try a more &quot;modern&quot; back-end to BMessage, something that would leverage the power of the STL. The end result is out there enough that I&#39;m not sure I want to use it. At any rate, I&#39;m not going to talk about that right now; maybe in another article, if you&#39;re all good. ;)</p>
+
+<p>The Haiku project has a pretty serious policy concerning unit testing, and BMessage is no different. BMessage has a great many convenience functions for directly adding/finding/replacing data for common types. While it could be argued that all of these functions are similar enough that writing tests for one set would be good enough, <strong>real</strong> programmers won&#39;t settle for anything less than complete coverage. =) For those of you who aren&#39;t actually writing code for Haiku and haven&#39;t ever written unit tests, let me assure you that they are often mind-numbingly tedious to code. Now imagine the fun that lay in store for me as I write the same group of tests for each and every set of convenience functions: there are, so far, 8 tests for the various convenience functions, each of which needs to be implemented for bool, int8, int16, int32, int64, float, double, char*, BString, BPoint, BRect, entry_ref, BMessage, BMessenger, raw pointer and BFlattenable. Do the math and I&#39;ve got 128 functions to implement. &quot;What about copy-&#39;n&#39;-paste and search-&#39;n&#39;-replace?&quot; you ask. For 120 functions?? I&#39;d rather be gummed to death by a mob of toothless grandmothers! </p>
+
+<p>My first idea was to procrastinate (during which time Nathan Whitehorn&#39;s Resourcer app got a lot of attention from me). My second idea was more productive: I thought I would write a light-weight scripting engine to generate the source for me. That actually made OK progress up to a point, but it felt clunky and it became clear that the engine would be difficult to extend. As it turns out, the third time was a charm, but before I get into that, a little background. On and off through 2002, I read a book called &quot;Modern C++ Design: Generic Programming and Design Patterns Applied&quot; by Andrei Alexandrescu. If, like me, you happen to think that C++ templates are the greatest thing since iced water or just plain want to melt large portions of your cortex, this book is the <strong>bomb</strong>. The things that Mr. Alexandrescu does with templates is absolutely sick &mdash; and eminently useful, if you are writing libraries. As it turns out, one of the techniques he discusses actually managed to lodge itself in my brain: policy-based class design. And now the fun begins.</p>
+
+<p>The basic concept of policy-based class design is that certain bits of functionality in a class are grouped together into their own interface &mdash; the policy &mdash; which then becomes a template parameter for the class itself. Here&#39;s an example: let&#39;s suppose that you&#39;re writing a library of classes and you want to make the method of memory allocation for the library customizable. You could specify some base class which the user would then derive from to create his custom allocator. The problem with this approach becomes apparent in that you want your allocator class to handle different types (after all, this library contains <strong>classes</strong> in the plural); something which is difficult to express through inheritance alone. The alternate approach is to make your allocator class templatized on the type it&#39;s going to allocate. Lifted straight from &quot;Modern C++ Design&quot; are two examples:</p>
+
+<pre>template  struct OpNewCreator { <br />        static T* Create() { <br />                return new T; <br />        } <br />};</pre>
+
+<pre>template  struct MallocCreator { <br />        static T* Create() { <br />                void* buf = std::malloc(sizeof(T)); <br />                if (!buf) return 0; <br />                return new(buf) T; <br />        } <br />};</pre>
+
+<p>The second allocator, MallocCreator, ensures that T can be a type with a constructor by using placement new on the malloc&#39;d buffer. Now the issue becomes one of getting your library classes to use these allocators &mdash; after all, they&#39;re not inherited from some base class, so you can&#39;t just go passing base pointers around. Again, templates ride to the rescue (also from &quot;Modern C++ Design&quot;):</p>
+
+<pre>template  <br />class WidgetManager : public CreationPolicy { <br />        ... <br />};</pre>
+
+<p>Now if you want to use OpNewCreator for your allocation you simply do this:</p>
+
+<pre>typedef WidgetManager&lt; OpNewCreator &gt; MyWidgetMgr;</pre>
+
+<p>If you want to use malloc, just do the same, substituting MallocCreator instead. This concept works because the host class (WidgetManager in this case) relies not on the policy class&#39;s type, but on its interface &mdash; static T* Create().</p>
+
+<p>As I was getting my scripting engine to the point where it was <strong>almost</strong> generating tests for BMessage&#39;s BRect convenience functions correctly (&quot;Just a few more hours of ruthless hacking!&quot;), it occurred to me that I was looking at a series of policies:</p>
+
+<ul>
+<li>the set of convenience functions getting tested (add/find/replace, etc.)</li>
+<li>the initialization of variables (and arrays of variables)</li>
+<li>the assertion of results in the tests</li>
+</ul>
+
+<p>Thrown on top of those policies were two other vital pieces of information: the type we were testing for (e.g., int32) and it&#39;s type_code (e.g., B_INT32_TYPE). Taken all together, we end up with a class declaration like this:</p>
+
+<pre>template <br />&lt; <br />        class Type, <br />        type_code TypeCode, <br />        class FuncPolicy, <br />        class InitPolicy, <br />        class AssertPolicy <br />&gt; <br />class TMessageItemTest { <br />  public: <br />        void MessageItemTest1(); <br />        ... <br />        void MessageItemTest8(); <br />};</pre>
+
+<p>The tests are a bit big to list one here in its entirety, but they look something like the following:</p>
+
+<pre>void MessageItemTest1() { <br />        BMessage msg; <br />        Type out = InitPolicy::Zero(); <br />        assert(FuncPolicy::Find(msg, &quot;item&quot;, 0, &amp;out) == B_NAME_NOT_FOUND); <br />        assert(out == AssertPolicy::Invalid()); <br />}</pre>   <p>As I said, this isn&#39;t a full test, but it should give you an idea of how the policies are getting used. Just for clarity&#39;s sake, here&#39;s the same code, but written for a specific type ( int32):</p>   <pre>void MessageItemTest1() { <br />        BMessage msg; <br />        int32 out = 0; <br />        assert(msg.Find(&quot;item&quot;, 0, &amp;out) == B_NAME_NOT_FOUND); <br />        assert(out == 0); <br />}</pre>
+
+<p>An interesting thing to note here is that for int32, InitPolicy::Zero() and AssertPolicy::Zero() boil down to the same value: zero. Why not use one or the other in both places? As it turns out, for other types, &quot;zero&quot; and &quot;invalid&quot; are not the same thing. For instance, a &quot;zero&quot; BRect has left, top, right and bottom all set to 0. However, an <strong>invalid</strong> BRect has left and top set to 0 and right and bottom set to -1. You might begin to see why scripting could have a hard time cutting the mustard.</p>
+
+<p>As it turns out, for most types FuncPolicy is conceptually identical: call the type&#39;s convenience function, passing in a name and value or index. In fact, they&#39;re so identical that we can create a policy-based class for that as well! Here&#39;s an abbreviated version:</p>
+
+<pre>template <br />&lt; <br />        typename Type, <br />        status_t (BMessage::*AddFunc)(const char*, Type), <br />        ... <br />&gt; <br />struct TMessageItemFuncPolicy { <br />        static status_t Add(BMessage&amp; msg, const char* name, Type&amp; val) { <br />                return (msg.*AddFunc)(name, val); <br />        } <br />        ... <br />}</pre>
+
+<p>It you&#39;ve been considering what the fully fleshed out code for all this looks like, you&#39;re probably thinking &quot;This is getting pretty out of hand&quot; by now, and if I had to do this more than once, I would absolutely agree. The beautiful thing, though, is that I only have to write the test code <strong>once</strong>. After that, I can specify a full set of tests for a given type with just this much code:</p>
+
+<pre>typedef TMessageItemFuncPolicy <br />&lt; <br />        int32, <br />        &amp;BMessage::AddInt32, <br />        &amp;BMessage::FindInt32, <br />        &amp;BMessage::FindInt32,   <em>// The version that returns int32 directly</em> <br />        &amp;BMessage::HasInt32, <br />        &amp;BMessage::ReplaceInt32 <br />&gt; <br />TInt32FuncPolicy; <br /><br />struct TInt32InitPolicy { <br />        inline static int32 Zero()      { return 0; } <br />        inline static int32 Test1()     { return 1234; } <br />        inline static int32 Test2()     { return 5678; } <br />}; <br /><br />struct TInt32AssertPolicy { <br />        inline static int32 Zero()              { return 0; } <br />        inline static int32 Invalid()   { return 0; } <br />}; <br /><br />typedef TMessageItemTest <br /><br />&lt; <br />        int32, <br />        B_INT32_TYPE, <br />        TInt32FuncPolicy, <br />        TInt32InitPolicy, <br />        TInt32AssertPolicy <br />&gt; <br />TMessageInt32ItemTest;</pre>
+
+<p>There! In a little over 30 lines of code, I&#39;ve just created nearly 400 lines of tests! Once that was done, it took less than half an hour to create the tests for about half of the types with BMessage convenience functions. The key to all this is that you&#39;re letting the compiler generate all the test code for you.</p>
+
+<p>As I said before, I left a bit out, so if you have a burning curiosity (or twisted perversion, depending on your perspective) to know more, I encourage you to check out the various MessageXXXItemTest.h files in current/src/tests/kits/app/bmessage. If that doesn&#39;t cook your noodle, you just might be the very kind of sick monkey that would love &quot;Modern C++ Design&quot;. If so, you definitely owe it to yourself to read it. </p>
+
+<p>You know, I just noticed I haven&#39;t created the tests for floats or doubles yet &mdash; I think I&#39;ll spend the next 10 minutes banging out 800 lines worth of code!</p>
+<br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

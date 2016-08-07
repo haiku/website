@@ -1,0 +1,93 @@
++++
+type = "blog"
+author = "PulkoMandy"
+title = "Locale kit: quick developer guide"
+date = "2009-07-16T16:36:17.000Z"
+tags = ["gsoc", "localekit", "gsoc2009"]
++++
+
+This week I was at the RMLL in Nantes, and I was busy showing Haiku to other people and explaining them why it was so much better than linux. I had little time for GSoC coding.
+Still, I made some cleanup and fixed some small bugs. The catalog part of the locale kit is now working fine and can be used to internationalize applications.
+
+Here is a small guide for those who want to get an application speaking in their own language.
+
+<h2>Sourcecode changes</h2>
+
+You have to alter your source code to get it working. We've tried to make this need as little changes as possible. First, you have to #include two files : Catalog.h and Locale.h. They are system headers from the locale kit. Now you have to tell the locale kit to initialize a catalog for you. A catalog is a class that you will use to map strings to their translated equivalents. The locale kit will automatically find the right data files for you, depending on the system-wide language preferences, you application mime signature, and some other magic (see the part of this post about the build system changes). So, you only have to add two lines of code:
+
+<pre>
+BCatalog cat;
+be_locale->GetAppCatalog(&cat);
+</pre>
+
+<!--break-->
+
+These lines must be executed before any localization occurs. You can put it at the beginning of your main() function to be safe, or at some other place like your main window constructor if you know what you are doing. You don't need to keep the cat variable around, the locale kit will handle everything by itself.
+
+Now, you need to define contexts in your application. Contexts are a way to separate different parts of the application. This is needed because, depending on the context, a string may have a different translation. For example, you usually find "Edit" in english applications. Depending on the context, this will in french become "Éditer" or "Édition". If your application is small or you don't know what to separate, it seems a good idea to use a single context for the whole application. You can #define TR_CONTEXT to anything you want, but try to be helpful to the translators so they know where the string comes from. For example, you can have a different context for each window in your app. This way, if a french translator sees "Edit" in your file, looking at the context he can know if he need to look for it in the "Main window" or the "Setting window" to see which translation he must choose.
+
+The last step, and the biffest one, is to enclose all the strings you want to localize in the TR() macro. For example, printf("hello"); becomes printf(TR("hello"));. It is possible to be more precise, for example if you want to help the translator, you can replace "This program is free software" by TR_CMT("This program is free software","free as in free speech, not as in free beer"). This way our french guy knows he needt to use "libre" and not "gratuit" as a translation. Finally, it is possible to override the context just for one string, but then you are forced to add a comment. So, if you have an Edit button (Éditer in french) and an Edit menu (Édition in french), you can do something like that:
+
+<pre>
+#define TR_CONTEXT "Main window"
+TR_ALL("Edit","Main window menu","This is édition in french");
+TR_CMT("Edit","These french guys are strange, this one is éditer");
+</pre>
+
+Finally, it is possible to translate strings by id to make your program language-neutral (and unreadable) this way:
+
+<pre>
+TR_ID(1844535) // This is "Hello, world!"
+</pre>
+
+I advise you not to do that.
+
+It was planned to support multiple datatypes instead of just strings, so you could use this ID system to get a picture or a sound. However, as everything in a catalog will be loaded into ram at startup, this would be pretty heavy for big programs. So we found another solution for you:
+
+<pre>
+fopen(TR_CMT("path/to/english/file.wav","this is me shouting Hello World"));
+</pre>
+
+The translator will then record a translated version of the sound and "translate" the path to ath/to/french/file.wav. You can do the same for everything using a string, so it should be possible to access pretty much anything this way.
+
+<h2>Build system</h2>
+
+That's all for the code, but now you have to generate the files to send to your translators. Note that as long as you don't use TR_ID, your program will work fine in the original language without any file. If the locale kit can't find a translation for something it will return the original string.
+
+There are two different cases for the build tools : are you localizing something integrated in the haiku build tree (a preflet for example), or are you working on an external app?
+
+<h3>Manual tool invocation</h3>
+
+If it's your own app, you have to do the work yourself. There are two commands to use, they are both included in Haiku images. The first one is collectcatkeys. It will travell trough your sourcecode and find the strings you want to be localized and dump them to a simple text file you can send to your translators. Here is how to use it:
+
+<pre>
+cpp *.cpp > preprocessed.cpp.tmp
+collectcatkeys preprocessed.cpp.tmp -l english -o english.catkeys
+rm preprocessed.cpp.tmp
+</pre>
+
+The other tool is linkcatkeys. Linkcatkeys will compile the catkeys files into a binary format suitable for use at application runtime (just a flatenned BMessage, actually).
+
+<pre>
+linkcatkeys english.catkeys -l english -s mimesignature -o english.catalog
+</pre>
+
+The mimesignature should be the one of your application. You now just have to place the generated catalog file with your executable, in the locale/catalogs/mimesignature/ folder. It is also possible to tell linkcatkeys to put the catalog directly as an attribute or a resource in your executable file if you want to avoid having all the catalogs around, but this is still untested. There are some other folders where you can put your catalog files too, the locale kit will look at /boot/home/config/etc and /boot/system/etc/ . These are meant for users who want to override catalogs for a specific app, and for system-wide catalogs from haiku we don't want to spread all over the system.
+
+<h3>Haiku jam rules</h3>
+
+If you are inside the haiku jam system, the rules for localization are already written for you (they lie in build/jam/BeOSRules if you ever want to look at them).
+Here is the example from the locale preflet, which is the first localized application in Haiku:
+
+<pre>
+DoCatalogs Locale #App. executable name
+ : x-vnd.Haiku-Locale # mime signature
+ : Locale.cpp #source files
+   LocaleWindow.cpp
+ : english.catalog #default catalog generated from sourcecode
+ :
+ [ FDirName $(HAIKU_TOP) src preferences locale french.catkeys ] # list of availabe translations
+ ;</pre>
+
+Thats all. Jam will take care of everything else.
+

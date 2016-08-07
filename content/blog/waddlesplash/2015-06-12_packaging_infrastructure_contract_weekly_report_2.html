@@ -1,0 +1,25 @@
++++
+type = "blog"
+author = "waddlesplash"
+title = "'Packaging Infrastructure' Contract Weekly Report #2"
+date = "2015-06-12T18:04:42.000Z"
+tags = ["contract work", "package management", "infrastructure"]
++++
+
+Hello, Haikuvians!<br>
+<br>
+This week was just as productive as last week. I did start on the builds logic, which now can run "builds" (lists of commands) in sequential order. I also improved the builder management system, and created documentation for pretty much everything.
+<!--break-->
+<br><br>
+Let's start with the builds logic: At the end of last week, there was none of it at all. Implementing that took a good portion of this week, as it involved adding support for running arbitrary commands on the builders, managing a sequential list of commands to run, starting a build only when a builder goes online and is fit to run the build, storing the currently running command, start time, elapsed time, build status (pending, running, failed, succeeded), command output, and displaying all of this information in the web interface.<br>
+<br>
+But after implementing most of that, I had no way to test it as the builder manager didn't yet create and update HaikuPorts and HaikuPorter trees on the builders, so I set out to create that logic. I reused the arbitrary-command-running system to implement that, and modified the event system to fire the "builder connected" event only after the builder manager had verified there was an up-to-date, working HaikuPorts tree on the builder. (If there wasn't and it couldn't set one up, or there was and it was broken in some way, it bails out and marks the builder as "broken".)<br>
+<br>
+After implementing that logic, though, I still wasn't "at the bottom of the rabbit hole", as the system could create and run builds but had nothing to actually do that would require them. So I went back to the HaikuPorts tree manager module (that manages the server's HaikuPorts clone) and implemented functionality that enabled it to notify the core controller module when recipes have changed (after a <code>git pull</code>), and then had the core controller use that to create a build that would lint (or re-lint) those recipes. After the usual rounds of bugfixing and refactoring, the system worked, and it properly creates builds and runs those commands on a builder. Those who have been paying attention to the logs of the #haiku IRC channel will have spotted my "mini visual progress reports" containing screenshots of the web interface. For the sake of those who don't use IRC, here they are again:<br>
+<a href="https://www.haiku-os.org/files/2_kitchen_build.png"><img src="https://www.haiku-os.org/files/2_kitchen_build.png" style="max-width:100%;max-height:200px"></a><br>
+<a href="https://www.haiku-os.org/files/2_kitchen_builders.png"><img src="https://www.haiku-os.org/files/2_kitchen_builders.png" style="max-width:100%;max-height:200px"></a><br>
+By the time I finshed most of that, it was the middle of the day on Thursday, so I decided to work next on documentation. The documentation I had so far was pretty minimal and wouldn't have made much sense to anyone but me, so it was severely lacking. I started by using <a href="https://www.npmjs.com/package/jsdoc">JSDoc</a>, the industry-standard for documenting JavaScript, to document the server and webapp's source code. JSDoc's generated HTML is pretty rudimentary, and pales in comparison to our nice Doxygen setup for the Haiku API, but the main point is that there are now comments in the source code in a standard format that give explanations for each class and function.<br>
+<br>
+After documenting the source code, I moved on to documenting the design of the system, as well as creating instructions for anyone trying to run it. These can now be found in the <a href="https://github.com/waddlesplash/haiku-kitchen/tree/master/docs">docs directory of the GitHub repo</a>.<br>
+<br>
+For the upcoming week, I plan to work on integration with various services (IRC, etc. so that developers can feed it commands) and then actually building packages (on a single machine, in dependency order). See you all then!

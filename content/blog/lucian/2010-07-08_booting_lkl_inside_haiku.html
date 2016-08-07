@@ -1,0 +1,120 @@
++++
+type = "blog"
+author = "lucian"
+title = "Booting LKL inside Haiku"
+date = "2010-07-08T01:57:52.000Z"
+tags = ["lkl-haiku-fsd gsoc gsoc2010", "lkl-haiku-fsd", "gsoc", "gsoc2010"]
++++
+
+<p>The first milestone in this GSoC journey to building a generic file system driver based on Linux kernel code is booting LKL (Linux Kernel Library) inside Haiku.
+</p>
+<p>
+For the short attention span: it works :)
+<pre>
+...
+KERN: KDiskDeviceManager::_AddDiskSystem() done: No error
+KERN: file system: file_systems/iso9660/v1
+KERN: KDiskDeviceManager::_AddDiskSystem(file_systems/iso9660/v1)
+KERN: KDiskDeviceManager::_AddDiskSystem() done: No error
+KERN: lklhaikufs: unhandled pheader type 0x4
+KERN: file system: file_systems/lklhaikufs/v1
+KERN: KDiskDeviceManager::_AddDiskSystem(file_systems/lklhaikufs/v1)
+KERN: khaiku_env_timer:: LKL_TIMER_INIT
+KERN: [lkl-console] Linux version 2.6.29 (gringo@lethe) (gcc version 4.4.4 (GCC) ) #10 Fri Jun 18 14:45:38 EEST 2010
+KERN: [lkl-console] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 16256
+KERN: [lkl-console] Kernel command line: 
+KERN: [lkl-console] lkl: IRQs initialized
+KERN: [lkl-console] PID hash table entries: 256 (order: 8, 1024 bytes)
+KERN: [lkl-console] lkl: timer initialized
+KERN: [lkl-console] Dentry cache hash table entries: 8192 (order: 3, 32768 bytes)
+KERN: [lkl-console] Inode-cache hash table entries: 4096 (order: 2, 16384 bytes)
+KERN: [lkl-console] Memory available: 64900k/65536k RAM, (862k kernel code, 270k data)
+KERN: [lkl-console] Mount-cache hash table entries: 512
+KERN: [lkl-console] bio: create slab <bio-0> at 0
+KERN: [lkl-console] io scheduler noop registered (default)
+KERN: [lkl-console] lkl: syscall interface initialized
+KERN: [lkl-console] console [lkl_console0] enabled
+KERN: [lkl-console] Warning: unable to open an initial console.
+KERN: [lkl-console] Switched to NOHz mode on CPU #0
+KERN: [lkl-console] System halted.
+KERN: khaiku_env_timer:: LKL_TIMER_SHUTDOWN
+KERN: [lkl-console] lkl: IRQs freed
+KERN: lkl: halt user callback called
+KERN: KDiskDeviceManager::_AddDiskSystem() done: No error
+KERN: file system: file_systems/nfs/v1
+KERN: KDiskDeviceManager::_AddDiskSystem(file_systems/nfs/v1)
+...
+</pre>
+</p>
+
+These are messages from <tt>/var/log/syslog</tt> that are generated when Haiku searches for available file system add-ons. One of those drivers is my <tt>lklhaikufs</tt> driver. Messages with <tt>[lkl-console]</tt> are from LKL (similar to what you see when a normal Linux kernel boots) :)
+<!--break-->
+<h1>Porting LKL to the Haiku kernel API</h1>
+<p>
+To boot LKL inside Haiku, first I have port LKL to a new pseudo-architecture. For this project I have two choices:
+<ul>
+<li>write a user space file system driver (similar to <tt>googlefs</tt>) and port LKL to the Haiku system call API (or a higher level library)</li>
+<li>write a kernel space file system driver and port LKL to Haiku's kernel API.</li>
+</ul>
+Even though the APIs are similar, the kernel space driver would definitely have a better performance so I chose this path.
+
+
+<h1>Porting details</h1>
+
+Porting LKL is much simpler than porting the whole Linux kernel to a new architecture. Much of the low-level details are already taken care of by the portable LKL layer. One only needs to provide a set of runtime environment dependent primitives that cannot be (efficiently) emulated in a portable manner:
+<ul>
+<li>memory management routines</li>
+<li>synchronization primitives</li>
+<li>thread management</li>
+<li>time and timer generators</li>
+<li>a (screen/log) printing routine</li>
+</ul>
+
+
+<h2>Memory management</h2>
+<p>
+Because LKL does not require memory protection mechanisms (there will be no processes running in the LKL operating system – all calls are considered from kernel space), support for memory management becomes trivial: LKL just needs a <em>physical</em> memory pool that the Linux kernel can use for its memory allocation needs. The poll of memory will be managed by the kernel using a mix of buddy, SLUB/SLAB/SLOB/SLQB/SL*B algorithms just like on a normal system. This pool will only be used for buffers and structures dynamically allocated by the kernel. The kernel code and
+statically allocated data will not be part of this poll as they are managed by Haiku's kernel add-on loader (see <code>src/system/kernel/elf.cpp: load_kernel_add_on()</code>).
+</p>
+
+<p>
+The file system driver does not need to interact with interrupts or anything like that, so it does not have any special requirements. This greatly simplifies my work: as memory does not need to be locked (<a href="http://www.haiku-os.org/legacy-docs/bebook/DeviceDrivers_Functions.html#lock_memory"><code>lock_memory</code></a>) or unlocked in RAM at various times, the memory support can be reduced to <code>malloc</code> and <code>free</code> (we all know that <code>malloc</code> or any kind of access (read/write/execute) to a unlocked memory address can <a href="http://www.haiku-os.org/legacy-docs/bebook/DeviceDrivers_Introduction.html#DeviceDrivers_Introduction_DontBlock">block</a>, don't we?).
+</p>
+
+<h2>Threading support</h2>
+<p>
+LKL needs threading support because the Linux kernel uses threads for internal house-keeping, like processing I/O requests or running softirqs, tasklets or workqueues and journaling tasks. 
+</p>
+
+<p>
+Starting/stopping threads from Haiku's kernel is similar to other more familiar APIs (e.g. POSIX): <a href="http://www.haiku-os.org/legacy-docs/bebook/DeviceDrivers_Functions.html#spawn_kernel_thread"><code>spawn_kernel_thread</code></a> takes a function <code>f</code> and a generic pointer <code>arg</code> as arguments and creates a new thread that will execute <code>f(arg)</code>.
+</p>
+<p>
+Two things should be noted here:
+<ul>
+<li>threads are initially suspended, you need to call <a href="http://www.haiku-os.org/legacy-docs/bebook/TheKernelKit_ThreadsAndTeams.html#resume_thread"><code>resume_thread</code></a> to actually run the thread's code. This differs from the traditional POSIX API and I spent some time investigating why my threads were never running :P.</li> 
+<li>threads (as other Haiku kernel resources – e.g. semaphores) can be given a name. This helps a lot in KDL trips</li>
+</ul>
+</p>
+
+<h2>Semaphore support</h2>
+<p>
+Haiku's semaphore API is very straight forward: <a href="http://www.haiku-os.org/legacy-docs/bebook/TheKernelKit_Semaphores.html#create_sem"><code>create_sem</code></a>, <a ,href="http://www.haiku-os.org/legacy-docs/bebook/TheKernelKit_Semaphores.html#delete_sem"><code>delete_sem</code></a>, <a href="http://www.haiku-os.org/legacy-docs/bebook/TheKernelKit_Semaphores.html#acquire_sem"><code>acquire_sem</code></a> and <a href="http://www.haiku-os.org/legacy-docs/bebook/TheKernelKit_Semaphores.html#release_sem"><code>release_sem</code></a> should be self-explanatory.
+</p>
+
+<p>
+However there's a catch: releasing a semaphore automatically invokes Haiku's scheduler, and this shouldn't be done in a number of contexts like when interrupts are disabled. Unfortunately the legacy BeOS docs license forbids improvements and such a warning cannot be written in release_sem's documentation. It's important to replace <code>release_sem(s)</code> calls with <code>release_sem_etc(s, 1, B_DO_NOT_RESCHEDULE)</code> if this can be called in such a context.
+</p>
+
+<h2>Time and timers</h2>
+<p>
+LKL needs to know the current time (not the time since starting the computer, but the absolute time – as in a wall clock) for a variety of tasks, but for this driver we need it to set a valid time stamp on files. For this LKL uses <a href="http://www.haiku-os.org/legacy-docs/bebook/TheKernelKit_Time.html#real_time_clock_usecs"><code>real_time_clock_usecs</code></a> which returns the time since start of the Unix epoch (January 1<sup>st</sup> 1970) in microseconds.
+</p>
+<p>
+Any operating system needs a functioning timer interrupt to function properly. Linux support two categories of programmable interrupt timer (PIC) chips: timers that fire periodically or timers that can efficiently be programmed to fire at various moments and stop firing in certain intervals. We simulate the second kind of PICs in Haiku, thus generating a smaller amount of LKL-interrupts (not real hardware interrupts), for a lower overhead:
+<pre>
+KERN: [lkl-console] Switched to NOHz mode on CPU #0
+</pre>
+</p>
+
+Now that the LKL boots and shuts down correctly, we have to build the file system driver that uses it :)

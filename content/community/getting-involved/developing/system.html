@@ -1,0 +1,366 @@
++++
+type = "article"
+title = "System Development"
+date = "2015-04-24T13:36:57.000Z"
+tags = []
++++
+
+<h2>Project Areas</h2>
+<ul>
+<li><a href="#drivers">Drivers</a></li>
+<li><a href="#kernel">Kernel/File systems</a></li>
+<li><a href="#media">Media</a></li>
+<li><a href="#network">Network</a></li>
+<li><a href="#user-interface">User interface</a></li>
+</ul>
+
+<HR>
+<a id="drivers" name="drivers"></a>
+
+<h2>Drivers</h2>
+
+<h4>
+USB Support for FreeBSD network compatibility layer
+</h4>
+
+<p>Haiku uses a FreeBSD network compatibility layer to support many network devices (ethernet and wireless) using drivers written for the FreeBSD project. This allows reusing network drivers with very little changes, considerably decreasing the effort needed to get good hardware support in Haiku. However, this layer only supports PCI devices, and doesn't work with USB ones. Adding support for USB to the compatibility layer would bring us support for a range of devices like so-called USB tethering, as well as USB to Ethernet and WiFi dongles.</p>
+
+<p>This project consists in importing one or more USB network drivers from FreeBSD into Haiku sources. The compatibility layer should then be extended to expose the FreeBSD USB APIs to the drivers, and forwarding the calls to Haiku's USB stack. Other parts of the compatibility layers may need to be extended as well.</p>
+
+<h4>
+Virtio network and balloon drivers
+</h4>
+
+<p>Virtio ("virtual input and output") is a technology used in virtual machines to reduce overhead of emulation. Instead of simulating an existing device, virtual machines expose a simplified "virtio" device, which is designed to make interfacing between the guest and host system easier. The technology is currently applied to disks, memory, and network. The virtio memory driver allows to implement "ballooning", that is, the virtual machine can increase or decrease its memory use (just like a balloon is inflated or deflated) when the guest system allocates or releases memory. This makes it easier to share the memory between several virtual machines more efficiently.</p>
+
+<p>Haiku already has a virtio bus driver, and a virtio disk driver. The addition of a virtio network card driver and a virtio memory balloon driver would enable Haiku to take advantage of emulation speedups using the lightweight virtio bus. Haiku could also be deployed in environments such as Amazon S3 or OpenStack. </p>
+
+<ul>
+<li>Tickets: <a href="https://dev.haiku-os.org/ticket/9800">#9800 virtio network driver</a>, <a href="https://dev.haiku-os.org/ticket/9803">#9803 virtio balloon memory driver</a></li>
+<li>Existing code: <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/drivers/network/virtio">virtio network driver (target of this task)</a>, <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/busses/virtio">virtio bus driver (should be mostly complete)</a>, <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/drivers/disk/virtual/virtio_block">virtio block (functional, example usage of virtio bus)</a></li></ul>
+
+<h4>
+ACPI Video Extensions
+</h4>
+
+<p>ACPI Video Extensions, as specified in ACPI Spec 4.0a Appendix B, adds special support to handle multiple output devices such as panels and TV-out capabilities, brightness control as well as special power management features.</p>
+
+<h4>
+AV/1394 support
+</h4>
+
+<p>Our Firewire stack supports DV receiving, but not controlling the A/V device (ie play/stop). This requires to modify the Firewire stack for FCP frame support. See AV/C Digital Interface Command Set General Specification for reference.</p>
+
+<h4>
+USB stack improvements (USB3, isochronous transfers)
+</h4>
+
+Like any other operating system, Haiku has drivers for all types of USB interfaces: OHCI and EHCI for USB1, UHCI for USB2, and XHCI for USB3. However, most of these still need some improvements to improve compatibility and add full support of the USB specification.
+
+The XHCI support is still not complete. On several machines it will not detect devices, generate a lot of hardware interrupts, or even prevent the whole system from booting. Work on XHCI support must be continued so Haiku gets more reliable and complete support for USB3.
+
+USB allows 3 different ways of exchanging data with a device: bulk, interrupt, and isochronous. In bulk mode, the data is transferred when the bus is idle. Interrupt mode has higher priority. Finally, isochronous mode guarantees a minimal rate. This last mode is used for example by USB audio cards and webcams, as they need a constant flow of data at a fixed rate. The UHCI and EHCI drivers are missing support for isochronous USB transfers. This makes it impossible to use most USB sound cards and webcams in Haiku.
+
+The USB tasks consist in implementing either complete USB3 support, or isochronous transfers for USB1 and USB2 devices. This can be complemented with porting a webcam or audio card driver from FreeBSD or Linux (FreeBSD is preferred because of the software license used, we prefer to avoid GPL code if possible).
+<p>Ticket for <a href="https://dev.haiku-os.org/ticket/1045">support</a> of USB isochronous streams.</p>
+
+<h4>
+Floppy drive support
+</h4>
+
+<p>We don't yet support floppy drives</p>
+
+<h4>
+SD Host Controller support
+</h4>
+
+<p>Haiku has currently no support for SD Host Controller. Implementing a stack with support for SDHC PCI devices would be a good start. This would involve designing and developing a SDHC PCI bus driver, a MMC bus module and a MMC SD disk driver. </p>
+
+<p>To develop and test, QEmu (from 2.3) provides an emulation for SDHC on PCI:
+-device sdhci-pci -sd my-test-drive</p>
+
+<ul>
+<li><a href="https://www.sdcard.org/downloads/pls/simplified_specs/partA2_300.pdf">Specifications for SDHC</a>
+<li><a href="https://www.sdcard.org/downloads/pls/simplified_specs/part1_410.pdf">Specifications for MMC</a>
+<li><a href="http://lists.gnu.org/archive/html/qemu-devel/2014-11/msg03244.html">QEmu references</a>
+</ul>
+
+<h4>
+3D acceleration support
+</h4>
+
+<p>Haiku does not currently support hardware acceleration of 3D rendering. Using the Gallium infrastructure from Mesa, the goal of this project is to make the existing Mesa renderer allow 3D rendering and not just software. This involves extending the API used by our video drivers (which is currently 2D oriented only), and making Gallium uses that API. Parts of the DRI/DRM model used on Linux may be reusable, but cooperation with the app_server must be possible.</p>
+
+<h4>
+Nouveau / PSCNV port
+</h4>
+
+<p>Haiku currently doesn't have a driver for NVidia video cards, and falls back to VESA for those. While our VESA driver is reasonably fast, it can't set the native resolution on all systems, leading to a suboptimal Haiku experience.
+Nouveau is a graphics driver for NVidia video cards. There is a fork called PSCNV which might have less dependencies on Linux.
+cf. https://github.com/pathscale/pscnv/wiki
+</p>
+
+<HR>
+<a id="kernel" name="kernel"></a>
+<h2>Kernel</h2>
+
+<h4>
+BootManager
+</h4>
+
+<p>The BootManager needs to be <a href="https://dev.haiku-os.org/ticket/3545">updated</a> to have multi-drive support or needs to be replaced.</p>
+
+<h4>
+UEFI Bootloader x86-64
+</h4>
+
+<p>Haiku currently lacks a UEFI boot loader. The code for making Haiku build an UEFI application with the boot platform already exists. You will need to write the actual boot code that sets up the CPU to boot Haiku.To your help you have the boot code for BIOS x86/x86-64 and serial debugging with printf. Development can be done in QEMU with UEFI firmware and serial output. UEFI API is very simple and learned quickly, major skill needed is booting x86-64 platform. This does not have to include Secure Boot.</p>
+
+<p>
+Haiku code to load the kernel is located in src/boot/platform. You can see the
+<a href="https://github.com/tqh/haiku/tree/efi_pm/src/system/boot/platform">different implementations.</a> The EFI version in that tree builds the bootplatform code, can run as a EFI application, can call EFI functions, but not much else. What needs to be done is setup CPU, MMU, handle kernel args, load kernel, some drivers (at least Vesa) that uses BIOS functions needs disabling. Basically everything needed to setup and boot a x86_64 platform once the EFI app is started is missing. Userland tools for EFI is also missing, so modifying and viewing boot options could also be part of the project. It would need a driver for <a href="http://wiki.phoenix.com/wiki/index.php/EFI_RUNTIME_SERVICES">Runtime services</a> and an application to set/get variables.</p>
+
+<h6>Additional information:</h6>
+<ul>
+<li>Our simplified GNU EFI (good for learning UEFI/QEMU): https://github.com/tqh/efi-example</li>
+<li><a href="https://github.com/tqh/haiku/tree/efi_pm">Current EFI development tree</a>  (take a look at the commit history and 
+<a href="https://github.com/tqh/haiku/commit/ae28c1e76c8754b25c5b887adc59b94fce050413">build instructions</a>)</li>
+<li>UEFI API information: http://wiki.phoenix.com/wiki/index.php/Category:UEFI_2.1</li>
+</ul>
+
+<h4>
+Power management
+</h4>
+
+
+<p>Haiku already has some power management support in the form of a CPU idling driver. This is however clearly not sufficient, and there is room for improvements in several areas in order to make Haiku use less power and make laptops running Haiku last longer on battery.</p>
+<p>Some investigation is required to identify the main issues in Haiku leading to suboptimal performance. There are however a few already known problems:</p>
+<ul>
+<li>Some subsystems such as the network and wireless stack wake up the system at regular intervals (10 or 100 times per second) to perform some tasks. Whenever possible they should be modified to trigger these tasks in anevent-driven way (triggering them from hardware interrupts for example).</li>
+<li>Some applications (such as the always-running DeskBar) are polling for events in a similar way. The APIs should be adjusted where possible to make those applications wait on notifications instead.</li>
+<li>None of the device drivers in Haiku include powersaving modes. When a device is idle, it should be put to sleep and powered off until it is needed again.</li>
+
+<h4>
+File Systems: New HaikuFS to replace BFS
+</h4>
+
+<p>Link to <a href="https://dev.haiku-os.org/wiki/FutureHaiku/FileSystem">idea</a> on devopment wiki.</p>
+
+<h4>
+File Systems: Write support for more filesystems
+</h4>
+
+<p>Haiku has great support for its own file system, but most others are only available read-only. It is way better for interoperability with other systems to be able to write to these disks from Haiku.</p>
+<p>The goal of this project is to complete the existing support for one of the following filesystems in Haiku, working from the existing code base:</p>
+<ol>
+<li>ReiserFS <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/file_systems/reiserfs">existing sources</a>, <a href="http://web.archive.org/web/20070717210450/http://www.namesys.com/X0reiserfs.html">official specifications</a>, <a href="http://p-nand-q.com/download/rfstool/reiserfs_docs.html">extra documentation on the FS layout</a></li>
+<li>BTRFS: <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/file_systems/btrfs">existing code</a>, <a href="https://btrfs.wiki.kernel.org/index.php/Main_Page">homepage</a></li>
+</ol>
+
+<h4>
+File Systems: general improvements and new filesystems.
+</h4>
+
+<p>Haiku has great support for its own file system, but is completely missing support for some other fielsystems. It is way better for interoperability with other systems to be able to read and write to these disks.</p>
+<p>The goal of this project is to port one of the following filesystems to Haiku:</p>
+
+<ol>
+<li>ext4: extend the <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/file_systems/ext2">existing ext2 driver</a> to support new ext3 and ext4 features</li>
+
+<li><a href="http://en.wikipedia.org/wiki/Unix_File_System">UFS2</a> (as used in *BSD): <a href="http://fxr.watson.org/fxr/source/ufs/">FreeBSD implementation</a>, <a href="http://sourceforge.net/p/ufs2tools/code/HEAD/tree/trunk/ufs2tools/">u2fstools for windows</a> (BSD licensed, source can be reused)</li>
+
+<li>HAMMER FS: <a href="http://www.dragonflybsd.org/hammer/">homepage</a>, <a href="http://fxr.watson.org/fxr/source/vfs/hammer/?v=DFBSD">sourcecode</a> (3-clause BSD, a port of the existing code is ok)</li>
+
+<li><a href="http://en.wikipedia.org/wiki/JFS_(file_system)">JFS</a>: existing code in Linux is under the GPL, a rewrite under the MIT license is preferred. The <a href="http://jfs.sourceforge.net/project/pub/jfslayout.pdf">filesystem design and disk structures</a> are well documented.</li>
+
+<li><a href="http://en.wikipedia.org/wiki/Xfs">XFS</a>: <a href="http://xfs.org/index.php/Main_Page">Development community</a>, <a href="http://oss.sgi.com/projects/xfs/index.html">homepage</a>  (existing code in Linux is under the GPL, a rewrite under the MIT license is preferred)</li>
+
+<li><a href="http://en.wikipedia.org/wiki/Zfs">ZFS</a>: <a href="http://www.open-zfs.org/wiki/Main_Page">main page</a>, <a href="https://github.com/illumos/illumos-gate/tree/master/usr/src/uts/common/fs/zfs">existing code</a> (Existing code is under the CDDL, a rewrite is preferred)</li>
+<li><a href="http://en.wikipedia.org/wiki/Server_Message_Block">SMB</a>, Windows shares: <a href="http://fxr.watson.org/fxr/source/fs/smbfs/?v=FREEBSD10">smbfs from FreeBSD</a> (2-clause BSD, code can be ported to Haiku)</li>
+</ol>
+
+<p>It's okay to port over the code from other systems, although we prefer code that can be distributed under the MIT license.</p>
+
+<h4>
+IMAP FS: File system access to an IMAP account
+</h4>
+
+<p>In Haiku emails are stored as individual <a href="http://www.haiku-os.org/docs/userguide/en/workshop-email.html">file with extended attributes</a>. The <a href="http://en.wikipedia.org/wiki/Internet_Message_Access_Protocol">IMAP</a> protocol exposes mails in a folder hierarchy and makes it possible to "browse" a remote mail box. Mounting an IMAP account as a local file system is therefore a natural fit. The file system should have full read and write support (deleting mails (files), creating folders, and moving mails between folders, etc.) with local caching for better performance. The design of <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/file_systems/netfs">netfs</a> and <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/file_systems/nfs4">nfs4</a> implementations for Haiku, as well as the simpler <a href="http://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/file_systems/googlefs">googlefs</a> can serve as a reference on how to implement a network file system.</p>
+
+<h4>
+x86-64: Support for 32 bit userland
+</h4>
+
+<p>
+Haiku is currently available in both 32 and 64 bit versions. However, the 64-bit version is currently unable to run 32-bit applications, forcing application developers to provide a 64-bit version of their applications. This is reducing the adoption of 64bit versions of Haiku for lack of available applications.</p>
+<p>The goal of this task is to add a compatibility mode to the 64-bit kernel so it is able to run 32-bit programs. The issues in doing that involve adjusting syscall parameters, and mainly converting pointers from the 32bit userland to the 64-bit addressing used on the kernel side. 32-bit applications compiled for Haiku "x86" architecture should be supported. Handling of gcc2-compiled legacy BeOS applications may also be considered as an extended goal, but not as much important.</p>
+
+
+<h4>
+ARM port / device tree support
+</h4>
+
+<p>Unlike x86 systems which have a PCI bus, most ARM devices have peripherals at hardcoded addresses. This means automatic hardware discovery is not possible. The Linux kernel developers designed a solution called "flattened device tree". It is a static description of the hardware, telling the kernel where devices are located and which driver to use.</p>
+
+<p>Haiku plans to use device trees to support several ARM devices with the same kernel. This requires updating our drivers and driver infrastructure to not rely so much on the PCI bus. This work should start with the USB EHCI driver, in order to provide at least one mass storage solution to the ARM port of Haiku.</p>
+
+<p>The ARM port of Haiku is currently in an early state. This project may involve debugging of other issues in the port to get it running further, so the device tree part can be tested. Several parts of the early boot code should be reviewed to make use of the device tree and remove hardcoded addresses (RAM mapping, framebuffer, serial port, etc).</p>
+
+
+<h4>
+Unify File System Caches
+</h4>
+
+<p>
+The Haiku kernel provides two kinds of caches for use by file system implementations: the <a href="http://cgit.haiku-os.org/haiku/tree/src/system/kernel/cache/file_cache.cpp">file cache</a> and the <a href="http://cgit.haiku-os.org/haiku/tree/src/system/kernel/cache/block_cache.cpp">block cache</a>. The file cache caches data at the "file" level, while the block cache is used at the "block" level and is used for on-disk structures as well as file data.</p>
+
+<p>The file cache uses physical memory pages directly and it is linked with the <a href="http://cgit.haiku-os.org/haiku/tree/src/system/kernel/vm">VM subsystem</a>, so that pages used for caching are freed automatically (in a least recently used order) when running low on free memory. The block cache, however, uses mapped memory (via the <a href="http://cgit.haiku-os.org/haiku/tree/src/system/kernel/slab">slab allocator</a>) and freeing memory in low memory situations is handled via the <a href="http://cgit.haiku-os.org/haiku/tree/src/system/kernel/low_resource_manager.cpp">low resource manager</a>.</p>
+
+<p>The first problem with the current implementation is caching imbalance in favor of the block cache: it tends grow more than needed and prevent the file cache to get enough memory.</p>
+<p>Another problem is the use of large amounts of kernel address space by the block cache, which can be problematic on 32 bit architectures. This makes the block cache constrained to the 2GB of memory available for the kernel in Haiku, and sometimes makes the kernel run out of address space for other uses.</p>
+
+<p>The goal of this project is to create a common underlying mechanism (using `VMCache`) to unify both caches and move the block cache out of the kernel address space. The following problems need to be investigated and solved:
+<ul>
+<li>How to deal with heterogenous block sizes (not necessarily matching the page size): each mounted filesystem volume may have a different block size, and the block cache must be able to efficiently cache blocks of these different sizes,
+<li>How to map support for transactions to `VMCache` hierarchies,
+<li>Balancing of the memory allocation between the block and the file cache and between multiple mounted filesystem volumes.
+</ul>
+</p>
+
+<h4>
+Replace GNU code with that under permissive licence
+</h4>
+
+<p>Replace GNU C library and utilities with BSD-licensed <a href="https://dev.haiku-os.org/ticket/1907">equivalents</a></p>
+
+<h4>
+Session management
+</h4>
+
+<h4>
+Multi-user support
+</h4>
+
+<HR>
+<a id="network" name="network"></a>
+<h2>Network</h2>
+
+<h4>
+Bluetooth Stack Improvements
+</h4>
+
+<p>Haiku Bluetooth Stack implements only basic functionality on lower and middle layers. This functionality needs to be completed and Bluetooth 2.X and later possibilities explored. This task involves investigating the current state of the Bluetooth code, checking that the basic functionality is still working (pairing devices, etc), and improving the stack to make it more useful by implementing drivers for a Bluetooth device of your choice (audio, HID, networking, etc).</p>
+
+<h4>
+Integrate our PPP implementation
+</h4>
+
+<p>Port the PPP implementation to our new network stack. Add phone-line modem support, including HDLC framing and VJC compression (porting both algorithms is sufficient, but make sure the license is compatible to MIT). Implement CHAP authentication. Find and fix bugs.</p>
+
+<ul>
+<li>Tickets: <a href="http://dev.haiku-os.org/ticket/812">#812</a>, <a href="http://dev.haiku-os.org/ticket/869">#869</a>, <a href="http://dev.haiku-os.org/ticket/873">#873</a>, <a href="http://dev.haiku-os.org/ticket/922">#922</a>, <a href="http://dev.haiku-os.org/ticket/923">#923</a>, <a href="http://dev.haiku-os.org/ticket/1059">#1059</a>, maybe: <a href="http://dev.haiku-os.org/ticket/1057">#1057</a>, <a href="http://dev.haiku-os.org/ticket/1058">#1058</a></li>
+</ul>
+
+<h4>
+Stream Control Transmission Protocol (SCTP)
+</h4>
+
+<p>Implement and test SCTP, a message based transport layer protocol similar to TCP and UDP. It should comply with current IP and IPv6 implementations and provide similar programming API as BSD.</p>
+
+<h4>
+IPv6 Finalization
+</h4>
+
+<p>
+The base framework for IPv6 support was implemented as a Google Summer of Code 2010 project. Even so, there remains a lot of smaller cleanup/finalization tasks that can be done as a project.
+</p>
+
+<ul>
+<li>Tickets:
+<ul>
+<li><a href="http://dev.haiku-os.org/ticket/8293">#8293</a> -- BNetworkAddress needs to check if there is an available IPv6 connection.</li>
+<li><a href="http://dev.haiku-os.org/ticket/7228">#7228</a> -- RFC: BNetworkInterfaceAddress needs to store auto-configuration flags</li>
+<li><a href="http://dev.haiku-os.org/ticket/6489">#6489</a> -- ifconfig needs to validate availability of ipv6 module prior to utilization</li>
+<li><a href="http://dev.haiku-os.org/ticket/2632">#2632</a> -- Possible redefinition for struct sockaddr_in, related to IPv6</li>
+<li><a href="http://dev.haiku-os.org/ticket/8319">#8319</a> -- Haiku needs IPv6 duplicate address detection during link scope ip configuration.</li>
+<li><a href="http://dev.haiku-os.org/ticket/8317">#8317</a> -- Haiku needs IPv6 global scope Auto Configuration (router advertisement + DHCPv6)</li>
+<li><a href="http://dev.haiku-os.org/ticket/11862">#11862</a> -- Net server multi-protocol rework</li>
+</ul></ul>
+
+<h4>
+Extending and improving the Services Kit network backend
+</h4>
+
+<p>
+The WebKit browser and some other Haiku applications such as HaikuDepot use the Services Kit as a network backend. This is a library similar to <a href="http://curl.haxx.se/">curl</a> or <a href="https://wiki.gnome.org/action/show/Projects/libsoup">soup</a>, but nicely integrated into the Haiku API for easy use in native applications. The Services Kit is still a work in progress, however, and can be improved in several ways. The work on this task could include:
+</p>
+
+<ul>
+<li>Reworking the Service Kit to avoid spawning one thread for each network request. The requests should be allowed to run in an existing thread, or to be grouped together (by use of select() or poll() to wait for activity on their sockets, then dispatching events to the BNetworkRequest objects). This would remove some of the overhead of creating a request and solve some design issues in the Services Kit API.</li>
+<li>Implementing HTTP 1.1 support, allowing the reuse of the connection to an HTTP server to perform multiple requests. BHttpRequest objects should be reworked to be able to use an existing HTTP 1.1 connection, and a way to store existing connections should be added.</li>
+<li>A caching layer for HTTP requests. There currently is no cache which means some requests are made again and again to the same server. The cache should keep the result of these requests on disk and/or in memory, making it possible to reuse them and load web pages faster.</li>
+<li>Complete support for HTTP proxies. While there is currently limited support, it is not possible to do HTTPS requests through a proxy. This should be added, as well as a system-wide user interface to configure and manage proxies.</li>
+<li>Implementing FTP support. The services kit is designed to support multiple protocols, but currently only HTTP and Gopher are supported (as well as the local "file" and "data" protocols). FTP support in the web browser would be helpful.</li>
+
+<HR>
+<a id="user-interface" name="user-interface"></a>
+<h2>User Interface</h2>
+
+<h4>
+Preflet GUI refactoring
+</h4>
+Several preference applications (aka preflets) could be redesigned. Furthermore, there might still be code that does not yet use our layout API. This work may include (but is not limited to):
+<ol>
+<li>combining Keymap and Keyboard</li>
+<li>combining Mouse and Touchpad</li>
+<li><a href="http://dev.haiku-os.org/ticket/6983">#6983</a>Printer</li>
+<li><a href="http://dev.haiku-os.org/ticket/6206">#6206</a>integrate scrollbar options into a new Appearance preflet</li>
+<li>Shortcuts</li>
+<li>Notifications</li>
+</ol>
+
+<h4>
+Modular edit view
+</h4>
+
+<p>Many Haiku applications are using their own edit view to provide basic editor functionalities. All these implementations work a little bit different and create an inconsistent user experience.
+One solution is to provide a modular and powerful editor view that could be used in various Haiku applications.</p>
+<p>The edit view design should be modular and extensible to make it easy to implement e.g. following features:</p>
+
+<ul>
+<li>syntax highlighting</li>
+<li>spell checker</li>
+<li>code completion, word completion</li>
+<li>line numbers, ruler, 80 character limit line, hyper links</li>
+<li>working on an input stream rather than on a input file e.g. to be able to open files ~100Mb without loading them into memory in one go.</li>
+<li>interface to external applications e.g. to jump from a compiler error to the according line in the code</li>
+</ul>
+<p>Reuse of existing syntax highlighting libraries may be possible, provided they can be connected to a native Haiku view. MIT license would be preferred for the external library.</p>
+
+<HR>
+<a id="media" name="media"></a>
+<h2>Media</h2>
+
+<h4>
+Add subtitle support to the Media Kit
+</h4>
+
+<p>While our MediaPlayer has support for external subtitle files, the Media Kit itself has not. The most obvious downside of that is that there is no support for subtitle (text or bitmap) embedded in video files within the MediaPlayer or other applications.</p>
+<p>Your job would be to design the necessary API extensions to let subtitles fit in with the rest of the Media Kit, and add native support for them, which will then be available to all applications as part of the framework.</p>
+
+<ul>
+<li>See <a href="/legacy-docs/bebook/TheMediaKit_Overview_Introduction.html" target="_blank">the BeBook introduction for the Media Kit</a> to become familiar with its design.</li>
+</ul>
+
+<h4>
+Implement system wide and application level input/output chooser
+</h4>
+
+<p>When more than one soundcard is attached to Haiku, you can only change the default input/output in the Media preferences, or reconnect media nodes manually via Cortex to another input/output device.
+The Media Kit could support default nodes per application (either unset (system default), or set to a specific device), and the Media preferences could offer an UI to change this.</p> <p>Additionally, applications like MediaPlayer, and SoundRecorder should be able to change the input/output device within the application, too (which would just be another way to alter the described Media Kit functionality).</p> <p>This functionality should only be visible if there actually is more than one audio device attached to the system; if a device is not available, it should automatically use the default output instead.</p> <p>Part of this work would be to implement non-volatile storage that the Media Kit uses for each application that is connected to it, and the ability to detect the application on next start. This storage could then also be used to remember other per application sound settings in the future (or if time permits) like the balance, and relative volume.</p>
+
+<h4>
+Streaming support for Media Kit and applications
+</h4>
+
+<p>The media kit and related applications in Haiku relies a lot on the BMediaFile being seekable. This makes it difficult to use with non-seekable media sources such as internet streams or DVD media. Rework what's needed to get them working properly.</p>

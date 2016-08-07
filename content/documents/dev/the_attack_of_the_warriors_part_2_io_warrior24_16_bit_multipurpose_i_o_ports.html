@@ -1,0 +1,78 @@
++++
+type = "article"
+title = "The Attack Of The Warriors, Part 2: IO-Warrior24 - 16 Bit Multipurpose I/O Ports"
+date = "2006-01-27T21:00:00.000Z"
+tags = ["hardware", "kernel", "I/O"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p><em>The code discussed in this article can be found <a href="../../files/HaikuNewsletter58Article1Archive1.zip">here</a>.</em></p>
+
+<p>The IO-Warrior24 device from Code Mercenaries is equipped with 16 general purpose I/O (input/output) pins. When enabling the so-called special mode functions, more or less pins are reassigned to serve a special purpose. You can select between:</p>
+
+<ul><li>I2C, IIC: a two-wire serial Inter-IC-Bus allowing connection to RAMs, EEPROMs, ADCs,DACs  and a lot more.</li>  <li>LCD: parallel communication with  alphanumerics  Liquid-Christal-Display units</li>  <li>SPI: a four-wire serial Serial-Peripheral-Interface-Bus similar to I2C</li>  <li>LED-Matrix: a serial communication bus to control LEDs in a multiplexed matrix configuration</li>   <li>RC5IR: Infrared Remote control according to the RC5 code</li> </ul>
+
+<p>We&#39;ll now examine this impressive manifold of functions step-by-step. To make life a little bit easier, Code Mercenaries is offering an &quot;IO-Warrior24 Starter Kit&quot; providing a LED controlled by an I/O-pin, an IR receiver, and the circuit and a 16-pin connector to directly connect a LCD module. A wrap-field can be found, too - you can add your own electronic components. Below you find the assembled starter kit and wiring diagram.</p>
+
+<p align="center"><a href="/files/HaikuNewsletter58Article1Image1.jpg"><span class="inline right"><a href="/drupal/" onclick="launch_popup(216, 664, 422); return false;" target="_blank"><img src="http://projectx.petterhj.net/drupal/files/screenshots/HaikuNewsletter58Article1Image1.jpg" alt="Figure 1: Starter Kit" title="Figure 1: Starter Kit" class="image preview" height="422" width="664"></a><span class="caption" style="width: 662px;"><strong>Figure 1: Starter Kit</strong></span></span></a></p>
+
+<span class="center"><img src="http://projectx.petterhj.net/drupal/files/screenshots/HaikuNewsletter58Article1Image2_0.preview.jpg" alt="Figure 2: IO-Warrior24 Wiring Diagram" title="Figure 2: IO-Warrior24 Wiring Diagram" class="image preview" height="647" width="800"><span class="caption" style="width: 798px;"><strong>Figure 2: IO-Warrior24 Wiring Diagram</strong></span></span>
+
+<p>If everything is prepared, then connect your warrior to the USB hub and launch USBCommander. Starting with release V1.0.1.0 all IO-Warrior chips do have unique serial numbers. If multiple IO-Warriors are connected to your hub you can easily distinguish them.</p>
+
+<span class="center"><img src="http://projectx.petterhj.net/drupal/files/screenshots/HaikuNewsletter58Article1Image3_0.jpg" alt="Figure 3: USB Device Info" title="Figure 3: USB Device Info" class="image preview" height="524" width="386"><span class="caption" style="width: 384px;"><strong>Figure 3: USB Device Info</strong></span></span>
+
+<p>&quot;USB Device Info&quot; is delivering the following information. A single configuration is present, but -- in contrast to the simple JoyWarrior -- the IO-Warrior uses two interfaces: interface 0 and interface 1. Endpoint 0 from the first interface uses two bytes for interrupt-transfer. Data is always written via a two byte control-transfer to this endpoint. All special-mode functions are managed by endpoint 0 of interface 1, but now eight bytes of data are used for control- and interrupt-transfer. Control transfer is done via SetReport requests which can be distinguished by different ReportIDs.</p>
+
+<h3>Writing Data to Port 0 and Port 1</h3>
+
+<p>Configuration 0, interface 0, and endpoint 0 is the minimal configuration for all USB devices. BeOS doesn&#39;t need the ReportID to perform a control transfer concerning this configuration. The MaxPacketSize is two bytes representing the two ports. You are able to send a report every 10 ms (i.e., Interval = 10).</p>
+
+<p align="center"><table border="1" width="50%">    <tbody><tr><td colspan="6">Control Transfer - Interface 0</td></tr>   <tr><td colspan="3">ReportID = 0x00</td><td colspan="3">Write Data To Port 0,1</td></tr>   <tr><td colspan="2">byte</td><td colspan="2">0</td><td colspan="2">1</td></tr>   <tr><td colspan="2">report</td><td colspan="2">Port 0</td><td colspan="2">Port 1</td></tr>   </tbody></table>Figure 4: Control Transfer Structure </p>
+
+<p>Sending data to the both ports is very easy. You create a two-byte report-field and set the individual bits to high or low level for the appropriate pins.</p>
+
+<pre>USBDevice dev(&quot;/dev/bus/usb/0/1/3&quot;);	// USB device<br />uchar report[2];<br /><br />report[0] = ~(0x08);			// switch on the red LED1 -&gt; Port 0, Bit 3, on-&gt; force pin to ground<br />report[1] = 0xFF;			// Port 1 all pins high<br /><br />ssize_t size = 0;<br />size = dev.ControlTransfer( USB_REQTYPE_CLASS |USB_REQTYPE_INTERFACE_OUT, // request type<br />			    USB_REQUEST_SET_CONFIGURATION,		  // request value<br />			   0,						  // value<br />			   0,						  // index : Interface 0 (IF0)<br />			   sizeof(report),				  // length: 2 bytes-&gt;IF0<br />			   report);					  // report<br /><br />    printf(&quot;size written = %d<br />&quot;,(int)size);<br /></pre>
+
+<p>The greatest problem is to find the correct parameters concerning the control transfer - USBCommander and the header file USB_spec.h are very helpful to perform this task. Don&#39;t forget to check the returned number of bytes: It must fit the transmitted report size, otherwise something went wrong.</p>
+
+<h3>Reading Data from Port 0 and Port 1</h3>
+
+<p>This is arranged by a two-byte interrupt transfer:</p>
+
+<p align="center">  <table border="1" width="50%">   <tbody><tr><td colspan="6">Interrupt Transfer - Interface 0</td></tr>   <tr><td colspan="3">ReportID = 0x00</td><td colspan="3">Read Data From Port 0,1</td></tr>    <tr><td colspan="2">byte</td><td colspan="2">0</td><td colspan="2">1</td></tr>   <tr><td colspan="2">reply</td><td colspan="2">Port 0</td><td colspan="2">Port 1</td></tr>  </tbody></table>Figure 5: Interrupt Transfer Structure </p>
+
+<pre><br />uchar reply[2];<br />const USBEndpoint *ept = dev.ActiveConfiguration()-&gt;InterfaceAt(0)-&gt;EndpointAt(0);<br />size = ept -&gt; InterruptTransfer(reply,sizeof(reply));	// last pin status<br />size = ept -&gt; InterruptTransfer(reply,sizeof(reply));	// actual pin status<br />if (size == sizeof(reply))<br />    printf(&quot;Port 0, Port 1:  0x%02X 0x%02X<br /> &quot;, reply[0], reply[1]);<br />else<br />    printf(&quot;Wrong size read = %d<br />&quot;,(int)size);<br /></pre>
+
+<p>The terminal output from the above looks like:</p>
+
+<pre>Port 0, Port 1:  0xF7 0xFF  (1111 0111   1111 1111)</pre>
+
+<p>The small code fragment shows how to read the status of the red LED1 we switched on in the last example. First we must get access to the endpoint in order to perform an interrupt transfer.  This transfer must be called twice--this seems to be a peculiarity concerning the interrupt handling of the Warrior device--an input pin status change is needed, and with Be&#39;s USB Kit, the last status is held.  Normally you will not be affected by this issue when you have a thread periodically reading the status of the device.</p>
+
+<p>It&#39;s possible to  avoid this (mis)behavior when setting a &quot;Special Mode Function&quot; to get the current pin status - please have a look at chapter 5.10.4 of the data sheet.</p>
+
+<p align="center">  <table border="1" width="50%">   <tbody><tr><td colspan="9">Control Transfer - Interface 1</td></tr>   <tr><td colspan="3">ReportID = 0xFF</td><td colspan="6">Get Current Pin Status</td></tr>   <tr><td>byte</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>    <tr><td>report</td><td>ReportID</td><td>0x00</td><td>0x00</td><td>0x00</td><td>0x00</td><td>0x00</td><td>0x00</td><td>0x00</td></tr>  </tbody></table>Figure 6: Control Transfer Structure </p>
+
+<p>After sending the special report to Interface 1, the data is delivered by an eight-byte interrupt transfer.</p>
+
+<p align="center">  <table border="1" width="50%">   <tbody><tr><td colspan="9">Interrupt Transfer - Interface 1</td></tr>   <tr><td colspan="3">ReportID = 0xFF</td><td colspan="6">Status Of Ports P0,...,P3</td></tr>   <tr><td>byte</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>    <tr><td>report</td><td>ReportID</td><td>Port 0</td><td>Port 1</td><td>Port 2</td><td>Port 3</td><td>0x00</td><td>0x00</td><td>0x00</td></tr>  </tbody></table>Figure 7: Interrupt Transfer Structure</p>
+
+<pre>uchar report2[8] = {0xFF,0x00,0x00,0x00,0x00,0x00,0x00,0x00};<br />size = dev.ControlTransfer(USB_REQTYPE_CLASS |USB_REQTYPE_INTERFACE_OUT,	// request type<br />			 USB_REQUEST_SET_CONFIGURATION,				// request value<br />			 0,							// value<br />			 1,							// index : Interface 1 (IF1)<br />			 sizeof(report2),					// length: 8 bytes-&gt;IF1<br />			 report2);						// report2<br />printf(&quot;size = %d<br />&quot;,(int)size);<br />uchar reply[8];<br />const USBEndpoint *ept = dev.ActiveConfiguration()-&gt;InterfaceAt(1)-&gt;EndpointAt(0);<br />if ( (ept -&gt;InterruptTransfer(reply,8) ) == 8)<br />     printf(&quot; ReportID, Port0...Port3, ...:  0x%02X  0x%02X  0x%02X  0x%02X  0x%02X  0x%02X  0x%02X 0x%02X&quot;,<br />	reply[0],reply[1],reply[2],reply[3],reply[4],reply[5],reply[6],reply[7]);<br /><br />// avoid odd/even problem of USB bus manager<br />dev.ControlTransfer(USB_REQTYPE_CLASS |USB_REQTYPE_INTERFACE_OUT,<br />				USB_REQUEST_SET_CONFIGURATION, 0, 1, sizeof(report2), report2);<br /><br />	ept-&gt;InterruptTransfer(reply,8);<br /></pre>
+
+<p>The terminal output from that would be:</p>
+
+<pre>ReportID, Port0...Port3, ...:  0xFF  0xF7  0xFF  0x00  0x00  0x00  0x00 0x00</pre>
+
+<p>Again we are trying to get the status of the red LED1. The transfer is done by Interface 1 - keep in mind we are using a special mode. Byte number 1 and 2 of the reply-field are containing the expected result. Because the BeOS USB bus manager is suffering from the famous odd/even problem described by ITO, Takayuki we had to repeat the action twice to simulate an even number of accesses. Otherwise the program will freeze and you have to reboot.  Zeta&#39;s USB stack is properly working, so you can remove the extra lines of code in your Zeta app.</p>
+
+<p>After removing all pitfalls it&#39;s time to introduce IOW24_IO16, an application equipped with a nice GUI constructed with InterfaceElements.</p>
+
+<span class="center"><img src="http://projectx.petterhj.net/drupal/files/screenshots/HaikuNewsletter58Article1Image4.jpg" alt="Figure 8: IOW24_IO16 Input" title="Figure 8: IOW24_IO16 Input" class="image preview" height="280" width="428"><span class="caption" style="width: 426px;"><strong>Figure 8: IOW24_IO16 Input</strong></span></span>
+
+<span class="center"><img src="http://projectx.petterhj.net/drupal/files/screenshots/HaikuNewsletter58Article1Image5.jpg" alt="Figure 9: IOW24_IO16 Output" title="Figure 9: IOW24_IO16 Output" class="image preview" height="281" width="428"><span class="caption" style="width: 426px;"><strong>Figure 9: IOW24_IO16 Output</strong></span></span>
+
+<p>Launch the application and type in the &quot;VendorID&quot;, &quot;ProductID&quot; and the unique &quot;Serial Number&quot;. Press the button &quot;Search USB Device&quot;, and if the dedicated device is connected, the related &quot;Product&quot; string (see USBCommander&#39;s USB Device Info) will appear. Normally all port pins are high, but with the help of sixteen checkboxes the pins can be set individually to low level. If LEDs are connected, they will be switched on. Without additional hardware -- I added eight LEDs to Port 1 -- you can only watch our famous red LED1, Port 0, bit 3.</p>
+
+<p>Now press &quot;Start Reading&quot; - both ports will periodically be scanned and the results will be displayed in the &quot;Read Port&quot; boxes. The most interesting part, however, is to stimulate the pins externally.  Please press the &quot;Output&quot; button - the device will be switched to input mode, where all ports are set to high level and can then be pulled down to ground to indicate low level. The left image is showing the input mode and bit 7 and 6 of port 1 forced externally to ground.</p>  
+
+<p>The &quot;Read Immediate&quot; checkbox is reserved for the special mode &quot;Get Current Pin Status&quot;. You will find out that reading is now instantaneous and the small delay of the normal reading mode has vanished. What about hot-plugging? No problem, as long as the &quot;Read Immediate&quot; mode isn&#39;t used. Next time we&#39;ll talk about the other special modes - stay tuned.</p><br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

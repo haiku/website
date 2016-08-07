@@ -1,0 +1,40 @@
++++
+type = "article"
+title = "Let's make use of Thread Local Storage!"
+date = "2002-05-04T09:00:00.000Z"
+tags = ["kernel", "TLS"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>TUTORIAL NEEDS REVISION - as stated in comments - "Note one should use initialize_after() and terminate_before() instead of _init() and _fini(), as the shared object crt code actually defines them already in BeOS, to do some dirty tricks, and call the initialize/terminate functions when present." - NEEDS REVISION</p>
+
+<p>Last week, I came across an interesting problem which I had not dealt with before. Some people on IRC were discussing the testing of the new netkit, and had problems with the unimplemented libnet call _h_errnop(), which supposedly returns the address of the errno variable for network funcs. In fact, I think it calls _h_errno() defined somewhere else, but that&#39;s the idea.</p>
+
+<p>Since we want this stuff to be thread-safe, errno shouldn&#39;t be clobbered by calls made by other threads. In the headers (search in /boot/header for netdb.h), this function is then used in a macro to <em>virtualise</em> the UNIX network equivalent of errno, with this line:</p>
+
+<p> #define h_errno (*__h_errno()) </p>
+
+<p>But the point is: <em>How can threads, which belong to the same address space, access something different at the same address ?</em></p>
+
+<p>The answer is <strong>Thread Local Storage</strong> (TLS), which is an API that provides a means to get a 32 bit value that can have a different value for each thread in a team. It&#39;s a valuable thing to help in the porting of a UNIX mono-threaded application. And it is also used in the system libraries, as we will see below. There is even a <a href="http://beunited.org/bebook/The%20Support%20Kit/TLS.html">page of the BeBook</a> that describes this API (check also the <a href="///boot/develop/headers/be/support/TLS.h">header file</a>). </p>
+
+<p>While I was searching for more information about this, <a href="http://google.com/">Google</a> kindly pointed me to <a href="http://www.goingware.com/freesoftware.html">this page</a>, where you can find the <a href="http://www.goingware.com/ftp/TLS-R4-x86.zip">source code</a> to the BeOS implementation of TLS on R4 (which seems to have been integrated in libroot by now, with a bit of help from the kernel maybe, since the intel implementation uses inlined asm that makes use of the fs segment register), and find out that the API comes from MS-Windows (*grin*)...  </p>
+
+<h3>Another trick</h3>
+
+<p>For the new libnet, we need to make use of this TLS API. But however, there is another issue: <em>How can you be sure make sure the calls to _h_errnop() will succeed, since the TLS slot needs to be allocated before making use of it?</em></p>
+
+<p>Well there might be more than one way of ensuring this, one of which would be to use atomic_add() like this:</p>
+
+<pre>status_t *_h_errnop(void)<br />{<br />    static uint32 initdone = 0;<br />    static volatile uint32 initcomplete = 0;<br />    <br />    // make sure we don&#39;t test a cached register<br />    // that we wouldn&#39;t be able to assign from another thread<br />    if (!atomic_add(&amp;initdone, 1)) {<br />        h_errno_tls = tls_allocate();<br />        atomic_add(&amp;initcomplete, 1);<br />    } else {<br />        atomic_add(&amp;init_done, -1);<br />        while (!initcomplete)<br />            // busy wait the first thread to pick up init did it totally<br />            ;<br />    }<br />    return tls_address(h_errno_tls);<br />}<br /><br /></pre>
+
+<p>This is a bit of overkill for such a tiny thing.</p>
+
+<p>There is a nicer solution, one that is used by the current libroot also, which involves hooking in the library loading mechanism, using standard elf libraries features. Google told me this was described <a href="http://www-106.ibm.com/developerworks/library/l-shobj/">here</a> (dang it, at least a nice tutorial about shared libraries !!!).</p>
+
+<p>The trick here is we will provide the _init() function to the compiler (to the linker really), so it won&#39;t include the default one when creating the shared object. This special function gets called just when library has been loaded, before anything else is called in it. As you will see below it makes everything much simpler :-)</p>
+
+<h3>The code</h3>
+
+<p>Here is just what I proposed to the people on IRC to add to the libnet code. Quite simple but still helpful.</p>
+
+<pre>#include &lt;TLS.h&gt;<br />#ifdef __cplusplus<br />extern &quot;C&quot; {<br />#endif<br />// the TLS id<br />static int32 h_errno_tls;<br />// This hook gets called upon dynamic library load<br />void _init()<br />{<br />    h_errno_tls = tls_allocate();<br />    // however it doesn&#39;t check for error...<br />}<br />// this one is called before the library gets unloaded<br />// (fini means ended in French)<br />void _fini()<br />{<br />}<br />// returns the pointer to the _h_errno status variable.<br />status_t *_h_errnop(void)<br />{<br />    return tls_address(h_errno_tls);<br />}<br />#ifdef __cplusplus<br />}<br />#endif<br /></pre><br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

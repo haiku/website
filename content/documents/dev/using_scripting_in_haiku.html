@@ -1,0 +1,85 @@
++++
+type = "article"
+title = "Using Scripting in Haiku"
+date = "2001-11-03T11:00:00.000Z"
+tags = ["user interface", "scripting", "hey"]
++++
+
+<div class="field field-type-text field-field-body"><h3 class="field-label">Body</h3><div class="field-items"><div class="field-item"><p>With this article I hope to explain the basics of scripting using BeOS and how it can enhance the Haiku project. To try out several examples mentioned in this article, you&#39;ll have to download a program called <a href="http://www.bebits.com/app/3332">hey</a>, which enables you to script BeOS applications from a Terminal.</p>
+
+<p>The program <a href="http://www.bebits.com/app/3332">hey</a> was developed by Atilla Mezei, an early BeOS developer, who unfortunately seems to have left the BeOS community. He created this tool to have a good testing tool when implementing scripting in BeOS applications.</p>
+
+<p>As an example, I&#39;m going to use my pet project, the print kit for Haiku. Or to be more specific, the print_server. The print_server presents most of the functionality of the printing architecture of BeOS, and is used by both the BPrintJob class and the Printers preference application.</p>
+
+<p>The requests to the print_server range from selecting a printer to putting up a page setup dialog for a specific printer. Also removing or adding a printer is actually done by the print_server. Here&#39;s an example of using hey with a scriptable application:</p>
+
+<pre>$ hey print_server DO PageSetup OF Printer &quot;MyPSPrinter&quot;</pre>
+
+<p>This will make the print_server put up the page setup dialog for the printer named &quot;MyPSPrinter&quot;, and return the settings made in the reply BMessage object. Another option is:</p>
+
+<pre>$ hey print_server CREATE Printer WITH name = &quot;DummyPrinter&quot; AND driver=&quot;Postscript&quot; AND Transport=&quot;Serial Port&quot; AND TransportAddress=&quot;ser1&quot;</pre>
+
+<p>Which will create a printer with the name &quot;DummyPrinter&quot; using the Postscript printer driver and using the 1st serial port as output port.</p>
+
+<p>To see what other commands the print_server will respond to, tell it to show its vocabulary:</p>
+
+<pre>$ hey print_server GETSUITES</pre>
+
+<p>Also, the classes from the Application and Interface kit both contain lots of scripting support. This is all described in the BeBook, as all these classes have a Scripting Support table explaining what you can script with them. Just for a cool example, try this:</p>
+
+<pre>$ hey Tracker GET Frame OF Window 1</pre>
+
+<p>You&#39;ll see returned a BRect() description that looks like the resolution of your current workspace. If you do this:</p>
+
+<pre>$ hey Tracker SET Frame OF Window 1 TO BRect[0,0,200,200]</pre>
+
+<p>The window of the Tracker will be resized to a really small one. If you now drag your Terminal around, you&#39;ll see that the largest part of your screen will not get updated anymore, as the window is smaller, and outside that window there is nothing :)</p>
+
+<p>Another useful one is this:</p>
+
+<pre>$ hey Terminal SET Title OF Window 0 TO &quot;Ithamar&#39;s teaching me Scripting :)&quot;</pre>
+
+<p>This is mostly useful if you&#39;re opening a lot of Terminals and want to quickly see which is which in the window list from the Deskbar. Hope this shows a few simple neat tricks with BeOS Scripting :)</p>
+
+<h3>Implementing scripting in the print_server</h3>
+
+<p>How does this work internally? Well, I&#39;ll explain to you how I did it within the print_server. Most of this code is in the current Haiku tree, so you should be able to view it from the web or download it using SVN tools on your favorite platform.</p>
+
+<p> Please note that I&#39;m assuming, for the sake of space saving here, that you&#39;ve read the Application Kit&#39;s introduction to messaging, and have had some experience with messaging on the BeOS (that means, you&#39;ve written a GUI app for BeOS, that had a clickable something, like menus, or buttons, or such).</p>
+
+<p>First thing to do is to make the application object scriptable. As described in the BeBook (see links on the bottom of this article), this involves basicaly a few simple overrides. First of all, we&#39;ll add a method called GetSupportedSuites() to the application class, which looks like this:</p>
+
+<pre>status_t<br />PrintServer::GetSupportedSuites(BMessage *message)<br />{<br />    message-&gt;AddString(&quot;suites&quot;, B_PSRV_PRINTSERVER_SUITE); <br />	<br />    BPropertyInfo prop_info(prop_list); <br />    message-&gt;AddFlat(&quot;messages&quot;, &amp;prop_info); <br />    return Inherited::GetSupportedSuites(message);<br />}<br /><br /></pre>
+
+<p>This method is called by the BHandler class as soon as any app sends the B_GET_SUPPORTED_SUITES message to it.</p>
+
+<p>As you can see, it adds a string &quot;suites&quot; to the message passed, that should look like &quot;suites/vnd.VENDOR-NAME&quot; where VENDOR and NAME are chosen by you. Next, it adds a flattened object of type BPropertyInfo under the name &quot;messages&quot;, which are the actual scripting commands which are defined under the above mentioned scripting suite. The format of this table we will see later on in this article.</p>
+
+<p>Next thing is that the application object will have to know how to resolve the scripting specifiers, like &quot;OF Printer 1&quot;, which is handled by a method called ResolveSpecifier. See an example of such a method below:</p>
+
+<pre>BHandler*<br />PrintServer::ResolveSpecifier(BMessage *message,   int32 index,<br />                              BMessage *specifier, int32 what,<br />                              const char *property)<br />{<br />    BPropertyInfo prop_info(prop_list); <br />    Printer* printer;<br />    switch(prop_info.FindMatch(message, 0, specifier, what, property)) {<br />        case B_ERROR:    // Not found!<br />            break;<br />        case 0:          // Return Printer handler<br />            &lt;snip&gt;<br />            break;<br />        case 1:          // Create new Printer and return it<br />            &lt;snip&gt;<br /><br />            break;<br />        default:<br />            return this;<br />    }<br />    return Inherited::ResolveSpecifier(message, index, specifier, what, property); <br />}<br /></pre>
+
+<p>I&#39;ve snipped a few pieces of code to keep this listing short -- look at the Haiku tree for details on the snipped code. Basically, it creates an object of type BPropertyInfo again, using the scripting suite description table, and asks the object to find a match with what it gets in the arguments. It then returns an index in the scripting suite description table of the match found, or B_ERROR if no match was found. The arguments are as follows:</p>
+
+<ul>
+<li>message<br />
+<p>Complete scripting message (message-&gt;what will be one of B_GET_PROPERTY, B_SET_PROPERTY, etc)</li>
+<li>specifier<br />
+<p>The current specifier (Printer 0, PageSetup, etc.)</li>
+<li>what<br />
+<p>short for message-&gt;what</li>
+<li>property<br />
+<p>The name of the property referenced in the current specifier (Printer, PageSetup, etc.)</li>
+</ul>
+
+<p>What this method should do, is simply return a BHandler to the object that the specifier resolves to. For the print_server, I create a BHandler derived object for every printer definition on the system. When I get a &quot;OF Printer x&quot; in here, I lookup the printer definition object, pop the specifier (BMessage::PopSpecifier()), and return the printer definition object (a BHandler derived object). This will let the specific printer def object handle the next specifier.</p>
+
+<p>If you&#39;ve found a specifier which is an end-point, so to speak, like the PageSetup specifier in one of my examples above, you can just return this and the specifier will be sent to the MessageReceived() function, so you can handle it there. If you cannot recognize the message, call the inherited version of ResolveSpecifier(), and the classes will see if they can &quot;get&quot; it, and if not, return a &quot;not understood&quot; message to the scripting originator.</p>
+
+<p>This is basically all :) You repeat this code for every object that needs to understand scripting (this example was done with the PrintServer application, but also my Printer object can understand printing of course!) and you&#39;re set.</p>
+
+<p>Hope this clarifies it a bit -- for more in depth explanations, only trust the original authors :) :</p>
+
+<li class="icon-html"><a href="http://www.beunited.org/bebook/The%20Application%20Kit/topic_Scripting.html">The BeBook: Application Kit: Scripting</a></li>
+<li class="icon-html"><a href="http://www.beatjapan.org/mirror/www.be.com/developers/developer_library/scripting.html">Be Developer Library: Scripting</a></li>
+<br class="clear" /><br class="giImageBlock-clear-both" /></div></div></div>

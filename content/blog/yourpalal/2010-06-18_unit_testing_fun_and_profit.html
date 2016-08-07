@@ -1,0 +1,127 @@
++++
+type = "blog"
+author = "yourpalal"
+title = "Unit Testing for Fun and Profit"
+date = "2010-06-18T17:55:22.000Z"
+tags = ["unit testing haiku layout archiving gsoc gsoc2010", "unit testing", "haiku", "layout", "archiving", "gsoc", "gsoc2010"]
++++
+
+<p>
+I noticed the other day that I had a comment below my <a href="http://www.haiku-os.org/blog/yourpalal/2010-06-11_progress_layout_api">previous blog post</a>, I didn't have time to reply that day, the next day I was in bed sick, but TODAY, I can reply!
+In the comment, AndrewZ asked if I could post some of my unit testing code, and I thought that would make for an interesting blog post, and here one is.
+</p>
+<!--break-->
+<h4>Unit Testing</h4>
+<p>
+"What is unit testing?" you ask (if you haven't asked this, you can safely skip ahead).
+Unit testing is the practice of writing many small tests to test different behaviours that you are developing.
+Ideally, each behaviour should have a corresponding test, and each test should test only one behaviour.
+Unit tests are really handy things to have around, and the help you:
+<ul>
+	<li>modify your code without fear (see next bullet point)</li>
+	<li>quickly and easily check for regressions</li>
+	<li>keep your code flexible (see previous bullet point)</li>
+	<li>see how writing code that uses whatever you are working on feels</li>
+	<li>debugging changes you've made</li>
+	<li>isolating problems with new code</li>
+	<li>probably other things too...</li>
+</ul>
+One of the basic building blocks of a good unit test suite is this handy thing called a 'test fixture'. A test fixture lets you group common code between different unit tests, so that tests remain easy to write. A test fixture is comprised of a few things.
+<ul>
+	<li>'set up' code, which will be run before each test</li>
+	<li>'tear down' code, which will be run after each test</li>
+	<li>some variables to be set up and torn down</li>
+	<li>code for the actual tests (this code should use the variables mentioned above)</li>
+</ul>
+Hopefully now you can see how useful unit tests are.
+They are so handy, in fact, that there is an entire programming methodology dedicated to them called Test Driven Development (TDD).
+</p>
+
+<h4>Test Driven Development</h4>
+<p>
+"What", you ask "is Test Driven Development??" (if you haven't asked this either, skip ahead again).
+TDD is a programming methodology that can be summed up by the phrase "test twice, write once".
+When practicing TDD, a programmer starts development on any new features/behaviour by writing a unit test that will fail.
+A unit test failure can be as simple as not compiling/linking succesfully.
+Once the programmer has written a failing unit test, he writes just enough code for that test to pass.
+Once the programmer has written what he thinks is enough code, he will run the test again. If the test doesn't pass, he hasn't written enough(correct) code, so he modifies what he has already written. This continues until the new test (and any tests that already existed) all run without failure.
+Now that all the tests are running and passing, the programmer is free to revise the code he has already written, and as long as he runs the tests after each change, he will know whether or not his changes have broken anything.
+</p>
+
+<p>
+Now that we all understand unit testing and TDD, let me tell you about my development cycle.
+I have been following something similar to TDD, but less stringent.
+I like to write tests for some of the bigger behaviour first, and if they start failing unexpectedly, I will write tests for the smaller behaviours that they depend on.
+You could call my methodology "Top Down Coding And Testing As Needed", or 'TDCATAN', if you are into acronyms.
+A funny thing about unit testing is that when you always start by writing tests, you will sometimes find that you have written tests that become obsolete.
+Sometimes you change your mind about what is the correct behaviour and sometimes features get removed.
+When that happens, the way to get your tests passing again is by modifying or deleting them :P
+</p>
+
+<h4>Examples</h4>
+<p>
+Well, I've already written quite a bit here, without so much as a snippet of code.
+I'd better do that now!
+One of the things I've been working on is BLayouts without BViews, but I recently decided to merge the
+BLayoutItem class I had written to proxy BLayouts with the BLayout class.
+The tests I had written for the BLayoutLayoutItem class (terrible name, I know :P) were all modified to reflect this, but the test fixture is still named LayoutLayoutItemTest.. (I really should change that!).
+</p>
+<p>
+The common variables shared between tests are:
+<pre>
+	BLayout*	fLayout;
+	BView*		fTopView;
+</pre>
+</br>
+The setUp method is run before each test (remember?)
+<pre>
+	void setUp()
+	{
+		fTopView = new BView("test", 0, new BGroupLayout(B_HORIZONTAL));
+		fTopView->ResizeTo(200, 200);
+		fLayout = new BGroupLayout(B_HORIZONTAL);
+		fTopView->GetLayout()->AddItem(fLayout);
+		fTopView->GetLayout()->AddView(new BButton("hi"));
+	}
+</pre>
+A new feature that you an see in action there is the call to AddItem(fLayout).
+This line is nesting the fLayout variable within the layout that manages fTopView.
+<br/><br/>
+The tearDown method is run after each test.
+<pre>
+	void tearDown()
+	{
+		delete fTopView;
+	}
+</pre>
+That one is pretty straight forward!
+<br/><br/>
+Here is an example of one of the test methods for that fixture.
+<pre>
+	void TestNestedViewlessLayoutHasRightParent()
+	{
+		BLayout* secondViewlessLayout = new BGroupLayout(B_VERTICAL);
+		fLayout->AddItem(secondViewlessLayout);
+		CPPUNIT_ASSERT(secondViewlessLayout->Parent() == fTopView);
+	}
+</pre>
+There are two new things in this code snippet:
+<ul>
+	<li>the call to BLayout::Parent() returns the BView that items
+		added to this BLayout will reside in.</li>
+	<li>CPPUNIT_ASSERT() is a macro defined by the unit testing library Haiku uses,
+		CppUnit. If the condition inside it is false, this test will fail.</li>
+</ul>
+</p>
+
+<h4>The Grand Finale</h4>
+<p>
+Now that you've read this, you are probably a unit testing expert!
+You can learn more about TDD <a href="http://en.wikipedia.org/wiki/Test-driven_development">here</a>, and CppUnit <a href="http://cppunit.sourceforge.net/doc/lastest/index.html">here</a>, and there is a nice intro
+<a href="http://cppunit.sourceforge.net/doc/lastest/cppunit_cookbook.html">here</a>.
+Finally, I've put the full text for LayoutLayoutItemTest and another test up on pastebin:
+<ul>
+	<li><a href="http://haiku.pastebin.com/RsC8uTSB">LayoutLayoutItemTest</a></li>
+	<li><a href="http://haiku.pastebin.com/GdMkxRha">ManagedArchivingTest</a></li>
+</ul>
+</p>

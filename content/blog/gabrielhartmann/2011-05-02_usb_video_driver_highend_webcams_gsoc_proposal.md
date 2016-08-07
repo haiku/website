@@ -1,0 +1,17 @@
++++
+type = "blog"
+author = "gabrielhartmann"
+title = "A USB Video Driver for High-end Webcams (GSoC Proposal)"
+date = "2011-05-02T03:04:18.000Z"
+tags = ["gsoc", "usb", "UVC", "driver", "gsoc2011"]
++++
+
+As part of the Google Summer of Code I'll be working on developing a driver for Haiku that allows for the use of high-end webcams.  By high-end webcams I mean in this case those which adhere to the USB video device class (UVC) specification.  Preliminary work will involve bringing Haiku's support for the Enhanced Host Controller Interface (EHCI) to a point where UVC driver development proper can begin.  Understanding the state of EHCI support and what work needs to be done in order to begin UVC development is my major goal for the community bonding period.
+
+UVC development will entail the detection and exposure of camera features via Haiku's media kit.  This will require (if I understand correctly) the production of a node with an attendant ParameterWeb which will hold the actual feature definitions.  Then ideally any interested application will be able to issue commands to a UVC compliant camera and receive back appropriate responses in the form of image frames or video streams in various formats and resolutions, or status reports depending on the camera.  The primary test camera will be a Logitech Quickcam Pro 9000 which supports a fairly wide range of resolutions, contains a microphone, and has a hardware button (presumably for taking still photographs).  I have also noticed during the course of some computer vision research with the camera that it has what appears to be a hardware driven exposure compensation feature.  There is also a similar feature exposed through the Windows Logitech driver software, but when this is turned off some exposure compensation still occurs.  It will be intersting to see whether this feature is genuinely rooted in the hardware or is a result of hidden propietary Logitech software.
+<!--break-->
+Once I have decent behaviour working from my core test camera I'd like to expand testing to other cameras which claim UVC compliance.  I believe the computer vision lab I'll be working in next semester has a range of cameras floating around that I should be able to borrow occassionally for testing purposes.  Anyone running Haiku with a UVC camera who'd like to participate in some tests would also be really appreciated.  The degree to which the UVC specification is followed in actual practice by different camera manufacturers should be interesting.
+
+So from now until the end of the community bonding period I'll probably be reading the currently under development EHCI code and asking questions of the people who wrote it.  I'll also be reading the original UVC and EHCI specifications and probably asking for clarification from the Haiku mentors and developers.  Other than that I'll just be familiarizing myself with Haiku in general and trying to keep my head above water academically speaking (Google should really think about a GSoC [Southern Hemisphere Edition]).
+
+Ideally reading the relevant specifications, and conversing with the code authors should put me on a firm foundation for hitting the ground running when it comes time to seriously begin coding at the conclusion of the community bonding period.  If any of this sounds interesting to you or you've had some experience with these issues any and all input is appreciated.

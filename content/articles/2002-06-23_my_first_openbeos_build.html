@@ -1,0 +1,178 @@
++++
+type = "article"
+title = "My First OpenBeOS Build"
+date = "2002-06-23T05:00:00.000Z"
+tags = ["openbeos article"]
++++
+
+<h4>Intro</h4>
+
+<p>Recently, David Reid reported that the OpenBeOS kernel source tree had been amended to fit its new environment after forking from NewOS. The jam scripts had been written, tweaked, and tested, and the new kernel was now capable of being built. He even included a <a href="http://beos.jetnet.co.uk/its_alive.jpg" target="_blank">picture</a> of his computer booting from the freshly created floppy.</p>
+
+<p>While I was happy to report this, I hadn't actually tried to do a build myself. So I thought I'd give it a shot. I'm happy to say that it went very well. The process was quite smooth and didn't take too long. Fortunately, my new computer had no problem booting from the OpenBeOS floppy disk created, so the adventure was a complete success for me. But there is no guarantee that this will be true for everyone -- some machines out there may not be properly detected by the kernel. Of course, over time, we will develop a list of compatible hardware.</p>
+
+<p>Fresh from victory, I decided to write up a set of directions for how to go about building the sources. While I'm at it, I'll make a few comments about where this leaves us, and where we have to go. Hopefully, others will be encouraged to try this as well. Btw, in case it is not obvious from my comments below, these directions are only for those building from BeOS.</p>
+
+<h4>Update the source tree</h4>
+
+<p>The first thing you will want to do is make sure that you have the latest source code downloaded from the CVS repository. The Dev Central section of the website contains a zip of a (BeOS) cvs binary. If you don't already have this program, download it and copy the binary to '<tt>/boot/home/config/bin</tt>'.</p>
+
+<p>To update locally, open a new Terminal window and run the following commands:</p>
+
+<pre>export CVSROOT=:pserver:anonymous@cvs.open-beos.sourceforge.net:/cvsroot/open-beos
+cvs login
+cvs -z3 co -P openbeos
+</pre>
+
+<p>At the login prompt, just press ENTER. This will download the latest versions of files in the CVS repository to your current directory (will be '<tt>/boot/home</tt>' when you first start up Terminal). If you already had files there, this will only update the latest versions. If this is the first update, it may take awhile to download them all.</p>
+
+<p>Assuming that you ran the cvs commands from the '<tt>/boot/home</tt>' directory, you should now have a '<tt>/boot/home/openbeos</tt>' directory containing the latest source tree.</p>
+
+<h4>Run jam</h4>
+
+<p>The next step is to run jam. This program (analogous to make) is what we use to build the binaries from the source files. As with cvs, you can find the binary for jam (as a zip) in the Dev Central section of the website. As before, copy the binary to '<tt>/boot/home/config/bin</tt>'.</p>
+
+<p>To run jam, use the following commands in the same Terminal window:</p>
+
+<pre>cd openbeos
+jam
+</pre>
+
+<p>In the openbeos directory will be a file called <tt>Jamfile</tt>. The jam program will open this file, and execute the commands contained therein. This top-level jam file contains references to other jam files in subdirectories below. As these jam files are executed in turn, the entire source tree is traversed and the binaries created.</p>
+
+<p>If jam encounters any errors -- i.e. in some jam script, a problem prevents a particular target from being built -- an error message will be printed. However, the program will not abort. It will proceed to the next jam file to be processed, etc. It is quite robust.</p>
+
+<p>Yes, rebuilding the entire tree will take awhile. Relax, have a cup of coffee, read that email you've been meaning to get to, etc., and then check back on the build progress from time to time. Here's a sample of the output that I got running jam:</p>
+
+<pre>$ jam
+sources/test/kits/app/Jamfile: No such file or directory
+don't know how to make distro/x86.R5/beos/system/lib/libopenbeos.so
+...found 918 target(s)...
+...updating 358 target(s)...
+...can't find 1 target(s)...
+...can't make 1 target(s)...
+MkDir1 objects
+MkDir1 objects/x86.R5
+MkDir1 objects/x86.R5/os
+MkDir1 objects/x86.R5/os/kits
+MkDir1 objects/x86.R5/os/kits/app
+C++ objects/x86.R5/os/kits/app/Cursor.o
+C++ objects/x86.R5/os/kits/app/Handler.o
+C++ objects/x86.R5/os/kits/app/Invoker.o
+C++ objects/x86.R5/os/kits/app/Looper.o
+C++ objects/x86.R5/os/kits/app/MessageFilter.o
+C++ objects/x86.R5/os/kits/app/MessageQueue.o
+C++ objects/x86.R5/os/kits/app/TokenSpace.o
+MkDir1 objects/x86.R5/os/kits/interface
+C++ objects/x86.R5/os/kits/interface/Alert.o
+C++ objects/x86.R5/os/kits/interface/Box.o
+C++ objects/x86.R5/os/kits/interface/Button.o
+C++ objects/x86.R5/os/kits/interface/CheckBox.o
+[... many more lines below omitted ...]
+</pre>
+
+<p>While running jam, I encountered a number of warnings (mostly missing function prototypes), but the only errors came from a couple of apps in the Preferences subdirectory -- consequently, binaries were not created for them. But the remainder of the source tree compiled with no problems.</p>
+
+<h4>Create boot floppies</h4>
+
+<p>When jam finishes with the build, you will see some directions (from the Kernel scripts) for creating boot floppies. Here's the end of the jam output, with the 'dd' command invoked to create the boot floppy:</p>
+
+<pre>[... many more lines above omitted ...]
+Cc objects/x86.R5/os/kits/kernel/boot/bootmaker.o
+Link objects/x86.R5/os/kits/kernel/boot/bootmaker
+Cc objects/x86.R5/os/kits/kernel/boot/bin2h.o
+Link objects/x86.R5/os/kits/kernel/boot/bin2h
+Cc objects/x86.R5/os/kits/kernel/boot/bin2asm.o
+Link objects/x86.R5/os/kits/kernel/boot/bin2asm
+Cc objects/x86.R5/os/kits/kernel/boot/makeflop.o
+Link objects/x86.R5/os/kits/kernel/boot/makeflop
+KernelStaticLibraryObjects objects/x86.R5/os/kits/kernel/libm.a
+BuildKernel objects/x86.R5/os/kits/kernel/kernel.x86
+
+Kernel linked!
+
+KernelFloppyImage floppy.x86
+
+*************************************************
+*         Kernel build completed!               *
+*    Boot image for a 1.44M floppy created      *
+*************************************************
+
+Floppy image is floppy.x86
+The following command will write it to a floppy on BeOS
+  dd if=floppy.x86  of=/dev/disk/floppy/raw bs=18k
+
+...failed updating 4 target(s)...
+...skipped 3 target(s)...
+...updated 352 target(s)...
+$
+$ dd if=floppy.x86 of=/dev/disk/floppy/raw bs=18k
+23+1 records in
+23+1 records out	
+</pre>
+
+<h4>Booting into OpenBeOS</h4>
+
+<p>With your fresh boot floppy in hand, you are now ready to try your first boot into OpenBeOS. If your computer is not compatible for some reason, the boot process will freeze at some point and go no further. Hopefully that won't happen, and you will see a screen similar to the one below. This is a mockup of the boot screen I get after booting on my second (new) computer.</p>
+
+<h3>Bootup Screen</h3>
+
+	<table width="630" bgcolor="black" border="0" cellpadding="0" cellspacing="16">
+	<tbody><tr>
+		<td>
+		<table width="580" bgcolor="black" border="0" cellpadding="0" cellspacing="0">
+			<tbody><tr>
+			<th nowrap="nowrap" align="left">
+
+			<font face="Courier New, Courier10 BT" size="3" color="#ffffff">
+			stage2 bootloader entry.<br>
+			memsize = 0xff80000, in_vesa 0, vesa_ptr 0x0<br>
+			CPU: family 6 model 11 stepping 1, string 'GenuineIntel'<br>
+			CPU at 1195768966 Hz<br>
+			smp: apic @ 0xfee00000, i/o apic 0xfec00000, total 1 processors detected<br>
+
+			jumping into kernel at 0x80009210<br>
+			</font>
+			<font face="Courier New, Courier10 BT" size="3" color="#c6bbbb">
+			init: Welcome to OpenBeOS!<br>
+			</font><p>
+<font face="Courier New, Courier10 BT" size="4" color="#c6bbbb">			Open source thesis that thousand of eyes looking thu the code<br>
+			increases software quality is completely wrong. The amount of<br>
+
+			bugs per line of code is an universal constant. The bazaar<br>
+			model only achieves a quick bug turnover.<br>
+			</font></p><p>
+<font face="Courier New, Courier10 BT" size="3" color="#c6bbbb">			init: spawned shell, pid 0x3<br>
+			Welcome to the OpenBeOS shell<br>
+			&gt; ls<br>
+
+			dev<br>
+			boot<br>
+			2 files found<br>
+			&gt; hostname<br>
+			openbeos.rock.my.world.com<br>
+			&gt;</font><font face="verdana.arial" size="4" color="#ffffff"> _</font><br>
+
+			<br><br>
+			</p></th>
+			</tr>
+		</tbody></table>
+		</td>
+	</tr>
+	</tbody></table>
+
+<p>When the computer boots, it tries to read the first boot sector (the first 512 bytes) from the floppy disk and execute the commands found there. In the case of our kernel, this first stage code merely loads and jumps to the second stage bootstrap, called 'stage2'. You can see the stage2 loader being entered on the screen output.</p>
+
+<p>After this, the hardware is checked and some basic data about what was found is displayed. Here we see that I have a single Intel (genuine, hehe) processor running at 1.2GHz and with 256MB memory onboard. </p>
+
+<p>The last message from the stage2 bootloader is that the kernel is being entered. By this time, all the kernel objects have been created and intialized (rootfs, devfs, virtual memory) and the first program is ready to run. The first program loaded is 'init', which prints out a welcome message, runs another program called 'fortune' that displays a humorous quote, then spawns the command shell. Notice how the text color goes a bit darker as we exit the bootstrap and enter the kernel.</p>
+
+<p>From there, I ran 'ls', one of the few commands available in the native shell. Then I ran 'hostname', a program just recently added by David Reid. Hmmm, my computer seems to have a very interesting hostname... ;-)</p>
+
+<h4>What next?</h4>
+
+<p>Well, the most obvious shortcoming is the lack of a disk-based file system. The kernel is currently running with everything loaded into memory. The sample apps included have any needed files loaded at boot time in the rootfs (e.g. you can find the fortunes data file at '<tt>/boot/etc/fortunes</tt>'). As long as we can only load what fits onto a floppy, we won't have much to run.</p>
+
+<p>Naturally, this will change as soon as we have BFS finished and integrated with the kernel. The BFS team is quickly approaching beta status as I write this. However, the integration with the kernel, via the VFS (virtual file system) layer, will have to be redone (the NewOS VFS is not quite compatible with the BeOS layer). This is very tricky work, as is all kernel programming, but at least the interface is fairly well understood.</p>
+
+<p>Once the VFS layer is complete, we can move to the next stage and create CDs to install the OS components onto the hard disk. This will, of course, involve creating a new BFS partition (or overwriting a previous one). That will be a very important (and exciting) milestone. And when we can install the entire OS... well, that's going to be sweet!</p>

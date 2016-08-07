@@ -1,0 +1,15 @@
++++
+type = "blog"
+author = "koki"
+title = "What do You Know About the Haiku Logo?"
+date = "2009-11-25T23:43:07.000Z"
+tags = ["logo"]
++++
+
+<p>I once had a personal blog where I wrote some stuff about Haiku. The blog is now gone, but I kept some of the posts that I thought could still be relevant or informative even afer time. Being that we have had many new comers as a result of the recent alpha release, I thought I would rehash some of these posts for both the newcomers as well as anyboby else who may have missed them in the past. This first one is about Haiku logo; I hope you enjoy it.</p>
+<!--break-->
+<p>For me, the Haiku logo has been a bit of a mystery (yeah, I know: maybe I just have an inquisitive mind). I did a little digging, and here is a little history from what I found. The Haiku logo was originally designed by Stuart McCoy. Going by the nickname "stubear," apparently Stuart was heavily involved in the early days of the Haiku Usability & Design Team, and seems to be the creator of some very nice mockups for the them OpenBeOS UI intended for Haiku R2.</p>
+
+<img src="/files/2009-11-24_haiku-logo-before-and-after.png" align="right" /><p>Some of you may not have noticed, but as can be seen from the image to the right, the Haiku logo has in fact undergone some transformation from it's initial design (see upper logo). The font as well as the overall appearance has stayed the same, but some subtle and a few not so subtle changes were made to spiff it up. The color of the leaves was changed to use sharper and more modern-looking gradients, and shadows were added underneath them to give a sense of depth. The shape of the letters was also tweaked to align them with pixels to give the crispest possible look, and a faint glow was added around the letters. This work was all done by Haiku developer and talented artist Stephan Assmus (Stippi to his friends) using the <a href="http://www.yellowbites.com/wonderbrush.html">graphic editing software WonderBrush</a> for Haiku which he developed himself (now included in Haiku!). Stippi not only has contributed a lot of code to Haiku in the areas of the app_server and more recently the media kit among others, but he is also the creator of the <a href="/articles/2006-11-13_why_haiku_vector_icons_are_so_small">efficient HVIF icon vector format</a> used by Haiku, as well as the author of the <a href="http://bug-no.petterhj.net/iconcontest/visualizer/?set=stippi&size=&res=1">Haiku icon set</a> chosen by popular vote in an icon contest held back in 2007.</p>
+
+<p>The Haiku logo uses the Futura Medium font, part of the Futura 2 font set by Paul Renner, a German typeface designer whose most notable work was the Futura typeface (more on <a href="http://en.wikipedia.org/wiki/Paul_Renner">Wikipedia</a>). Futura 2 seems to be available as both OpenType and Postscript Type 1 fonts. There is also a clone of Futura Medium: look for a font by the name of Fujiyama2, found in some Corel Draw versions; it comes as a very close (but not quite identical) replacement.</p>

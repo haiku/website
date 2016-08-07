@@ -1,0 +1,102 @@
++++
+type = "article"
+title = "How to transform the app_server code to use compositing"
+date = "2011-06-15T11:14:06.000Z"
+tags = ["app_server", "compositing", "window", "framebuffer", "drawing", "AGG", "Painter"]
++++
+
+The topic of implementing compositing in the app_server comes up once in a while. I have outlined my thoughts on the subject more than once, but these are burried in mailing list archives. Since I have just written another overview of how this could be approached, I thought I might better put this up as an article here, so I can point people to it in the future.
+
+I am going to give an overview only. It is intended to help anyone along when reading the app_server code and piecing things together. These are direction that I think are guaranteed to work OK, and with the minimal amount of changes, but anyone taking up this task needs to figure out the actual implementation himself, of course. Here it goes...
+<!--break-->
+<h2>The Involved Classes</h2>
+<p>
+Compositing can initially be implemented without doing lots of changes to the drawing code or how updates work. In the Interface Kit we have BWindow and BView. The BWindow has a messaging port to the app_server. Inside app_server, a ServerWindow (one instance per BWindow) receives any drawing commands which BViews send via their owning BWindow. BViews also have a server counterpart, which is called View, unsurprisingly. There is another class called Window. Window is representing the on-screen object in the server (holds clipping, decorator, ...) while ServerWindow is rather managing the communication and owns one Window object. View objects are owned by Window and mirror the client side BView hierarchy, as long as those BViews are attached. Each Window also owns a DrawingEngine, which abstracts the entire drawing interface. The default implementation for all the supported drawing functions is in the Painter class. Painter itself is using AGG for general purpose drawing algorithm implementation, and has a whole bunch of optimized implementations when it can take a shortcut. So each Window instance owns a DrawingEngine and Painter instance.
+</p>
+
+<p>
+Now comes the interesting part: Painter has the notion of being attached to a memory address which represents the frame buffer of the screen. All the Painter objects owned by each Window are attached to the same memory address at the moment. They each expect to be setup with a correct clipping region before any drawing calls are invoked on them (this happens in ServerWindow right before invoking drawing calls).
+</p>
+
+<h2>Locking</h2>
+<p>
+The clipping is updated for all on-screen windows in an "atomic" operation, by the Desktop object. The Desktop object runs in its own thread and whenever it calls into any ServerWindow/Window/View/... code it is expected to hold the global window lock in write-mode. This means all ServerWindow threads are then blocking. Whenever ServerWindow threads run, they hold the global lock in read-only mode, which means all other ServerWindow threads are allowed to run concurrently, and only the Desktop thread is blocking (since it always wants a write-lock). This means when the global clipping is supposed to be changed, for example by moving a window on screen, this operation blocks until all other ServerWindow threads have released the read-lock. Note that one can also invoke Desktop functions from a ServerWindow thread. In that case one has to first give up the read-lock, acquire the write-lock, call into the Desktop function, release the write-lock, and re-acquire the read-lock. Just so one understands these bits of code when coming across them. That's basically the locking inside app_server, but there are additional utility classes which perform their own (inner) locking. It is relatively easy, unfortunately, to mess things up and cause a dead-lock. Just keep this in mind. To repeat: A ServerWindow thread only runs after it successfully acquired the read-lock (or the write-lock, but the write-lock then blocks all other threads including the Desktop thread, it only does this when it already knows it will call into Desktop functions). The Desktop thread only runs when it successfully acquired the write-lock, it never read-locks.
+</p>
+
+<h2>Painter</h2>
+<p>
+Anyway, the important bit is that all Painters are attached to the same frame buffer, pointing to the same top-left pixel address, and they are already allowed to paint concurrently. All threads are blocked when the clipping is updated, then they can continue drawing again. The frame buffer which these Painters are attached to is called the "back-buffer". It resides in system RAM and is always 32 bit per pixel.
+</p>
+
+<p>
+Since all Painter objects point to the top-left pixel of the back-buffer, all the coordinates of client drawing commands are converted to screen coordinate space! (Important since this needs to change later on.) One can look at how OffscreenWindow works (used for BBitmaps with BViews attached) to get an idea of how it would work for any regular window with its own drawing buffer.
+</p>
+
+<h2>HWInterface</h2>
+<p>
+Access to the frame buffer is managed by instances of a class called HWInterface. There is only a single instance of this class per Screen. In a regular desktop situation, this instance would be of the type AccelerantHWInterface. It is connected to the graphics card via the accelerant interface by which the graphics card provides a frame buffer of its own. It may have a different color space. HWInterface provides utility methods for copying parts of the back-buffer (RAM) to the front-buffer (graphics card memory).
+</p>
+
+<h2>Update Sessions</h2>
+<p>
+Inside the DrawingEngine, one will encounter code which performs this back-to-front copying. Here is another important bit of information: To avoid flickering, a Window object has the notion of an "update session". Basically it means it collects all "dirty regions". Eventually it will have a chance to tell the client BWindow object (via a back channel which is just regular BMessages being sent to the client BWindow) that it needs to paint these dirty regions. This is all asynchronous of course. Eventually sometime later, the BWindow has become aware that the Window companion in the server wants it to paint. It sends a command "begin update session". The first thing that happens is that Window freezes the session's dirty region and tells the BWindow which views are affected. Updates which arrive while a session is ongoing are batched into the next (future) update session. Also, an update session puts the Window drawing code into a special mode: It does not perform back-to-front copying of painted regions. Once the BWindow has finished calling all the Draw() hooks of the affected BViews, it sends a command "end update session". This in turn will then finally trigger the back to front copy. This means there is no flickering when BViews draw in Haiku. However, BViews can draw at any time. An application may just invoke someView->Draw(), or one can even invoke any drawing methods directly. When this happens, the server Window is not inside an update session and the back-to-front copy happens immediately. With flickering and the obvious performance hit. That's why the proper way to redraw a BView is by calling Invalidate() instead of Draw().
+</p>
+
+<h2>The Path To The Future</h2>
+<p>
+So how would one implement compositing now? Basically, you would want to give each Window object currently on screen it's own private frame buffer. The Painter objects are then each attached to a frame buffer of their own. Nothing would <i>need</i> to change except that the coordinate conversion is done relative to the window coordinate system rather than the screen system (like for OffscreeWindow). The buffer allocation management can be simple at first.
+</p>
+
+<p>
+As the second step, one would need something which actually composes all window buffers into the back-buffer at the right moment and transfers the result into the front-buffer inside the graphics memory. Notice that one absolutely <b>cannot</b> get rid of the back-buffer in system RAM as long as the compositing is performed by the CPU. You want to access the graphics memory only in one direction - writing - you never want to read from it. Reading the graphics memory is insanely slow. For compositing, that is what one needs to do, however.
+</p>
+
+<p>
+The third step (rather simple, but here for completeness) is to change that BDirectWindow now points to the window buffer instead of the frame buffer.
+</p>
+
+<h2>The Mouse Cursor</h2>
+<p>
+In DrawingEngine, one will see another thing which is that "overlays" may be hidden before a drawing function and shown again after it is completed. There is only one type of overlay at the moment, which is the mouse cursor bitmap. When the user drags something, the drag bitmap and the mouse cursor shape are temporarily combined. The code of temporarily hiding the mouse cursor is both still needed for certain types or configurations of a HWInterface, and somewhat absolete at the same time: The mouse cursor is composited on top of the front-buffer, on the fly, when transfering parts of the back buffer to the front buffer. The mouse shape is not actually visible in the back-buffer and that's why the code which temporarily hides it is usually a no-op.
+</p>
+
+<p>
+There are however compile options which make the app_server run with a single drawing buffer, and then this code would be needed. Once compositing is implemented, and if it's done as the only choice and not optionally, then this functionality can be removed. This would cleanup a lot of code to remove the single-buffer run-mode option, and to move the mouse shape management entirely into the new Compositor class. It would be composited like any window buffer, on top of anything else.
+</p>
+
+<p>
+When one triggers the compositing at the right time, one should now have a system which works exactly as before, only with a lot of memory overhead and no other benefits.
+</p>
+
+<h2>The Benefits</h2>
+<p>
+Obviously the next steps would then be to realize some benefits from the changes:
+</p>
+
+<ul>
+<li>
+One would change the way how dirty regions are triggered when parts of windows are exposed (all this code is in the Desktop class). Obviously exposing parts of a window does not actually need anything to be redrawn anymore, since the exposed part is already fully valid in the private Window frame buffer. So expose events do not need to invalidate client BWindows anymore, but they simply need to trigger an update at the compositing step. This change will be one of the biggest benefits, since it greatly reduces the CPU consumption when windows are moved on screen. One can consider it performance optimization by "caching".
+<br>
+The only events that trigger actual redraw would be:
+<ul>
+<li>When a Window is resized. Note one can copy the valid region of the old buffer and limit the dirty region, but Views with B_FULL_UPDATE_ON_RESIZE, or views which follow the right/bottom edge of their parents still invalidate parts of the new buffer that could be copied from the old... the code already does this, so nothing needs to change.</li>
+<li>When the client requests a redraw via BView::Invalidate().</li>
+<li>When the View hierarchy changes.</li>
+<li>When other properties change, like the decorator look. (All this already happens, no need to change anything except to avoid triggering the wrong kind of update when windows move.)</li>
+</ul>
+</li>
+
+<li>
+The next chance of introducing some benefit is by using an alpha channel for Windows. Giving them a drop shadow would be nice. Compositing these in software may be fast enough, you just freed up some time by caching window contents.
+</li>
+</ul>
+
+<h2>Acceleration</h2>
+<p>
+Only once this system is in place, one can start thinking about doing the compositing via the graphics card hardware. For this to work one would setup the hardware to pull textures from main memory and compose them in the graphics buffer. This would actually allow to get rid of the back-buffer in system RAM, but only for the situation when hardware acceleration is available. Obviously there is no driver for Haiku yet which has these capabilities. There isn't even an official accelerant API for this new functionality and requirements of the compositing.
+</p>
+
+<h2>Bonus Points</h2>
+<p>
+There are some nice properties which can be coded into the compositor: It can be locked to the screen refresh rate, and one may cause window painting to happen in separate temporary buffers. The compositor would then compose the dirty parts of the back-buffer at a fixed rate, in its own thread. It requests buffers from each Window to do so, but the buffers would always be clean. When a Window draws, which would be undisturbed by the compositor asking for the buffer, it draws into a temporary buffer. When it is done, it switches the new clean buffer for the old clean one by holding the compositor lock for a short time (also telling the compositor to recompose at the same time). This way the user can never see dirty parts of any window anymore, and since the compositor is locked to the screen refresh, he wouldn't see tearing artifacts either.
+</p>
