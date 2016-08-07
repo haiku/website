@@ -209,8 +209,15 @@ for (var i in nodes) {
 		url_dst = url_alias[i][2];
 		break;
 	}
-	if (!url_dst)
-		url_dst = url_src;
+	if (!url_dst) {
+		// If it's a news article, try to invent a URL
+		if (type == "news" || type == "content_news") {
+			url_dst = "news/" + (new Date(parseInt(created) * 1000)).toISOString().substr(0, 10) + "_" +
+				title.toLowerCase().replace(/\ /g, "_");
+			console.log("WARN: No url_dst for nid" + nid + ", invented one");
+		} else
+			url_dst = url_src;
+	}
 	for (var i in term_node) {
 		if (term_node[i][0] != nid)
 			continue;
@@ -219,9 +226,15 @@ for (var i in nodes) {
 			tags.push(tag);
 	}
 
-	var outfile = header_template + '\n\n';
+	var outfile = header_template + '\n\n', realtype = '';
+	if (type == "blog")
+		realtype = "blog";
+	else if (type == "content_news" || url_dst.indexOf("news/") != -1)
+		realtype = "news";
+	else
+		realtype = "article";
 	outfile = outfile
-		.replace("TYPE", type == "blog" ? "blog" : "article") // FIXME: news
+		.replace("TYPE", realtype)
 		.replace("TITLE", title.replace(/"/g, '\\"'))
 		.replace("DATE", (new Date(parseInt(created) * 1000)).toISOString())
 		.replace("TAGS", tags.length ? ('"' + tags.join('", "') + '"') : '');
