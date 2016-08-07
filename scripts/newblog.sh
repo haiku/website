@@ -15,6 +15,7 @@ fi
 if [ $# -lt 1 ]; then
 	echo "Usage: ./scripts/newblog.sh <name>"
 	echo "e.g.: ./scripts/newblog.sh PulkoMandy"
+	exit 1
 fi
 
 DIRNAME=`echo $1 | tr '[:upper:]' '[:lower:]'`

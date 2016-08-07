@@ -15,10 +15,11 @@ fi
 if [ $# -lt 2 ]; then
 	echo "Usage: ./scripts/newpost.sh <title> <author>"
 	echo "e.g.: ./scripts/newblog.sh \"Website Rewrite Complete\" waddlesplash"
+	exit 1
 fi
 
 DIRNAME=`echo $2 | tr '[:upper:]' '[:lower:]'`
-POSTFILE=`echo $1 | tr '[:upper:]' '[:lower:]' | sed "s/ /_/g" | tr -cd '[[:alnum:]]_-'`.md
+POSTFILE=`date --rfc-3339=date`_`echo $1 | tr '[:upper:]' '[:lower:]' | sed "s/ /_/g" | tr -cd '[[:alnum:]]_-'`.md
 cp ./scripts/blog_post.md content/blog/$DIRNAME/$POSTFILE
 sed -i "s/TITLE_GOES_HERE/$(echo $1 | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" content/blog/$DIRNAME/$POSTFILE
 sed -i "s/AUTHOR_GOES_HERE/$2/g" content/blog/$DIRNAME/$POSTFILE
