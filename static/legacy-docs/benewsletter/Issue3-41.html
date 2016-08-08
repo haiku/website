@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-40.html" title="Issue 3-40, October 7, 1998" /><link rel="next" href="Issue3-42.html" title="Issue 3-42, October 21, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-40.html" title="Issue 3-40, October 7, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-42.html" title="Issue 3-42, October 21, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-40.html">Issue 3-40, October 7, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-42.html">Issue 3-42, October 21, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-41"></a>Issue 3-41, October 14, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-41"></a>Be Engineering Insights: Where Does the Time Go?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+The star of this article is <code class="function">system_time()</code>. Unlike time services of
+yesteryear, which were precise to 1/100th of a second, or even a mere
+second, BeOS can report wall-time to the nearest microsecond (µs). This allows
+some interesting uses in the area of benchmarking, CPU usage in
+particular.
+</p><p>
+Where I quantify results, note that my test machine is a uniprocessor
+200MHz Pentium Pro, a mid-level performer these days. All concepts and
+results are applicable for BeOS users on PowerPC, although the numbers
+may vary.
+</p><p>
+Benchmarking a system from the outside is straightforward: hook up the
+logic analyzer and read off the numbers. However, having a system
+benchmark itself presents some real problems. Heisenberg's Uncertainty
+Principle, which applies to subatomic particles, states that the more you
+know about a particle's position, the less you know about its momentum
+(where it's going), and visa versa. For us to observe the particle, it
+must interact with its surroundings, and that changes the state as
+observed.
+</p><p>
+Analogously, the more you know where your program is executing, the less
+you know how much time it's hogging. For us to observe the program's
+whereabouts, we must add code, and that introduces overhead that is not
+part of the program.
+</p><p>
+In both arenas, we can attempt to gain better measurements by using
+indirect methods. In the case of benchmarking, we want to benchmark in
+ways that allow overhead to be minimized, measured or canceled.
+</p><p>
+Using only <code class="function">system_time()</code>, I will reveal some tricks I use when measuring
+code, and some pitfalls of interpreting results. Special bonus: this
+article includes code samples which can be assembled into a complete
+applet, "cpuload".
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745697"></a>Simple Example</h3></div></div></div><p>
+First, let's time <code class="function">system_time()</code>, using itself!
+</p><pre class="programlisting c">
+<span class="type"><span class="type">bigtime_t</span></span> <code class="varname">t</code> = <code class="function">system_time</code>( );
+<code class="varname">t</code> = <code class="function">system_time</code>( ) - <code class="varname">t</code>;
+<code class="function">printf</code>( "%f\n", (<span class="type">double</span>)<code class="varname">t</code>);
+</pre><p>
+This measures the time to execute one call of <code class="function">system_time()</code>, and I get
+either 0µs or 1µs. For more precision, we need to average a bunch of
+calls:
+</p><pre class="programlisting c">
+<span class="type">bigtime_t</span> <code class="varname">t</code> = <code class="function">system_time</code>( );
+for (<span class="type">int</span> <code class="varname">i</code>=0; <code class="varname">i</code>&lt;1000-1; ++<code class="varname">i</code>)
+        <code class="function">system_time</code>( );
+<code class="varname">t</code> = <code class="function">system_time</code>( ) - <code class="varname">t</code>;
+<code class="function">printf</code>( "%f\n", <code class="varname">t</code>/1000.);
+</pre><p>
+I get about 0.28µs... good enough for government work.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745821"></a>The Grind Routine</h3></div></div></div><p>
+Here is the first installment of our applet. The <code class="function">grind()</code> routine is
+designed to do nothing, expensively, but to an extent controlled by
+argument <code class="parameter">n</code>. For the larger purpose, it could waste time in any fashion,
+like call <code class="function">sqrt()</code> many times. However, this implementation has properties
+which will allow us to conduct a sanity check.
+</p><pre class="programlisting c">
+#include        &lt;Application.h&gt;
+#include        &lt;math.h&gt;
+#include        &lt;stdio.h&gt;
+#include        &lt;string.h&gt;
+
+struct <span class="type">pointer</span> {
+        struct <span class="type">pointer  *</span><code class="varname">p</code>;
+};
+struct <span class="type">pointer</span>  <code class="varname">futile</code>  = { &amp;<code class="varname">futile</code> };
+<span class="type">uint</span>            <code class="varname">z</code>;
+
+<span class="type">void</span>
+<code class="function">grind</code>( <span class="type">uint</span> <code class="parameter">n</code>)
+{
+  struct <span class="type">pointer *</span><code class="varname">p</code> = &amp;<code class="varname">futile</code>;
+  for (<span class="type">uint</span> <code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="parameter">n</code>; ++<code class="varname">i</code>) {
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+          <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>; <code class="varname">p</code> = <code class="varname">p</code>-&gt;<code class="varname">p</code>;
+  }
+  <code class="varname">z</code> += <code class="varname">p</code> == 0;
+}
+</pre><p>
+<code class="varname">futile</code> is a linked list, made circular by pointing to itself. <code class="function">grind()</code>
+traverses this list futilely until its counter is exhausted. In
+assembler, the inner loop looks like this:
+</p><pre class="programlisting asm">
+loop:
+  movl (%eax),%eax
+  movl (%eax),%eax
+  .
+  .       28 more "movl" instructions
+  .
+  movl (%eax),%eax
+  movl (%eax),%eax
+  incl %edx
+  cmpl %ecx,%edx
+  jb loop
+</pre><p>
+The compiler cannot eliminate this code by optimization, partly because
+of the dummy variable <code class="varname">z</code> (always 0). For each step along the list, the
+Intel P6 core (Pentium Pro, Pentium II) takes 3 clocks, the L1 cache
+latency. Loop overhead is eliminated by speculative execution (fancy
+hardware). Therefore, grind(1) takes 96 clocks plus entry/exit overhead,
+and grind(100) reduces that overhead by a factor of 100.
+</p><p>
+The situation is largely the same with the PowerPC, although the numbers
+are different (e.g. 2 clocks needed by the 604).
+</p><p>
+Calibration
+</p><p>
+Next, we need to calibrate <code class="function">grind()</code> to determine just how much time it
+uses; we can influence the duration with the supplied argument. This is
+not as simple as calling <code class="function">grind()</code> with bracketing
+calls to <code class="function">system_time()</code>.
+We need to eliminate the "hidden costs" of the modern OS, including all
+hardware interrupts, and all time-sharing with currently running servers
+and apps.
+</p><p>
+To do this, we make two assumptions (uh, oh). First, that time is
+allocated in a fixed quantum by the scheduler. Second, if we run a short
+enough <code class="function">grind()</code> enough times, it will complete without being interrupted.
+</p><p>
+Here is the main body of the applet. <code class="function">calibrate()</code> uses a power-of-1.1
+search to set <code class="varname">gtime</code> and <code class="varname">gcount</code>, where
+<code class="code"><code class="function">grind</code>(<code class="varname">gcount</code>)</code> will use "gtime"
+microseconds, with no OS overhead. For each candidate <code class="varname">gcount</code>, we run
+<code class="function">grind()</code> 100 times and record the BEST performance.
+</p><pre class="programlisting cpp">
+<span class="type">bigtime_t</span> <code class="varname">gtime</code>;
+<span class="type">uint</span>      <code class="varname">gcount</code>;
+
+struct <code class="classname">A</code>: <code class="classname">BApplication</code> {
+  <code class="classname">A</code>( ): <code class="classname">BApplication</code>( "application/x-cpuload") {
+          <code class="methodname">Run</code>( );
+  }
+  <span class="type">void</span> <code class="methodname">ReadyToRun</code>( ) {
+          <code class="methodname">calibrate</code>( );
+          new <code class="classname">W</code>( <code class="classname">BRect</code>( 0, 0, 100, 100));
+  }
+  <span class="type">void</span> calibrate( ) {
+    <code class="varname">gcount</code> = 10;
+    while (<code class="constant">TRUE</code>) {
+      <code class="varname">gtime</code> = 0;
+      for (<span class="type">uint</span> <code class="varname">i</code>=0; <code class="varname">i</code>&lt;100; ++<code class="varname">i</code>) {
+        <span class="type">bigtime_t</span> <code class="varname">t0</code> = <code class="function">system_time</code>( );
+        <code class="function">grind</code>( <code class="varname">gcount</code>);
+        <span class="type">bigtime_t</span> <code class="varname">t</code> = <code class="function">system_time</code>( ) - <code class="varname">t0</code>;
+
+        if (<code class="varname">gtime</code>==0 || <code class="varname">t</code>&lt;<code class="varname">gtime</code>)
+          <code class="varname">gtime</code> = <code class="varname">t</code>;
+      }
+      if (<code class="varname">gtime</code> &gt; 800)
+              break;
+      <code class="varname">gcount</code> *= 1.1;
+    }
+    <code class="function">printf</code>( "gtime=%Ld gcount=%d MHz=%f\n", <code class="varname">gtime</code>, <code class="varname">gcount</code>,
+    <code class="varname">gcount</code>*32.*3/<code class="varname">gtime</code>);
+  }
+  <span class="type">void</span> <code class="methodname">MessageReceived</code>( <span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">m</code>) {
+    if (<code class="parameter">m</code>-&gt;<code class="varname">what</code> == 'q')
+      <code class="methodname">Quit</code>( );
+  }
+};
+
+<code class="function">main</code>( )
+{
+  <code class="classname">A</code>       <code class="varname">a</code>;
+  return (<code class="varname">z</code>);
+}
+</pre><p>
+The search is over when the time quantum exceeds 800µs. Why? Because I
+claim there is a clock interrupt every 1ms, the first regular source of
+overhead that <code class="function">calibrate()</code> will encounter. You can verify my claim by
+nudging the <code class="function"><code class="function">printf</code>()</code> into the <code class="code">while</code> loop, extending the search to 2
+seconds, and plotting the results. Here's what I get:
+</p><pre class="screen">
+201 +
+    |
+    |
+200 +  #
+    |      #
+    |    #  #####
+    #     #      #
+199 +##
+    |                #
+    |               #
+198 +             ##   ##
+    |                    # ######
+    |                     #      ### ###
+    |                                   ##########
+197 +                                              ###
+    |
+    |
+196 +
+    |                                                   ##
+    |                                                  #   #
+    |                                                 #   #   #
+195 +-------------+------------+-------------+------------+-#---
+   100          1000         10000        100000        1e+06
+</pre><p>
+This is a plot of time-slice (in microseconds) against effective CPU
+clock frequency (in MHz). Measurements are noisy until a few hundred
+microseconds, after which the CPU is reliably measured at 199.5MHz, close
+to the manufacturer rating. At 1000µs, it drops suddenly to 198MHz: this
+is evidence of the 1000Hz clock interrupt, when BeOS must perform
+housekeeping. The graph shows steadily increasing load between 1ms and
+1s. This load includes Pulse events, and other periodic work in the
+servers. Work of periodicity 1s is popular since another decline is
+clearly visible.
+</p><p>
+By writing <code class="function">grind()</code> in a certain way, and tossing in knowledge about the
+P6 architecture, we can denominate CPU performance in MHz. This is not a
+necessity, but does confirm we're on the right track. It also shows how
+code written to calibrate <code class="function">grind()</code> can be turned into a benchmark of its
+own.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id746662"></a>The CPULOAD Applet</h3></div></div></div><p>
+Here is the remaining code for "cpuload". If you insert it before <code class="code">struct
+A</code>, the applet is ready for compilation.
+</p><pre class="programlisting cpp">
+struct <code class="classname">L</code>: <code class="classname">BLooper</code> {
+  <code class="methodname">L</code>( ) {
+    <code class="varname">n</code> = 0;
+    <code class="methodname">Run</code>( );
+    <code class="methodname">PostMessage</code>( 'g');
+  }
+
+  <span class="type">void</span> <code class="methodname">MessageReceived</code>( <span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">m</code>) {
+    <code class="function">set_thread_priority</code>( <code class="function">find_thread</code>( 0), <code class="constant">B_LOW_PRIORITY</code>/5);
+    while (<code class="constant">TRUE</code>) {
+      <code class="function">grind</code>( <code class="varname">gcount</code>);
+      ++<code class="varname">n</code>;
+    }
+  };
+  <span class="type">uint</span>    <code class="varname">n</code>;
+};
+
+struct <code class="classname">C</code>: <code class="classname">BView</code> {
+  <code class="methodname">C</code>( <code class="classname">BRect</code> <code class="parameter">r</code>): <code class="classname">BView</code>( <code class="parameter">r</code>, 0, <code class="constant">B_FOLLOW_ALL</code>, <code class="constant">B_WILL_DRAW</code>|<code class="constant">B_PULSE_NEEDED</code>)
+  {
+    <code class="varname">lastt</code> = <code class="function">system_time</code>( );
+    <code class="function">memset</code>( <code class="varname">lastn</code>, 0, sizeof <code class="varname">lastn</code>);
+    <span class="type">system_info</span> <code class="varname">si</code>;
+    <code class="function">get_system_info</code>( &amp;<code class="varname">si</code>);
+    for (<code class="varname">lcount</code>=0; <code class="varname">lcount</code>&lt;<code class="varname">si</code>.<code class="varname">cpu_count</code>; ++<code class="varname">lcount</code>)
+      <code class="varname">ltab</code>[<code class="varname">lcount</code>] = new <code class="classname">L</code>( );
+  }
+
+  <span class="type">void</span> <code class="methodname">Pulse</code>( ) {
+    <span class="type">bigtime_t</span> <code class="varname">t</code> = <code class="function">system_time</code>( );
+    <span class="type">float</span> <code class="varname">f</code> = 0;
+
+    for (<span class="type">uint</span> <code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="varname">lcount</code>; ++<code class="varname">i</code>) {
+      <code class="varname">f</code> += 100. * (<code class="varname">ltab</code>[<code class="varname">i</code>]-&gt;<code class="varname">n</code>-<code class="varname">lastn</code>[<code class="varname">i</code>]) / ((<span class="type">float</span>)(<code class="varname">t</code>-<code class="varname">lastt</code>)/<code class="varname">gtime</code>);
+      <code class="varname">lastn</code>[<code class="varname">i</code>] = <code class="varname">ltab</code>[<code class="varname">i</code>]-&gt;<code class="varname">n</code>;
+    }
+
+    <code class="varname">lastt</code> = <code class="varname">t</code>;
+    <code class="varname">f</code> /= <code class="varname">lcount</code>;
+    <code class="function">graph</code>( <code class="varname">f</code>);
+  }
+
+  virtual <span class="type">void</span> <code class="function">graph</code>( <span class="type">float</span>) = 0;
+  <span class="type">bigtime_t</span> lastt;
+  <span class="type">uint</span>      lastn[20],
+            lcount;
+  L         *ltab[20];
+};
+
+struct <code class="classname">V0</code>: <code class="classname">C</code> {
+  <code class="methodname">V0</code>( <code class="classname">BRect</code> <code class="parameter">r</code>): <code class="classname">C</code>( <code class="parameter">r</code>) { }
+
+  <span class="type">void</span> graph( <span class="type">float</span> f) {
+    <code class="function">printf</code>( "%f\n", f);
+  }
+};
+
+struct <code class="classname">W</code>: <code class="classname">BWindow</code> {
+  <code class="methodname">W</code>( <code class="classname">BRect</code> <code class="parameter">r</code>): <code class="classname">BWindow</code>( <code class="parameter">r</code>, "cpuload", <code class="constant">B_TITLED_WINDOW</code>, <code class="constant">B_NOT_ZOOMABLE</code>)
+  {
+    <code class="methodname">AddChild</code>( new <code class="classname">V0</code>( <code class="parameter">r</code>));
+    <code class="methodname">MoveBy</code>( 100, 100);
+    <code class="methodname">SetPulseRate</code>( 1000000);
+    <code class="methodname">Show</code>( );
+  }
+
+  <span class="type">bool</span> <code class="methodname">QuitRequested</code>( ) {
+    <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>( 'q');
+    return (<code class="constant">TRUE</code>);
+  }
+};
+</pre><p>
+<code class="classname">L</code> does the grunt work of calling <code class="function">grind()</code>, at low scheduling priority: any
+unused CPU cycles are soaked up and the exact number recorded. One <code class="classname">L</code> is
+created for each CPU on your machine.
+</p><p>
+<code class="classname">C</code> starts <code class="classname">L</code> and calculates
+the load on a per second basis. It grabs
+results directly from <code class="classname">L</code>, a different thread, which works because the
+datum is a single machine word. This eliminates communication overhead,
+which would otherwise have to be analyzed.
+</p><p>
+<code class="classname">V0</code> prints the results textually. <code class="classname">W</code> requests Pulse events for reporting
+purposes, 1 per second.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id747165"></a>Observations</h3></div></div></div><p>
+A simple way to swamp the CPU for a few seconds is the following shell
+command:
+</p><pre class="screen">
+echo '2^99999' | bc
+</pre><p>
+With "
+cpuload
+" running, CPU availability drops from 97% to 4%. Why not 100% and 0%?
+97% reflects actual BeOS time-sharing overhead, while 4% shows the impact
+of "cpuload" itself. While its scheduling priority of 1 is as low as
+possible, BeOS will nonetheless allocate "cpuload" a few time-slices per
+second. This anomaly still allows accurate measurements in the remaining
+range. A scheduling priority of 0 would cause scheduling conflicts with
+the idle thread, yielding peculiar results.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id747194"></a>CPULOAD Variations</h3></div></div></div><p>
+Text output has some advantages:the applet introduces less overhead, and
+results can be logged for later analysis. With averaging over a minute,
+precision of 4 digits can be expected. However, graphical output is
+compelling, so I provide two possible replacements for <code class="classname">V0</code>:
+</p><pre class="programlisting cpp">
+struct <code class="classname">V1</code>: <code class="classname">C</code> {
+  <code class="methodname">V1</code>( <code class="classname">BRect</code> <code class="parameter">r</code>): <code class="classname">C</code>( <code class="parameter">r</code>) {
+    <code class="varname">x</code> = <code class="parameter">r</code>.<code class="varname">right</code>;
+  }
+  <span class="type">void</span> <code class="methodname">graph</code>( <span class="type">float</span> <code class="parameter">f</code>) {
+    <code class="methodname">ScrollBy</code>( 1, 0);
+    <code class="methodname">StrokeLine</code>( <code class="classname">BPoint</code>( <code class="varname">x</code>, 100), <code class="classname">BPoint</code>( <code class="varname">x</code>, 100-(<code class="varname">f</code>+.5)));
+    ++<code class="varname">x</code>;
+  }
+  <span class="type">uint</span> <code class="varname">x</code>;
+};
+
+struct <code class="classname">V2</code>: <code class="classname">C</code> {
+  <code class="methodname">V2</code>( <code class="classname">BRect</code> <code class="parameter">r</code>): <code class="classname">C</code>( <code class="parameter">r</code>) {
+    <code class="function">memset</code>( <code class="varname">rec</code>, 0, sizeof <code class="varname">rec</code>);
+    <code class="varname">nrec</code> = 0;
+  }
+
+  <span class="type">void</span> <code class="methodname">graph</code>( <span class="type">float</span> <code class="parameter">f</code>) {
+    if (<code class="varname">nrec</code> == 0)
+      <code class="varname">rec</code>[<code class="varname">nrec</code>] = <code class="parameter">f</code>;
+    else
+      <code class="varname">rec</code>[<code class="varname">nrec</code>] = <code class="parameter">f</code> + <code class="varname">rec</code>[<code class="varname">nrec</code>-1];
+
+    ++<code class="varname">nrec</code>;
+
+    for (<span class="type">uint</span> <code class="varname">i</code>=0; ; ++<code class="varname">i</code>) {
+      <span class="type">uint</span> <code class="varname">j</code> = 1 &lt;&lt; <code class="varname">i</code>;
+      if (<code class="varname">j</code> &gt;= <code class="varname">nrec</code>)
+              break;
+
+      <span class="type">float</span> <code class="varname">y</code> = (<code class="varname">rec</code>[<code class="varname">nrec</code>-1]-<code class="varname">rec</code>[<code class="varname">nrec</code>-1-<code class="varname">j</code>]) / <code class="varname">j</code>;
+
+      <code class="methodname">FillRect</code>( <code class="classname">BRect</code>( <code class="varname">i</code>*8, 100-<code class="varname">y</code>, <code class="varname">i</code>*8+6, 100));
+      <code class="methodname">SetHighColor</code>( 255, 255, 255);
+      <code class="methodname">FillRect</code>( <code class="classname">BRect</code>( <code class="varname">i</code>*8, 0, <code class="varname">i</code>*8+6, 100-1-<code class="varname">y</code>));
+      <code class="methodname">SetHighColor</code>( 0, 0, 0);
+    }
+  }
+
+  <span class="type">void</span> <code class="methodname">Draw</code>( <code class="classname">BRect</code>) {
+    <code class="methodname">SetHighColor</code>( 255, 0, 0);
+    for (uint <code class="varname">x</code>=0; <code class="varname">x</code>&lt;100; <code class="varname">x</code>+=20)
+      <code class="methodname">FillRect</code>( <code class="classname">BRect</code>( 0, <code class="varname">x</code>, 100, <code class="varname">x</code>+10-1));
+  }
+
+  <span class="type">float</span>   <code class="varname">rec</code>[33000];
+  <span class="type">uint</span>    <code class="varname">nrec</code>;
+};
+</pre><p>
+<code class="classname">V1</code> implements a simple horizontal scrolling plot.
+<code class="classname">V2</code> shows the load for
+the last 2^n seconds, for all integers "n" from 0 to 15: each bar
+averages twice the historical load of the previous bar.
+</p><p>
+Another variation involves running <code class="function">grind()</code> at the priority of your Be
+app. Now "cpuload" is measuring the amount of CPU time your app would get
+under current conditions, rather than measuring idle CPU cycles.
+</p><p>
+Finally, you can start multiple grinders on one CPU, and measure BeOS
+time-sharing efficiency. With two grinders per CPU, instead of one, I
+measure CPU efficiency at 99.92%. Are we having fun yet?
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id747596"></a>Conclusion</h3></div></div></div><p>
+"cpuload" measures CPU usage in its own way, not necessarily a way
+suitable for your app. As an example, if your app needed the entire L2
+cache (imagine "futile" being 60K elements), and another L2 hog was
+running on the system, the interaction could cause a disastrous
+performance degradation:I can construct cases where the slowdown is a
+factor of 10. Yet "cpuload" (or a logic analyzer) would show an equitable
+sharing of CPU time.
+</p><p>
+Understanding these interactions is the crux of benchmarking in the
+modern environment of complex OS and hardware. The answer is attacking
+the benchmarking challenge with the same custom concentration that you
+use to write the program. And take industry benchmark figures with more
+than a grain of salt.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-41"></a>Developers Workshop: But You Can't Make Her Think</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><p>
+In the 1920's, a ranger at Yellowstone National Park found himself in a
+psychological battle with two of the college students the Park hired for
+summer work. Less than a battle, actually, it was more a series of artful
+annoyances played on the ranger by the students. They were careful about
+covering their tracks, so the ranger couldn't retaliate or even reprimand
+them—although avoiding punishment wasn't their main concern. They were
+more interested in increasing the ranger's frustration by their
+anonymity. Finally, however, the two blew their cover in the interest of
+art.
+</p><p>
+Of the hundreds of geysers in Yellowstone, a few erupt with a dependable
+regularity. Bleachers are set up around these geysers, where the park
+rangers lecture the tourists for a few minutes before the eruption. Just
+to the side of a tool shed near their nemesis's geyser, the two students
+planted a steering column, with the wheel still attached, that they had
+lifted from an abandoned car, jabbing it column end down into the ground.
+</p><p>
+They hid behind the shed waiting for the crowd to assemble. Seconds
+before the geyser erupted—just as the ranger was finishing his speech
+-- one of the students yelled to the other something along the lines of
+"Okay, let her go!", and the other fellow jumped out from behind the shed
+and, feigning great effort, began to spin the wheel, apparently letting
+loose the jet of steam and hot water.
+</p><p>
+This is an amusing, but misleading, UI.
+</p><p>
+It was leaked in these pages a few weeks ago that the UI Guidelines, our
+Balm of Gilead for the Control what Ails You, was back from the ghost
+writers and THIS CLOSE to being finished. True-ish, but, unfortunately,
+this propinquity is affected by daylight: All the words are there (and
+then some), but we're a bit thin on hours in the day that can be devoted
+to pushing those words into the correct order and trimming the ones that
+don't do much more than sit on the page and smile at you as if you
+yourself were a drooling idiot in need of constant reminding that the
+user will be less confused if you design your UI such that it is...less
+confusing.
+</p><p>
+Out on the documentation plantation (where we grow our own adverbs, and
+at night you can hear the boasts of the rodomonts as they stuff syllables
+back into their syncopes), we're also raising tech doc, user doc,
+asparagus, release notes, and miscellaneous editorialisms and articles.
+And of all these, the UI Guidelines, whose topic is a religious issue,
+needs the most scrupulous attention (of a certain type): We don't want to
+publish an errata sheet for the bible.
+</p><p>
+So let's resynchronize our watches: We're going to try to get the UI
+Guidelines—at least the parts with the sex scenes—on the R4 CD. But
+if they don't quite make it, they'll be posted to the web site soon
+thereafter. You can lead a horse to water, but don't hold your breath.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-41"></a>A Red Herring</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+The "Red Herring" makes interesting reading—an insider view of Silicon
+Valley wheelers and dealers. It's well-written and opinionated, above
+cutting-and-pasting quotes from the usual suspects and recycling of press
+releases, which makes some other business magazines so bland. One doesn't
+have to agree with every opinion this estimable magazine offers, however.
+Opinions are made to be disagreed with, and I'd like to oblige.
+</p><p>
+In the "Red Herring" for November 98, in an article titled
+<a class="ulink" href="http://www.redherring.com/mag/issue60/editor.html"><span class="trademark">DRINKING THE KOOL-AID</span>™</a>, Jason
+Pontin opines, "Steve Jobs rescued Apple—but the point is moot." He
+concedes that Apple has a simpler, more successful product line, smaller
+inventories, and now, for the first time since 1995, a healthy bottom
+line. But, he contends, it doesn't matter anymore.
+</p><p>
+"The whole point of the Mac was to be a better alternative to Microsoft
+operating systems on Intel chips. Yet no one wants such an alternative
+anymore, except graphic designers who are used to it," he says. Pontin
+argues that iMac buyers aren't thinking "different," they're just buying
+a fast Internet terminal that also runs Office, probably implying a PC
+would do more for less. In his mind, people who rave about Apple's
+spectacular turnaround have drunk the famous Kool-Aid the founder was
+accused of serving his followers in the old days. And he concludes:
+"Steve Jobs has saved Apple. Good for him. It doesn't matter."
+</p><p>
+As indicated earlier, I beg to differ.
+</p><p>
+The article notes, but fails to attach much significance to, the fact
+that almost 10 percent of iMac buyers were PC users. Keeping in mind the
+iMac quirks and price, the iMac success with PC owners cannot be
+dismissed. Just as Apple fans were wrong to keep on dissing the growing
+number of PC buyers for not seeing that the Mac was so much better, PC
+aficionados would err if they thought the many people who buy iMacs were
+just drinking the Apple Kool-Aid.
+</p><p>
+Simplicity and style, exactly what Apple promoted, do matter. And, unlike
+the "Red Herring," the PC industry agrees and has reacted in its usual
+pragmatic way. Andy Grove was quoted in Time magazine on the positive
+effect of the iMac on the thinking of his customers, PC makers. The risk
+for Apple is to see the PC industry once again adopt and improve upon its
+ideas. On the bright side, Apple is in a leadership position again, not
+teetering on the edge of the grave.
+</p><p>
+I don't believe any company should survive merely because it provides
+"diversity" to the ecosystem, but when customers vote with their wallets
+for a variety of solutions, this is good news. Who would have predicted a
+year ago Linux and the iMac would appear as legitimate choices for
+enterprises and consumers?
+</p><p>
+This is ironic at the very time when the trial for the
+<acronym class="acronym" title="Department Of Justice">DOJ</acronym> suit against
+Microsoft is about to start, especially when one considers the role
+Microsoft played in supporting Apple's turnaround. In any event, for us,
+this is a much better world than one where "other" platforms are
+unthinkable. It's much easier for us to be a specialized platform in an
+ecumenical world than off-color in a monochromatic one. Imagine what the
+"Red Herring" would think of a market where customers thought there was
+no need for more than one business magazine.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-40.html">Issue 3-40, October 7, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-42.html">Issue 3-42, October 21, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-40.html" title="Issue 3-40, October 7, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-42.html" title="Issue 3-42, October 21, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

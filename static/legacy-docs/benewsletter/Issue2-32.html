@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-31.html" title="Issue 2-31, August 6, 1997" /><link rel="next" href="Issue2-33.html" title="Issue 2-33, August 20, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-31.html" title="Issue 2-31, August 6, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-33.html" title="Issue 2-33, August 20, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-31.html">Issue 2-31, August 6, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-33.html">Issue 2-33, August 20, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-32"></a>Issue 2-32, August 13, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-32"></a>Be Engineering Insights: Spamming with BeMail</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Polic</span></span></div></div></div><p>
+"Forget Fen-Phen! Not Weightloss"
+</p><p>
+"Email Photos to Friends &amp; Family * Display on Website * Save on your
+Computer!"
+</p><p>
+"Balding? New Medications Regrow Hair"
+</p><p>
+"Best Selling Software---Try It FREE!!!"
+</p><p>
+One of my email addresses have been made public (sold???) and is now in
+the hands of the 1990s version of the "Snake Oil Salesman." A day doesn't
+go by where I'm not bombarded with enticing offers to lose weight, regrow
+my hair, improve my sex life or get rich quick. I've even received
+solicitations by the companies that create the spamming software, and for
+a price, I too, can become a spammer.
+</p><p>
+So it seems that a popular use of a modern day OS is for email spamming,
+which got me thinking, with the BeOS we have the most modern of modern
+OSes and yet there is no spamming program. So the point of this
+newsletter article (besides fulfilling my obligation to provide this
+week's Insight) is to remedy this situation (for better or worse).
+</p><p>
+Our "Marketing Tool for the 90s" will build on mail and query features
+built into the BeOS. For simplicity, our tool will be command line based
+and will take three arguments: subject; message file path; and the
+predicate for an address book query.
+</p><p>
+(What address book you ask? There is a crude version built into the
+Preview Release; a more fleshed out version will be available with a
+forthcoming update to the Preview Release).
+</p><p>
+We start by constructing a <code class="classname">BApplication</code> and overriding the
+<code class="methodname">ArgvReceived()</code>
+and <code class="methodname">ReadyToRun()</code> methods. The
+<code class="methodname">ArgvReceived()</code> function does some simple sanity
+checking of the parameters, opens and buffers the message content, and
+calls the <code class="methodname">Spam()</code> function to do the processing.
+The <code class="methodname">ReadyToRun()</code> function
+alerts the user if the application was executed incorrectly and quits the
+application:
+</p><pre class="programlisting cpp">
+class <code class="classname">TSpamApp</code> : public <code class="classname">BApplication</code> {
+
+private:
+
+<span class="type">bool</span>      <code class="varname">fArgvCalled</code>;
+
+public:
+
+TSpamApp(<span class="type">void</span>);
+virtual <span class="type">void</span>  <code class="methodname">ArgvReceived</code>(<span class="type">int32</span>, <span class="type">char**</span>);
+virtual <span class="type">void</span>  <code class="methodname">ReadyToRun</code>(<span class="type">void</span>);
+<span class="type">void</span>      <code class="methodname">Spam</code>(<span class="type">char*</span>, <span class="type">char*</span>, <span class="type">char*</span>, <span class="type">off_t</span>);
+};
+
+
+<code class="classname">TSpamApp</code>::<code class="methodname">TSpamApp</code>(<span class="type">void</span>)
+  : <code class="classname">BApplication</code>("application/x-vnd.Be-SPAM")
+{
+  <span class="comment">// init flag that ArgvReceived has been called</span>
+  <code class="varname">fArgvCalled</code> = <code class="constant">FALSE</code>;
+}
+
+
+<span class="type">void</span> <code class="classname">TSpamApp</code>::<code class="methodname">ArgvReceived</code>(<span class="type">int32</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>)
+{
+  <span class="type">char      *</span><code class="varname">message</code>;
+  <code class="classname">BEntry</code>    <code class="varname">entry</code>;
+  <code class="classname">BFile</code>     <code class="varname">file</code>;
+  <code class="classname">BMessage</code>  <code class="varname">msg</code>(<code class="constant">B_REFS_RECEIVED</code>);
+  <span class="type">off_t</span>     <code class="varname">len</code>;
+  <span class="type">status_t</span>  <code class="varname">result</code>;
+
+  <span class="comment">// flag that ArgvReceived has been called</span>
+  <code class="varname">fArgvCalled</code> = <code class="constant">TRUE</code>;
+
+  <span class="comment">// make sure we have the right amount of arguments</span>
+  if (<code class="varname">argc</code> != 4) {
+    <code class="function">printf</code>("USAGE: Spam subject path query\n");
+    return;
+  }
+
+  <span class="comment">// try opening message file</span>
+  <code class="varname">entry</code>.<code class="methodname">SetTo</code>(<code class="parameter">argv</code>[2]);
+  <code class="varname">file</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">entry</code>, <code class="constant">O_RDONLY</code>);
+  if (<code class="varname">file</code>.<code class="methodname">InitCheck</code>() != <code class="constant">B_NO_ERROR</code>) {
+    <code class="function">printf</code>("ERROR: failed to open message file %s
+           [0x%.8x]\n", <code class="parameter">argv</code>[2], <code class="varname">file</code>.<code class="methodname">InitCheck</code>());
+    return;
+  }
+
+  <span class="comment">// buffer message content</span>
+  <code class="varname">file</code>.<code class="methodname">GetSize</code>(&amp;<code class="varname">len</code>);
+  if (!(<code class="varname">message</code> = (<span class="type">char *</span>)malloc(<code class="varname">len</code>))) {
+    <code class="function">printf</code>("ERROR: failed to allocate message buffer
+           (need: %Ld)\n", <code class="varname">len</code>);
+    return;
+  }
+  <code class="varname">file</code>.<code class="methodname">Read</code>(<code class="varname">message</code>, <code class="varname">len</code>);
+
+  <span class="comment">// start spamming</span>
+  <code class="methodname">Spam</code>(<code class="parameter">argv</code>[1], <code class="parameter">argv</code>[3], <code class="varname">message</code>, <code class="varname">len</code>);
+  <code class="function">free</code>(<code class="varname">message</code>);
+}
+
+
+<span class="type">void</span> <code class="classname">TSpamApp</code>::<code class="methodname">ReadyToRun</code>(<span class="type">void</span>)
+{
+  if (!<code class="varname">fArgvCalled</code>)
+  <span class="comment">// we got here because we were dbl-clicked or launched</span>
+  <span class="comment">// without arguments</span>
+    (new <code class="classname">BAlert</code>("", "USAGE: Spam subject path query",
+                "OK"))-&gt;<code class="methodname">Go</code>();
+  <code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+}
+</pre><p>
+The <code class="methodname">Spam()</code> function performs the query that the sucker^H^H^H^H^H^Hrecipient
+list is generated with. It also calculates how many messages were queued
+successfully and provides a list of all recipients (using their real
+names):
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TSpamApp</code>::<code class="methodname">Spam</code>(<span class="type">char *</span><code class="parameter">subject</code>, <span class="type">char *</span><code class="parameter">predicate</code>,
+                    <span class="type">char *</span><code class="parameter">message</code>, <span class="type">off_t</span> <code class="parameter">len</code>)
+{
+  <span class="type">char          *</span><code class="varname">name</code>;
+  <span class="type">char          *</span><code class="varname">address</code>;
+  <span class="type">int32</span>         <code class="varname">count</code> = 0;
+  <code class="classname">BEntry</code>        <code class="varname">entry</code>;
+  <code class="classname">BFile</code>         <code class="varname">file</code>;
+  <span class="type"><code class="classname">BMailMessage</code>  *</span><code class="varname">mail</code>;
+  <code class="classname">BQuery</code>        <code class="varname">query</code>;
+  <code class="classname">BVolume</code>       <code class="varname">vol</code>;
+  <code class="classname">BVolumeRoster</code> <code class="varname">volume</code>;
+  <span class="type">attr_info</span>     <code class="varname">info</code>;
+
+  <span class="comment">// construct new mail message and add our enticing</span>
+  <span class="comment">// subject and message</span>
+  <code class="varname">mail</code> = new <code class="classname">BMailMessage</code>();
+  <code class="varname">mail</code>-&gt;<code class="methodname">AddHeaderField</code>(<code class="constant">B_MAIL_SUBJECT</code>, <code class="parameter">subject</code>);
+  <code class="varname">mail</code>-&gt;<code class="methodname">AddContent</code>(<code class="parameter">message</code>, <code class="parameter">len</code>);
+
+  <span class="comment">// set up query on boot volume using passed in predicate</span>
+  <code class="varname">volume</code>.<code class="methodname">GetBootVolume</code>(&amp;<code class="varname">vol</code>);
+  <code class="varname">query</code>.<code class="methodname">SetVolume</code>(&amp;<code class="varname">vol</code>);
+  <code class="varname">query</code>.<code class="methodname">SetPredicate</code>(<code class="parameter">predicate</code>);
+
+  <span class="comment">// start query</span>
+  <code class="varname">query</code>.<code class="methodname">Fetch</code>();
+
+  <span class="comment">// loop while we have items that match predicate</span>
+  while (<code class="varname">query</code>.<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">entry</code>) == <code class="constant">B_NO_ERROR</code>) {
+    <code class="varname">file</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">entry</code>, <code class="constant">O_RDONLY</code>);
+
+    <span class="comment">// make sure file opens ok and has email attribute</span>
+    if ((<code class="varname">file</code>.<code class="methodname">InitCheck</code>() == <code class="constant">B_NO_ERROR</code>) &amp;&amp;
+       (<code class="varname">file</code>.<code class="methodname">GetAttrInfo</code>("PERSON:email", &amp;<code class="varname">info</code>) ==
+       <code class="constant">B_NO_ERROR</code>) &amp;&amp; (<code class="varname">info</code>.<code class="varname">size</code> &gt; 1)) {
+
+      <span class="comment">// create space for email attribute and read it in</span>
+      <code class="varname">address</code> = (<span class="type">char *</span>)<code class="function">malloc</code>(<code class="varname">info</code>.<code class="varname">size</code>);
+      <code class="varname">file</code>.<code class="methodname">ReadAttr</code>("PERSON:email", <code class="constant">B_STRING_TYPE</code>, 0,
+        <code class="varname">address</code>, <code class="varname">info</code>.<code class="varname">size</code>);
+
+      <span class="comment">// we will use a BCC field since that's what other</span>
+      <span class="comment">// spammers seem to do. BCC fields are suppressed in</span>
+      <span class="comment">// the message and are only used for building the</span>
+      <span class="comment">// recipient list.  The TRUE parameter means to</span>
+      <span class="comment">// clobber any previous entries set for this field</span>
+      <code class="varname">mail</code>-&gt;<code class="methodname">AddHeaderField</code>(<code class="constant">B_MAIL_BCC</code>, <code class="varname">address</code>, <code class="constant">TRUE</code>);
+
+      <span class="comment">// attempt to queue message</span>
+      if (<code class="varname">mail</code>-&gt;<code class="methodname">Send</code>(<code class="constant">FALSE</code>) == <code class="constant">B_NO_ERROR</code>) {
+        <code class="varname">count</code>++;
+        <code class="function">printf</code>("  QUEUED: ");
+      }
+      else
+        <code class="function">printf</code>("  FAILED: ");
+
+      <span class="comment">// get recipients real name</span>
+      if ((<code class="varname">file</code>.<code class="methodname">GetAttrInfo</code>("PERSON:name", &amp;<code class="varname">info</code>)
+           == <code class="constant">B_NO_ERROR</code>) &amp;&amp; (<code class="varname">info</code>.<code class="varname">size</code> &gt; 1)) {
+        <code class="varname">name</code> = (<span class="type">char *</span>)malloc(<code class="varname">info</code>.<code class="varname">size</code>);
+        <code class="varname">file</code>.<code class="methodname">ReadAttr</code>("PERSON:name", <code class="constant">B_STRING_TYPE</code>, 0,
+          <code class="varname">name</code>, <code class="varname">info</code>.<code class="varname">size</code>);
+        <code class="function">printf</code>("%s (%s)\n", <code class="varname">name</code>, <code class="varname">address</code>);
+        <code class="function">free</code>(<code class="varname">name</code>);
+      }
+      else
+        <code class="function">printf</code>("%s\n", <code class="varname">address</code>);
+      <code class="function">free</code>(<code class="varname">address</code>);
+    }
+  }
+  delete <code class="varname">mail</code>;
+
+  <span class="comment">// now send all queued mail</span>
+  if (<code class="varname">count</code>) {
+    <code class="function">send_queued_mail</code>();
+    <code class="function">printf</code>("Spammed %d suckers\n", <code class="varname">count</code>);
+  }
+  else
+    <code class="function">printf</code>("No recipients found\n");
+}
+</pre><p>
+And let's not forget the main just for completeness:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="function">main</code>(<span class="type">void</span>)
+{
+  <span class="type"><code class="classname">TSpamApp</code>  *</span><code class="varname">myApp</code>;
+
+  <code class="varname">myApp</code> = new <code class="classname">TSpamApp</code>();
+  <code class="varname">myApp</code>-&gt;<code class="methodname">Run</code>();
+
+  delete <code class="varname">myApp</code>;
+  return <code class="constant">B_NO_ERROR</code>;
+}
+</pre><p>
+With this simple application and the following command I can target my
+message to a specific audience:
+</p><pre class="screen">
+$ Spam 'Reduce coding time by two thirds' blatant_lie.txt
+       PERSON:group=*bedevtalk*
+</pre><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580476"></a>BeOS Mail Format</h3></div></div></div><p>
+The second part of this article will describe the format of an email
+message generated by the BeOS.
+</p><p>
+According to RFC822, all email messages are required to have a Date and
+From field. These fields will be generated automatically if they are not
+explicitly set (using the <code class="methodname">AddHeaderField</code>(<code class="constant">B_MAIL_DATE</code>, ...) and
+<code class="methodname">AddHeaderField</code>(<code class="constant">B_MAIL_FROM</code>, ...) functions).
+</p><p>
+The <code class="varname">Date</code>, if not explicitly set, is the time
+the Kit receives the <code class="methodname">Send()</code>
+command. The <code class="varname">From</code> field construction is a bit more complicated. It's
+constructed from fields defined in both the E-mail and Network preference
+applications:
+</p><pre class="screen">
+"Real Name" POP_User_Name@Domain_Name
+</pre><p>
+If "Real Name" is not defined, the "User Name" defined in the Network
+panel will be substituted. If "Pop User Name" is not defined the Network
+Host Name will be substituted.
+</p><p>
+So as you can see, the <code class="varname">From</code> field generated may not be the correct
+address to which incoming mail should be sent, so a <code class="varname">Reply To</code> field is
+provided. If the <code class="varname">Reply To</code> field is left blank in the E-mail panel, none
+will be added (unless the mail client explicitly sets it). If the client
+explicitly sets a <code class="varname">Reply To</code> field, the Kit will use this one instead of
+the defined one.
+</p><p>
+The only other field needed to send a message is either a <code class="varname">To</code> or <code class="varname">Bcc</code>
+field. If the recipient name is set through the <code class="varname">Bcc</code> field, the recipient
+names are suppressed in the actual message.
+</p><p>
+The Kit will also add a default X-Mailer field to the header if one
+hasn't been explicitly set. Any additional header fields can be added
+using the <code class="methodname">AddHeaderField()</code> command. There is no checking by the Kit for the
+validity of these fields.
+</p><p>
+For non-MIME type messages, a Content-Type field will also be added with
+the correct text encoding. The text conversion will be done by the Kit
+when setting the content field. By default the text will be converted to
+ISO-8859-1. Other conversions can be set with the <code class="methodname">AddContent()</code> call.
+</p><p>
+For multi-part messages (enclosures and text with more than one
+conversion) two additional fields are added to the header: MIME-version
+field and Content-Type field. The MIME-version is set to "1.0". The
+Content-Type field is set to "multipart/mixed" and a boundary is defined.
+</p><p>
+At each boundary point in the message, a Content-Type field will be
+present. For text sections this is the same for non-MIME messages
+(including the text conversions). For enclosure sections the Content-Type
+is the same as the Content-Type defined in the header including a new
+boundary.
+</p><p>
+Before we describe an enclosure section we need some background on a BeOS
+file. For all practical purposes, the BeOS is a forked file system --
+meaning that the contents (text, pictures, etc.) of the file is saved in
+one fork and the attributes (window position, user preferences, etc.) is
+stored in another fork (or forks).
+</p><p>
+When sending a BeOS file as an enclosure it's best to keep all forks
+intact in case the recipient is also using the BeOS. For users of other
+OSes, they're likely to be interested only in the content portion of the
+file. To accomplish this the file is broken up into the content part and
+the attribute part (all attributes are concatenated into this single
+part) and are nested under their own MIME boundary.
+</p><p>
+The file content comes first under its own Content-Type header with the
+type set to the same MIME type of the file followed by the file name. The
+attribute part comes next with its own Content-Type header set to
+"application/x-be_attribute" followed by the file name. Both parts are
+encoded using base64.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-32"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+So... You've been to the latest BeDC have you? Well, did you see the
+naked people riding their bicycles in the rain?
+</p><p>
+I tell you, I've always had a certain amount of fear and trepidation when
+it comes to travelling to the East coast of the United States. I always
+thought it was my fear of getting stuck in a snow storm, but now I know
+the real fear is that there are some real loonies out there! And I lived
+in Berkeley for several years.
+</p><p>
+Moving the BeDC to the east caused several of our demos to crash. What an
+unheard of event. The demo gods definitely were not smiling upon us on
+the 4th. But, to the credit of the Be OS community, most developers were
+quite pleased and excited to see the latest and greatest stuffs. If you
+were there you may have seen Doug Fulton's paper detector sample
+application, or Jean-Louis' likeness in more than one 3D application. I
+think the most exciting thing came with Pierre's demo where he did a
+Jean-Louis head in a temple setting with lots of butterflies flying
+around. To top this one off, it was accelerated with the 3Dfx chip set,
+so it was nice, smooth, and fast with nice textures to boot. This was due
+to the combined efforts of Geoff's glide library support and George being
+inspired enough to create an accelerated version of the 3D Kit in short
+order.
+</p><p>
+Speaking of acceleration, what's all the hullabalu about this 3Dfx chip
+set anyway? As I've said in the past, this chip set is arguably one of
+the most popular in PC class boards today. Their relatively low cost and
+tremendous speed have made them the target of affection for the latest
+and greatest games on the PC platform, and now the BeOS. So what about
+acceleration? We have played with Mesa, which is a freely available
+OpenGL®-like implementation. Brian Paul, the author, will tell you that
+it's not OpenGL®, is not an OpenGL® licensed product, and it does not
+necessarily run the OpenGL® conformance test suite. But I use it anyway
+because it allows us to do accelerated OpenGL® right now today.
+</p><p>
+Where does that leave our licensed OpenGL® implementation? We are
+currently working to extend our OpenGL® implementation to make it more
+easily accept hardware acceleration in the future. Be Inc. is not putting
+Mesa out as a replacement for our own implementation. In DTS we felt it
+would be extremely beneficial to have a implementation of OpenGL® that
+took advantage of hardware acceleration. Mesa is freely available, and it
+didn't require too much work on our part to make it available. So there
+you have it. Mesa is available today, our own extensible OpenGL® will be
+out in the future, with more hardware support following.
+</p><p>
+How can one describe MacWorld? Well, after 2 days straight of our own
+conference, head on over to the World Trade Center and do some more time
+over there. Booth duty is fun. No really. When you're assigned to what we
+call the "large demo" you get to see massive crowds at every one of your
+demos. Giving this demo is likened to inciting a riot. You slowly build
+up from one application to the next, each time running more applications
+at the same time. In the finale, when you have 4 QuickTime movies playing
+along, with pulsating 3D objects, CD sound, digitized stereo sound, and
+DOOM playing in the background, while you're browsing web pages on your
+desktop...the pulse tends to quicken.
+</p><p>
+And the most fun of all, once you've shown all this, you look at the
+crowd with the wry vampire smile and yell at the crowd, "DO YOU WANT TO
+DO THIS TO YOUR MAC?" and they wildly and desperately respond "YES!!" and
+they faint to the ground. And the sweetest response you could give, "of
+course you do, and you can, because today the BeOS is freely available,
+here, just take this disk and install it on your Mac." They blink a
+couple of times, and ask how the demo is crippled, and you tell them, no
+timeout, not limitations, go ahead, take it, the first one's free.
+</p><p>
+It's also very gratifying to be able to yank people into our booth by
+showing them third party applications that are actually shipping. This is
+a big moment in the history of the BeOS. With the exception of LCS and
+Metrowerks, this is the first time commercial apps are shipping for the
+BeOS. In our booth we were selling the BeSpecific disk and Audio Elements
+from Adamation, and Be Basics and BeStudio from BeatWare. Time and again
+people would ask, how do I do word processing, and I would say, Just buy
+BeBasics and you're all set. I think the whole community should be
+grateful to these early developers for making bold moves towards
+commercial success. When investors and users see that there are companies
+making a successful go of it commercially, they tend to pay more
+attention and vote with their own dollars.
+</p><p>
+So, I went out to dinner with the Adamation crew on one occasion, and it
+was very interesting. The topics covered in conversation ranged from
+Cockney Rhymes to sawed off bee bee guns. From Roswell conspiracies, to
+the domination of a new digital media environment. You simply had to be
+there to understand why we were all rolling on the floor laughing for 3
+hours, but since you probably weren't, suffice it to say, that the BeOS
+community is a lively and kickin' place, and there's nowhere else I'd
+rather be at the moment. Besides, I've picked up quite a few CDs of dance
+music, and I'm anxious to try them out with that nifty Pulsar Application.
+</p><p>
+See you on the Front.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-32"></a>After MacWorld</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We get many questions, in person or via e-mail, regarding the
+Microsoft/Apple deal and, of course, I have an opinion, actually more
+than one. But too much has been written already on the short-term impact,
+the loaded symbolism of last week's events at Apple. I'm more interested
+in mulling over the longer-term consequences and, for this, I'd like to
+see a few more specks of dust settle down. In particular, I'd like to
+understand the meaning of the unexpected silence on some loaded topics.
+</p><p>
+As for our little company, we had a great week for one reason: BeOS
+developers. Monday and Tuesday, August 4th and 5th, we held a Developers'
+Conference at the Haynes Convention Center, ending with a Masters Awards
+party at the Boston Computer Museum. Pierre Raynaud-Richard also presided
+over a 24-hour 3D Kit programming contest.
+</p><p>
+On a parallel thread, Alex, Wes and I got up at 1:30am Tuesday morning,
+drove up to New York in the rain, gave an investor presentation, and came
+back to Boston in time for another early afternoon meeting. We won't do
+this too often, I hope, but it felt good seeing BeOS applications emerge
+as we were evangelizing investors.
+</p><p>
+As reported elsewhere, the Masters Awards generated over 100 submissions
+and the quality was such that we had some really difficult decisions on
+our hands. I won't state here what my favorites are, but I can say I'm
+impressed with the overall quality and creativity, as well as the way
+they express unique features of our OS, such as the combination of
+multi-processing and multi-threading, and the resulting agility and
+bandwidth.
+</p><p>
+The same is true of the 3D hackfest. With the first release of our 3D
+Kit, the programming contest provided a test of the expressive power and
+efficiency of this new addition to the BeOS. The traditional rotating
+kettle, familiar to OpenGL® programmers, now serves as a mirror for an
+orbiting cow textured on the fly, inevitably leading to jokes about an
+impending presentation of the Intel version to Gateway (no such plans at
+this time).
+</p><p>
+The conference consisted of technical sessions mixed with demonstrations
+of new products by BeOS developers anxious to trot their creations before
+an audience of their peers. This tested our product in places that
+probably hadn't been touched before—meaning we discovered fresh new
+bugs and gained a sense of urgency for the search-and-destroy expedition
+now taking place in our office. The 28,000 copies of the Preview Release
+we distributed at MacWorld are certain to provide us with more feedback
+and opportunities to refine our product.
+</p><p>
+As is now usual, but we don't take it for granted, our Macworld Expo
+booth was well attended. The Intel BeOS demonstration was received with
+an open mind (Apple probably helped by committing to Intel versions of
+Rhapsody), and the performance, even at this early stage, drew positive
+comments.
+</p><p>
+The highlight was the presence of BeOS developers—Adamation, Fusion
+Development, purity, ro design, and TruSpectra—in our booth, with
+BeatWare in a nearby booth of their own. We now see the beginnings of
+commercial applications on our platform; some of them were on sale and
+sold well at the show. I even saw BeOS software, including our $49.95
+retail package, sold at the Developer Depot booth in the Apple pavilion.
+</p><p>
+Just as important, what emerges in common from these new applications is
+that the BeOS adds one letter to WYSIWYG, the letter N—for NOW.
+Real-time WYSIWYG, if you will, instead of watching the hourglass icon.
+This isn't just about getting tasks done faster and more securely; just
+as important, this is about preventing wait-time from intruding on the
+flow of creative thoughts. Such a benefit applies beyond multimedia
+creation: Ask a programmer how s/he feels waiting around for a compile.
+</p><p>
+This said, we're now in the process of broadcasting a million units of
+the BeOS for the remainder of this calendar year. My heartfelt thanks to
+all who helped prepare and deliver last week's events and motivated us to
+do even better in the future.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-32"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580879"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580885"></a>Subject: BeOS for Intel!</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: BeOS for Inhell<br />
+AKA: cross compiling<br />
+AKA: Blinking Lights
+</h5></div></div></div><p>
+Lots of comments about the BeOS-on-Intel announcement. Surprisingly (or
+maybe not—it's a funny world), we didn't hear much "don your garlic
+necklace, we're going into the crypt" sentiment. In fact, the port to
+Intel is seen by some as a righteous crusade; as Bryan Copeland put
+it...
+</p><p>
+“<span class="quote">The majority of computer users use Intel technology... which is why I
+can't wait for Be on Intel... get people off of the Microsoft operating
+systems...</span>”
+</p><p>
+The main thread concentrated on hardware—which motherboard/chip set
+configurations will be supported (and when)? Will ADC/DAC users be
+thrown into the grungy abyss of PC sound cards?
+</p><p>
+So what about the PPC? A number of listeners insist that the PPC is the
+superior chip while conceding that unless CHRP solidifies soon, the
+party is over. Dave Haynie...
+</p><p>
+“<span class="quote">It's going to be hard enough a shot against the x86 if Apple grabbed
+CHRP by the arms, danced the night away, and ended the evening with a
+big wet smack on the lips and a few copped feels. Without an open PPC
+market, Apple's doomed...</span>”
+</p><p>
+There was also a small discussion of the merits of fat vs. CPU-specific
+binaries. Most folks seem to regard fat binaries as unessential at
+best, and (looking into the future) potentially clumsy since new chips
+demand more fat. It's felt that since CDs are big enough to accommodate
+any number of CPU-specific images there's no reason to squish them into
+a doughy mess. On a related note, cross-compiling is seen as a must.
+</p><p>
+Re blinking lights: Some developers are already thinking about ways to
+wedge a BeBox-like LED display into the bezel of a PC clone. (How about
+an LED server?)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580961"></a>Subject: User-specified Screen Size</h4></div></div></div><p>
+Should games (in particular of all types of apps) be more screen-size
+aware than they are? Some folks think that as we see more wide and
+arbitrarily deep monitors, a game designer should try to adapt --
+perhaps by letting the user decide which screen mode to use. As Marco
+Nelissen put it...
+</p><p>
+“<span class="quote">...if it doesn't find out from the system which modes are actually
+available, and shows me a list to choose from, then I consider it a
+poorly written game.</span>”
+</p><p>
+On the other side, we have the "gamewright" attitude, as expressed by
+Jon Watte (or a good impersonation):
+</p><p>
+“<span class="quote">Current games can give you a choice of the screen modes available when
+they are compiled, and let you choose between them. Once arbitrary-size
+comes into play, they will not list the new sizes. Big deal. They
+weren't tested with the new sizes, and weren't designed to work well on
+the new sizes, so there's no big loss.</span>”
+</p><p>
+There was some pushing and shoving over the design of the (future) API
+that would support arbitrary depths and sizes.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id581011"></a>Subject: BeOS appearance &amp; Replacing the Tracker?</h4></div></div></div><p>
+A big question from Graham Gilmore...
+</p><p>
+“<span class="quote">How much of the BeOS 'look' is contained in the Tracker? Let's say I
+wanted to have a completely new look for BeOS ...would this be
+possible, and where would I find all the stuff that would need
+replacing?</span>”
+</p><p>
+A number of listeners called in to offer opinions and vote for
+methodology. Peter Potrebic summarized Be's current thinking (see
+below).
+</p><p>
+THE BE LINE: From Peter Potrebic...
+</p><p>
+The "Look" and "Feel" of the BeOS is defined by both the app_server
+(the look of windows and scroll bars) and the Interface Kit (everything
+else). We have several ideas for opening up these parts of the system
+for customization.
+</p><p>
+A couple of ideas for customizing app_server windows are...
+</p><ul class="itemizedlist"><li><p>
+allow components (color, frame, etc.) to be set through a
+preferences application
+</p></li><li><p>
+provide an add_on architecture to define completely new types of
+windows
+</p></li></ul><p>
+Customizations in the Interface Kit could be handled by a "drop in"
+library that would redefine how things look and feel (e.g. a library
+that defines a new draw method for the BButton class).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id581079"></a>Subject: Restarting the App Server</h4></div></div></div><p>
+Is it possible to restart the app_server after it has crashed? You can
+telnet into your machine and launch the app_server by hand, but it's
+simpler (and probably safer) to just reboot.
+</p><p>
+So why does the app_server crash? Is Be trying to fix the problem?
+</p><p>
+THE BE LINE: Absolutely.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id581103"></a>Subject: Accelerated OpenGL®</h4></div></div></div><p>
+Does Be *really* have an OpenGL® implementation? A listener phoned in
+to point out that, strictly speaking, Be has implemented Mesa.
+Subterfuge? Not really, say many of our listeners—Mesa looks like
+OpenGL® and quacks like OpenGL®, therefore it *is* OpenGL®. But some
+folks, Osma Ahvenlampi notably, are not entirely satisfied...
+</p><p>
+“<span class="quote">Nothing in Mesa is OpenGL®, even though it might look similar or even
+identical. Before anything can be called OpenGL®, it is required to be
+SGI-licensed. Thus, Mesa is not, and never will be, OpenGL®.</span>”
+</p><p>
+The response, as given by Be's Jake Hamby:
+</p><p>
+“<span class="quote">In order to be OpenGL®, it is NOT required to be SGI-licensed, it is
+required to pass the conformance test. Whether we decide to use the SGI
+sample code, the Mesa code, our own code, or a combination of them, the
+OpenGL® logo will be your guarantee that it passes the conformance
+tests, and is therefore, [to] all intents and purposes, OpenGL®.</span>”
+</p><p>
+This didn't comfort Terry Sikes...
+</p><p>
+“<span class="quote">...the difference between Mesa and OpenGL® is significant... What
+version of OpenGL® does Mesa emulate? 1.0? 1.1? What about extensions?
+... The best thing (IMO) for Be would be to partner with SGI and
+provide SGI OpenGL® for Be. The Intel Win32 drivers would probably move
+to Intel BeOS pretty easily, and from there to PowerPC. Without this,
+getting hardware 3D support under BeOS will be problematic at best.</span>”
+</p><p>
+Jake Hamby again...
+</p><p>
+“<span class="quote">We've already licensed 'real OpenGL®.' However, *nobody* uses the
+stock SGI sample implementation without extensive optimization... It's
+reasonable for us to spend extensive effort into tuning, and even
+replacing large portions of, the SGI sample code to get the best
+possible performance for our users.</span>”
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-31.html">Issue 2-31, August 6, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-33.html">Issue 2-33, August 20, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-31.html" title="Issue 2-31, August 6, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-33.html" title="Issue 2-33, August 20, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

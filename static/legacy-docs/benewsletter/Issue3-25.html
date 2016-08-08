@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-24.html" title="Issue 3-24, June 17, 1998" /><link rel="next" href="Issue3-26.html" title="Issue 3-26, July 1, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-24.html" title="Issue 3-24, June 17, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-26.html" title="Issue 3-26, July 1, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-24.html">Issue 3-24, June 17, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-26.html">Issue 3-26, July 1, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-25"></a>Issue 3-25, June 24, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-25"></a>Be Engineering Insights: My Address? In What Space?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Igor</span> <span class="surname">Eydelnant</span></span></div></div></div><p>
+It's a trivial observation that today's high-tech life often draws upon
+ideas and terms from yesterday's fiction. Welcome to the parallel
+universe of address spaces. (Eerie music in the background.)
+</p><p>
+Recently I needed a piece of code to provide bus-to- virtual and
+virtual-to-bus address conversions for my network device driver.
+</p><p>
+Here's the problem. <acronym class="acronym" title="Direct Memory Addressing">DMA</acronym>-based
+hardware devices use bus address space for
+transfers, while software normally operates with virtual memory. Kernel
+device drivers live in between. Luckily, the bus address is the same as
+the physical <acronym class="acronym" title="Random Access Memory">RAM</acronym>
+address. (Well, as with all generalizations, this one is
+not entirely true. But it still holds for the currently supported set of
+BeOS platforms. BTW, can I get an
+<acronym class="acronym" title="Nintendo 64">N64</acronym> for testing?)
+</p><p>
+Here's the plan. Create a locked contiguous area and map it, and then
+it's only a matter of offsets! I find areas very powerful and flexible.
+The gain: we don't have to worry about crossing physical page boundaries,
+because the memory chunk is physically contiguous. The disadvantage:
+memory cannot be moved or swapped out until it's released. The Be Book
+describes this feature as "justifiable excess":
+</p><p>
+<a class="link bebook" href="../BeBook/TheKernelKit_Areas.html">TheKernelKit_Areas.html</a>
+</p><p>
+It was indeed justifiable for my driver. But recently I got a fortune
+cookie indicating: "If you don't conserve memory, the eco-police will get
+you!" Signed: Paranoid Anonymous.
+</p><p>
+The code snippet snip-snips...umh, follows.
+</p><pre class="programlisting c">
+<span class="comment">/* * * * * * * * * * * * * * * * * * * * * *
+ * Kernel-mode only
+ * virt2phys(), phys2virt()
+ */</span>
+
+#include &lt;KernelExport.h&gt;
+
+#define <code class="function">RNDUP</code>(<code class="parameter">x</code>, <code class="parameter">y</code>) (((<code class="parameter">x</code>) + (<code class="parameter">y</code>) - 1) &amp; ~((<code class="parameter">y</code>) - 1))
+
+#define <code class="constant">FOO_SIZE</code>   0x2000      <span class="comment">// 2 phys pages</span>
+#define <code class="constant">AREA_NAME</code>  "foo_area"
+
+<span class="type">area_id</span> <code class="varname">foo_area</code>;
+static <span class="type">uchar *</span>  <code class="varname">phys_start_area</code>;
+static <span class="type">uchar *</span>  <code class="varname">virt_start_area</code>;
+
+
+<span class="comment">/* init_driver()
+ * Gets called when the driver is being loaded
+ */</span>
+
+<span class="type">status_t</span>
+<code class="function">init_driver</code>()
+{
+  <span class="type">uchar *</span>  <code class="varname">foo_buf</code>;
+
+  <span class="comment">// driver init essentials...</span>
+
+  <code class="varname">foo_buf</code> = <code class="function">get_area</code>(<code class="constant">FOO_SIZE</code>, &amp;<code class="varname">foo_area</code>);
+  if (!<code class="varname">foo_buf</code>) {
+    <code class="function">kprintf</code>("init: can't get_area()\n");
+    return <code class="constant">B_NO_MEMORY</code>;
+  }
+
+  return (<code class="function">init_area</code>(<code class="varname">foo_buf</code>));
+}
+
+
+<span class="comment">/* uninit_driver()
+ * Gets called when the driver is being unloaded
+ */</span>
+
+<span class="type">status_t</span>
+<code class="function">uninit_driver</code>()
+{
+  <span class="comment">// driver uninit essentials...</span>
+
+  return (<code class="function">delete_area</code>(<code class="varname">foo_area</code>));
+}
+
+
+<span class="comment">/* get_area()
+ * Create locked contiguous area
+ */</span>
+static <span class="type">uchar *</span>
+<code class="function">get_area</code>(<span class="type">size_t</span> <code class="parameter">size</code>, <span class="type">area_id *</span><code class="parameter">areap</code>)
+{
+  <span class="type">uchar *</span> <code class="varname">base</code>;
+  <span class="type">area_id</span> <code class="varname">id</code>;
+
+  <code class="parameter">size</code> = <code class="function">RNDUP</code>(<code class="parameter">size</code>, <code class="constant">B_PAGE_SIZE</code>);
+
+  <code class="varname">id</code> = <code class="function">create_area</code>(<code class="constant">AREA_NAME</code>,
+          &amp;<code class="varname">base</code>,
+          <code class="constant">B_ANY_KERNEL_ADDRESS</code>,
+          <code class="parameter">size</code>,
+          <code class="constant">B_FULL_LOCK</code> | <code class="constant">B_CONTIGUOUS</code>,
+          <code class="constant">B_READ_AREA</code> | <code class="constant">B_WRITE_AREA</code>);
+
+  if (<code class="varname">id</code> &lt; <code class="constant">B_NO_ERROR</code>) {
+    <code class="function">kprintf</code>("get_area: Can't create area\n");
+    return (<code class="constant">NULL</code>);
+  }
+
+  <code class="function">memset</code>(<code class="varname">base</code>, <code class="constant">NULL</code>, <code class="varname">size</code>);   <span class="comment">// zero it out</span>
+  *<code class="parameter">areap</code> = <code class="varname">id</code>;
+  return (<code class="varname">base</code>);
+}
+
+
+<span class="comment">/* init_area()
+ * Map the area, set global ptrs
+ */</span>
+
+<span class="type">status_t</span>
+<code class="function">init_area</code>(<span class="type">uchar *</span> <code class="parameter">base</code>)
+{
+  <span class="type">physical_entry</span>  <code class="varname">area_phys_addr</code>[2];  <span class="comment">// only the start + 0</span>
+
+  <span class="comment">// Get location &amp; size of phys blocks: use the 1st byte of</span>
+  <span class="comment">// the 1st page to find the start of the area</span>
+
+  <code class="function">get_memory_map</code>(<code class="parameter">base</code>,     <span class="comment">// vbuf to translate</span>
+                 1,        <span class="comment">// size of vbuf</span>
+                 &amp;<code class="varname">area_phys_addr</code>[0],    <span class="comment">// tbl to fill out</span>
+                 1);       <span class="comment">// #of entries</span>
+
+  <span class="comment">// we're relying on the fact that both virt area</span>
+  <span class="comment">// and it's phys map are contiguous as advertised.</span>
+
+  <code class="varname">virt_start_area</code> = <code class="parameter">base</code>;
+  <code class="varname">phys_start_area</code> = (<span class="type">uchar *</span>) (<code class="varname">area_phys_addr</code>[0].<code class="varname">address</code>);
+
+  return <code class="constant">B_NO_ERROR</code>;
+}
+
+
+<span class="comment">/* phys2virt()
+ * Find the offset, ret virt addr
+ * or panic
+ */</span>
+
+<span class="type">void *</span>
+<code class="function">phys2virt</code>(<span class="type">ulong</span> <code class="parameter">ph_addr</code>)
+{
+  <span class="type">ulong</span>  <code class="varname">offset</code>;
+
+  <code class="varname">offset</code> = <code class="parameter">ph_addr</code> - (<span class="type">ulong</span>) <code class="varname">phys_start_area</code>;
+
+  if ( (<code class="parameter">ph_addr</code> &lt; (<span class="type">ulong</span>) <code class="varname">phys_start_area</code>) ||
+       (<code class="varname">offset</code> &gt; <code class="constant">AREA_SIZE</code>) ) {
+    <code class="function">kprintf</code>("Out of bounds: PA=0x%08x\n", <code class="parameter">ph_addr</code>);
+    <code class="function">kernel_debugger</code>("p2v");
+  }
+
+  return (<code class="varname">virt_start_area</code> + <code class="varname">offset</code>);
+}
+
+
+<span class="comment">/* virt2phys()
+ * Find the offset, ret phys address
+ * or panic
+ */</span>
+
+<span class="type">ulong</span>
+<code class="function">virt2phys</code>(<span class="type">void *</span> <code class="parameter">v_addr</code>)
+{
+  <span class="type">ulong</span>  <code class="varname">offset</code>;
+
+  <code class="varname">offset</code> = (<span class="type">ulong</span>) <code class="parameter">v_addr</code> - (<span class="type">ulong</span>) <code class="varname">virt_start_area</code>;
+
+  if ( (<code class="parameter">v_addr</code> &lt; <code class="varname">virt_start_area</code>) ||
+       (<code class="varname">offset</code> &gt; <code class="constant">AREA_SIZE</code>) ) {
+    <code class="function">kprintf</code>("Out of bounds: VA=0x%08x\n", <code class="parameter">v_addr</code>);
+    <code class="function">kernel_debugger</code>("v2p");
+  }
+
+  return ((<span class="type">ulong</span>) <code class="varname">phys_start_area</code> + <code class="varname">offset</code>);
+}
+</pre><p>
+As always, the most interesting issues (memory protection, exception
+handling) are beyond the scope of this short article. See you next time
+here on the pages of the "Menlo Park Bee."
+</p><p>
+Recommended literature:<br />
+http://www.be.com/documentation/be_book/index.html<br />
+http://www.be.com/developers/BeDC/March98/presentations/WritingDeviceDrivers/index.html
+</p><p>
+Linux Device Drivers, by A. Rubini, O'Reilly<br />
+Linux Kernel Internals, by M. Beck et. al., 2nd Ed., Addison-Wesley
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-25"></a>Developers' Workshop: BeOS Programming Basics: Part 4</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+In part three of this series, we investigated messaging on the BeOS by
+adding support for a window registry to our application. This week, we'll
+take the first step on the road to changing what was originally "Hello
+World" into a real, live, useful BeOS application, by adding a scrollable
+text editing view to our windows.
+</p><p>
+As always, if you haven't read the previous three parts of this series,
+you might want to take a moment to do so:
+</p><p>
+<a class="xref" href="Issue3-7.html#DevWorkshop3-7" title="Developers' Workshop: BeOS Programming Basics: Part 1">Developers' Workshop: BeOS Programming Basics: Part 1</a><br />
+<a class="xref" href="Issue3-13.html#DevWorkshop3-13" title="Developers' Workshop: BeOS Programming Basics, Part 2">Developers' Workshop: BeOS Programming Basics, Part 2</a><br />
+<a class="xref" href="Issue3-19.html#DevWorkshop3-19" title="Developers' Workshop: BeOS Programming Basics: Part 3">Developers' Workshop: BeOS Programming Basics: Part 3</a>
+</p><p>
+You can download the source code for this week's project from the Be FTP
+site:
+</p><p>
+ftp://ftp.be.com/pub/samples/intro/obsolete/TextWorld.zip
+</p><p>
+We begin with the source from Part 3, <code class="filename">messageworld.cpp</code>, and perform a
+little clean-up work in preparation for this week. First, we need to
+include some additional files, so we can use the <code class="classname">BTextView</code> class for
+editing:
+</p><pre class="programlisting cpp">
+#include &lt;TextView.h&gt;
+#include &lt;ScrollView.h&gt;
+</pre><p>
+Let's also fix the application signature to be unique:
+</p><pre class="programlisting cpp">
+<span class="type">const char *</span><code class="constant">APP_SIGNATURE</code> = "application/x-vnd.BeTextWorld";
+</pre><p>
+Then let's remove the Options menu and the old <code class="classname">HelloView</code> class, since
+they won't be needed anymore. So long, simple demo view! We'll miss you!
+</p><p>
+Also, we can remove the following constants, which are near the top of
+the <code class="classname">MessageWorld</code> source:
+</p><pre class="programlisting cpp">
+<span class="type">constuint32</span> <code class="constant">MENU_OPT_HELLO</code> = 'MOhl';
+<span class="type">const char   *</span><code class="constant">STRING_HELLO</code> = "Hello World!";
+<span class="type">const char   *</span><code class="constant">STRING_GOODBYE</code> = "Goodbye World!";
+</pre><p>
+The <code class="classname">HelloView</code> class and its member functions can be removed as well.
+Don't forget to remove the <code class="varname">helloview</code> variable from the
+<code class="classname">HelloWindow</code> class.
+</p><p>
+From the <code class="classname">HelloWindow</code> constructor, remove the following code, so we don't
+keep adding the <span class="guimenu">Options</span> menu to the menu bar:
+</p><pre class="programlisting cpp">
+<code class="varname">menu</code> = new <code class="classname">BMenu</code>("Options");
+<code class="varname">item</code>=new <code class="classname">BMenuItem</code>("Say Hello", new <code class="classname">BMessage</code>(<code class="constant">MENU_OPT_HELLO</code>));
+<code class="varname">item</code>-&gt;<code class="methodname">SetMarked</code>(<code class="constant">true</code>);
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>);
+<code class="varname">menubar</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">menu</code>);
+</pre><p>
+Also, remove the code that adds the <code class="classname">HelloView</code> to the window:
+</p><pre class="programlisting cpp">
+<code class="varname">r</code>.<code class="varname">top</code> = <code class="varname">menubar</code>-&gt;<code class="methodname">Bounds</code>().<code class="varname">bottom</code>+1;
+<code class="methodname">AddChild</code>(<code class="varname">helloview</code> = new <code class="classname">HelloView</code>(<code class="varname">r</code>));
+</pre><p>
+And, from <code class="classname">HelloWindow</code>::<code class="methodname">MessageReceived()</code>, remove the case handler for
+<code class="constant">MENU_OPT_HELLO</code> from the <code class="code">switch</code> block.
+</p><p>
+Now let's do a quick find-and-replace operation to change all occurrences
+of "HelloWindow" to "TextWindow" and all occurrences of "HelloApp" to
+"TextApp".
+</p><p>
+Now that we've finished our initial tidying up of the code, let's add the
+<code class="classname">BTextView</code>. The <code class="classname">BTextView</code>
+class is used to present (optionally) editable,
+(optionally) formatted text in a view. This is great for creating simple
+text editors (<span class="application">StyledEdit</span>, for example, uses a
+<code class="classname">BTextView</code> for the editing
+area of the window).
+</p><p>
+First, add to the <code class="classname">TextWindow</code> class a new private member variable:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BTextView</code>    *</span><code class="varname">textview</code>;
+</pre><p>
+Now, let's look at the revised <code class="classname">TextWindow</code> constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">TextWindow</code>::<code class="methodname">TextWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>)
+      : <code class="classname">BWindow</code>(<code class="parameter">frame</code>, "Untitled ", <code class="constant">B_TITLED_WINDOW</code>,
+        <code class="constant">B_NOT_RESIZABLE</code>|<code class="constant">B_NOT_ZOOMABLE</code>) {
+  <code class="classname">BRect</code> <code class="varname">r</code>;
+  <span class="type"><code class="classname">BMenu</code> *</span><code class="varname">menu</code>;
+
+  <span class="comment">// Add the menu bar</span>
+
+  <code class="varname">r</code> = <code class="methodname">Bounds</code>();
+  <code class="varname">menubar</code> = new <code class="classname">BMenuBar</code>(<code class="varname">r</code>, "menu_bar");
+
+  <span class="comment">// Add File menu to menu bar</span>
+
+  <code class="varname">menu</code> = new <code class="classname">BMenu</code>("File");
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("New",
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_NEW</code>), 'N'));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Open" <code class="constant">B_UTF8_ELLIPSIS</code>,
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_OPEN</code>), 'O'));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Close",
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_CLOSE</code>), 'W'));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddSeparatorItem</code>();
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Save",
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_SAVE</code>), 'S'));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Save as" <code class="constant">B_UTF8_ELLIPSIS</code>,
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_SAVEAS</code>)));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddSeparatorItem</code>();
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Page Setup" <code class="constant">B_UTF8_ELLIPSIS</code>,
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_PAGESETUP</code>)));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Print" <code class="constant">B_UTF8_ELLIPSIS</code>,
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_PRINT</code>), 'P'));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddSeparatorItem</code>();
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Quit",
+          new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_QUIT</code>), 'Q'));
+  <code class="varname">menubar</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">menu</code>);
+  <code class="methodname">AddChild</code>(<code class="varname">menubar</code>);
+
+  <span class="comment">// Add the text view</span>
+
+  <code class="classname">BRect</code> <code class="varname">textframe</code> = <code class="methodname">Bounds</code>();
+  <code class="varname">textframe</code>.<code class="varname">top</code> = <code class="varname">menubar</code>-&gt;<code class="methodname">Bounds</code>().<code class="varname">bottom</code> + 1.0;
+  <code class="classname">BRect</code> <code class="varname">textrect</code> = <code class="varname">textframe</code>;
+  <code class="varname">textrect</code>.<code class="methodname">OffsetTo</code>(<code class="constant">B_ORIGIN</code>);
+  <code class="varname">r</code>.<code class="methodname">InsetBy</code>(3.0,3.0);
+  <code class="methodname">AddChild</code>(<code class="varname">textview</code> =
+    new <code class="classname">BTextView</code>(<code class="varname">textframe</code>, "text_view", <code class="varname">textrect</code>,
+      <code class="constant">B_FOLLOW_ALL_SIDES</code>, <code class="constant">B_WILL_DRAW</code>|<code class="constant">B_PULSE_NEEDED</code>));
+
+  <span class="comment">// Tell the application that there's one more window</span>
+  <span class="comment">// and get the number for this untitled window.</span>
+
+  <code class="methodname">Register</code>(<code class="constant">true</code>);
+  <code class="methodname">Show</code>();
+}
+</pre><p>
+There are two changes here worth noting. First, the <code class="methodname">AddChild()</code> call to
+add the menu bar to the window now occurs only after all the menus are
+added. This is critical (and fixes a minor bug in the existing code):
+although the <code class="classname">BMenuBar</code> class adjusts the height of the menu bar given the
+height of the text it contains, if it doesn't have any text in it when we
+add it to the window, it won't calculate the height. So it was assuming
+that the height of the menu bar is zero (which is true given what it
+knows about the menu bar at the time).
+</p><p>
+By including the <code class="code"><code class="methodname">AddChild</code>(<code class="varname">menubar</code>)</code> after the menus are all in place, the
+height of the menu bar's frame rectangle is correctly adjusted. This is
+necessary because the code that computes the frame rectangle for the
+<code class="classname">BTextView</code> relies on the menu bar's frame rectangle (so that our code will
+work regardless of the user's settings in the Fonts preferences
+application).
+</p><p>
+The other change is that instead of adding a <code class="classname">HelloView</code> to the code, we
+now add a <code class="classname">BTextView</code>. Its frame rectangle is computed by taking the bounds
+of the entire window and moving the top edge down below the bottom of the
+menu bar.
+</p><p>
+A <code class="classname">BTextView</code> actually requires two rectangles as input. The first
+represents the actual frame rectangle of the text view itself. The other,
+the text rectangle, represents the area inside the view that the text is
+actually drawn in. This lets you establish borders around the edges of
+the text, and determines how wide the lines of the text are. The bottom
+edge of this rectangle is ignored, and will change as the text gets
+longer or shorter while being edited.
+</p><p>
+The text rectangle is simply the frame rectangle, inset by three pixels
+on every side. We use <code class="code"><code class="methodname">OffsetTo</code>(<code class="constant">B_ORIGIN</code>)</code> to offset the text rectangle so
+its top-left corner is at (0,0)—the text rectangle is local to the
+text view, so we need to make this adjustment.
+</p><p>
+Finally, we instantiate the <code class="classname">BTextView</code> object and add it to the window.
+</p><p>
+If you compile and run the application now, you have a very simple
+"notepad-style" text editor, where you can create multiple windows using
+the New option in the <span class="guimenu">File</span> menu, and enter text in them all.
+</p><p>
+But there are some obvious shortcomings. Let's go through them, one by
+one, and correct them.
+</p><p>
+First, you have to click in the <code class="classname">BTextView</code> before you can start editing.
+This is easy to fix. The problem is that, by default, the text view
+doesn't have the focus. "Focus" is a fancy way of saying "gets dibs on
+keys the user presses." So let's give the <code class="classname">BTextView</code> the default focus.
+Add the following line of code, right after the <code class="methodname">AddChild()</code> call that adds
+the <code class="classname">BTextView</code> to the window:
+</p><pre class="programlisting cpp">
+<code class="varname">textview</code>-&gt;<code class="methodname">MakeFocus</code>(<code class="constant">true</code>);
+</pre><p>
+This establishes that keystrokes should, by default, be sent to the
+<code class="classname">BTextView</code>. Try compiling and running the application again to see that
+this is, in fact, the case.
+</p><p>
+The next shortcoming is that the window is a fixed size. This is pretty
+dull. Let's go ahead and make the window resizable. As you see, our
+current <code class="classname">TextWindow</code> constructor begins like this:
+</p><pre class="programlisting cpp">
+<code class="classname">TextWindow</code>::<code class="methodname">TextWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>)
+      : <code class="classname">BWindow</code>(<code class="parameter">frame</code>, "Untitled ", <code class="constant">B_TITLED_WINDOW</code>,
+        <code class="constant">B_NOT_RESIZABLE</code>|<code class="constant">B_NOT_ZOOMABLE</code>) {
+</pre><p>
+Just change this to:
+</p><pre class="programlisting cpp">
+<code class="classname">TextWindow</code>::<code class="methodname">TextWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>)
+      : <code class="classname">BWindow</code>(<code class="parameter">frame</code>, "Untitled ", <code class="constant">B_DOCUMENT_WINDOW</code>, 0) {
+</pre><p>
+Now run this. Well, the window's resizable, but the resize box is leaving
+droppings behind when you use it, and it'd be really nice if there were a
+scroll bar in there.
+</p><p>
+So now we introduce the <code class="classname">BScrollView</code> class. This is a type of view that
+contains either a horizontal or vertical scroll bar (or both), as well as
+any other view. The scroll bars then let the user scroll the child view.
+</p><p>
+In our case, we'll create a <code class="classname">BScrollView</code> and add
+the <code class="classname">BTextView</code> to it, so
+the user can then use scroll bars to scroll through the <code class="classname">BTextView</code>. This
+changes the code that creates and adds the <code class="classname">BTextView</code>
+(and <code class="classname">BScrollView</code>) to look like this:
+</p><pre class="programlisting cpp">
+<code class="classname">BRect</code> <code class="varname">textframe</code> = <code class="methodname">Bounds</code>();
+<code class="varname">textframe</code>.<code class="varname">top</code> = <code class="varname">menubar</code>-&gt;<code class="methodname">Bounds</code>().<code class="varname">bottom</code> + 1.0;
+<code class="varname">textframe</code>.<code class="varname">right</code> -= <code class="constant">B_V_SCROLL_BAR_WIDTH</code>;
+<code class="classname">BRect</code> <code class="varname">textrect</code> = <code class="varname">textframe</code>;
+<code class="varname">textrect</code>.<code class="methodname">OffsetTo</code>(<code class="constant">B_ORIGIN</code>);
+<code class="varname">r</code>.<code class="methodname">InsetBy</code>(3.0,3.0);
+
+<code class="varname">textview</code> = new <code class="classname">BTextView</code>(<code class="varname">textframe</code>, "text_view", <code class="varname">textrect</code>,
+  <code class="constant">B_FOLLOW_ALL_SIDES</code>, <code class="constant">B_WILL_DRAW</code>|<code class="constant">B_PULSE_NEEDED</code>);
+
+<code class="methodname">AddChild</code>(<code class="varname">scrollview</code> =
+  new <code class="classname">BScrollView</code>("scroll_view", <code class="varname">textview</code>,
+      <code class="constant">B_FOLLOW_ALL_SIDES</code>, 0, <code class="constant">false</code>, <code class="constant">true</code>, <code class="constant">B_NO_BORDER</code>));
+
+<code class="varname">textview</code>-&gt;<code class="methodname">MakeFocus</code>(<code class="constant">true</code>);
+</pre><p>
+Note that we're subtracting <code class="constant">B_V_SCROLL_BAR_WIDTH</code> from the right edge of
+the <code class="classname">BTextView</code>'s frame rectangle. This makes room for the vertical scroll
+bar.
+</p><p>
+The <code class="classname">BTextView</code> is now allocated and saved, without actually adding it to
+the window.
+</p><p>
+Then the <code class="classname">BScrollView</code> is created, with the name "scroll_view." Note the
+reference to textview; the <code class="classname">BScrollView</code> constructor automatically makes
+the specified view (our <code class="classname">BTextView</code> in this case) the target of the scroll
+bars in the <code class="classname">BScrollView</code>.
+</p><p>
+We specify that the view should have no horizontal scroll bar (<code class="constant">false</code>),
+but should have a vertical scroll bar (<code class="constant">true</code>). Finally, we indicate that
+we don't need a border, by specifying the <code class="constant">B_NO_BORDER</code> value. Be sure to
+read over the <code class="classname">BScrollView</code> section in the Be Book for a more in-depth look
+at exactly what's happening here.
+</p><p>
+Note also that we've added:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BScrollView</code>  *</span><code class="varname">scrollview</code>;
+</pre><p>
+To the <code class="classname">TextWindow</code> class's private members.
+</p><p>
+If you now compile and run this, you should have a very familiar-looking
+editing window—completely resizable and scrollable. But you'll notice
+that word wrapping is odd, because the width of the text rectangle isn't
+being changed as you make the window wider and narrower. Let's fix that
+by adding a <code class="methodname">FrameResized()</code> function to our window:
+</p><p>
+Add the following line to the <code class="classname">TextWindow</code>'s public member functions:
+</p><pre class="programlisting cpp">
+virtual <span class="type">void</span>  <code class="methodname">FrameResized</code>(<span class="type">float</span> <code class="parameter">width</code>, <span class="type">float</span> <code class="parameter">height</code>);
+</pre><p>
+Then add the code for <code class="methodname">TextWindow::FrameResized()</code>:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TextWindow</code>::<code class="methodname">FrameResized</code>(<span class="type">float</span> <code class="parameter">width</code>, <span class="type">float</span> <code class="parameter">height</code>) {
+  <code class="classname">BRect</code> <code class="varname">textrect</code> = <code class="varname">textview</code>-&gt;<code class="methodname">TextRect</code>();
+
+  <code class="varname">textrect</code>.<code class="varname">right</code> = <code class="varname">textrect</code>.<code class="varname">left</code> +
+    (<code class="varname">width</code> - <code class="constant">B_V_SCROLL_BAR_WIDTH</code> - 3.0);
+  <code class="varname">textview</code>-&gt;<code class="methodname">SetTextRect</code>(<code class="varname">textrect</code>);
+}
+</pre><p>
+This code gets the current text rectangle from the <code class="classname">BTextView</code>, adjusts the
+right edge, and updates the text rectangle by calling <code class="methodname">SetTextRect()</code>.
+</p><p>
+The right edge is corrected by taking the left edge, adding the window's
+new width, and subtracting the width of the scroll bar and the number
+3.0, which, as you recall, is the amount by which we inset the text
+rectangle from the <code class="classname">BTextView</code>'s frame rectangle.
+</p><p>
+If you compile and run this application, you now have an editor which
+always keeps the text wrapped inside the edit window.
+</p><p>
+That's all for this time. There are obviously many things we can do to
+make this application more useful, and you can probably figure most of
+them out yourself by browsing through the <code class="classname">BTextView</code>
+and <code class="classname">BScrollView</code>
+sections of the Be Book.
+</p><p>
+Next time (in about six weeks), we'll add an Edit menu to add the
+standard editing features, and we'll add code to open existing text
+files, and save documents to disk. Until then, play with this code and
+see what you can do with it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-25"></a>After PC Expo</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+It is tempting to compare our PC Expo experience to our participation in
+last fall's Comdex. In Las Vegas, graciously hosted by our long-time
+partners Umax, we showed the released PowerPC version of the BeOS and a
+pre-release Intel implementation.
+</p><p>
+Most visitors there first gave us quizzical looks: Who are you, what are
+you doing here? Things improved after the demonstration, but we didn't
+have a product for this mostly Wintel crowd. Our positioning was unclear
+and we couldn't show many applications.
+</p><p>
+At PC Expo, we had our own booth. We had an Intel product, complete with
+a fresh 3.1 upgrade. We stated and demonstrated our position as a
+specialized OS for A/V applications, coexisting with Windows, the general
+purpose OS. We also had Be Developers showing and selling applications.
+</p><p>
+One rewarding moment that repeated itself over and over came at the
+conclusion of our demos—a wave of people walking to the Be Developer
+stations to look at their applications.
+</p><p>
+Another interesting pattern was the reaction of visitors whose badges
+identified them as IS managers. We thought they couldn't possibly be
+interested in anything but Microsoft platforms. Many reminded us,
+however, that they had a life besides their day job and they were
+interested in our media capabilities. Some even ventured the opinion that
+they saw possible uses for our technology in their companies if or when
+we proved capable and solid enough.
+</p><p>
+Overall, we enjoyed good traffic in spite of being in the "other"
+section. Unlike at Comdex, most visitors had already heard about us and
+they seemed pleased with the time they spent on our booth.
+</p><p>
+At one point, I spotted Michael Dell walking by—taking time out from
+the executive suite—and we chatted for a few moments. He amiably
+expressed an interest in trying the BeOS on one of his machines, and
+we'll do our best to give him a first good impression.
+</p><p>
+I won't belabor the point, but it would be nice, when you order your Dell
+System on their Web site, to have—alongside your choice of modems and
+applications software—a button to click for a factory install of the
+BeOS and choice of applications as an option.
+</p><p>
+This said, we have much work ahead of us, focusing on one goal: to bring
+customers to our developers. From improvements to our product to better
+e-commerce capabilities, evangelism, marketing,
+<acronym class="acronym" title="Public Relations">PR</acronym>,
+<acronym class="acronym" title="Original Equipment Manufacturer">OEM</acronym> agreements, to
+cite but a few building blocks, with BeOS applications now emerging, the
+next steps become pretty obvious.
+</p><p>
+Our gratitude goes to all the people inside and outside Be who made this
+first PC Expo a success. I'll take the risk of singling out Sylvie
+Pelaprat for masterminding the operation, not least of all because she'd
+have been criticized if things had gone awry.
+</p><p>
+In an earlier column I mentioned NYC cab drivers and Parisian
+<span class="foreignphrase"><em class="foreignphrase">maître d</em></span>'s.
+I just sampled the former, and found them reasonably friendly and
+efficient. Now I'll go and refresh my memories of the latter.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-24.html">Issue 3-24, June 17, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-26.html">Issue 3-26, July 1, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-24.html" title="Issue 3-24, June 17, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-26.html" title="Issue 3-26, July 1, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

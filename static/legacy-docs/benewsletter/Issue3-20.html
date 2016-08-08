@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-19.html" title="Issue 3-19, May 13, 1998" /><link rel="next" href="Issue3-21.html" title="Issue 3-21, May 27, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-19.html" title="Issue 3-19, May 13, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-21.html" title="Issue 3-21, May 27, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-19.html">Issue 3-19, May 13, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-21.html">Issue 3-21, May 27, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-20"></a>Issue 3-20, May 20, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-20"></a>Be Engineering Insights: Splitting Device Drivers and Bus Managers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Arve</span> <span class="surname">Hjønnevåg</span></span></div></div></div><p>
+The current release of the BeOS uses kernel add-ons to load device
+drivers. These device drivers communicate directly with the hardware to
+provide a standard interface for applications to use. The
+<acronym class="acronym">ISA</acronym> and
+<acronym class="acronym" title="Peripheral Component Interconnect">PCI</acronym>
+buses can always be accessed directly by the
+<acronym class="acronym" title="Central Processing Unit">CPU</acronym>, and the kernel has
+built-in functions that let drivers access these.
+</p><p>
+Other buses, however, like
+<acronym class="acronym" title="Small Computer Systems Interface">SCSI</acronym>,
+<acronym class="acronym" title="Integrated Drive Electronics">IDE</acronym>,
+<acronym class="acronym" title="Universal Serial Bus">USB</acronym>,
+<acronym class="acronym" title="Personal Computer Memory Card International Association">PCMCIA</acronym>, and
+<acronym class="acronym" title="Firewire">1394</acronym> are usually
+accessed through the devices on the
+<acronym class="acronym">PCI</acronym> or
+ISA bus. If someone wants to
+write a driver for a device connected to one of these buses, it's
+preferable not to have to communicate directly with the hardware for that
+bus.
+</p><p>
+To help the implementation of devices connected to these buses, R4 will
+add the notion of loadable kernel modules that can be used to implement
+bus managers. A bus manager is a module that allows the driver to access
+a bus without detailed knowledge of the hardware that controls it. The
+bus manager will find modules that handle specific buses. The drivers can
+then scan all buses for the devices they can handle without having to
+know how to handle the controllers.
+</p><p>
+For R4 the <acronym class="acronym">IDE</acronym> driver has been split up into
+<acronym class="acronym" title="AT Attachment">ATA</acronym> and <acronym class="acronym" title="AT Atachment Packet INterface">ATAPI</acronym> drivers, an
+<acronym class="acronym">IDE</acronym> bus manager, and controller modules for generic
+<acronym class="acronym">PCI</acronym> <acronym class="acronym">IDE</acronym>, BeBox
+<acronym class="acronym">IDE</acronym>, and Mac <acronym class="acronym">IDE</acronym>. Not all modules
+have been implemented yet, but the <acronym class="acronym">ATA</acronym> and
+<acronym class="acronym">ATAPI</acronym> drivers that have been implemented are more
+functional than the old driver, while allowing third party developers to
+add support for specific controllers.
+</p><p>
+I will now show you what it takes to implement a module for an <acronym class="acronym">IDE</acronym>
+controller, but keep in mind that every detail is subject to change.
+</p><p>
+<code class="filename">IDE.h</code> defines the interface for the module:
+</p><pre class="programlisting cpp">
+typedef struct {
+  <span class="type">bus_manager_info</span>  binfo;
+  <span class="type">uint32</span> (*<code class="varname">get_nth_cookie</code>) (<span class="type">uint32</span> <code class="parameter">bus</code>);
+  <span class="type">uint32</span> (*<code class="varname">get_bus_count</code>) ();
+  <span class="type">int32</span>  (*<code class="varname">get_abs_bus_num</code>) (<span class="type">uint32</span> <code class="parameter">cookie</code>);
+
+  <span class="type">status_t</span> (*<code class="varname">acquire_bus</code>) (<span class="type">uint32</span> <code class="parameter">cookie</code>);
+  <span class="type">status_t</span> (*<code class="varname">release_bus</code>) (<span class="type">uint32</span> <code class="parameter">cookie</code>);
+
+  <span class="type">status_t</span> (*<code class="varname">write_command_block_regs</code>)
+    (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">ide_task_file *</span><code class="parameter">tf</code>, <span class="type">ide_reg_mask</span> <code class="parameter">mask</code>);
+  <span class="type">status_t</span> (*<code class="varname">read_command_block_regs</code>)
+    (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">ide_task_file *</span><code class="parameter">tf</code>, <span class="type">ide_reg_mask</span> <code class="parameter">mask</code>);
+
+  <span class="type">uint8</span> (*<code class="varname">get_altstatus</code>) (<span class="type">uint32</span> <code class="parameter">cookie</code>);
+  <span class="type">void</span> (*<code class="varname">write_device_control</code>) (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">uint8</span> <code class="parameter">val</code>);
+
+  <span class="type">void</span> (*<code class="varname">write_pio_16</code>)
+    (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">uint16 *</span><code class="parameter">data</code>, <span class="type">uint16</span> <code class="parameter">count</code>);
+  <span class="type">void</span> (*<code class="varname">read_pio_16</code>)
+    (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">uint16 *</span><code class="parameter">data</code>, <span class="type">uint16</span> <code class="parameter">count</code>);
+
+  <span class="type">status_t</span> (*<code class="varname">intwait</code>) (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">bigtime_t</span> <code class="parameter">timeout</code>);
+
+  <span class="type">status_t</span> (*<code class="varname">prepare_dma</code>)
+    (<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">void *</span><code class="parameter">buffer</code>, <span class="type">size_t *</span><code class="parameter">size</code>, <span class="type">bool</span> <code class="parameter">to_device</code>);
+  <span class="type">status_t</span> (*<code class="varname">finish_dma</code>)(<span class="type">uint32</span> <code class="parameter">cookie</code>);
+} <span class="type">ide_bus_info</span>;
+</pre><p>
+A module for an <acronym class="acronym">IDE</acronym> controller exports this structure with all the
+function pointers pointing to the respective functions. All functions
+have to be implemented, but prepare_dma and finish_dma may return an
+error if <acronym class="acronym" title="Direct Memory Access">DMA</acronym>
+is not supported, and all device drivers need to handle this
+case.
+</p><p>
+binfo contains the generic bus manager module information. Currently this
+contains the module name, some flags and a function for initialization
+and uninitialization.
+</p><p>
+At initialization time, the module finds the hardware it supports, and
+allocates resources. Specifically it may scan the <acronym class="acronym">PCI</acronym> bus, create areas
+for <acronym class="acronym">DMA</acronym> tables, and initialize structures and semaphores used to access
+each bus. At closing time all resources should be freed.
+</p><p>
+The first three functions an <acronym class="acronym">IDE</acronym> module implements are those that allow
+the IDE bus manager to iterate through all the buses a module handles and
+map them to a global bus number that the drivers will use. The functions
+are
+</p><ul class="itemizedlist"><li><pre class="programlisting c">
+<span class="type">uint32</span> <code class="function">get_nth_cookie</code>(<span class="type">uint32</span> <code class="parameter">bus</code>)
+</pre><p>
+Returns a cookie that the driver uses when accessing the specified bus.
+The cookie needs to uniquely identify the specified bus. It will
+normally be a pointer to information about the bus, or an index into an
+array.
+</p></li><li><pre class="programlisting c">
+<span class="type">uint32</span> <code class="function">get_bus_count</code>()
+</pre><p>
+Returns the number of buses that this module implements.
+</p></li><li><pre class="programlisting c">
+<span class="type">int32</span> <code class="function">get_abs_bus_num</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>)
+</pre><p>
+Allows the bus manager to always number the primary and secondary IDE
+bus in a PC as 0 and 1, and it allows a driver to find out that a drive
+on a bus is the same as a specific drive that the BIOS uses. Partition
+utilities use this information to correctly fill in the CHS information
+in the partition table, and boot managers like lilo need this so that
+it will boot from the right disk. The function returns 0 if the bus is
+the primary IDE bus, 1 if it is the secondary, or -1 if it is neither.
+</p></li></ul><p>
+Let's now look at the functions to access the bus. Since only one device
+can be active on an <acronym class="acronym">IDE</acronym> bus at a given time, we define two functions that
+gives a driver exclusive access to the bus.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">acquire_bus</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>);
+<span class="type">status_t</span> <code class="function">release_bus</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>);
+</pre><p>
+A normal implementation of these would look like this:
+</p><pre class="programlisting cpp">
+static <span class="type">status_t</span>
+<code class="function">acquire_bus</code>(<span class="type">bus_info *</span><code class="parameter">cookie</code>)
+{
+  return <code class="function">acquire_sem_etc</code>(<code class="parameter">cookie</code>-&gt;<code class="varname">mutex</code>,
+                         1, <code class="constant">B_CAN_INTERRUPT</code>, 0);
+}
+
+static <span class="type">status_t</span>
+<code class="function">release_bus</code>(<span class="type">bus_info *</span><code class="parameter">cookie</code>)
+{
+  return <code class="function">release_sem_etc</code>(<code class="parameter">cookie</code>-&gt;<code class="varname">mutex</code>,
+                         1, <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+}
+</pre><p>
+All the following functions assume that the driver has successfully
+called <code class="function">acquire_bus</code>.
+</p><p>
+The next four functions provide access to the <acronym class="acronym">IDE</acronym> registers:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">write_command_block_regs</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>,
+  <span class="type">ide_task_file *</span><code class="parameter">tf</code>, <span class="type">ide_reg_mask</span> <code class="parameter">mask</code>);
+
+<span class="type">status_t</span> <code class="function">read_command_block_regs</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>,
+  <span class="type">ide_task_file *</span><code class="parameter">tf</code>, <span class="type">ide_reg_mask</span> <code class="parameter">mask</code>);
+
+<span class="type">uint8</span> <code class="function">get_altstatus</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>);
+
+<span class="type">void</span> <code class="function">write_device_control</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">uint8</span> <code class="parameter">val</code>);
+</pre><p>
+<code class="function">read_command_block_regs()</code> and
+<code class="function">write_command_block_regs()</code> allow multiple
+registers to be updated with one call. All these are straightforward to
+implement.
+</p><p>
+To do <acronym class="acronym" title="Programmed Input / Output">PIO</acronym>
+data transfers we use two functions:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">read_pio_16</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">uint16 *</span><code class="parameter">data</code>,
+                 <span class="type">uint16</span> <code class="parameter">count</code>);
+<span class="type">void</span> <code class="function">write_pio_16</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">uint16 *</span><code class="parameter">data</code>,
+                  <span class="type">uint16</span> <code class="parameter">count</code>);
+</pre><p>
+These functions read or write the data passed in from and to the <acronym class="acronym">IDE</acronym> data
+register. The argument count specifies how many 16-bit words to transfer.
+</p><p>
+The last function that has to be implemented is
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">intwait</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">bigtime_t</span> <code class="parameter">timeout</code>);
+</pre><p>
+This function blocks the caller until an interrupt is received from the
+bus, or until the time specified in the timeout argument has elapsed.
+</p><p>
+Finally we have two functions that a driver uses to do DMA transfers:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">prepare_dma</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>, <span class="type">void *</span><code class="parameter">buffer</code>,
+  <span class="type">size_t *</span><code class="parameter">size</code>, <span class="type">bool</span> <code class="parameter">to_device</code>);
+
+<span class="type">status_t</span> <code class="function">finish_dma</code>(<span class="type">uint32</span> <code class="parameter">cookie</code>);
+</pre><p>
+If <acronym class="acronym">DMA</acronym> is not supported these functions return
+<code class="constant">B_NOT_ALLOWED</code>. If the controller supports
+<acronym class="acronym">DMA</acronym>, <code class="function">prepare_dma()</code> sets up the required
+<acronym class="acronym">DMA</acronym> tables and prepares the controller for a
+<acronym class="acronym">DMA</acronym> read or write. It is the driver's responsibility to
+lock the memory before locking the bus. This order is necessary since
+locking memory may cause disk access to occur.
+</p><p>
+You have now seen how the controller-specific part of an <acronym class="acronym">IDE</acronym> driver can
+be separated from the device-specific parts. Since most
+<acronym class="acronym" title="Personal Computer">PC</acronym>s have
+motherboard <acronym class="acronym">IDE</acronym> buses that are mostly hardware compatible, using modules
+for <acronym class="acronym">IDE</acronym> controllers is not strictly necessary. It does, however provide
+cleaner device drivers, and an easy way to support controllers that
+deviate from the standard. Other bus types also exist where different
+controllers are incompatible, but it's not feasible for every device
+driver for these buses to know about different controllers.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-20"></a>Developers' Workshop: DynaDraw, Part One</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michael</span> <span class="surname">Morrissey</span></span></div></div></div><p>
+Hello, everyone! I'm Michael Morrissey, the new DTS engineer here at Be.
+I've already enjoyed working with several of you during my first month on
+the job, and I hope that one day we'll meet at a developer conference or
+demo.
+</p><p>
+The first time I saw a Silicon Graphics machine (*), when I was a
+freshman in college, I was blown away. The graphics were so fast, so
+smooth! Those great <span class="orgname">SGI</span> demos captivated me, and I spent hours tweaking
+the parameters to the programs, just to amuse myself.
+</p><p>
+Eventually, I wanted to write my own graphics programs. I looked at some
+of the sample code, but couldn't seem to get started. C wasn't the
+problem, it was the GL library—I didn't understand the building blocks
+necessary to writing a basic graphics program with it. Some older
+students who saw I was struggling set me straight and got me going.
+</p><p>
+I imagine a lot of people are in the same predicament with the Intel
+release of the BeOS that I was in with that SGI machine—tired of
+tweaking the demos and sample code, wanting to write their own code, but
+unsure how to start and feeling a little overwhelmed. I'd like to help
+newcomers to BeOS programming by building a small application which
+emphasizes the fundamentals but is large enough for experimentation.
+</p><p>
+The application we'll build (actually, port and modify) is DynaDraw,
+written originally in C and GL by Paul Haeberli of Silicon Graphics
+(fittingly, the person who first told me about BeOS). It's a fun little
+paint program which models the dynamics of a brush with mass on a paper
+with drag. (Don't worry, we'll skip the physics!)
+</p><p>
+DynaDraw turns your mouse into a calligraphy pen, and lets you make
+beautiful, smooth strokes easily. Rather than concentrating on any one
+aspect of the OS, we'll talk about good program structure and use objects
+that are common to almost all programs.
+</p><p>
+The sample code for this application can be found at:
+</p><p>
+ftp://ftp.be.com/pub/samples/interface_kit/obsolete/dynadraw.zip
+</p><p>
+Paul's original C source is also included in this zip file, and I highly
+recommend checking out his web page on DynaDraw:
+</p><p>
+http://www.sgi.com/grafica/dyna/index.html
+</p><p>
+When designing or porting an application, it's often easiest to write the
+program in stages, starting with minimal functionality, and building up
+from there. Keep in mind that you'll add more features later, and don't
+paint yourself into a corner.
+</p><p>
+For minimal functionality DynaDraw needs a window to draw in. But, since
+<code class="classname">BWindow</code> objects can't draw, we need a
+<code class="classname">BView</code> object as a child of the
+<code class="classname">BWindow</code>.
+</p><p>
+We'll want to draw with the left mouse button down. The
+<code class="classname">BView</code> API has a <code class="methodname">MouseDown()</code>
+function, so if we derive a class from <code class="classname">BView</code>, we can
+override that function to handle mouse events the way we'd like.
+</p><p>
+Another important consideration is the ability to redraw the image if
+part or all of the view becomes invalidated, for example, if another
+window is on top of ours temporarily, or if we minimize and then restore
+our window. <code class="classname">BView</code>s can't redraw themselves; you have to tell them how --
+and for this, we'll override the <code class="classname">BView</code>::<code class="methodname">Draw()</code> function.
+</p><p>
+Something else to consider is where to put the state-specific variables
+for the "filter"—things such as brush mass, drag, velocity, etc. --
+which were stored in the filter structure in Paul's original program.
+We'd like them to be as close as possible to the functions that need them
+-- the functions that draw (and redraw)—so we'll put them in our BView
+descendant. By the same logic, we'll also put the functions that operate
+on these variables in the same class (such as the <code class="methodname">Apply()</code>
+method).
+</p><p>
+That's our minimum functionality, so let's look at what we'll need to
+implement it:
+</p><ul class="itemizedlist"><li><p>
+We always want an instance of the <code class="classname">BApplication</code> object, but we don't
+need to specialize any of its functionality, so we can use the class as
+it is.
+</p></li><li><p>
+We'll want a window. We don't need to specialize it—but we do have
+to override one of its functions, <code class="methodname">QuitRequested()</code>. I'll return to this
+in a moment.
+</p></li><li><p>
+We'll need a <code class="classname">BView</code>, but since we need to specialize
+functions such as <code class="methodname">MouseDown()</code> and
+<code class="methodname">Draw()</code>, we'll want to create a new class—let's
+call it <code class="classname">FilterView</code>—derived from
+<code class="classname">BView</code>.
+</p></li></ul><p>
+Returning to override <code class="classname">BWindow</code>::<code class="methodname">QuitRequested()</code>:
+even in the simplest apps, with just one window, you need to override
+<code class="methodname">QuitRequested()</code>. This is because the last window
+to close needs to alert the <code class="classname">BApplication</code> object to
+quit. <code class="classname">BWindow</code>::<code class="methodname">QuitRequested()</code> doesn't do this
+automatically, because a window can't assume that it's the last one open.
+So we'll override <code class="methodname">QuitRequested()</code> by creating a
+simple class derived from <code class="classname">BWindow</code>, called
+<code class="classname">DDWindow</code>:
+</p><pre class="programlisting cpp">
+class <code class="classname">DDWindow</code> : public <code class="classname">BWindow</code>
+{
+ public:
+   <code class="classname">DDWindow</code>(<code class="classname">BRect</code> <code class="parameter">R</code>, <span class="type">const char*</span> <code class="parameter">title</code>,
+            <span class="type">window_type</span> <code class="parameter">type</code>, <span class="type">uint32</span> <code class="parameter">flags</code>);
+   <span class="type">bool</span> <code class="methodname">QuitRequested</code>();
+};
+
+<code class="classname">DDWindow</code>::<code class="methodname">DDWindow</code>(<code class="classname">BRect</code> <code class="parameter">R</code>, <span class="type">const char*</span> <code class="parameter">title</code>,
+                   <span class="type">window_type</span> <code class="parameter">type</code>, <span class="type">uint32</span> <code class="parameter">flags</code>)
+  : <code class="classname">BWindow</code>(<code class="parameter">R</code>, <code class="parameter">title</code>, <code class="parameter">type</code>, <code class="parameter">flags</code>)
+{
+  <span class="comment">// do nothing</span>
+}
+
+<span class="type">bool</span>
+<code class="classname">DDWindow</code>::<code class="methodname">QuitRequested</code>()
+{
+  <span class="comment">/* we're the last window open,
+     so shut down the application */</span>
+   <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+   return true;
+}
+</pre><p>
+The constructor for the <code class="classname">DDWindow</code> doesn't really do
+anything but pass the arguments along to the
+<code class="classname">BWindow</code>. In the
+<code class="methodname">QuitRequested()</code> method, we post a message to our
+<code class="classname">BApplication</code> object to quit. Remember,
+<code class="varname">be_app</code> is a global variable set in
+<code class="classname">BApplication</code> constructor to point to the instance of
+your application object.
+</p><p>
+Okay! Now on to the <code class="function">main()</code> function:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> main()
+{
+  <code class="classname">BApplication</code> <code class="varname">App</code>("application/x-vnd.Be-dynadraw");
+  <span class="type"><code class="classname">DDWindow</code>*</span> <code class="varname">W</code> = new <code class="classname">DDWindow</code>(<code class="classname">BRect</code>(50,50,800,600),
+                      "DynaDraw!",
+                      <code class="constant">B_TITLED_WINDOW</code>, 0);
+
+  <span class="type"><code class="classname">FilterView</code>*</span> <code class="varname">F</code> = new <code class="classname">FilterView</code>(<code class="varname">W</code>-&gt;<code class="methodname">Bounds</code>());
+  <code class="varname">W</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">F</code>);
+  <code class="varname">W</code>-&gt;<code class="methodname">Show</code>();
+  <code class="varname">App</code>.<code class="methodname">Run</code>();
+  return <code class="constant">B_NO_ERROR</code>;
+}
+</pre><p>
+This actually does an enormous amount of work for us. First, it connects
+us to the application sever and sets up our application identifier. Next,
+we create a <code class="classname">DDWindow</code>: the top-left corner is at (50,50) and the
+lower-right corner is at (800,600); the window title is "DynaDraw!"; the
+window has a yellow tab; and finally, the user can move, resize, close,
+and zoom the window. Remember, though, this window isn't displayed yet.
+</p><p>
+Next, we create an instance of our (still undefined) <code class="classname">FilterView</code> class,
+passing in an important <code class="classname">BRect</code>, namely, the bounds of the window it will
+be attached to. Then we display the window, and start the application's
+message loop.
+</p><p>
+The <code class="classname">FilterView</code> class should look like this:
+</p><pre class="programlisting cpp">
+class <code class="classname">FilterView</code> : public <code class="classname">BView</code>
+{
+ public:
+  <span class="comment">/* overridden functions from BView */</span>
+   <code class="methodname">FilterView</code>(<code class="classname">BRect</code> <code class="parameter">R</code>);
+   <span class="type">void</span> <code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">point</code>);
+   <span class="type">void</span> <code class="methodname">Draw</code>(<code class="classname">BRect</code> <code class="parameter">updateRect</code>);
+
+ private:
+  <span class="comment">/* state variables, formerly from the filter structure */</span>
+   <span class="type">float</span> <code class="varname">curmass</code>, <code class="varname">curdrag</code>, <code class="varname">width</code>;
+   <span class="type">float</span> <code class="varname">velx</code>, <code class="varname">vely</code>, <code class="varname">vel</code>;
+   <span class="type">float</span> <code class="varname">accx</code>, <code class="varname">accy</code>, <code class="varname">acc</code>;
+   <span class="type">float</span> <code class="varname">angx</code>, <code class="varname">angy</code>;
+   <code class="classname">BPoint</code> <code class="varname">odel</code>, <code class="varname">m</code>, <code class="varname">cur</code>, <code class="varname">last</code>;
+
+  <span class="comment">/* a list of polygons which make up our brushstokes */</span>
+   <code class="classname">BList</code> <code class="varname">polyList</code>;
+
+  <span class="comment">/* this is where the calculations get done,
+     and the drawing */</span>
+   <span class="type">void</span> <code class="methodname">DrawSegment</code>();
+   <span class="type">bool</span> <code class="methodname">Apply</code>(<code class="classname">BPoint</code> <code class="parameter">m</code>, <span class="type">float</span> <code class="parameter">curmass</code>, <span class="type">float</span> <code class="parameter">curdrag</code>);
+
+  <span class="comment">/* little helper functions */</span>
+   inline <span class="type">float</span> flerp(<span class="type">float</span> <code class="parameter">f0</code>, <span class="type">float</span> <code class="parameter">f1</code>, <span class="type">float</span> <code class="parameter">p</code>);
+   inline <span class="type">void</span> setpos(<code class="classname">BPoint</code> <code class="parameter">point</code>);
+};
+</pre><p>
+Note that all the variables that were originally in the filter struct are
+now in the private section of the class. This is fine, since the only
+functions that need these variables are also in the class. Our
+brushstrokes are made up of polygons. We'll want to keep a list of them
+(so that we can redraw), so I've decided to use a <code class="classname">BList</code> object as a
+container. Every time we make a stroke, we'll add an item to this
+<code class="classname">BList</code>.
+</p><p>
+Then we have the two main methods, which remain largely unchanged from the
+original program. The first is <code class="methodname">Apply()</code>, which
+decides whether or not a segment needs to be drawn. If it does, the other
+main method, <code class="methodname">DrawSegment()</code> is called, and it draws
+the segment. Finally, there are two small helper methods, which don't do
+anything special.
+</p><p>
+The constructor for this class looks like this:
+</p><pre class="programlisting cpp">
+<code class="classname">FilterView</code>::<code class="methodname">FilterView</code>(<code class="classname">BRect</code> <code class="parameter">R</code>)
+  : <code class="classname">BView</code>(<code class="parameter">R</code>, "filter", <code class="constant">B_FOLLOW_ALL_SIDES</code>, <code class="constant">B_WILL_DRAW</code>)
+{
+  <code class="varname">curmass</code> = 0.50;
+  <code class="varname">curdrag</code> = 0.46;
+  <code class="varname">width</code> = 0.50;
+}
+</pre><p>
+Now we give the constructor a <code class="classname">BRect</code> object, which it
+passes on to the <code class="classname">BView</code> constructor. We name the view
+"filter", and instruct it to follow all sides. We'll do some
+drawing, so we need update notifications sent to us. Inside the
+constructor, we set initial values for the mass, drag, and width variables.
+</p><p>
+The <code class="methodname">MouseDown()</code> method looks like this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">FilterView</code>::<code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">point</code>)
+{
+  <span class="type">uint32</span> <code class="varname">buttons</code>=0;
+  <span class="type">bool</span>  <code class="varname">flag</code>=0;
+  <span class="type">float</span> <code class="varname">p</code>;
+  <span class="type">float</span> <code class="varname">mx</code>, <code class="varname">my</code>;
+  <code class="classname">BRect</code> <code class="varname">B</code> = <code class="methodname">Bounds</code>();
+
+  <code class="methodname">GetMouse</code>(&amp;<code class="parameter">point</code>, &amp;<code class="varname">buttons</code>, <code class="constant">true</code>);
+
+  if(<code class="varname">buttons</code> == <code class="constant">B_PRIMARY_MOUSE_BUTTON</code>)
+  {
+    <code class="varname">mx</code> = (<span class="type">float</span>)<code class="parameter">point</code>.<code class="varname">x</code> / <code class="varname">B</code>.<code class="varname">right</code>;
+    <code class="varname">my</code> = (<span class="type">float</span>)<code class="parameter">point</code>.<code class="varname">y</code> / <code class="varname">B</code>.<code class="varname">bottom</code>;
+    <code class="varname">m</code>.<code class="methodname">Set</code>(<code class="varname">mx</code>,<code class="varname">my</code>);
+    <code class="methodname">setpos</code>(<code class="varname">m</code>);
+    <code class="varname">odel</code>.<code class="methodname">Set</code>(0,0);
+
+    while(<code class="varname">buttons</code> == <code class="constant">B_PRIMARY_MOUSE_BUTTON</code>)
+    {
+      <code class="methodname">GetMouse</code>(&amp;<code class="parameter">point</code>, &amp;<code class="varname">buttons</code>, <code class="constant">true</code>);
+
+      <code class="varname">mx</code> = (<span class="type">float</span>)<code class="parameter">point</code>.<code class="varname">x</code> / <code class="varname">B</code>.<code class="varname">right</code>;
+      <code class="varname">my</code> = (<span class="type">float</span>)<code class="parameter">point</code>.<code class="varname">y</code> / <code class="varname">B</code>.<code class="varname">bottom</code>;
+      <code class="varname">m</code>.<code class="methodname">Set</code>(<code class="varname">mx</code>,<code class="varname">my</code>);
+
+      if(<code class="methodname">Apply</code>(<code class="varname">m</code>, <code class="varname">curmass</code>, <code class="varname">curdrag</code>))
+        <code class="methodname">DrawSegment</code>();
+      <code class="function">snooze</code>(15000);
+    }
+  }
+  else if (<code class="varname">buttons</code> == <code class="constant">B_SECONDARY_MOUSE_BUTTON</code>)
+  {
+    <span class="type">int32</span> <code class="varname">count</code> = <code class="varname">polyList</code>.<code class="methodname">CountItems</code>();
+    for(<span class="type">int</span> <code class="varname">i</code>=0; <code class="varname">i</code> &lt; <code class="varname">count</code>; <code class="varname">i</code>++)
+    {
+      <code class="function">delete</code>(<code class="varname">polyList</code>.<code class="methodname">ItemAt</code>(0);
+      <code class="varname">polyList</code>.<code class="methodname">RemoveItem</code>(0L);
+    }
+    <code class="methodname">Invalidate</code>();
+  }
+}
+</pre><p>
+The <code class="methodname">MouseDown()</code> method is called when the parent window receives a
+mouse down message. In our case, we want to track the cursor as long as
+the primary mouse button is held down. If the second mouse button is
+pressed, we want to clear the screen. (For anyone using a one-button
+mouse, don't despair; we'll add a general clear-screen feature later on.)
+</p><p>
+First we decide which button is being pressed. If it's the primary button,
+we initialize some points. Then we enter a loop which will continue until
+the button is released. In that loop, we get the mouse position, update our
+point, and call the <code class="methodname">Apply()</code> method to determine if
+a segment needs to be drawn. (I'll skip the
+<code class="methodname">Apply()</code> method body, since it's all calculations,
+and identical to the original version.)
+</p><p>
+If we need to draw the segment, we call
+<code class="methodname">DrawSegment()</code>, which I'll get to in a moment.
+Finally, we need to <code class="function">snooze()</code> between mouse calls;
+otherwise, the responsiveness would be too high. If the secondary mouse
+button was pressed, we want to clear the screen. We do this by deleting all
+the polygons in the polyList, and invalidating the whole view (meaning the
+<code class="methodname">Draw()</code> function is called on the entire view).
+There are three things to note here: first, the
+<code class="methodname">RemoveItem()</code> function does not free the objects it
+holds pointers to—you must do that. Second, calling
+<code class="methodname">RemoveItem()</code> compacts the list, so the length of
+the list decreases by one every time you call it. Third, you'll notice that
+I called <code class="methodname">RemoveItem()</code> with an argument of 0L --
+this is because <code class="methodname">RemoveItem()</code> is overloaded, one
+version taking a <span class="type">void*</span>, the other taking an
+<span class="type">int32</span>. Calling it with a 0 is ambiguous; calling it with a 0L
+makes it clear we want the <span class="type">int32</span> version.
+</p><p>
+Now, back to <code class="methodname">DrawSegment()</code>. Calculations
+removed, it looks like this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">FilterView</code>::<code class="methodname">DrawSegment</code>()
+{
+  <span class="comment">/* calculations removed */</span>
+
+  <code class="methodname">SetHighColor</code>(0,0,0);
+
+  <code class="varname">polypoints</code>[0].<code class="methodname">Set</code>((<code class="varname">B</code>.<code class="varname">right</code>*(<code class="varname">px</code>+<code class="varname">odel</code>.<code class="varname">x</code>)),
+                    (<code class="varname">B</code>.<code class="varname">bottom</code>*(<code class="varname">py</code>+<code class="varname">odel</code>.<code class="varname">y</code>)));
+  <code class="varname">polypoints</code>[1].<code class="methodname">Set</code>((<code class="varname">B</code>.<code class="varname">right</code>*(<code class="varname">px</code>-<code class="varname">odel</code>.<code class="varname">x</code>)),
+                    (<code class="varname">B</code>.<code class="varname">bottom</code>*(<code class="varname">py</code>-<code class="varname">odel</code>.<code class="varname">y</code>)));
+  <code class="varname">polypoints</code>[2].<code class="methodname">Set</code>((<code class="varname">B</code>.<code class="varname">right</code>*(<code class="varname">nx</code>-<code class="varname">del</code>.<code class="varname">x</code>)),
+                    (<code class="varname">B</code>.<code class="varname">bottom</code>*(<code class="varname">ny</code>-<code class="varname">del</code>.<code class="varname">y</code>)));
+  <code class="varname">polypoints</code>[3].<code class="methodname">Set</code>((<code class="varname">B</code>.<code class="varname">right</code>*(<code class="varname">nx</code>+<code class="varname">del</code>.<code class="varname">x</code>)),
+                    (<code class="varname">B</code>.<code class="varname">bottom</code>*(<code class="varname">ny</code>+<code class="varname">del</code>.<code class="varname">y</code>)));
+
+  <code class="varname">polyList</code>.<code class="methodname">AddItem</code>(new <code class="classname">BPolygon</code>(<code class="varname">polypoints</code>, 4));
+  <code class="methodname">FillPolygon</code>(<code class="varname">polypoints</code>, 4);
+  <code class="methodname">StrokePolygon</code>(<code class="varname">polypoints</code>, 4);
+
+  <code class="varname">odel</code> = <code class="varname">del</code>;
+
+}
+</pre><p>
+We call <code class="methodname">SetHighColor()</code>, which sets the pen color
+to black. Next, we set the coordinates for the four
+<code class="classname">BPoint</code>s which make up the polygon. Then, we make a
+new <code class="classname">BPolygon</code>, constructed with our four-point array,
+and add it to our polygon list. Finally, we make a call to
+<code class="methodname">FillPolygon()</code>, but also one to StrokePolygon. The
+reason is that if our polygon gets extremely small, flattened to the point
+were it lies on a single line, <code class="methodname">FillPolygon()</code> will
+not draw anything (because the area is, after all, zero).
+<code class="methodname">StrokePolygon()</code>, on the other hand, will draw the
+line, which is what we need.
+</p><p>
+The only thing left to look at is the <code class="methodname">Draw()</code>
+method, which is called if
+part or all of the view is invalidated. Lifting the hood reveals a
+trivial function:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">FilterView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code> <code class="parameter">updateRect</code>)
+{
+  <span class="type"><code class="classname">BPolygon</code>*</span> <code class="varname">bp</code>;
+  <span class="type">int32</span> <code class="varname">count</code> = <code class="varname">polyList</code>.<code class="methodname">CountItems</code>();
+  for(<span class="type">int</span> <code class="varname">i</code> =0; <code class="varname">i</code> &lt; <code class="varname">count</code>; <code class="varname">i</code>++)
+  {
+    <code class="varname">bp</code> = (<span class="type">BPolygon*</span>)<code class="varname">polyList</code>.<code class="methodname">ItemAt</code>(<code class="varname">i</code>);
+    <code class="methodname">FillPolygon</code>(<code class="varname">bp</code>);
+    <code class="methodname">StrokePolygon</code>(<code class="varname">bp</code>);
+  }
+}
+</pre><p>
+All we do here is loop through the polygon list, getting one item at a
+time, and calling FillPolygon() and StrokePolygon() for the item. This
+reconstructs our drawing.
+</p><p>
+We now have a small program that draws nice calligraphic strokes. Play
+with it for a while to see how it feels and how it reacts to movements.
+Adjust the mass, drag, and width parameters in the FilterView constructor
+and see how it changes the program.
+</p><p>
+There's lots more to do with this program. To start with, we should have
+a simple menu bar at the top that lets us clear the screen, bring up an
+About box, and quit (without using the close button on the window tab).
+Since I'm a "tweak-freak," I'd like a window where I can adjust the mass,
+drag, width, snooze factor, and other things on the fly, without
+recompiling. Being able to change the color of the pen would be nice,
+too, so we'll add a color preference panel.
+</p><p>
+I'll be back in two weeks with an article which adds these features. It
+will also show how starting with a simple, clean framework makes
+expanding your programs much easier. In the next article we'll be moving
+at a faster pace, so you may want to get a head start by checking out the
+<code class="classname">BSlider</code> class, the <code class="classname">BColorControl</code>
+class, and simple messaging.
+</p><p>
+See you in two weeks!
+</p><p>
+(*) - That first SGI machine was an Iris 4D, for the curious.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-20"></a>How Do I Explain This To My Mother?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+My mother is puzzled. She thinks this whole circus of DOJ and state
+lawsuits against Microsoft is unfair, greedy, and downright dangerous. My
+mother asks tough, common sense questions. And since she's not a geek --
+not our kind of geek anyway—she won't stand for any of our industry
+encoded speech. No, she wants answers she can understand.
+</p><p>
+How come those bureaucrats want Microsoft to bundle Netscape's browser
+along with the one already offered with Windows? Isn't that, as Mr. Gates
+pointed out, like forcing Coca-Cola to include three cans of Pepsi inside
+each six-pack of Coke? It is very nice of Microsoft to keep making their
+product more and more useful to more and more people; why are these
+government lawyers trying to prevent Microsoft from innovating?
+</p><p>
+She also wonders why so many people who benefited from Microsoft's work are
+now turning against it. She reminds me of the times when there were two
+different voltages for appliances or when the rail gauge changed at the
+border between France and Spain. With all the good PCs running Windows and
+Office, customers don't have to worry about the voltage, the hardware guys
+know what to manufacture and everyone should be happy, she says.
+</p><p>
+Doesn't everyone see how the Microsoft standard fueled the PC explosion?
+Look at your old cronies at Apple. They didn't participate and they were
+left behind. In my mind it's clear, she tells me. Microsoft is the industry
+benefactor, so why bite the hand that feeds you millions?
+</p><p>
+And she knows. She not only looks and speaks like Scott McNealy's mother,
+she's also been following Sun for a while. In fact, when Sun went public,
+she heard a rumor that one of Sun's founders, Andy Bechtolsheim, took his
+IPO money and bought Microsoft stock. So, she followed suit and invested
+her retirement savings in Microsoft stock, thinking Andy had to be onto
+something. He was. She likes what the stock has done for her and her fellow
+MSFT holders. As for people who attack Microsoft, I can't print the names
+she has for them in this family publication.
+</p><p>
+What do you say for yourself and your so-called friends in the industry,
+she demands to know? (Needless to say, when she learned I invested my time
+and, worse, her grandchildren's inheritance in a non-Windows operating
+system company, she was distraught, thinking all efforts to educate me had
+been a waste. But that's another story.)
+</p><p>
+So, I tell her the cans of Pepsi in a Coke six-pack argument is admirable.
+She smiles, and I'm her good son again. Then I bring up the software that
+ships with Windows on any new PC these days. Among other things, there is
+an icon for Microsoft's own network, MSN, and a folder of on-line services
+-- AOL, Compuserve, and AT&amp;T's WorldNet. Isn't that a bunch of cans from
+brands directly competing with the MSN brand? She's puzzled.
+</p><p>
+But what about the apparatchiki who want to prevent Microsoft from
+innovating, she asks? I sigh. Maman, this is complicated. She gives me a
+withering look. Don't talk down to me. If you can't explain yourself to
+your mother, either you haven't done your homework, or you're trying to
+hide something from me. So, what is it?
+</p><p>
+Well, it goes like this. Some biased and ill-informed people say Microsoft
+never innovates, they just copy very well and use these imitations to
+eliminate competitors. Myself, I'd say they have a very good eye. And I
+admire the way they implement once they've decided on a target.
+</p><p>
+Take Microsoft's conversion to the Internet, I say, showing her the '95
+Pearl Harbor speech. I attempt to explain how Microsoft's official &amp;
+quot;embrace and extend" becomes lethal. Microsoft can extend its
+operating system in ways that use its position of power in the OS domain to
+generate a sure win. Some biased minds consider that unfair competition.
+</p><p>
+What's so wrong with that, she asks? Customers get a better product, a more
+complete offering from their favorite vendor. It makes no impression when I
+try and explain thatthis sterilizes innovation, just as when a culture
+occupies the entire Petri dish, there is no more room for other life forms.
+</p><p>
+Yes, but what if I get all I need at a good price? Then, I try to explain
+what a per-system license means. Allegedly, Microsoft gives its OEMs a good
+price for the "everything-on-it" combo of Windows and Office if
+they agree to calculate the license fee on the basis of the number of
+systems you ship, regardless of what you actually put on the disk.
+Accounting is simplified, the OEM can market, promote, mix, and match what
+they want without incurring complicated reporting requirements.
+</p><p>
+Isn't this gracious, asks my mother, low price, simplicity? Certainement, I
+say, but try selling a word processor to that OEM. He'll ask why he should
+pay for it, since he's already paid for Office. My mother is a little
+troubled by this. She's not sure what a word processor better than Word
+could be, but she sees that making a business of a non-Microsoft word
+processor could be even harder than her eldest son's OS venture, perhaps.
+</p><p>
+But she quickly recovers her equanimity. On second thought, she says, this
+lawsuit is a big win for Microsoft. First, Microsoft will win and, even if
+they don't win, they win. Now I'm the one who's puzzled.
+</p><p>
+The first win is simple. Does Microsoft have good lawyers, who know the law
+inside out? Yes, of course, Bill's father is a lawyer of fine repute,
+Microsoft's chief legal eagle Bill Neukom is talented, and the company can
+afford the best litigators. The DOJ may also have fine lawyers, but, does
+Joel Klein live and breathe technology as well as Bill and his people? No.
+Therefore, Bill will win.
+</p><p>
+And the second win, she says, is even better. Imagine Microsoft's situation
+without these lawsuits. Their ever-increasing presence—she doesn't like
+to say dominance—would only generate more and more hostility, which is
+not good for business.
+</p><p>
+Now, my dear son, let's assume for a moment your Silicon Valley cronies are
+right. Let's assume Microsoft does indeed embrace and extend and smother
+its competition. These suits give Microsoft two things that are invaluable.
+One is time. The legal battles will last for years, while Microsoft goes on
+doing what it does. The other is a mantle of martyrdom. As victims of
+bureaucratic oppression, they can exterminate with even greater impunity.
+</p><p>
+One might think my mother is a real cynic.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-20"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696073"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696079"></a>Subject: How to make a BeOS floppy?</h4></div></div></div><p>
+How do you make a BFS floppy...and should you? Young Ficus Kirkpatrick of
+Be thinks maybe you shouldn't:
+</p><p>
+"...the journal eats up a large portion of the disk. I would be loath
+to use a floppy because they are notoriously slow, seemingly always
+corrupt, etc..."
+</p><p>
+Master Kirkpatrick goes on to suggest using CDs rather than floppies, which
+prompted Chris Herborth to plead for a CD writing app. Other suggestions,
+other voices: Use network download to distribute software, tar to the
+floppy, use HFS/MS-DOS floppies.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696106"></a>Subject: Release 3 on BeBox</h4></div></div></div><p>
+Is Release 3 much less stable than PR2 on a BeBox? Slower? Hard to install?
+A number of correspondents wrote in to mention that they couldn't get the
+ROM Updater to drop-launch—they had to launch it from the shell. Others
+had no problem installing or updating the ROM.
+</p><p>
+THE BE LINE: The Release 3 boot ROM for the BeBox was broken. However,
+there really wasn't any need to update the ROM; you can use the PR2 boot
+ROM to run Release 3 on a BeBox.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696129"></a>Subject: Printing (from Be Newsletter)</h4></div></div></div><p>
+Printing comments, prompted by Benoit Schillings' Newsletter article,
+http://www.be.com/aboutbe/benewsletter/volume_II/Issue18.html:
+</p><ul class="itemizedlist"><li><p>
+When should a print job pop up the Print Setup or Page Setup panel?
+Some folks think the Print menu item should print, period. Others think
+that "Print..." is a well-known convention and that users
+understand that another panel is on its way.
+</p></li><li><p>
+Tyler Riti suggests a no-fuss, no-panel "Print one copy"
+item in addition to the expected "Print..."
+</p></li><li><p>
+Mr. Riti would also like more flexibility in choosing a printer. The
+current Mac-influenced bureaucracy (fill out a form and submit it to
+SelectPrinter) is barbaric. Adam Lloyd, who's thought about these things,
+submitted a plan for how as document-based choose-printer UI might look and
+feel.
+</p></li><li><p>
+Michael Crawford would like multi-device printing: "I'd like to
+be able to choose a different printer for different pages, for example to
+print envelopes and letters in a single print job."
+</p></li><li><p>
+A number of listeners would like to mix and match layout types within
+a document. For example, they'd like to be able to mix portrait and
+landscape orientation.
+</p></li></ul></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696186"></a>Subject: select() spaws [sic] threads?</h4></div></div></div><p>
+From Jason Jasmin:
+</p><p>
+"Given that the os appears to spawn a separate thread for each socket
+being <code class="function">select()</code>ed, is there any performance loss to just spawn a reader
+thread for each socket and have the thread sit in a blocking <code class="function">recv()</code> loop?"
+</p><p>
+Also sprach Jon Watte:
+</p><p>
+"[spawning rather than selecting] is actually considered a performance
+GAIN. Threads are cheap on BeOS. Really cheap. It definitely makes sense to
+spawn one thread per socket if you're expecting &lt; 100 simultaneous
+connections."
+</p><p>
+Luc Andre pointed out that this doesn't help when you're porting code.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696229"></a>Subject: URL handling AKA: message/rfc822</h4></div></div></div><p>
+What MIME type should an URL be? Should it assume the type of the data it
+points to? Most listeners think an URL should have its own type, perhaps of
+supertype (or "media" type, in archaic RFC lingo) "message".
+Some folks suggest using "message/rfc822", the standard
+email type. Nearly everyone agreed that an URL shouldn't take the type of
+the data it represents.
+</p><p>
+How should the system support URL handling? Some folks would like to find
+and launch protocol-handling apps, something like:
+</p><pre class="programlisting cpp">
+<code class="varname">be_roster</code>-&gt;<code class="methodname">Launch</code>(<code class="constant">B_HTTP_PROTOCOL</code>, &gt;&gt;URL&lt;&lt;, ...)
+</pre><p>
+The objection, here, is that this assumes that you know the protocol. So
+how about a call that takes an URL and deduces protocol for you?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id696277"></a>Subject: Laying out GUI components</h4></div></div></div><p>
+Anyone want to offer some distance-between-UI-objects guidelines for
+Wendell Beckwith? Tinic Uro suggests...
+</p><p>
+"...a minimum 8 pixels for the bordersize of group of elements and a
+minimum of 4 pixels for the space between elements... Leave enough space
+for future localisation..."
+</p><p>
+Thorsten Seitz:
+</p><p>
+"You shouldn't hardcode the layout at all but instead always make it
+font-sensitive (liblayout or something else). This way you won't have
+problems with localization either."
+</p><p>
+Dan from Cornell, you're on the air:
+</p><p>
+"Use the height of be_plain_font as one 'display unit.' One display
+unit then becomes the vertical distance between radio buttons and
+checkboxes, the horizontal distance between 'OK' and 'Cancel', the margin
+of a BBox, etc. Unrelated control groups are separated by two display
+units."
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-19.html">Issue 3-19, May 13, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-21.html">Issue 3-21, May 27, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-19.html" title="Issue 3-19, May 13, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-21.html" title="Issue 3-21, May 27, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

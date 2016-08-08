@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Media Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheMediaKit_Overview.html" title="The Media Kit" /><link rel="prev" href="BBufferConsumer_Overview.html" title="BBufferConsumer" /><link rel="next" href="BBufferProducer_Overview.html" title="BBufferProducer" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="BBufferConsumer_Overview.html" title="BBufferConsumer"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheMediaKit_Overview.html" title="The Media Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="BBufferProducer_Overview.html" title="BBufferProducer"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Media Kit</div></div><div id="headerB">Prev: <a href="BBufferConsumer_Overview.html">BBufferConsumer</a>  Up: <a href="TheMediaKit_Overview.html">The Media Kit</a>  Next: <a href="BBufferProducer_Overview.html">BBufferProducer</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BBufferGroup_Overview"></a>BBufferGroup</h2></div></div></div><a id="id583950" class="indexterm"></a><p>A <a class="link" href="BBufferGroup.html" title="BBufferGroup"><code class="classname">BBufferGroup</code></a>
+serves as a repository for
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a>s,
+and can be used to
+pass those buffers to another node for its use when sending data. It must
+also be used by your
+<a class="link" href="BBufferProducer.html" title="BBufferProducer"><code class="classname">BBufferProducer</code></a> to acquire
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a>s to put data that
+you produce into before you send the buffer on to its destination.</p><p>You can create a new
+<a class="link" href="BBufferGroup.html" title="BBufferGroup"><code class="classname">BBufferGroup</code></a>
+by simply calling:</p><pre class="programlisting example cpp">new <code class="classname">BBufferGroup</code>;</pre><p>If you pass in some arguments describing what sort of buffers you want,
+and how many of them, the group will even create the
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a>s for you. This is how you'll usually use
+<a class="link" href="BBufferGroup.html" title="BBufferGroup"><code class="classname">BBufferGroup</code></a>,
+from within your
+<a class="link" href="BBufferProducer.html" title="BBufferProducer"><code class="classname">BBufferProducer</code></a>
+subclass' constructor so you'll know there are buffers
+ready and waiting when it's time to start sending data. A possible
+exception is if your node is a filter that simply processes buffers it
+receives and passes them along.</p><p>A <a class="link" href="BBufferGroup.html" title="BBufferGroup"><code class="classname">BBufferGroup</code></a>
+instance runs a thread that reclaims
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a>s whose
+<a class="link" href="BBuffer.html#BBuffer_Recycle" title="Recycle()"><code class="methodname">Recycle()</code></a>
+function has been called. If the group is temporarily out of
+free buffers, a request for a buffer may block until one is available, or
+until the request times out, if a timeout is specified when the request
+is made.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id584085"></a>Using BBitmaps as Buffers</h3></div></div></div><p>If you're doing video processing, you might want your buffers to be
+<a class="link" href="BBitmap.html" title="BBitmap"><code class="classname">BBitmap</code></a>s.
+Here's how you can accomplish this:</p><pre class="programlisting example cpp"><span class="type">BBufferGroup *</span><code class="varname">my_group</code> = new <code class="classname">BBufferGroup</code>;
+<span class="type">BBitmap *</span><code class="varname">my_bitmap</code> = new <code class="classname">BBitmap</code>(<code class="classname">BRect</code>(0,0,639,479), <code class="constant">B_BITMAP_IS_AREA</code>,
+            <code class="constant">B_RGB32</code>, 640*4);
+
+if (!<code class="varname">my_bitmap</code>-&gt;<code class="methodname">IsValid</code>()) {
+   return <code class="constant">B_ERROR</code>;
+}
+<span class="type">area_info</span> <code class="varname">bm_info</code>;
+
+if (<code class="function">get_area_info</code>(<code class="varname">my_bitmap</code>-&gt;<code class="methodname">Area</code>(), &amp;<code class="varname">bm_info</code>) != <code class="constant">B_OK</code>) {
+   return <code class="constant">B_ERROR</code>;
+}
+
+<span class="type">buffer_clone_info</span> <code class="varname">bc_info</code>;
+<code class="varname">bc_info</code>.<code class="varname">area</code> = <code class="varname">bm_info</code>.<code class="varname">area</code>;
+<code class="varname">bc_info</code>.<code class="varname">offset</code> = ((<span class="type">char *</span>) <code class="varname">my_bitmap</code>-&gt;<code class="methodname">Bits</code>())-((<span class="type">char *</span>) <code class="varname">bm_info</code>.<code class="varname">address</code>);
+<code class="varname">bc_info</code>.<code class="varname">size</code> = <code class="varname">my_bitmap</code>-&gt;<code class="methodname">BitsLength</code>();
+
+<span class="type">BBuffer *</span><code class="varname">out_buffer</code> = <code class="constant">NULL</code>;
+<span class="type">status_t</span> <code class="varname">err</code> = <code class="varname">my_group</code>-&gt;<code class="methodname">AddBuffer</code>(<code class="varname">bc_info</code>, &amp;<code class="varname">out_buffer</code>);
+
+<span class="comment">/* out_buffer is now set to use the BBitmap's memory */</span></pre><p>This code takes advantage of the <code class="constant">B_BITMAP_IS_AREA</code> flag when creating the
+bitmap. This forces the bitmap to be in a memory area of its very own,
+which you can then use when creating the
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a>.</p><p>If you need to do real-time accesses to the
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a>, you should lock it
+down. In addition, if you use DMA, you'll need to specify for the buffer
+to be contiguous (you can do this using the
+<a class="link" href="BBitmap.html" title="BBitmap"><code class="classname">BBitmap</code></a>
+constructor, specifying the contiguous flag).</p><p>Before deleting any
+<a class="link" href="BBitmap.html" title="BBitmap"><code class="classname">BBitmap</code></a>s
+used in this way, be sure the buffer group has been deleted first and (if
+<a class="link" href="BBufferConsumer.html#BBufferConsumer_SetOutputBuffersFor" title="SetOutputBuffersFor()"><code class="methodname">SetOutputBuffersFor()</code></a>
+has been used) all buffers have been reclaimed.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="BBufferConsumer_Overview.html">BBufferConsumer</a>  Up: <a href="TheMediaKit_Overview.html">The Media Kit</a>  Next: <a href="BBufferProducer_Overview.html">BBufferProducer</a> </div><div id="footerB"><div id="footerBL"><a href="BBufferConsumer_Overview.html" title="BBufferConsumer"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheMediaKit_Overview.html" title="The Media Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="BBufferProducer_Overview.html" title="BBufferProducer"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

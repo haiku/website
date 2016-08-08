@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-31.html" title="Issue 3-31, August 5, 1998" /><link rel="next" href="Issue3-33.html" title="Issue 3-33, August 19, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-31.html" title="Issue 3-31, August 5, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-33.html" title="Issue 3-33, August 19, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-31.html">Issue 3-31, August 5, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-33.html">Issue 3-33, August 19, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-32"></a>Issue 3-32, August 12, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-32"></a>Be Engineering Insights: Fun with Threads, Part 1</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pavel</span> <span class="surname">Císler</span></span></div></div></div><p>
+Threads make BeOS responsive. Threads help programmers achieve good
+perceived performance and snappiness in their application even on slow
+hardware. Threads also make it really easy to add subtle, hard to track
+down bugs that only happen on the user's system, never on the
+programmer's machine.
+</p><p>
+This article is for C++ programmers. It shows a few typical cases of
+thread use, pointing out common pitfalls and isolating the low-level
+thread calls into prefabricated C++ classes that make it easier to avoid
+some common mistakes. The article also contains some mandatory advanced
+C++ trickery that we all live for.
+</p><p>
+Let's start with the simplest kind of thread—the fire and forget
+thread. This thread is self-contained. It has a copy of the state it
+needs for its work, so it doesn't need to obtain any information from
+other threads, and therefore needs no complex synchronization.
+</p><p>
+First we need a simple thread base class that we'll subclass in all our
+examples (we include all the code inside the class definition to save
+valuable article real estate; in the real world we would split it up):
+</p><pre class="programlisting cpp">
+class <code class="classname">ThreadPrimitive</code> {
+public:
+
+  <code class="methodname">ThreadPrimitive</code>(<span class="type">int32</span> <code class="parameter">priority</code> = <code class="constant">B_LOW_PRIORITY</code>,
+    <span class="type">const char *</span><code class="parameter">name</code> = 0)
+    :  <code class="varname">scanThread</code>(-1),
+       <code class="varname">priority</code>(<code class="parameter">priority</code>),
+       <code class="varname">name</code>(<code class="parameter">name</code>)
+    {}
+
+  virtual <code class="methodname">~ThreadPrimitive</code>()
+    {
+      if (<code class="varname">scanThread</code> &gt; 0) {
+        <code class="function">kill_thread</code>(<code class="varname">scanThread</code>);
+        ASSERT(!"should not be here");
+      }
+    }
+
+  <span class="type">void</span> <code class="methodname">Go</code>()
+    {
+      <code class="varname">scanThread</code> = <code class="function">spawn_thread</code>(&amp;<code class="classname">ThreadPrimitive</code>::<code class="methodname">RunBinder</code>,
+        <code class="varname">name</code> ? <code class="varname">name</code> : "UntitledThread", <code class="varname">priority</code>, <code class="varname">this</code>);
+      <code class="function">resume_thread</code>(<code class="varname">scanThread</code>);
+    }
+
+
+  virtual <span class="type">void</span> <code class="methodname">Run</code>() = 0;
+
+private:
+
+  static <span class="type">status_t</span> <code class="methodname">RunBinder</code>(<span class="type">void *</span><code class="parameter">castToThis</code>)
+    {
+      <span class="comment">// In this call we do the dirty casting work, making</span>
+      <span class="comment">// the rest of the interfaces fully typed and clean</span>
+
+      <span class="type"><code class="classname">ThreadPrimitive</code> *</span><code class="varname">self</code> = (<span class="type"><code class="classname">ThreadPrimitive</code> *</span>)<code class="parameter">castToThis</code>;
+      <code class="varname">self</code>-&gt;<code class="methodname">Run</code>();
+
+      return <code class="constant">B_OK</code>;
+    }
+
+protected:
+  <span class="type">thread_id</span> <code class="varname">scanThread</code>;
+  <span class="type">int32</span> <code class="varname">priority</code>;
+
+private:
+  <span class="type">const char *</span><code class="varname">name</code>;  <span class="comment">// only valid in the constructor and in</span>
+                     <span class="comment">// the Go call</span>
+};
+</pre><p>
+<code class="classname">ThreadPrimitive</code> is an abstract base class—you have to subclass it to
+make it instantiable. Specifically, you must implement the pure virtual
+<code class="methodname">Run()</code> function. Your implementation should incorporate the code that does
+the actual work for which the thread was spawned. In other words, each
+<code class="classname">ThreadPrimitive</code> subclass performs a specific task. In addition, we expect
+all subclasses to privatize the constructor and provide a static
+"perform" function that constructs an object and then calls
+<code class="methodname">Go()</code>.
+</p><p>
+Note that the thread has two sides. One side (the constructor and the
+<code class="methodname">Go()</code> call) is accessible from the caller side, and one is accessed once
+the thread is running. These two sides are in two totally different
+contexts and we need to be aware of that.
+</p><p>
+For instance, the <code class="varname">name</code> member variable is not a copy, but a pointer to
+the string passed in the constructor. It may not be a pointer to a valid
+name by the time <code class="methodname">RunBinder()</code> or
+<code class="methodname">Run()</code> gets to run—it may go out of
+scope on the spawner side, get deleted, etc. We'll augment this by making
+it private so that a subclass can't use it in <code class="methodname">Run()</code> by accident.
+</p><p>
+Let's look at a <code class="classname">PrimitiveThread</code> subclass.
+The <code class="classname">FindAFileThread</code> does a
+recursive search for a file starting at a specified directory, and then
+opens the file with its preferred app. All the object needs is the name
+of the file and the directory it should start at. In order to be self
+contained, the subclass needs its own copies of these two pieces of data.
+</p><pre class="programlisting cpp">
+class <code class="classname">FindAFileThread</code>: private <code class="classname">ThreadPrimitive</code> {
+public:
+  static <span class="type">void</span> <code class="methodname">Launch</code>(<span class="type">const<code class="classname">BEntry</code> *</span><code class="parameter">startDir</code>,
+    <span class="type">const char *</span><code class="parameter">lookForName</code>, <span class="type">int32</span> <code class="parameter">priority</code> = <code class="constant">B_LOW_PRIORITY</code>,
+    <span class="type">const char *</span><code class="parameter">name</code> = 0)
+    {
+      <span class="type"><code class="classname">FindAFileThread</code> *</span>thread =
+        new <code class="classname">FindAFileThread</code>(<code class="parameter">startDir</code>, <code class="parameter">lookForName</code>,
+          <code class="parameter">priority</code>, <code class="parameter">name</code>);
+
+      if (<code class="varname">thread</code>-&gt;<code class="methodname">Go</code>() != <code class="constant">B_OK</code>)
+        <span class="comment">// failed to launch, clean up</span>
+        delete <code class="varname">thread</code>;
+    }
+
+private:
+  <code class="methodname">FindAFileThread</code>(<span class="type">const<code class="classname">BEntry</code> *</span><code class="parameter">startDir</code>,
+    <span class="type">const char *</span><code class="parameter">lookForName</code>, <span class="type">int32</span> <code class="parameter">priority</code>, <span class="type">const char *</span><code class="parameter">name</code>)
+    :  <code class="classname">ThreadPrimitive</code>(<code class="parameter">priority</code>, <code class="parameter">name</code>),
+       <code class="varname">startDir</code>(*<code class="parameter">startDir</code>),
+       <code class="varname">lookForName</code>(<code class="function">strdup</code>(<code class="parameter">lookForName</code>))
+    {}
+
+  virtual <code class="methodname">~FindAFileThread</code>()
+    {
+      <code class="function">free</code> (<code class="varname">lookForName</code>);
+    }
+
+  virtual <span class="type">void</span> <code class="methodname">Run</code>()
+    {
+      <span class="type">char</span> <code class="varname">buffer</code>[<code class="constant">B_FILE_NAME_LENGTH</code>];
+      <code class="varname">startDir</code>.<code class="methodname">GetName</code>(<code class="varname">buffer</code>);
+      <code class="function">printf</code>("looking for %s in directory %s\n",
+        <code class="varname">lookForName</code>, <code class="varname">buffer</code>);
+      <span class="comment">// ... look for &lt;lookForName&gt; recursively in startDir</span>
+      <span class="comment">// left out as an exercise for the reader</span>
+
+      delete <code class="varname">this</code>;
+      <span class="comment">// clean up after ourselves when we are done</span>
+    }
+
+  <span class="comment">// copy of the state our thread needs to Run()</span>
+  <code class="classname">BEntry</code> <code class="varname">startDir</code>;
+  <span class="type">char *</span><code class="varname">lookForName</code>;
+};
+</pre><p>
+We said the thread needs to be self contained. That also means it needs
+to clean up after itself once it's done running. You can see that it
+deletes itself at the end of the <code class="methodname">Run()</code> call.
+</p><p>
+To use the object, we call the static <code class="methodname">Launch()</code> function:
+</p><pre class="programlisting cpp">
+<code class="classname">FindAFileThread</code>::<code class="methodname">Launch</code>(&amp;<code class="varname">someDirRef</code>, "APM.h");
+</pre><p>
+Remember that the constructor must be private. This is to only allow a
+heap-allocated instance of the thread. A stack-based instance wouldn't
+work for a couple of reasons. First, the thread deletes itself when it's
+done. Second, if it was declared as a local instance and the spawning
+function quit while the object was still running, the local instance
+would be deleted, killing the thread with it.
+</p><p>
+The constructor also makes copies of the state the thread uses—we need
+a destructor to delete the <code class="varname">lookForName</code> copy obtained
+by <code class="function">strdup()</code>. (Note
+that in R4 there will be a nice new <code class="classname">BString</code> class that we could have used
+here, allowing us to avoid the explicit destructor).
+</p><p>
+As you can see, to implement our <code class="classname">FindAFileThread</code> we wrote a fairly simple
+subclass of <code class="classname">ThreadPrimitive</code>. But we still needed to subclass and there
+was still quite a bit of stuff to remember (and mess up), and this is,
+after all, a very simple example.
+</p><p>
+If you're adventurous (or are writing a big app with a lot of threading),
+you could use the following thread class, which utilizes function objects
+to avoid having to subclass <code class="classname">ThreadPrimitive</code> each time. As you may know,
+function objects are classes that have an <code class="methodname">operator()</code>—they know how to
+call themselves. They usually pack a function pointer and necessary
+parameters to be used as arguments during a function call. They're
+actually very useful in threading code. When you're using a thread, you
+still want to call some code, not right there but asynchronously, in a
+different context. A function object is about packaging up all the
+information you need to perform the call later. Function objects are a
+part of <acronym class="acronym" title="Standard Template Library">STL</acronym>;
+we'll use our own here to serve the purpose of the interface
+we want to use.
+</p><pre class="programlisting cpp">
+class <code class="classname">FunctionObject</code> {
+public:
+  virtual <span class="type">void</span> <code class="methodname">operator()</code>() = 0;
+  virtual <code class="methodname">~FunctionObject</code>() {}
+};
+</pre><p>
+This is the <code class="classname">FunctionObject</code> base class that defines the
+interface our thread will understand.
+</p><pre class="programlisting cpp">
+class <code class="classname">FireAndForgetThread</code>: private <code class="classname">ThreadPrimitive</code> {
+public:
+  static <span class="type">void</span> <code class="methodname">Launch</code>(<span class="type"><code class="classname">FunctionObject</code> *</span><code class="parameter">functor</code>,
+    <span class="type">int32</span> <code class="parameter">priority</code> = <code class="constant">B_LOW_PRIORITY</code>, <span class="type">const char *</span><code class="parameter">name</code> = 0)
+    {
+      <span class="type"><code class="classname">FireAndForgetThread</code> *</span>thread =
+        new <code class="classname">FireAndForgetThread</code>(<code class="parameter">functor</code>, <code class="parameter">priority</code>, <code class="parameter">name</code>);
+
+      if (thread-&gt;<code class="methodname">Go</code>() != <code class="constant">B_OK</code>)
+        <span class="comment">// failed to launch, clean up</span>
+        delete thread;
+    }
+
+private:
+  <code class="methodname">FireAndForgetThread</code>(<span class="type"><code class="classname">FunctionObject</code> *</span><code class="parameter">functor</code>,
+    <span class="type">int32</span> <code class="parameter">priority</code>, <span class="type">const char *</span><code class="parameter">name</code>)
+    :  <code class="classname">ThreadPrimitive</code>(<code class="parameter">priority</code>, <code class="parameter">name</code>),
+       <code class="varname">functor</code>(<code class="parameter">functor</code>)  <span class="comment">// take over the function</span>
+                         <span class="comment">// object ownership</span>
+    {}
+
+  virtual <code class="methodname">~FireAndForgetThread</code>()
+    {
+      delete <code class="varname">functor</code>;
+    }
+
+  virtual <span class="type">void</span> <code class="methodname">Run</code>()
+    {
+      (*<code class="varname">functor</code>)();
+      <span class="comment">// invoke the function object to get threads work done</span>
+
+      delete <code class="varname">this</code>;
+      <span class="comment">// clean up after ourselves when we are done</span>
+    }
+
+  <span class="type"><code class="classname">FunctionObject</code> *</span><code class="varname">functor</code>;
+    <span class="comment">// functor owned by the thread</span>
+};
+</pre><p>
+This time there are no task-specific arguments in the <code class="methodname">Launch()</code> call and
+in the constructor. The directory and filename parameters that we passed
+explicitly in the previous example are now packaged up in a function
+object, along with a target function that's called when the thread runs.
+The bare <code class="classname">FunctionObject</code> doesn't do much. In practice you'll use one of
+the prefabricated function objects that you have for this purpose, for
+instance:
+</p><pre class="programlisting cpp">
+template &lt;class <code class="classname">Param1</code>, class <code class="classname">Param2</code>&gt;
+class <code class="classname">TwoParamFunctionObject</code> : public <code class="classname">FunctionObject</code> {
+public:
+  <code class="methodname">TwoParamFunctionObject</code>(<span class="type">void</span> (*<code class="parameter">callThis</code>)(<code class="classname">Param1</code>, <code class="classname">Param2</code>),
+    <code class="classname">Param1</code> <code class="parameter">param1</code>, <code class="classname">Param2</code> <code class="varname">param2</code>)
+    :  <code class="varname">function</code>(<code class="parameter">callThis</code>),
+       <code class="varname">param1</code>(<code class="parameter">param1</code>),
+       <code class="varname">param2</code>(<code class="parameter">param2</code>)
+    {
+    }
+
+  virtual <span class="type">void</span> <code class="methodname">operator()</code>()
+    { (<code class="varname">function</code>)(<code class="varname">param1</code>.<code class="methodname">Pass</code>(), <code class="varname">param2</code>.<code class="methodname">Pass</code>()); }
+
+private:
+  <span class="type">void</span> (*<code class="varname">function</code>)(<code class="varname">Param1</code>, <code class="varname">Param2</code>);
+  <code class="classname">ParameterBinder</code>&lt;<code class="classname">Param1</code>&gt; <code class="varname">param1</code>;
+  <code class="classname">ParameterBinder</code>&lt;<code class="classname">Param2</code>&gt; <code class="varname">param2</code>;
+};
+</pre><p>
+The function object above works with static target functions that take
+two parameters. <code class="classname">ParameterBinder</code> is a little bit of magic that uses
+template specialization to accommodate different function object
+parameters differently. Remember, we need to make a copy of everything.
+For example, if we pass a <span class="type">const <code class="classname">BEntry</code>*</span> to our target searching
+function, we still need to keep a copy of the entire <code class="classname">BEntry</code> instance in
+the function object, since the original <code class="classname">BEntry</code> might be long gone when
+our thread does its job.
+</p><p>
+Passing a <code class="classname">BEntry</code> as a parameter would be inefficient; it would cause
+multiple unnecessary copy operations. The <code class="classname">BEntry</code> specialization of
+<code class="classname">ParameterBinder</code> ensures that
+<span class="type">const <code class="classname">BEntry</code>*</span> can be passed to the function
+object constructor, a copy of the <code class="classname">BEntry</code> is saved, and a
+<span class="type">const <code class="classname">BEntry</code>*</span>
+is passed to the target function, which is exactly what we need.
+</p><p>
+Default <code class="classname">ParameterBinder</code> used for scalars:
+</p><pre class="programlisting cpp">
+template&lt;class <code class="classname">P</code>&gt;
+class <code class="classname">ParameterBinder</code> {
+public:
+  <code class="methodname">ParameterBinder</code>(<code class="classname">P</code> <code class="parameter">p</code>)
+    :  <code class="varname">p</code>(<code class="parameter">p</code>)
+    {}
+  <code class="classname">P</code> <code class="methodname">Pass</code>()
+    { return <code class="varname">p</code>; }
+private:
+  <code class="classname">P</code> <code class="varname">p</code>;
+};
+</pre><p>
+<code class="classname">ParameterBinder</code> specialization for
+<span class="type">const <code class="classname">BEntry</code>*</span>:
+</p><pre class="programlisting cpp">
+template&lt;&gt;
+class <code class="classname">ParameterBinder</code>&lt;<span class="type">const<code class="classname">BEntry</code> *</span>&gt; {
+public:
+  <code class="methodname">ParameterBinder</code>(<span class="type">const<code class="classname">BEntry</code> *</span> <code class="parameter">p</code>)
+    :  <code class="varname">p</code>(*<code class="parameter">p</code>)
+    {}
+  <span class="type">const<code class="classname">BEntry</code> *</span><code class="methodname">Pass</code>()
+    { return &amp;<code class="varname">p</code>; }
+private:
+  <code class="classname">BEntry</code> <code class="varname">p</code>;
+};
+</pre><p>
+In a real application you'd have a whole army of function object
+templates and would just pick the one for the right number of function
+arguments. You wouldn't need to worry about picking the right
+<code class="classname">ParameterBinder</code> once you had specializations for the different struct
+types you might be using. The function object works on different types of
+parameters and does full type checking, making sure the types of
+arguments we pass to it and the types required by the target function are
+compatible.
+</p><p>
+If you are interested in knowing more about function objects (or are a
+function object junkie, like Hiroshi, and can't get enough of them), I
+recommend that you read, for instance, the excellent "Ruminations about
+C++," by Andrew Koenig and Barbara Moo.
+</p><p>
+Here's how we would use our new <code class="classname">FireAndForgetThread</code>:
+</p><pre class="programlisting cpp">
+static <span class="type">void</span>
+<code class="function">FindAFile</code>(<span class="type">const<code class="classname">BEntry</code> *</span><code class="parameter">startDir</code>, <span class="type">const char *</span><code class="parameter">name</code>)
+{
+  char <code class="varname">buffer</code>[<code class="constant">B_FILE_NAME_LENGTH</code>];
+  <code class="parameter">startDir</code>-&gt;<code class="methodname">GetName</code>(<code class="varname">buffer</code>);
+  <code class="function">printf</code>("looking for %s in directory %s\n", <code class="parameter">name</code>, <code class="varname">buffer</code>);
+  <span class="comment">// do some work here</span>
+}
+
+...
+  <code class="classname">BEntry</code> <code class="varname">entry</code>("/boot/home");
+  <code class="classname">FireAndForgetThread</code>::<code class="methodname">Launch</code>(new
+    <code class="classname">TwoParamFunctionObject</code>&lt;<span class="type">const<code class="classname">BEntry</code> *</span>,
+    <span class="type">const char *</span>&gt;(&amp;<code class="function">FindAFile</code>, &amp;<code class="varname">entry</code>, "APM.h"));
+...
+</pre><p>
+The <code class="methodname">Launch()</code> call packages up the function address and the parameters into
+a function object and sends it off. Note that we didn't need to tweak the
+thread class itself; all we had to do was supply the <code class="methodname">FindAFile()</code> function
+itself. There's practically no room left for thread setup code that we
+could make a mistake in. Oh, and by the way, if we tried really hard to
+screw up and pass, say an <span class="type">entry_ref*</span> in place of entry, the compiler
+would catch it because <code class="classname">FindAFile</code> takes a
+<span class="type">const <code class="classname">BEntry</code>*</span>. We're reaching
+the Holy Grail of programming here—the compiler will not let us make
+any mistakes.
+</p><p>
+This concludes the first part of this article, in the next part we'll
+examine more types of threads and their use.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-32-2"></a>Be Engineering Insights: BeOS and the Simple Life</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Chinn</span></span></div></div></div><p>
+Over the weekend I had a chance to tour one of <span class="orgname">SGI</span>'s buildings. It's an
+impressive site. A huge building with slanted purple walls, a cafeteria,
+auditoriums, sand volley ball court, nicely landscaped grounds, $1000
+chairs, and even clean carpets.
+</p><p>
+Coming back to Be I realized that while other companies' campuses are
+distinguished and nice to look at, I really enjoy the simplicity of what
+we have at Be. In fact, I've made that the subject of this article --
+doing things in a simple and direct way; no incredible tricks, no obscure
+C++, just getting the job done.
+</p><p>
+Most of our developers have probably already addressed the issue of
+transitioning from writing code in a straight C or a non-message based
+system to writing applications for the BeOS. On many systems you have the
+controls just do the work it needs to do. In the BeOS most of the
+interactions are message based: a control is pressed and it sends a
+message that you catch somewhere else and do something.
+</p><p>
+Sometimes this is the best way to accomplish the task at hand. Other
+times you just want the control to do something immediately or interact
+directly with another part of your application directly. Accomplishing
+this "liveness" with the BeOS is simple and easy, but how and where
+should it be done? For any object based on <code class="classname">BControl</code>, the place to do this
+is in <code class="methodname">SetValue</code>.
+</p><p>
+One example is when you're using a control such as a <code class="classname">BColorControl</code>. For
+this example it will change the Desktop color. In <code class="classname">BColorControl</code>'s most
+basic state, when you click on a color tile or change an individual <acronym class="acronym">RGB</acronym>
+value a message is sent to its parent window:
+</p><pre class="programlisting cpp">
+...
+<span class="type"><code class="classname">BColorControl</code>*</span> <code class="varname">indirectColorControl</code> = new <code class="classname">BColorControl</code>(
+  <code class="classname">BPoint</code>(0, 0),
+  <code class="constant">B_CELLS_32x8</code>,
+  8,
+  "color control",
+  new <code class="classname">BMessage</code>('ccnt'),
+  <code class="constant">false</code>);
+...
+</pre><p>
+On receiving the message, in our example, the window unpacks the value
+into an <span class="type">rgb_color</span> and sets the desktop color.
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TWindow</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code>*</span> <code class="parameter">m</code>)
+{
+  <span class="type">int32</span> <code class="varname">value</code>;
+  <span class="type">rgb_color</span> <code class="varname">dcColor</code>;
+
+  switch (<code class="parameter">m</code>-&gt;<code class="varname">what</code>) {
+    case 'ccnt':  <span class="comment">// message sent from BColorControl</span>
+      {
+        <code class="parameter">m</code>-&gt;<code class="methodname">FindInt32</code>("be:value", &amp;<code class="varname">value</code>);
+        <code class="varname">dcColor</code>.<code class="varname">red</code>   = (<code class="varname">value</code> &gt;&gt; 24);
+        <code class="varname">dcColor</code>.<code class="varname">green</code> = (<code class="varname">value</code> &gt;&gt; 16);
+        <code class="varname">dcColor</code>.<code class="varname">blue</code>  = (<code class="varname">value</code> &gt;&gt; 8);
+        <code class="varname">dcColor</code>.<code class="varname">alpha</code> = 255;
+
+        <code class="classname">BScreen</code> <code class="varname">b</code>(<code class="constant">B_MAIN_SCREEN_ID</code>);
+        <code class="varname">b</code>.<code class="methodname">SetDesktopColor</code>(<code class="varname">dcColor</code>, <code class="constant">true</code>);
+      }
+      break;
+  }
+}
+</pre><p>
+This method works, but is not very "live." Changes to the Desktop color
+only occur when the mouse button is released, so dragging around on the
+color tiles doesn't actively change the Desktop color. So, how can you
+make it "live"? Override the <code class="methodname">SetValue</code> method of a custom
+<code class="classname">BColorControl</code>,
+get the rgb value for the current selection and set it directly:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TCustomColorControl</code>::<code class="methodname">SetValue</code>(<span class="type">int32</span> <code class="parameter">v</code>)
+{
+  <span class="comment">// always remember to actually set the</span>
+  <span class="comment">//control's value when overriding</span>
+  <code class="classname">BColorControl</code>::<code class="methodname">SetValue</code>(<code class="parameter">v</code>);
+
+  <span class="comment">// convert the value to an rgb_color</span>
+  <span class="type">rgb_color</span> <code class="varname">dcColor</code> = <code class="methodname">ValueAsColor</code>();
+
+  <span class="comment">// set the desktop color</span>
+  <code class="classname">BScreen</code> <code class="varname">b</code>(<code class="constant">B_MAIN_SCREEN_ID</code>);
+  <code class="varname">b</code>.<code class="methodname">SetDesktopColor</code>(<code class="varname">dcColor</code>, <code class="constant">true</code>);
+}
+</pre><p>
+Now, when the user drags around on the color tiles, as each new tile is
+hit, the Desktop color changes immediately. You can use this same
+technique with any <code class="classname">BControl</code> for a similar "liveness."
+</p><p>
+In the same way, letting a control "know" about another object enables it
+to communicate directly and maintain this "live" feel. Here we have a
+view and a set of three sliders that modify the individual rgb components
+for the view's view color and the Desktop color:
+</p><pre class="programlisting cpp">
+...
+
+<span class="comment">// get the current Desktop color</span>
+<code class="classname">BScreen</code> <code class="varname">b</code>(<code class="constant">B_MAIN_SCREEN_ID</code>);
+<span class="type">rgb_color</span> <code class="varname">dcColor</code> = <code class="varname">b</code>.<code class="methodname">DesktopColor</code>();
+
+<code class="classname">BRect</code> <code class="varname">objectFrame</code>(10, 5, <code class="methodname">Bounds</code>().<code class="methodname">Width</code>() - 10, 15);
+
+<span class="comment">// create a simple BView as a 'color swatch'</span>
+<span class="type"><code class="classname">BView</code>*</span> <code class="varname">colorSwatch</code> = new <code class="classname">BView</code>(<code class="varname">objectFrame</code>,
+"color swatch", <code class="constant">B_FOLLOW_NONE</code>, <code class="constant">B_WILL_DRAW</code>);
+<code class="varname">colorSwatch</code>-&gt;<code class="methodname">SetViewColor</code>(<code class="varname">dcColor</code>);
+<code class="methodname">AddChild</code>(<code class="varname">colorSwatch</code>);
+
+<span class="comment">// add 3 custom BSliders, one for the red, green and blue</span>
+<span class="comment">// components of an rgb value</span>
+<code class="varname">objectFrame</code>.<code class="varname">top</code> = 20;
+<code class="varname">objectFrame</code>.<code class="varname">bottom</code> = 55;
+<span class="type"><code class="classname">TSlider</code>*</span> <code class="varname">redSlider</code> = new <code class="classname">TSlider</code>(<code class="varname">objectFrame</code>,
+"Red", <code class="varname">colorSwatch</code>);
+<code class="methodname">AddChild</code>(<code class="varname">fRedSlider</code>);
+
+<code class="varname">objectFrame</code>.<code class="methodname">OffsetBy</code>(0, 40);
+<span class="type"><code class="classname">TSlider</code>*</span> <code class="varname">greenSlider</code> = new <code class="classname">TSlider</code>(<code class="varname">objectFrame</code>,
+"Green", <code class="varname">colorSwatch</code>);
+<code class="methodname">AddChild</code>(<code class="varname">fGreenSlider</code>);
+
+<code class="varname">objectFrame</code>.<code class="methodname">OffsetBy</code>(0, 40);
+<span class="type"><code class="classname">TSlider</code>*</span> <code class="varname">blueSlider</code> = new <code class="classname">TSlider</code>(<code class="varname">objectFrame</code>,
+"Blue", <code class="varname">colorSwatch</code>);
+<code class="methodname">AddChild</code>(<code class="varname">fBlueSlider</code>);
+
+<span class="comment">// set the individual values for each slider</span>
+<code class="varname">redSlider</code>-&gt;<code class="methodname">SetValue</code>(<code class="varname">dcColor</code>.<code class="varname">red</code>);
+<code class="varname">greenSlider</code>-&gt;<code class="methodname">SetValue</code>(<code class="varname">dcColor</code>.<code class="varname">green</code>);
+<code class="varname">blueSlider</code>-&gt;<code class="methodname">SetValue</code>(<code class="varname">dcColor</code>.<code class="varname">blue</code>);
+...
+</pre><p>
+Where <code class="classname">TSlider</code> is as follows:
+</p><pre class="programlisting cpp">
+class <code class="classname">TSlider</code> : public <code class="classname">BSlider</code> {
+public:
+  <code class="methodname">TSlider</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>, <span class="type">const char*</span> <code class="parameter">name</code>,
+    <span class="type"><code class="classname">BView</code>*</span> <code class="parameter">colorSwatch</code>);
+  <span class="type">void</span> <code class="methodname">SetValue</code>(<span class="type">int32</span> <code class="parameter">value</code>);
+
+private:
+  <span class="type"><code class="classname">BView</code>*</span>  <code class="varname">fColorSwatch</code>;
+};
+
+<code class="classname">TSlider</code>::<code class="methodname">TSlider</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>, <span class="type">const char*</span> <code class="parameter">name</code>,
+  <span class="type"><code class="classname">BView</code>*</span> <code class="parameter">colorSwatch</code>)
+  : <code class="classname">BSlider</code>(<code class="parameter">frame</code>, <code class="parameter">name</code>, <code class="parameter">name</code>, <code class="constant">NULL</code>, 0, 255,
+      <code class="constant">B_TRIANGLE_THUMB</code>),
+    <code class="varname">fColorSwatch</code>(<code class="parameter">colorSwatch</code>)
+{
+}
+</pre><p>
+For our custom slider, the individual rgb components are modified in
+<code class="methodname">SetValue()</code>, based on which slider was changed. The new rgb value is then
+used to set the view color for the color swatch and the Desktop color.
+The fill color for the slider is also set to the individual rgb component
+that the slider represents:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TSlider</code>::<code class="methodname">SetValue</code>(<span class="type">int32</span> <code class="parameter">v</code>)
+{
+  <span class="comment">// tell the slider its new value</span>
+  <code class="classname">BSlider</code>::<code class="methodname">SetValue</code>(<code class="parameter">v</code>);
+
+  <span class="comment">// get the current color of the view</span>
+  <span class="type">rgb_color</span> <code class="varname">viewColor</code> = <code class="varname">fColorSwatch</code>-&gt;<code class="methodname">ViewColor</code>();
+
+  <span class="comment">// each slider will represent its individual color</span>
+  <span class="comment">// in its fill color</span>
+  <span class="type">rgb_color</span> <code class="varname">fillColor</code> = {0,0,0,255};
+
+  <span class="comment">// determine which slider has been modified</span>
+  <span class="comment">// get its new value</span>
+  if (strcmp("Red", <code class="methodname">Name</code>()) == 0) {
+    <code class="varname">fillColor</code>.<code class="varname">red</code> = <code class="methodname">Value</code>();
+    <code class="varname">viewColor</code>.<code class="varname">red</code> = <code class="methodname">Value</code>();
+  } else if (strcmp("Green", <code class="methodname">Name</code>()) == 0) {
+    <code class="varname">fillColor</code>.<code class="varname">green</code> = <code class="methodname">Value</code>();
+    <code class="varname">viewColor</code>.<code class="varname">green</code> = <code class="methodname">Value</code>();
+  } else if (strcmp("Blue", <code class="methodname">Name</code>()) == 0) {
+    <code class="varname">fillColor</code>.<code class="varname">blue</code> = <code class="methodname">Value</code>();
+    <code class="varname">viewColor</code>.<code class="varname">blue</code> = <code class="methodname">Value</code>();
+  }
+
+  <span class="comment">// set the fill color</span>
+  <code class="methodname">UseFillColor</code>(<code class="constant">true</code>, &amp;<code class="varname">fillColor</code>);
+
+  <span class="comment">// set the view color</span>
+  <code class="varname">fColorSwatch</code>-&gt;<code class="methodname">SetViewColor</code>(<code class="varname">viewColor</code>);
+  <code class="varname">fColorSwatch</code>-&gt;<code class="methodname">Invalidate</code>();
+
+  <span class="comment">// set the Desktop color</span>
+  <code class="classname">BScreen</code> <code class="varname">b</code>(<code class="constant">B_MAIN_SCREEN_ID</code>);
+  <code class="varname">b</code>.<code class="methodname">SetDesktopColor</code>(<code class="varname">viewColor</code>, <code class="constant">true</code>);
+}
+</pre><p>
+Since all the processing is done in <code class="methodname">SetValue()</code>,
+all the changes are "live."
+Once again, if messages had been used, the color would change only when
+the mouse button was released.
+</p><p>
+The above techniques are quite simple—and that is the point. By
+simplifying the process with a little directness we make the interaction
+of the parts of the application a bit more responsive. With this
+responsiveness comes the "live" feel that most users really appreciate.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-32"></a>Developers Workshop: Translation Kit, Again!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jon</span> <span class="surname">Watte</span></span></div></div></div><p>
+When I talked about the Translation Kit at the last BeDC, I promised to
+make code available on our web page that showed how to create a Save As
+menu using the Translation Kit to save in a format of the user's choice.
+It's about time I delivered on that promise, so here it is.
+</p><p>
+In BeOS Release 4, the <code class="classname">BTranslationUtils</code> class will have learned new
+tricks. One of them is to populate an existing <code class="classname">BMenu</code> with menu items for
+available translations, to make creating that Save As menu a no-brainer.
+However, since anyone who doesn't work here has to live with R3.2 for
+some time to come, it can't hurt to put the same code in your app, at
+least until you get around to updating it for R4. Thus, I give you:
+</p><pre class="programlisting cpp">
+#include &lt;Menu.h&gt;
+#include &lt;Message.h&gt;
+#include &lt;MenuItem.h&gt;
+#include &lt;TranslationKit.h&gt;
+
+enum {
+  <code class="constant">B_TRANSLATION_MENU</code> = 'BTMN'
+};
+
+<span class="type">status_t</span>
+<code class="function">AddTranslationItems</code>(
+  <span class="type"><code class="classname">BMenu</code> *</span> <code class="parameter">intoMenu</code>,
+  <span class="type">uint32</span> <code class="parameter">from_type</code>,
+  <span class="type">const<code class="classname">BMessage</code> *</span> <code class="parameter">model</code>,       <span class="comment">/* default B_TRANSLATION_MENU */</span>
+  <span class="type">const char * </span><code class="parameter">translator_id_name</code>, <span class="comment">/* default "be:translator" */</span>
+  <span class="type">const char * </span><code class="parameter">translator_type_name</code>,     <span class="comment">/* default "be:type" */</span>
+  <span class="type"><code class="classname">BTranslatorRoster</code> *</span> <code class="parameter">use</code>)
+{
+  if (<code class="parameter">use</code> == <code class="constant">NULL</code>) {
+    <span class="type">use</span> = <code class="classname">BTranslatorRoster</code>::<code class="methodname">Default</code>();
+  }
+  if (<code class="parameter">translator_id_name</code> == <code class="constant">NULL</code>) {
+    <code class="parameter">translator_id_name</code> = "be:translator";
+  }
+  if (<code class="parameter">translator_type_name</code> == <code class="constant">NULL</code>) {
+    <code class="parameter">translator_type_name</code> = "be:type";
+  }
+  <span class="type">translator_id *</span> <code class="varname">ids</code> = <code class="constant">NULL</code>;
+  <span class="type">int32</span> <code class="varname">count</code> = 0;
+
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="varname">use</code>-&gt;<code class="methodname">GetAllTranslators</code>(&amp;<code class="varname">ids</code>, &amp;<code class="varname">count</code>);
+  if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>)
+    return <code class="varname">err</code>;
+
+  for (<span class="type">int</span> <code class="varname">tix</code>=0; <code class="varname">tix</code>&lt;<code class="varname">count</code>; <code class="varname">tix</code>++) {
+    <span class="type">consttranslation_format *</span> <code class="varname">formats</code> = <code class="constant">NULL</code>;
+    <span class="type">int32</span> <code class="varname">num_formats</code> = 0;
+    <span class="type">bool</span> <code class="varname">ok</code> = <code class="constant">false</code>;
+    <code class="varname">err</code> = <code class="parameter">use</code>-&gt;<code class="methodname">GetInputFormats</code>(<code class="varname">ids</code>[<code class="varname">tix</code>], &amp;<code class="varname">formats</code>,
+      &amp;<code class="varname">num_formats</code>);
+    if (<code class="varname">err</code> == <code class="constant">B_OK</code>)
+      for (<span class="type">int</span> <code class="varname">iix</code>=0; <code class="varname">iix</code>&lt;<code class="varname">num_formats</code>; <code class="varname">iix</code>++) {
+        if (<code class="varname">formats</code>[<code class="varname">iix</code>].<code class="varname">type</code> == <code class="parameter">from_type</code>) {
+          <code class="varname">ok</code> = <code class="constant">true</code>;
+          break;
+        }
+      }
+    if (!<code class="varname">ok</code>)
+      continue;
+
+    <code class="varname">err</code> = <code class="parameter">use</code>-&gt;<code class="methodname">GetOutputFormats</code>(<code class="varname">ids</code>[<code class="varname">tix</code>], &amp;<code class="varname">formats</code>,
+      &amp;<code class="varname">num_formats</code>);
+    if (<code class="varname">err</code> == <code class="constant">B_OK</code>)
+      for (<span class="type">int</span> <code class="varname">oix</code>=0; <code class="varname">oix</code>&lt;<code class="varname">num_formats</code>; <code class="varname">oix</code>++) {
+        if (<code class="varname">formats</code>[<code class="varname">oix</code>].<code class="varname">type</code> != <code class="parameter">from_type</code>) {
+          <span class="type"><code class="classname">BMessage</code> *</span> <code class="varname">itemmsg</code>;
+          if (<code class="parameter">model</code>) {
+            <code class="varname">itemmsg</code> = new <code class="classname">BMessage</code>(*<code class="parameter">model</code>);
+          }
+          else {
+            <code class="varname">itemmsg</code> = new <code class="classname">BMessage</code>(<code class="constant">B_TRANSLATION_MENU</code>);
+          }
+          <code class="varname">itemmsg</code>-&gt;<code class="methodname">AddInt32</code>(<code class="parameter">translator_id_name</code>, <code class="varname">ids</code>[<code class="varname">tix</code>]);
+          <code class="varname">itemmsg</code>-&gt;<code class="methodname">AddInt32</code>(<code class="parameter">translator_type_name</code>,
+            <code class="varname">formats</code>[<code class="varname">oix</code>].<code class="varname">type</code>);
+          <code class="parameter">intoMenu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>(<code class="varname">formats</code>[<code class="varname">oix</code>].<code class="varname">name</code>,
+            <code class="varname">itemmsg</code>));
+        }
+      }
+  }
+  delete[] <code class="varname">ids</code>;
+  return <code class="constant">B_OK</code>;
+}
+</pre><p>
+Usage is easy. Create the <code class="classname">BMenu</code> that you want to
+hang off your "Save As" menu item. Call
+<code class="methodname">AddTranslationItems()</code> with, at a minimum, that
+menu and the "class" of formats you deal with. If you deal with
+bitmaps, this would be <code class="constant">B_TRANSLATOR_BITMAP</code>. The last
+four arguments can be <code class="constant">NULL</code> unless you want to
+customize the operation of the function, which falls outside of the scope
+of this article (but you can read the code to figure out how).
+</p><p>
+The function figures out which translators can translate from that
+"class" format to some interesting format, and add the name of each of
+those formats as an item to a menu. The message for that item will have a
+value for the translator (by ID) and the format (by code) requested.
+</p><p>
+You then do this in your Save As handler, assuming you already know how
+to run a <code class="classname">BFilePanel</code> to tell you where to create
+an output <code class="classname">BFile</code>, and that
+you're saving a member bitmap named <code class="varname">fBitmap</code>:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span>
+<code class="classname">MyWindow</code>::<code class="methodname">DoSaveAs</code>(
+  <span class="type"><code class="classname">BFile</code> *</span> <code class="parameter">outputFile</code>,
+  <span class="type"><code class="classname">BMessage</code> *</span> <code class="parameter">save_as</code>)
+{
+  <span class="type">int32</span> <code class="varname">translator</code>;
+  <span class="type">uint32</span> <code class="varname">type</code>;
+  <span class="type">status_t</span> <code class="varname">err</code>;
+
+  <code class="varname">err</code> = <code class="parameter">save_as</code>-&gt;<code class="methodname">FindInt32</code>("be:translator", &amp;<code class="varname">translator</code>);
+  if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>)
+    return <code class="varname">err</code>;
+
+  <code class="varname">err</code> = <code class="parameter">save_as</code>-&gt;<code class="methodname">FindInt32</code>("be:type", (<span class="type">int32 *</span>)&amp;<code class="varname">type</code>);
+  if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>)
+    return err;
+
+  <code class="classname">BBitmapStream</code> <code class="varname">input</code>(<code class="varname">fBitmap</code>);
+  <code class="varname">err</code> = <code class="classname">BTranslatorRoster</code>::<code class="methodname">Default</code>()-&gt;<code class="methodname">Translate</code>(<code class="varname">translator</code>,
+    &amp;<code class="varname">input</code>, <code class="constant">NULL</code>, <code class="parameter">outputFile</code>, <code class="varname">type</code>);
+  if (<code class="varname">err</code> == <code class="constant">B_OK</code>)
+    <code class="varname">err</code> = <code class="methodname">SetFileType</code>(<code class="parameter">outputFile</code>, <code class="varname">translator</code>, <code class="varname">type</code>);
+  return <code class="varname">err</code>;
+}
+</pre><p>
+As you can see, we're setting the file type by calling another function
+that we also need to implement. This time to get the actual <acronym class="acronym">MIME</acronym> type
+corresponding to the internal type ID for the translator we're using:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span>
+<code class="classname">MyWindow</code>::<code class="methodname">SetFileType</code>(<span class="type"><code class="classname">BFile</code> *</span> <code class="parameter">file</code>, <span class="type">int32</span> <code class="parameter">translator</code>,
+  <span class="type">uint32</span> <code class="parameter">type</code>)
+{
+  <span class="type">translation_format *</span> <code class="varname">formats</code>;
+  <span class="type">int32</span> count;
+
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="classname">BTranslatorRoster</code>::<code class="methodname">GetOutputFormats</code>(<code class="parameter">translator</code>,
+    &amp;<code class="varname">formats</code>, &amp;<code class="varname">count</code>);
+  if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>)
+    return err;
+
+  <span class="type">const char *</span> <code class="varname">mime</code> = <code class="constant">NULL</code>;
+  for (<span class="type">int</span> <code class="varname">ix</code>=0; <code class="varname">ix</code>&lt;<code class="varname">count</code>; <code class="varname">ix</code>++) {
+    if (<code class="varname">formats</code>[<code class="varname">ix</code>].<code class="varname">type</code> == <code class="parameter">type</code>) {
+      <code class="varname">mime</code> = <code class="varname">formats</code>[<code class="varname">ix</code>].<code class="varname">MIME</code>;
+      break;
+    }
+  }
+  if (<code class="varname">mime</code> == <code class="constant">NULL</code>) {
+    <span class="comment">/* this should not happen, but */</span>
+    <span class="comment">/* being defensive might be prudent */</span>
+    return <code class="constant">B_ERROR</code>;
+  }
+
+  <span class="comment">/* use BNodeInfo to set the file type */</span>
+  <code class="classname">BNodeInfo</code> <code class="varname">ninfo</code>(<code class="parameter">file</code>);
+  return <code class="varname">ninfo</code>.<code class="methodname">SetType</code>(<code class="varname">mime</code>);
+}
+</pre><p>
+Well, this should fulfill my promise, and I hope it will also lead to a
+few more applications that can use the Translation Kit to its fullest.
+We're doing even more interesting stuff with the Translation Kit for R4,
+including a control panel to let the user configure default settings for
+installed translators, and an <acronym class="acronym">API</acronym> for your app to retrieve those settings
+so you can pass them as ioExtension when you call the Translation Kit.
+</p><p>
+Also in R4 we're defining a standard format for styled text
+import/export, and writing some more standard Translators to ship with
+the system. Ah, yes, R4 will be exciting indeed!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-32"></a>Are You Insane?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+The question has been asked many times, of me individually and
+collectively of all of us Be-ans. Often our questioners worry about our
+well-being. They remind us of the high degree of risk involved in writing
+"yet another operating system" while Windows reigns supreme or, earlier,
+while NeXTStep appeared headed in the same direction as OS/2.
+</p><p>
+If Steve Jobs can't establish a platform, if IBM can't shake Microsoft's
+hold on the office market, you must be crazy to think you can gain
+critical mass for yourself and your developers. And by the way, your
+investors are also crazy if they think they'll ever get back a red cent
+of their money. It's this kind of feedback that keeps us humble and ever
+aware that we have much to do and much to prove.
+</p><p>
+Fortunately, Steve Jobs proved that NeXT was going somewhere. As for us,
+we've been able to show that the BeOS is not on the same futile path as
+OS/2 in trying to offer "better DOS than DOS, better Windows than
+Windows." Rather, in a context that considers the possibility of more
+than one OS on your hard disk, we are positioning ourselves as a
+specialized A/V platform coexisting with the general-purpose Windows, a
+low-risk complement instead of a replacement, as OS/2 attempted to do.
+</p><p>
+Some still question our sanity about this notion of peaceful OS
+coexistence, but at least the doubt has shifted. Now it's when we say
+positive things about Windows and Microsoft that our soundness of mind
+comes into dispute again. Our concerned correspondents get a little
+frustrated with us, or with me personally. They ask, "How can you say
+those things about a product and a company that...," followed by a long,
+colorful list of sins.
+</p><p>
+Perhaps this is a good time to explain ourselves. In the first place, we
+understand and respect the range of opinions and emotions aroused by
+Microsoft and its products. The company has ascended to preeminence in
+the industry. Many accuse it of transgressions on its rise to
+sovereignty. They see flaws in its products. They perceive it as a
+monopolistic power, and fear what they see as a natural tendency to abuse
+its position and to crush competition.
+</p><p>
+Consider the PC market. Today, when you order a PC, it comes with
+Windows, even when there is an IBM logo on it. In office productivity
+applications, Microsoft Office is the standard. Why should our little
+company expend its energy fighting that?
+</p><p>
+As one of my favorite existential philosophers, Ross Perot, once said, "I
+don't have a dog in that fight." Well, we don't have a dog in the fight
+against Microsoft as the general-purpose OS. We're not going to waste our
+energy on that front. We have too much work to do to improve our product,
+to create better opportunities for BeOS developers, to service our
+<acronym class="acronym" title="Original Equipment Manufacturer">OEM</acronym>
+and distribution partners and, ultimately, to fulfill our shareholders'
+expectations.
+</p><p>
+Now put yourself in the position of someone who's just bought a PC. It
+comes with Windows 98 and, most likely, with some <acronym class="acronym">OEM</acronym> version of Office.
+We have some choices. If we launch into an anti-Microsoft, anti-Windows
+diatribe, we run the risk of our potential BeOS user hearing that he or
+she has just bought a bad product from a bad company.
+</p><p>
+In our view, this is a bit like meeting someone who's just bought a car
+and ranting, "You bought that lemon from those felons?" If you're trying
+to sell this person an after market stereo and on-board DVD player, what
+do you think your chances are? Since we are, in effect, selling an after
+market A/V system, it only makes sense to position it as a complement to
+Windows, rather than disparage the system you just bought. That way, we
+don't get stuck arguing the pros and cons of Windows. Instead, we move
+quickly to the merits of our product.
+</p><p>
+All right then, our questioners persist, you're not insane, but you are
+hypocritical. You can't tell me you don't have negative feelings towards
+Microsoft and its products. You're just hiding them because you've
+calculated it would be bad for business.
+</p><p>
+Yes, it would be bad for business. Yes, my Jesuit confessor advises me it
+is permissible to harbor ambivalent feelings towards such a powerful
+entity. No, my confessor continues, focusing on the positive is not the
+mortal sin of prevarication, but merely the venial one of
+californication. For my penance I must say three Hail Marys and two Our
+Fathers.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-31.html">Issue 3-31, August 5, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-33.html">Issue 3-33, August 19, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-31.html" title="Issue 3-31, August 5, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-33.html" title="Issue 3-33, August 19, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

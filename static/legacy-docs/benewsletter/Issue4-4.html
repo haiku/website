@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-3.html" title="Issue 4-3, January 20, 1999" /><link rel="next" href="Issue4-5.html" title="Issue 4-5, February 3, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-3.html" title="Issue 4-3, January 20, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-5.html" title="Issue 4-5, February 3, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-3.html">Issue 4-3, January 20, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-5.html">Issue 4-5, February 3, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-4"></a>Issue 4-4, January 27, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-4"></a>Be Engineering Insights: Device Driver Idioms</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>
+Every language, whether human or computer, has "idioms"; that is, a
+common way of expressing a concept or thought. In American English, the
+phrase "thanks a million" is a convenient way to express great thanks for
+something. In the C programming language, the idiom
+</p><pre class="programlisting c">
+for(<code class="varname">ptr</code>=<code class="varname">head</code>; <code class="varname">ptr</code>; <code class="varname">ptr</code>=<code class="varname">ptr</code>-&gt;<code class="varname">next</code>)
+  ...
+</pre><p>
+is a common way to iterate through a linked list. Cognizant listeners or
+readers easily recognize both of these idioms. The nice thing about
+idioms is that they don't require parsing the individual bits to
+recognize the meaning of the whole. Idioms are a type of shorthand that
+efficiently communicates an idea.
+</p><p>
+In writing device drivers one finds several common "idioms" for achieving
+a particular result. In this article I'd like to cover some common device
+driver idioms that BeOS device driver writers should know about. These
+idioms are a bit more complex than phrases like "thanks a million" but
+are still simple to recognize. This list is not exhaustive, but it should
+cover the more common idiomatic expressions in driverspeak (a language
+littered with hex constants, acronyms, bits, shifts, and bytes).
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id531635"></a>Starting Up</h3></div></div></div><p>
+The first problem most device driver writers have is that they often want
+only one person to be able to open their device at a time. I've often
+seen the following code used to accomplish this:
+</p><pre class="programlisting c">
+<span class="type">static long</span> <code class="varname">open_count</code> = 0;
+
+<code class="function">driver_open</code>(<span class="type">const char *</span><code class="parameter">name</code>, <span class="type">uint32</span> <code class="parameter">flags</code>, <span class="type">void **</span><code class="parameter">cookie</code>)
+{
+
+  <code class="varname">open_count</code>++;
+  if (<code class="varname">open_count</code> &gt; 1)
+    return <code class="constant">EBUSY</code>;
+
+  ...
+}
+</pre><p>
+That is the code equivalent of an English speaker saying "what can I do
+you for." It's just plain wrong. In this case the increment of <code class="varname">open_count</code>
+is not atomic (in a multiprocessor environment an increment of <code class="varname">open_count</code>
+could be lost) and the count is not decremented in the event that the
+<code class="varname">open_count</code> is greater than 1.
+</p><p>
+In proper driverspeak, the way to prevent multiple opens of a driver is
+this:
+</p><pre class="programlisting c">
+<span class="type">static int</span> <code class="varname">open_count</code> = 0;
+
+<code class="function">driver_open</code>(<span class="type">const char *</span><code class="parameter">name</code>, <span class="type">uint32</span> <code class="parameter">flags</code>, <span class="type">void **</span><code class="parameter">cookie</code>)
+{
+  if (<code class="function">atomic_add</code>(&amp;<code class="varname">open_count</code>, 1) &gt; 0) {
+    <code class="function">atomic_add</code>(&amp;<code class="varname">open_count</code>, -1);
+    return <code class="constant">EBUSY</code>;
+  }
+
+  ...
+}
+</pre><p>
+The use of <code class="function">atomic_add()</code> guarantees
+that <code class="varname">open_count</code> is indeed atomically
+updated. The return value of <code class="function">atomic_add()</code> is the previous value of
+<code class="varname">open_count</code>, which allows us to check whether we are the first person to
+increment <code class="varname">open_count</code>. If the <code class="code">if</code> test succeeds we are not the first
+person to open the driver, so we have to decrement <code class="varname">open_count</code> to put it
+back to what it was before and return <code class="constant">EBUSY</code>.
+</p><p>
+This idiom extends to allow a maximum number of <code class="function">open()</code>'s as well.
+Changing the <code class="code">if</code> test to
+</p><pre class="programlisting c">
+#define <code class="constant">MAX_OPEN</code> 4
+
+if (<code class="function">atomic_add</code>(&amp;<code class="varname">open_count</code>, 1) &gt;= <code class="constant">MAX_OPEN</code>)
+</pre><p>
+allows only <code class="constant">MAX_OPEN</code> number of open calls to succeed.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id531857"></a>Waiting for an Event</h3></div></div></div><p>
+When a driver performs an I/O operation it usually must wait for that
+operation to complete. The obvious synchronization method is to use a
+semaphore. Normally a semaphore is created with a count of 1, which means
+that a call to <code class="function">acquire_sem()</code> will acquire the semaphore and return
+immediately. A device driver, however, wants the <code class="function">acquire_sem()</code> to block
+until an event happens. To accomplish this, we create the semaphore with
+a count of zero. Then in the device interrupt handler, we release the
+semaphore to unblock the I/O request. In code that looks something like
+this:
+</p><pre class="programlisting c">
+<span class="comment">/* in a driver initialization function */</span>
+<code class="varname">io_done_sem</code> = <code class="function">create_sem</code>(0, "device interrupt sem");
+
+<span class="comment">/* in a driver I/O routine */</span>
+... set up an I/O operation that will
+    complete with an interrupt ....
+<code class="varname">ret</code> = <code class="function">acquire_sem_etc</code>(<code class="varname">io_done_sem</code>, 1, <code class="constant">B_CAN_INTERRUPT</code>, 0);
+if (<code class="varname">ret</code> != <code class="constant">B_OK</code>) {
+  ... the I/O request did not complete successfully ...
+}
+
+<span class="comment">/* in the interrupt handler, release the thread
+   blocked waiting */</span>
+<code class="function">release_sem_etc</code>(<code class="varname">io_done_sem</code>, 1, <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+</pre><p>
+The key parts here are that the driver I/O routine will initiate an I/O
+operation and then immediately block on the <code class="varname">io_done_sem</code> until the device
+interrupts and the driver interrupt handler is called. When the interrupt
+occurs and the kernel calls the driver interrupt handler, it will release
+the semaphore, unblocking the thread that requested the I/O. At the end
+of the sequence of events the semaphore is left again with a count of
+zero and the next I/O request will block as expected.
+</p><p>
+The idiom in this example is the use of semaphores to block until an
+interrupt occurs. This is different from typical application (sneef)
+level use of semaphores, because we create the semaphore in a way that
+will block on our first acquisition of the semaphore instead of
+immediately acquiring it.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id531977"></a>More Initialization</h3></div></div></div><p>
+We can combine the idiomatic use of <code class="function">atomic_add()</code> in
+the first example with the second example to show how to initialize part of
+a driver once (and only once). Normally, one-time initialization is done in
+routines like <code class="function">init_hardware()</code> or
+<code class="function">init_driver()</code> that the kernel guarantees to be
+single-threaded. Sometimes, however, that is not possible. If the driver
+allows multiple <code class="function">open()</code>'s, then we need a mechanism to
+insure that initialization only happens once and that any other threads
+doing an open at the same time will block until initialization is complete.
+</p><p>
+The resulting idiom is a blend of the previous two idioms. It only
+depends on the <code class="function">init_driver()</code> routine creating
+a semaphore with a count of zero. In code, the whole idiom is
+</p><pre class="programlisting c">
+<span class="type">static long</span>  <code class="varname">init_count</code> = 0;
+<span class="type">static sem_id</span> <code class="varname">init_sem</code> = -1;
+
+<span class="comment">/* in init_driver() */</span>
+<code class="varname">init_sem</code> = <code class="function">create_sem</code>(0, "init sem");
+
+<span class="comment">/* in driver_open() */</span>
+if (<code class="function">atomic_add</code>(&amp;<code class="varname">init_count</code>, 1) == 0) {
+
+  <span class="comment">/* do the initialization */</span>
+
+  <code class="function">delete_sem</code>(<code class="varname">init_sem</code>);
+} else {
+  <code class="function">atomic_add</code>(&amp;<code class="varname">init_count</code>, -1);
+
+  <span class="comment">/* now wait for the init sem */</span>
+  <code class="function">acquire_sem</code>(<code class="varname">init_sem</code>);
+}
+</pre><p>
+This idiom is somewhat less common, but is necessary for some drivers. An
+alternative form (a dialect if you will) addresses the case in which it's
+not possible to first create the <code class="varname">init_sem</code> semaphore. This case is
+slightly more complex:
+</p><pre class="programlisting c">
+<span class="type">static     long</span> <code class="varname">init_count</code> = 0;
+<span class="type">static volatile int</span> <code class="varname">init_done</code> = 0;
+
+<span class="comment">/* in driver_open() */</span>
+if (<code class="function">atomic_add</code>(&amp;<code class="varname">init_count</code>, 1) == 0) {
+
+  <span class="comment">/* do the initialization */</span>
+
+  <code class="varname">init_done</code> = 1;
+
+} else {
+  <code class="function">atomic_add</code>(&amp;<code class="varname">init_count</code>, -1);
+
+  <span class="comment">/* now wait for the init sem */</span>
+  while(<code class="varname">init_done</code> == 0)
+    <code class="function">snooze</code>(5000);
+}
+</pre><p>
+This form will loop while waiting for the variable <code class="varname">init_done</code> to be set.
+The <code class="function">snooze()</code> call will prevent the looping thread from consuming too much
+CPU time.
+</p><p>
+Observant readers may ask why no protection is needed around the
+manipulation of the variable <code class="varname">init_done</code>. The answer is that the thread
+that performs the initialization is the only one to store to the variable
+and the other threads only ever read the variable. Hence, there is no
+race condition for who will update the <code class="varname">init_done</code> variable. A store to a
+variable is an atomic operation and if only one thread is storing and
+other threads are reading, there is no race condition.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id532214"></a>Spinlocks</h3></div></div></div><p>
+As the dreadnaught of synchronization primitives, the spinlock is a
+powerful and dangerous tool. And built around this sultan of
+synchronization primitives is an idiom that carries the strength of
+four-letter epithets in the English language.
+</p><p>
+Just like colloquial expressions involving expletives, spinlocks are not
+appropriate for all situations. The most obvious example of appropriate
+use of a spinlock is when an interrupt handler and regular driver code
+must both perform read-modify-write operations on the registers of a
+device. A spinlock is necessary in this case because in a multiprocessor
+environment a thread may execute an I/O operation on one CPU, while a
+different CPU handles an interrupt from the device.
+</p><p>
+The first question to ask is—why not use a semaphore? The answer is
+simple: in the BeOS an interrupt handler cannot acquire a semaphore.
+Acquiring a semaphore can cause the calling code to block. An interrupt
+handler executes with interrupts disabled and, therefore, cannot block.
+Not to mention the fact that if an interrupt handler blocked, other
+devices that share the same interrupt would not be serviced for a very
+long time.
+</p><p>
+Now that we're convinced that there is a reason and our device requires
+the use of a semaphore to protect access to its registers, what is the
+proper idiom in driverspeak?
+</p><p>
+In the regular (top-half) of the driver, the following code works:
+</p><pre class="programlisting c">
+<span class="type">cpu_status</span> <code class="varname">ps</code>;
+<span class="type">spinlock</span> <code class="varname">hwlock</code> = 0;
+
+<code class="varname">ps</code> = <code class="function">disable_interrupts</code>();
+<code class="function">acquire_spinlock</code>(&amp;<code class="varname">hwlock</code>);
+
+  ... play with hw registers ...
+
+<code class="function">release_spinlock</code>(&amp;<code class="varname">hwlock</code>);
+<code class="function">restore_interrupts</code>(<code class="varname">ps</code>);
+</pre><p>
+The interrupt handler calls <code class="function">acquire_spinlock()</code> directly, and may omit the
+calls to <code class="function">disable_interrupts()</code> and
+<code class="function">restore_interrupts()</code> because it already
+executes with interrupts disabled.
+</p><p>
+For code not executed in an interrupt handler, the calls to
+<code class="function">disable_interrupts()</code> and <code class="function">restore_interrupts()</code>
+are required for correct use of
+spinlocks. If interrupts were not disabled before acquiring the spinlock,
+the system could deadlock if the spinlock were held and an interrupt
+occurred that needed to lock the same spinlock. Consider it an absolute
+rule that whenever a driver wants to acquire a spinlock, it must first
+disable interrupts (and likewise, it must restore interrupts after it
+releases the spinlock).
+</p><p>
+The above idiomatic use of spinlocks is often wrapped in two functions
+that encapsulate the pair of function calls:
+</p><pre class="programlisting c">
+<span class="type">static cpu_status</span>
+<code class="function">lock_hw</code>(<span class="type">spinlock *</span><code class="parameter">lock</code>)
+{
+  <span class="type">cpu_status</span> <code class="varname">ps</code>;
+
+  <code class="varname">ps</code> = <code class="function">disable_interrupts</code> ();
+  <code class="function">acquire_spinlock</code>(<code class="parameter">lock</code>);
+  return <code class="varname">ps</code>;
+}
+
+<span class="type">static void</span>
+<code class="function">unlock_hw</code>(<span class="type">spinlock *</span><code class="parameter">lock</code>, <span class="type">cpu_status</span> <code class="parameter">ps</code>)
+{
+  <code class="function">release_spinlock</code>(<code class="varname">lock</code>);
+  <code class="function">restore_interrupts</code> (<code class="varname">ps</code>);
+}
+</pre><p>
+The spinlock idiom of
+<code class="function">disable_interrupts</code>/<code class="function">acquire_spinlock</code>
+is a safe way to guard access to hardware from an interrupt handler and
+regular driver code.
+</p><p>
+Of course, no discussion of spinlocks can go without the two main
+postulates of spinlock usage:
+</p><div class="orderedlist"><ol><li><p>
+Never disable interrupts for lengthy periods of time (i.e., greater
+than 1 millisecond). Make sure you know what work is going to happen
+while you have the spinlock held (i.e., the complete code-path from
+start to finish).
+</p></li><li><p>
+Once a spinlock is acquired, any loops that spin waiting for a
+hardware bit to change state should also have a safety exit in case the
+bit never changes state.
+</p></li></ol></div><p>
+Not following those two rules can cause the behavior of the BeOS to
+deteriorate (the first rule) or lock up (the second rule).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id532485"></a>The End: It's Time for the Fat Lady to Sing</h3></div></div></div><p>
+This quick tour of idiomatic expressions in driverspeak should be enough
+to get you talking about and understanding the code in most device
+drivers. Other more complex (and subtle) idioms exist that involve
+producers and consumers, but we'll leave those for another article.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-4-2"></a>Be Engineering Insights: Worn Out Rhymes</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Baron</span> <span class="surname">Arnold</span></span></div></div></div><p>
+I can hear bulldozers out on the playing field. Red white and blue
+tracked machines spitting diesel exhaust, they lower their blades to the
+ground.
+</p><p>
+4.1 is coming down to the wire and where I normally would be totally
+excited to tell you about all that's great about Be and the BeOS, I'm
+just typing. I'm burnt out, I have two hours left to write this article
+and the truth is, I am completely uninspired.
+</p><p>
+I live this OS. I don't use anything else. All other operating systems
+are "alternative."
+</p><p>
+When I'm not breaking BeOS, chasing down bugs and engineers, I make
+records. I run BeOS on a Power Computing PowerTower 210 (long live PPC).
+I share 650 square feet of rectangular warehouse space with Ficus
+Kirkpatrick. I have an old Tascam 688 8-track cassette recorder with
+<acronym class="acronym" title="DeciBel eXtended noise reduction">DBX</acronym>
+noise reduction running at double speed. I master to minidisc and then
+under BeOS, I use <span class="application">BamBam</span> to record, sox to swap
+<acronym class="acronym" title="Audio Interchange File Format">AIFF</acronym> to WAV, and 8mHz to
+create mp3's. Finished work gets uploaded to
+[http://www.catastropherecords.com]. To get in just click on the t-shirt.
+The password thing doesn't work.
+</p><p>
+Before the summer of '99 comes I'll be able to trade out that old analog
+8-track for BeOS software. There will be an 8-in 10-out
+<acronym class="acronym" title="Analogue to Digital">A/D</acronym> converter,
+phat new digital
+multitrack/<acronym class="acronym" title="Musical Instrument Digital Interface">MIDI</acronym>
+application choices, and mastering
+software. Alpha versions of full-featured applications from major names
+in the audio and video software world will step into testing soon and I
+am ready to break them. I won't say here what I know, but listen for
+announcements at
+<acronym class="acronym" title="National Association of Music Merchants">NAMM</acronym>.
+</p><p>
+Since I'm not really giving you the kind of post punk poetry you have
+come to expect, I'll pass on a
+<acronym class="acronym" title="Quality Assurance">QA</acronym> tool that we couldn't live without here
+at Be. <span class="application">InputRecorder</span> is a program originally written by David Chayla and
+hacked for stability by Steven Black. <span class="application">InputRecorder</span> simply records and
+plays back keyboard and mouse input. It's a very big hammer.
+<span class="application">InputRecorder</span> is best used to repeat simple tasks over and over again,
+say, clicking on the Be menu until the machine dies. That actually used
+to happen in pre 4.0 days. But not anymore. :) There are a couple of
+quirks, but hey, it works.
+</p><p>
+Unzip InputRecorder.zip
+[ftp://ftp://ftp.be.com/pub/samples/input_server/InputRecorder.zip]
+</p><p>
+and run <code class="filename">install.sh</code> from a <span class="application">Terminal</span>
+window. To use the <span class="application">InputRecorder</span>,
+enter a file name in the text field. Click <span class="guibutton">Record</span>.
+Click <span class="guibutton">Stop</span>, and then
+click <span class="guibutton">Record</span> again. A dialog will ask you if you want to
+<span class="guibutton">Cancel</span>, <span class="guibutton">Initialize</span>, or
+<span class="guibutton">Add</span>. Click <span class="guibutton">Initialize</span>. Add does not work. Your mouse
+should jump to center screen. You are now recording.
+</p><p>
+Open a <span class="application">Tracker</span> window, pull down a menu, switch to a different workspace,
+switch back again, and click stop. Click <span class="guibutton">Play</span> and notice that whatever
+you did will be played back in time, with pixel precision. There are two
+check boxes you can enable, <span class="guibutton">Lock</span> and <span class="guibutton">Loop</span>.
+<span class="guibutton">Lock</span> will lock out all mouse
+and keyboard input during playback. To stop playback press <span class="keysym">Scroll Lock</span>.
+Press <span class="keysym">Scroll Lock</span> again to re-enable the <span class="guibutton">Play</span> button.
+<span class="guibutton">Loop</span> will, as you
+probably guessed, loop the playback.
+</p><p>
+In <acronym class="acronym">QA</acronym> we used this tool
+extensively to find memory leaks in the Kits, the
+<span class="application">Tracker</span>, and the app_server during 4.0 testing. Steven Black will be
+giving you a detailed explanation of the source in March, and possibly a
+cleaned up version.
+</p><p>
+Have fun, file good bugs, and spread the word.
+</p><p>
+BeOS forever.
+</p><p>
+love/ba
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-4"></a>Developers' Workshop: Media Kit Basics: A Time to Every Purpose Under
+Heaven</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+In reflecting upon my lengthy childhood, one recurring incident springs
+to mind from my formative years: Late at night, with my parents out and
+my babysitter long since neutralized, I would dial a particular phone
+number over and over. After a few rings, It would be answered by a female
+voice: "At the tone, general telephone time is: 9:22 and thirty seconds.
+-- BEEP." Some have misconstrued this, years later, as a lonely child
+reaching out for warmth and sustenance from the mother Bell. Others have
+incorrectly assumed that it was my budding interest in women that drove
+me to the rotary dial time and time again. In truth, though, there was
+only one thing I was interested in—setting my wrist watch to be as
+close to the REAL time as possible.
+</p><p>
+Many years later, I am a Be engineer, and despite running approximately
+fifteen minutes behind the rest of the world, my obsession for time has
+not lessened.
+</p><p>
+In contrast to my last article, which dealt with the guts of the Media
+Kit in some detail, I felt it would be useful to back up a bit, and
+describe the system of time measurements that are encountered when
+programming media applications—a brief history of time in the Media
+Kit, if you will. This will hopefully be useful as a reference when you
+are dealing with the Media Kit.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id532816"></a>When is a Microsecond Not a Microsecond?</h3></div></div></div><p>
+The first obstacle to overcome when understanding time in the Media Kit
+is that time means different things to different components of your
+system.
+</p><ul class="itemizedlist"><li><p>
+Your <acronym class="acronym">CPU</acronym> measures one sort of time using its internal timer
+registers. You pass timeout values to <code class="function">snooze()</code>
+and <code class="function">read_port_etc()</code> in
+terms of microseconds as it relates to the <acronym class="acronym">CPU</acronym>'s conception of time.
+</p></li><li><p>
+Your sound card may measure another sort of time, using its own
+conception of what time is. It may report this time in terms of
+"microseconds" as well, but a length of one microsecond to the sound
+card may vary slightly from your <acronym class="acronym">CPU</acronym>'s perception of how long one
+microsecond is.
+</p></li><li><p>
+Finally, your node maintains yet a third measure of time, in terms of
+your current position in a piece of media. This is also reported in
+"microseconds," but this conception of time may vary from both the
+sound card and the <acronym class="acronym">CPU</acronym>.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id532881"></a>So, How Do You Tell Time in the Media Kit?</h3></div></div></div><p>
+Time in the Media Kit is governed by objects called time sources. The
+purpose of a time source is to keep track of some component's perception
+of time. It publishes this time as the time in "microseconds" that its
+corresponding component perceives. Every time source also knows how to
+convert between this component's representation of time, called
+"performance time," and "real time," which is the time that is defined by
+the <acronym class="acronym">CPU</acronym>.
+</p><p>
+Your media node keeps track of time by "slaving" to a time source, like
+choosing one particular time source to help you keep track of time. The
+Media Kit creates at least one time source for you to use. It is called
+the System Time Source, and it represents your <acronym class="acronym">CPU</acronym>'s conception of time.
+In addition, other components of your system that have their own
+perceptions of time (sound card, video card, external timing device,
+etc.) may have other time sources associated with them.
+</p><p>
+The time source your node chooses to slave to can affect performance
+considerably. So, which time source do you choose? Use these simple rules
+of thumb:
+</p><ul class="itemizedlist"><li><p>
+If you're a producer, use the time source associated with your
+output, so that everything looks and sounds its best when the end user
+sees it. If you are receiving buffers that are marked with times from a
+time source that's different from the one you're slaved to, you'll need
+to translate between that time source's performance time and the
+performance time of the time source that you're slaved to.
+</p></li><li><p>
+If all you're doing is recording from a physical input, use the time
+source associated with that input for best results.
+</p></li><li><p>
+If you don't have any other time source available, use the System
+Time Source.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id534430"></a>What Do You Do with this Time?</h3></div></div></div><p>
+Here's how your node can make use of the performance time reported by a
+time source:
+</p><ul class="itemizedlist"><li><p>
+Events that affect your node are typically specified in performance
+time. When you tell a media node to start, stop, or seek, you specify
+the performance time at which the event should happen. (An important
+exception to this rule are time sources, which handle these events
+totally differently. I won't delve into the dark world of time sources
+here, however.)
+</p></li><li><p>
+If you are a buffer producer, you mark each buffer with the
+performance time at which that buffer should be performed. If you are
+also a physical input, you should instead mark each buffer with the
+performance time at which that buffer was recorded.
+</p></li></ul><p>
+This means that you can't blindly pass buffers from physical inputs to
+your system's output. Because each incoming buffer is stamped with the
+time it was recorded, and there is always some delay between the input
+and output, your buffers will always appear to be late at the final
+output! Some node has to intermediate between the input and output of
+your system to make sure the buffers are timed correctly.
+</p><ul class="itemizedlist"><li><p>
+If you are a buffer consumer, you generally won't be too concerned
+with the timestamps on buffers you receive. If you are a physical
+output, however, you use the timestamp on each buffer to figure out
+when the buffer should be played.
+</p></li><li><p>
+Your node will often have to make system calls like <code class="function">snooze()</code> and
+<code class="function">read_port_etc()</code>, which take real time measurements. In these cases,
+your node will use its time source to convert performance time to real
+time.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id534504"></a>Media Time</h3></div></div></div><p>
+Earlier in this article I mentioned a third concept of time: a position
+in a piece of media. We refer to this as media time, and it is the
+responsibility of each media node to determine the relationship between
+media time and performance time, depending on what that node actually
+does. When you send a node a Seek request, you tell it the media time to
+which the node should seek. In addition, you can use media time as a
+basis for scheduling events which occur at a specific point in the media
+-- such as, syncing sound output to a frame in an animation.
+</p><p>
+Typically, media time flows at the same rate at performance time, but has
+some offset (ie. media time "0" may be at some point in the future of
+performance time). On the other hand, buffer producers may implement the
+<code class="methodname">SetPlayRate()</code> function to increase or decrease the rate of media time
+with respect to performance time. For example, if you have a sound
+playback node that supports <code class="methodname">SetPlayRate()</code>, and you tell that node to play
+half as fast, buffers will still be sent out at the same speed as before,
+and the performance time stamped on the buffers will be unaffected.
+However, the producer will only grab sound from the sound file half as
+quickly, and will stretch the media out to fill each buffer.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id534537"></a>Closing Thoughts</h3></div></div></div><p>
+Timing is the single most important issue that you will have to deal with
+if you work in the Media Kit. Hopefully, this has covered much of the
+groundwork you need to understand how time works in the Media Kit. Until
+next time, just remember that there's "no such thing as tomorrow, only
+one two three four --"
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-4"></a>It Feels Just Right.</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I struggled to find a suitable title for today's column. In the end I
+chose one that describes how the company and the product feel, which is
+-- just right.
+</p><p>
+The company I refer to is IK-Multimedia, based in Modena, Italy. Enrico
+Lori founded it in 1996, to produce high-quality audio software at
+affordable prices. Its current product is called Groovemaker. It sells
+for $69.95. DJs use it, as do hobbyists and audio producers looking for
+background sounds for videos. You can create random tracks for a virtual
+DJ with Groovemaker, or mix loop libraries and create patterns for a
+sequence.
+</p><p>
+The company, with less than twenty employees, feels like a typical
+start-up, where everyone has at least two jobs. Or, as we say at Be, the
+universal job description is "Do whatever you have to do." At
+IK-Multimedia, every employee is a musician, which sounds like the old
+Hewlett-Packard practice of designing products for the engineer on the
+next lab bench. The company has its own studio and uses Groovemaker to
+produce audio material to go with the product.
+</p><p>
+The newest offering from IK-Multimedia is called T-Racks. It will be
+launched this week at NAMM in Los Angeles. It's an unusual and ambitious
+undertaking, modeling an analog amplifier/compressor/equalizer starting
+with the schematics, and "rebuilding" it in software using 32-bit
+floating point audio. T-Racks will sell for $299.
+</p><p>
+The BeOS connection to T-Racks began with a meeting in Paris. This was
+followed by a two-day porting session with assistance from our friend
+Duncan Wilcox, who made the trip from Florence to Modena to help with the
+change of platforms. Two days of work resulted in a stable beta, not the
+finished product. Some code was left on the porting room floor—mostly
+work required on the previous platform, but now provided by the BeOS
+itself. Putting in the finishing touches and testing will take a
+(hopefully small) multiple of that amount of time.
+</p><p>
+Of course, the credit belongs to the IK-Multimedia team. There is no
+magic—only clean, well-designed code ports that easily. What feels
+just right here is the combination of people, technology, company
+culture, and target market. And, of course, timing—to coincide with
+<acronym class="acronym" title="National Association of Music Merchants">NAMM</acronym>
+later this week. It'll be fun being there Thursday.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-3.html">Issue 4-3, January 20, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-5.html">Issue 4-5, February 3, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-3.html" title="Issue 4-3, January 20, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-5.html" title="Issue 4-5, February 3, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

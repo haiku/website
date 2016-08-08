@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-30.html" title="Issue 4-30, July 28, 1999" /><link rel="next" href="Issue4-32.html" title="Issue 4-32, August 11, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-30.html" title="Issue 4-30, July 28, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-32.html" title="Issue 4-32, August 11, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-30.html">Issue 4-30, July 28, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-32.html">Issue 4-32, August 11, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-31"></a>Issue 4-31, August 4, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-31"></a>Be Engineering Insights: The Kernel Programming Model Revisited</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+Lately, it's been fashionable to write about the driver model and API in
+our newsletter. Being very hip, I couldn't possibly avoid the subject.
+</p><p>
+We've had several articles on the basic rules a driver writer must follow
+-- rules that apply to all kernel code and that define the kernel
+programming model. Still, too often I run into code that breaks them --
+and it's not only third-party; I've found questionable code in house as
+well. Perhaps the blame lies with my broken English—but I'll try again
+to explain the basic rules. This time I'll tell you why you have to
+respect them and what happens if you don't. I hope that will help you to
+memorize them. If not, at least the details of how the kernel works
+should make the curious developer happy.
+</p><p>
+In the rest of the article, I'll use the terms "interrupt handler" and
+"spinlock section." By interrupt handler, I mean a routine that serves
+either IO interrupt (installed using install io interrupt) or timer
+interrupt (scheduled using add timer). By spinlock section, I mean the
+critical section protected by a spinlock.
+</p><p>
+If you have questions or comments about this article, don't hesitate to
+e-mail me: cyril@be.com.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id807079"></a>Interrupt handlers and spinlock sections cannot be preempted.</h3></div></div></div><p>
+It is illegal to cause a preemption while in an interrupt handler or
+spinlock section. A preemption can occur, for example, when release sem()
+is called without the <code class="constant">B_DO_NOT_RESCHEDULE</code> flag. Instead, the handler
+should return <code class="constant">B_INVOKE_SCHEDULER</code> if preemption is desired after the
+interrupt has been processed—say because a semaphore was released.
+Preemption can also occur when interrupts are enabled. This explains why
+it's necessary to disable interrupts before acquiring a spinlock—and
+restore them after releasing it.
+</p><p>
+Depending on the exact context, various *bad things* can happen if you
+break this rule.
+</p><ul class="itemizedlist"><li><p>
+With interrupt handlers:
+</p><p>
+-- IO interrupt handlers: with level triggered interrupts, the CPU can
+take new interrupts of the same level only after the interrupt handler
+returns. In other terms, interrupts of the same level are masked for
+the time the handler runs. If the handler is preempted, there is no
+guarantee when it will resume execution. The interrupted thread may be
+very low priority for example, in which case it can wait tenths of a
+second before it is run again. Blocking interrupts for that long is
+*very bad*.
+</p><p>
+-- Timer handlers: if a timer handler is preempted, the other timer
+handlers that were scheduled to run at the same time will run only
+after the preempted thread resumes execution, which can be tenths of a
+second later, as we've seen. That would also have terrible effects on
+interrupt latency, which is currently below a couple of hundred
+microseconds.
+</p></li><li><p>
+With spinlock sections
+</p><p>
+-- Preemption in the middle of a critical section can lead to
+deadlocks. The classic priority inversion problem, for example, leads
+to a system blockage when using spinlocks instead of semaphores.
+Imagine thread A, priority 10, grabs a spinlock. It is preempted in the
+critical section. Thread B, real time priority 100, attempts to grab
+the spinlock and loops while waiting for it. Because B is real time and
+does not block, the scheduler will never run A again. Hence the
+deadlock.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id807150"></a>Interrupt handlers and spinlock sections cannot block.</h3></div></div></div><p>
+Just as interrupt handlers and spinlock sections can't be preempted,
+neither can they block. Blocking can occur directly by calling
+<code class="function">acquire_sem()</code>. It can also occur indirectly as the result of invoking a blocking
+kernel call—like <code class="function">malloc()</code> or <code class="function">read_port()</code>—or even by touching
+unlocked memory, which causes the thread to enter VM. The list of calls
+that can potentially block is long, and includes some you wouldn't
+suspect. For example, <code class="function">delete_sem()</code> blocks because
+it calls <code class="function">free()</code> to free
+the semaphore structure. <code class="function">remove_io_interrupt_handler()</code> blocks because it
+waits for any executing instance of the removed handler to complete
+execution. And so on. Therefore, as I've written in previous articles,
+don't invoke any function that is not explicitly allowed. You can find a
+list of permissible functions in my article
+"<a class="xref" href="Issue4-19.html#Engineering4-19" title="Be Engineering Insights: Attention Driver Writers!">Be Engineering Insights: Attention Driver Writers!</a>."
+</p><p>
+If you feel you really need to make a call that's not on the list,
+the best thing to do is e-mail me about it.
+</p><p>
+Here are some insights about what can happen if you don't respect this
+rule:
+</p><ul class="itemizedlist"><li><p>
+With interrupt handlers: The scheduler is designed so that there must
+always be one null thread ready to run per CPU in case all other
+threads are blocked. If the interrupt handler that blocks happened to
+interrupt a null thread, it won't be ready to run any more—and the
+kernel will most likely die a horrible death.
+</p><p>
+Also, blocking in interrupt handlers would break the semantic of thread
+priority. For example, the highest priority real time thread is
+guaranteed to run until it blocks. This would no longer be true if it
+was interrupted and blocked by some interrupt.
+</p></li><li><p>
+With spinlock sections: Similar to preemption, blocking also causes a
+deadlock in the classic priority inversion problem. This is the same
+scenario that was discussed above.
+</p><p>
+Another scenario that leads to a deadlock, but involves VM is this:
+thread A touches unlocked memory in a spinlock section. It enters VM
+that needs to page in the frame. VM calls <code class="function">read()</code> on the disk driver,
+which programs the IO and waits for the disk interrupt. Then thread B
+runs and tries to grab the spinlock, with interrupt masked, of course.
+The processor will never be able to service the disk interrupt. We have
+a clear deadlock.
+</p><p>
+A variation of this scenario possibly applies to a misbehaved IO
+interrupt handler as well. For example, if the interrupt handler serves
+a device on PCI (level-sensitive interrupts) and has the same interrupt
+priority as the disk device (PCI also), then the disk interrupt cannot
+be propagated to the CPU until the interrupt handler returns, which
+won't happen until the page fault is processed...
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id807265"></a>About pairing acquire_spinlock() and release_spinlock().</h3></div></div></div><p>
+Spinlocks must be initialized to 0 before they are used. Every call to
+<code class="function">acquire_spinlock()</code> must be paired with a call
+to <code class="function">release_spinlock()</code> on
+the same spinlock. This defines a critical section. If you nest
+spinlocks, i.e., define critical sections within critical sections, it is
+essential that the spinlocks are released in the opposite order from
+which they are acquired.
+</p><p>
+The reason for this is that the kernel keeps track of which spinlocks are
+held and which are being waited on. The logic that does the tracking
+expects spinlock to be used in a mutex manner, or to put it differently,
+that spinlocks are used to protect critical sections. This implies that
+spinlock must be initialized to 0, that acquiring and releasing it are
+exactly paired, and that nesting is done in an ordered manner.
+</p><p>
+You may wonder why the kernel keeps track of spinlocks. On a multiple CPU
+system, deadlocks can occur under some circumstances involving intercpu
+interrupts. The kernel has to do the tracking in order to detect and
+break those deadlocks.
+</p><p>
+Imagine a dual CPU system. CPU 0 acquires spinlock S. CPU 1 tries to
+acquire S, but keeps looping because S is held already. Then CPU 0 sends
+a intercpu interrupt to CPU 1. This means that CPU 0 signals CPU 1 and
+waits for the interrupt to be taken. But interrupts are masked on CPU 1
+because we are in a critical section. The system is deadlocked. Other,
+more complex, scenarios involving intercpu interrupts, more spinlocks,
+and/or more CPUs also lead to deadlocks.
+</p><p>
+Those deadlocks are dealt with in <code class="function">acquire_spinlock()</code>. When a cycle is
+detected in the dependency graph, <code class="function">acquire_spinlock()</code> "flushes" the
+intercpu interrupt by executing the service routine. This releases the
+CPU waiting on the interrupt to be processed and doing this it breaks the
+deadlock.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-31-2"></a>Be Engineering Insights: Application Server Q&amp;A</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">George</span> <span class="surname">Hoffman</span></span></div></div></div><p>
+I have embarked on a bold experiment. I have forsworn all soda (I already
+abjure coffee), I eat no snacks while programming, and I consume small,
+balanced meals. The idea is that soon enough I will be fit and trim: a
+svelte coding Adonis. Of course, my productivity dropped to almost nil
+for the first few days of my new diet, but I am slowly learning to coax
+my brain into something resembling functionality without the use of
+artificial stimulants or buckets of microwave popcorn. It is a liberating
+experience—I highly recommend it. Unless you have any deadlines coming
+up soon...
+</p><p>
+The deadline for this newsletter article crept up on me and pounced like
+a Stanford senior at Full Moon On the Quad. None of the scraps of sample
+code I've been working on were ready, and 4.5 was not a heavy feature
+release, so I had no new features to blab about. This being the case, I
+was unprepared to discharge my obligation to you, my loyal legions of
+fanatically devoted readers, with an article of the quality you have come
+to expect (i.e., good).
+</p><p>
+My friends, I felt guilt. I felt shame. I very nearly felt a deep sense
+of despair. I was confronted with the realization that I would have to
+Let You Down with some goofy article about C++ coding style, of the type
+Pavel usually subjects you to.
+</p><p>
+Then I realized, with dawning consciousness, that you ungrateful scrubs
+never read my newsletter articles anyway! Not a week goes by that I don't
+read about or hear some developer complaining about a missing feature
+which I implemented (and documented in a newsletter article!) many months
+ago. Book 'em! Ignorance of the API is no excuse!
+</p><p>
+Yeah, yeah, I know it's not in the Be Book yet, punk. Are you here to
+complain or are you here to code? Read the newsletter. Read the headers.
+Have some friggin' balls! Slam it on the table, open yer wussie
+electrocuted-C-mode text editor, and get to work!
+</p><p>
+So anyway, in my righteous wrath, I decided to use this article to answer
+some frequently asked questions about the app server and related
+low-flying phenomena. Feature requests. Bug reports. I'm keeping the
+communication lines open. I want us to have a trusting, caring
+relationship.
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id807420"></a><a id="id807422"></a>Q:</td><td><p>
+How come you don't allow <code class="classname">BView</code>s to be "transparent" so they can draw
+over a background drawn by their parent?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We do. Set the flag <code class="constant">B_DRAW_ON_CHILDREN</code> in the parent view, and the
+parent's drawing will not be clipped to exclude its children. If you also
+set the child view's color to be <code class="constant">B_TRANSPARENT_COLOR</code>, you'll get the
+effect you're looking for. For more about this, see my previous
+newsletter articles.
+</p></td></tr><tr class="question"><td><a id="id807450"></a><a id="id807453"></a>Q:</td><td><p>
+Why does the app server redraw all my views when I resize my window,
+even when they're just moving around in the window and a simple
+screen-to-screen blit would suffice?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Sorry about that. I'm gonna fix it as soon as I find time (probably
+not for R5; possibly in the release after that). It will use the view
+transaction mechanism, so be sure to use that if you want to take
+advantage of screen-to-screen blit optimization (when it gets
+implemented) when moving your own views around.
+</p></td></tr><tr class="question"><td><a id="id807472"></a><a id="id807474"></a>Q:</td><td><p>
+I have a bug: when I draw into a <code class="classname">BBitmap</code>
+with a <code class="classname">BView</code> and then blit
+the bitmap to the screen, my drawing sometimes doesn't show up.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+This "bug" is submitted every few weeks. It is not a bug; the behavior
+is fully and correctly documented in the Be Book. You are not guaranteed
+that your drawing will be completed until you call <code class="methodname">BView::Sync()</code> on the
+view you were drawing in. So, call <code class="methodname">Sync()</code> on the view attached to the
+bitmap before you blit it to the screen (or another bitmap).
+</p></td></tr><tr class="question"><td><a id="id807506"></a><a id="id807509"></a>Q:</td><td><p>
+Can I have Chelsea's phone number?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+No.
+</p></td></tr><tr class="question"><td><a id="id807520"></a><a id="id807523"></a>Q:</td><td><p>
+When are we gonna get anti-aliased primitives?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Another popular one. There are several challenges to doing
+anti-aliased primitives well (i.e., fast), and it would require some
+re-architecting of the rendering pipeline. This is not scheduled right
+now, so I just don't know when we'll have it.
+</p></td></tr><tr class="question"><td><a id="id807538"></a><a id="id807541"></a>Q:</td><td><p>
+Why isn't my CyberVision Wizzbang2300 AGP card supported?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We are producing drivers as fast as our brains and (the more limiting
+factor) the documentation we are given by hardware companies allow. If
+you need a driver for a particular card, tell us, but also please contact
+the hardware company and pressure them to work with us to produce one, or
+at least to give us the required documentation.
+</p></td></tr><tr class="question"><td><a id="id807558"></a><a id="id807561"></a>Q:</td><td><p>
+D00d! It would be so |{-r/\|) 31I+e if u would do themes, and
+translucent windows, like Enlightenment under X. I use E all the time,
+and I have this /\\/\/E50/\/\3 theme with like, aliens, and Richard
+Stallman, and he's like, riding this giant butterfly...
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Translucent windows, as they appear on Enlightenment, are more or less
+a sham, meaning that the effect breaks down as soon as whatever the
+window is over changes. The same trick can be done under BeOS (with no
+help from me, I might add), but it's not really all that exciting. (I'm
+speaking from my experience with Enlightenment, which is several releases
+out of date, but I doubt the fundamentals have changed. If I'm wrong, and
+the E guys have managed to make X jump through a hoop that high, kudos to
+them.)
+</p><p>
+Similarly, the tricks being pulled in Windows NT 5.0 (with menus that
+fade in and out, etc.) are not applicable to a real, general purpose
+solution.
+</p><p>
+Doing "real" translucent windows on BeOS, that look good, feel good,
+behave as expected, and do not interfere unduly with performance, is a
+decidedly nontrivial task. Such a project is not scheduled or close to
+being scheduled, although some behind-the-scenes work planned for the
+next few releases will make it easier to do, once it becomes a goal.
+</p></td></tr><tr class="question"><td><a id="id807591"></a><a id="id807593"></a>Q:</td><td><p>
+How about themes?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Also not scheduled, although you'll see a bit of work on prettying up
+the interface for the next release.
+</p></td></tr><tr class="question"><td><a id="id807606"></a><a id="id807609"></a>Q:</td><td><p>
+How about nonrectangular windows?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+I've had several requests for this and I've done some work on it. It
+possibly will be in R5.
+</p></td></tr><tr class="question"><td><a id="id807621"></a><a id="id807624"></a>Q:</td><td><p>
+The app server is way slow on my machine! When I [do this] and then at
+the same time [do that], everything slows to a crawl! You/BeOS/the-app
+server/non-Open-Source-OSes suck!
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+I am very interested in hearing about your performance problems, but
+in order for me to do anything about them I need to know the details.
+Submit a specific, detailed bug so that it can be assigned to the right
+person and reproduced. (Over half the time I see this complaint, it isn't
+the app server bogging the system down, but some other team.) If the bug
+just says, "The app server is slow... make it faster," it is useless to
+us and will be thrown away.
+</p></td></tr></tbody></table></div><p>
+I hope this answers some of your common questions. If you have further
+questions or concerns, please feel free to contact me (geh@be.com).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-31"></a>Developers' Workshop: One Target Per Invoker Is Not Enough</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+Recently, the DTS oracle has been peppered with questions about
+messaging. One question that popped up was: "OK, all this sending of
+messages to one target is well and good, but what if I need to send a
+message to multiple targets?" This resulted in the rallying cry that I
+adopted as the title of this article—inspired by the BeBox slogan from
+a few years ago.
+</p><p>
+There are several ways to solve this problem, depending on what your
+requirements are. One way is to keep a list of <code class="classname">BMessenger</code>s around, one
+for each target, and when you want to send a message, simply tell each
+messenger to send the message for you. Of course, it would be nice to
+encapsulate this functionality in a class, so I have:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/application_kit/MultiInvoker.zip&gt;
+</p><p>
+This little piece of code implements a class that looks much like a
+<code class="classname">BInvoker</code>, and like <code class="classname">BInvoker</code>,
+it works well as a mix- in class. Its
+interface differs slightly from <code class="classname">BInvoker</code>, however, because instead of a
+single target, it maintains a list of targets. Appropriately, when you
+tell it to <code class="methodname">Invoke()</code>, it simply runs through the list of targets and sends
+the message to each target.
+</p><p>
+Note that you can either add a target using the standard
+<code class="classname">BHandler</code>/<code class="classname">BLooper</code>
+pair of parameters, or you can create a <code class="classname">BMessenger</code> dynamically and hand
+it off to the <code class="classname">MultiInvoker</code> (the
+<code class="classname">MultiInvoker</code> deletes the messenger when
+it's done). The great advantage to the latter approach is that, if you
+have a specially derived <code class="classname">BMessenger</code> (e.g., one that sends messages to a
+target across a network), you can simply toss one of those puppies to a
+<code class="classname">MultiInvoker</code> and it will Just Work (tm)—an extra piece of flexibility
+that <code class="classname">BInvoker</code> doesn't provide.
+</p><p>
+This approach works well for any Observer patterns in your code (this
+terminology comes from "Design Patterns," by Gamma, Helm, Johnson, and
+Vlissidies, one of my all-time favorite books about programming). For
+example, the sample code archive for this week contains a simple test app
+with several observers. The application creates an Observable object that
+derives from MultiInvoker. When the time comes for the observable to
+broadcast an update, it simply calls <code class="methodname">Invoke()</code> with a message that
+describes its state. The messaging mechanism inherent in <code class="classname">MultiInvoker</code>
+makes this approach particularly well-suited for multithreaded
+applications.
+</p><p>
+One limitation to this approach, however, is that the sender has to know
+who the targets are. Depending on your situation, you may want
+flexibility on the receiver's end about who receives the message—for
+example, if you're sending a message to a <code class="classname">Mediator</code> object, and you want
+the mediator to dispatch the message to the appropriate targets. That
+limitation can easily be overcome as well, by creatively using <code class="classname">BLooper</code>s
+or <code class="classname">BMessageFilter</code>s—but that's a topic for another time...
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BitByBit4-31"></a>BIT BY BIT: New Column</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+One of the main tasks of Be's Developer Technical Support Team is to
+provide sample code to help you (our developers) ship your applications.
+Our sample code library has grown substantially, but most of the code is
+in the form of simple applications or utilities that demonstrate
+interesting features of our APIs. These apps are generally limited in
+scope; they detail how to perform queries, print, use menus, and so on.
+</p><p>
+Unfortunately, such code doesn't adequately demonstrate how to write real
+world applications that deal with many of these areas combined. Also,
+parts of our APIs aren't in sample code at all, because they're more
+useful as the complexity of applications increases.
+</p><p>
+The purpose of this new column, "Bit by Bit" is to construct real apps
+over the course of many articles. Each article will introduce a BeOS
+programming concept, and will gradually advance the complexity of the
+application. This iterative process should allow us to cover each subject
+simply but thoroughly. It will help you to understand not only the
+concepts presented, but also how they fit together in the overall
+structure of the application. The idea is to build an application that
+does everything the right way.
+</p><p>
+Next time I'll start our first application—Rephrase, a text processing
+application based on <code class="classname">BTextView</code>. Rephrase won't be a threat to other word
+processing apps, which generally implement their own text engines—but
+look out <span class="application">StyledEdit</span>!
+</p><p>
+The first installment will focus on the fundamentals of the BeOS
+programming model: the application, the window, and the view.
+</p><p>
+See you next week!
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-30.html">Issue 4-30, July 28, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-32.html">Issue 4-32, August 11, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-30.html" title="Issue 4-30, July 28, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-32.html" title="Issue 4-32, August 11, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

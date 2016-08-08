@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-47.html" title="Issue 4-47, November 24, 1999" /><link rel="next" href="Issue4-49.html" title="Issue 4-49, December 8, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-47.html" title="Issue 4-47, November 24, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-49.html" title="Issue 4-49, December 8, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-47.html">Issue 4-47, November 24, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-49.html">Issue 4-49, December 8, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-48"></a>Issue 4-48, December 1, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-48"></a>Be Engineering Insights: Supporting Different Versions of BeOS in Your
+Application</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pavel</span> <span class="surname">Cisler</span></span></div></div></div><p>
+Sorry. This time (to George's dismay) I will not subject you to any
+esoteric C++ features. Rather, I'd like to share a sneaky little trick
+I've been doing with my app Eddie that lets it use new system features
+while staying binary compatible with old versions of BeOS.
+</p><p>
+Every new BeOS release comes with a new API that applications can use to
+support new functionality, integrate better with the system, etc. Using
+these new APIs requires that your application be built against the latest
+headers and libraries.
+</p><p>
+Supporting an older version of BeOS lets users who haven't upgraded to
+the latest version run your application. It will become more important as
+the BeOS installed base expands and people upgrade to new versions less
+often or later. To support BeOS R4 and later, for example, you need to
+set up your build environment to use the R4 headers, libraries, and tools
+from an R4 BeOS CD (be careful about the
+<code class="filename">lib</code> folder; a lot of the files
+in it are symbolic links to the
+<code class="filename">/system/lib</code> and you actually have to
+replace the links with the real binaries from the R4
+<code class="filename">/system/lib</code>).
+</p><p>
+Clearly, app developer has to decide what the right compromise is between
+supporting new features and being backwards compatible.
+</p><p>
+You can, however, have your cake and eat it too—you don't even need
+any proprietary BeOS secrets. Here's how you do it:
+</p><p>
+Let's pretend that BeOS R6.8 is about to come out. As a third party
+developer, you're seeded with a beta version that includes new headers.
+Pretend that R6.8 adds a new API:
+</p><pre class="programlisting cpp">
+class <code class="classname">BTheRegistry</code> {
+public:
+    <code class="methodname">BTheRegistry()</code>;
+
+
+    <span class="type">status_t</span> <code class="methodname">RegSetValue</code>(<span class="type">const char *</span><code class="parameter">appMimeSig</code>, <span class="type">const char *</span><code class="parameter">valueName</code>,
+        <span class="type">uint32</span> <code class="parameter">valueType</code>, <span class="type">const void *</span><code class="parameter">value</code>, <span class="type">size_t</span> <code class="parameter">size</code>);
+
+
+    virtual <span class="type">void</span> <code class="methodname">PickARandomEntryAndCorruptIt()</code>;
+    ...
+};
+</pre><p>
+In the application that you're about to release, you'd like to take
+advantage of the new API by calling:
+</p><pre class="programlisting cpp">
+<code class="methodname">BTheRegistry()</code>.<code class="methodname">RegSetValue</code>(
+    "application/x-vnd.CoolLabs.CoolApp",
+    "studioAssistant", "PaperClip", <code class="function">strlen</code>("PaperClip") + 1);
+</pre><p>
+When you build your new app with the R6.8 headers, it won't run under
+BeOS R6.7 because the loader will (among other things) not be able to
+find the symbols for the <code class="classname">BTheRegistry</code> class.
+</p><p>
+Ideally, we'd like to set up our class to still run under R6.7 and either
+not offer the functionality supported by the new API or have a reasonable
+fallback alternative. When running under R6.8 we'd like it to take full
+advantage of the new API, in our case the hypothetical
+<code class="methodname">BTheRegistry::RegSetValue</code> call. To do this, we build the entire
+application with the old headers/libraries and place the calls to the new
+APIs into a special glue compatibility library. We single out the calls
+to the new APIs in the application and direct them through a
+<code class="classname">CompatibilityGlue</code> class. Your app will replace the call to:
+</p><pre class="programlisting cpp">
+<code class="methodname">BTheRegistry()</code>.<code class="methodname">RegSetValue</code>(....
+</pre><p>
+with:
+</p><pre class="programlisting cpp">
+<code class="classname">CompatibilityGlue</code>::<code class="methodname">RegSetValue</code>("application/x-vnd.CoolLabs.CoolApp",
+    "studioAssistant", "PaperClip", <code class="function">strlen</code>("PaperClip") + 1);
+</pre><p>
+The new <code class="classname">CompatibilityGlue</code> class in your app tries to load a compatibility
+glue stub library. If it succeeds, it redirects the call to <code class="methodname">RegSetValue</code>
+to the glue stub, which ends up calling the new call in the new system
+binaries. If it fails to load the glue stub library, it's most likely
+because the loader refused to load it, which implies that you're running
+under an older version, R6.7. The <code class="classname">CompatibilityGlue</code> will fall back onto
+alternative code in that case, and the next closest thing using only R6.7
+APIs.
+</p><p>
+Here's the <code class="classname">CompatibilityGlue</code> class that you add to your app:
+</p><pre class="programlisting cpp">
+class <code class="classname">CompatibilityGlue</code> {
+public:
+    static <span class="type">void</span> <code class="methodname">Setup()</code>;
+        <span class="comment">// Setup is used instead of the constructor
+        // to initialize the class from the application</span>
+    static <span class="type">void</span> <code class="methodname">Teardown()</code>;
+
+    static <span class="type">status_t</span> <code class="methodname">RegSetValue</code>(<span class="type">const char *</span><code class="parameter">appMimeSig</code>,
+        <span class="type">const char *</span><code class="parameter">valueName</code>, <span class="type">uint32</span> <code class="parameter">valueType</code>,
+        <span class="type">const void *</span><code class="parameter">value</code>, <span class="type">size_t</span> <code class="parameter">size</code>);
+
+    <span class="comment">// more calls here</span>
+
+private:
+    <span class="comment">// constructor and destructor called by Setup/Teardown,
+    // shouldn't be called directly</span>
+    <code class="methodname">CompatibilityGlue()</code>;
+    <code class="methodname">~CompatibilityGlue()</code>;
+
+    <span class="comment">// stub function pointers</span>
+    <span class="type">status_t</span> (*<code class="function">glueRegSetValue</code>)(<span class="type">const char *</span>, <span class="type">const char *</span>,
+        <span class="type">uint32</span>, <span class="type">const void *</span>, <span class="type">size_t</span>);
+        <span class="comment">// ... more here</span>
+
+    <span class="type">static <code class="classname">CompatibilityGlue</code> *</span><code class="varname">compatibilityGlue</code>;
+    <span class="type">image_id</span> <code class="varname">imageID</code>;
+};
+
+<code class="classname">CompatibilityGlue</code> *<code class="classname">CompatibilityGlue</code>::<code class="varname">compatibilityGlue</code> = <code class="constant">NULL</code>;
+
+<span class="type">void</span>
+<code class="classname">CompatibilityGlue</code>::<code class="methodname">Setup()</code>
+{
+    <span class="comment">// This trivial version of setup is not thread safe, OK if
+    // we only call it once from the application initialization
+    // code</span>
+    if (!<code class="varname">compatibilityGlue</code>)
+        <code class="varname">compatibilityGlue</code> = new <code class="classname">CompatibilityGlue</code>;
+}
+
+<span class="type">void</span>
+<code class="classname">CompatibilityGlue</code>::<code class="methodname">Teardown()</code>
+{
+    delete <code class="varname">compatibilityGlue</code>;
+}
+
+<code class="classname">CompatibilityGlue</code>::<code class="methodname">CompatibilityGlue()</code>
+    :<code class="varname">glueRegSetValue</code>(<code class="constant">NULL</code>),
+     <code class="varname">imageID</code>(-1)
+{
+    <code class="classname">BPath</code> <code class="varname">path</code>;
+
+    <span class="comment">// find the path to the applications addon folder
+    // (call provided by the app)</span>
+    if (<code class="classname">MyCoolApp</code>::<code class="methodname">GetAppPluginPath</code>(&amp;<code class="varname">path</code>) != <code class="constant">B_OK</code>)
+        return;
+
+    <code class="varname">path</code>.<code class="methodname">Append</code>("CompatibilityGlue.so");
+
+    <span class="comment">// try loading the compatibility addon</span>
+    <span class="type">image_id</span> <code class="varname">imageID</code> = load_add_on(<code class="varname">path</code>.<code class="methodname">Path()</code>);
+    if (<code class="varname">imageID</code> &lt; 0)
+        <span class="comment">// failed to load the compatibility glue stub,
+        // running under an older system</span>
+        return;
+
+    <span class="comment">// initialize the compatibility addon
+    // (optional)</span>
+    <span class="type">status_t</span> (*<code class="varname">init</code>)();
+    if (<code class="function">get_image_symbol</code>(<code class="varname">identifier</code>, "Init",
+        <code class="constant">B_SYMBOL_TYPE_TEXT</code>, (<span class="type">void **</span>)&amp;<code class="varname">init</code>) != <code class="constant">B_OK</code>) {
+        <span class="comment">// failed to initialize the compatibility glue stub</span>
+        return;
+    }
+
+    if ((<code class="varname">init</code>)() != <code class="constant">B_OK</code>)
+        return;
+
+    <span class="comment">// compatibility addon initialized, find the calls we
+    // are interested in and hook them up</span>
+
+    if (<code class="function">get_image_symbol</code>(<code class="varname">identifier</code>, "StubRegSetValue",
+        <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">glueRegSetValue</code>) != <code class="constant">B_OK</code>)
+        <span class="comment">// couldn't find the symbol for the RegSetValue stub call</span>
+        return;
+
+    <span class="comment">// ... setup more calls here</span>
+}
+
+<code class="classname">CompatibilityGlue</code>::<code class="methodname">~CompatibilityGlue()</code>
+{
+    if (<code class="varname">imageID</code> &gt;= 0) {
+        <span class="type">status_t</span> (*<code class="varname">deinit</code>)();
+        if (get_image_symbol(<code class="varname">identifier</code>, "DeInit",
+            <code class="constant">B_SYMBOL_TYPE_TEXT</code>, (void **)&amp;<code class="varname">deinit</code>) == <code class="constant">B_OK</code>)
+            (<code class="varname">deinit</code>)();
+
+        <code class="function">unload_add_on</code>(<code class="varname">imageID</code>);
+    }
+}
+
+<span class="type">status_t</span>
+<code class="classname">CompatibilityGlue</code>::<code class="methodname">RegSetValue</code>(<span class="type">const char *</span><code class="parameter">appMimeSig</code>,
+    <span class="type">const char *</span><code class="parameter">valueName</code>, <span class="type">uint32</span> <code class="parameter">valueType</code>, <span class="type">const void *</span><code class="parameter">value</code>,
+    <span class="type">size_t</span> <code class="parameter">size</code>)
+{
+    if (<code class="varname">compatibilityGlue</code>-&gt;<code class="varname">glueRegSetValue</code>)
+        return (<code class="varname">compatibilityGlue</code>-&gt;<code class="varname">glueRegSetValue</code>)(<code class="parameter">appMimeSig</code>,
+            <code class="parameter">valueName</code>, <code class="parameter">valueType</code>, <code class="parameter">value</code>, <code class="parameter">size</code>);
+    else {
+        <span class="comment">// running under older system, use a fallback mechanism
+        // (or do nothing if applicable)</span>
+        <span class="type">ssize_t</span> <code class="varname">result</code> = <code class="varname">someSettingsNode</code>-&gt;<code class="methodname">WriteAttr</code>(<code class="parameter">valueName</code>,
+            <code class="parameter">valueType</code>, 0, <code class="parameter">value</code>, <code class="parameter">size</code>);
+        if (<code class="varname">result</code> &lt; 0)
+            return <code class="varname">result</code>;
+    }
+    return <code class="constant">B_OK</code>;
+}
+</pre><p>
+As you can see, the <code class="classname">CompatibilityGlue</code> class tries to load the
+<code class="filename">CompatibilityGlue.so</code> library, calls its <code class="function">Init</code> function, does a symbol
+lookup for the desired stubbed calls, and, if successful, points the stub
+function pointers to them.
+</p><p>
+The actual compatibility glue stub library <code class="filename">CompatibilityGlue.so</code> is built
+against R6.8 headers/libraries/tools the same way we would build a shared
+library. For our example it will be tiny:
+</p><pre class="programlisting cpp">
+#include &lt;TheRegistry.h&gt;
+
+EXPORT extern "C" <span class="type">status_t</span> <code class="function">Init()</code>;
+EXPORT extern "C" <span class="type">void</span> <code class="function">DeInit()</code>;
+EXPORT extern "C" <span class="type">status_t</span> <code class="function">StubRegSetValue</code>(<span class="type">const char *</span><code class="parameter">appMimeSig</code>,
+    <span class="type">const char *</span><code class="parameter">valueName</code>, <span class="type">uint32</span> <code class="parameter">valueType</code>, <span class="type">const void *</span><code class="parameter">value</code>,
+    <span class="type">size_t</span> <code class="parameter">size</code>);
+
+<span class="type">status_t</span>
+<code class="function">Init</code>()
+{
+    <span class="comment">// if needed, objects needed by the glue stub library
+    // can be allocated here</span>
+    return <code class="constant">B_OK</code>;
+}
+
+<span class="type">void</span>
+<code class="function">DeInit</code>()
+{
+    <span class="comment">// if needed, objects needed by the glue stub library
+    // can be deallocated here</span>
+}
+
+<span class="type">status_t</span>
+<code class="function">StubRegSetValue</code>(<span class="type">const char *</span><code class="parameter">appMimeSig</code>, <span class="type">const char *</span><code class="parameter">valueName</code>,
+    <span class="type">uint32</span> <code class="parameter">valueType</code>, <span class="type">const void *</span><code class="parameter">value</code>, <span class="type">size_t</span> <code class="parameter">size</code>)
+{
+    return <code class="methodname">BTheRegistry()</code>.<code class="methodname">RegSetValue</code>(<code class="parameter">appMimeSig</code>, <code class="parameter">valueName</code>,
+        <code class="parameter">valueType</code>, <code class="parameter">value</code>, <code class="parameter">size</code>);
+}
+</pre><p>
+The resulting stub library <code class="filename">CompatibilityGlue.so</code> is placed in the
+application plugin directory --
+<code class="filename">/boot/home/config/add-ons/MyCoolApp/</code>
+would be a good candidate (or in any other place where the
+<code class="methodname">MyCoolApp::GetAppPluginPath</code> will find it).
+</p><p>
+When your application starts up, it calls the <code class="methodname">CompatibilityGlue::Setup()</code>
+call that tries to load the stub library. If it succeeds, you're running
+R6.8 and the spanking new APIs are called. If it fails, the fallback code
+is used instead.
+</p><p>
+Theoretically, you could actually skip the <code class="filename">CompatibilityGlue.so</code>—you
+could actually look up the symbols of the new calls directly and fix up
+the stub function pointers to call directly into the corresponding new
+shared library. To do that, you'd have to use the mangled C++ name for
+the function lookup, know where to look for the symbols, etc. The
+technique using <code class="filename">CompatibilityGlue.so</code> is easier.
+</p><p>
+Obviously, this technique works best with simple, single routine calls
+that add cool functionality to your application. It would be foolish to
+stub out an entire class with all its methods, etc., this way. I've used
+it in the past to build a version of Eddie (found at
+<a class="link" href="http://www.el34.com">http://www.el34.com</a>) compatible all the way back to BeOS Preview
+Release 2 and still have it use calls like <code class="methodname">BNode::Sync()</code> and I'll very
+likely use it to support new BeOS versions while staying backwards
+compatible.
+</p><p>
+Disclaimer:
+</p><p>
+Some of the APIs discussed in this article are purely hypothetical, used
+primarily to illustrate the techniques I describe. No promises are being
+made about the availability of such APIs in any future versions of BeOS.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-48-2"></a>Be Engineering Insights: Transforming Media With BMediaFile</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Nathan</span> <span class="surname">Schrenk</span></span></div></div></div><p>
+In BeOS R4.5, the extremely useful <code class="classname">BMediaFile</code> API was added to the Media
+Kit, but a quick review of newsletter articles shows that <code class="classname">BMediaFile</code>
+hasn't been discussed much in this forum. <code class="classname">BMediaFile</code> provides a
+(relatively) easy way to access audio and video data in a number of
+common file formats, such as QuickTime, AVI, and WAV, among others. By
+using <code class="classname">BMediaFile</code> and its trusty sidekick
+<code class="classname">BMediaTrack</code>, you can read and
+write video and audio data without worrying about how to decode
+compressed Cinepak video or how to encode IMA-4 audio. Using these APIs
+should allow you to spend more time writing the real code for your
+application, or will enable your application to support more data input
+and output formats. We plan to continue to add to the file formats and
+encoders and decoders we support, so if your application uses the
+<code class="classname">BMediaFile</code>/<code class="classname">BMediaTrack</code> API,
+its capabilities will grow along with the BeOS.
+</p><p>
+You might think that this general idea of being able to support many
+different audio and video file formats by utilizing <code class="classname">BMediaFile</code> in your
+application is similar to another part of the BeOS API, the Translation
+Kit. If you were thinking this, you would be correct. The Translation Kit
+documentation and header files hint at being able to translate data of
+various formats, such as bitmaps, sound, text, MIDI, and media, but I
+believe that the Translation Kit is only being used for bitmaps in
+practice. The Translation Kit handles reading and writing bitmaps very
+well, but it's not rich enough to support the complexities of the audio
+and video formats that are handled by <code class="classname">BMediaFile</code>, which is why a new API
+was introduced. One great advantage of the Translation Kit is that quite
+a few third party developers have released additional translators for
+bitmap formats that are not supported by BeOS out of the box.
+Unfortunately, it's not currently possible for third party developers to
+add to the file formats, decoders, or encoders supported by <code class="classname">BMediaFile</code>.
+We're looking into making this possible. Also, there are functions in
+<code class="classname">BMediaFile</code> and <code class="classname">BMediaTrack</code>
+for accessing a <code class="classname">BParameterWeb</code> of settings
+values. These functions are not currently implemented, although we are
+planning to add this support in the future.
+</p><p>
+The nitty-gritty details of how to read and write audio and video data
+using <code class="classname">BMediaFile</code> are spelled out in the R4.5 Be Book, so I won't go into
+them here. You can find <code class="classname">BMediaFile</code> API documentation at
+<a class="link bebook" href="../BeBook/BMediaFile.html">BMediaFile.html</a>.
+</p><p>
+An in-depth example on how to use <code class="classname">BMediaFile</code> to convert from one file and
+encoding format to another is located at
+<a class="link bebook" href="../BeBook/TheMediaKit_Overview_ReadingWriting.html">TheMediaKit_Overview_ReadingWriting.html</a>.
+</p><p>
+Near the bottom of the in-depth example referred to above, is a section
+titled "Integrating Into a Real Application." I thought it might be
+useful to write a "Real Application" that uses the concepts presented in
+the example. The result is <span class="application">MediaConverter</span>,
+&lt;ftp://ftp.be.com/pub/samples/media_kit/MediaConverter.zip
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-48"></a>Developers' Workshop: How to Drop Frames</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Todd</span> <span class="surname">Thomas</span></span></div></div></div><p>
+Here's something you weren't expecting: sample code for a BeOS digital
+video application that plays a maximum of 4 frames per second and can be
+set to drop as many frames as you like. But you can also think of it as
+an exploration of <code class="classname">BMediaTrack</code>'s <code class="methodname">ReadFrames()</code> function.
+</p><p>
+The app and its central class are named FilmStrip, after the medium that
+falls somewhere between overhead transparencies and 16mm film in the
+great hierarchy of audio-visual presentation formats. A film strip is,
+well, a strip of exposed positive photographic film that is run one frame
+at a time through a projector, usually to the accompaniment of a
+narrative on audio cassette. It's a lot like a movie, but without all
+those gratuitous extra frames used to make stuff move.
+</p><p>
+So now you're asking yourself, "How can I use BeOS to simulate the
+immersive multimedia experience of the film strip, when all I have are
+these movie files full of gratuitous extra frames?" That's what the
+FilmStrip class and app are all about.
+</p><p>
+You can find the source code for FilmStrip at:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/media_kit/FilmStrip.zip&gt;
+</p><p>
+The FilmStrip class extracts individual frames as bitmaps out of any
+digital video file the BeOS has a codec for, using the magic of the
+BMediaTrack class. The heart of the FilmStrip class is its function
+</p><pre class="programlisting cpp">
+<code class="classname">BBitmap</code>* <code class="methodname">NextFrame</code>(<span class="type">void</span>)
+</pre><p>
+which returns a pointer to an internally allocated BBitmap containing the
+"next" frame. The meaning of "next" depends on which of two modes the
+FilmStrip object is in: in Frame mode, "next" is taken literally to mean
+the frame immediately following the current frame; in Time mode, "next"
+means the frame occurring some number of microseconds after the current
+frame.
+</p><p>
+<code class="classname">BMediaTrack</code> makes it easy to get frame data from a media file. It's as
+simple as
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="varname">err</code>;
+<span class="type">int64</span> <code class="varname">numFrames</code>;
+
+<code class="varname">err</code> = <code class="varname">track</code>-&gt;<code class="methodname">ReadFrames</code>((<span class="type">char*</span>)<code class="varname">someBuffer</code>,
+    &amp;<code class="varname">numFrames</code>);
+</pre><p>
+for some <span class="type"><code class="classname">BMediaTrack</code>*</span> track.
+</p><p>
+Of course there are a few preparatory steps you need to take first. You
+can only instantiate a <code class="classname">BMediaTrack</code> from a
+<code class="classname">BMediaFile</code>. And in the case of
+FilmStrip, we want that track to be the video track of a movie, as
+opposed to the audio track or the laugh track or whatever. Next, you need
+to negotiate with the codec which format you want the decoded data to be
+in. FilmStrip's needs are simple—it just wants the video data to be
+decoded if necessary. Here's a fragment of code from FilmStrip's private
+SetTo() function that accomplishes all that:
+</p><pre class="programlisting cpp">
+<code class="varname">mFile</code> = new <code class="classname">BMediaFile</code>(&amp;<code class="varname">ref</code>);
+<code class="varname">err</code> = <code class="varname">mFile</code>-&gt;<code class="methodname">InitCheck()</code>;
+if (<code class="varname">err</code> == <code class="constant">B_OK</code>) {
+    <span class="type">int32</span> <code class="varname">i</code> = 0;
+    do {
+        <code class="varname">mTrack</code> = <code class="varname">mFile</code>-&gt;<code class="methodname">TrackAt</code>(<code class="varname">i</code>);
+        <code class="varname">err</code> = <code class="varname">mTrack</code>-&gt;<code class="methodname">InitCheck()</code>;
+        if (<code class="varname">err</code> == <code class="constant">B_OK</code>) {
+            <span class="comment">// sniff out whether it's the video track
+            // and break out if it is</span>
+            <code class="varname">mFormat</code>.<code class="varname">u</code>.<code class="varname">raw</code> <code class="varname">video</code> =
+                <span class="type">media_raw_video_format</span>::<code class="varname">wildcard</code>;
+            <code class="varname">mFormat</code>.<code class="varname">type</code> = <code class="constant">B_MEDIA_RAW_VIDEO</code>;
+            <code class="varname">err</code> = <code class="varname">mTrack</code>-&gt;<code class="methodname">DecodedFormat</code>(&amp;<code class="varname">mFormat</code>);
+            if (<code class="varname">err</code> == <code class="constant">B_OK</code>) {
+                if (<code class="varname">mFormat</code>.<code class="methodname">IsVideo()</code>) {
+                    break;
+                }
+                else {
+                    <span class="comment">// when mFile is deleted it
+                    // will delete all open tracks
+                    // as well, but why waste
+                    // the memory on tracks
+                    // we're not using?</span>
+                    <code class="varname">mFile</code>-&gt;<code class="methodname">ReleaseTrack</code>(<code class="varname">mTrack</code>);
+                }
+            }
+        }
+        <code class="varname">i</code>++;
+    } while (<code class="varname">i</code> &lt; <code class="varname">mFile</code>-&gt;<code class="methodname">CountTracks()</code>);
+</pre><p>
+If your needs are more complex, you can change other fields of the media
+format object (<code class="varname">mFormat</code> in the code above) as necessary. Note that
+<code class="methodname">ReadFrames()</code> always reads one and only one frame from a video track, but
+reads as many frames as negotiated from an audio track. After you've
+successfully negotiated an output format, you can safely use <code class="methodname">ReadFrames()</code>.
+</p><p>
+Which frame (or frames) does <code class="methodname">ReadFrames()</code> read? Whichever you tell it to
+using the <code class="methodname">SeekToFrame()</code> or <code class="methodname">SeekToTime()</code>
+functions. Be aware that not all
+media codecs are capable of seeking to arbitrary frames in a track --
+some can only seek to key frames. Note that your nearest keyframe may be
+behind you. You can pass either function the flag
+<code class="constant">B_MEDIA_SEEK_CLOSEST_BACKWARD</code> or
+<code class="constant">B_MEDIA_SEEK_CLOSEST_FORWARD</code> to indicate which keyframe you
+want relative to the frame you asked for. FilmStrip gives examples of
+using both <code class="methodname">SeekToFrame()</code> and <code class="methodname">SeekToTime()</code>
+at the end of <code class="methodname">NextFrame()</code>.
+</p><p>
+Note: the R4.5.2 Indeo-5 codec doesn't behave properly when you pass
+<code class="constant">B_MEDIA_SEEK_CLOSEST_FORWARD</code> to <code class="methodname">SeekToFrame()</code>—it actually does the
+opposite. If you play an Indeo-5 encoded movie with FilmStrip in Frame
+mode, you'll notice it only shows frame 0. This bug is fixed in the next
+release of BeOS.
+</p><p>
+There are two FilmStrip constructors.
+</p><pre class="programlisting cpp">
+<code class="methodname">FilmStrip</code>(<span class="type">const entry_ref&amp;</span> <code class="parameter">ref</code>)
+</pre><p>
+takes the <span class="type">entry_ref</span> of the file you wish to grab frames from. It defaults
+to Frame mode, and tries to be clever about setting the interval between
+consecutive frames in Time mode.
+</p><pre class="programlisting cpp">
+<code class="methodname">FilmStrip</code>(<span class="type">const entry_ref&amp;</span> <code class="parameter">ref</code>, <span class="type">const int32</span> <code class="parameter">mode</code>,
+<span class="type">const bigtime_t</span> <code class="parameter">grabInterval</code>)
+</pre><p>
+lets you explicitly set the mode and frame interval.
+</p><p>
+<code class="classname">FilmStrip</code> also has a static member function
+</p><pre class="programlisting cpp">
+static <span class="type">status_t</span> <code class="methodname">SniffRef</code>(<span class="type">const entry_ref&amp;</span> <code class="parameter">ref</code>)
+</pre><p>
+that does a quick 'n dirty test to see if ref's MIME type is of supertype
+"video". You can use this function to quickly reject a ref that's not
+some kind of movie, but it doesn't guarantee that there's a codec for the
+specific type of movie if it is.
+</p><p>
+There are a few other things of interest in the FilmStrip application. It
+uses two <code class="classname">BWindow</code> descendants to accomplish the tasks of showing frames
+from and letting you control a FilmStrip object. The <code class="classname">FilmStripWindow</code>
+class defines the app's main window. It contains a single <code class="classname">BitmapView</code>
+which displays the frame obtained from its member <code class="classname">FilmStrip</code> object.
+<code class="classname">FilmStripWindow</code> has a member <code class="classname">BMessageRunner</code> which sends a message to the
+window at a user specified interval indicating it's time to show the
+FilmStrip's next frame. <code class="classname">FilmStripWindow</code>
+also has a member <code class="classname">BMessenger</code>
+which targets a floating control panel window.
+</p><p>
+The <code class="classname">ControlWindow</code> class defines that floating control panel window. It
+contains a <code class="classname">BMessenger</code> targeted at the main window, so it can send
+messages when the user tweaks its controls that will cause the main
+window to update its <code class="classname">FilmStrip</code> object.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-48"></a>Understanding Stock Prices</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Perhaps I should use another title—something like "Je ne Parle pas
+NASDAQ" or "Yo no Hablo Wall Street." Understandably, the movements in
+our stock price have attracted attention and prompted questions to
+jlg@be.com or info@be.com. I have two positions on this topic, one
+institutional and the other personal.
+</p><p>
+The company position is a classical one: we don't comment on our stock
+price. The law and SEC regulations dictate why, when, and how we inform
+our shareholders. When you step back from technical and legal details,
+it's pretty much common sense. Shareholders need good, timely, and
+equally distributed information. Once they have it, they're in a good
+position to make decisions to hold, buy, or sell shares, among other
+things. That's why we have regular filings every quarter and ad hoc
+filings or press releases to disclose meaningful events such as a
+relationship with another party or a significant hire.
+</p><p>
+Apart from these obligations, it's better for us to stick to our knitting
+-- developing and promoting the product and supporting customers and
+partners. We don't object to comments on our stock price by third
+parties, shareholders, analysts, the press, or observers of any kind, but
+we feel strongly that we shouldn't join in the conversation, nor do we
+track, review or endorse them.
+</p><p>
+On the personal side, I know I'm not meant to understand the stock
+market. I know this partly because of my love of mathematics. I won't
+abuse near clichés such as "chaos" or "non-linear," but I just think
+that there are no a priori—sorry, make that "before the fact" --
+explanations of market behavior. There is no testable theory. There are
+just evening news pontifications: profit-taking; resistance; interest
+rate increase already discounted; earnings surprises; whisper numbers;
+beating expectations; visibility; EBITDA (Earnings Before Interest, Tax
+and Debt Amortization); and even, for the choicest e-businesses, EBE,
+Earnings Before Expenses (no kidding). My father, an accountant, passed
+away too early to see this explosion of vaporous financial analysis.
+</p><p>
+Instead, just for fun, I'll contradict myself and do a twist on a
+Greenspan theory. Our beloved Chairman of the Fed once groused about the
+"irrational exuberance" he saw in the stock market. More recently, he
+relented a bit. Yes, the Chairman said—and I paraphrase—there are
+going to be a few General Motors, General Electrics, and IBMs in this
+broth of e-companies, but we don't know which ones. As a result, buying
+these stocks is like buying lottery tickets. Big winners in small numbers.
+</p><p>
+Now comes my twist: Imagine a Lotto with a big pot. And, instead of
+printing as many tickets as the buying public desires, imagine selling a
+fixed number of tickets through an auction. Or selling a fixed number of
+tickets six months before the drawing and letting buyers resell tickets
+among themselves or at auctions in the interval before the liquidating
+event. Or imagine what would happen to the on-going auction process if
+the amount of the prize wasn't known with certainty, if it varied, if
+various opinions and rumors regarding the amount circulated before the
+drawing...
+</p><p>
+Metaphors are not to be confused with a testable theory. As a great
+crook, Werner Erhardt, inventor of the very Seventies EST, used to say,
+everything works by agreement. And, when it comes to a market agreement
+between buyer and seller, with or without an underlying auction, what is
+the real difference between a DM banknote, a painting, a share of T
+(NYSE), or a book?
+</p><p>
+Speaking of books and group behavior, two titles you might enjoy, if only
+as nonaddictive alternatives to sleeping pills: "Logic of Collective
+Action: Public Goods and the Theory of Groups," by Mancur Olson, and
+"Principles of Group Solidarity," by Michael Hechter. The first one,
+after many years out of print (I had to buy the French translation) is
+now available in paperback, with a terrific introduction. The second one
+is an easier read, but is currently out of print. With luck, your library
+or Alibris will find it for you.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-47.html">Issue 4-47, November 24, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-49.html">Issue 4-49, December 8, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-47.html" title="Issue 4-47, November 24, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-49.html" title="Issue 4-49, December 8, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

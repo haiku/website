@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-27.html" title="Issue 4-27, July 7, 1999" /><link rel="next" href="Issue4-29.html" title="Issue 4-29, July 21, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-27.html" title="Issue 4-27, July 7, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-29.html" title="Issue 4-29, July 21, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-27.html">Issue 4-27, July 7, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-29.html">Issue 4-29, July 21, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-28"></a>Issue 4-28, July 14, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-28"></a>Be Engineering Insights: BeOS Kernel Programming Part IV: Bus Managers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Brian</span> <span class="surname">Swetland</span></span></div></div></div><p>
+This week we will once again delve into the mysteries of writing code
+that operates in the realm of the BeOS kernel. Recently, Ficus expounded
+on kernel modules in his article
+</p><p>
+<a class="xref" href="Issue4-26.html#Engineering4-26" title="Be Engineering Insights: Programmink Ze Quernelle, Part 3: Le Module">Be Engineering Insights: Programmink Ze Quernelle, Part 3: Le Module</a>
+</p><p>
+We'll dig a bit deeper into this subject by looking at a specific class
+of modules—bus managers.
+</p><p>
+Bus managers provide an abstraction layer to drivers. Instead of
+burdening drivers with the knowledge of how to interact with devices on a
+bus (i.e., <acronym class="acronym">PCI</acronym>, <acronym class="acronym">ISA</acronym>,
+<acronym class="acronym">SCSI</acronym>, <acronym class="acronym">USB</acronym>), a common interface to each class of bus
+is provided.
+</p><p>
+The <acronym class="acronym">PCI</acronym> bus manager allows a driver to locate and interact with devices
+on the PCI bus (consult your local header file
+<code class="filename">/boot/develop/headers/be/drivers/PCI.h</code>
+for gory details). A driver, once
+it obtains a <span class="type">pci_module_info</span> pointer from
+<code class="code">get_module(B_PCI_MODULE_NAME, (module_info**) pci)</code>,
+may use provided functions like <code class="function">get_nth_pci_info()</code>
+to iterate over devices on the bus. Once located, functions like
+<code class="function">read_io_8()</code>, <code class="function">write_io_32()</code>,
+and friends allow iospace access (on x86
+platforms where there is a separate iospace).
+</p><p>
+<acronym class="acronym">PCI</acronym> and <acronym class="acronym">ISA</acronym> are fairly boring bus managers. Where bus managers get
+interesting is when they have two sides. On the "top" side, an interface
+is provided to drivers. On the "bottom" side, an interface is provided to
+busses. A driver using a bus manager like this needs to know nothing
+about how the underlying bus works—it only needs to know about the
+interface provided by the bus manager.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id799606"></a>Brian Talks About SCSI—No Surprises Here</h3></div></div></div><p>
+Let's take a concrete example—<acronym class="acronym">SCSI</acronym>. The <acronym class="acronym">SCSI</acronym> standard defines a number
+of things, but the most interesting to a driver writer is a command
+protocol. To interact with a <acronym class="acronym">SCSI</acronym> device, a 6, 10, or 12 byte command is
+sent to the device, some data is sent or received (depending on the
+command), and a response code is returned. The specification defines the
+gritty details of the electrical and signaling properties of the bus,
+arbitration, and other stuff that someone writing a tape driver doesn't
+want to worry about.
+</p><p>
+<acronym class="acronym">SCSI</acronym> devices all accept the same basic commands and adhere to the
+electrical and signaling standards defined in the specification. <acronym class="acronym">SCSI</acronym>
+controller cards all use totally different mechanisms for issuing these
+commands (ranging from twiddling the bits almost directly to passing
+commands to an intelligent controller using an elegant shared-memory
+mailbox mechanism).
+</p><p>
+The <acronym class="acronym">SCSI</acronym> bus manager provides an interface to drivers that adheres to the
+Common Access Method (ANSI X3.232-1996).
+
+<sup>[<a id="id799660" href="#ftn.id799660" class="footnote">3</a>]</sup>
+
+It uses three function calls
+-- one to allocate a command block, one to issue a command, and one to
+release the command block afterwards. The command block is filled with
+the <acronym class="acronym">SCSI</acronym> command, information about the data to send or receive, and some
+other useful flags. The command block refers to the <acronym class="acronym">SCSI</acronym> device using
+three numbers: the <code class="varname">path</code> (which maps to a specific hardware controller),
+the <code class="varname">target</code> (the <acronym class="acronym">SCSI</acronym> ID of a device on the bus), and the <code class="varname">lun</code> (the
+<acronym class="acronym">SCSI</acronym> Logical Unit Number, which is 0 for most devices). The driver using
+the <acronym class="acronym">SCSI</acronym> bus manager need not concern itself with what hardware is
+actually associated with a particular path.
+</p><pre class="programlisting cpp">
+<span class="comment">/* from /boot/develop/headers/be/drivers/CAM.h */</span>
+
+<span class="type">struct cam_for_driver_module_info</span> {
+    <span class="type">bus_manager_info</span> <code class="varname">minfo</code>;
+    <span class="type">CCB_HEADER *</span> (*<code class="varname">xpt_ccb_alloc</code>)(<span class="type">void</span>);
+    <span class="type">void</span> (*<code class="varname">xpt_ccb_free</code>)(<span class="type">void *</span><code class="parameter">ccb</code>);
+    <span class="type">long</span> (*<code class="varname">xpt_action</code>)(<span class="type">CCB_HEADER *</span><code class="parameter">ccbh</code>);
+};
+
+#define <code class="constant">B_CAM_FOR_DRIVER_MODULE_NAME</code> \
+    "bus_managers/scsi/driver/v1"
+</pre><p>
+The <acronym class="acronym">SCSI</acronym> bus manager doesn't know how to talk to any specific host
+controllers. It relies on a number of modules (living in
+<code class="filename">/system/add-ons/kernel/busses/scsi</code>)
+to actually speak to the hardware.
+The bus manager is a bookkeeper—it loads the scsi bus modules and lets
+them search for supported hardware. If they find any, they inform the bus
+manager with the <code class="function">xpt_bus_register()</code> call and are kept loaded. If not,
+they're unloaded. Registered busses are assigned a number by which
+drivers can address them.
+</p><pre class="programlisting cpp">
+<span class="comment">/* from /boot/develop/headers/be/drivers/CAM.h */</span>
+
+<span class="type">struct cam_for_sim_module_info</span> {
+    <span class="type">bus_manager_info</span> <code class="varname">minfo</code>;
+    <span class="type">long</span> (*<code class="varname">xpt_bus_register</code>) (<span class="type">CAM_SIM_ENTRY *</span><code class="parameter">sim</code>);
+    <span class="type">long</span> (*<code class="varname">xpt_bus_deregister</code>) (<span class="type">long</span> <code class="parameter">path</code>);
+};
+
+#define <code class="constant">B_CAM_FOR_SIM_MODULE_NAME</code> \
+    "bus_managers/scsi/sim/v1"
+</pre><p>
+The <acronym class="acronym">SCSI</acronym> bus manager itself exists as a module which lives at
+<code class="filename">/system/add-ons/kernel/bus_managers/scsi</code>.
+It exports two distinct modules --
+(<code class="filename">bus_managers/scsi/driver/v1</code> and
+<code class="filename">bus_managers/scsi/sim/v1</code>)—from one
+binary (this is a neat feature of the kernel module system).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id799930"></a>A Module Of Many Names</h3></div></div></div><p>
+How does <code class="code">get_module(B_CAM_FOR_DRIVER_MODULE_NAME, &amp;cam)</code> actually get the
+right module, you may ask? The module manager looks for modules by first
+prepending the user config directory for kernel add-ons and then
+prepending the system config directory for kernel add-ons to the module
+name and looking for a binary. If that doesn't exist, subpaths are sliced
+off the end until a match is found (or there are no more subpaths). So in
+the case of this <code class="function">get_module()</code> call, the following items are attempted:
+</p><pre class="screen">
+/boot/home/config/add-ons/kernel/bus_managers/scsi/driver/v1
+/boot/home/config/add-ons/kernel/bus_managers/scsi/driver
+/boot/home/config/add-ons/kernel/bus_managers/scsi
+/boot/home/config/add-ons/kernel/bus_managers
+/boot/beos/system/add-ons/kernel/bus_managers/scsi/driver/v1
+/boot/beos/system/add-ons/kernel/bus_managers/scsi/driver
+/boot/beos/system/add-ons/kernel/bus_managers/scsi
+</pre><p>
+Here it stops because a file is found. Within that binary is a symbol
+called "modules" that contains the list of modules which exist in the
+binary:
+</p><pre class="programlisting cpp">
+<span class="type">module_info *</span><code class="varname">modules</code>[] =
+{
+    (<span class="type">module_info *</span>) &amp;<code class="varname">cam_for_sim_module</code>,
+    (<span class="type">module_info *</span>) &amp;<code class="varname">cam_for_driver_module</code>,
+    NULL
+};
+</pre><p>
+Should the correct module not exist in this list, the module manager
+continues to look until it exhausts all the possible binary names. At
+that point it must report failure.
+</p><p>
+The <span class="type">module_info</span> structures referred to here include their full name
+(e.g., <code class="filename">bus_managers/scsi/driver/v1</code>), which is used to determine which
+module is desired. This feature allows a single module binary to support
+two different interfaces (like the <acronym class="acronym">SCSI</acronym> bus managers driver and bus
+interface) or different versions of the same interface. What if we wanted
+to provide a new version of the driver interface
+(<code class="filename">bus_managers/scsi/driver/v2</code>)?
+We could include it in the modules list
+alongside the old interface (kept to provide backward compatibility). Old
+drivers would get the old version, new drivers would get the new one.
+Everyone would be happy.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id800039"></a>More About Finding Modules</h3></div></div></div><p>
+<code class="function">get_module()</code> is well and good if you happen to know the name of the
+module you're looking for (which is the case for a driver hunting for the
+<acronym class="acronym">SCSI</acronym> or PCI bus manager). What can you do if you don't know the name? The
+<acronym class="acronym">SCSI</acronym> bus manager needs to try to load all available <acronym class="acronym">SCSI</acronym> buses, but
+looking for them can be tricky. Luckily the kernel provides some handy
+tools:
+</p><pre class="programlisting cpp">
+<span class="comment">/* somewhere in the bowels of scsi_cam.c */</span>
+
+<span class="type">void *</span><code class="varname">ml</code>;
+<span class="type">size_t</span> <code class="varname">sz</code>;
+<span class="type">char</span> <code class="varname">name</code>[<code class="constant">B_PATH_NAME_LENGTH</code>];
+
+
+<code class="varname">ml</code> = <code class="function">open_module_list</code>("busses/scsi/");
+while((<code class="varname">sz</code> = <code class="constant">B_PATH_NAME_LIST</code>) &amp;&amp;
+  (<code class="function">read_next_module_name</code>(<code class="varname">ml</code>,<code class="varname">name</code>,&amp;<code class="varname">sz</code>) == <code class="constant">B_OK</code>)){
+  <code class="function">cam_load_module</code>(<code class="varname">name</code>);
+}
+<code class="function">close_module_list</code>(<code class="varname">ml</code>);
+</pre><p>
+This snippet of code allows the <acronym class="acronym">SCSI</acronym> bus manager to iterate over all
+available modules that have names starting with <code class="literal">busses/scsi</code>. The
+function <code class="function">cam_load_module()</code> actually does a
+<code class="function">get_module()</code> on the current
+module and sees if it registers itself with the <acronym class="acronym">SCSI</acronym> bus manager or not.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-28-2"></a>Erratum for Be Engineering Insights: Device Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+The <code class="function">close()</code> function in the sample driver that appeared in my article last
+week contains an error. In addition to providing a correction, this
+erratum includes a full explanation of the device open/close protocol.
+</p><p>
+When user code invokes system call <code class="function">open()</code>, a new "session" begins with a
+call to <code class="function">device open()</code>. This results in the creation of a cookie (if you
+desire), and a file descriptor with reference count 1.
+</p><p>
+A subsequent call to system call <code class="function">dup()</code> increments that ref count.
+Creating a new team with system call <code class="function">load_image()</code>
+or <code class="function">fork()</code> duplicates
+all the parent's file descriptors for use by the child, raising the ref
+counts accordingly.
+</p><p>
+The ref count of a file descriptor is decremented on the explicit call of
+system call <code class="function">close()</code>, or the implicit system call <code class="function">close()</code> when a team
+exits. A system call <code class="function">close()</code> of a file descriptor with ref count 1 will
+trigger the device close. For a team with two or more threads, that final
+system call <code class="function">close()</code> can create a subtle situation: one thread is blocked
+or running in one of the device
+<code class="function">read</code>/<code class="function">write</code>/<code class="function">ioctl</code> functions, when the
+other thread calls device close.
+</p><p>
+The sole purpose of device close is to encourage blocked calls—of the
+same session—to unblock and go home.
+</p><p>
+Once the driver is free of all other callers for a given session, driver
+shutdown can proceed to the final stage: disabling the hardware, removing
+interrupt handlers, and freeing kernel resources. Your driver performs
+these chores in the device free function. The kernel guarantees that the
+call is single-threaded with respect to this session. Of course, you must
+remain vigilant for the threads of other sessions, and protect shared
+data appropriately: an example is <code class="varname">ocsem</code>
+protecting <code class="function">nopen</code>.
+</p><p>
+The original device write function had a race condition between
+<code class="function">acquire_sem_etc()</code> and <code class="function">has_signals_pending()</code>,
+causing <code class="varname">wbsem</code> to miscount.
+<code class="function">has_signals_pending()</code> is a function internal to the kernel, hence it is
+not documented and it should not be used. Instead, the revised code uses
+the return status of <code class="function">acquire_sem_etc()</code>: now the semaphore is unchanged
+should an error occur. Not shown here is a mechanism to unblock I/O
+threads: you'll want one for drivers with slow, blocking I/O. Even fast
+devices would benefit if you expect lost interrupts or other erroneous
+hardware behavior.
+</p><pre class="programlisting cpp">
+<span class="type">static status_t</span>
+<code class="function">qq_close</code>( <span class="type">void *</span><code class="parameter">v</code>)
+{
+    return (<code class="constant">B_OK</code>);
+}
+
+<span class="type">static status_t</span>
+<code class="function">qq_free</code>( <span class="type">void *</span><code class="parameter">v</code>)
+{
+    <span class="type">struct client *</span><code class="varname">c</code> = <code class="parameter">v</code>;
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="varname">c</code>-&gt;<code class="varname">d</code>;
+    <code class="function">acquire_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+    if (--<code class="varname">d</code>-&gt;<code class="varname">nopen</code> == 0) {
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">MCR</code>, 0);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IER</code>, 0);
+        <code class="function">remove_io_interrupt_handler</code>( <code class="varname">d</code>-&gt;<code class="varname">irq</code>, <code class="function">qq_int</code>, <code class="varname">d</code>);
+    }
+    <code class="function">release_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+    <code class="function">free</code>( <code class="varname">v</code>);
+    return (<code class="constant">B_OK</code>);
+}
+
+<span class="type">static status_t</span>
+<code class="function">qq_write</code>( <span class="type">void *</span><code class="parameter">v</code>, <span class="type">off_t</span> <code class="parameter">o</code>, <span class="type">const void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">nbyte</code>)
+{
+    <span class="type">cpu_status</span> <code class="varname">cs</code>;
+    <span class="type">struct client *</span><code class="varname">c</code> = <code class="parameter">v</code>;
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="varname">c</code>-&gt;<code class="varname">d</code>;
+    <span class="type">uint</span> <code class="varname">n</code> = 0;
+    while (<code class="varname">n</code> &lt; *<code class="varname">nbyte</code>) {
+        <span class="type">status_t</span> <code class="varname">s</code> = <code class="function">acquire_sem_etc</code>( <code class="varname">d</code>-&gt;<code class="varname">wbsem</code>, 1,
+                                    <code class="constant">B_CAN_INTERRUPT</code>, 0);
+        if (<code class="varname">s</code> &lt; <code class="constant">B_OK</code>) {
+            *<code class="varname">nbyte</code> = <code class="varname">n</code>;
+            return (<code class="varname">s</code>);
+        }
+        <code class="varname">d</code>-&gt;<code class="varname">wcur</code> = 0;
+        <code class="varname">d</code>-&gt;<code class="varname">wmax</code> = <code class="function">min</code>( *<code class="varname">nbyte</code>-<code class="varname">n</code>, <code class="function">sizeof</code>( <code class="varname">d</code>-&gt;<code class="varname">wbuf</code>));
+        <code class="function">memcpy</code>( <code class="varname">d</code>-&gt;<code class="varname">wbuf</code>, (<span class="type">uchar *</span>)<code class="varname">buf</code>+<code class="varname">n</code>, <code class="varname">d</code>-&gt;<code class="varname">wmax</code>);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IER</code>, <code class="constant">IER_THRE</code>);
+        <code class="function">acquire_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">wfsem</code>);
+        <code class="varname">n</code> += <code class="varname">d</code>-&gt;<code class="varname">wmax</code>;
+        <code class="function">release_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">wbsem</code>);
+    }
+    return (<code class="constant">B_OK</code>);
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-28"></a>Developers' Workshop: Copying Files</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Christopher</span> <span class="surname">Tate</span></span></div></div></div><p>
+In my last column, I provided a simple function called <code class="function">CopyFile()</code>.
+Unsurprisingly, this function copies a file under the BeOS, including not
+only the "ordinary" data of the file but also any attributes that the
+file may include. This week, I'll extend the function to attempt to
+discern whether there is enough space on the destination volume for the
+file before actually performing the copy. The source code for this
+extended version of <code class="function">CopyFile()</code> is available on the Be FTP site at this
+URL:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/storage_kit/CopyFile.zip&gt;
+</p><p>
+Let's look at the new function prototype first:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">CopyFile</code>(<span class="type">const entry_ref&amp;</span> <code class="parameter">source</code>,
+    <span class="type">const entry_ref&amp;</span> <code class="parameter">dest</code>,
+    <span class="type">void*</span> <code class="parameter">buffer</code> = <code class="constant">NULL</code>,
+    <span class="type">size_t</span> <code class="parameter">bufferSize</code> = 0,
+    <span class="type">bool</span> <code class="parameter">preflight</code> = <code class="constant">false</code>,
+    <span class="type">bool</span> <code class="parameter">createIndices</code> = <code class="constant">false</code>);
+</pre><p>
+There are two new arguments since last time: <code class="parameter">preflight</code> and
+<code class="parameter">createIndices</code>. The first of these specifies whether or not to analyze
+the source file to determine whether it will fit on the destination
+volume; the second indicates whether the copy routine should ensure that
+file attributes which are indexed on the source volume are also indexed
+on the destination volume.
+</p><p>
+I'll discuss indices a little later; first let's look at preflighting. In
+<code class="filename">CopyFile.cpp</code> there's a function called
+<code class="function">preflight_file_size()</code> which
+estimates the storage required for a given file. I'll walk through its
+implementation briefly, starting with its prototype:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">preflight_file_size</code>(<span class="type">const entry_ref&amp;</span> <code class="parameter">fileRef</code>,
+    <span class="type">const fs_info&amp;</span> <code class="parameter">srcInfo</code>,
+    <span class="type">const fs_info&amp;</span> <code class="parameter">destInfo</code>,
+    <span class="type">off_t*</span> <code class="parameter">outBlocksNeeded</code>);
+</pre><p>
+First off, note that two of the arguments are <span class="type">fs_info</span> structures. These
+structures, obtained through the Storage Kit's <code class="function">fs_stat_dev()</code> function,
+describe whole file systems. Not all <acronym class="acronym">BFS</acronym> volumes are the same; in
+particular, <acronym class="acronym">BFS</acronym> supports a variety of fundamental block sizes. Storage on
+a disk isn't continuous, it's divided into discrete units called
+"blocks." Everything on a disk—file data, attribute data, and file
+system control structures—occupies an integral number of blocks. Even
+more A given file's data will consume more or fewer disk blocks depending
+on what the destination volume's block size is. For this reason, the
+preflight operation calculates the file's storage requirements in terms
+of blocks, not bytes.
+</p><p>
+Calculating the number of blocks consumed for the file's ordinary data is
+easy:
+</p><pre class="programlisting cpp">
+<span class="type">struct stat</span> <code class="varname">info</code>;
+<span class="type">off_t</span> <code class="varname">diskBlockSize</code> = <code class="varname">destInfo</code>.<code class="varname">block_size</code>;
+<code class="classname">BFile</code> <code class="varname">file</code>(&amp;fileRef, <code class="constant">O_RDONLY</code>);
+<code class="varname">file</code>.<code class="methodname">GetStat</code>(&amp;<code class="varname">info</code>);
+<span class="type">off_t</span> <code class="varname">blocksNeeded</code> = 1 + (<span class="type">off_t</span>) <code class="function">ceil</code>(<span class="type">double</span>(<code class="varname">info</code>.<code class="varname">st_size</code>) /
+<span class="type">double</span>(<code class="varname">diskBlockSize</code>));
+</pre><p>
+<code class="methodname">BFile::GetStat()</code> returns a variety of useful information about a file; in
+this case we only care about its data size. We then count how many blocks
+the data will require, rounding up. The extra 1 is because there is a
+one-block file system control structure called an "inode" for every file.
+The inode is where the file system stores various information about the
+file such as when it was last modified, what user "owns" it, whether it's
+write-protected, etc.
+</p><p>
+In the case of a destination file system that does not support
+attributes, we're done counting blocks. However, the usual case of
+copying files onto <acronym class="acronym">BFS</acronym> volumes is more interesting; attribute storage
+under <acronym class="acronym">BFS</acronym> is complex. Proceeding through the code we see that
+<code class="function">preflight_file_size()</code> checks whether the destination volume supports
+attributes by verifying that the <code class="constant">B_FS_HAS_ATTR</code>
+flag is set in its <span class="type">fs_info</span>
+structure, then enters the following loop:
+</p><pre class="programlisting cpp">
+<span class="type">off_t</span> <code class="varname">fastSpaceUsed</code> = 0;
+<span class="type">char</span> <code class="varname">attrName</code>[<code class="constant">B_ATTR_NAME_LENGTH</code>];
+<code class="varname">file</code>.<code class="methodname">RewindAttrs</code>();
+while ((<code class="varname">err</code> = <code class="varname">file</code>.<code class="methodname">GetNextAttrName</code>(<code class="varname">attrName</code>)) ==
+<code class="constant">B_NO_ERROR</code>)
+{
+    <span class="type">const size_t</span> <code class="constant">FAST_ATTR_OVERHEAD</code> = 9;
+    <span class="type">const off_t</span>  <code class="constant">INODE_SIZE</code> = 232;
+
+    <span class="type">attr_info</span> <code class="varname">info</code>;
+    <code class="varname">file</code>.<code class="methodname">GetAttrInfo</code>(<code class="varname">attrName</code>, &amp;<code class="varname">info</code>);
+    <span class="type">off_t</span> <code class="varname">fastLength</code> = <code class="varname">info</code>.<code class="varname">size</code> + <code class="function">strlen</code>(<code class="varname">attrName</code>) +
+    <code class="constant">FAST_ATTR_OVERHEAD</code>;
+    if (<code class="varname">fastSpaceUsed</code> + <code class="varname">fastLength</code> &lt; <code class="varname">diskBlockSize</code> -
+    <code class="constant">INODE_SIZE</code>)
+    {
+        <code class="varname">fastSpaceUsed</code> += <code class="varname">fastLength</code>;
+    }
+    else
+    {
+        <code class="varname">blocksNeeded</code> += 1 + <code class="function">off_t</code>(<code class="function">ceil</code>(<code class="function">double</code>(<code class="varname">info</code>.<code class="varname">size</code>) /
+        <code class="function">double</code>(<code class="varname">diskBlockSize</code>)));
+    }
+
+    <span class="comment">// index calculations; see below</span>
+}
+</pre><p>
+The principle of iterating over the source file's attributes is one we
+saw last time, but the rest of the code deserves some explanation. BFS
+uses two different schemes for storing attributes: a "fast" scheme in
+which attributes are actually stored in leftover space within the file's
+main inode, and a slower scheme once that space fills up. The above code
+calculates how much fast-area storage would be required to hold the
+attribute, then checks to see whether there's enough fast-area space
+available. If so, the attribute's storage requirements are added to the
+fast-area tally, otherwise a separate attribute inode and attribute data
+blocks will be used for it. In that case, the storage requirement
+calculation is the same as for the file's data portion.
+</p><p>
+The nine-byte <code class="constant">FAST_ATTR_OVERHEAD</code> constant is calculated based on the
+scheme that <acronym class="acronym">BFS</acronym> uses for storing attributes in the fast area. The
+overhead is 4 bytes for the attribute's type, 2 bytes for a name-length
+indicator, 2 bytes for the attribute's data length, plus 1 byte for a
+trailing <code class="constant">NULL</code> at the end of the attribute's name. Similarly, the current
+size of the <acronym class="acronym">BFS</acronym> inode structure is 232 bytes; whatever is left over in
+the inode block is available for fast attribute storage.
+</p><p>
+There is one more feature of the Be file system that complicates storage
+requirement estimation, and that's the concept of indexed attributes. BFS
+can be instructed to maintain an index of all files that contain a
+particular named attribute; this index then allows the file system to
+search for files whose attributes match various criteria by scanning the
+indices rather than having to scan all files. This is the secret of the
+Tracker's blazingly fast "Find..." capability. The cost of this feature
+is disk space: the file system has to duplicate the attribute data within
+the index structures on disk.
+</p><p>
+To estimate the amount of extra storage needed for indexed attributes,
+the preflight routine keeps track of the cumulative size of all indexed
+attributes within the attribute-scanning loop:
+</p><pre class="programlisting cpp">
+<span class="comment">// index calculations</span>
+<span class="type">struct index_info</span> <code class="varname">indexInfo</code>;
+if (!<code class="function">fs_stat_index</code>(<code class="varname">srcInfo</code>.<code class="varname">dev</code>, <code class="varname">attrName</code>, &amp;<code class="varname">indexInfo</code>))
+{
+    <code class="varname">indexedData</code> += <code class="function">min</code>(<code class="varname">info</code>.<code class="varname">size</code>, 256);
+}
+</pre><p>
+then, after all attributes have been examined:
+</p><pre class="programlisting cpp">
+<code class="varname">blocksNeeded</code> += 2 * <code class="varname">indexedData</code> / <code class="varname">diskBlockSize</code> + 2;
+</pre><p>
+Indexed attribute data is duplicated within the volume's indices, up to a
+maximum of 256 bytes per attribute. We keep track of the total amount of
+data that will be added to indices by the copy operation, then estimate
+its storage cost as twice the number of blocks necessary to hold the data
+contiguously, plus a small amount to account for indexing of
+non-attribute data such as file names and modification times. The exact
+number of blocks required cannot be determined accurately because it
+depends on the state of the indices prior to the copy operation. Double
+the minimum is an educated guess based on the observation that, on
+average, the blocks within a given index structure under <acronym class="acronym">BFS</acronym> tend to be
+about half-full.
+</p><p>
+It bears repeating that these are *estimates*, not precise calculations.
+This code may overestimate by a few blocks the amount of storage that
+will actually be consumed by the copy operation. That's as close an
+estimate as possible, since certain aspects of the file system --
+particularly directory and index management—are somewhat
+nondeterministic. Because conservative estimates are safe, this is an
+acceptable inaccuracy for our purposes.
+</p><p>
+Now that I've shown you what's involved in predetermining the amount of
+storage required for a file, a word of caution is in order. Especially
+for files with large numbers of attributes, this preflighting function
+will be SLOW. One of the slowest operations in any file system is the
+"stat" function, examining a file's vital statistics. Under BFS, because
+attributes are practically files in themselves, getting attribute
+information via <code class="methodname">BNode::GetAttrInfo()</code>
+is just as bad as <code class="methodname">BFile::GetStat()</code>
+for performance. Note that the Tracker itself doesn't use this intricate
+procedure to preflight disk requirements for a copy operation; it uses a
+simpler, more conservative heuristic instead—one which doesn't involve
+getting info on all attributes. But if you know that you're copying files
+with large amounts of attribute data, or large numbers of files (such as
+an installer program might do), the more accurate estimation that I've
+presented here might be worth the trouble.
+</p></div><div class="footnotes"><hr /><div class="footnote"><p><sup>[<a id="ftn.id799660" href="#id799660" class="para">3</a>] </sup>
+BeOS CAM Non-compliance (for nit-pickers)
+</p><p>
+When I said that the <acronym class="acronym">SCSI</acronym> bus manager adhered to <acronym class="acronym">CAM</acronym>, I lied. Our
+implementation diverges from the spec in several important ways:
+</p><p>
+</p><ul class="itemizedlist"><li><p>
+The Execute SCSI IO request is Synchronous (no callback or polling as
+defined in the spec). You get to wait.
+</p></li><li><p>
+You must lock all memory that will be involved in a <acronym class="acronym">SCSI</acronym> data
+transfer and should do so BEFORE allocating the CCB.
+</p></li><li><p>
+We currently ignore the no-disconnect, sync/no-sync, and
+tagged-queueing flags. Our SIMs will negotiate for the best protocol
+and speed they can handle.
+</p></li></ul><p>
+</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-27.html">Issue 4-27, July 7, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-29.html">Issue 4-29, July 21, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-27.html" title="Issue 4-27, July 7, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-29.html" title="Issue 4-29, July 21, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

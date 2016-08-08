@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-42.html" title="Issue 1-42, September 25, 1996" /><link rel="next" href="Issue1-44.html" title="Issue 1-44, October 9, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-42.html" title="Issue 1-42, September 25, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-44.html" title="Issue 1-44, October 9, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-42.html">Issue 1-42, September 25, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-44.html">Issue 1-44, October 9, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-43"></a>Issue 1-43, October 2, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-43"></a>Be Engineering Insights: Fast Pixel Animation</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+Two weeks ago, a question was posted (to comp.sys.be) asking about the
+proper way to animate a large number of pixels inside a window. It seems
+that <code class="methodname">FillRect()</code> isn't as fast as the application writer wants.
+</p><p>
+You ask for it—you get it; I figured it might be fun to spend a Sunday
+evening looking at ways to draw quixels pickly. I took my favorite guinea
+pig program—HelloWorld—and changed the <code class="methodname">Draw()</code> function to benchmark
+different techniques.
+</p><p>
+First I tried <code class="methodname">FillRect()</code>. The code looks something like this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+  <span class="type">double</span>  <code class="varname">start</code>;
+  <span class="type">double</span>  <code class="varname">end</code>;
+  <span class="type">long</span>  <code class="varname">i</code>;
+  <code class="classname">BRect</code> <code class="varname">r</code>;
+
+  <code class="varname">r</code>.<code class="methodname">Set</code>(10,10,10,10);
+
+  <code class="varname">start</code> = <code class="function">system_time</code>();
+
+  for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 10000; i++) {
+    <code class="methodname">FillRect</code>(<code class="varname">r</code>);
+  }
+
+  <code class="methodname">Flush()</code>;
+  <code class="varname">end</code> = <code class="function">system_time</code>();
+  <code class="function">printf</code>("t = %f\n", (<code class="varname">end</code>-<code class="varname">start</code>)/10000.0);
+}
+</pre><p>
+On my beloved 66 MHz BeBox, a single <code class="methodname">FillRect()</code> takes about 75
+microseconds. At 15 frames per second, you would be able to animate an
+area of about 888 pixels (isn't BC a great toy...). Not too bad, but how
+much faster can we go?
+</p><p>
+Next test was to use <code class="methodname">MovePenTo()</code> and <code class="methodname">StrokeLine()</code>. I changed the loop to
+look like this:
+</p><pre class="programlisting cpp">
+for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 10000; <code class="varname">i</code>++) {
+  <code class="methodname">MovePenTo</code>(<code class="classname">BPoint</code>(10,10));
+  <code class="methodname">StrokeLine</code>(<code class="classname">BPoint</code>(10,10));
+}
+</pre><p>
+This time, 73 microseconds. 2.666% better than <code class="methodname">FillRect()</code>. My jaw it was
+undropped. Perhaps we're getting into the overhead of the general
+protocol? Disabling the window discipline decreased the overhead somewhat
+—down to 66 microseconds. We're headed in the right direction, but...
+</p><p>
+Let's try something that naturally has a much faster protocol:
+<code class="methodname">LineArray()</code>. Now the function looks like this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+  <span class="type">double</span> <code class="varname">start</code>;
+  <span class="type">double</span>  <code class="varname">end</code>;
+  <span class="type">long</span> <code class="varname">i</code>,<code class="varname">j</code>;
+  <span class="type">rgb_color</span>  <code class="varname">c</code>;
+
+  <code class="varname">c</code>.<code class="varname">red</code> = 0;
+  <code class="varname">c</code>.<code class="varname">green</code> = 0;
+  <code class="varname">c</code>.<code class="varname">blue</code> = 0;
+
+  <code class="varname">start</code> = <code class="function">system_time</code>();
+
+  for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 10000/32; <code class="varname">i</code>++) {
+    <code class="methodname">BeginLineArray</code>(32);
+    for (<code class="varname">j</code> = 0; <code class="varname">j</code> &lt; 32; <code class="varname">j</code>++) {
+      <code class="methodname">AddLine</code>(<code class="classname">BPoint</code>(10,10), <code class="classname">BPoint</code>(10,10),<code class="varname">c</code>);
+      <code class="methodname">EndLineArray</code>();
+    }
+  }
+  <code class="methodname">Flush</code>();
+  <code class="varname">end</code> = <code class="function">system_time</code>();
+  <code class="function">printf</code>("t = %f\n", (<code class="varname">end</code>-<code class="varname">start</code>)/10000.0);
+}
+</pre><p>
+16 microseconds per pixel! Disable discipline and we get down to 11
+microseconds. That's an area of 4100 pixels at 15 frames per second.
+</p><p>
+Can we do even better? Yes—but not without cheating. Try this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+  <span class="type">double</span>  <code class="varname">start</code>;
+  <span class="type">double</span>  <code class="varname">end</code>;
+  <span class="type">long</span>  <code class="varname">i</code>;
+  <code class="classname">BRect</code>  <code class="varname">r</code>;
+  <code class="classname">BBitmap</code>  *<code class="varname">b</code>;
+  <span class="type">rgb_color</span>  <code class="varname">c</code>;
+  <span class="type">long</span>  <code class="varname">x</code>;
+  <span class="type">long</span>  <code class="varname">y</code>;
+  <span class="type">char  *</span><code class="varname">p</code>;
+
+  <code class="varname">r</code>.<code class="methodname">Set</code>(0,0,255,255);
+  <code class="varname">b</code> = new <code class="classname">BBitmap</code>(<code class="varname">r</code>, <code class="constant">B_COLOR_8_BIT</code>);
+
+  <code class="varname">start</code> = <code class="function">system_time</code>();
+
+  <code class="varname">x</code> = 10;
+  <code class="varname">y</code> = 10;
+
+  for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 10000; <code class="varname">i</code>++) {
+    <code class="varname">p</code> = (<span class="type">char</span> *)<code class="varname">b</code>-&gt;<code class="methodname">Bits</code>() + <code class="varname">b</code>-&gt;<code class="methodname">BytesPerRow</code>()*<code class="varname">y</code> + <code class="varname">x</code>;
+    *<code class="varname">p</code> = 20;
+  }
+  <code class="methodname">DrawBitmap</code>(<code class="varname">b</code>, <code class="classname">BPoint</code>(0,0));
+  <code class="varname">end</code> = <code class="function">system_time</code>();
+  delete <code class="varname">b</code>;
+
+  <code class="function">printf</code>("t = %f\n", (<code class="varname">end</code>-<code class="varname">start</code>)/10000.0);
+}
+</pre><p>
+Since we're simply blitting a bitmap, this isn't a general solution. But
+it is fast—0.82 usec per pixel, enough to animate 81300 pixels at 15
+fps. Of course, the bitmap that we're creating in the loop is, shall we
+say, restrained: We really are just poking the same pixel over and over.
+But the point of this experiment is to get a feel for our absolute best
+time. The key to approaching this time is to keep the pixel position
+computation at a minimum.
+</p><p>
+A few weeks ago, I wrote about the enhanced performance of
+<code class="methodname">DrawBitmapAsync()</code> (vs <code class="methodname">DrawBitmap()</code>).
+In the example above, we only draw
+once, so <code class="methodname">DrawBitmapAsync()</code> doesn't really apply. But what happens if we
+put the draw call into the loop? First we try <code class="methodname">DrawBitmap()</code>:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+  <span class="type">double</span>  <code class="varname">start</code>;
+  <span class="type">double</span>  <code class="varname">end</code>;
+  <span class="type">long</span>  <code class="varname">i</code>;
+  <code class="classname">BRect</code>  <code class="varname">r</code>;
+  <code class="classname">BBitmap</code>  *<code class="varname">b</code>;
+
+  <code class="varname">r</code>.<code class="methodname">Set</code>(0,0,7,7);
+  <code class="varname">b</code> = new <code class="classname">BBitmap</code>(<code class="varname">r</code>, <code class="constant">B_COLOR_8_BIT</code>);
+
+  <code class="varname">start</code> = <code class="function">system_time</code>();
+
+  for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 10000; <code class="varname">i</code>++) {
+    <code class="methodname">DrawBitmap</code>(<code class="varname">b</code>, <code class="classname">BPoint</code>(10,10));
+  }
+  <code class="methodname">Sync</code>();
+  <code class="varname">end</code> = <code class="function">system_time</code>();
+  delete <code class="varname">b</code>;
+  <code class="function">printf</code>("t = %f\n", (<code class="varname">end</code>-<code class="varname">start</code>)/10000.0);
+}
+</pre><p>
+This produces a horrendous 875 usec per bitmap! That's the price you pay
+for synchronous operations and context switches! By using
+<code class="methodname">DrawBitmapAsync()</code> instead of <code class="methodname">DrawBitmap()</code>, we get down to 160 usec per
+bitmap. That's fast enough to draw 416 little icons at 15 fps.
+</p><p>
+Of course, you can always mix the two techniques: Try using custom code
+to (repeatedly) blit a small bitmap into a bigger bitmap. When it comes
+to animation, nothing will beat a clean custom piece of code.
+</p><p>
+By the way, I did a quick test on a 133 MHz BeBox. In most cases the
+performance is close to 3x better... J'aime ces caches L1 !
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-43-2"></a>Be Engineering Insights: BeWare, All Ye Who Check the Web Site</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ron</span> <span class="surname">Theis</span></span></div></div></div><p>
+The crowd followed the leader's every movement, banging their sticks in
+zombie-like unison. Thousands of sticks, hollow and of different lengths,
+produced a pseudo-musical sound that pulsed a communal heartbeat. The
+followers were rapt, staring at the stage as their leader jumped and
+shouted commands left and right.
+</p><p>
+I was witnessing a company picnic. And it wasn't Be's.
+</p><p>
+"Am I safe?" I shouted to my roommate as we entered the throng at
+Shoreline Amphitheater.
+</p><p>
+"Sure, just stay close to me!" He shouted in reply. "And don't make any
+sudden movements!"
+</p><p>
+My roommate had coaxed me into coming to his company's picnic by assuring
+me that the music, food, people, and lip sync competition would be "a ton
+of fun." He hadn't mentioned mass hypnosis and ritual sacrifice.
+</p><p>
+After the banging, during which the leader shouted group hug mottos about
+"adapting to change" and "meeting new challenges," they did indeed have a
+lip sync competition. The competition included a distressingly large
+number of male engineers duped into sliding on nylons and into drag queen
+acts. Don't get me wrong; I had a fine time during the show, but I was
+glad I wouldn't be going to work with these folks on Monday.
+</p><p>
+Still, I couldn't help wonder whether Be would evolve into this sort of
+monstrosity. Will Be become a zillion-dollar company with representatives
+in every country on the planet and division acronyms that are totally
+unrecognizable to the engineering staff? Will Be wheel out a gray-haired
+Erich Ringewald to judge lip sync competitions? I had a hard time
+imagining Steve Horowitz up on stage at Shoreline, giving the Mother of
+All Demos to a thousands-strong mass of employees and leading them in
+chants of "The System is Still Responsive! The System is Still
+Responsive!"
+</p><p>
+Right now, Be could barely fill the first row of Shoreline. The company
+is small, and I love it. I know everybody in the company. I get to
+respond to Webmaster e-mail personally (webmaster@be.com), and make the
+web site seem a little more human. Being the Webmaster, I also get
+excited about Be's potential for using the web. Every time I read one of
+Jean- Louis' future-of-the-web articles, I get pumped up. Before coming
+to work for Be, I figured they'd always just send it to their "Internet
+Division" or something. But now, the "Internet Division" is me. Gulp.
+</p><p>
+The web site has made some great strides recently, namely the new look,
+designed by Mark Gonzales, which coincided with the MacWorld
+announcements. But even more improvements are in the works. On my
+whiteboard there's a list of planned web site improvements as long as my
+arm, waiting to be tackled. On-line ordering is up and running, but the
+capability to do secure transactions still needs to be added. Developers
+have a Registered Developer Area of the web site, which requires a
+password to enter, allowing us to distribute information in a more
+targeted manner.
+</p><p>
+In the Registered Developer Area, developers can now modify the contact
+information we keep for them on-line. They can keep us up to date about
+their latest projects. And soon, they'll be able to add their own
+projects to <span class="trademark">BeWare</span>™. Personally, I'm excited about this. It will give
+all developers an opportunity to alert end users (as well as other
+developers) to the presence of their applications. Freeware, shareware,
+and commercial applications can sit alongside each other, with web, ftp,
+and e-mail links guiding the web surfer.
+</p><p>
+I think the BeWare section of the web site has a lot of potential. At
+NASA, I used to use a graphing program for the Mac called "Igor Pro" (by
+Wavemetrics). It had a novel way of displaying data (as "waves"), was
+extremely powerful, and you could even script it. It was great—and I
+never would have heard of it had one of my co-workers not sworn by it as
+the best graphing program he'd ever seen. After all, how do applications
+usually gain notoriety? Magazine reviews, software catalogs, and word of
+mouth, apparently. And those are only commercial applications --
+shareware applications are doomed to skulk in the shadows, hoping that
+enough users tell their friends, in a "chain letter" approach to
+advertising.
+</p><p>
+BeWare should help change that: One-stop shopping for freeware,
+shareware, and commercial Be applications. And searchable, too. I can't
+wait to be able to run a search on "Game" and "3D" in order to check out
+the latest 3D games for the <span class="trademark">BeOS</span>™. (For testing purposes only, of
+course.)
+</p><p>
+We have more improvements for the web site in the works: A better search
+engine, a Reseller Area styled after the ID &amp; Password Registered
+Developer Area, searchable archives of BeDevTalk posts, a number of
+list-server upgrades, better ftp site integration with the web site, and
+on-line mailing list subscription capabilities. Over time, these
+functions will be integrated.
+</p><p>
+The Internet Division is hard at work on it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-43"></a>Be Developer Talk: Chris Herborth, QNX Software Systems Ltd.</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Chris</span> <span class="surname">Herborth</span></span></div></div></div><p>
+I've been writing software since 1985, when I got my Commodore 64. I
+replaced it with an Atari 1040ST in 1986; it was over ten years old when
+I finally put it in storage—it had to go to make room for my BeBox.
+</p><p>
+By day, I'm an R&amp;D technical writer for QNX Software Systems Ltd.
+(http://www.qnx.com/), a small, privately owned high- tech company in
+Kanata, Ontario, who develops QNX, the leading real-time OS for PCs.
+Working for QNX is great. In addition to writing, I get to make use of my
+hacker talents. I implemented our SGML documentation process and
+programmed all the support tools.
+</p><p>
+Day job aside, I've always had a goal in the back of my mind: To develop
+role-playing games based on a programmable engine that could (in theory)
+handle any game in any genre. I've got some pretty high-end demands for
+this thing: 32-bit alpha channel graphics (so you can see fish swimming
+in the stream); separate threads for every actor, as well as for the
+animation and audio; a built-in programming language for designing the
+game. To support these ideals, I need a system with some decent
+horsepower. And to feed my own desires, I need a system that's
+interesting, one that's not flooded with shovelware.
+</p><p>
+The BeBox announcement excited me the way the Amiga and Atari ST excited
+me in 1986. Fresh, new systems, uncharted territory, and a groovy feeling
+that accountants and lawyers would never use this box in their day jobs.
+A complete lack of software is annoying yet very exciting... the
+possibility of an incredible set of new applications is fantastic, since
+we're not burdened with bloated apps and the Microsoft monopoly. The fact
+that the BeOS supports everything in my wish-list of OS features
+(something no other OS has done) and that it was affordable to someone
+who's still paying for sending himself through university really caught
+my eye. A clean C++ API is a bonus (even though I prefer dynamically
+typed languages).
+</p><p>
+I'm currently developing my dream game engine on the BeBox; the working
+title is Arcana. To support the engine, I need to create other useful
+utilities, such as a graphics editor suited to working with small tiles
+stored in PNG format, and the Arcana WorldBuilder (a sort of BeIDE for
+creating computer role-playing games), and who knows what else along the
+way.
+</p><p>
+After I finish Arcana and the Arcana WorldBuilder, I'm going to start
+creating top-notch role-playing games. This will be done when it's done;
+I'm going to start updating my web pages (http://www.qnx.com/~chrish)
+soon, and will have a log of what's finished, what I'm working on, and
+what I plan on doing.
+</p><p>
+While I'm designing Arcana, I've got loads of other interesting ideas
+floating around in my head... games, utilities, applications, silly
+hacks, who knows what. I've already ported an EMACS-like editor (jove),
+Info-ZIP's archiving utilities (zip and unzip), and a bunch of other
+goodies. When I get a spare week or two, I'm planning on porting STonX,
+an Atari ST emulator for UNIX systems. These things get posted on my web
+pages and sent to ftp.be.com as I finish them.
+</p><p>
+One other very exciting thing that I'm working on is a port of id
+Software's DOOM. Yes folks, we'll have a nice version of DOOM (running in
+a window or running full-screen via the Game Kit—your choice).
+Progress on this isn't as fast as I'd like—I do have to go to work --
+but it's coming along nicely. After the id guys check it out, I'll be
+unleashing a beta test version; it'll work with existing WAD files, do
+UDP networking, stereo sound, MIDI (maybe, if I can borrow a MIDI device
+of some sort), everything. If you want to speed things up, send me money
+so I can take time off work. Or a cloning machine to hook to the
+<span class="trademark">GeekPort</span>™. But PLEASE don't e-mail me to ask about DOOM; check my web
+pages instead. I'll be posting development logs soon.
+</p><p>
+I also plan on doing a port of Dr. Cat's DragonSpires client.
+DragonSpires (http://www.eden.com/~cat/) is a graphical MUD on the
+Internet, featuring an Ultima-like display. And did I mention that I was
+writing a few Be programming tutorials? You should expect to see them in
+a new Be e-zine soon. But that's a secret. I'd love to write a book or
+two about programming the BeBox at some point, too.
+</p><p>
+Obviously, I'm pretty busy in my spare time.
+</p><p>
+Be's developer support has been top-notch. Much better than any other
+tech support group that I've ever dealt with (well, QNX's tech support
+people are great, but I usually don't deal with them). Of course, there's
+always room for improvement: Getting a searchable database of bug reports
+and feature requests up on their web pages would be a great start.
+</p><p>
+The documentation in "The Be Book" could be better. More example code for
+common uses (such as how to get all the file references out of
+BApplication's RefsReceived() argument) would be nice. The Be developer
+community helps a lot here. Posting a question to BeDevTalk is a great
+way to get answers. You can tell we love the system because of the number
+of religious wars that go on in BeDevTalk. Jake Hamby's experimental news
+server (at muppet.jpl.nasa.gov) is also good (and doesn't get so noisy).
+</p><p>
+In the newsletter, I'd like to see some information from the developers
+at Be about what they plan on implementing, sort of a "crystal ball"
+column. Even if it's full of "plans change" and "we might do it another
+way" and "we might never get around to this" comments, I'd still love to
+have some idea of where the BeOS is heading. It can be frustrating (and
+lead to a zillion feature requests) not knowing what'll be in the next OS
+revision until it actually ships.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-43"></a>Who Should Develop on the BeOS?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This morning I met with a reporter. He asked me to respond to a statement
+by one of the people I admire in our industry, Tim Gill, the founder of
+Quark. With all the caveats about second-hand information well
+stipulated, Tim said something to the effect he wouldn't port Quark
+Xpress to the BeOS. Quark was more interested, and busy as hell, in
+moving their product forward on the Mac and Windows than in making a
+"lateral" move to an unproven platform such as Be's.
+</p><p>
+A very logical position, one that is shared by many of the established
+developers. They have a lot invested in their franchise, why would they
+risk it on a new platform?
+</p><p>
+I'm not sure I can give an unequivocal "Yes, you should" retort. Are we
+better off with new developers, unproven but unencumbered by their pasts
+—just like us? Or do we need the name, the marketing power, and the
+"code base" of a proven leader? There's no simple answer. Some companies
+have fared well in lateral moves, porting their product from Mac to
+Windows, or vice versa. Others have wasted their time—and their
+shareholders' resources. Sometimes the problem is the famous "code base."
+A successful product doesn't mean what went in the sausage was pristine.
+The port, even with the latest tools, can take a long time and perform
+poorly. Other times, the problem is management or marketing. The culture,
+the habits, the metrics of Mac and Windows users are more different than
+either group realizes, and the product or its marketing misses the mark.
+Excel works well across platforms, but even mighty Microsoft couldn't
+avoid a dud like the latest revision of Word on the Mac. I could mention
+other so-so examples, but I'd rather point out Photoshop as an example of
+a product successfully "lateraled" from the Macintosh to Windows and
+various flavors of UNIX, probably the result of the combined virtues of
+management and code base.
+</p><p>
+New developers have much in their favor. They tend to think more
+innovatively, and they will write fresh code targeted to our platform
+rather than attempt to "repurpose" their "code base." The difference in
+function and performance could be as striking as the one we see between
+the mature MacOS and the BeOS when they both run on the same hardware.
+And, on the BeOS, new developers, unlike established ones, do not have to
+fear alienating software distributors; therefore they can market and
+distribute their software on the web.
+</p><p>
+Does this mean we have no interest in proven, successful developers? Of
+course not. Some people even suggest I should go and sleep on John
+Warnock's doorstep until he decides to port Photoshop to the BeOS. We
+first have to complete our port of the BeOS on PowerMacs, thus ensuring a
+much larger installed base for BeOS applications. Then, we might have to
+provide tools that facilitate the adaptation of some, not all,
+well-designed applications to the BeOS. In this context, the opposite of
+well-designed are applications written in such a way that only a total
+rewrite will allow them to fully use the competitive features of the
+BeOS. In this case, a "straight" port will probably feel lame—not
+recommended.
+</p><p>
+When we have the migration tools and the PowerMac port on a CD, I'll give
+Tim Gill a call.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-42.html">Issue 1-42, September 25, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-44.html">Issue 1-44, October 9, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-42.html" title="Issue 1-42, September 25, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-44.html" title="Issue 1-44, October 9, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

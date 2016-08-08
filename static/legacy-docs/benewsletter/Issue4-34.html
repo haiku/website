@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-33.html" title="Issue 4-33, August 18, 1999" /><link rel="next" href="Issue4-35.html" title="Issue 4-35, September 1, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-33.html" title="Issue 4-33, August 18, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-35.html" title="Issue 4-35, September 1, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-33.html">Issue 4-33, August 18, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-35.html">Issue 4-35, September 1, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-34"></a>Issue 4-34, August 25, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-34"></a>Be Engineering Insights: The Input Server Part 3: Pointing Devices and
+Tablets</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Hiroshi</span> <span class="surname">Lockheimer</span></span></div></div></div><p>
+This is a tale of the Input Server and the devices it recognizes. I know
+you've heard this before, but today we're going to approach the topic
+from the point of view of "pointing devices" (mice, tablets, and the
+like), with a concentration on tablets. First, let's review:
+</p><p>
+Way back before we knew better, user input was handled by the Application
+Server. The user would move the mouse or type on the keyboard, and, in
+response to a notification from the mouse or keyboard driver, the
+Application Server would create a message and send it to the appropriate
+application. This was a closed system; the only place you could step into
+the input river was at the application level—well after all the
+important decisions had been made.
+</p><p>
+A couple of releases back, we decided to provide an "input spigot" that
+sat upstream of the Application Server. This new machinery, the Input
+Server, lets the developer create an input device add-on that listens to
+a particular driver (or drivers), and manufactures the messages that are
+then handed to the Application Server (which still delivers them to
+specific applications).
+</p><p>
+Currently, the Input Server recognizes two types of devices: keyboard
+devices and pointing devices. When you create an input device, you have
+to declare it to be one or the other. We chose the name "pointing device"
+(or, in Input Server parlance, <code class="constant">B_POINTING_DEVICE</code>) rather than "mouse
+device" because there's more than one way to point. Tablets, for example.
+</p><p>
+However, when we move from the Input Server into the Application Server,
+we see a bias towards mice. All <code class="constant">B_POINTING_DEVICE</code> devices are expected to
+communicate with the Application Server by creating and sending the
+messages <code class="constant">B_MOUSE_UP</code>, <code class="constant">B_MOUSE_DOWN</code>,
+and <code class="constant">B_MOUSE_MOVED</code>. We chose these
+messages, rather than create a new protocol, to ensure backward
+compatibility. And, as with most backwardly compatible decisions, a few
+modern details were left wanting. In the case of pointing devices, there
+are two problems with the messages, particularly the <code class="constant">B_MOUSE_MOVED</code>
+message:
+</p><ul class="itemizedlist"><li><p>
+Cursor location is expressed in view coordinates, but input devices
+don't know about views.
+</p></li><li><p>
+Tablets are more flexible than mice; the current <code class="constant">B_MOUSE_MOVED</code>
+protocol doesn't express all the ways in which a tablet can "move."
+</p></li></ul><p>
+To get around these problems, we've added new conventions to the
+<code class="constant">B_MOUSE_MOVED</code> protocol, as explained below.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814063"></a>The View Problem</h3></div></div></div><p>
+The <code class="constant">B_MOUSE_MOVED</code> message contains
+a <code class="classname">BPoint</code> "where" field that, by
+convention, contains the cursor location in view coordinates. However,
+views live in the Application Server, which is downstream from the input
+device that has to create this message. In other words, the input device
+doesn't know anything about views, and so can't translate to view
+coordinates. To bridge this gap, we've modified the <code class="constant">B_MOUSE_MOVED</code>
+convention.
+</p><p>
+When creating a <code class="constant">B_MOUSE_MOVED</code> message from within an Input Server device,
+you add "x" and "y" fields, setting their values to either an offset
+relative to the cursor's previous position, or an absolute position in
+the range 0.0 to 1.0.
+</p><p>
+Mice always use relative locations; tablets can use either, although
+absolute locations are the norm (more on that later).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814108"></a>Relative Location</h3></div></div></div><p>
+All mice and some tablets can express the pointer location relative to
+its previous position. If your pointing device is operating in relative
+coordinate mode, you add "x" and "y" as <span class="type">int32</span> values:
+</p><pre class="programlisting cpp">
+<span class="type">int32</span> <code class="varname">xVal</code>, <code class="varname">yVal</code>;
+<code class="varname">event</code>-&gt;<code class="methodname">AddInt32</code>("x", <code class="varname">xVal</code>);
+<code class="varname">event</code>-&gt;<code class="methodname">AddInt32</code>("y", <code class="varname">yVal</code>);
+</pre><p>
+In this case, <code class="varname">xVal</code> and <code class="varname">yVal</code> are the horizontal and vertical distances, in
+device-defined units, that the cursor moved. These units are interpreted
+as pixels by the Application Server.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814180"></a>Absolute Location</h3></div></div></div><p>
+To set the field to a location, you add "x" and "y"
+fields as <span class="type">float</span>s. For
+example:
+</p><pre class="programlisting cpp">
+<span class="type">float</span> <code class="varname">xVal</code>, <code class="varname">yVal</code>;
+<code class="varname">event</code>-&gt;<code class="methodname">AddFloat</code>("x", <code class="varname">xVal</code>);
+<code class="varname">event</code>-&gt;<code class="methodname">AddFloat</code>("y", <code class="varname">yVal</code>);
+</pre><p>
+As mentioned above, <code class="varname">xVal</code> and <code class="varname">yVal</code> must be in the range 0.0 to 1.0. The
+values are then scaled, by the Application Server, to the screen's
+coordinate system such that <code class="literal">(0.0, 0.0)</code> is the top left of the screen, and
+<code class="literal">(1.0, 1.0)</code> is the bottom right. By using a 0.0 to 1.0 range, the pointer
+device can express the cursor location independent of screen resolution.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814259"></a>A Word on "where"</h3></div></div></div><p>
+In both cases—i.e., relative and absolute location—the Application
+Server creates and adds a "where" field based on the "x" and "y" values
+translated to the target view's coordinate system, and throws away the
+original "x" and "y" fields. The fact that the "x" and "y" fields aren't
+retained is important, as explained below.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814276"></a>Tablets Are Smarter Than Mice</h3></div></div></div><p>
+Tablets really feel the user. They supply a lot more information about
+the user's digital probing than a mouse does. Specifically, a tablet can
+track movement with much greater precision than a mouse, a tablet can
+include pressure and tilt information, and it can go into "eraser" mode.
+</p><p>
+To accommodate this information, the next release will introduce some
+conventions for tablet-specific fields in the <code class="constant">B_MOUSE_MOVED</code> message.
+These fields, described below, won't be acted upon by the Application
+Server, but they will be passed through to the application that receives
+the <code class="constant">B_MOUSE_MOVED</code> message. The application can decide whether it wants to
+use this information or not.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814309"></a>Tablet Precision</h3></div></div></div><p>
+As mentioned above, a tablet can encode the pointer's absolute location
+through "x" and "y" fields, which the Application Server converts to a
+"where" field. Although the "where" precision
+(a <code class="classname">BPoint</code>) is sufficient
+for most applications, it's nowhere near as precise as the original "x"
+and "y" values. Some applications may be interested in the "real"
+tablet-precise location; but the original "x" and "y" fields are thrown
+away by the Application Server.
+</p><p>
+To get around this, your tablet should copy its absolute location values
+into the "be:tablet_x" and "be:tablet_y" fields. So the example shown
+above should actually look like this:
+</p><pre class="programlisting cpp">
+<span class="type">float</span> <code class="varname">xVal</code>, <code class="varname">yVal</code>;
+<code class="varname">event</code>-&gt;AddFloat("x", <code class="varname">xVal</code>);
+<code class="varname">event</code>-&gt;AddFloat("y", <code class="varname">yVal</code>);
+<code class="varname">event</code>-&gt;AddFloat("be:tablet x", <code class="varname">xVal</code>);
+<code class="varname">event</code>-&gt;AddFloat("be:tablet y", <code class="varname">yVal</code>);
+</pre><p>
+The additional fields are passed through without conversion; it's up to
+the application to interpret them properly.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814392"></a>Tablet Pressure</h3></div></div></div><p>
+Tablet pressure is expressed as a float in the range 0.0 to 1.0 (minimum
+to maximum), and added as the "be:tablet_pressure" field:
+</p><pre class="programlisting cpp">
+<span class="type">float</span> <code class="varname">pressure</code>;
+<code class="varname">event</code>-&gt;<code class="methodname">AddFloat</code>("be:tablet pressure", <code class="varname">pressure</code>);
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814430"></a>Tablet Tilt</h3></div></div></div><p>
+Tilt is in the range -1.0 to 1.0, where (-1.0, -1.0) tilts to the top
+left, (1.0, 1.0) tilts the bottom right, and (0.0, 0.0) is no tilt. The
+fields are "be:tablet tilt x" and "be:tablet tilt y":
+</p><pre class="programlisting cpp">
+<span class="type">float</span> <code class="varname">tilt_x</code>, <code class="varname">tilt_y</code>;
+<code class="varname">event</code>-&gt;<code class="methodname">AddFloat</code>("be:tablet tilt x", <code class="varname">tilt_x</code>);
+<code class="varname">event</code>-&gt;<code class="methodname">AddFloat</code>("be:tablet tilt y", <code class="varname">tilt_y</code>);
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814484"></a>Eraser Mode</h3></div></div></div><p>
+Eraser mode is expressed as an <span class="type">int32</span> in the "be:tablet_eraser" field:
+</p><pre class="programlisting cpp">
+<span class="type">int32</span> <code class="varname">eraser</code>;
+<code class="varname">event</code>-&gt;<code class="methodname">AddInt32</code>("be:tablet_eraser", <code class="varname">eraser</code>);
+</pre><p>
+The value is 1 when the pen is reversed (the eraser is on), and 0
+otherwise. Other eraser modes may be defined in the future.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id814531"></a>Hold Your Horses</h3></div></div></div><p>
+BeOS Release 4.5 didn't include any tablet drivers—we hope to fill
+this void in the next release. The tablet device that's included will
+certainly use the conventions described here.
+</p><p>
+If you're writing a tablet device, you should use the new fields
+yourself. (Note that if you're writing a mouse device, you don't need to
+add these fields to the messages that you create.) More importantly, if
+you're writing an application that can benefit from a tablet's features,
+you should look for the new fields in the <code class="constant">B_MOUSE_MOVED</code> messages that you
+receive.
+</p><p>
+Past articles about the Input Server by Hiroshi Lockheimer:
+</p><p>
+<a class="xref" href="Issue3-35.html#Engineering3-35" title="Be Engineering Insights: An Introduction to the Input Server">Be Engineering Insights: An Introduction to the Input Server</a>
+</p><p>
+<a class="xref" href="Issue4-7.html#Engineering4-7" title="Be Engineering Insights: An Introduction to Input Method Aware Views">Be Engineering Insights: An Introduction to Input Method Aware Views</a>
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-34-2"></a>Be Engineering Insights: Napoleon's Maxim</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Leo L.</span> <span class="surname">Schwab</span></span></div></div></div><p>
+Software engineering is a rewarding profession and a demanding one.
+"Multidisciplinary" only vaguely describes the variety of knowledge and
+skills a good engineer should have, especially at a place like Be.
+However, just as important as selecting the right algorithm, the right
+compiler, the optimum keymappings in the editor, is the ultimate choice
+an engineer must make: where to eat.
+</p><p>
+We are fortunate at Be to be located within 10 minutes walk of many
+excellent eateries, an often-overlooked contribution to the quality of
+work we're able to do here. Menlo Park—hardly a downscale town—is
+adjacent to upscale Palo Alto and Atherton, which affords us a broad
+spectrum of cuisine, from no-star fast food to four-star slow food.
+</p><p>
+Asian food seems to be the most popular in the Be lunchroom. Su Hong
+Chinese Restaurant (known as "The Hong") gets a lot of Be business. Our
+Fearless Leader JLG is often seen there ordering the Menlo Combo to go.
+If Su Hong is too clean for you, there's always Mr. Chau's, a bit further
+away. We have no less than *three* choices for sushi: Akasaka, Gombei,
+and Tokyo Subway ("Sokyo Tubway"), the last being the popular choice.
+</p><p>
+Other ethnicities are also well represented. Just up the road is
+Gaylord's Indian restaurant. For Mexican food you have your choice of
+burritos: MexToGo gets frequent visits, as does Una Mas, and 360°
+Burrito (where they go by their yuppie name, "wraps"). If you hanker for
+Swiss cuisine there's Amandine, where waiters maintain neutrality in not
+favoring one dish over another. For French food there's Le Pot Au Feu,
+though I don't see many Be regulars there. I enjoy Italian, at
+Florentines, Trattoria Buon Gusto, and Scala Mia, places that understand
+basil. (I love basil. Basil should be used in everything. Breast of
+chicken stuffed with sun-dried tomatoes and basil, dolmas wrapped in
+basil instead of grape leaves, basil bread, basil salad, basil
+sandwiches, basil ice cream, Basil Rathbone...the list goes on.)
+</p><p>
+Pizza, the long-standing basic food group for engineers, is available at
+Round Table, but if you're here in the evening, Applewood, open only for
+dinner, is a superior venue.
+</p><p>
+Deli-style sandwiches? No problem. Togos just opened next door, and Jan's
+is just on the other side of the tracks. But if you like great heaping
+eye-watering gobs of Dijon mustard, Le Boulanger ("Boolanger") serves up
+fancy sandwiches on fresh-baked bread, although some may prefer the less
+pretentious fare at The Oasis. All things chicken are found at the oddly
+named Koo-Koo-Roo ("The Koo").
+</p><p>
+Looking for a gimmicky restaurant with deep-fried everything? There's a
+Chili's right next door. If you prefer more "traditional" unhealthy food,
+like burgers, there's the ubiquitous
+<span class="trademark"><span class="trademark"><span class="trademark">McDonald's</span>®</span>™</span>©(BFD), or you
+can walk a bit further and get a real burger at Clark's. There's an
+Arby's across the street, a place so amazingly cheesy that their Web page
+is hosted on AOL. Fishier fare is just next door at Cook's Seafood, and
+coming soon is 3 Fish, under construction next to our building.
+</p><p>
+Looking for healthier cuisine? That's covered, too. Late For The Train is
+so healthful, you won't recognize it (it's organic, don'cha know).
+Hobee's in Palo Alto (my favorite place) is less austere, and they serve
+killer breakfasts all day.
+</p><p>
+If your goal isn't so much eating as hanging out and relaxing, then Caffe
+Borrone ("Cafe Baloney") may be your spot, conveniently located next to a
+Ricochet repeater for your laptop. Or you could hike up to the bistro
+above Draeger's supermarket, where you can order &gt;from one of about
+fifteen teas and several dishes garnished with goat cheese.
+</p><p>
+If, like us, you just IPO'd (and if you haven't, what's the matter with
+you?), then you'll probably want to celebrate by visiting a
+fake-teak-and-crystal upscale place like Left Bank which opened a few
+months ago, or the even more recent Wild Hare, which actually serves hare
+and other game meats (their bison burger is very good). Or you could go
+to the long-established Dal Baffo, a place whose picture you see in the
+dictionary next to the term "exquisite dining."
+</p><p>
+If you need to get some shopping done over lunch, there are lots of
+places in Stanford Shopping Center, ranging from the mega-salad bar at
+Fresh Choice to Max's Opera Cafe, where they will sing
+<span class="trademark"><span class="trademark">Happy Birthday</span>™</span>© to you in twelve-part harmony.
+</p><p>
+I'm sure after this article goes to press that I'll start hearing from
+everyone in the office about places I neglected to mention, or places I
+portrayed in an insufficiently flattering light. Such a response, I
+think, would confirm that we at Be take our food as seriously as our
+products. It's said that programmers are engines that turn pizza into
+code, but the quality of the code you get is only as good as the fuel you
+put in. So we're fortunate to be located where we are, with a full
+spectrum of dining options available. Though other factors—like a
+flair for programming—are just as important to the success of our
+company, I'm sure Napoleon would have agreed that, like an army, a
+software company travels on its stomach.
+</p><p>
+(Trademarks used above are the property of their respective owners. The
+mention or failure to mention a particular establishment should not be
+interpreted as an official endorsement or nonendorsement of said
+establishment by Be, Inc. The author cheerfully accepts bribes in
+exchange for mention in future articles.)
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-34"></a>Developers' Workshop: Lights... Camera... Render!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Chris</span> <span class="surname">Tate</span></span></div></div></div><p>
+Digital images are easy to create. Putting pixels into memory is a
+simple, well-understood art. Writing them to disk in a useful manner is a
+trifle more complex, but the BeOS Translation Kit provides a number of
+tools to help manage that complexity. All in all, putting still images on
+disk isn't something that causes headaches.
+</p><p>
+Digital movies are another story. As with still image files, there are a
+number of different file formats to choose from, but there are also
+choices of compression scheme, whether and how to provide a sound track,
+and so on. Creating animations means a lot of supporting code, especially
+if that support is duplicated in a number of different applications.
+</p><p>
+BeOS R4.5 introduced some new Media Kit classes designed to provide that
+support to all applications: <code class="classname">BMediaTrack</code> and
+<code class="classname">BMediaFile</code>. A <code class="classname">BMediaTrack</code>
+represents one coherent stream of data, for example a digital sound track
+or a sequence of images to be played at a specified rate. A <code class="classname">BMediaFile</code>
+contains one or more <code class="classname">BMediaTrack</code>s, and represents the movie as a whole,
+providing the interface that determines the file format as well as other
+attributes of the movie file as a whole.
+</p><p>
+How do these two classes help you create digital movies? As I mentioned,
+still images are relatively easy to create. <code class="classname">BMediaTrack</code> provides an
+interface for putting a sequence of still images together, and
+BMediaFiles write <code class="classname">BMediaTrack</code>s out to actual disk files in the proper
+manner. The Media Kit has functions for iterating over the list of all
+installed media file writers as well as the list of supported codecs for
+a given media format. All you need now is a simple way of hooking them
+all together.
+</p><p>
+That brings us to this week's sample class—<code class="classname">BitmapMovie</code>. This class
+provides a very simple interface for creating a movie file out of a
+sequence of <code class="classname">BBitmap</code>s. Before I describe it, I should point out that you
+can find the source code for <code class="classname">BitmapWriter</code> at this URL:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/media kit/BitmapWriter.zip&gt;
+</p><p>
+When you construct a <code class="classname">BitmapMovie</code> object, you specify its dimensions and
+the color space that your <code class="classname">BBitmap</code>s will use (generally you'll use
+<code class="constant">B_RGB32</code>, since that's the most widely accepted color space on the BeOS).
+Then choose the file format, media format, and codec you want, and call
+<code class="methodname">BitmapMovie::CreateFile()</code>. That creates the file on disk according to
+your specifications. Now all you need to do is call
+<code class="methodname">BitmapMovie::WriteFrame()</code> repeatedly, passing in the <code class="classname">BBitmap</code>s
+representing successive frames of video, until you're finished. At that
+point you call <code class="methodname">BitmapMovie::CloseFile()</code>, and your movie is safely
+ensconced on the disk.
+</p><p>
+The <code class="classname">BitmapWriter</code> sample program demonstrates
+the <code class="classname">BitmapMovie</code> class by
+creating a simple animation and writing it to disk. The application also
+demonstrates the mechanism for determining the available file formats and
+codecs, and presents a user interface for selecting any of the supported
+combinations. The code is pretty simple; I'll just go over a few
+highlights and important points to remember when you write your own code
+to handle BMediaFiles and <code class="classname">BMediaTrack</code>s.
+</p><ul class="itemizedlist"><li><p>
+The basic process for creating movie files is this:
+</p><div class="orderedlist"><ol><li><p>
+Create the <code class="classname">BMediaFile</code> object.
+</p></li><li><p>
+Create the <code class="classname">BMediaTrack</code> objects that reside in the file.
+</p></li><li><p>
+Optionally adjust the codec's image quality or other settings.
+</p></li><li><p>
+Commit the file's header to disk.
+</p></li><li><p>
+Write data to the tracks.
+</p></li><li><p>
+Close the file.
+</p></li></ol></div></li><li><p>
+<code class="methodname">BMediaFile::CreateTrack()</code> takes the *input* media format as an
+argument. That is, you specify the format of the buffers you'll be
+providing to <code class="methodname">BMediaTrack::WriteFrames()</code>, not the format of encoded data
+that you want on disk. The codec argument is what determines the
+encoding.
+</p></li><li><p>
+Deleting a <code class="classname">BMediaFile</code> also deletes any
+<code class="classname">BMediaTrack</code>s associated with
+that file.
+</p></li><li><p>
+Don't call <code class="methodname">BMediaFile::CloseFile()</code> more than once. Sad to say,
+there's a bug in at least one media file writer shipped with R4.5 that
+causes crashes in this case. Just don't do it.
+</p></li><li><p>
+Specify the quality of encoding to use before calling
+<code class="methodname">BMediaFile::CommitHeader()</code>. In general, codecs can't change quality
+settings on the fly, and the codec parameters might be part of the
+file's header information.
+</p></li><li><p>
+Attaching a <code class="classname">BView</code> to a <code class="classname">BBitmap</code>
+lets you use the standard BeOS drawing
+API to generate the frames of your movie. This is a great technique for
+producing off screen images without having to do the pixel pushing
+yourself.
+</p></li><li><p>
+There is currently no way to determine all the codecs installed in
+the system; you can only tell which codecs are available within a given
+file format and which support a given media format. For example, if you
+change the sample code to use a 720x480 movie size, you'll notice that
+the DV codec is available; this is because the DV codec only supports
+that size.
+</p></li></ul></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BitByBit4-34"></a>Bit By Bit: Resizing and Scroll Bars</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+Last week's installment of Rephrase showed you how to open large files.
+Now you need an easy way to view the file's contents. Although <code class="classname">BTextView</code>
+provides keyboard navigation (<span class="keysym">PageUp</span> and <span class="keysym">PageDown</span>), scroll bars and a
+resizable window are more useful, so we'll add them this week.
+</p><p>
+You'll find this version of <span class="application">Rephrase</span> at:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/tutorials/rephrase/rephrase0.1d3.zip&gt;
+</p><p>
+Rephrase 0.1d3<br />
+New Features<br />
+Resizable Windows<br />
+Scroll Bars<br />
+"Intelligent" Window Sizing
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id815133"></a>Programming Concepts</h3></div></div></div><p>
+A frame rectangle is the size and position of a window or a view in its
+parent's coordinate space. For a window this is the screen; for a view it
+is its window or parent view. It is the rect where the object is
+responsible for displaying itself.
+</p><p>
+When the frame rectangle of a window or a view changes, a frame event
+message is sent. Windows and views that have the <code class="constant">B_FRAME_EVENTS</code> flag
+receive these messages and the <code class="methodname">FrameResized()</code>
+or <code class="methodname">FrameMoved()</code> hook
+functions are called. The functions themselves are straightforward:
+<code class="methodname">FrameResized()</code> reports the new width and height of the rectangle;
+<code class="methodname">FrameMoved()</code> informs the object of its new position in its parent's
+coordinates (the screen for a window or the view's parent).
+</p><p>
+Currently <span class="application">Rephrase</span> doesn't care
+about <code class="methodname">FrameMoved()</code> calls. <code class="methodname">FrameResized()</code>
+calls are another matter. The phrase display window responds to
+<code class="methodname">FrameResized()</code> calls to adjust the size of the text view's text
+rectangle. The <code class="classname">BTextView</code> also cares about
+<code class="methodname">FrameResized()</code> messages; it
+uses them to update any scroll bars that might be targeting the view.
+</p><p>
+Scrolling a view changes the portion of its contents visible in a view's
+frame. <code class="classname">BScrollBar</code>s are <code class="classname">BView</code>s
+that visually represent the section of the
+display view shown and provide a means to scroll that view. <code class="classname">BView</code>s and
+<code class="classname">BScrollBar</code>s interact to keep in sync:
+<code class="classname">BScrollBar</code>s call <code class="methodname">BView::ScrollTo()</code>
+and <code class="methodname">BView::ScrollBy()</code>, and
+<code class="classname">BView</code>s call <code class="methodname">BScrollBar::SetValue()</code>.
+</p><p>
+<code class="classname">BTextView</code> takes this interaction a bit further. When the content in a
+text view changes, it will update the value, proportions, and ranges of
+any <code class="classname">BScrollBar</code> targeting it. All the work is
+done by the <code class="classname">BTextView</code>; just
+create the <code class="classname">BScrollBar</code>s and target the text view.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id815270"></a>Implementation details:</h3></div></div></div><ul class="itemizedlist"><li><p>
+<code class="classname">pDisplay</code> now has a
+<span class="type"><code class="classname">BTextView</code>*</span> member,
+<code class="varname">fEdit</code>. This is used throughout
+the window to access the text view.
+[<code class="filename">pDisplay.h</code>:20]
+</p></li><li><p>
+<code class="classname">pDisplay</code> now creates its <code class="classname">BWindow</code>
+superclass with a document window
+look and removes previous restrictions on zooming and resizing.
+[<code class="filename">pDisplay.cpp</code>:27-28]
+</p></li><li><p>
+<code class="methodname">BuildMenus()</code> is a new function that encapsulates building the main
+menu bar. It was introduced mainly for readability purposes.
+[<code class="filename">pDisplay.cpp</code>:209-232]
+</p></li><li><p>
+<code class="methodname">pDisplay::FrameResized()</code> adjusts the size of the text rectangle in
+the text view. It remains a constant 4 pixels inset from the text view
+proper. The text flickers a bit, as the entire text view may need to be
+redrawn because of differing line wrap.
+[<code class="filename">pDisplay.cpp</code>:154-165]
+</p></li><li><p>
+Window size is determined dynamically, based on the default font and
+the current printer settings, rather than having a fixed rectangle
+size. The window's text rectangle is set to be 40 lines high, based on
+the font. The width of the text rect is either the width of the current
+printer's printable rectangle or 45 ems. An em is a typographical unit
+based on the width of an uppercase M. For roman character fonts it's
+considered a good estimate of the widest character in the font.
+[<code class="filename">pDisplay.cpp</code>: 31-82]
+</p></li><li><p>
+The <code class="classname">BPrintJob</code> class is used for interacting with the print server.
+We'll use it again in a future installment addressing printing issues.
+In this issue we use <code class="methodname">BPrintJob::PrintableRect()</code>
+to return a <code class="classname">BRect</code> that
+represents the default printer's rectangle for printing. If a printer
+has been set up, <span class="application">Rephrase</span> uses its printable rect's width for the width
+of the <code class="classname">pDisplay</code> text rectangle. If no printer has been set up, the
+rectangle will be invalid.
+[<code class="filename">pDisplay.cpp</code>:43-53]
+</p></li><li><p>
+The <code class="classname">BFont</code> class represents a font used to display text for a view.
+You can use the class to acquire information about the font. Three
+global font pointers are defined for the system: <code class="varname">be_plain_font</code>,
+<code class="varname">be_bold_font</code>, and <code class="varname">be_fixed_font</code>.
+You make these systemwide settings in the Font
+preferences panel. <code class="varname">be_plain_font</code> is the default font for all text views.
+</p></li><li><p>
+Rephrase uses <code class="methodname">BFont::GetHeight()</code> to determine the height of a line of
+text. <code class="methodname">BFont::StringWidth()</code> determines the size of an em (see number 5
+above). This value is used to set the window's minimum width, and
+perhaps the default width if no printer is available.
+[<code class="filename">pDisplay.cpp</code>:35-41]
+</p></li><li><p>
+Window size limits are based on font and screen size. The minimum
+size is based on a text rect 12 ems wide and 10 lines deep. The maximum
+is the size of the screen.
+[<code class="filename">pDisplay.cpp</code>:74-82]
+</p></li><li><p>
+To enlarge a <code class="classname">BRect</code> by a specific amount on each side, pass negative
+values into <code class="methodname">BRect::InsetBy()</code>. Be sure to remember to offset the
+rectangle to <code class="constant">B_ORIGIN</code> (<code class="code"><code class="classname">BPoint</code>(0,0)</code>)
+if you're expecting the rectangle to start there.
+[<code class="filename">pDisplay.cpp</code>:58-59]
+</p></li></ul></div><p>
+Next week: <code class="classname">BFilePanel</code>s and saving files.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-34"></a>Going Public: Part I</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+There are things I shouldn't say, at least not if I'm unprepared to see a
+throwaway remark bounce back and become a reality. I used to say, "Don't
+ask me 'When is our IPO?' My office overlooks the parking lot, and when I
+see the BMWs of investment bankers fighting for spaces, I'll know it's
+time."
+</p><p>
+Early this year, one of our friends in the banking community came to see
+us and flatly told us to get moving, to start preparing for an Initial
+Public Offering. "But, but, but," I stuttered. "I may have been abducted
+by aliens and raised in California by VCs, but I'm still a French Farmer
+at heart—too financially conservative to have debt or day-trading
+account. It's too soon, we don't have the revenues and earnings record to
+qualify for an IPO."
+</p><p>
+They said I should be ashamed of myself. How could I, a professed
+born-again capitalist, let the statist roots of my culture of birth
+corrupt my thinking? In other words, who was I to second guess the market?
+</p><p>
+Just as the simple and memorable catechism of the Universal Life Church
+states, "Only You Can Decide What The Good Is For You," only the market
+can decide what a good investment is. And the market's calculus of risk
+and reward has changed since the days of Standard Oil, General Motors,
+and General Electric. At each cycle of the market's evolution, there have
+been good and bad investments, fairly balanced between old school
+conservative companies and the New Age ones of the time. Not everyone
+felt that RCA or IBM was a good investment, or that they signalled a new
+era. And the same was true for Intel, Dell, or Microsoft.
+</p><p>
+Right now, the good banker said, the market has decided that "The Good"
+is in betting on the future of the Internet. You can do a Greenspan
+impersonation with a French accent and question the exuberance, but even
+the Fed Chairman now concedes that there are potential huge winners,
+future GMs, GEs, and Standard Oils in cyberspace.
+</p><p>
+I've seen what BeOS does, the good banker continued. With the huge
+investments in broadband, fat pipes to homes and offices everywhere, you
+have a role to play on both ends of these pipes, in the creation and
+consumption of digital media. It's hard to argue with a banker who's
+selling you your own product.
+</p><p>
+That's how we got started on the road to the IPO. And we found ourselves
+being sold our own ideas again when we began interviewing investment
+banking firms. By February of this year, the banking community was
+preparing what has become the most active IPO season ever, the Spring of
+1999. It showed in the attention span of some, but the quality of
+discussions was generally pretty high, with a good consensus on the
+risk/reward proposition to present to investors.
+</p><p>
+In the end, I was impressed by the quality, the professionalism, and
+reaction time of the best presentations. In the case of the two that
+drove our choice, within 24 hours, the banking firm came back with a
+detailed analysis of our business, its place in the landscape, its
+competition, its risks and advantages. I know it's their business to do
+this, I know they have PowerPoint and Excel templates, but faking
+intelligence in person is harder.
+</p><p>
+With all due respect to the bankers (I'll come to their part later), it
+was the analysts who did it. In the case of Volpe Brown Whelan, the lead
+firm, it was Charlie Finnie (called Mr. Charles Finnie by the veddy
+British New Economist) and his encyclopedic knowledge of the world of
+digital media and the Internet. In the case of Needham, our New
+York-based firm, it was Brent Williams and his very assertive and
+articulate command of the world of operating systems and multimedia.
+Charlie and Brent sang our song better than we ever did—and under
+their tutelage we would learn how to best present ourselves to the
+investment community.
+</p><p>
+But before we got to the pitch, we had to meet the SEC's requirements --
+that is, we had to file a prospectus and get clearance to proceed. For
+that phase of the process, see Going Public: Part II, next week.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-33.html">Issue 4-33, August 18, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-35.html">Issue 4-35, September 1, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-33.html" title="Issue 4-33, August 18, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-35.html" title="Issue 4-35, September 1, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

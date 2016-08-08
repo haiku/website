@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-45.html" title="Issue 1-45, October 16, 1996" /><link rel="next" href="Issue1-47.html" title="Issue 1-47, October 30, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-45.html" title="Issue 1-45, October 16, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-47.html" title="Issue 1-47, October 30, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-45.html">Issue 1-45, October 16, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-47.html">Issue 1-47, October 30, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-46"></a>Issue 1-46, October 23, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-46"></a>Be Engineering Insights: Writing Netcard Drivers for the BeOS</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Bradley</span> <span class="surname">Taylor</span></span></div></div></div><p>
+A lot of Be developers have expressed interest in writing drivers for all
+sorts of network media, such as ATM, 100VG, 100Base-T, alternative ISA
+and PCI Ethernet cards, PLIP, and SLIP. In fact, I've had more requests
+about doing network media drivers for the BeOS than doing anything else
+that's network-related, whether it be alternative protocol stacks, TCP
+enhancements, or application issues. It isn't what I expected, but then
+again, things never are.
+</p><p>
+In response to the great developer interest in doing network drivers,
+I'll do two things:
+</p><ul class="itemizedlist"><li><p>
+First, I'll increase the priority of developing a netcard driver
+architecture for BeOS, aiming for release in DR9.
+</p></li><li><p>
+Second, I'll start an "early adopter" program where you can get
+started with DR8. To enroll in the program, all you need to do is read
+this article and download some stuff from the Be FTP site. I won't ask
+you for money, date of birth, spending habits, or how often you pick
+your nose.
+</p></li></ul><p>
+Now, for some caveats and limitations:
+</p><ul class="itemizedlist"><li><p>
+The DR8 version of the driver architecture will only support Ethernet
+drivers or things that look like Ethernet. In other words, your driver
+had better be prepared to read and write 1514-byte packets, including
+the 14-byte Ethernet header. The header contains the 48-bit destination
+address, followed by the 48-bit source address, followed by the 16- bit
+protocol field.
+</p></li><li><p>
+A lot of things will change when the API is officially released, so
+please don't start flaming me when your code doesn't recompile or your
+binary stops working.
+</p></li><li><p>
+The interface presented here is somewhat messy. Its purpose is to get
+you started getting real work done, not to be framed, placed lovingly
+upon a wall, and admired for hours on end.
+</p></li></ul><p>
+OK, now that we have that out of the way, let's get down to business.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id503058"></a>The DR8 Version</h3></div></div></div><p>
+For the DR8 version, an Ethernet driver consists of two binaries. The
+first is the low-level device driver for the card you're interested in.
+The second is a high-level add- on, which is used to configure the card.
+For example, let's say your card is the fictional "Ackme" card. Your
+device driver would be stored in "/system/drivers/ackme", and your add-on
+would be in "/system/add-ons/net_server/ackme".
+</p><p>
+The device driver needs the following standard device driver entry
+points: <code class="function">open()</code>, <code class="function">control()</code>,
+<code class="function">read()</code>, <code class="function">write()</code>, and <code class="function">close()</code>.
+</p><ul class="itemizedlist"><li><p>
+<code class="function">open()</code>, in most cases, should always return
+<code class="constant">B_NO_ERROR</code>. The actual
+opening of the card is performed by...
+</p></li><li><p>
+...the <code class="function">control()</code> call. There are two messages for the control call:
+<code class="constant">ETHER_INIT</code> and <code class="constant">ETHER_GETADDR</code>.
+<code class="constant">ETHER_INIT</code> takes card-specific parameters
+—such as IRQ values or I/O port numbers—and attempts to open the
+card. <code class="constant">ETHER_GETADDR</code> returns the 48-bit Ethernet address associated with
+the card.
+</p></li><li><p>
+<code class="function">read()</code> blocks until a packet is received, and then fills in the input
+buffer with the packet contents (including header) and returns the size.
+</p></li><li><p>
+<code class="function">write()</code> does the opposite of <code class="function">read()</code>.
+</p></li><li><p>
+<code class="function">close()</code> does pretty much what you would expect.
+</p></li></ul><p>
+The add-on contains three entry points: <code class="function">configure()</code>, <code class="function">driver_open()</code>, and
+<code class="function">get_pretty_name()</code>.
+</p><ul class="itemizedlist"><li><p>
+<code class="function">configure()</code> is the main guts of the add-on. It's called by the
+Network preferences application, and its job is to put up a window to
+ask users how they want the card configured.
+</p></li><li><p>
+<code class="function">driver_open()</code> is called by the net server to open the driver. It
+returns a file descriptor that the net server will invoke <code class="function">ioctl()</code>,
+<code class="function">read()</code>, <code class="function">write()</code>, and <code class="function">close()</code> on.
+</p></li><li><p>
+<code class="function">get_pretty_name()</code> is called by the Network preference application to
+print a more mnemonic name for the driver, such as "3Com Etherlink II"
+rather than "3c503".
+</p></li></ul><p>
+There are a lot of details that I've left out here, but the source code
+from the FTP site should be pretty self- explanatory.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id503249"></a>The Future</h3></div></div></div><p>
+The API for the "real" architecture will be a lot cleaner than this. Most
+likely, it will be an object-oriented add-on that the net server and
+Network preferences application can both use. The add-on, in turn, may
+invoke its own device driver, but that's an implementation detail that
+only the add-on will need to know about. Therefore, some network drivers
+can be written completely as user programs. However, anything that wants
+to catch interrupts must have a device driver component.
+</p><p>
+Stay tuned for further details. In the meantime, check out
+ftp://ftp.be.com/pub/Samples/netcard_driver.tgz.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News1-46"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+The BeOS is full of lots of nifty things that make programming a breeze.
+We'd like you to think that the API presented by the system is much
+easier to use than a lot of legacy systems. Well, this is true to a
+point. And that point is what distinguishes Be, Inc. from everyone else.
+Even if the API isn't easier in some areas, we will make sure that it is
+at least well understood so that useful work can be done as painlessly as
+possible.
+</p><p>
+On BeDevTalk and comp.sys.be there has been much discussion about issues
+at as low a level as the effects of cache line contention on
+multithreaded applications, and as relevant as optimal graphics blits
+using the vertical blanking area of a graphics card.
+</p><p>
+Well, I've also received requests for some very basic information on how
+to get started using the BeOS. This week I'd like to address this very
+basic need.
+</p><p>
+"The Be Book" is very good at explaining the API of the system as it
+exists. There are now currently a number of sample programs that
+developers can look at to get started. But there doesn't necessarily
+exist a straightforward tutorial on how simple things should actually get
+done.
+</p><p>
+So... You will find such a tutorial in:
+ftp://ftp.be.com/pub/Samples/January.tgz
+</p><p>
+It's about time! Well, actually it's not, it's just a simple calendar
+program.
+</p><p>
+In this tutorial you will find things such as:
+</p><ul class="itemizedlist"><li>
+How do I create a basic GUI based application?
+</li><li>
+How do I draw to the screen?
+</li><li>
+How can I display text quickly?
+</li><li>
+How do I deal with messages?
+</li><li>
+How do I close down the application cleanly?
+</li></ul><p>
+The sample application is a simple calendar display of the month of
+January. The application itself isn't too fancy, as we don't want its
+functions to get in the way of a clear understanding of what's going on.
+But there's enough interesting stuff to make it less trivial than the
+HelloWorld application.
+</p><p>
+Most of the information in the tutorial can ultimately be found in "The
+Be Book," but this tutorial puts it together in a succinct way so that
+you don't have to go read the whole book to figure things out.
+</p><p>
+I have a particular agenda for what things will be introduced in
+tutorials in the near future, and in what order. If you have any
+requests, please feel free to e-mail me and tell me what you want
+(wadams@be.com).
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id503402"></a>From Your Bench</h3></div></div></div><p>
+Here are some recent ftp.be.com uploads that you might find interesting
+and want to employ.
+</p><p>
+Title: BeInfo<br />
+Location: ftp.be.com/pub/contrib/util/BeInfo.tgz<br />
+Author: Frederic Tessier (tessier@moebius.qc.ca)
+</p><p>
+This is a nice system info display that shows you things like memory
+used, pages, semaphores, ports, threads, teams. It also shows machine ID,
+type of CPU, clock rate, and PCI bus clock rate. The display of resource
+information is updated periodically.
+</p><p>
+Title: New games including BeTetris, XOIDS<br />
+Location: ftp://ftp.be.com/pub/contrib/games
+</p><p>
+Need I say more? Everybody needs a way to burn all those extra cycles on
+their machines. Here are a few games that will help you do this with ease.
+</p><p>
+Title: DataTypes<br />
+Location: ftp.be.com/pub/contrib/libraries/Datatypes13.tar.gz<br />
+Author: Jon Watte (hplus@ix.netcom.com)
+</p><p>
+This is one of the most powerful concepts that exists on the BeOS. The
+problem is simple: How can you translate between file types without
+having to write a whole bunch of code? This library provides a framework
+that should be used by all developers interested in integrating foreign
+data.
+</p><p>
+Jon Watte, who happens to work for Metrowerks, has developed and provided
+this library on his own time to make the BeOS incrementally better than
+what's available on other platforms. You can't go wrong using this free
+software, or at least learning from it and trying to implement your own
+framework (please don't do this).
+</p><p>
+Jon is very receptive to suggestions as to how this library can be
+improved and has been trying to get it adopted for the longest time.
+There is probably no better endorsement than from the horse's mouth, so I
+say, "Go use this thing." It will be used in future tutorials as a matter
+of course. Get used to it, feel comfortable with it, make suggestions as
+to how it can become better.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id503484"></a>The Demo Scene</h3></div></div></div><p>
+We are presently in the process of compiling a demo CD, which will be
+used by the Be demo team to show off the BeOS around the world. We have
+asked that developers wanting their software to show up on this CD make
+it available real soon. The first CD will be pressed within a week (by
+October 28). Don't panic if you can't make it for this one. There will be
+more in the future, because we always want to put our best foot forward.
+</p><p>
+If you have any ideas or votes for your favorite demos, please feel free
+to drop me e-mail and voice your opinion. You probably know as well, if
+not better than we, what really excites people about the BeOS.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-46"></a>Be Developer Talk: Masaaki Tani, Toyota Central Research &amp; Developement Laboratories, Inc.</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Masaaki</span> <span class="surname">Tani</span></span></div></div></div><p>
+I'm not a professional programmer. I'm a chemist working on organic and
+inorganic hybrid materials for a Japanese automobile company. Currently,
+I'm studying the reaction of silane compounds and the product consequent
+to such reactions.
+</p><p>
+In my laboratory I use a number of different scientific instruments,
+which output data in various formats: MS-DOS text from the X-ray diffract
+meter, CP-M unknown files from the Infrared spectrometer, USCD P-sytem(!)
+files from TG/DTA. Most modern instruments are computer-controlled, but
+some of the older instruments—the pH meter, thermometer, and so on --
+give me only DC voltage, and I have to store the data on an analog chart
+recorder.
+</p><p>
+Old or new, almost all my instruments have either a serial port or an
+analog voltage output. To manage all my instruments in a uniform way, I
+need a PC that accepts both analog data and digital data. This PC is
+called the BeBox. It has a nice "GeekPort" and many serial ports
+(including the MIDI ports—it can convert physical properties to
+musical data!). I want the BeBox to be the interpreter between my
+instruments, and to control the machines that don't naturally understand
+digital signals.
+</p><p>
+I have just received DR8 and am studying the GeekPort. My plans are only
+just forming, but here's what I'm thinking: One of my ideas as a chemist
+is to make an easy-to-use, data-collection/analysis/synthesis-control
+program. As a geek who likes music, I'd also like to make a MIDI-to-CV
+converter application that can play the antique music synthesizers I have
+(the one that don't understand MIDI signals).
+</p><p>
+Of course, the BeOS isn't perfect; I wish it could handle the 2-byte
+character codes we use to represent the Japanese language. I've heard
+that the BeOS will support Unicode in the near future. This is a start --
+but in Japan, we use JIS code on the internet, and S-JIS code on PCs and
+Macs. If the BeOS is going to compete with PCs and Macintosh in the
+Japanese market, I think it must at least support S-JIS Kanji code.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-46"></a>Be Marketing Mutterings: Recruiting</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>
+Last time I started to describe our channel strategy and promised future
+articles to elaborate on it. I haven't forgotten this promise, but, this
+time, I wanted to take a side trip into a topic that's always on our
+minds at Be: recruiting.
+</p><p>
+Startup companies tend to have two distinct recruiting modes: "Pain
+relief" and "go for it." You may not be familiar with these terms (I just
+made them up), so let me explain.
+</p><p>
+The "pain relief" mode of recruiting involves hiring people into the
+organization when the workload on people already in the company has
+attained maximum tolerable pain level. For example, if you find yourself
+waking up in the morning with your face down on your keyboard, you've
+probably reached this level. I should hasten to add that this is a rare
+occurrence at Be and, when it does happen, has occasionally resulted in
+the production of useful code, C++ being a sufficiently flexible language
+that random nocturnal movements of one's face on the keyboard during REM
+sleep can generate compilable code. "Pain relief" recruiting is partly a
+way of conserving cash during a company's formative years, mostly a
+consequence of the fact that, when you're busy, it takes longer than it
+should to hire new people.
+</p><p>
+The "go for it" mode of recruiting involves eyeballing a one, two, or
+three-year business plan, deciding that the company is destined for
+continued, solid growth, and hiring ahead of the curve to ensure that the
+growth is actually supportable.
+</p><p>
+You're probably ahead of me at this point: Be is about to enter a phase
+of "go for it" recruiting in the sales, support, and marketing areas.
+Next month, we'll be shipping Developer Release 8 of the BeOS for
+PowerMac, and "MacTech" magazine will be bundling a free copy in its
+January issue (which will also ship next month, because magazine
+publishers have a different calendar from the rest of us). Early next
+year, we'll be shipping a release of the BeOS for PowerMac targeted at a
+wider audience, not just at developers. This translates into big volumes,
+which in turn translates into the need for excellent order fulfillment,
+customer support, and technical support organizations.
+</p><p>
+Our web site will carry detailed job descriptions of positions as they
+come open; check out http://www.be.com/aboutbe/jobs/index.html if you're
+interested. During the next two months, we'll be building the support
+organizations designed to carry us through what promises to be a very
+interesting 1997.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-46"></a>Apple's Quick Rebound</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+The one-two punch of good news from Apple deserves more than a
+perfunctory cheer, it signals a new competitive stance and raises
+interesting questions for the Mac clone makers, including Motorola (who
+makes the PowerPC chips and is to supply Mac motherboards to cloners).
+Apple's numbers surprised most analysts. They expected a loss in the
+$30-60 million range. Instead, Apple posted a $25 million net profit.
+Perhaps more important, Apple's cash flow from operations amounted to
+$410 million. The next day, the company made headlines again by
+announcing some of the models Apple's COO had energetically previewed the
+week before—with surprisingly low prices. The new Performa 6400 models
+are priced several hundred dollars lower than Wintel clones with
+comparable processor speeds. The announcement was so sudden it must have
+caught some resellers off guard. This Sunday's "New York Times" offers an
+IQ test in the same J&amp;R ad: would you rather buy a 120MHz 7200 with 16 MB
+RAM, a 1.2 GB drive, and a 4X CD-ROM, or a new 200 MHz 6200 with 16 MB
+RAM, a 2.4 GB drive, 8X CD-ROM, and 28.8 Kbps modem, microphone, and
+speakers thrown in? We can expect a little scrambling here and there. The
+rumor is Marco Landi won the decision for these aggressive prices at the
+last minute. Planned or not, this is exquisite timing, right at the edge
+of the Christmas buying season. First, announce financial results showing
+Apple coming out of a tailspin. This tells potential buyers they can
+trust Apple to be around for a while. Second, blow away the old Wintel
+selling point—price. This should make for an interesting quarter.
+Writing Apple's obituary isn't new: When I first started at Apple,
+naysayers were already predicting Apple's impending demise by reason of
+lacking CP/M and 8-inch floppies—and the company's imminent
+destruction by Fortune Systems homing in on Apple with 68000-based Wang
+emulation. Not then, not now. And marketing being just as much about
+minds as things, there's reason to hope Apple is beginning to reverse its
+downward momentum.
+</p><p>
+A few interesting questions remain, though. FY 96 revenues fell about 11
+percent below the FY 95 $11 billion level, and this past quarter sales
+fell 23 percent under last years comparable level, this at time when the
+PC industry continues to experience double-digit growth rates. This could
+explain the aggressive pricing for the new models. Notwithstanding the
+dangerously naive "Win 95 = Mac 89" bumper stickers, the Macintosh had
+lost its technical edge over the Wintel machines and it was more
+expensive. This is no longer the case. It will be interesting to watch if
+and how new entrants, such as Sony and Toshiba, react and reprice their
+new 200 MHz machines and how the established home Wintel machines get
+repositioned against an aggressive 160 Mhz Performa at $1,499.
+</p><p>
+This, in turn, raises another question: What about the PowerMac clone
+makers? A few days before the latest announcement, a new Mac compatible
+maker appeared on the scene, APS, well-known in the Mac market for their
+storage devices and accessories. ("Maker" is probably a misnomer, as
+Motorola will make the motherboard and chassis for APS's clone.) The
+prices posted on their web site are not materially different from
+comparable Apple machines. Apple even appears to enjoy an advantage in
+bundling a modem and an interesting collection of software. Apple execs
+have been heard grumbling that clone makers were "cherry picking," that
+is, going for the juiciest higher-end segments of the Mac market instead
+of obediently focusing on the low end, where Apple couldn't make money.
+Things will get interesting and will test Apple's genuine will to create
+a vibrant hardware market based on the Macintosh platform. The
+conversations among Apple, Motorola, and clone makers are likely to be
+animated. Who gets the best price for processors, and by how much? Apple,
+the Motorola division making Mac motherboards, or Power Computing if they
+buy CPU chips from IBM? Besides the cost of the microprocessor, who
+manufactures the lowest cost motherboard: Apple, Motorola, Power
+Computing? We'll be watching to see whether the Mac clone market becomes
+freer or if it becomes smothered by the kind of "managed competition"
+that brought other plans to a halt.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-45.html">Issue 1-45, October 16, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-47.html">Issue 1-47, October 30, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-45.html" title="Issue 1-45, October 16, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-47.html" title="Issue 1-47, October 30, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-37.html" title="Issue 1-37, August 21, 1996" /><link rel="next" href="Issue1-39.html" title="Issue 1-39, September 4, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-37.html" title="Issue 1-37, August 21, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-39.html" title="Issue 1-39, September 4, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-37.html">Issue 1-37, August 21, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-39.html">Issue 1-39, September 4, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-38"></a>Issue 1-38, August 28, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-38"></a>Be Engineering Insights: Multiple Inheritance and the Be Application</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+Inspecting the include files for Be application development reveals a
+uniform absence of multiple inheritance. I may be the only proponent of
+multiple inheritance at Be, but there are surely others in the developer
+community. This article encourages the use of this key C++ structuring
+mechanism, while identifying certain dangers which are particular to the
+Be world.
+</p><p>
+The sources of dangers which I discuss are threads, dynamic <code class="classname">BObject</code>s, and
+C++ itself. This three-headed Hydra incapacitates unwary programs without
+warning. I have prepared a code sample, preserved in alcohol, for your
+inspection.
+</p><p>
+Be threads, integral to BeOS, provide a powerful programming methodology.
+Common within operating systems for decades, multiple control-flow is
+finally emerging for use by application writers. Unfortunately, far
+greater care is required in this environment, and knowledge of concepts
+like synchronization is crucial. Furthermore, programs run
+nondeterministically, hindering the bug search.
+</p><p>
+Like any C++ object, a <code class="classname">BObject</code> encapsulates data. However, some exhibit
+dynamic behavior beyond the semantics of the language. A <code class="classname">BWindow</code>, for
+example, has effects on the screen, the operating system, and the state
+of the team. One notable effect is the asynchronous appearance of a new
+thread. <code class="classname">BWindow</code>s also make a habit of deleting themselves.
+</p><p>
+Consider the skillful blending of the C language with a pit of vipers:
+the result could be likened to C++. Given the resulting performance,
+portability and industry support, C++ is a reasonable choice by Be.
+However, this presumes the application writer can develop immunity to the
+venom. The lack of garbage collection and the matter of object
+construction and destruction are an enduring pain.
+</p><p>
+Described superficially, multiple inheritance moves member objects into
+the list of base classes. In the following example, a <code class="classname">BLocker</code> and a
+<code class="classname">BControl</code> comprise a new class. Class <code class="classname">X</code>
+uses membership, but is unable to
+invoke the <code class="classname">BControl</code> (<code class="methodname">BControl::Invoke</code>
+is a protected function). Class <code class="classname">Y</code>
+uses multiple inheritance, successfully. The code for <code class="classname">Y</code> is better
+structured, better protected, and looks cleaner.
+</p><pre class="programlisting cpp">
+struct <span class="type">X</span> {
+  <code class="methodname">X</code>( ): <code class="varname">c</code>( <code class="methodname">BRect</code>( ), 0, 0, 0, 0, 0) {
+    <code class="varname">l</code>.<code class="methodname">Lock</code>( );
+    <code class="varname">c</code>.<code class="methodname">Invoke</code>( );    <span class="comment">// illegal!</span>
+  }
+  <code class="classname">BControl</code> <code class="varname">c</code>;
+  <code class="classname">BLocker</code> <code class="varname">l</code>;
+};
+
+struct <span class="type">Y</span>: <code class="classname">BLocker</code>, <code class="classname">BControl</code> {
+  <code class="methodname">Y</code>( ): <code class="methodname">BControl</code>( <code class="methodname">BRect</code>( ), 0, 0, 0, 0, 0) {
+    <code class="methodname">Lock</code>( );
+    <code class="methodname">Invoke</code>( );
+  }
+};
+</pre><p>
+Even if <code class="classname">X</code> were legal, the interaction of
+<code class="classname">X</code> with <code class="classname">BControl</code> and <code class="classname">BLocker</code>
+would be a mess. Pointers to all objects would have to be exchanged, and
+declarations of friendship thrown around like confetti. In C++, <code class="code">friend</code>
+destroys the distinction between <code class="code">protected</code> and <code class="code">private</code>. With <code class="code">friend</code>
+like this, who needs <code class="code">enemy</code>?
+</p><p>
+The real dividends of multiple inheritance come from data sharing within
+a subset of a larger object. This is achieved with "virtual base
+classes". The complexity of <code class="classname">BObject</code>s, and their derivatives, makes such
+structuring highly desirable.
+</p><p>
+Two classes can cooperate with a virtual class, which contains shared
+data and linkage to functions for each other's use. The degree of sharing
+is determined mutually and the name spaces do not otherwise collide, as
+would happen if a hierarchy were imposed (one class derived from the
+other). Also, a hierarchy permits sharing in one direction only.
+</p><p>
+The other way to arrange sharing between "sibling" objects is through an
+object which is derived from both classes. This approach is inferior
+because shared data in the object will migrate toward the root, again
+causing name trouble. Function linkage will be clumsy since pure virtual
+functions cannot be employed from that direction.
+</p><p>
+As promised, here is our preserved code specimen, depicting the best in
+code structure, but also foolhardy regard for the Hydra. The code is
+necessarily small for this article, but runs nicely. Finding the same
+bugs in a large-scale program is no cakewalk, as you can imagine.
+</p><pre class="programlisting cpp">
+#include      &lt;Application.h&gt;
+#include      &lt;Window.h&gt;
+#include      &lt;stdio.h&gt;
+
+class <code class="classname">V</code> {
+  <code class="methodname">V</code>( ): <code class="varname">z</code>( 1000) { }
+  protected:
+  virtual <span class="type">void</span> <code class="methodname">fm</code>( <code class="classname">BPoint</code>) {
+    <code class="function">printf</code>( "Oops!  V::fm called\n");
+  }
+  <span class="type">uint</span>  <code class="varname">z</code>;
+};
+
+class <code class="classname">W</code>: <code class="classname">BWindow</code>, virtual <code class="classname">V</code> {
+  <code class="methodname">W</code>( <code class="classname">BRect</code> <code class="parameter">r</code>): <code class="methodname">BWindow</code>( <code class="parameter">r</code>, 0, <code class="constant">B_TITLED_WINDOW</code>, 0) {
+    <code class="function">printf</code>( "W::W called (thread=%d)\n", <code class="function">find_thread</code>( 0));
+    <code class="methodname">Show</code>( );
+    <code class="function">snooze</code>( 10000000);
+    <code class="varname">u</code> = 42;
+    <code class="function">printf</code>( "W::W done (thread=%d)\n", <code class="function">find_thread</code>( 0));
+  }
+  <span class="type">void</span> <code class="methodname">FrameMoved</code>( <code class="classname">BPoint</code> <code class="parameter">p</code>) {
+    <code class="function">printf</code>( "W::FrameMoved: thread=%d, u=%d, z=%d\n",
+    <code class="function">find_thread</code>( 0), <code class="varname">u</code>, <code class="varname">z</code>);
+    <code class="function">fm</code>( <code class="parameter">p</code>);
+  }
+  <span class="type">uint</span> <code class="varname">u</code>;
+};
+
+class <code class="classname">H</code>: <code class="classname">BHandler</code>, virtual <code class="classname">V</code> {
+  <code class="methodname">H</code>( ) { }
+  <span class="type">void</span> <code class="methodname">fm</code>( <code class="classname">BPoint</code> <code class="parameter">p</code>) {
+    <code class="function">printf</code>( "H::fm: z=%d, p=", <code class="varname">z</code>); <code class="parameter">p</code>.<code class="methodname">PrintToStream</code>( );
+
+};
+
+struct <span class="type">S</span>: <code class="classname">W</code>, <code class="classname">H</code> {
+  <code class="methodname">S</code>( ): <code class="methodname">W</code>( <code class="methodname">BRect</code>( 20, 20, 90, 90)) { }
+  <code class="methodname">~S</code>( ) {
+    <code class="varname">be_app</code>-&gt;<code class="methodname">Quit</code>( );
+  }
+};
+
+struct <span class="type">A</span>: <code class="classname">BApplication</code> {
+  <code class="methodname">A</code>( ): <code class="classname">BApplication</code>( 'xyzt') { }
+  private:
+  <span class="type">void</span> <code class="methodname">ReadyToRun</code>( ) {
+    new <code class="classname">S</code>;
+  }
+  <span class="type">bool</span> <code class="methodname">QuitRequested</code>( ) {
+    return (<code class="constant">FALSE</code>);
+  }
+};
+<code class="function">main</code>( )
+{
+  <code class="classname">A</code> <code class="varname">a</code>;
+  <code class="varname">a</code>.<code class="methodname">Run</code>( );
+  return (0);
+}
+</pre><p>
+<code class="classname">V</code> represents the shared portion of a
+<code class="classname">BWindow</code> <code class="classname">W</code> and a
+<code class="classname">BHandler</code> <code class="classname">H</code>. <code class="classname">W</code> and <code class="classname">H</code>
+are bonded by the aggregate object <code class="classname">S</code>, which plays no role, except for
+startup and shutdown. Ideally, <code class="methodname">V::fm</code> is pure; for our demo, it prints a
+warning.
+</p><p>
+On startup, the program immediately creates a window which you can move.
+For the next 10 seconds, moving the window illuminates three bugs.
+</p><p>
+Firstly, <code class="methodname">W::FrameMoved</code> is being called, but the
+<code class="classname">W</code> constructor (<code class="methodname">W::W</code>) has
+not completed. There are two separate threads running in W, without any
+provision for interlocks. Even with interlocks, this scenario would make
+little sense.
+</p><p>
+Secondly, <code class="classname">W</code> is being used before fully constructed. This is often
+acceptable, but the utmost care is required. The obvious case is the
+constructor itself. The order of object construction is well-defined in
+C++ (tediously so). In our example, that care is lacking: variable <code class="varname">u</code> is
+being used before set.
+</p><p>
+Thirdly, the function <code class="methodname">V::fm</code> is being called before
+linkage to <code class="methodname">H::fm</code> has
+been established. This seems unintuitive, since <code class="classname">V</code> has been constructed
+(observe the value of <code class="varname">z</code>). But construction of <code class="methodname">H::fm</code> has not started, so
+C++ mandates no linkage. Do you feel faint? Do your limbs feel numb?
+That's the C++ venom coursing through your veins.
+</p><p>
+The `snooze' call freezes the program during an embarrassing phase of its
+initialization, for easy inspection. In a real Be app, this phase might
+be manifest on certain occasions only: the dreaded timing-sensitive bug.
+</p><p>
+When developing a Be app, it is critical to understand the dynamic nature
+of <code class="classname">BObject</code>s like <code class="classname">BWindow</code>s and
+<code class="classname">BView</code>s. Firstly, they must be created with
+the <code class="function">new</code> operator. Secondly, they <code class="function">delete</code> themselves. Therefore, an
+aggregate like <code class="classname">S</code> must contain no more than one instance of such an object.
+</p><p>
+In conclusion, the complexity of large applications in the Be environment
+can be contained by multiple inheritance. The sceptics should note that
+single inheritance must confront almost all the issues of multiple
+inheritance, while enjoying far fewer benefits. Therefore, open your
+copies of the C++ ARM, and start hacking. And beware the Hydra!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-38"></a>Be Developer Talk: Laurent Domenech, Opalis</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Laurent</span> <span class="surname">Domenech</span></span></div></div></div><p>
+Like most of the developers that have written in this column, we at
+Opalis loved the Be adventure from the first time we heard of it. Having
+worked on Windows NT, I immediately felt comfortable with the advanced
+features of the BeOS and decided that we should help and participate as
+much as possible, especially since there's a lot of French guys involved
+here...
+</p><p>
+Our speciality, networking and business systems, may not sound like the
+ideal Be target, but I'm sure the BeBox, with its high-level
+capabilities, can make a contribution in a "regular" company—it's not
+just a video/audio editing machine. (I'm also sure that the Box has a
+place in the home. That's why we're studying IHS applications, but that's
+another story...)
+</p><p>
+The first program we're developing for the BeOS is an implementation of
+OpalisRobot, our event-driven scheduler. This is a general tool that
+includes something like an extended cron. A description (and, soon, the
+first version) is available at www.opalis.com/opr_beos.html. If your
+application needs to schedule some tasks or to detect special system
+events, you won't have to rewrite yet-another- scheduler, you'll be able
+to use OpalisRobot for BeOS, probably for free.
+</p><p>
+The second project—a personal one—is IPv6 over Ethernet and ATM. I
+spend all my free time on it, and if all goes well, we should have this
+in a year. I'll certainly release some parts before, such as ATM drivers.
+This is a big challenge for me, and also for the BeBox, since some ATM
+adapters and switches can go very fast. For example, Sun just released a
+622 Mb/s adapter (of course, it does not fit on a PCI slot, unless you
+use a hammer).
+</p><p>
+Many thanks to the Be team for this exciting box. Please always stay on
+the wild side...
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id496180"></a>BeMall presentation</h3></div></div></div><p>
+BeMall is an initiative from Opalis. While working on the BeBox as
+developers, we thought it was a good idea to set up something to promote
+the BeBox and help developers sell their BeOS applications.
+</p><p>
+BeMall offers several services:
+</p><ul class="itemizedlist"><li><p>
+A repository for developer information in the Web site. You will find
+helpful information and source code in the Developer Exchange and Help
+City sections. If you're developing for the BeBox, please consider
+sharing your knowledge and code with other developers.
+</p></li><li><p>
+A repository of BeOS freeware and shareware. This is mainly for
+people who don't have storage on the Internet and want to use the
+BeMall site as a primary location for their programs. It's not our
+intention to compete with ftp.be.com or with big repository sites, but
+to be an additional site for selected files.
+</p></li><li><p>
+A registration service for shareware authors. We can also help
+authors package and market their applications.
+</p></li><li><p>
+A mail order catalog (and, soon, an Internet e-shop) for commercial
+BeOS applications and selected hardware. Right now, BeMall features the
+first ever BeOS commercial application (Metrowerks CodeWarrior) at the
+most competitive price. You can freely subscribe to our mailing list on
+the Web site.
+</p></li></ul><p>
+We have other projects such as periodic CD-ROM or a magazine, but we need
+your input! Please answer to our survey Web page at
+www.BeMall.com/survey.html.
+</p><p>
+See you soon on BeMall...
+Contact: info@BeMall.com - www.BeMall.com
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-38"></a>Be Marketing Mutterings</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>
+This Sunday, I was paying my weekly visit to Fry's Electronics in Palo
+Alto. For those of you unfamiliar with this emporium, it's a cornucopia
+of items with but one common attribute: They all appeal to geeks, nerds,
+and technofreaks. Each of the Fry's stores has a theme; the Palo Alto
+outlet is decorated to resemble a Western saloon, complete with the heads
+of several farm animals stuck onto the wall. So, gentle reader, please
+imagine the setting: bright fluorescent lights, doleful cows surveying
+the scene from their vantage points on the wall, aisle upon aisle of
+electronics and, it being early on a Sunday, very few people trudging
+around.
+</p><p>
+I round a corner, in search of an elusive cable, and bump into a former
+colleague with whom I worked at a Major Workstation Company. It's nice to
+see him; we've not seen each other for about three years. We exchange
+pleasantries and I hand him my Be business card. He raises his eyebrows
+and asks me what Be does.
+</p><p>
+"We've created a brand-new operating system and a multiprocessor computer
+and are marketing it to digital content application developers," say I.
+</p><p>
+My friend backs away, his face showing a mixture of surprise,
+apprehension, and pity. He clearly believes that my tray table is not in
+the fully locked and upright position and, after a few more pleasantries,
+we separate, each in search of the little pieces of electronics that will
+satisfy us today.
+</p><p>
+It was only later that I pondered on this brief encounter. My Fry's
+friend was not the first person to imply, or even openly state, that what
+Be is doing is crazy, or at least eccentric. Several posters to
+comp.sys.be have asked fellow netizens for their arguments in favor of
+Be, because their friends have told them that we're crazy.
+</p><p>
+We can argue that a good proof of sanity is demonstrated success.
+Definitions of success vary, but Be's includes respect for our
+technology, broad acceptance of the BeOS and low-cost MP computers
+running the BeOS, satisfied and profitable developers and happy customers
+doing cool things. We could write this into a florid mission statement,
+but.....nah!
+</p><p>
+We've reached a stage of development at which the probabilities of
+success are leaning in our favor. If we consider the reasons why
+start-ups fail, some of the most common are lack of funds, uninteresting
+technology, no clearly-identified target market, overwhelming
+competition, or a poor team. Right now, through a welcome round of
+adequate financing (using the "just in time" principle), technology that
+excites people, a market space that's large enough to be interesting yet
+small enough to be well-defined, no direct competitor (yet), and the best
+team of engineers, marketers, and support people that I've had the
+privilege to work with—things look quite positive.
+</p><p>
+We can also argue that however much a single company may appear to
+dominate, there's always at least 20% of the market that's inaccessible
+to the dominant player. That 20% comprises customers that are looking for
+something a little different, a little special, or a little more useful
+for their particularly unusual task. Our target market is that 20%:
+Unique people with unusual needs.
+</p><p>
+We could strongly debate using reductio ad absurdum: Does our protagonist
+believe that the current UNIX/Windows/MacOS trio of dominant operating
+systems will prevail for ever? Probably not. How about for 50 years?
+Seems a little too long. 20 years? Still too much. 10 years? Well... So,
+when WILL an alternative emerge? Could it be now? Could it be the BeOS?
+</p><p>
+There are other arguments, many of them founded upon the "look at the
+product and tell me if you see something special and useful" approach.
+</p><p>
+We could argue forever. Or we could get on with building the products.
+</p><p>
+Even so, people still think we're crazy.
+</p><p>
+And that makes it all the more fun.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-38"></a>The War Of Two Browsers...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+A few years ago, jaded observers said our industry had entered maturity,
+we were getting our AARP card in the mail. Without saying it in so many
+words, they meant that everything new had been invented already, life was
+going down an incrementally boring path, taking gross margins with it.
+But this was before (among other things) the phenomenal increase in
+processor power and, of course, the rise of the Internet from the Unix
+geek underground, thanks to Tim Berners-Lee's HTML.
+</p><p>
+As a result, instead of operating systems and processor wars, we now have
+the war of the two browsers. At stake is nothing less than the control of
+the huge streams of money about to be carried by Intranets and the
+Worldwide Web. For businesses, Intranets represent a new level of cost
+and flexibility in delivering client-server applications.
+</p><p>
+In many respects, the browser is a New Age incarnation of the Common User
+Access (CUA), the one client/one user interface to corporate IS resources
+that was promoted "Web aeons" ago by IBM. Netscape's genius—I should
+say Jim Clark's genius—has been to see this and go for it as only he,
+Silicon Valley money, and egos fueled by a strong dose of anti- Microsoft
+sentiment can. Said sentiment was not lost on its object, but Microsoft
+is used to it. They know how to harness the hostility and envy of others
+to their own business goals. More importantly, Microsoft understands that
+this is about control. Netscape and their allies want to take control of
+a huge portion of the computing business, one that is indeed Microsoft's
+next target after winning control of office productivity: enterprise
+computing.
+</p><p>
+The operating system is a commodity, said Netscape, the new platform is
+the browser, a cross-operating system platform at that. A new genre of
+computing is emerging on that platform, and Netscape is the drummer, not
+Microsoft.
+</p><p>
+The response was remarkable and reminds us of why Microsoft is Microsoft.
+From the Pearl Harbor anniversary speech last Fall, to the recent
+delivery of version 3.0 of Explorer, the strategy was courageous and
+insightful—and the execution flawless. This might be viewed as
+unfortunate by the many who claim Microsoft's dominance is excessive
+already, but it is a fact, nonetheless.
+</p><p>
+The latest version of Microsoft's browser looks pretty good to me. I've
+downloaded both Navigator and Explorer 3.0 versions on my home Windows 95
+system and I no longer feel Navigator to be markedly superior to
+Explorer. In many respects, I like Explorer's user interface a little
+better and I noted that it had obligingly imported my Navigator bookmarks
+for me. On the other hand, Explorer isn't available on my Mac or on other
+platforms yet. This is still a plus for Navigator.
+</p><p>
+Netscape's reaction is a mix of PR and legal maneuvering, with
+accusations of illegal conduct strenuously denied by Microsoft in a
+well-detailed response on their Web site. We'll see. In the meantime, the
+war of the two browsers continues and it might take a very logical turn
+in the next few months. Microsoft, on the one hand, wants to disable
+Netscape's platform story. The solution? Integrate the browser into the
+platform, instead of making it an application. Make it pervasive—make
+it disappear. Explorer 4.0 might do just that, with a minuscule RAM
+footprint (at least compared to the 4 to 5 megabytes currently required);
+the rest of the code consists of DLLs inside the system.
+</p><p>
+More importantly, Explorer functions are instantiated as an API, allowing
+programmers to integrate these functions into their code. The story
+sounds good. Based on the progress thus far, the implementation ought to
+be convincing. Netscape had the right idea, and here is our
+implementation integrated in Windows 97. Netscape, on the other hand, has
+decided to get into the operating system business with a subsidiary
+called Navio. Reportedly, Navio will write an OS for televisions,
+telephones and other communicating appliances. This OS will run a much
+smaller version of Navigator. So now, Netscape is more or less trying to
+do what Microsoft failed to execute with Modular Windows and Windows at
+Work, two interesting stories for connoisseurs. We'll have to see what
+Microsoft's reply to that one will be. A version of Pegasus, their
+upcoming PDA OS, for appliances?
+</p><p>
+In the meantime, we happen to agree with Microsoft: the browser ought to
+be integrated in the system and presented to application programmers as
+an API, a class library. After all, several years ago, we didn't call our
+"user shell" a Finder or a File Manager, we called it a browser.
+</p><p>
+This is the process we're starting with DR8, available Real Soon Now.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-37.html">Issue 1-37, August 21, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-39.html">Issue 1-39, September 4, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-37.html" title="Issue 1-37, August 21, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-39.html" title="Issue 1-39, September 4, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

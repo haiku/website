@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Support Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheSupportKit_Overview.html" title="The Support Kit" /><link rel="prev" href="TheSupportKit_Overview_Introduction.html" title="Introduction" /><link rel="next" href="TLS_Overview.html" title="Thread Local Storage" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheSupportKit_Overview_Introduction.html" title="Introduction"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheSupportKit_Overview.html" title="The Support Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TLS_Overview.html" title="Thread Local Storage"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Support Kit</div></div><div id="headerB">Prev: <a href="TheSupportKit_Overview_Introduction.html">Introduction</a>  Up: <a href="TheSupportKit_Overview.html">The Support Kit</a>  Next: <a href="TLS_Overview.html">Thread Local Storage</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheSupportKit_Archiving"></a>Archiving</h2></div></div></div><p>
+The BeOS provides a protocol for archiving and unarchiving objects. When
+you archive an object, you record its state into a
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a> that can be
+sent to another application, flattened and saved as a file, cached in
+memory, and so on. Unarchiving does the opposite: It takes a
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+archive and turns it into a functioning object.
+</p><p>
+The archiving protocol is represented by the
+<a class="link" href="BArchivable.html" title="BArchivable"><code class="classname">BArchivable</code></a>
+class. Many of the BeOS classes inherit from
+<a class="link" href="BArchivable.html" title="BArchivable"><code class="classname">BArchivable</code></a>.
+If you create your own classes
+and want them to be archivable, they, too, must inherit (directly or
+indirectly) from
+<a class="link" href="BArchivable.html" title="BArchivable"><code class="classname">BArchivable</code></a>.
+</p><p>
+The sections below tell you (1) how to archive and unarchive an object,
+and (2) what you have to do to create an archivable class of your own.
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheSupportKit_Archiving_And_Unarchiving"></a>Archiving and Unarchiving</h3></div></div></div><p>
+To archive a <a class="link" href="BArchivable.html" title="BArchivable"><code class="classname">BArchivable</code></a>
+object, you create a <a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+and pass it to the object's
+<a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a>
+function. You can then send the message to some other
+application or, as shown below, write out its flattened form to a file so
+you can resurrect it later:
+</p><pre class="programlisting example cpp"><span class="comment">/* Archiving and storing a BButton, sans error checks.*/</span>
+<code class="classname">BMessage</code> <code class="varname">message</code>;
+<span class="type">BButton *</span><code class="varname">button</code>;
+<code class="classname">BFile</code> <code class="varname">file</code>;
+
+<code class="varname">button</code>-&gt;<code class="methodname">Archive</code>(&amp;<code class="varname">message</code>);
+<code class="varname">file</code>.<code class="methodname">SetTo</code>(<code class="varname">filename</code>, <code class="constant">B_CREATE_FILE</code> | <code class="constant">B_WRITE_ONLY</code>);
+<code class="varname">message</code>.<code class="methodname">Flatten</code>(&amp;<code class="varname">file</code>);</pre><p>
+To unarchive, you find an archived object and pass it to the object's
+constructor, or, if you don't know the object's class (we'll talk more
+about that later), you pass it to
+<a class="link" href="TheSupportKit_Functions.html#instantiate_object" title="instantiate_object()"><code class="function">instantiate_object()</code></a>.
+The constructor case is simple:
+</p><pre class="programlisting example cpp"><code class="classname">BMessage</code> <code class="varname">msg</code>;
+<code class="classname">BFile</code> <code class="varname">f</code>;
+<span class="type">BButton *</span><code class="varname">button</code>;
+
+<code class="varname">file</code>.<code class="methodname">SetTo</code>(<code class="varname">filename</code>, <code class="constant">B_READ_ONLY</code>);
+<code class="varname">msg</code>.<code class="methodname">Unflatten</code>(&amp;<code class="varname">f</code>);
+<code class="varname">button</code> = new <code class="classname">BButton</code>(&amp;<code class="varname">msg</code>);</pre><p>
+Invoking the constructor is fine if you know the class of the object that
+you're unarchiving. But consider the case where you're unarchiving an
+object from a message that you didn't create. For example, let's say your
+application displays a view that's imported from a foreign archive (sent
+from another application, or loaded from an add-on). To unarchive the
+"unknown" object, you pass the
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+archive to
+<a class="link" href="TheSupportKit_Functions.html#instantiate_object" title="instantiate_object()"><code class="function">instantiate_object()</code></a>,
+and then cast the returned object (a
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BArchivable</code></a>*
+) to some:
+</p><pre class="programlisting example cpp"><span class="type">BView *</span><code class="varname">foreignView</code>;
+<code class="varname">foreignView</code> = dynamic_cast&lt;<span class="type">BView *</span>&gt;(<code class="function">instantiate_object</code>(&amp;<code class="parameter">msg</code>));</pre><p>
+You still don't know the class of the object, and you won't be able to
+invoke any functions that it defines, but at least
+</p><p>
+Each archivable class implements
+<a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a> to record the object
+properties (data members, "owned" objects, etc.) that the class defines.
+These properties are added as fields to the argument
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>. Most
+implementations look something like this:
+</p><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">MyClass</code>::<code class="methodname">Archive</code>(<span class="type">BMessage *</span><code class="parameter">archive</code>, <span class="type">bool</span> <code class="parameter">deep</code>)
+{
+   <span class="emphasis"><em><code class="classname">baseClass</code></em></span>::<code class="methodname">Archive</code>(<code class="parameter">archive</code>, <code class="parameter">deep</code>);<a id="archiving.baseclass"></a><span class="callout"><img src="./images/callouts/1.png" alt="1" /></span>
+
+   <code class="parameter">archive</code>-&gt;<code class="methodname">AddInt32</code>("MyClass::Property1", <code class="varname">property1</code>);<a id="archiving.addproperty"></a><span class="callout"><img src="./images/callouts/2.png" alt="2" /></span>
+   <code class="parameter">archive</code>-&gt;<code class="methodname">AddString</code>("MyClass::Property2", <code class="varname">property2</code>);
+   ...
+
+   if ( <code class="varname">deep</code><a id="archiving.deep"></a><span class="callout"><img src="./images/callouts/3.png" alt="3" /></span>) {
+      <code class="classname">BMessage</code> <code class="varname">childArchive</code>;
+      for (<span class="type">int32</span> <code class="varname">i</code>; <code class="varname">i</code> &lt; <code class="methodname">CountChildren</code>(); <code class="varname">i</code>++)
+         if ( <code class="methodname">childAt</code>(<code class="varname">i</code>)-&gt;<code class="methodname">Archive</code>(&amp;<code class="varname">childArchive</code>, <code class="varname">deep</code>) == <code class="constant">B_OK</code> )
+            <code class="parameter">archive</code>-&gt;<code class="methodname">AddMessage</code>("children", &amp;<code class="varname">childArchive</code>);
+   }
+
+   <code class="parameter">message</code>-&gt;<code class="methodname">AddString</code>("add_on", "application/x-CodeForThisObject");<a id="archiving.sig"></a><span class="callout"><img src="./images/callouts/4.png" alt="4" /></span>
+}</pre><div class="calloutlist"><table summary="Callout list"><tr><td><a href="#archiving.baseclass"><span class="callout"><img src="./images/callouts/1.png" alt="1" /></span></a> </td><td><p>First, call the inherited version of
+<a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a>.
+This gives all the
+ancestor classes a shot at recording the properties they define.</p><pre class="programlisting example cpp"><code class="classname">BArchivable</code>::<code class="methodname">Archive</code>(<code class="parameter">archive</code>, <code class="parameter">deep</code>);</pre></td></tr><tr><td><a href="#archiving.addproperty"><span class="callout"><img src="./images/callouts/2.png" alt="2" /></span></a> </td><td><p>Next, record the properties that are defined by this class. How the
+message fields are named and typed are up to the class itself. It's a
+good idea to give your fields some sort of prefix to keep them from
+colliding with the Be-defined fields (whose names are, unfortunately, a
+bit haphazard).</p></td></tr><tr><td><a href="#archiving.deep"><span class="callout"><img src="./images/callouts/3.png" alt="3" /></span></a> </td><td><p><a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a>'s
+second argument indicates whether the archive should be
+deep or shallow. In a deep archive, a class archives any objects that it
+"owns"—roughly speaking, these are the objects that the class is
+responsible for deleting. The archivable children must also inherit from
+<a class="link" href="BArchivable.html" title="BArchivable"><code class="classname">BArchivable</code></a>.</p></td></tr><tr><td><a href="#archiving.sig"><span class="callout"><img src="./images/callouts/4.png" alt="4" /></span></a> </td><td><p>This line records the signature of the library that contains the
+object's code. If you want your object to be loaded dynamically by some
+other application, you should add the library signature under the string
+field <code class="varname">add_on</code>. You don't have to supply a library if you don't care
+about dynamic loading.</p></td></tr></table></div><p>If a class doesn't have any data to add to the archive, it doesn't need
+to implement
+<a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheSupportKit_Archiving_Instantiability"></a>Instantiability</h3></div></div></div><p>To be unarchivable, a class must implement a constructor that takes a
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+archive as an argument, and it must implement the static
+<a class="link" href="BArchivable.html#BArchivable_Instantiate" title="Instantiate()"><code class="methodname">Instantiate()</code></a>
+function.</p><p>A typical unarchiving constructor calls the inherited version, and then
+reconstitutes the properties that were added when the object was archived:</p><pre class="programlisting example cpp"><code class="classname">MyClass</code>::<code class="methodname">MyClass</code>(<span class="type">BMessage *</span><code class="parameter">archive</code>) : <span class="emphasis"><em><code class="classname">baseClass</code></em></span>(<code class="parameter">archive</code>)
+{
+   <span class="type">int32</span>    <code class="varname">i</code>;
+   <code class="classname">BMessage</code> <code class="varname">msg</code>;
+   <span class="type">BArchivable*</span> <code class="varname">obj</code>;
+
+   <code class="parameter">archive</code>-&gt;<code class="methodname">FindInt32</code>("MyClass::Property1", &amp;<code class="varname">property1</code>);
+   <code class="parameter">archive</code>-&gt;<code class="methodname">FindString</code>("MyClass::Property2", &amp;<code class="varname">property2</code>);
+   ...
+
+   while ( <code class="varname">data</code>-&gt;<code class="methodname">FindMessage</code>("children", <code class="varname">i</code>++, &amp;<code class="varname">msg</code>) == <code class="constant">B_OK</code>){
+      <code class="varname">obj</code> = <code class="function">instantiate_object</code>(&amp;<code class="varname">msg</code>);
+      <code class="varname">childList</code>-&gt;<code class="methodname">AddItem</code>(dynamic_cast&lt;<span class="type">ChildClass *</span>&gt;(<code class="varname">obj</code>));
+   }
+}</pre><p>
+The class must also implement the static
+<a class="link" href="BArchivable.html#BArchivable_Instantiate" title="Instantiate()"><code class="methodname">Instantiate()</code></a>
+function (declared in <a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a>),
+which needn't do much more than call the
+archive-accepting constructor, and return a
+<a class="link" href="BArchivable.html#BArchivable_Archive" title="Archive()"><code class="methodname">Archive()</code></a> pointer. For
+example:
+</p><pre class="programlisting example cpp"><span class="type">BArchivable*</span> <code class="classname">TheClass</code>::<code class="methodname">Instantiate</code>(<span class="type">BMessage*</span> <code class="parameter">archive</code>)
+{
+   if ( <code class="function">validate_instantiation</code>(<code class="parameter">archive</code>, "TheClass"))
+      return new <code class="classname">TheClass</code>(<code class="parameter">archive</code>);
+   return <code class="constant">NULL</code>;
+}</pre><p>
+The <a class="link" href="TheSupportKit_Functions.html#validate_instantiation" title="validate_instantiation()"><code class="function">validate_instantiation()</code></a>
+function, provided by the Support Kit, is a safety check that makes sure the
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+object is, in fact, an archive for the named class.
+</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheSupportKit_Archiving_Unarchiving"></a>Unarchiving</h3></div></div></div><p>
+To unarchive a <a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>,
+you call the
+<a class="link" href="TheSupportKit_Functions.html#instantiate_object" title="instantiate_object()"><code class="function">instantiate_object()</code></a>
+function. When passed a
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a> archive,
+<a class="link" href="TheSupportKit_Functions.html#instantiate_object" title="instantiate_object()"><code class="function">instantiate_object()</code></a>
+looks for the first name in the "class" array, finds the
+<a class="link" href="BArchivable.html#BArchivable_Instantiate" title="Instantiate()"><code class="methodname">Instantiate()</code></a>
+function for that class, and calls it. Failing that, it picks another name from the "class" array
+(working up the inheritance hierarchy) and tries again.
+</p><p>
+<a class="link" href="TheSupportKit_Functions.html#instantiate_object" title="instantiate_object()"><code class="function">instantiate_object()</code></a>
+returns a <a class="link" href="BArchivable.html" title="BArchivable"><code class="classname">BArchivable</code></a> instance. You then use
+<code class="function">cast_as()</code> to cast the object to a more interesting class. A typical
+unarchiving session looks something like this:
+</p><pre class="programlisting example cpp"><span class="comment">/* archive is the BMessage that we want to turn into an object.
+* In this case, we want to turn it into a BView.
+*/</span>
+<span class="type">BArchivable *</span><code class="varname">unarchived</code> = <code class="function">instantiate_object</code>(<code class="varname">archive</code>);
+if ( <code class="varname">unarchived</code> ) {
+   <span class="type">BView *</span><code class="varname">view</code> = <code class="function">cast_as</code>(<code class="varname">unarchived</code>, <code class="classname">BView</code>);
+   if ( <code class="varname">view</code> ) {
+      . . .
+   }
+}</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheSupportKit_Archiving_Dynamic_Loading"></a>Dynamic Loading</h3></div></div></div><p>
+It's not defined how a host will interact with an unarchived instance of
+a previously unknown class. It's up to the parties to define entry points
+and protocols, just as it is for any other add-on module.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheSupportKit_Overview_Introduction.html">Introduction</a>  Up: <a href="TheSupportKit_Overview.html">The Support Kit</a>  Next: <a href="TLS_Overview.html">Thread Local Storage</a> </div><div id="footerB"><div id="footerBL"><a href="TheSupportKit_Overview_Introduction.html" title="Introduction"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheSupportKit_Overview.html" title="The Support Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TLS_Overview.html" title="Thread Local Storage"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

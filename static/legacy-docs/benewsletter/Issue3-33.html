@@ -1,0 +1,915 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-32.html" title="Issue 3-32, August 12, 1998" /><link rel="next" href="Issue3-34.html" title="Issue 3-34, August 26, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-32.html" title="Issue 3-32, August 12, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-34.html" title="Issue 3-34, August 26, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-32.html">Issue 3-32, August 12, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-34.html">Issue 3-34, August 26, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-33"></a>Issue 3-33, August 19, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-33"></a>Be Engineering Insights: Fun with Threads, Part 2</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pavel</span> <span class="surname">Císler</span></span></div></div></div><p>
+In the first part of this article we discussed fire-and- forget threads.
+These are pretty straightforward, with a very simple setup. You'll
+definitely want to have read that article before continuing. You can find
+it at:
+</p><p>
+<a class="xref" href="Issue3-32.html#Engineering3-32" title="Be Engineering Insights: Fun with Threads, Part 1">Be Engineering Insights: Fun with Threads, Part 1</a>
+</p><p>
+Usually, though, you'll use threads that interact more with the world
+around them and need some level of synchronization. In our next example
+we'll implement a simple mouse-tracking thread that can be used for, say,
+implementing a nice button class. I'm sure you've done this before—you
+override MouseDown and keep looping until the user lets go of the mouse
+button. You animate your button, pressing it whenever the mouse tracks
+into its rectangle.
+</p><p>
+All is well, except that the rest of your window is not getting any
+updates, pulse tasks of views aren't being called, etc.—not
+surprising, since in the <code class="methodname">MouseDown()</code> you blocked the entire window thread.
+You could use the Pulse calls, keep a tracking state in your button and
+track it by getting pulse events. That's a little messy though. You have
+to require pulse events for the view, but you don't really need them
+unless you're actually tracking the button, and you end up wasting cycles.
+</p><p>
+A better way to fix this is by spawning a thread that takes care of the
+mouse tracking asynchronously, allowing the rest of your window to be
+live. This thread is still pretty autonomous—it can delete itself when
+you're done pressing and clean up its state, etc. It will, however, have
+to access the button it's tracking—state owned by a different thread.
+Let's see how to do that properly. This time I'll write the <code class="classname">Button</code> class
+itself first and while I'm writing it I'll be able to decide on a
+convenient interface with the mouse-tracking thread:
+</p><pre class="programlisting cpp">
+class <code class="classname">SomeButton</code> : public <code class="classname">BControl</code> {
+public:
+  <code class="methodname">SomeButton</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>, <span class="type">const char *</span><code class="parameter">name</code>, <span class="type">uint32</span> <code class="parameter">resizeMask</code>,
+    <span class="type">uint32</span> <code class="parameter">flags</code>)
+    :  <code class="classname">BControl</code>(<code class="parameter">frame</code>, <code class="parameter">name</code>, "", 0, <code class="parameter">resizeMask</code>, <code class="parameter">flags</code>),
+       <code class="varname">pressing</code>(<code class="constant">false</code>)
+    {}
+
+  <span class="type">void</span> <code class="methodname">MouseDown</code>(<code class="classname">BPoint</code>)
+    {
+      <code class="classname">MouseDownThread</code>::<code class="methodname">TrackMouse</code>(
+        <code class="varname">this</code>, &amp;<code class="methodname">DoneTracking</code>, &amp;<code class="methodname">Track</code>);
+    }
+
+  <span class="type">void</span> <code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+    {
+      <span class="comment">// draw pressed/normal button based on value of</span>
+      <span class="comment">// &lt;pressing&gt;, left as an exercise for the reader</span>
+    }
+
+private:
+  <span class="type">bool</span> <code class="varname">pressing</code>;
+
+  friend <span class="type">void</span> <code class="methodname">DoneTracking</code>(<span class="type"><code class="classname">BView</code> *</span><code class="parameter">view</code>, <code class="classname">BPoint</code> <code class="parameter">point</code>);
+  friend <span class="type">void</span> <code class="methodname">Track</code>(<span class="type"><code class="classname">BView</code> *</span><code class="parameter">view</code>, <code class="classname">BPoint</code> <code class="parameter">point</code>, <span class="type">uint32</span>);
+};
+</pre><p>
+Note the simple <code class="methodname">MouseDown()</code> call. The
+<code class="methodname">TrackMouse()</code> call then targets two
+callback functions:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="methodname">DoneTracking</code>(<span class="type"><code class="classname">BView</code> *</span><code class="parameter">view</code>, <code class="classname">BPoint</code> <code class="parameter">point</code>)
+{
+  <span class="type"><code class="classname">SomeButton</code> *</span><code class="varname">button</code> = dynamic_cast&lt;<span class="type"><code class="classname">SomeButton</code> *</span>&gt;(<code class="parameter">view</code>);
+  <code class="varname">button</code>-&gt;<code class="varname">pressing</code> = <code class="constant">false</code>;
+  <code class="varname">button</code>-&gt;<code class="methodname">Invalidate</code>();
+  if (<code class="varname">button</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Contains</code>(<code class="parameter">point</code>)) {
+    <code class="varname">button</code>-&gt;<code class="methodname">SetValue</code>(!<code class="varname">button</code>-&gt;<code class="methodname">Value</code>());
+    <code class="varname">button</code>-&gt;<code class="methodname">Invoke</code>();
+  }
+}
+
+<span class="type">void</span>
+<code class="methodname">Track</code>(<span class="type"><code class="classname">BView</code> *</span><code class="parameter">view</code>, <code class="classname">BPoint</code> <code class="parameter">point</code>, <span class="type">uint32</span> <span class="comment">/*unusedButtons*/</span>)
+{
+  <span class="type"><code class="classname">SomeButton</code> *</span><code class="varname">button</code> = dynamic_cast&lt;<span class="type"><code class="classname">SomeButton</code> *</span>&gt;(<code class="parameter">view</code>);
+  <span class="type">bool</span> <code class="varname">newPressing</code> = <code class="varname">button</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Contains</code>(<code class="parameter">point</code>);
+  if (<code class="varname">newPressing</code> != <code class="varname">button</code>-&gt;<code class="varname">pressing</code>) {
+    <code class="varname">button</code>-&gt;<code class="varname">pressing</code> = <code class="varname">newPressing</code>;
+    <code class="varname">button</code>-&gt;<code class="methodname">Invalidate</code>();
+  }
+}
+</pre><p>
+That looks like an easy enough way to set up control tracking. <code class="methodname">MouseDown()</code>
+just calls <code class="classname">MouseDownThread</code>::<code class="methodname">TrackMouse()</code>, which passes in the functions
+used to track the button as the mouse moves in an out of the control and
+as the user lets go of the buttons.
+</p><p>
+Here's what the tracking thread will be like:
+</p><pre class="programlisting cpp">
+class <code class="classname">MouseDownThread</code> : private <code class="classname">ThreadPrimitive</code> {
+public:
+  static <span class="type">void</span> <code class="methodname">TrackMouse</code>(<span class="type"><code class="classname">BView</code> *</span><code class="parameter">view</code>,
+    <span class="type">void</span> (*<code class="parameter">donePressing</code>)(<span class="type"><code class="classname">BView</code> *</span>, <code class="classname">BPoint</code>),
+    <span class="type">void</span> (*<code class="parameter">pressing</code>)(<span class="type"><code class="classname">BView</code> *</span>, <code class="classname">BPoint</code>, <span class="type">uint32</span>) = 0,
+    <span class="type">bigtime_t</span> <code class="parameter">pressingPeriod</code> = 100000)
+    {
+      <span class="type"><code class="classname">MouseDownThread</code> *</span><code class="varname">thread</code> = new <code class="classname">MouseDownThread</code>(
+        <code class="parameter">view</code>, <code class="parameter">donePressing</code>, <code class="parameter">pressing</code>, <code class="parameter">pressingPeriod</code>);
+
+      if (<code class="varname">thread</code>-&gt;<code class="methodname">Go</code>() != <code class="constant">B_OK</code>)
+        <span class="comment">// failed to launch, clean up</span>
+        delete <code class="varname">thread</code>;
+    }
+
+protected:
+  <code class="methodname">MouseDownThread</code>(<code class="varname"><code class="classname">BView</code> *</code><code class="parameter">view</code>,
+    <span class="type">void</span> (*<code class="parameter">donePressing</code>)(<span class="type"><code class="classname">BView</code> *</span>, <code class="classname">BPoint</code>),
+    <span class="type">void</span> (*<code class="parameter">pressing</code>)(<span class="type"><code class="classname">BView</code> *</span>, <code class="classname">BPoint</code>, <span class="type">uint32</span>),
+    <span class="type">bigtime_t</span> <code class="parameter">pressingPeriod</code>)
+     :  <code class="classname">ThreadPrimitive</code>(<code class="constant">B_LOW_PRIORITY</code>, "MouseTracker"),
+        <code class="varname">view</code>(<code class="parameter">view</code>),
+        <code class="varname">donePressing</code>(<code class="parameter">donePressing</code>),
+        <code class="varname">pressing</code>(<code class="parameter">pressing</code>),
+        <code class="varname">pressingPeriod</code>(<code class="parameter">pressingPeriod</code>)
+    {
+      <code class="varname">parent</code> = <code class="varname">view</code>-&gt;<code class="methodname">Window</code>();
+    }
+
+  virtual <span class="type">void</span> <code class="methodname">Run</code>()
+    {
+      for (;;) {
+        if (!<code class="varname">parent</code>-&gt;Lock())
+          break;
+
+        <span class="type">uint32</span> <code class="varname">buttons</code>;
+        <code class="classname">BPoint</code> <code class="varname">location</code>;
+        <code class="varname">view</code>-&gt;<code class="methodname">GetMouse</code>(&amp;<code class="varname">location</code>, &amp;<code class="varname">buttons</code>, <code class="constant">false</code>);
+        if (!<code class="varname">buttons</code>) {
+          (*<code class="varname">donePressing</code>)(<code class="varname">view</code>, <code class="varname">location</code>);
+          <code class="varname">parent</code>-&gt;<code class="methodname">Unlock</code>();
+          break;
+        }
+
+        if (<code class="varname">pressing</code>)
+          (*<code class="varname">pressing</code>)(<code class="varname">view</code>, <code class="varname">location</code>, <code class="varname">buttons</code>);
+
+        <code class="varname">parent</code>-&gt;<code class="methodname">Unlock</code>();
+        <code class="function">snooze</code>(<code class="varname">pressingPeriod</code>);
+      }
+
+      delete <code class="varname">this</code>;
+      ASSERT(!"should not be here");
+    }
+
+private:
+  <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">parent</code>;
+  <span class="type"><code class="classname">BView</code> *</span><code class="varname">view</code>;
+  <span class="type">void</span> (*<code class="varname">donePressing</code>)(<span class="type"><code class="classname">BView</code> *</span>, <code class="classname">BPoint</code>);
+  <span class="type">void</span> (*<code class="varname">pressing</code>)(<span class="type"><code class="classname">BView</code> *</span>, <code class="classname">BPoint</code>, <span class="type">uint32</span>);
+  <span class="type">bigtime_t</span> <code class="varname">pressingPeriod</code>;
+  <span class="type">thread_id</span> <code class="varname">threadID</code>;
+
+  typedef <span class="type">ThreadPrimitive</span> <span class="type">_inherited</span>;
+};
+</pre><p>
+Where is the synchronization? In the <code class="methodname">Run</code> call we lock the window of the
+button we're operating on. If the window is gone when we wake up from our
+snooze, the call to Lock will fail and the thread will exit, deleting
+itself.
+</p><p>
+Note one very important point in this class. I could have omitted the
+<code class="code"><span class="type"><code class="classname">BWindow</code>*</span> <code class="varname">parent</code></code>
+member—saving the <code class="code"><span class="type"><code class="classname">BView</code>*</span> <code class="varname">view</code></code> would have been enough
+-- and I can get the window from the view by calling <code class="code"><code class="varname">view</code>-&gt;<code class="methodname">Window</code>()</code>,
+right? WRONG!
+</p><p>
+Think again about what happens when the tracking thread wakes up from the
+snooze and the window our button is in has closed for some reason in the
+mean time. The view pointer will probably point to some random memory,
+possibly a corpse of the original button view. Trying to call Window on
+it will most likely crash.
+</p><p>
+<code class="methodname">Lock()</code> is designed to handle being called on Loopers that have been
+deleted, so if the window is gone, the lock will fail and we'll just
+bail. In our mouse tracking example this would usually not happen. A
+window is not likely to go away while you're tracking the mouse, so
+you'll have a subtle, hard to reproduce bug waiting to fire when you're
+doing that important demo.
+</p><p>
+Using <code class="methodname">Lock()</code> on the spawning thread like this is the most common way of
+synchronizing. It serves two purposes: it serves as a lock for the shared
+state, allowing the thread to access state in the spawning thread in a
+mutually exclusive way; and it allows the thread to exit in a reasonably
+clean way after the spawning thread dies itself.
+</p><p>
+In some cases synchronization like this is not good enough. You may, for
+some reason, need to quit the thread as a part of deleting the spawning
+thread. For one thing, the lock synchronization shown above doesn't cover
+one obscure case: if, while you're snoozing, your spawning window is
+deleted and a similar one is created in its place, aliased to the same
+pointer value. This is practically impossible in our mouse tracking
+sample, but may be very well possible if the thread heartbeat is longer
+in some other application. You may use a more sophisticated locking
+technique, involving a <code class="classname">BMessenger</code>—a messenger-based lock has a more
+elaborate locking check and handles an aliasing issue like this
+completely.
+</p><p>
+You may however have different reasons to have a synchronization model
+where the spawning thread also quits the new thread in, say, it's
+destructor. This time we'll imagine a thread that calls a function object
+periodically (the function object can be configured to traverse the disk,
+a few entries each time it is called, deleting old query files that are
+no longer needed). Again, if function objects are too much for you, you
+can imagine a concrete subclass of this example thread that gets all the
+parameters and the function pointer passed as arguments and stores them
+until the time comes to do the work inside <code class="methodname">Run()</code>.
+</p><pre class="programlisting cpp">
+class <code class="classname">OwnedPeriodicThread</code> : private <code class="classname">ThreadPrimitive</code> {
+public:
+  static <code class="classname">OwnedPeriodicThread</code> *<code class="methodname">Launch</code>(<span class="type"><code class="classname">FunctionObject</code> *</span><code class="parameter">functor</code>,
+    <span class="type">bigtime_t</span> <code class="parameter">period</code>, <span class="type">int32</span> <code class="parameter">priority</code> = <code class="constant">B_LOW_PRIORITY</code>,
+    <span class="type">const char *</span><code class="parameter">name</code> = 0)
+    {
+      <span class="type"><code class="classname">OwnedPeriodicThread</code> *</span><code class="varname">thread</code> = new <code class="classname">OwnedPeriodicThread</code>(
+        <code class="parameter">functor</code>, <code class="parameter">period</code>, <code class="parameter">priority</code>, <code class="parameter">name</code>);
+
+      if (<code class="varname">thread</code>-&gt;<code class="methodname">Go</code>() != <code class="constant">B_OK</code>) {
+        <span class="comment">// failed to launch, clean up</span>
+        <code class="varname">thread</code>-&gt;<code class="methodname">Die</code>();
+        return 0;
+      }
+      return <code class="varname">thread</code>;
+    }
+
+  virtual <code class="methodname">~OwnedPeriodicThread</code>()
+    {
+      for (;;) {
+        <code class="varname">requestedToQuit</code> = <code class="constant">true</code>;
+        if (<code class="varname">readyToQuit</code>)
+          break;
+        <code class="function">snooze</code>(<code class="varname">period</code>);
+      }
+      delete <code class="varname">functor</code>;
+    }
+
+private:
+  <span class="type">void</span> <code class="methodname">Die</code>()
+    {
+      <code class="varname">readyToQuit</code> = <code class="constant">true</code>;
+      delete <code class="varname">this</code>;
+    }
+
+  <code class="methodname">OwnedPeriodicThread</code>(<span class="type"><code class="classname">FunctionObject</code> *</span><code class="parameter">functor</code>,
+    <span class="type">bigtime_t</span> <code class="parameter">period</code>, <span class="type">int32</span> <code class="parameter">priority</code>, <span class="type">const char *</span><code class="parameter">name</code>)
+    :  <code class="classname">ThreadPrimitive</code>(<code class="parameter">priority</code>, <code class="parameter">name</code>),
+       <code class="varname">functor</code>(<code class="parameter">functor</code>),
+       <code class="varname">requestedToQuit</code>(<code class="constant">false</code>),
+       <code class="varname">readyToQuit</code>(<code class="constant">false</code>)
+    {}
+
+  virtual <code class="varname">void</code> <code class="methodname">Run</code>()
+    {
+      for (;;) {
+        if (<code class="varname">requestedToQuit</code>) {
+          <code class="varname">readyToQuit</code> = <code class="constant">true</code>;
+          break;
+        }
+
+        (*<code class="varname">functor</code>)();
+          <span class="comment">// do the work</span>
+
+        <code class="function">snooze</code>(<code class="varname">period</code>);
+      }
+    }
+
+  <span class="type"><code class="classname">FunctionObject</code> *</span><code class="varname">functor</code>;
+    <span class="comment">// functor owned by the thread</span>
+  <span class="type">bigtime_t</span> <code class="varname">period</code>;
+    <span class="comment">// the time period at which we call functor</span>
+
+  <span class="comment">// a pair of synchronization bits</span>
+  <span class="type">bool</span> <code class="varname">requestedToQuit</code>;
+  <span class="type">bool</span> <code class="varname">readyToQuit</code>;
+};
+</pre><p>
+In this case the static <code class="methodname">Launch()</code> call actually returns a pointer to the
+thread object. Also the destructor is public. It is up to the thread
+owner—the spawner—to delete the thread once all the work is done.
+The destructor waits for the next Run task to go through its next loop
+and realize its work is over.
+</p><p>
+If the task of the thread represented by the function object needs to
+access the spawning window, it may do so by locking down its own copy of
+the window pointer. It will always know that as long as the window got
+locked it is the same window, because the window wouldn't quit until it
+stopped the thread. And in that case we wouldn't be halfway through
+invoking the work task—the function object, right?
+</p><p>
+You could further enhance this thread by having the worker function or
+function object return when it finishes or when an error condition occurs.
+In that case you would just set the <code class="varname">readyToQuit</code> to
+<code class="constant">true</code>, break out of the <code class="methodname">Run()</code>
+loop, and wait patiently for the spawner to delete it.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id726930"></a>More Thread Ideas</h3></div></div></div><p>
+The <span class="application">Tracker</span> uses a lot of "run later" tasks for things like selecting the
+parent folder when you choose Open Parent in a window, after the child
+window closes and the parent opens. This just begs using a separate
+thread; you're closing the current window—the same window that belongs
+to the thread you're executing in. Sometime in the near future the parent
+window will open because you sent the <span class="application">Tracker</span> app a message to open it.
+The best way to do this is to spawn a thread that waits around until the
+parent window opens and then waits until it finds the right folder in it
+and selects it for you.
+</p><p>
+To make using threads like this easier, the <span class="application">Tracker</span> uses a task queue
+class—a thread and a list of tasks that wait to be executed
+periodically until they are done. This saves the overhead of creating a
+separate thread for each of them and of synchronizing the deletion of
+each of them individually—you just delete the entire task queue when
+the Tracker is quitting. The task queue has different flavors of tasks --
+one-shot, periodic, periodic with a timeout, etc. Too bad the class
+doesn't fit in here—maybe I'll be able to sneak it into a future
+Newsletter article.
+</p><p>
+The <span class="application">Tracker</span> also uses the task queue to consolidate different tasks that
+require a common, expensive action. To give you an example, the <span class="application">Tracker</span>
+has to update an icon of a file once it gets a node monitor notification
+about some attribute change. When mimeset runs, for instance, the <span class="application">Tracker</span>
+gets several node monitors for the single mimeset call—one about each
+icon being added, one about a type being set, one about a preferred app
+being set, etc. Each of these has an effect on what the resulting icon
+will be.
+</p><p>
+If the <span class="application">Tracker</span> responded to each of them, the icon would update four
+times. Instead, a task is enqueued for each of them, waiting around for a
+fraction of a second. If another task for the same attribute change gets
+generated, it merges with the previous one and only one update is
+performed. The worker function objects that make this happen have two
+virtual calls:
+</p><pre class="programlisting cpp">
+virtual <span class="type">bool</span>
+  <code class="methodname">CanAccumulate</code>(<span class="type">const<code class="classname">AccumulatingFunctionObject</code> *</span>) const;
+virtual <span class="type">void</span>
+  <code class="methodname">Accumulate</code>(<span class="type"><code class="classname">AccumulatingFunctionObject</code> *</span>);
+</pre><p>
+These two virtuals are overridden in a specific flavor of a function
+object, implementing a method of determining whether two scheduled tasks
+can be coalesced into one and actually preforming the coalescing. Using a
+scheme like this dramatically reduces the ammount of updates performed
+when mimeset or other attribute modifying operation is in action.
+</p></div><p>
+This concludes the second part of this article. At this point I wish to
+thank the Metrowerks compiler for kindly interpreting specialized
+templates and converting them into an executable binary for me. Further,
+I would like to note that this article was written mostly in Gobe
+Productive and using it has been a truly enjoyable experience.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-33-2"></a>Be Engineering Insights: Pixel Packing Mama</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+As I write this I'm sitting by a pool typing on a Sony Vaio portable,
+which is of course running the BeOS. We've come a long way, baby! Why by
+a pool? Because my daughter Yasmin is taking swimming lessons, and seeing
+her and the other kids flailing around helplessly (with adult
+supervision) reminds me of my state of mind sometimes when I'm
+programming.
+</p><p>
+So I'm here thinking, you know, I bet every developer in the world is
+wondering how to do something as esoteric as easily read and write pixels
+in a <code class="classname">BBitmap</code>. So I queried at least one developer as to how they would
+write 16-bit pixels in a <code class="classname">BBitmap</code>, and thus an article was born.
+</p><p>
+In this article I would like to explore two issues. One is pixel formats,
+and the other is how to do a whole bunch of work without bothering the
+app_server.
+</p><p>
+For the first topic, let's look at some pixel formats typically found in
+the BeOS. In the file
+<code class="filename">GraphicsDefs.h</code> you'll find this big enum that
+contains color_space types that we support or at least define. You'll
+find these among them:
+</p><pre class="screen">
+<code class="constant">B_CMAP8</code>
+<code class="constant">B_RGB32</code>
+<code class="constant">B_RGB15</code>
+</pre><p>
+There are many others, but I'll focus on these for now. Are they big
+endian, little endian, what component goes where, and why should you care?
+</p><p>
+You'll also find the <code class="classname">BBitmap</code> object in the Kits. This is the well-defined
+object used to display bitmap images in the BeOS interface. When you
+construct a <code class="classname">BBitmap</code>, you give it a size, one of these defined color
+spaces, and a couple of flags to do stuff we won't worry about at the
+moment.
+</p><pre class="programlisting cpp">
+<code class="methodname">BBitmap</code>(<code class="classname">BRect</code> <code class="parameter">bounds</code>, <span class="type">color_space</span> <code class="parameter">depth</code>,
+  <span class="type">bool</span> <code class="parameter">accepts_views</code> = <code class="constant">false</code>, <span class="type">bool</span> <code class="parameter">need_contiguous</code> = <code class="constant">false</code>);
+</pre><p>
+The Kits also supply some ways to draw a <code class="classname">BBitmap</code>
+in a <code class="classname">BView</code>. There are
+eight different calls, but we'll concentrate on one for now:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="methodname">DrawBitmap</code>(<span class="type">const<code class="classname">BBitmap</code> *</span><code class="parameter">aBitmap</code>,
+  <code class="classname">BRect</code> <code class="parameter">srcRect</code>, <code class="classname">BRect</code> <code class="parameter">dstRect</code>);
+</pre><p>
+With this method you take a <code class="classname">BBitmap</code> and you tell it what part of it you
+want to display where in the <code class="classname">BView</code>. Nothing could be simpler. End of
+article...
+</p><p>
+But, in the interest of filling space, let's say you want to copy one
+<code class="classname">BBitmap</code> to another. Or even more interesting, you have some random bits
+lying around that aren't necessarily in a <code class="classname">BBitmap</code> right now, but you want
+to copy them into a <code class="classname">BBitmap</code> quickly and easily. First let's do some name
+wrangling. You can find all this code online at:
+</p><p>
+ftp://ftp.be.com/pub/samples/r3/interface_kit/pixelbuff.zip
+</p><pre class="programlisting cpp">
+class <code class="classname">PixelBuffer</code>
+{
+public:
+      <code class="methodname">PixelBuffer</code>(<span class="type">void *</span><code class="parameter">data</code>, <span class="type">color_space</span>, <span class="type">int32</span> <code class="parameter">width</code>,
+        <span class="type">int32</span> <code class="parameter">height</code>, <span class="type">int32</span> <code class="parameter">bytesperRow</code>);
+  virtual <code class="methodname">~PixelBuffer</code>();
+
+
+  virtual <span class="type">void</span> <code class="methodname">SetPixel</code>(
+     <span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>, <span class="type">constrgb_color &amp;</span>);
+  virtual <span class="type">void</span> <code class="methodname">GetPixel</code>(
+     <span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>, <span class="type">rgb_color &amp;</span>);
+
+
+  <span class="type">int32</span>  <code class="methodname">Width</code>()  {return <code class="varname">fWidth</code>;};
+  <span class="type">int32</span>  <code class="methodname">Height</code>() {return <code class="varname">fHeight</code>;};
+  <span class="type">int32</span>  <code class="methodname">BytesPerRow</code>()  {return <code class="varname">fBytesPerRow</code>;};
+  <span class="type">color_space</span>  <code class="methodname">CSpace</code>() {return <code class="varname">fColorSpace</code>;};
+
+
+protected:
+  <span class="type">void   *</span><code class="varname">fData</code>;
+  <span class="type">int32</span>   <code class="varname">fWidth</code>;
+  <span class="type">int32</span>   <code class="varname">fHeight</code>;
+  <span class="type">int32</span>   <code class="varname">fBytesPerRow</code>;
+  <span class="type">color_space</span>  <code class="varname">fColorSpace</code>;
+private:
+};
+</pre><p>
+This is a convenience class that can be used to represent any pixel
+buffer, including <code class="classname">BBitmap</code>s,
+<code class="classname">BDirectWindow</code> frame buffers, or just random
+chunks of memory. The most interesting thing it does is allow you to set
+and get pixels using the coordinates and an <span class="type">rgb_color</span> structure. So, if
+you want to copy from anywhere to anywhere else, just do this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="function">copyPixels</code>(<span class="type"><code class="classname">PixelBuffer</code> *</span><code class="parameter">dest</code>, <span class="type"><code class="classname">PixelBuffer</code> *</span><code class="parameter">source</code>)
+{
+  <span class="type">int</span> <code class="varname">numRows</code> = <code class="parameter">source</code>-&gt;<code class="methodname">Height</code>();
+  <span class="type">int</span> <code class="varname">numCols</code> = <code class="parameter">source</code>-&gt;<code class="methodname">Width</code>();
+
+
+  for (<span class="type">int</span> <code class="varname">row</code> = 0; <code class="varname">row</code> &lt; <code class="varname">numRows</code>; <code class="varname">row</code>++)
+  {
+    for (<span class="type">int</span> <code class="varname">col</code> = 0; <code class="varname">col</code> &lt; <code class="varname">numCols</code>; <code class="varname">col</code>++)
+    {
+      <span class="type">rgb_color</span> <code class="varname">aColor</code>;
+      <code class="parameter">source</code>-&gt;<code class="methodname">GetPixel</code>(<code class="varname">col</code>, <code class="varname">row</code>, <code class="varname">aColor</code>);
+      <code class="parameter">dest</code>-&gt;<code class="methodname">SetPixel</code>(<code class="varname">col</code>, <code class="varname">row</code>, <code class="varname">aColor</code>);
+    }
+  }
+}
+</pre><p>
+You go row by row, pixel by pixel copying stuff as you need to and you're
+done, right? This is probably the slowest method on earth, but as long as
+the <code class="methodname">GetPixel()</code> and <code class="methodname">SetPixel()</code>
+methods do what they're supposed to, it will
+always be correct, no matter what the source and destination color spaces
+are. And of course you'd want to throw in some error checking, boundary
+constraints, and the like.
+</p><p>
+So what do these two methods have to look like? First, we'll introduce
+one more method. For any given location in a pixel buffer, we need to be
+able to find the pointer in memory that represents the start of that
+pixel. In all the cases we'll deal with here, pixels can align to byte
+boundaries. If we had 1-, 2-, or 4-bit colors, things would be slightly
+different. So here's a method to find the pointer to any particular pixel:
+</p><pre class="programlisting cpp">
+<span class="type">void *</span> <code class="methodname">GetPointer</code>(<span class="type">constint32</span>, <span class="type">constint32</span>);
+
+<span class="type">void *</span>
+<code class="classname">PixelBuffer</code>::<code class="methodname">GetPointer</code>(<span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>)
+{
+  <span class="type">void *</span><code class="varname">retValue</code>=0;
+  switch (<code class="methodname">CSpace</code>())
+  {
+    case <code class="constant">B_CMAP8</code>:
+    {
+      <span class="type">uint8</span> <code class="varname">indexValue</code>;
+      <code class="varname">retValue</code> = &amp;((<span class="type">uint8 *</span>)<code class="methodname">Data</code>())[<code class="parameter">y</code> * <code class="methodname">BytesPerRow</code>() + <code class="parameter">x</code>];
+    }
+    break;
+
+
+    case <code class="constant">B_RGB15</code>:
+    case <code class="constant">B_RGBA15</code>:
+    case <code class="constant">B_RGB16</code>:
+    {
+      <span class="type">uint32</span> <code class="varname">offset</code> = (<code class="parameter">y</code>*<code class="methodname">BytesPerRow</code>() / 2)+<code class="parameter">x</code>;
+      <code class="varname">retValue</code> = &amp;((<span class="type">uint16 *</span>)<code class="methodname">Data</code>())[<code class="varname">offset</code>];
+    }
+    break;
+
+
+    case <code class="constant">B_RGB32</code>:
+    case <code class="constant">B_RGBA32</code>:
+    {
+      <span class="type">uint32</span> <code class="varname">offset</code> = (<code class="parameter">y</code>*<code class="methodname">BytesPerRow</code>() / 4)+<code class="parameter">x</code>;
+      <code class="varname">retValue</code> = &amp;((<span class="type">uint32 *</span>)<code class="methodname">Data</code>())[<code class="varname">offset</code>];
+    }
+    break;
+  }
+  return <code class="varname">retValue</code>;
+}
+</pre><p>
+With this method in hand, we can now do the <code class="methodname">GetPixel()</code> call:
+</p><pre class="programlisting cpp">
+union <span class="type">colorUnion</span> { <span class="type">rgb_color</span> <code class="varname">color</code>; <span class="type">uint32</span> <code class="varname">value</code>; };
+
+<span class="type">void</span>
+<code class="classname">PixelBuffer</code>::<code class="methodname">GetPixel</code>(
+  <span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>, <span class="type">rgb_color &amp;</span><code class="parameter">aColor</code>)
+const
+{
+  switch (<code class="methodname">ColorModel</code>())
+  {
+    case <code class="constant">B_CMAP8</code>:
+    {
+      <span class="type">constcolor_map  *</span><code class="varname">colors</code> = <code class="function">system_colors</code>();
+
+
+      <span class="type">uint8</span> <code class="varname">indexValue</code>;
+      <code class="varname">indexValue</code> = *((<span class="type">uint8 *</span>)<code class="methodname">GetPointer</code>(<code class="parameter">x</code>,<code class="parameter">y</code>));
+
+
+      <code class="varname">aColor</code> = <code class="varname">colors</code>-&gt;<code class="varname">color_list</code>[<code class="varname">indexValue</code>];
+    }
+    break;
+
+    case <code class="constant">B_RGB15</code>:
+    case <code class="constant">B_RGBA15</code>:
+    case <code class="constant">B_RGB16</code>:
+    {
+      <span class="type">uint16</span> <code class="varname">indexValue</code> = *((<span class="type">uint16 *</span>)<code class="methodname">GetPointer</code>(<code class="parameter">x</code>,<code class="parameter">y</code>));
+      <code class="varname">aColor</code>.<code class="varname">blue</code> = (<code class="varname">indexValue</code> &amp; 0x1f) &lt;&lt; 3;  <span class="comment">// low 5 bits</span>
+      <code class="varname">aColor</code>.<code class="varname">green</code> = ((<code class="varname">indexValue</code> &gt;&gt; 5) &amp;0x1f) &lt;&lt; 3;
+      <code class="varname">aColor</code>.<code class="varname">red</code> = ((<code class="varname">indexValue</code> &gt;&gt; 10) &amp;0x1f) &lt;&lt; 3;
+      <code class="varname">aColor</code>.<code class="varname">alpha</code> = 255;
+    }
+    break;
+
+
+    case <code class="constant">B_RGB32</code>:
+    case <code class="constant">B_RGBA32</code>:
+    {
+      <span class="type">colorUnion</span> <code class="varname">aUnion</code>.<code class="varname">value</code> = *((<span class="type">uint32 *</span>)<code class="methodname">GetPointer</code>(<code class="parameter">x</code>,<code class="parameter">y</code>));
+      <code class="varname">aColor</code> = <code class="varname">aUnion</code>.<code class="varname">color</code>;
+    }
+    break;
+  }
+}
+</pre><p>
+What's going on here? We use the <code class="methodname">GetPointer()</code> method to find the location
+of the pixel in the buffer, then we handle color conversion. That's
+really the crux of this and the <code class="methodname">SetPixel()</code> calls. They do color conversion
+so you don't have to worry about it. These conversions can be as optimal
+as you like. The <code class="methodname">SetPixel()</code> method is similar but reversed, so check the
+code online for that one.
+</p><p>
+Of course, <code class="methodname">SetPixel()</code> and <code class="methodname">GetPixel()</code>
+are the absolute minimum set of
+operations required to build any graphics system. Once you have these you
+can do primitive drawing of all kinds, but that's not what we're after
+here.
+</p><p>
+One more thing I'm after, though, is being able to draw icons into a
+<code class="classname">BBitmap</code> in a nice, efficient manner. I'll
+start by saying <code class="classname">BBitmap</code> objects
+are the greatest thing on earth, but they're not free. They are allocated
+in shared memory so that both the app_server and your application can
+have access to them. This saves on copying.
+</p><p>
+Since they're allocated in shared memory, that means they are of a
+minimum page size, which is 4K. If you have hundreds of icons in an
+application, the easiest thing to do is to create a <code class="classname">BBitmap</code> for each one
+of them. When it's time to display them, you call <code class="classname">BView</code>::<code class="methodname">DrawBitmap()</code> and
+you're done with it. However, having hundreds of little 4K-minimum
+bitmaps, even if the actual number of pixels is a paltry 1024, may not be
+the most efficient thing to do.
+</p><p>
+You could load all your little icons into a single <code class="classname">BBitmap</code> and keep track
+of their relative locations within it, and use the <code class="methodname">DrawBitmap()</code> method
+that takes a source rect and a destination rect. But let's say you want
+to go one step further. Your interface uses an offscreen bitmap for
+flicker-free updates. Many times you want to draw various icons into this
+offscreen <code class="classname">BBitmap</code>, and then display it to the screen. Well, the
+<code class="classname">PixelBuffer</code> object gives us the means to do the following:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="function">DisplayIcon</code>(<span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>,
+  <span class="type"><code class="classname">PixelBuffer</code> *</span><code class="parameter">dest</code>, <span class="type"><code class="classname">PixelBuffer</code> *</span><code class="parameter">icon</code>)
+{
+  <span class="type">int</span> <code class="varname">numRows</code> = <code class="parameter">icon</code>-&gt;<code class="methodname">Height</code>();
+  <span class="type">int</span> <code class="varname">numCols</code> = <code class="parameter">icon</code>-&gt;<code class="methodname">Width</code>();
+
+
+  for (<span class="type">int</span> <code class="varname">row</code> = 0; <code class="varname">row</code> &lt; <code class="varname">numRows</code>; <code class="varname">row</code>++)
+  {
+    for (<span class="type">int</span> <code class="varname">col</code> = 0; <code class="varname">col</code> &lt; <code class="varname">numCols</code>; <code class="varname">col</code>++)
+    {
+      <span class="type">rgb_color</span> <code class="varname">aColor</code>;
+      <code class="parameter">icon</code>-&gt;<code class="methodname">GetPixel</code>(<code class="varname">col</code>, <code class="varname">row</code>, <code class="varname">aColor</code>);
+      <code class="parameter">dest</code>-&gt;<code class="methodname">SetPixel</code>(<code class="parameter">x</code>+<code class="varname">col</code>, <code class="parameter">y</code>+<code class="varname">row</code>, <code class="varname">aColor</code>);
+    }
+  }
+}
+
+#define <code class="constant">img_width</code> 25
+#define <code class="constant">img_height</code> 11
+<span class="type">unsigned char</span> <code class="varname">img_bits</code>[] = {<span class="comment">/* actual data goes here */</span>};
+
+<span class="type"><code class="classname">PixelBuffer</code> *</span><code class="varname">icon</code> =
+  new <code class="classname">PixelBuffer</code>(<code class="varname">img_bits</code>, <code class="constant">B_CMAP8</code>, <code class="constant">img_width</code>,
+    <code class="constant">img_height</code>, <code class="constant">img_width</code>);
+</pre><p>
+To display the icon on the offscreen display at any
+location, do this:
+</p><pre class="programlisting cpp">
+<code class="function">DisplayIcon</code>(10,10, <code class="varname">fOffscreenBitmap</code>, <code class="varname">icon</code>);
+</pre><p>
+In this way you can create an icon that takes exactly as much memory as
+you need it to, which saves on memory resources. The second benefit is
+that you don't actually have to talk to the app_server in order for your
+icon to be drawn into your pixel buffer. And why not talk to the
+app_server? Because it's a busy team and you would probably rather not
+make requests if you really don't have to.
+</p><p>
+There's no real savings when all you're doing is drawing a single icon.
+As soon as you copy the bits for the icon, you'll be displaying the
+<code class="classname">BBitmap</code>, but when you want to batch the drawing of multiple icons, this
+will really help. That's typically the case when you're using an
+offscreen buffer to reduce flicker in your display.
+</p><p>
+The third benefit of this method is that the destination pixel buffer
+could easily represent the frame buffer of your display. In that case,
+when you draw your icon, it's on screen. No further processing or copying
+is required. This is a tremendous boost if your icons happen to be frames
+of decoded video that you're trying to display in real time. And by the
+by, who needs a copy constructor or operator = on <code class="classname">BBitmap</code> when you have
+these mechanisms.
+</p><p>
+So, there you have it. A little bit of abstraction on what a bitmap is, a
+little bit of color conversion, and you have a basic framework for
+flexibly dealing with bitmaps. There are many ways these methods can be
+optimized. For instance, you could add some methods to the <code class="classname">PixelBuffer</code>
+like this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="methodname">SetPixel8</code>(<span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>, <span class="type">uint8</span> <code class="parameter">color</code>);
+<span class="type">void</span> <code class="methodname">SetPixel15</code>(<span class="type">constint32</span> <code class="parameter">x</code>, <span class="type">constint32</span> <code class="parameter">y</code>, <span class="type">uint16</span> <code class="parameter">color16</code>);
+</pre><p>
+The same goes for the <code class="methodname">GetPixel()</code> methods.
+That way, the <code class="methodname">copyPixels()</code>
+function and the <code class="methodname">DisplayIcon()</code> functions can use an optimized interface
+based on the color space of the source and destination. You could also
+optimize the <code class="methodname">copyPixels()</code> method by introducing a row at a time copy into
+the <code class="classname">PixelBuffer</code> object that is optimized in a similar fashion as the
+<code class="methodname">SetPixel8()</code> and <code class="methodname">SetPixel15()</code>
+methods. Once you have that, your life will be
+better, the sun will shine brighter, and all will be right with the world.
+</p><p>
+You can probably imagine other convenient things that can be done, like
+alpha blending and other point operations. But that's another story. I
+think I've been on the stage too long, so I'll get off now.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-33"></a>The European Dream</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Hans</span> <span class="surname">Speijer</span></span></div></div></div><p>
+It takes more than a web site to make a company truly international.
+Sometimes you have to leave cyberspace and touch down in the real world.
+This is often the time when a computer company realizes it needs a
+presence where the market is. Jean-Louis Gassée understood this when he
+asked Jean Calmon to start a Be Europe office in 1994. The wisdom of this
+decision is borne out by the size of the European software market—$37
+billion in 1997.
+</p><p>
+In 1997 EITO/IDC estimated that in Y2K there would be 41 million
+households with a PC, and 19 million would be connected to the Internet.
+This means that a company relying exclusively on the Internet for its
+sales and advertising would not be reaching more then 50 percent of its
+potential customers in Europe. Even if the average BeOS user is more net
+savvy than the average Windows 98 user, the a virtual presence is still
+essential if you want to sell products in Europe.
+</p><p>
+Europe is also significant in software development, with many
+high-quality software products and engineers to offer. In fact, 26% of
+all registered BeOS developers, 37% of current BeWare entries, and 52% of
+the Master Award winners are from Europe. To name just a few prominent
+European developers: Attila Mezei (2 Master Awards and 2 Honorable
+Mentions), Maarten Hekkelman (1 Master Award and 1 Honorable Mention) and
+Marco Nelissen (1 Master Award and 7 BeWare entries).
+</p><p>
+In addition to its developer community, Europe has active user and
+hobbyist communities. One example of this is the demo scene that
+originated on the Commodore 64 and later boomed on the Commodore Amiga
+and the PC. These demo coders, musicians, and graphic artists became
+important contributors to the gaming and multimedia industries. And they
+took their experience and beloved systems with them into their
+professional lives.
+</p><p>
+Our first mission at Be Europe is to get as many shipping BeOS
+applications as possible. The BeOS platform needs applications to attract
+users. The more applications that show the power of the BeOS, the more
+copies of the BeOS we will sell, and the bigger the market for BeOS
+software developers. To help bring more applications to market we will
+assist current BeOS developers in any way we can. In addition, we're
+contacting companies in the multimedia sector about developing on the
+BeOS.
+</p><p>
+There's also lot we can do for non-European developers who want to sell
+their products in Europe. If you are one of them, keep us up to date in
+your project status and tell us where and when you need help. This goes
+for companies as well as for individual developers.
+</p><p>
+Our second mission is to build European distribution channels. Although
+the web is a good way to get products into customers' hands, many people
+(especially in Europe) are used to going to a shop, talking to a
+salesperson, looking at all the boxes, and playing with some demo
+systems. Not only do we need to get the BeOS into these shops, but we
+also need to make sure that people will be able to buy third-party
+products in the same shops. We've begun to explore the different channels
+and will gradually build indirect distribution, especially with the
+availability of a larger public BeOS release and more user-ready
+commercial applications in the near future.
+</p><p>
+Our third and final mission is to spread BeOS awareness in Europe. We do
+this by keeping close contact with the press, going to trade shows and
+conferences, and adding a good healthy dose of evangelism. In addition to
+our own activities on behalf of the BeOS, we owe thanks to our many
+supporters who speak positively about the BeOS; word of mouth is as good
+-- or maybe even better than—classical marketing. People often have
+more confidence in a friend's pitch about the virtues of a product than
+in an ad they see in the paper. To get the word out, we'll be on the road
+a lot, showing the BeOS at universities and informal gatherings of
+technology enthusiasts.
+</p><p>
+Not everything smells of roses and the streets are not paved with gold.
+We deal with more then 30 different countries, more than 15 different
+languages, and at least 9 significantly different cultures. In some
+countries the law even prevents us from putting the BeOS on the shelves
+if we don't have packaging and manuals in the native language, and many
+people will not buy a product that is not localized to their own language
+in any case.
+</p><p>
+We are only a small team (currently four persons), and we're all
+multitasking—but the Be spirit burns brightly in all of us. Let us
+know how you're doing and help us spread the BeOS gospel in Europe.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-33"></a>Developers Workshop: The Slave of Duty</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id728767"></a><a id="id728769"></a>Q:</td><td><p>
+I've spent a decade stuffing the <code class="command">find</code>,
+<code class="command">grep</code>, <code class="command">awk</code>, and <code class="command">sed</code> syntax into
+the tips of my fingers. Steadfast and faithful, I like the shell; I feel
+a communion with the ancients in the necropsy of a diff. But how do I
+open a file from the command line? Of course I understand that I can
+invoke an application by name, but I concede that the <span class="application">Tracker</span>'s preferred
+app intelligence is greater than my <code class="envar">$PATH</code>.
+I want the <span class="application">Tracker</span> to open the
+file for me. How?
+</p><p>
+-- Mabel Stanley, Penzance, England
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Wander not, Mabel. The short answer: Type
+</p><pre class="screen">
+/system/Tracker filename
+</pre><p>
+at the command line prompt and your file will open. But, you object,
+that's a lot to type and hard-coded pathnames make you queasy? And when
+your tiny alabaster fingers slip while typing ".alias" such that you open
+the non-existent ".alais" instead, the <span class="application">Tracker</span> doesn't object to your
+wrong tree up-barking, but bounds slobberingly to the front gate with no
+slippers in its mouth? And, what's more, you are an orphan? Then try
+spoon feeding the app roster.
+</p><p>
+The little app shown below, which we'll call "open", calls on the app
+roster to open the files that are passed as command line arguments. The
+heart of the code is the <code class="methodname">Launch()</code> call;
+<code class="methodname">Launch()</code> finds and launches the
+preferred app for each file. This works fine for files, but it doesn't
+work for directories, so we catch the directories that are passed in and
+open them with <span class="application">Tracker</span> (i.e. a directory is
+opened as a <span class="application">Tracker</span> folder
+window). The code is small; you can fit the entire thing in your mouth:
+</p><pre class="programlisting cpp">
+#include &lt;Roster.h&gt;
+#include &lt;Application.h&gt;
+#include &lt;signal.h&gt;
+
+<span class="type">int</span> main(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>)
+{
+  <span class="type">int</span> <code class="varname">n</code>;
+  <span class="type">entry_ref</span> <code class="varname">ref</code>;
+  <code class="classname">BEntry</code> <code class="varname">entry</code>;
+  <span class="type">status_t</span> <code class="varname">err</code>;
+  <span class="type">char *</span><code class="varname">arv</code>[1];
+  <code class="classname">BApplication</code>("application/x-open");
+
+  if (<code class="parameter">argc</code> == 1) {
+    <code class="function">printf</code>("Usage: open &lt;file1&gt; &lt;file2&gt; &lt;file3&gt; ...\n");
+    return -1;
+  }
+
+  <code class="function">signal</code>(<code class="constant">SIGINT</code>, <code class="constant">SIG_IGN</code>);
+
+  for (<code class="varname">n</code> = 1; <code class="varname">n</code> &lt; <code class="parameter">argc</code>; <code class="varname">n</code>++) {
+    <code class="function">get_ref_for_path</code>(<code class="parameter">argv</code>[<code class="varname">n</code>], &amp;<code class="varname">ref</code>);
+    <code class="varname">entry</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">ref</code>, <code class="constant">false</code>);
+
+    if (<code class="varname">entry</code>.<code class="methodname">IsDirectory</code>()) {
+      <code class="varname">arv</code>[0] = <code class="function">strdup</code>(<code class="parameter">argv</code>[<code class="varname">n</code>]);
+      <code class="varname">err</code> = <code class="varname">be_roster</code>-&gt;<code class="methodname">Launch</code>("application/x-vnd.Be-TRAK",
+        1, <code class="varname">arv</code>);
+      <code class="function">free</code>(<code class="varname">arv</code>[0]);
+    }
+    else
+      <code class="varname">err</code>=<code class="varname">be_roster</code>-&gt;<code class="methodname">Launch</code>(&amp;<code class="varname">ref</code>);
+
+    if (<code class="varname">err</code> != <code class="constant">B_OK</code> &amp;&amp; <code class="varname">err</code> != <code class="constant">B_ALREADY_RUNNING</code>)
+      <code class="function">printf</code>("open: %s\n", <code class="function">strerror</code>(<code class="varname">err</code>));
+  }
+  return 0;
+}
+</pre><p>
+The only line that needs an explanation is the <code class="function">signal()</code>
+call:
+</p><pre class="programlisting cpp">
+#include &lt;signal.h&gt;
+...
+  <code class="function">signal</code>(<code class="constant">SIGINT</code>, <code class="constant">SIG_IGN</code>);
+</pre><p>
+This tells <code class="command">open</code> to ignore
+<span class="keysym">Control</span>+<span class="keycap">C</span>. We don't actually care that the
+signal affects <code class="command">open</code> itself, but we do care about how a
+<span class="keysym">Control</span>+<span class="keycap">C</span> from
+the command line affects an app that's launched with <code class="command">open</code>. For the
+launched app inherits <code class="command">open</code>'s stdio descriptors and signal handlers, and
+thus it is that
+<span class="keysym">Control</span>+<span class="keycap">C</span>
+will kill the launched app if we don't tell the
+handler to ignore it.
+</p><p>
+When you launch <code class="command">open</code>, it does its thing and then dies—you don't have
+to heave it into the shell background (i.e. you don't have to "$ open
+file &amp;"). However, you should use <span class="application">FileTypes</span>
+to set <code class="command">open</code> to be a
+"Background App". This will prevent <code class="command">open</code> from (briefly) appearing as an
+icon in the <span class="application">DeskBar</span>. You should also set it to be "Multiple Launch", just
+in case (of something that isn't worth describing).
+</p><p>
+How is <code class="command">open</code> different from invoking <code class="filename">/system/Tracker</code>? Error handling,
+mainly. If you try to open a non-existent file (or a file that doesn't
+want to be opened for whatever reason), <code class="command">open</code> will tell you about it.
+And for the scopophiliac, "open" lets you see the normally-suppressed
+<code class="function"><code class="function">printf</code>()</code> messages that are generated by the launched app. Fun you betcha
+sam.
+</p></td></tr></tbody></table></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-33"></a>Amiga Rumors...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Lately, I've received several e-mail messages asking Amiga-related
+questions. Is it true we're going to rewrite the AmigaOS? Gateway
+"acquired" the Amiga—what is our relationship with Gateway?
+</p><p>
+As to the first one, no, we're not going to rewrite the AmigaOS.
+Personally, I don't think it needs rewriting. From the very beginning,
+it's been a modern OS. I remember how we feared its impact at Apple when
+the Amiga first came out in 1986. Multitasking, great graphics, sound,
+animation, and video. This was a gifted baby, and the Commodore family
+promptly adopted it.
+</p><p>
+To make a long and sad story short, in spite of the Amiga achieving sales
+in the vicinity of 5 million units, Commodore failed to invest in its
+future, then went belly up. The Amiga was sold to Escom, a German
+company, and later to Gateway when Escom closed shop.
+</p><p>
+To us at Be, the Amiga was an inspiration because of its audio and video
+capabilities. Also, we drew a distinction between Commodore and the
+Amiga, which investors didn't always do. I remember times during our fund
+raising when the mention of Amiga as a model drew alarmed looks. Telling
+them they were wrong wasn't really an option. Nevertheless, because of
+our old Amiga connection, I still have a license plate that reads AMIGA
+96—given to me when we introduced the BeBox.
+</p><p>
+So, as rumors often do, the BeOS/Amiga rumors have a foundation. We
+always liked the Amiga and were happy to see Gateway adopt it. This is a
+strong company and their interest in new approaches to new media—as
+with the Destination PC—creates a nice potential cultural fit for the
+Amiga heritage.
+</p><p>
+As to the second question—about a BeOS-Gateway relationship—the
+recent availability of the BeOS on Intel-based PCs logically prompts
+sensible questions about Be, the AmigaOS, and Gateway.
+</p><p>
+Does this mean that Gateway is going to announce tomorrow a BeOS-based
+Amiga computer? That would be nice, but I doubt it. Speaking only for Be,
+combining two operating systems—or if you prefer, two sets of APIs --
+looks like a major technical challenge. If the Amiga heritage isn't
+maintained in some way, the result of such a marriage is not an Amiga --
+you might as well buy a straight PC. If, on the other hand, BeOS
+applications don't run on the new hybrid, it's a problematic proposition
+for Be developers.
+</p><p>
+In any case, I can't remember an instance when combining two sets of very
+different APIs resulted in success. At first glance, combining the Amiga
+and Be cultures and technologies looks like a nice, almost natural idea.
+Unfortunately, though, while some crossbreeding produces stronger
+hybrids, I fear that this one might disappoint.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-32.html">Issue 3-32, August 12, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-34.html">Issue 3-34, August 26, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-32.html" title="Issue 3-32, August 12, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-34.html" title="Issue 3-34, August 26, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

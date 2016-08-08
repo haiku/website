@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-36.html" title="Issue 1-36, August 14, 1996" /><link rel="next" href="Issue1-38.html" title="Issue 1-38, August 28, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-36.html" title="Issue 1-36, August 14, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-38.html" title="Issue 1-38, August 28, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-36.html">Issue 1-36, August 14, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-38.html">Issue 1-38, August 28, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-37"></a>Issue 1-37, August 21, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-37"></a>Be Engineering Insights: The Kernel Scheduler and Real-Time Threads</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+Not much has been disclosed about the internals of the kernel scheduler.
+It's time to explain in detail how it works, so that real-time
+application programmers know what they can expect from it and can make
+better use of it. In this article, I discuss the kernel scheduler as it
+has been implemented since Developer Release 7.
+</p><p>
+The scheduler distinguishes between two classes of threads:
+"time-sharing" and "real-time." The thread's priority level determines
+which category it falls into. The priority range 1-99 is used for
+time-sharing threads; 100-120 is used for real-time threads. Within each
+class, threads are further differentiated using their relative priorities.
+</p><p>
+A real-time thread is executed as soon as it's ready. If more than one
+real-time thread is ready at the same time, the thread with the higher
+priority is executed first. The thread is guaranteed to run without being
+preempted (except by a real-time thread with a higher priority) until it
+invokes a blocking system call (semaphore, ports, snooze, I/O, and so on).
+</p><p>
+A time-sharing thread is executed only if there are no real- time threads
+in the ready queue. When this condition is satisfied, a time-sharing
+thread is elected in a probabilistic manner based on its priority, using
+a logarithmic scale of base 2. For example, a thread with a priority 8 is
+four times more likely to be elected than a thread with a priority 6. A
+new time-sharing thread is reelected regularly, once every "scheduler
+quantum" (currently, every 3 milliseconds).
+</p><p>
+Because the BeBox is a multiprocessor machine, things are actually a bit
+more complex. But the rules described still apply: No time-sharing thread
+is allowed to stand in the way of a real-time thread. For example, if CPU
+1 is executing real-time thread A, it's possible for a time-sharing
+thread B to run on CPU 2. (Note that on a single-processor system, B
+would have to wait until A blocks.) If real-time thread C wakes up, it
+would immediately interrupt B on CPU 2 and run there, without interfering
+with A.
+</p><p>
+If you look at the header file OS.h (in DR8), you will see some
+predefined priorities. With each real-time priority, there's an
+associated "maximum latency" (described in the comment next to each
+priority constant). This latency is the maximum time that a thread can
+afford to sit in the ready queue without being executed. Note that these
+maximum latencies are *not* enforced by the scheduler—these are
+guidelines, not guarantees. As a developer, you can use the latency
+guidelines to find the appropriate priority for your real-time thread.
+</p><p>
+In the real-time class:
+</p><p>
+<code class="constant">B_REAL_TIME_PRIORITY</code> (120)—latency 0.5-1 ms Used for the most
+demanding real-time tasks, such as audio. We currently use this one for
+the threads in the chain feeding the DAC.
+</p><p>
+<code class="constant">B_URGENT_PRIORITY</code> (110)—latency 5-10 ms Used for slightly less
+demanding tasks. We use it for MIDI.
+</p><p>
+<code class="constant">B_REAL_TIME_DISPLAY_PRIORITY</code> (100)—latency 10-30 ms We use this one
+for the app_server threads poller and mouser, in charge of reading the
+keyboard and displaying the cursor.
+</p><p>
+In the time-sharing class:
+</p><p>
+<code class="constant">B_URGENT_DISPLAY_PRIORITY</code> (20) We don't use this one yet. You shouldn't
+use it either.
+</p><p>
+<code class="constant">B_DISPLAY_PRIORITY</code> (15) This is the priority of window threads, where
+updates take place.
+</p><p>
+<code class="constant">B_NORMAL_PRIORITY</code> (10) This is the priority of all other system-created
+threads.
+</p><p>
+<code class="constant">B_LOW_PRIORITY</code> (5) This is for threads that run in the background,
+without disturbing any other threads.
+</p><p>
+When designing a real-time application, analyze its real- time
+constraints. If the maximum tolerable latency falls below 0.5
+milliseconds, then the BeBox isn't (yet) the right platform for that
+application. However, for anything higher than that, you should pick the
+priority with the matching latency.
+</p><p>
+Real-time threads must limit themselves to operations that truly require
+real-time attention. A healthy respect for this rule is essential to the
+proper behavior of the system. Memory allocation, for example, should be
+done by a normal priority time-sharing thread. The real-time thread
+should only access buffers that have already been allocated (and locked
+in memory, if necessary).
+</p><p>
+Another factor to keep in mind when composing your real-time thread is
+whether a particular function call will "lock" the underlying system
+resource or component. Most of the components of the <span class="trademark">BeOS</span>™ are
+reentrant, and so calls on that component can be used in a real-time
+application. But some components aren't reentrant; functions that access
+these components are automatically locked while they're being used. This
+can degrade performance. For example, the file system (in its current
+state) may lock the I/O system for long periods. This can be a problem
+for certain real- time applications as we cannot guarantee reasonable
+latency for disk I/O. We're quite aware of these limitations and are
+constantly working to eliminate them.
+</p><p>
+If you run into any problem while designing or programming your real-time
+application, or if you have a question, you can contact me at
+cyril@be.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-37"></a>Be Developer Talk: Chris Wilkinson, Michigan State University</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Chris</span> <span class="surname">Wilkinson</span></span></div></div></div><p>
+In addition to being a full-time student at Michigan State University,
+I'm a computer support assistant for the department of physics and
+astronomy. My areas of study, astrophysics and computer engineering,
+afford many opportunities to work on a wide variety of projects. Within
+the astronomy group alone you can find a number of application areas,
+ranging from control of telescopes to data acquisition.
+</p><p>
+The platforms I choose, both personally and departmentally, must contain
+a highly responsive operating system. They must be able to multitask
+effortlessly and be fully compatible with a wide range of hardware. The
+Be systems and BeOS serve these purposes well—although there's always
+room for expansion.
+</p><p>
+The BeBox's potpourri of technologies displays something I've been
+expecting for years: The convergence of multiplatform technology to
+achieve a heightened level of functionality. Very few machines come ready
+with a <span class="trademark">GeekPort</span>™ and other such innovations integrated into the OS. I
+see great potential, and I hope to utilize these features to their full
+extent.
+</p><p>
+My short term plans include using a BeBox in a mass data acquisition and
+control system. This system includes simultaneous information input and
+control output according to a set of preprogrammed equations and
+instructions. Long-term plans include MIDI sequencing, among other
+things.
+</p><p>
+I think that Be is doing a great job of not getting caught in the typical
+"developer shunning" that other computer hardware and software firms have
+gotten into. Companies like Commodore, NeXT, and others made a great
+debut, but they weren't responsive to the tides of an ever-changing world.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-37"></a>CHRP, Bad News, Good News</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Not all the news was good at Macworld. One disturbing item was the
+announcement by Apple's senior management that their CHRP (Common
+Hardware Reference Platform) boxes would ship later than expected --
+probably by the fourth quarter of 1997. This is bad news for the PowerPC
+family. But the extent of the delay might trigger a healthy reaction and
+end up creating a sense of urgency, finally, for a much needed standard
+hardware platform, for an equivalent to the PC/AT for the PowerPC.
+</p><p>
+The concept of a reference platform isn't new or difficult. We all saw
+the birth and the growth of a huge industry based on derivatives of IBM's
+PC/AT design. When IBM transmogrified its RS processor family into the
+PowerPC, it published a PowerPC Reference Platform design. We used PREP
+as the basis for the design of the BeBox, adding multiprocessing and
+richer I/O not explicitly envisioned by the platform designers, probably
+because of their corporate roots in the PC business. This was in 1994.
+</p><p>
+Where are we two years later? Not much further along. Motorola, Apple,
+and IBM got together and transformed PREP into CHRP. Basically, this was
+done in order to make room in the platform definition for Macintosh
+compatibility. This complicated things a little and there were other
+issues related to the commitment of silicon vendors to making building
+blocks for CHRP, but with a champion the size of Apple, CHRP had to be a
+success.
+</p><p>
+It's now transpiring that Apple's commitment to CHRP was perhaps less
+total than formerly trumpeted. Such tepid engagement might be connected
+to the success of Power Computing. In the eyes of some, Power Computing
+and others could take away large portions of the hardware business if
+CHRP became a true industry platform. CHRP could threaten Apple's current
+control of its licensing business.
+</p><p>
+Today, Apple's licenses are not licenses in the commonly accepted sense
+of the term. You don't get a license to the Mac OS in the same sense as
+getting a license to run Windows or UNIX on your PC clone. In the PC
+world, unless you're really stupid or crazy and as long as you stick to
+some basic hardware rules, you design a motherboard, you buy your BIOS
+from a specialist such as AMI, Phoenix, or Award, and Windows runs on
+your PC without any special interaction with the system software
+supplier, Microsoft. For an Apple licensee, it's different. For each
+motherboard design, Apple designs proprietary ASICs (roughly equivalent
+to a chipset in the Wintel world) and adapts the Mac ROMs (the rough
+equivalent of a BIOS) to the hardware. Then the Mac OS and applications
+can run, ignoring hardware particulars. In the Apple cloning world, the
+licensee gets a license to a motherboard design, permission to buy ASICs
+and ROMs, and a Mac OS distribution license. I might oversimplify a
+little here and there, but you get the picture: The Apple licensee needs
+much more than the Mac OS from Apple. Without access to ROMs and ASICs,
+you can't build a clone.
+</p><p>
+For those confronting the Byzantine world of Apple licensing, CHRP
+promised to be a welcome simplification. But not a total one. The CHRP
+spec still stipulated that Mac OS specific ROMs be purchased from Apple
+(or from a designated vendor). Today, Apple can modify its hardware
+almost at will. In theory, by controlling both the hardware and the
+software, it can move the platform forward, incorporate new technology
+more easily, and in the process, produce a better-integrated, smoother,
+more reliable product. Apple's control of the hardware and software
+layers might yield another byproduct when fine-tuning control of the
+company's licensing business. While I'm not intimately familiar with the
+terms of its licenses, I can imagine a situation where a licensee does
+not get a license to a new design and the required ASIC and ROM building
+blocks, or not right away, or not automatically.
+</p><p>
+Perhaps CHRP was perceived as a threat to Apple's ability to control
+licensees, and Power Computing's striking success might have given weight
+to the fear. As a result, CHRP- compliant hardware and software got
+delayed, thus threatening the advent of a truly standard PowerPC platform.
+</p><p>
+Hopefully, Apple's new management realizes the importance of creating
+such a standard. But we know that management fiats rarely accelerate
+existing projects. The way out might be to just ditch CHRP. It was
+getting unconvincing or unconvinced support from the other players
+anyway. Take any reasonable current or imminent hardware design, call it
+nCHRP or whatever, and make it easy or easier to buy the ASICs and ROMs
+-- as easy as it is to buy a chipset and a BIOS in the Wintel world. Of
+course, it's easier said than done, and the transition to a true platform
+might feel threatening. But no one's business or credibility will be
+helped by a failure to deliver a standard PowerPC platform in 1997.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-37"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495109"></a>WEEK 4</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495115"></a>Subject: root directories AKA: Sneering at UNIX...</h4></div></div></div><p>
+The "what's in /?" thread veered into a UNIX (pro or con) shouting
+match after someone posed the rhetorical question "Is it too much to
+ask for a multi-media enhanced UNIX in 1996?" A few days later, the
+thread co-opted the OpenBoot discussion.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495133"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495139"></a>Subject: Unicode</h4></div></div></div><p>
+Here were gathered opinions on whether Unicode is the best way to
+handle non-Western characters, how one should sort CJK (and "extended"
+Western characters—umlauts and such), what happens when you pass a
+CJK character to a function such as <code class="function">toupper()</code>, and so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495158"></a>Subject: Re: Multi-headed BeOS and down with the Network Computer</h4></div></div></div><p>
+A previous request for FireWire to support a multiheaded system was
+rebutted by the opinion that fiber would be better. It seems that the
+FireWire wire has length limitations unless you resort to "repeaters."
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495175"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495181"></a>Subject: Pivot monitor support?</h4></div></div></div><p>
+At what level of the OS/driver world would you insert the intelligence
+to support a 90 degree pivotable monitor? Should the BeOS and hardware
+be "open" so a third-party could provide an implementation directly?
+Alternatively, should Be provide indirect hooks? Following the latter,
+it was suggested that the OS should provide hooks for arbitrary display
+sizes and orientations. It was also pointed out that intelligent
+switching between portrait and landscape layout requires a driver (or
+some part of software) that can move windows so they stay on the screen.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495192"></a>Subject: Spaces in Filenames</h4></div></div></div><p>
+It was proposed that spaces in filenames be converted to underbars when
+the name is displayed in a shell. This would (it was opined) make the
+life of the CLI user a wee bit nicer. The proposal was fairly
+unanimously rejected; tempers flared.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495208"></a>Subject: Case Sensitive File Names</h4></div></div></div><p>
+Or "When is an 'a' not an 'A'?" Should filenames be case sensitive?
+Many opinions here. Well, actually, only three opinions: "Yea," "nay,"
+and "sometimes." But lots of mail. LOTS of mail. (Uhm... is "lots" the
+same as... nevermind.)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495223"></a>Subject: An Alternative View</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Persistent Object Store as Filesystem</h5></div></div></div><p>
+This thread was sprouted from the case sensitivity debacle. To squeeze
+a number of its ideas together the argument goes something like this:
+Files should be replaced by database- managed objects that would be
+accessed through queries and that would be visible at the programming
+level AND the user level. The boundary between a document and the
+application(s) that can open it would be intentionally blurred.
+</p><p>
+There was some grumbling (How are existing foreign file systems
+supported? Will programmers *really* be able to throw away their file
+system crutches and walk? If the result is hierarchical, how is it
+different from the file system?), but, in general, there was little
+objection to the object/document metaphor.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495254"></a>Subject: Introduction</h4></div></div></div><p>
+After a shaky start (Tangerine Dream? Let's all go to Izzy's house,
+turn on the black lights, and imagine we're at the edge of the
+universe.) this thread became a clearing house for "audio jukebox"
+ideas. Such a device could use IR or the GeekPort to search through and
+play tracks from a stack of CDs (or, in the future, DVDs).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495271"></a>Subject: Screen saver formats</h4></div></div></div><p>
+Windows recognizes .SCR; the Mac knows After Dark. How about a Be
+screen saver format and API? It was pointed out that you can run screen
+saver modules in Saver. See http://www.be.com/beware/Graphics.html for
+the engine; also, http://www.qnx.com/~chrish/Be/screen_savers/ for some
+modules.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495288"></a>Subject: StartUp Directory</h4></div></div></div><p>
+A "StartUp" directory, which would contain programs that would be
+launched automatically when you boot, was proposed. A counterproposal
+suggested that it would be better to use the database to tag auto
+launch apps.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id495302"></a>Subject: Re: BeBox as music-machine</h4></div></div></div><p>
+Could a BeBox be used as (for example) a ten-input real-time audio
+mixer? It was pointed out that you would at least need some extra
+equipment to (multiplex?) the inputs, since the BeBox only has two
+line-in signals. We also heard from Steve Ellison of Level Control
+Systems. He described the massive audio control system (with outboard
+equipment) that they're building.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-36.html">Issue 1-36, August 14, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-38.html">Issue 1-38, August 28, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-36.html" title="Issue 1-36, August 14, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-38.html" title="Issue 1-38, August 28, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-17.html" title="Issue 3-17, April 28, 1998" /><link rel="next" href="Issue3-19.html" title="Issue 3-19, May 13, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-17.html" title="Issue 3-17, April 28, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-19.html" title="Issue 3-19, May 13, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-17.html">Issue 3-17, April 28, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-19.html">Issue 3-19, May 13, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-18"></a>Issue 3-18, May 6, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-18"></a>Be Engineering Insights: Proper Printing</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+I thought that since the Print feature now actually prints, I'd use this
+newsletter article to provide a good reference example of how to
+implement printing in your application—so here it is.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">MyView</code>::<code class="methodname">PageSetup</code>()
+{
+  <span class="type">status_t</span>  <code class="varname">result</code> = <code class="constant">B_ERROR</code>;
+
+<span class="comment">// It is a good idea to give the print job a meaningful</span>
+<span class="comment">// name, since this is what the user will see in the spool</span>
+<span class="comment">// control (or the spool folder), so try to name it after</span>
+<span class="comment">// the document being printed.</span>
+
+  <code class="classname">BPrintJob</code>  <code class="varname">printJob</code>(<code class="varname">this</code>-&gt;<code class="methodname">DocumentName</code>());
+
+<span class="comment">// If mPrintSettings is NULL, it means that this document</span>
+<span class="comment">// was never printed, so we need to set up the Settings of</span>
+<span class="comment">// the BPrintJob using a new empty message. Otherwise you</span>
+<span class="comment">// would reuse the settings saved with the document so that</span>
+<span class="comment">// the user does not have to reset all the settings each</span>
+<span class="comment">// time he wants to open and print.</span>
+
+  if (<code class="varname">mPrintSettings</code> != <code class="constant">NULL</code>)
+    <code class="varname">printJob</code>.<code class="methodname">SetSettings</code>(new <code class="classname">BMessage</code>(<code class="varname">mPrintSettings</code>));
+  else
+    ;
+
+<span class="comment">// Call ConfigPage, this allows the user to change the</span>
+<span class="comment">// current PageSettings and will validate the content of the</span>
+<span class="comment">// settings if the printer has changed.</span>
+
+  <code class="varname">result</code> = <code class="varname">printJob</code>.<code class="methodname">ConfigPage</code>();
+
+  if (<code class="varname">result</code> == <code class="constant">B_NO_ERROR</code>) {
+
+<span class="comment">// We have new settings, so we can delete the old local copy</span>
+<span class="comment">// and extract the new one out of the print job.</span>
+
+    <code class="function">delete</code> (<code class="varname">mPrintSettings</code>);
+    <code class="varname">mPrintSettings</code> = <code class="varname">printJob</code>.<code class="methodname">Settings</code>();
+
+<span class="comment">// You may want to save those new settings somewhere in the</span>
+<span class="comment">// current document, so that they are remembered from one</span>
+<span class="comment">// session to another.</span>
+
+    <code class="varname">this</code>-&gt;<code class="methodname">SaveMySettings</code>(<code class="varname">mPrintSettings</code>);
+  }
+
+  return (<code class="varname">result</code>);
+}
+
+<span class="comment">//----------------------------------------------------------</span>
+
+<span class="type">void</span> <code class="classname">MyView</code>::<code class="methodname">Print</code>()
+{
+  <code class="classname">BPrintJob</code> <code class="varname">printJob</code>(<code class="varname">this</code>-&gt;<code class="methodname">DocumentName</code>());
+
+<span class="comment">// If we do not have any settings, this probably means that</span>
+<span class="comment">// the user is trying to print without having done a</span>
+<span class="comment">// PageSetup first. In that case we want to get a PageSetup</span>
+<span class="comment">// dialog to show up before printing.</span>
+<span class="comment">// Note that if mPrintSettings is not NULL, this could also</span>
+<span class="comment">// mean that a PageSetup setting from a previous printing</span>
+<span class="comment">// session was reloaded from the document.</span>
+
+
+  if (<code class="varname">mPrintSettings</code> == <code class="constant">NULL</code>) {
+    if (<code class="methodname">PageSetup</code>() != <code class="constant">B_NO_ERROR</code>)
+      return;
+  }
+  else
+    <code class="varname">printJob</code>.<code class="methodname">SetSettings</code>(new <code class="classname">BMessage</code>(<code class="varname">mPrintSettings</code>));
+
+<span class="comment">// ConfigJob will show the user a dialog which allows him</span>
+<span class="comment">// to specify which pages to print, the number of copies,</span>
+<span class="comment">// the printing quality etc.</span>
+
+  if (<code class="varname">printJob</code>.<code class="methodname">ConfigJob</code>() == <code class="constant">B_NO_ERROR</code>) {
+    int32  <code class="varname">curPage</code> = 1;
+    int32  <code class="varname">first_page</code>;
+    int32  <code class="varname">last_page</code>;
+    int32  <code class="varname">pages_in_document</code>;
+    BRect  <code class="varname">pageRect</code> = <code class="varname">printJob</code>.<code class="methodname">PrintableRect</code>();
+    BRect  <code class="varname">curPageRect</code> = <code class="varname">pageRect</code>;
+
+<span class="comment">// Let's find out how many pages we have in the document.</span>
+
+    <code class="varname">pages_in_document</code> = (<code class="varname">this</code>-&gt;<code class="methodname">TotalVerticalSize</code>() +
+      (<code class="varname">pageRect</code>.<code class="methodname">Height</code>() - 1)) / <code class="varname">pageRect</code>.<code class="methodname">Height</code>();
+
+<span class="comment">// Find out how many pages the user wants to print</span>
+<span class="comment">// this time.</span>
+
+    <code class="varname">first_page</code> = <code class="varname">printJob</code>.<code class="methodname">FirstPage</code>();
+    <code class="varname">last_page</code> = <code class="varname">printJob</code>.<code class="methodname">LastPage</code>();
+
+<span class="comment">// Be certain to clip the last page value against the</span>
+<span class="comment">// document size. It looks pretty bad to the customer when</span>
+<span class="comment">// you try to output MAXINT pages on her printer!</span>
+
+    if (<code class="varname">last_page</code> &gt; <code class="varname">pages_in_document</code>)
+      <code class="varname">last_page</code> = <code class="varname">pages_in_document</code>;
+
+<span class="comment">// Let's start the job for real,</span>
+<span class="comment">// BeginJob actually creates the spool file!</span>
+
+    <code class="varname">printJob</code>.<code class="methodname">BeginJob</code>();
+
+<span class="comment">// Now, for all the pages, let's image the page and add it</span>
+<span class="comment">// to the current job.</span>
+
+    for (<code class="varname">curPage</code> = <code class="varname">first_page</code>;
+         <code class="varname">curPage</code> &lt;= <code class="varname">last_page</code>; <code class="varname">curPage</code>++) {
+
+<span class="comment">// Let's compute a rectangle which encloses the part of the</span>
+<span class="comment">// view describing page "curPage"</span>
+
+      <code class="varname">curPageRect</code>.<code class="methodname">OffsetTo</code>(0, <code class="varname">curPage</code> * <code class="varname">pageRect</code>.<code class="methodname">Height</code>());
+
+<span class="comment">// Let's render the current view with this curPageRect.</span>
+<span class="comment">// Note that we want that part of the view to be set on the</span>
+<span class="comment">// page at position 0,0</span>
+
+      <code class="varname">printJob</code>.<code class="methodname">DrawView</code>(<code class="varname">this</code>, <code class="varname">curPageRect</code>, <code class="classname">BPoint</code>(0.0, 0.0));
+
+<span class="comment">// And let's add this new page to the job.</span>
+
+      <code class="varname">printJob</code>.<code class="methodname">SpoolPage</code>();
+
+<span class="comment">// Check for errors/user interrupt/nuclear war</span>
+<span class="comment">// alert/disk full</span>
+
+      if (!<code class="varname">printJob</code>.<code class="methodname">CanContinue</code>())
+        goto <code class="varname">catastrophic_exit</code>;
+    }
+
+    <code class="varname">printJob</code>.<code class="methodname">CommitJob</code>();
+  }
+
+<code class="varname">catastrophic_exit</code>:;
+
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-18"></a>Spreading The Word II</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Johnson</span></span></div></div></div><p>
+Spreading the Word II—another in my series of articles about making
+MONEY developing applications for the BeOS.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id688704"></a>Visit Be and PC User Groups!</h3></div></div></div><p>
+Developers—have you shown your application(s) to any user groups yet?
+User groups are one of the best ways to spread the word about your
+product.
+</p><p>
+Demonstrating your product to a user group accomplishes several desirable
+goals:
+</p><ul class="itemizedlist"><li><p>
+You are informing users of your product's existence (and after the
+demo they inform others).
+</p></li><li><p>
+You are showing them how it works and how they would use it.
+</p></li><li><p>
+You are learning from your potential customers what they want to
+know. Often the question and answer period after your demonstration is
+the most important part of your visit.
+</p></li></ul><p>
+When visiting a user group, bring you own computer with everything set up
+and ready to go. You probably won't need a monitor, but ask ahead of time
+just in case. Now I'll remind you of the obvious: once you set a date,
+make sure you arrive with your demo well-prepared, machine fully tricked
+out, goodies to give away, and so on. Bring one or more copies of your
+product for a raffle. If you only sell online let them know that you'll
+send the product to the winner(s). If you're demonstrating to a PC user
+group instead of a Be user group let us know and we'll try to provide
+some things, like T-shirts and copies of BeOS to raffle, to help you out.
+</p><p>
+There are now over 100 Be User Groups (BUGs) and they are eager to see
+your products. They would be more than happy to arrange a meeting to show
+a Be app. You can find them on the web at:
+</p><p>
+http://www.be.com/usergroups/usergroups.html.
+</p><p>
+Send them a note asking if you can be added to their schedule. If you
+want more specific information about specific groups, contact
+sylvie@be.com.
+</p><p>
+Don't limit yourself to Be user groups! PC user groups are not
+necessarily Windows user groups and the BeOS runs on PCs. Everyone with a
+Pentium is ultimately a potential customer for your BeOS application, so
+it's a GREAT idea to look PC user groups and arrange to show them your
+product. The BeOS runs on Intel architecture, which means that there are
+a huge number of potential customers out there right now—but they
+don't know about you yet! You can bring the news about the BeOS to these
+groups by showing your product.
+</p><p>
+Here are some links to lists of PC user groups to check out:
+</p><pre class="screen">
+<a class="ulink" href="http://www.apcug.net/">http://www.apcug.net/</a>
+http://www.user-groups.com/
+<a class="ulink" href="http://www.yahoo.com/Computers_and_Internet/Organizations/User_Groups/">http://www.yahoo.com/Computers_and_Internet/Organizations/User_Groups/</a>
+</pre><p>
+One more thing—remember my article on sending press releases? It's
+also a good idea to send them to Be and PC user groups.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id688795"></a>Support BeOS-Related Web Sites</h3></div></div></div><p>
+It's helpful to become familiar with the various BeOS-related web sites.
+Check them out! Contact the people in charge and find out how to send
+them news, articles, review copies, etc. A relationship with a news site
+is a relationship with its readers.
+</p><p>
+Tip: Advertise! You get exposure and the web site gets support if you
+place a banner ad on the web site!
+</p><p>
+Check the BeOS-related web sites below:
+</p><pre class="screen">
+Be Leading Edge:  http://subway.student.utwente.nl/edge.html
+BeOS Central:  http://beos.newdream.net/
+BeHive:  http://www.zdnet.com/mac/behive/
+Believe:  http://www.napanet.net/~xredbear/
+Be Happy:  http://www.qnx.com/~chrish/Be/
+Let It...Be:  http://www.boomweb.com/LetItBe/index.html
+Be Dope  http://www.bedope.com/
+Be News Now:  http://beos.ethereal.net/
+BeOS for Intel:  http://www.befunk.com/
+BeForever:  http://www.beforever.com/
+BeIntouch:  http://www.guerilla.com/beintouch/
+BeGames:  http://free.prohosting.com/~dunham/
+Plan Be:  http://www.planbe.com/
+BeGeek.com:  http://www.begeek.com/
+BeTrieve:  http://betrieve.zippysoft.com/
+Time to Be:  http://www.imada.ou.dk/~moriarty/be/
+Be Different (Spanish):  http://web.jet.es/pong/
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id688824"></a>For Shareware Authors</h3></div></div></div><p>
+Here's something I've been meaning to bring up for a while: Shareware
+authors—consider selling your product as a commercial application
+instead of shareware. Selling your product commercially through BeDepot
+offers all the advantages of shareware with fewer disadvantages. Make
+your product available at low cost, a "no-brainer" price, and you won't
+believe how many you'll sell! The revenue can finance the next version,
+maybe even enable you to quit your day job.
+</p><p>
+One of the main reasons for making a product available as shareware has
+been the difficulty of collecting payment, especially using credit cards.
+BeDepot &lt;http://www.bedepot.com/&gt; collects payments for you, and even
+accepts credit cards. You just sit back and get checks.
+</p><p>
+Another typical reason for selling as shareware has been the difficulty
+of delivering the product once it is ordered. You either have to print
+manuals and boxes and duplicate disks, or send a large file (or ship a
+package) when you get the order. BeDepot delivers the product
+electronically for you.
+</p><p>
+So once again, I urge you to use BeDepot instead of trying to make money
+through shareware. You'll make more, with less hassle.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id688865"></a>Visit Be newsgroups at comp.sys.be.*</h3></div></div></div><p>
+Another place to gather and spread information is on newsgroups. Check
+the Be newsgroups located at <a class="ulink" href="news:comp.sys.be.*">comp.sys.be.*</a>.
+It isn't good manners to just
+show up and advertise (except at comp.sys.be.announce, if you follow
+their rules), but there is a lot to gain from being active on these
+newsgroups. You can help people with their questions and also get
+information from a wide variety of sources. Newsgroups are read by a lot
+of people, even if they are not actively posting, so being active helps
+you and your products become known.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-18"></a>Developers' Workshop: Forget-Me-Nots</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+Greetings! As it turns out, I am back in the hot seat again much sooner
+than anticipated. With Doug on vacation and my wedding swiftly
+approaching, we belatedly discovered a need to rearrange the order of the
+DTS Newsletter writing. So, you get me again now, and then will be
+hippo-free until late June or early July.
+</p><p>
+Along with rearranging Newsletter duties, the DTS team also sat down to
+more clearly parcel out responsibilities for sections of the BeOS. These
+"areas of expertise" loosely define where we should be focussing our
+individual efforts for investigating bugs, answering developer questions,
+writing sample code and so on. I was lucky enough to inherit many of the
+lower-level Kits, including: the Kernel, Mail, Network, Storage, and
+Support Kits, rounded off with developer tools and add-ons.
+</p><p>
+This week I am going to talk about some of the things that we forget to
+talk about every now and then. I'll start with two "forgotten functions"
+from my areas: <code class="function">cast_as()</code> and <code class="function">snooze_until()</code>.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id688960"></a>cast_as()</h3></div></div></div><p>
+Take a look sometime inside of
+<code class="filename">support/ClassInfo.h</code>. You will see some
+useful macros there that probably do not see the light of day as much as
+they should, at least if outside engineers are anything like we are. The
+<code class="function">cast_as()</code> macro is the most important of these functions (although the
+others can certainly be useful.)
+</p><p>
+There are some places in the BeOS where <span class="type">void *</span>s are thrown about with
+great abandon. Those that leap readily to mind include dealing with items
+from BLists and arguments for thread entry functions. It is very tempting
+to simply use C-style casts to deal with these pointers, but this is not
+smart. (And before we go farther I will admit to being dumb in all of my
+sample code until now, look for updates in the near future to correct
+this.) Let me give you a concrete example of how this could be
+problematic.
+</p><p>
+Assume that you have a <code class="classname">BList</code> that is
+(supposedly) full of <code class="classname">BRect</code> pointers.
+You want to look at these pointers and find one that contains a given
+<code class="classname">BPoint</code>. You would have a loop whose inner core looked like this:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BRect</code> *</span>rect = (<span class="type"><code class="classname">BRect</code> *</span>) <code class="varname">list</code>.<code class="methodname">ItemAt</code>(<code class="varname">index</code>);
+if (<code class="varname">rect</code>-&gt;<code class="methodname">Contains</code>(<code class="varname">point</code>)) {
+  <span class="comment">/* do something cool */</span>
+}
+</pre><p>
+This is all fine and dandy if the item at index is actually a <code class="classname">BRect</code>. The
+result if the item is not a <code class="classname">BRect</code> is undefined (and probably most
+undesirable).
+</p><p>
+But there is a way to make sure that this slice of evil never occurs.
+Change the inner loop to something like this:
+</p><pre class="programlisting cpp">
+<span class="type">void *</span><code class="varname">item</code> = <code class="constant">NULL</code>;
+<code class="classname">BRect</code> <code class="varname">rect</code> = <code class="constant">NULL</code>;
+
+<code class="varname">item</code> = <code class="varname">list</code>.<code class="methodname">ItemAt</code>(<code class="varname">index</code>);
+<code class="varname">rect</code> = cast_as(<code class="varname">item</code>, <code class="classname">BRect</code>);
+if (!<code class="varname">rect</code>) {
+  <code class="function">printf</code>("we don't have a rect here!\n");
+  return <code class="constant">B_ERROR</code>;
+}
+<span class="comment">/* we are safe and know that rect is indeed a BRect*/</span>
+if (<code class="varname">rect</code>-&gt;<code class="methodname">Contains</code>(<code class="varname">point</code>)) {
+  <span class="comment">/* do something cool */</span>
+}
+</pre><p>
+Now, in an ideal world you wouldn't end up with a situation where you
+have chosen the wrong <code class="classname">BList</code> to look through, or where you haven't
+accidentally added the wrong pointer to the right <code class="classname">BList</code>. But these things
+have been known to happen!
+</p><p>
+Another, and perhaps more common, use for the <code class="function">cast_as()</code> macro is found
+when playing in the Interface Kit. There are many functions that simply
+return a generic <span class="type"><code class="classname">BView</code>*</span>. Whenever these need to be cast to a more
+specific class using the <code class="function">cast_as()</code> macro will prove much safer than a
+blind C-style cast.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689208"></a>snooze_until()</h3></div></div></div><p>
+A new thread control function was added to the Kernel Kit in Release 3
+that deserves mention. <code class="function">snooze_until()</code> allows a thread to block until a
+certain time is reached. This is exciting, of course, but how does
+<code class="function">snooze_until()</code> differ from it's older sibling
+<code class="function">snooze()</code>?
+</p><p>
+The most obvious way is that <code class="function">snooze_until()</code> supports defining a time to
+awaken based on a named time base. In Release 3 the only time base
+supported is the <code class="constant">B_SYSTEM_TIMEBASE</code>, which simply deals with the system
+time. In the future we will support other time bases so <code class="function">snooze_until()</code>
+could be used to block until a given frame of video is ready or until the
+next MIDI event needs to be sent.
+</p><p>
+The other major difference (and the only one of real use now) is that
+<code class="function">snooze_until()</code> has been designed to be more
+accurate than <code class="function">snooze()</code>. This
+accuracy comes in large part from the possibilities of being rescheduled
+between calls. Take the following example where you want to snooze for 25
+milliseconds in between some <code class="function"><code class="function">printf</code>()</code> calls.
+</p><pre class="programlisting cpp">
+<code class="function">printf</code>("let's print!\n");
+<code class="function">snooze</code>(25000);
+<code class="function">printf</code>("let's print again!\n");
+</pre><p>
+In the best of all worlds there would only be the 25 millisecond interval
+between the calls. But in the worst case your thread could be rescheduled
+right after the first <code class="function"><code class="function">printf</code>()</code>, and when next rescheduled would
+immediately block for the 25 milliseconds, and then would be rescheduled
+after the <code class="function">snooze()</code>. With a thread rescheduling latency of 1 -2
+milliseconds, this could mean that you could sleep for a handful of
+milliseconds extra.
+</p><p>
+You could rewrite this code using <code class="function">snooze_until()</code> and your worst case
+scenario would look a little better.
+</p><pre class="programlisting cpp">
+<span class="type">bigtime_t</span> <code class="varname">now</code> = <code class="function">system_time</code>();
+<code class="function">printf</code>("let's print!\n");
+<code class="function">snooze_until</code>(<code class="varname">now</code> + 25000);
+<code class="function">printf</code>("let's print again!\n");
+</pre><p>
+This will base the wake-up time on the original "now" time, rather than
+the time that the <code class="function">snooze()</code> function was called, and should be better.
+</p><p>
+There are currently some caveats, however. The difference in performance
+between <code class="function">snooze_until()</code> and <code class="function">snooze()</code>
+is generally not noticeable unless
+running within a real-time thread or if the amount of time to snooze is
+very small. In general, it doesn't make any sense to try and snooze for
+less than 1 millisecond, because interrupts are only looked at every
+millisecond. However, when <code class="function">snooze_until()</code> is called and the amount of
+time left until the wake-up time is very small, it will return rather
+than have the thread rescheduled. This makes tight timing loops more
+accurate (assuming you have a need for such a tight loop anyway).
+</p><p>
+And as mentioned, this really only makes a huge difference when dealing
+with a real-time thread. If you are not dealing with a real-time thread
+there is no guarantee that you will run when you are ready. If higher
+priority threads are ready to run, they will go first, regardless of
+which type of nap you took. Even when dealing with a real-time thread,
+you must still be aware that there are latencies involved, on the order
+of 2-3 milliseconds max, and 1 millisecond on average, so timing loops
+will never be precisely accurate.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689393"></a>GPL</h3></div></div></div><p>
+One last forgotten item. In the mad rush to get Release 3 out the door,
+we forgot to also release the GNU Public License code that used in the
+BeOS. We are rectifying this lapse in memory now.
+</p><p>
+We use GPL code for malloc, termcap and crypt. This are directly linked
+into the kernel, libroot, telnet, telnetd, top, and zbeos (the BeOS Intel
+bootloader). We have a single downloadable archive called gnu_x86.tar.gz
+that contains makefiles, the GNU source code, and object files that allow
+you to rebuild these components.
+</p><p>
+ftp://ftp.be.com/pub/gnu/gnu_x86.tar.gz
+</p><p>
+We also use GPL code for our 3Com 3C905 Ethernet drivers. This code comes
+from Linux and the source is available in an archive called
+linux_ether.tar.gz.
+</p><p>
+ftp://ftp.be.com/pub/gnu/linux_ether.tar.gz
+</p><p>
+The other GNU tools used by the BeOS are included in the /optional
+directory of the Release 3 CD.
+</p><p>
+The packages are complete and allow you to rebuild the GNU code and
+relink to produce the final binaries. Unfortunately if you make
+modifications (or used modified versions) we can't offer support if you
+run into problems.
+</p><p>
+We thank you all for your patience and friendly reminders to make these
+packages available. Be is a strong supporter of "free" software, and we
+will continue to do our best to comply with the license requirements of
+the code included in the BeOS.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-18"></a>Just For Fun</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+In late March this year, we held our first developer conference that
+focused on the Intel platform. Now we are preparing for our first trade
+show with a similar focus, but a much bigger audience. This is PC Expo,
+in New York City, opening June 16th at the Jacob Javits Convention Center.
+</p><p>
+As we learned from inflicting our inexperience on BeOS enthusiasts who
+ordered the Release 3 for Intel product, we are likely to find that
+nothing we've done so far can fully prepare us for an event like PC Expo.
+We've been to MacWorld trade shows, a couple of Comdexes—the first in
+the PowerPC pavilion, the second generously hosted by our Umax friends --
+we've been to NAB, with the Adamation booth this time, but never as
+"ourselves" to a PC Expo.
+</p><p>
+I'm sure we'll undergo more humbling and comical experiences which will
+be reported here—at least the admissible ones. Still, since we
+released the Intel version of our BeOS, we've learned a few lessons we
+plan to bring with us to our "coming out" at PC Expo.
+</p><p>
+First, we've verified there is demand for our product. I'm not trying to
+be funny or attempting to brag. Consider this: We mostly gave away the
+PowerPC version of the BeOS, on CDs bundled with magazines and as a free
+download version. This was a good way to spread the news and to bootstrap
+an installed base for Be developers. However, we learned we weren't
+learning much from this distribution method.
+</p><p>
+As some companies have found, the free software habit is hard to kick.
+Shareholders get nervous and the intended audiences—developers and
+customers—experience mixed emotions. It feels good at first, but will
+it last? And, in any event, giving away your product makes it hard to get
+a feel for the demand out there.
+</p><p>
+For those reasons, there is no free BeOS for Intel. So far, customers
+have been kind, putting up with our fledgling e-commerce system,
+overtaxed voice mail, and learn-as-you-go bumbling. Returns are very few
+and, while demand has settled down from its early peak, we enjoy a modest
+daily current of business from the US, Europe, and Japan. No strutting in
+the end zone, but we are a little ahead of our (conservative) goals for
+this year.
+</p><p>
+Second, we have to re-emphasize the "geeks-only" status of our product.
+We're not ready for the mainstream. Installation isn't for normal people,
+there are still too few applications (though this is changing), and we
+support only a limited range of hardware devices. This also is changing,
+but we will never cover the immense range of configurations Windows does.
+</p><p>
+To help people through the labyrinth of hardware compatibility, we hope
+to offer a Windows application for download soon. Once in your system, it
+would test your hardware and return one of three answers: yes; not sure,
+please allow us to upload the test results to galactic headquarters; or,
+no, sorry, we're not worthy of your hardware.
+</p><p>
+Meanwhile, we're not sitting still. We plan to offer a very minimalist
+VGA grey scale driver for Release 3.1. If the BeOS CD does not contain a
+driver for your graphics card, this driver will still let you boot on
+(almost) any display adapter, install the BeOS, and look for the right
+driver on our Web site or other related ones. In addition, as we are
+doing with our friends at UMI and the "Ming Specials" listed on our Web
+site, we'll work with system vendors to identify "BeOS Ready" systems.
+</p><p>
+Third, I just mentioned Release 3.1. It is exactly what the numbering
+convention implies: rolling up bug fixes, adding more drivers (including
+the basic VGA install capability mentioned above). PC Expo gives us a
+good deadline to beat for that release. I tend to like "dot" releases.
+They solidify the previous "major" version, they fix more bugs than they
+create—unlike the "big" releases—and they instill confidence in
+developers and customers.
+</p><p>
+Fourth, since we introduced the BeOS for Intel Architecture PCs, we've
+learned we have to keep working hard at differentiating our work from
+IBM's futile attempt to position OS/2 as "Better DOS than DOS, better
+Windows than Windows." Once the audience realizes we mean it when we
+acknowledge Windows as the immensely successful general-purpose reference
+OS, it becomes much easier to position the BeOS as a complementary
+specialized OS for video and audio applications.
+</p><p>
+The stealth success of Linux as a specialized OS, a Unix clone coexisting
+peacefully with Windows, helps demonstrate the validity of the general
+purpose vs. specialized concept. We also find that our non-religious,
+non-Microsoft-bashing posture is appreciated. Others do the bashing very
+well; we'd like to stay focused on all the things we have to do for
+customers and developers.
+</p><p>
+Speaking of which, and this is the last item on my list for today, PC
+Expo will give all of us an opportunity to show applications, sell some
+product, display work in progress, show promising prototypes, and, in
+general, demonstrate momentum on the application side.
+</p><p>
+For us on the release side, a trade show is effective persuasion for
+getting developers to bring their work to the next stage, especially when
+moving PowerPC code to the Intel side. We'll have demo stations set up,
+so if you'd like to show your work, please let us know. With the "geeks
+only" positioning clearly established, we'll enjoy the right subset of PC
+Expo visitors.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-18"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689643"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689649"></a>Subject: BFS Filesystem, Viruses and anything else I can dream up</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id689659"></a><a id="id689661"></a>Q:</td><td><p>
+Can the Be filesystem become fragmented? Is there any way to check for
+fragmentation, or to defragment?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Yes, fragmentation is possible, but, according to Dominic Giampaolo...
+</p><p>
+“<span class="quote">In practice BFS seems quite resilient against fragmentation. I recently
+ran some diagnostics on some systems around here that have been in
+constant use for 6 months or more... Over 98% of the files on all three
+machines were stored in one or two contiguous runs of disk blocks.</span>”
+</p><p>
+Tyler Riti wonders whether defragmenting is worth it: 30 minutes of
+defragging to gain a few milliseconds of seek time. Furthermore, does
+defragmenting actually buy you back those milliseconds? Of course it
+does, says the conventional wisdom; but multi-threading confounds the
+issue. If two or more programs are hitting different files at the same
+time, then the contiguity of the files isn't necessarily a help, and can
+actually be a hindrance (since the order in which the blocks are hit
+isn't necessarily sorted).
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689693"></a>Subject: Crossdevelopment with BeIDE</h4></div></div></div><p>
+The BeIDE puts object files in a directory that's always named
+"(Objects)". If you zip and move your project directory between PPC and
+Intel, you clobber the destination object files. Can anybody think of an
+automated way to avoid this?
+</p><p>
+Thorbjorn Jemander (and others) suggested creating a directory structure
+that separates the projects from the source:
+</p><pre class="screen">
+/proj/x86/
+/proj/PPC/
+/proj/source/
+</pre><p>
+The project and "(Objects)" directory live in the respective architecture
+directories, and the source code lives in the "source" directory. The
+projects would include the common sources, but wouldn't step on each
+other's object files.
+</p><p>
+Most folks liked the solution, although it isn't perfect: If you change
+the set of source files, you have to update both projects (for example).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689732"></a>Subject: html indexing tool?</h4></div></div></div><p>
+Scripting talk with all the usual snakes and ladders: Python, Perl,
+Frontier, etc.
+</p><p>
+The usefulness of Be API-specific components (BMessage, BPath, etc.) as
+scripting candidates was clarified. Some of our readers debated whether
+an object database (as used by some scripting environments) is necessary:
+Is the BFS fast enough to use directories as tables and files as records?
+</p><p>
+Other topics: How should data types (int16, int32, et. al.) be
+represented within a script message? Is string representation too slow?
+W.G.J. Langeveld thinks strings are plenty fast enough, given the context:
+</p><p>
+“<span class="quote">Well sure, strings aren't all that speedy. They're not horrible either,
+compared to the time to interpret the instruction (which is a string
+anyway) and the task switch time to send the message. How many numbers
+will a typical message contain? If you think the answer is more than 10,
+then I think we have different ideas of what scripting is supposed to
+accomplish.</span>”
+</p><p>
+How should different data types be presented to the user? Need the user
+know the difference between int32 and int64 (for example)? Chris Herborth
+suggested that the scripting interface follow the API. Some readers
+objected on the grounds that this would be too complex for users. Mr.
+Herborth responded:
+</p><p>
+“I'm going to exactly mirror the API, then start working on making a
+simplified API for people doing common tasks. By having everything there
+at the start, I'm enabling anyone to come up with:
+</p><div class="orderedlist"><ol><li><p>
+a correct application scripting message :-)
+</p></li><li><p>
+the ability to make a simplified API”
+</p></li></ol></div><p>
+The attitude of "smarter doesn't mean harder" didn't appease all of our
+readers. It was generally agreed that a scripting language's first
+requirement is that it be easy to use; it mustn't require knowledge of
+implementation details such as BMessage format or data byte-length. Some
+folks are concerned that a "robust" language will cut corners when it
+comes to hiding details.
+</p><p>
+A grass-roots, module-by-module, Frontier-like project was proposed by
+Jake "Jake Hamby" Hamby.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689819"></a>Subject: Math performance on Release 3 Intel</h4></div></div></div><p>
+Peter Enzerink wants to know why the <span class="type">float</span>ing point benchmarks run slower
+in BeOS Release 3 than on Windows 95. There were no direct answers, but a
+number of subthreads:
+</p><ul class="itemizedlist"><li><p>
+How much does compiler optimization affect performance? No clear
+answer, but most of our listeners seem to think that you shouldn't
+expect more than a 10% speed up.
+</p></li><li><p>
+Does a higher thread priority mean a faster app? No—you should
+never try to improve overall app speed by increasing thread priorities.
+If you have a real-time stream, then use a real-time priority; but
+goosing all threads in an effort to (A) get more performance out of the
+system or (B) play beat-your-neighbor is (A) ill-conceived and futile,
+and (B) exhibits a pathetic insecurity and mean spirit.
+</p></li><li><p>
+Can you really use MSVC to compile BeOS code (as a listener implied)?
+It's been done; Jon Watte suggests...
+</p><div class="orderedlist"><ol><li><p>
+Write speed-critical section in C only.
+</p></li><li><p>
+Transfer needed header files to Windows NT
+</p></li><li><p>
+Compile C files with MSVC
+</p></li><li><p>
+Transfer .OBJ files to BeOS, renaming them .o
+</p></li><li><p>
+Compile C++ files with mwcc
+</p></li><li><p>
+Link it all together to an app
+</p></li></ol></div></li></ul><p>
+Note that this is an unsupported phenomenon.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689907"></a>Subject: Idea ?! ?</h4></div></div></div><p>
+Are "gestural" input systems useful? Listener Chaut liked the sound of
+the Windows app that lets you...
+</p><p>
+"...draw a 'W' (at the scale you want) with your mouse and it launches
+Word ..."
+</p><p>
+Would this be just a weekend hack, or is this an example of (notoriously
+difficult) OCR in sheep's clothing? (Yes it is, no it isn't, went the
+debate.)
+</p><p>
+A number of listeners wrote in to second the call for more BeOS input
+devices (stylus pads and the like), but some of us just couldn't take the
+</p><p>
+Subject seriously and will be spending the evening in our rooms. Mike
+Manzano:
+</p><p>
+“<span class="quote">I've got it! How about just a button that, when you press on it, pops up
+a menu with a list of things you can launch in it!</span>”
+</p><p>
+And Ingmar Krusch:
+</p><p>
+“<span class="quote">It would be easy to write an app that recognizes gestures from QuickCam
+pictures. So if you make a funny face, it connects N+ to bedope.com...</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689965"></a>Subject: Running a thread on a processor</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id689974"></a><a id="id689977"></a>Q:</td><td><p>
+How do you assign a thread to a specific processor (on an MP system)?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+You can't—and you really don't want to. If you want to select an
+algorithm based on the number of processors, do so (the <code class="function">get_system_info()</code>
+function will help you here), but don't try to outguess the system when
+it comes to scheduling cycles.
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id689999"></a>Subject: ACCEPTS_FIRST_CLICK</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id690008"></a><a id="id690010"></a>Q:</td><td><p>
+If a window accepts first click, shouldn't the initial click make the
+window active?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Nope. The easiest way to activate the window is to tell the view that
+gets the click to do it.
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id690027"></a>Subject: alive or dead?</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id690036"></a><a id="id690038"></a>Q:</td><td><p>
+How can you test (programmatically) to see if an app is *really*
+alive? (Or, as Ingmar Krusch colorfully put it: “<span class="quote">I want to know if it
+quacks when I feed it.</span>”)
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Call <code class="methodname">BRoster::IsRunning()</code>
+</p><p>
+Objection: This only returns the presence of
+the app in <code class="classname">BRoster</code>'s roster of apps—it doesn't actually check to see
+if the app is alive.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Call <code class="function">get_thread_info()</code>, snooze, and then re-call and check for
+activity.
+</p><p>
+Objection: It's theoretically possible for an app to be
+completely inactive and so appear dead.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Look for the presence of a debugger nub thread in the team.
+</p><p>
+Objection: What if some other (or future) debugger doesn't spawn a recognizable nub?
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id690097"></a>Subject: BeFS: difference between PPC and x86 filesystem?</h4></div></div></div><p>
+Is there a difference between the PPC and Intel versions of BFS that
+would prevent a user from reading the PPC CD on a PC running BeOS?
+</p><p>
+THE BE LINE: (From Dominic Giampaolo) We do not currently support reading
+PPC versions of BFS under Intel (nor the other way around). The layout of
+the file system is the same on both platforms, only the endianess is
+different.
+</p><p>
+Support for reading opposite-endian file systems is planned for a future
+release although I'm not sure when it will make it in.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id690124"></a>Subject: mimetypes questions</h4></div></div></div><p>
+In a subthread of the mimetypes topic, flavors of zip were discussed:
+</p><ul class="itemizedlist"><li><p>
+gzip: Good compression, particularly on multiple small files (since
+it compresses the lot of them as a single stream), but it doesn't
+preserve Be attributes. Also, since gzip produces a stream, damage is
+difficult to correct.
+</p></li><li><p>
+zip: zip archives files individually so its compression isn't as good
+as gzip (although the difference isn't overwhelming), but damage repair
+is easier. Also, zip preserves Be attributes; this feature tilts the
+scales in many cases.
+</p></li><li><p>
+bzip2: Best compression, although, again, there's not a huge
+difference. If you absolutely have to squish out that last 10% of
+trapped air, then use bzip2; otherwise, don't worry about it. And bzip2
+(according to Trey Boudreau) isn't protected by patent lawyers (as bzip
+is).
+</p></li></ul></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-17.html">Issue 3-17, April 28, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-19.html">Issue 3-19, May 13, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-17.html" title="Issue 3-17, April 28, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-19.html" title="Issue 3-19, May 13, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

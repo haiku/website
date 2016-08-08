@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-22.html" title="Issue 2-22, June 4, 1997" /><link rel="next" href="Issue2-24.html" title="Issue 2-24, June 18, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-22.html" title="Issue 2-22, June 4, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-24.html" title="Issue 2-24, June 18, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-22.html">Issue 2-22, June 4, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-24.html">Issue 2-24, June 18, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-23"></a>Issue 2-23, June 11, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-23"></a>Be Engineering Insights: The new font engine, PART 2: Porting font code
+from DR8 to the Preview Release</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+(...The stranger stood up, but they still couldn't see his face. The
+leader of the security team looked one last time at his boss before
+taking action. But his gaze was fixed on the stranger, captivated. No
+instruction. So he barked the order he had been holding back...
+</p><p>
+"FIR--"
+</p><p>
+A thin beam of energy shot up from the stranger's belt, widening with
+distance to a tenth of an inch. It sliced diagonally through the neck of
+the security leader. A final groan burbbled from his gaping throat, then
+his body collapsed slowly; the head, neatly detached, rolled on the
+ground...)
+</p><p>
+Perhaps the link to "Porting Font Code from DR8 to the Preview Release"
+is not clear. But at least it's not just another boring introduction. So
+first, let's go through a quick overview of the main API changes:
+</p><ul class="itemizedlist"><li><p>
+The font interface has been extracted from <code class="classname">BView</code> and put in its own
+<code class="classname">BFont</code> class. The class gives you an easy way to keep track of different
+font settings, and lets you ask for metric information without having
+to create a <code class="classname">BView</code>. This model is much more efficient for serious text
+drawing/editing, at the price of being a minor annoyance for people who
+just want to do basic stuff.
+</p></li><li><p>
+The single font name is replaced by a name pair: The family name
+(Courier, Times, etc.) and the style name (plain, bold, italic, etc.).
+</p></li><li><p>
+Three default, global <code class="classname">BFont</code> objects have been defined: <code class="varname">be_plain_font</code>,
+<code class="varname">be_bold_font</code> and <code class="varname">be_fixed_font</code>. These abstract the most common "styles"
+of font used inside a standard application. The definitions of these
+fonts are set by the user, through the Font Preferences app. Apps
+should use the default fonts rather than hard coded font names (as we
+had been doing in DR8 with Erich, Emily and Kate). The values of the
+default fonts are set when an app is launched; they won't change (for
+that app) thereafter. To pick up new settings in an app, the user has
+to quit and restart the app.
+</p></li></ul><p>
+Let's give more details about <code class="classname">BView</code> and <code class="classname">BFont</code>.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566342"></a>What Happened To BView</h3></div></div></div><p>
+What happened to <code class="classname">BView</code> is quite simple: Almost all the font related
+functions have been moved (and in some cases modified or enhanced) to the
+<code class="classname">BFont</code> class. Here are the functions that have moved:
+</p><pre class="screen">
+<code class="classname">BView</code>::<code class="methodname">GetCharEscapement</code>(...)
+<code class="classname">BView</code>::<code class="methodname">GetCharEdges</code>(...)
+<code class="classname">BView</code>::<code class="methodname">GetFontInfo</code>(...)
+<code class="classname">BView</code>::<code class="methodname">SetFontName</code>(...)
+<code class="classname">BView</code>::<code class="methodname">SetFontRotation</code>(...)
+<code class="classname">BView</code>::<code class="methodname">SetFontShear</code>(...)
+<code class="classname">BView</code>::<code class="methodname">SetSymbolSet</code>(...)
+</pre><p>
+A logical exception, <code class="classname">BView</code>-&gt;<code class="methodname">DrawChar(...)</code> is unchanged, and
+<code class="classname">BView</code>-&gt;<code class="methodname">DrawString(...)</code> is just slightly enhanced with the introduction of
+<span class="type">escapements_delta</span>. Those optional parameters define an additional
+escapement, different for space characters and non-space characters,
+allowing easy justification of a full line of text.
+</p><p>
+We were reluctant to force everyone to use the <code class="classname">BFont</code> API for every single
+font-related operation, so we decided to keep a subset of the <code class="classname">BFont</code> API
+in <code class="classname">BView</code>. Specifically, <code class="methodname">StringWidth()</code>
+and <code class="methodname">GetFontHeight()</code> are retained so
+that you can easily get the dimensions of the rect used by a string.
+Additionally, <code class="methodname">SetFontSize()</code> was so commonly used that we decided to keep
+it in <code class="classname">BView</code> as well.
+</p><p>
+All other font setting changes must be done by modifying the <code class="classname">BView</code>'s
+<code class="classname">BFont</code> object; you use <code class="methodname">GetFont()</code>
+and <code class="methodname">SetFont()</code> to access and set the
+object.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566501"></a>BFont Properties</h3></div></div></div><p>
+Here are the standard properties of the new <code class="classname">BFont</code> API:
+</p><p>
+Family and Style names: you can get the complete list from global
+functions:
+</p><pre class="screen">
+<code class="function">count_font_families</code>()
+<code class="function">get_font_family</code>(index, &amp;font_family)
+<code class="function">count_font_styles</code>(font_family)
+<code class="function">get_font_style</code>(font_family, index, &amp;font_style).
+</pre><p>
+The list of families is cached for each application after the first use.
+As the user is allow to add and remove fonts files at any time, this list
+could change at any time. But, for technical reasons—and because the
+user really shouldn't be changing the font all that much anyway—this
+list is not updated automatically in the Preview Release.
+</p><p>
+You can force a "font update" by calling:
+</p><pre class="programlisting c">
+<span class="type">bool</span> <code class="function">update_font_families</code>(<span class="type">bool</span> <code class="parameter">check_only</code>)
+</pre><p>
+If <code class="parameter">check_only</code> is <code class="constant">TRUE</code>, the function
+lets you know (through the return
+value) if the global font list has changed, but it doesn't actually
+update your app's version of the list. If <code class="parameter">check_only</code>
+is <code class="constant">FALSE</code>, it will go
+ahead and update your app, if necessary. Updating can take a long time,
+and it blocks the calling thread, so the "check only" option gives your
+app a chance to put up a warning to the user, or spawn a thread to do the
+updating in the background.
+</p><p>
+The list of styles can be different (and usually is) for each different
+family. A lot of different names exist for something representing the
+same "style." For example, plain is often called "roman" or "regular."
+Because of this, family and style should always be set at the same time,
+in one call:
+</p><pre class="programlisting cpp">
+<code class="classname">BFont</code>::<code class="methodname">SetFamilyAndStyle</code>(<span class="type">constfont_family</span>,
+                         <span class="type">constfont_style</span>)
+</pre><p>
+Nevertheless, if you just want to change the style of the current family,
+you pass <code class="constant">NULL</code> as the family. Or if you just want to select the "standard"
+style of a font (the plain equivalent, if available), you pass <code class="constant">NULL</code> as
+the style.
+</p><ul class="itemizedlist"><li><p>
+Size: In points, any positive floating-point value smaller than
+10,000. The global <code class="classname">BFont</code> objects have individual default sizes.
+</p></li><li><p>
+Rotation: In degrees, with a default value of 0.
+</p></li><li><p>
+Shear: In degrees, in the range [45, 135] with a default value of 90.
+</p></li><li><p>
+Encoding: This is the character set encoding used to describe
+characters when talking with the font engine. The BeOS should use only
+<code class="constant">B_UNICODE_UTF8</code> (the default value) for now. Other encodings may be
+supported later.
+</p></li><li><p>
+Encoding: This is the character set encoding used to describe
+characters when talking to the font engine. The BeOS should use only
+<code class="constant">B_UNICODE_UTF8</code> (the default value) for now. A small set of standard 8
+bit encodings are also supported for compatibility (ISO-8859-1 to 10,
+and Macintosh Roman).
+</p></li><li><p>
+Spacing_mode: This parameter was described in great detail in the
+previous newsletter.
+</p></li><li><p>
+Faces: This parameter is currently reserved for future extensions,
+such as underline or strikethrough.
+</p></li><li><p>
+Flags: This controls the selection of special options. The only one
+available for now is <code class="constant">B_DISABLE_ANTI_ALIASING</code>. Furthermore,
+anti-aliasing should ONLY be turned off by the rare application that
+displays monocolor bitmap fonts in large point sizes.
+</p></li></ul><p>
+When using <code class="classname">BView</code>::<code class="methodname">SetFont()</code>,
+you can set a subset of these parameters by
+using the <code class="parameter">setting_mask</code>. This gives you two
+ways modify a <code class="classname">BView</code>'s font
+setting:
+</p><p>
+A. <code class="methodname">GetFont()</code> -&gt; modify the parameter -&gt; <code class="methodname">SetFont()</code>
+</p><p>
+B. Set the parameter in a dummy <code class="classname">BFont</code> object -&gt;
+<code class="methodname">SetFont()</code> using a setting
+flag to modify only this parameter
+</p><p>
+Typically, A is written in 3 lines of code, B in only 2.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566770"></a>Porting Examples</h3></div></div></div><p>
+That's enough general information for now (you can find more in the
+documentation and code examples). Let's take a look at a few practical
+cases:
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>selecting a standard font:</td></tr><tr><td>Before:</td><td><code class="methodname">SetFontName</code>("Erich");</td></tr><tr><td>Now:</td><td><code class="methodname">SetFont</code>(<code class="varname">be_plain_font</code>);</td></tr></tbody></table></div><p>
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>changing the point size:</td></tr><tr><td>Before:</td><td><code class="methodname">SetFontSize</code>(12.0);</td></tr><tr><td>Now:</td><td><code class="methodname">SetFontSize</code>(12.0);</td></tr></tbody></table></div><p>
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>getting the width of a string:</td></tr><tr><td>Before:</td><td><code class="methodname">StringWidth</code>("The string I prefer");</td></tr><tr><td>Now:</td><td><code class="methodname">StringWidth</code>("My beloved string");</td></tr></tbody></table></div><p>
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>getting the ascent of the current font:</td></tr><tr><td>Before:</td><td><code class="methodname">GetFontInfo</code>(&amp;<code class="varname">info</code>); info.ascent;</td></tr><tr><td>Now:</td><td><code class="methodname">GetFontHeight</code>(&amp;<code class="varname">height</code>); height.ascent;</td></tr></tbody></table></div><p>
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>changing the rotation of the font:</td></tr><tr><td>Before:</td><td><code class="methodname">SetFontRotation</code>(110.0);</td></tr><tr><td>Now:</td><td><code class="methodname">GetFont</code>(&amp;<code class="varname">tmpFont</code>); <code class="varname">tmpFont</code>.<code class="methodname">SetRotation</code>(110.0);</td></tr><tr><td> </td><td><code class="methodname">SetFont</code>(&amp;<code class="varname">tmpFont</code>);</td></tr><tr><td>Or:</td><td><code class="varname">fooFont</code>.<code class="methodname">SetRotation</code>(110.0);</td></tr><tr><td> </td><td><code class="methodname">SetFont</code>(&amp;<code class="varname">fooFont</code>, <code class="constant">B_FONT_ROTATION</code>);</td></tr></tbody></table></div><p>
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>saving a font setting:</td></tr><tr><td>Before:</td><td><code class="methodname">GetFontInfo</code>(&amp;<code class="varname">curInfo</code>);</td></tr><tr><td>Now:</td><td><code class="methodname">GetFont</code>(&amp;<code class="varname">curFont</code>);</td></tr></tbody></table></div><p>
+</p><p>
+</p><div class="informaltable"><table border="0"><colgroup><col /><col /></colgroup><tbody><tr><td>To do:</td><td>restoring a font setting:</td></tr><tr><td>Before:</td><td><code class="methodname">SetFontName</code>(<code class="varname">oldInfo</code>.<code class="varname">name</code>);</td></tr><tr><td> </td><td><code class="methodname">SetFontSize</code>(<code class="varname">oldInfo</code>.<code class="varname">size</code>);</td></tr><tr><td> </td><td><code class="methodname">SetFontRotation</code>(<code class="varname">oldInfo</code>.<code class="varname">rotation</code>);</td></tr><tr><td> </td><td><code class="methodname">SetFontShear</code>(<code class="varname">oldInfo</code>.<code class="varname">shear</code>);</td></tr><tr><td>Now:</td><td><code class="methodname">SetFont</code>(&amp;<code class="varname">oldFont</code>);</td></tr></tbody></table></div><p>
+</p><p>
+And you will find much more in future sample code.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id567330"></a>Drawing Modes</h3></div></div></div><p>
+The last thing I want to talk about is a small but very important detail:
+The first two drawing modes used in the <code class="classname">BView</code> (COPY and OVER) were
+equivalent for text in DR8. That's no longer the case in the Preview
+Release. And the bad thing is that an incorrect usage of those modes will
+make the anti-aliasing look REALLY BAD. So please, read the following
+carefully and update your code if necessary.
+</p><p>
+BEFORE: Both COPY and OVER were basically doing what the OVER mode was
+supposed to do. Their performance was similar, and many people used one
+or the other without seeing any real difference on the screen.
+</p><p>
+NOW: The mode OVER reads the background before drawing, as the
+anti-aliasing is done using alpha blending. But, depending on the user
+configuration, the cost of reading back the frame buffer of the graphic
+card can be prohibitive.
+</p><p>
+This is where the COPY mode shows the power of its simplified definition:
+By computing the alpha-blending between the HighColor of the glyph itself
+and the LowColor of the <code class="classname">BView</code> (which represents the color of the uniform
+background), COPY is much faster than OVER. However, you can only use
+COPY on a uniform background, and you ABSOLUTELY NEED TO HAVE THE
+LOWCOLOR SET PROPERLY (it's the responsibility of the programmer).
+</p><p>
+I hope you understand now why many quick ports from DR8 to the Preview
+Release (probably including a few apps of our own) displayed ugly looking
+anti-aliased fonts here and there...
+</p><p>
+Here's another good reason to use the fast COPY mode as much as possible:
+Fonts never erase their background (for the simple reason that there is
+no consistent way to define the limits of the background of a character).
+Consequently, the programmer is responsible for erasing the background
+properly before calling DrawBitmap.
+</p><p>
+For example, let's say you just want to change the color of &gt;&gt;the font;
+you may be tempted to just redraw the text in the new color, thinking it
+will overwrite the previously drawn text (some Be engineers were doing
+that). This was true in both modes (COPY and OVER) in DR8.
+</p><p>
+With the Preview Release, it's still true in COPY mode, but doesn't work
+anymore in OVER mode: The rasterizer will use the already anti-aliased
+background, increasing the amount of anti-aliasing with each redraw,
+until it reaches a saturation point. This doesn't look good at all (the
+poor guinea pigs who got the alpha version of Advanced Access probably
+remember the ugly text in menubars).
+</p><p>
+To conclude these two articles on the new font engine, I would say there
+are still many areas that could be improved in terms of both quality and
+performance. Be assured that we're thinking about it, but improvements
+probably won't be published before the next release. In the meantime, I
+will be happy to answer any other questions at: pierre@be.com.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Support2-23"></a>Sailing to Support Nirvana, PART 2</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ed</span> <span class="surname">Romson</span></span></div></div></div><p>
+Welcome back to our discussion about sailing towards technical support
+Nirvana. This week I'll share some thoughts on outsourcing, and on how to
+maximize the satisfaction of your customers while holding down support
+costs.
+</p><p>
+Let's recap the last "Sailing to Support Nirvana" article before we
+start. I discussed piloting your own day-sailer with a limited support
+staff, and captaining a larger organization that provided "soup to nuts"
+support to your customers. We explored a formula that showed the base
+cost of handling contacts and a method of that black magic art,
+forecasting contact volume. Let's reproduce here the chart we used,
+because the result (cost of each support contact) will be important to
+our discussion of outsourcing:
+</p><pre class="screen">
+** Chart 1 **
+
+Personnel cost (per person)...................$100,000
+Number of contacts handled/day/person...............30
+Number of people.....................................2
+Efficiency factor..................................0.8
+Number of work days................................260
+Calls handled/person/year.........................6240
+Cost per contact................................$16.03
+</pre><p>
+I'd like to start off with an exploration of the controversy over whether
+or not to outsource. Believe me, I have been all over the map on this
+one. Five years ago, I was a major opponent of outsourcing. I felt that
+we would lose control over the quality of information provided to our
+customers. I mean, who understood our products better than the people who
+had supported them for years? How could an outside company ever gain
+enough knowledge to effectively support our beloved products? Over the
+years, I have changed my position almost 100 percent. I've seen
+outsourcing work in the US, Japan and Europe.
+</p><p>
+The secret is to realize that outsourcing is not a panacea. Some (less
+than successful) companies think that they can outsource and forget. They
+outsource and never have to worry about that work again. After all, isn't
+that the work which they are contracting for? Well, yes, however you must
+keep management control over the outsource vendor. A strong vendor
+manager, someone who knows the support business and is excellent at
+managing projects, is essential for the success of an outsourcing
+project. The thing you are really contracting for is the "production
+line" work of answering the questions.
+</p><p>
+Another requirement is that there must be someone inside the company to
+handle the calls escalated from the first-line people. Remember those
+first two sailors you brought aboard to help sail your original sloop?
+Those guys and gals are now invaluable at teaching your new vendor the
+ropes, and they are there to serve as the masters of escalation. This not
+only makes effective use of your higher paid resources, but also allows
+for job enrichment for those poor swabs who have been slogging away,
+answering the first-level questions.
+</p><p>
+What is your involvement in all of this? You own the fleet. You have
+contracted with a company to provide the sails and the manpower. You are
+setting the course and determining the cargo to carry; that is, what is
+supported, and how it is supported. You keep an eye on the fleet, making
+sure your customers are satisfied, and your ships don't run aground. You
+take soundings with a regular customer survey, and you make course
+corrections based on what your customers are telling you.
+</p><p>
+You may be asking whether this outsourcing is more expensive than growing
+your support capacity in-house. I'll share some of the pricing I've seen
+in the recent past. I must admit that I've changed some of the numbers to
+protect the guilty, but the numbers in Chart 2 below reflect bids you
+might receive if you were to ask for quotes from some of the larger
+outsource vendors:
+</p><pre class="screen">
+** Chart 2 **
+
+Sample outsource quote—8 minute call (10 x 5 support)
+
+Contacts/   Team     Price/     Price/
+     Day    Size    Minute    Contact
+
+      50       3     $1.70     $13.60
+     100       5     $1.40     $11.20
+     150       7     $1.30     $10.40
+     200       8     $1.15     $ 9.20
+     250      10     $1.10     $ 8.80
+     300      11     $1.05     $ 8.40
+     450      14     $0.99     $ 7.92
+</pre><p>
+This chart needs some explanation. The assumptions are listed at the top,
+and the chart assumes that the average telephone call will be 8 minutes
+in length (a good assumption for software contacts with reasonably
+sophisticated users). It also assumes that you are accepting contacts
+from 8am to 6pm (10 hours a day), Monday through Friday (five days a
+week).
+</p><p>
+The "Price per Minute" and "Price per Contact" are figures that the
+outsource company gives you to say "this is what it will cost you." You
+may remember that I came up with a cost per contact of $16.03 when I did
+the calculation for in-house staff. That makes sense; you are paying
+those "fully loaded costs" and you have very little economy of scale with
+just a few support people. You also want to pay more for your internal or
+"institutional" knowledge keepers. In this scenario, you are going to use
+your internal people as information resources, and as second level
+support resources—natural tasks for higher cost people.
+</p><p>
+Now, what does all this mean? The decision that needs to be made regards
+the point at which it makes sense to outsource, rather than grow your
+support resources inside the company. You will need internal support
+resources for higher level support, the "Masters" or "Chiefs" on your
+boat. The crew can be pressed from outside and it makes sense to do so
+when the volume of your contacts (calls and email) grows beyond the
+capacity of your core of support engineers. This "break point" will be
+unique to your circumstance.
+</p><p>
+The only advice I can give is to look at the ability to scale up Customer
+Support as your product sells and grows in complexity. This lack of
+ability to scale up without astronomical costs has crippled many
+companies. In today's business environment, keeping core strengths within
+the company, and outsourcing everything else is the winning solution.
+</p><p>
+Outsourcing is never the easy way out. As I've said, I've done it a few
+times, and I am (obviously) not shy about sharing my thoughts and
+opinions. If you are considering this route for technical support and
+need someone off whom to bounce ideas, I'd be happy to help. Here at Be,
+we are also looking at various scenarios where we can establish a
+framework for support (and printing, packaging and distribution for that
+matter) while allowing our developers to join in and enjoy some of the
+benefits of the economy of scale. If you are interested in discussing
+that concept, I'd be happy to help with that as well.
+</p><p>
+In the Be Newsletter #72, I invoked the ghost of Mayor Koch and asked for
+feedback on our support of your efforts. I am still interested. How are
+we doing? It's romson@be.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-23"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+Pssstt... Hey buddy. Come here. I've got a secret for you. Have you ever
+walked into a fine jewelry shop in the dark and tried to find the crown
+jewels? Well, to continue our barrage of sample and useful documentation,
+I submit to you a little tool to help you do your best. There are quite a
+few ways to deal with images in the world. There is the Datatypes
+library, there are resource files, and there is the Rraster application.
+</p><p>
+Rraster and Datatypes allow you to at run-time read in any image file of
+any type the user so happens to have a codec for. The image resource
+allows you to pack a known image in along with the executable so that
+it's always there. Packing things into resources is a good way to go
+because you can use one of the various resource editing tools like
+InterfaceElements and IconWorld to manipulate them.
+</p><p>
+Another technique for getting images into your application is the
+embedded graphic. That is, you do something like:
+</p><pre class="programlisting cpp">
+#define <code class="constant">width</code>   64
+#define <code class="constant">height</code>  64
+#define <code class="constant">cspace</code>  <code class="constant">B_RGB_32_BIT</code>
+#define <code class="constant">bytesperpixel</code>  3
+
+<span class="type">unsigned char</span> <code class="varname">bits</code>[] = {0,0,0,0,...};
+
+<code class="classname">BRect</code> <code class="varname">aRect</code>(0,0,<code class="constant">width</code>-1,<code class="constant">height</code>-1);
+<code class="classname">BBitmap</code> <code class="varname">bitmap</code> = new <code class="classname">BBitmap</code>(<code class="varname">aRect</code>, <code class="constant">cspace</code>);
+<span class="type">int</span> <code class="varname">bytesperrow</code> = <code class="constant">bytesperpixel</code>*<code class="constant">width</code>;
+
+for (<span class="type">int</span> <code class="varname">row</code>=0; <code class="varname">row</code>&lt;<code class="constant">height</code>; <code class="varname">row</code>++)
+{
+  <span class="type">int</span> <code class="varname">bitoffset</code> = <code class="varname">row</code>*<code class="constant">bytesperpixel</code>*<code class="constant">width</code>;
+  <span class="type">int</span> <code class="varname">bitmapoffset</code> = <code class="varname">row</code>*<code class="varname">bitmap</code>-&gt;<code class="methodname">BytesPerRow</code>();
+  <code class="varname">bitmap</code>-&gt;<code class="methodname">SetBits</code>((<span class="type">char *</span>)<code class="varname">bits</code>+<code class="varname">bitsoffset</code>, <code class="constant">bytesperrow</code>,
+    <code class="varname">bitmapoffset</code>, <code class="constant">cspace</code>);
+}
+</pre><p>
+This is nifty if you have some sort of tool that allows you to convert
+any image into an easy format which is simply a "C" structure. Well... we
+have such a thing:
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/mkimghdr.tgz
+</p><p>
+This little utility utilizes the codecs of the Rraster application to
+turn just about any graphic into this useful format. The codecs that
+shipped with the Advanced Access release were for Targa and Gif images.
+There are a whole slew of new codecs for other formats that will show up
+in the Preview Release. These include JFIF, TIFF, PCX, PBM, XBM, and PNG.
+The same technique can be utilized with the Datatypes library. Thus for
+all those codecs that everyone is hard at work producing for Datatypes,
+you will be able to create simple "C" structures and include them in your
+app. Of course, using Datatypes, there is already a "C" structure
+Datatype, but there you have it.
+</p><p>
+You know, one thing about life with a 2 year old is that there is never a
+dull moment. My current schedule gives me the night duty. That means,
+from about 6:00pm until 9:30pm I'm in charge of entertaining and
+eventually putting to bed a fiery bundle of joy. Well, how do you
+entertain a 2 year old? Use the BeOS of course, but the mouse is a
+horrible little rodent to be avoided at all costs, so do you prefer a
+graphics tablet? I do. I've been playing with the Wacom tablets and
+driver... Oops, did I say that? Well, nothing has changed in the system
+to make it easy for any pointing device to show up as a mouse, but that
+doesn't mean we can't play anyway:
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/wacom.tgz
+</p><p>
+These tablets are neat things. They tell you positional and button
+information like a mouse, but then there's things like proximity,
+pressure and tilt. Somebody slap me with something killer using this
+stuff please!! Oh, does that look like a device driver sample? Why yes it
+is.
+</p><div class="blockquote"><table border="0" cellspacing="0" cellpadding="0" class="blockquote" summary="Block quote"><tr><td width="90%" valign="top"><p>
+If you're a real programmer,<br />
+code is your documentation
+</p></td><td width="5%" valign="top"> </td></tr><tr><td width="100%" colspan="2" align="right" valign="top">—</td></tr></table></div><p>
+It's the beginning of summer. I have been told that VideoMania has been
+bad to the pocket books of a few developers. That's a good thing. It's
+this excitement to do neat things that drives the leapfrog development
+cycle. Keep up the good work and we'll be inspired to pump out the killer
+code to support you.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-23"></a>Modem Wars</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+It looks like we averted a standards war with the new generation of 56
+Kbps modems. The two-and-a-half warring factions managed to agree on
+something without either directly agreeing or exactly knowing what they
+agreed on. Trust me, I'll explain in a moment. Before doing so, I need to
+disclose I'm a director of 3Com. The company has announced an agreement
+to acquire US Robotics, one of the companies mentioned below.
+</p><p>
+The fight got off to an uglier start than usual. The previous generation
+of 33.6 Kbps modems had seen a small scale attempt to preempt the
+V.something standard with a V.Fast offering, but the International
+Telecommunications Union (ITU) ratified a norm soon enough for everyone
+to quickly comply and customers to buy in peace.
+</p><p>
+Not so with the 56K generation. Last year, Rockwell, whose chips powered
+about 80% of V.34 modems, announced their new K56Plus standard; AT&amp;T
+announced their own V.flex2 and US Robotics their X2 modulation. Each one
+with the firm intent of "owning" the new norm in the absence one
+sanctioned by the ITU.
+</p><p>
+Rockwell announced first but USR quickly took the lead. Their strategy is
+retroactively obvious: they figured out buyers needed to connect their
+modem at the higher speed they were paying for. Before you e-mail me with
+therapeutic advice for platitudinous thoughts, I beg you to consider what
+USR did and their opposition didn't, or did much later.
+</p><p>
+USR preemptively "convinced" a number of ISPs, big and small, to announce
+support, meaning access for X2 modems. Besides actually providing means
+to instantiate the function customers were paying for, USR also wanted to
+create a perception, they wanted a self-fulfilling prophecy. "We are
+winning, join the winner and, as a result, we'll all win." Somehow, the
+promoters of the other two standards never got around to such an
+energetic unfurling of their standard. They agreed to make K56Plus and
+V.flex2 "interoperable" (that's where the "two-and-a-half" above comes
+from), thus reducing the confusion; but they were two or three months
+behind USR in actually delivering modems to the retail channel.
+</p><p>
+Let's stop for a moment and look at the difference between USR and their
+opponents. Lucent or Rockwell produce the technology, others adopt it and
+make modems. A division of labor and energy. USR "makes" the technology
+(Motorola disagrees, they say some of it comes from their patent
+portfolio...) as well as the device. No division here, no questioning
+whose job it is to promote the standard and whose it is to sell the
+devices.
+</p><p>
+Still, there were potential losers in this war, not manufacturers, but
+losers of the worst possible kind: customers, people with our money in
+their pockets. What if the ITU, when a few million modems have already
+been sold, decides for the "wrong" standard, meaning the "other one" my
+modem and my ISP don't use? Worse, the ITU could decide to bless neither
+K56Plus/V.flex2 nor X2.
+</p><p>
+Fear, Uncertainty and Doubt, FUD, is usually deployed by the dominant
+player against a pesky interloper when the latter threatens to take too
+much business away from the former: don't buy this because it will become
+obsolete, incompatible, or any such reason. In the case of 56K modems,
+FUD worked against everyone because a third party, the ITU, holds the
+keys to the norm.
+</p><p>
+As a result, the "double blind" agreement mentioned at the beginning
+magically appeared in order to create peace of mind and more sales. Most
+56K modem suppliers have independently or competitively come to offer a
+guaranteed upgrade to the as yet unknown standard (see Motorola's and
+USR's Web pages for examples of their guarantees). Hopefully, DSP
+flexibility and software permitting, this isn't as bold as one might
+think, but I always wince when the future is presented as "a mere matter
+of software." And, somehow, I wonder if ISPs aren't, in fact, the primary
+target of such promises. If ISPs refuse to take the plunge, the 56K
+business will die once all people like me have bought one and found a
+paucity of responding access points.
+</p><p>
+As we depend on Web marketing and delivery of application software, we're
+happy to see one obstacle to faster downloads on its way to oblivion.
+While we wait for the XDSL messiah, we'll continue to adore the good old
+telephone system.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-22.html">Issue 2-22, June 4, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-24.html">Issue 2-24, June 18, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-22.html" title="Issue 2-22, June 4, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-24.html" title="Issue 2-24, June 18, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

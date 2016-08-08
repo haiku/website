@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - Special Topics - Device Drivers</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="DeviceDrivers.html" title="Device Drivers" /><link rel="prev" href="DeviceDrivers_ConstantsDefinedTypes.html" title="Constants And Defined Types" /><link rel="next" href="DeviceDrivers_MessageConstants.html" title="Message Constants" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="DeviceDrivers_ConstantsDefinedTypes.html" title="Constants And Defined Types"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="DeviceDrivers_MessageConstants.html" title="Message Constants"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - Special Topics - Device Drivers</div></div><div id="headerB">Prev: <a href="DeviceDrivers_ConstantsDefinedTypes.html">Constants And Defined Types</a>  Up: <a href="DeviceDrivers.html">Device Drivers</a>  Next: <a href="DeviceDrivers_MessageConstants.html">Message Constants</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Functions"></a>Kernel Functions</h2></div></div></div><p>The kernel exports a number of functions that device drivers can call.
+The device driver accesses these functions directly in the kernel, not
+through a library.</p><p>Remember, when writing a driver that calls one of these functions, to link
+against <code class="filename">_KERNEL_</code>. This will instruct the loader to dynamically locate the
+symbols in the current kernel when the driver is loaded.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="acquire_spinlock"></a><a id="release_spinlock"></a>
+<a id="spinlock"></a>
+acquire_spinlock(), release_spinlock(), spinlock</h3></div></div></div><a id="id920626" class="indexterm"></a><a id="id920634" class="indexterm"></a><a id="id920641" class="indexterm"></a><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">acquire_spinlock</span>(<span class="methodparam"><span class="type">spinlock* </span><span class="parameter">lock</span></span>);</code><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">release_spinlock</span>(<span class="methodparam"><span class="type">spinlock* </span><span class="parameter">lock</span></span>);</code><pre class="programlisting definition c">typedef <span class="type">vlong</span> <span class="type">spinlock</span></pre><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>Spinlocks are mutually exclusive locks that are used to protect sections
+of code that must execute atomically. Unlike semaphores, spinlocks can be
+safely used when interrupts are disabled (in fact, you must have
+interrupts disabled).</p><p>To create a spinlock, simply declare a spinlock variable and initialize
+it 0:</p><pre class="programlisting example c"><span class="type">spinlock</span> <code class="varname">lock</code> = 0;</pre><p>The functions acquire and release the lock spinlock. When you acquire and
+release a spinlock, you must have interrupts disabled; the structure of
+your code will look like this:</p><pre class="programlisting example c"><span class="type">cpu_status</span> <code class="varname">former</code> = <code class="function">disable_interrupts</code>();
+<code class="function">acquire_spinlock</code>(&amp;<code class="varname">lock</code>);
+
+<span class="comment">/* critical section goes here*/</span>
+
+<code class="function">release_spinlock</code>(&amp;<code class="varname">lock</code>);
+<code class="function">restore_interrupts</code>(<code class="varname">former</code>);</pre><p>The spinlock should be held as briefly as possible, and acquisition must
+not be nested within the critical section.</p><p>Spinlocks are designed for use in a multi-processor system (on a single
+processor system simply turning off interrupts is enough to guarantee
+that the critical section will be atomic). Nonetheless, you can use
+spinlocks on a single processor—you don't have to predicate your
+code based on the number of CPUs in the system.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="add_timer"></a><a id="cancel_timer"></a>
+<a id="timer_hook"></a>
+<a id="qent"></a>
+<a id="timer"></a>
+add_timer(), cancel_timer(), timer_hook, qent, timer</h3></div></div></div><a id="id920837" class="indexterm"></a><a id="id920844" class="indexterm"></a><a id="id920850" class="indexterm"></a><a id="id920857" class="indexterm"></a><a id="id920864" class="indexterm"></a><code class="methodsynopsis c"><span class="type">status_t </span><span class="methodname">add_timer</span>(<span class="methodparam"><span class="type">timer* </span><span class="parameter">theTimer</span></span>,<br />                   <span class="methodparam"><span class="type">timer_hook </span><span class="parameter">hookFunction</span></span>,<br />                   <span class="methodparam"><span class="type">bigtime_t </span><span class="parameter">period</span></span>,<br />                   <span class="methodparam"><span class="type">int32 </span><span class="parameter">flags</span></span>);</code><code class="methodsynopsis c"><span class="type">bool </span><span class="methodname">cancel_timer</span>(<span class="methodparam"><span class="type">timer_t* </span><span class="parameter">theTimer</span></span>);</code><pre class="programlisting definition c">typedef <span class="type">int32</span> (*<span class="type">timer_hook</span>)(<span class="type">timer*</span>)</pre><pre class="programlisting definition c">struct <span class="type">quent</span> {
+    <span class="type">int64</span> <code class="varname">key;</code>
+    <span class="type">qent*</span> <code class="varname">next</code>;
+    <span class="type">qent*</span> <code class="varname">prev</code>;
+}</pre><pre class="programlisting definition c">struct <span class="type">timer</span> {
+    <span class="type">qent</span>   <code class="varname">entry</code>;
+    <span class="type">uint16</span>   <code class="varname">flags</code>;
+    <span class="type">uint16</span>   <code class="varname">cpu</code>;
+    <span class="type">timer_hook</span> <code class="varname">hook</code>;
+    <span class="type">bigtime_t</span>   <code class="varname">period</code>;
+}</pre><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p><code class="function">add_timer()</code> installs a new timer interrupt. A timer interrupt causes the
+specified <code class="parameter">hookFunction</code> to be called when the desired amount of time has
+passed. On entry, you should pass a pointer to a <span class="type">timer</span> structure in
+<code class="parameter">theTimer</code>; this will be filled out with data describing the new timer
+interrupt you've installed. The <code class="parameter">flags</code> argument provides control over how
+the timer functions, which affects the meaning of the <code class="parameter">period</code> argument as
+follows:</p><table class="variablelist constants"><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_ONE_SHOT_ABSOLUTE_TIMER</code></span></p></td><td><p>The timer will fire once at the system time
+specified by <code class="parameter">period</code>.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_ONE_SHOT_RELATIVE_TIMER</code></span></p></td><td><p>The timer will fire once in approximately
+<code class="parameter">period</code> microseconds.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_PERIODIC_TIMER</code></span></p></td><td><p>The timer will fire every <code class="parameter">period</code> microseconds, starting
+in <code class="parameter">period</code> microseconds.</p></td></tr></tbody></table><p><code class="function">cancel_timer()</code> cancels the specified timer. If it's already fired, it
+returns <code class="constant">true</code>; otherwise <code class="constant">false</code> is returned. It's guaranteed that once
+<code class="function">cancel_timer()</code> returns, if the timer was in the process of running when
+<code class="function">cancel_timer()</code> was called, the timer function will be finished executing.
+The only exception to this is if <code class="function">cancel_timer()</code> was called from inside a
+timer handler (in which case trying to wait for the handler to finish
+running would result in deadlock).</p><table class="variablelist returncodes"><thead><tr><th>Return Code</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_OK</code>.</span></p></td><td><p>The timer was installed
+(<code class="function">add_timer()</code> only).</p></td></tr><tr><td><p><span class="term"><code class="constant">B_BAD_VALUE</code>.</span></p></td><td><p>The timer couldn't be installed because the period was
+invalid (probably because a relative time or period was negative;
+unfortunately, Be hasn't mastered the intricacies of installing timers
+to fire in the past).</p></td></tr></tbody></table></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="call_all_cpus"></a>call_all_cpus()</h3></div></div></div><a id="id921242" class="indexterm"></a><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">call_all_cpus</span>(<span class="methodparam"><span class="type">void </span>(*<span class="parameter">func</span>)(<span class="type">void* </span>, <span class="type">int </span>), <span class="type">void* </span><span class="parameter">cookie</span>)</span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>Calls the function specified by <code class="parameter">func</code> on all
+CPUs. The <code class="parameter">cookie</code> can be anything your needs
+require.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="disable_interrupts"></a><a id="restore_interrupts"></a>
+<a id="cpu_status"></a>
+disable_interrupts(), restore_interrupts(), cpu_status</h3></div></div></div><a id="id921328" class="indexterm"></a><a id="id921335" class="indexterm"></a><a id="id921342" class="indexterm"></a><code class="methodsynopsis c"><span class="type">cpu_status </span><span class="methodname">disable_interrupts</span>();</code><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">restore_interrupts</span>(<span class="methodparam"><span class="type">cpu_status </span><span class="parameter">status</span></span>);</code><pre class="programlisting definition c">typedef <span class="type">ulong</span> <span class="type">cpu_status</span></pre><p>Declared in:  <code class="filename">drivers/KernelExport.h</code></p><p>These functions disable and restore interrupts on the CPU that the caller
+is currently running on. <code class="function">disable_interrupts()</code> returns its previous state
+(i.e. whether or not interrupts were already disabled).
+<code class="function">restore_interrupts()</code> restores the previous status of the CPU, which
+should be the value that <code class="function">disable_interrupts()</code> returned:</p><pre class="programlisting example c"><span class="type">cpu_status</span> <code class="varname">former</code> = <code class="function">disable_interrupts()</code>;
+...
+<code class="function">restore_interrupts</code>(<code class="varname">former</code>);</pre><p>As long as the CPU state is properly restored (as shown here), the
+disable/restore functions can be nested.</p><p>See also:
+<a class="link" href="DeviceDrivers_Functions.html#install_io_interrupt_handler" title="install_io_interrupt_handler(), remove_io_interrupt_handler()"><code class="function">install_io_interrupt_handler()</code></a></p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="dprintf"></a><a id="set_dprintf_enabled"></a>
+<a id="panic"></a>
+dprintf(), set_dprintf_enabled(), panic()</h3></div></div></div><a id="id921491" class="indexterm"></a><a id="id921498" class="indexterm"></a><a id="id921505" class="indexterm"></a><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">dprintf</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">format</span></span>);</code><code class="methodsynopsis c"><span class="type">bool </span><span class="methodname">set_dprintf_enabled</span>(<span class="methodparam"><span class="type">bool </span><span class="parameter">enabled</span></span>);</code><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">panic</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">format</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p><code class="function">dprintf()</code> is a debugging function that has the same syntax and behavior
+as standard C <code class="function">printf()</code>, except that it writes its output to the serial
+port at a data rate of 19,200 bits per second. The output is sent to
+<code class="filename">/dev/ports/serial4</code> on BeBoxes,
+<code class="filename">/dev/modem on Macs</code>, and
+<code class="filename">/dev/ports/serial1</code>
+on Intel machines. By default, <code class="function">dprintf()</code> is disabled.</p><p><code class="function">set_dprintf_enabled()</code> enables
+<code class="function">dprintf()</code> if the <code class="parameter">enabled</code> flag is <code class="constant">true</code>, and
+disables it if the flag is <code class="constant">false</code>. It returns the previous enabled state,
+thus permitting intelligent nesting:</p><pre class="programlisting example c"><span class="comment">/* Turn on dprintf */</span>
+<span class="type">bool</span> <code class="varname">former</code> = <code class="function">set_dprintf_enabled</code>(<code class="constant">true</code>);
+...
+<span class="comment">/* Now restore it to its previous state. */</span>
+<code class="function">set_dprintf_enabled</code>(<code class="varname">former</code>);</pre><p><code class="function">panic()</code> is similar to <code class="function">dprintf()</code>,
+except it hangs the computer after printing the message.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="get_memory_map"></a><a id="physical_entry"></a>
+get_memory_map(), physical_entry</h3></div></div></div><a id="id921717" class="indexterm"></a><a id="id921724" class="indexterm"></a><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">get_memory_map</span>(<span class="methodparam"><span class="type">const void* </span><span class="parameter">address</span></span>,<br />                    <span class="methodparam"><span class="type">ulong </span><span class="parameter">numBytes</span></span>,<br />                    <span class="methodparam"><span class="type">physical_entry* </span><span class="parameter">table</span></span>,<br />                    <span class="methodparam"><span class="type">long </span><span class="parameter">numEntries</span></span>);</code><pre class="programlisting definition c">typedef struct {
+    <span class="type">void*</span><code class="varname">address</code>;
+    <span class="type">ulong</span> <code class="varname">size</code>;
+} <span class="type">physical_entry</span></pre><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>Returns the physical memory chunks that map to the virtual memory that
+starts at address and extends for <code class="parameter">numBytes</code>. Each chunk of physical memory
+is returned as a <span class="type">physical_entry</span> structure; the series of structures is
+returned in the table array. (which you have to allocate yourself).
+<code class="parameter">numEntries</code> is the number of elements in the array that you're passing in.
+As shown in the example, you should lock the memory that you're about to
+inspect:</p><pre class="programlisting example c"><span class="type">physical_entry</span> <code class="varname">table</code>[<code class="varname">count</code>];
+<code class="function">lock_memory</code>(<code class="varname">addr</code>, <code class="varname">extent</code>, 0);
+<code class="function">get_memory_map</code>(<code class="varname">addr</code>, <code class="varname">extent</code>, <code class="varname">table</code>, <code class="varname">count</code>);
+. . .
+<code class="function">unlock_memory</code>(<code class="varname">someAddress</code>, <code class="varname">someNumberOfBytes</code>, 0);</pre><p>The end of the table array is indicated by (<code class="varname">size</code> == 0):</p><pre class="programlisting example c"><span class="type">long</span> <code class="varname">k</code>;
+while (<code class="varname">table</code>[<code class="varname">k</code>].<code class="varname">size</code> &gt; 0) {
+   <span class="comment">/* A legitimate entry */</span>
+   if (++<code class="varname">k</code> == <code class="varname">count</code>) {
+      <span class="comment">/* Not enough entries */</span>
+      break; }
+}</pre><p>If all of the entries have non-zero sizes, then table wasn't big enough;
+call <code class="function">get_memory_map()</code> again with more table entries.</p><p>The function always returns <code class="constant">B_OK</code>.</p><p>See also:
+<a class="link" href="DeviceDrivers_Functions.html#lock_memory" title="lock_memory(), unlock_memory()"><code class="function">lock_memory()</code></a>,
+<code class="function">start_isa_dma()</code></p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="has_signals_pending"></a>has_signals_pending()</h3></div></div></div><a id="id921984" class="indexterm"></a><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">has_signals_pending</span>(<span class="methodparam"><span class="type">struct thread_rec* </span><span class="parameter">thr</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>Returns a bitmask of the currently pending signals for the current
+thread. <code class="parameter">thr</code> should always be <code class="constant">NULL</code>; passing other values will yield
+meaningless results. <code class="function">has_signals_pending()</code> returns 0 if no signals are
+pending.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="install_io_interrupt_handler"></a><a id="remove_io_interrupt_handler"></a>
+install_io_interrupt_handler(), remove_io_interrupt_handler()</h3></div></div></div><a id="id922057" class="indexterm"></a><a id="id922064" class="indexterm"></a><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">install_io_interrupt_handler</span>(<span class="methodparam"><span class="type">long </span><span class="parameter">interrupt_number</span></span>,<br />                                  <span class="methodparam"><span class="type">interrupt_handler </span><span class="parameter">handler</span></span>,<br />                                  <span class="methodparam"><span class="type">void* </span><span class="parameter">data</span></span>,<br />                                  <span class="methodparam"><span class="type">ulong </span><span class="parameter">flags</span></span>);</code><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">remove_io_interrupt_handler</span>(<span class="methodparam"><span class="type">long </span><span class="parameter">interrupt_number</span></span>,<br />                                 <span class="methodparam"><span class="type">interrupt_handler </span><span class="parameter">handler</span></span>,<br />                                 <span class="methodparam"><span class="type">void* </span><span class="parameter">data</span></span>);</code><p>Declared in:  <code class="filename">drivers/KernelExport.h</code></p><p><code class="function">install_io_interrupt_handler()</code>
+adds the handler function to the chain of
+functions that will be called each time the specified interrupt occurs.
+This function should have the following syntax:</p><pre class="programlisting definition c"><span class="type">int32</span> <code class="function">handler</code>(<span class="type">void*</span><code class="parameter">data</code>)</pre><p>The data passed to
+<code class="function">install_io_interrupt_handler()</code> will be passed to the
+handler function each time it's called. It can be anything that might be of
+use to the <code class="parameter">handler</code>, or <code class="constant">NULL</code>. If
+the interrupt handler must return one of the following values:</p><table class="variablelist constants"><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_UNHANDLED_INTERRUPT</code></span></p></td><td><p>The interrupt handler didn't handle the interrupt;
+the kernel will keep looking for someone to handle it.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_HANDLED_INTERRUPT</code></span></p></td><td><p>The interrupt handler handled the interrupt. The
+kernel won't keep looking for a handler to handle it.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_INVOKE_SCHEDULER</code></span></p></td><td><p>The interrupt handler handled the interrupt. This
+tells the kernel to invoke the scheduler immediately after the handler
+returns.</p></td></tr></tbody></table><p>If <code class="constant">B_INVOKE_SCHEDULER</code> is returned by the interrupt handler, the kernel
+will immediately invoke the scheduler, to dispatch processor time to
+tasks that need handling. This is especially useful if your interrupt
+handler has released a semaphore (see
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem_etc"><code class="function">release_sem_etc()</code></a>
+in the Kernel Kit).</p><p>The <code class="parameter">flags</code> parameter is a bitmask of options.
+The only option currently defined is
+<code class="constant">B_NO_ENABLE_COUNTER</code>. By default, the OS keeps track of
+the number of functions handling a given interrupt. If this counter changes
+from 0 to 1, then the system enables the irq for that interrupt.
+Conversely, if the counter changes from 1 to 0, the system disables the
+irq. Setting the <code class="constant">B_NO_ENABLE_COUNTER</code> flag instructs
+the OS to ignore the handler for the purpose of enabling and disabling the
+irq.</p><p><code class="function">install_io_interrupt_handler()</code> returns
+<code class="constant">B_OK</code> if successful in installing the handler, and
+<code class="constant">B_ERROR</code> if not. An error occurs when either the
+<code class="parameter">interrupt_number</code> is out of range or there is not
+enough room left in the interrupt chain to add the handler.</p><p><code class="function">remove_io_interrupt()</code> removes the named
+interrupt from the interrupt chain. It returns <code class="constant">B_OK</code> if
+successful in removing the handler, and <code class="constant">B_ERROR</code> if
+not.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="kernel_debugger"></a><a id="add_debugger_command"></a>
+<a id="remove_debugger_command"></a>
+<a id="load_driver_symbols"></a>
+<a id="kprintf"></a>
+<a id="parse_expression"></a>
+kernel_debugger(), add_debugger_command(), remove_debugger_command(),
+load_driver_symbols(), kprintf(), parse_expression()</h3></div></div></div><a id="id922388" class="indexterm"></a><a id="id922395" class="indexterm"></a><a id="id922402" class="indexterm"></a><a id="id922409" class="indexterm"></a><a id="id922416" class="indexterm"></a><a id="id922423" class="indexterm"></a><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">kernel_debugger</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">string</span></span>);</code><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">add_debugger_command</span>(<span class="methodparam"><span class="type">char* </span><span class="parameter">name</span></span>,<br />                         <span class="methodparam"><span class="type">int </span> (*<span class="parameter">func</span>)(<span class="type">int </span>, <span class="type">char** </span>)</span>,<br />                         <span class="methodparam"><span class="type">char* </span><span class="parameter">help</span></span>);</code><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">remove_debugger_command</span>(<span class="methodparam"><span class="type">char * </span><span class="parameter">name</span></span>,<br />                            <span class="methodparam"><span class="type">int </span> (*<span class="parameter">func</span>)(<span class="type">int </span>, <span class="type">char** </span>)</span>);</code><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">load_driver_symbols</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">driverName</span></span>);</code><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">kprintf</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">format</span></span>);</code><code class="methodsynopsis c"><span class="type">ulong </span><span class="methodname">parse_expression</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">string</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p><code class="function">kernel_debugger()</code> drops the calling thread into a debugger that writes
+its output to the serial port at 19,200 bits per second, just as
+<a class="link" href="DeviceDrivers_Functions.html#dprintf" title="dprintf(), set_dprintf_enabled(), panic()"><code class="function">dprintf()</code></a>
+does. This debugger produces string as its first message; it's
+not affected by
+<a class="link" href="DeviceDrivers_Functions.html#set_dprintf_enabled"><code class="function">set_dprintf_enabled()</code></a>.</p><p><code class="function">kernel_debugger()</code> is identical to the
+<a class="link" href="TheKernelKit_Miscellaneous.html#debugger" title="debugger()"><code class="function">debugger()</code></a> function documented in
+the Kernel Kit, except that it works in the kernel and engages a
+different debugger. Drivers should use it instead of
+<a class="link" href="TheKernelKit_Miscellaneous.html#debugger" title="debugger()"><code class="function">debugger()</code></a>.</p><p><code class="function">add_debugger_command()</code> registers a new command with the kernel debugger.
+When the user types in the command name, the kernel debugger calls <code class="parameter">func</code>
+with the remainder of the command line as <code class="varname">argc</code>/<code class="varname">argv</code>-style arguments. The
+<code class="parameter">help</code> string for the command is set to help.</p><p><code class="function">remove_debugger_command()</code> removes the specified kernel debugger command.</p><p><code class="function">load_driver_symbols()</code> loads symbols from the specified kernel driver into
+the kernel debugger. <code class="parameter">driver_name</code> is the path-less name of the driver
+which must be located in one of the standard kernel driver directories.
+The function returns <code class="constant">B_OK</code> on success and <code class="constant">B_ERROR</code> on failure.</p><p><code class="function">kprintf()</code> outputs messages to the serial port. It should be used instead
+of <a class="link" href="DeviceDrivers_Functions.html#dprintf" title="dprintf(), set_dprintf_enabled(), panic()"><code class="function">dprintf()</code></a>
+from new debugger commands because
+<a class="link" href="DeviceDrivers_Functions.html#dprintf" title="dprintf(), set_dprintf_enabled(), panic()"><code class="function">dprintf()</code></a> depends too
+much upon the state of the kernel to be reliable from within the debugger.</p><p><code class="function">parse_expression()</code> takes a C expression and returns the result. It only
+handles integer arithmetic. The logical and relational operations are
+accepted. It can also supports variables and assignments. This is useful
+for strings with multiple expressions, which should be separated with
+semicolons. Finally, the special variable "." refers to the value from
+the previous expression. This function is designed to help implement new
+debugger commands.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="lock_memory"></a><a id="unlock_memory"></a>
+lock_memory(), unlock_memory()</h3></div></div></div><a id="id922768" class="indexterm"></a><a id="id922774" class="indexterm"></a><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">lock_memory</span>(<span class="methodparam"><span class="type">void* </span><span class="parameter">address</span></span>,<br />                 <span class="methodparam"><span class="type">ulong </span><span class="parameter">numBytes</span></span>,<br />                 <span class="methodparam"><span class="type">ulong </span><span class="parameter">flags</span></span>);</code><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">unlock_memory</span>(<span class="methodparam"><span class="type">void* </span><span class="parameter">address</span></span>,<br />                   <span class="methodparam"><span class="type">ulong </span><span class="parameter">numBytes</span></span>,<br />                   <span class="methodparam"><span class="type">ulong </span><span class="parameter">flags</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p><code class="function">lock_memory()</code> makes sure that all the memory
+beginning at the specified virtual <code class="parameter">address</code> and
+extending for <code class="parameter">numBytes</code> is resident in RAM, and locks
+it so that it won't be paged out until <code class="function">unlock_memory()</code>
+is called. It pages in any of the memory that isn't resident at the time
+it's called. It is typically used in preparation for a DMA
+transaction.</p><p>The <code class="parameter">flags</code> field contains a bitmask of options.
+Currently, two options, <code class="constant">B_DMA_IO</code> and
+<code class="constant">B_READ_DEVICE</code>, are defined.
+<code class="constant">B_DMA_IO</code> should be set if any part of the memory range
+will be modified by something other than the CPU while it's locked, since
+that change won't otherwise be noticed by the system and the modified pages
+may not be written to disk by the virtual memory system. Typically, this
+sort of change is performed through DMA.
+<code class="constant">B_READ_DEVICE</code>, if set, indicates that the caller
+intends to fill the memory (read from the device). If cleared, it indicates
+the memory will be written to the device and will not be altered.</p><p><code class="function">unlock_memory()</code> releases locked memory and
+should be called with the same flags as passed into the corresponding
+<code class="function">lock_memory()</code> call.</p><p>Each of these functions returns <code class="constant">B_OK</code> if
+successful and <code class="constant">B_ERROR</code> if not. The main reason that
+<code class="function">lock_memory()</code> would fail is that you're attempting to
+lock more memory than can be paged in.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="map_physical_memory"></a>map_physical_memory()</h3></div></div></div><a id="id922962" class="indexterm"></a><code class="methodsynopsis c"><span class="type">area_id </span><span class="methodname">map_physical_memory</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">areaName</span></span>,<br />                            <span class="methodparam"><span class="type">void* </span><span class="parameter">physicalAddress</span></span>,<br />                            <span class="methodparam"><span class="type">size_t </span><span class="parameter">numBytes</span></span>,<br />                            <span class="methodparam"><span class="type">uint32 </span><span class="parameter">spec</span></span>,<br />                            <span class="methodparam"><span class="type">uint32 </span><span class="parameter">protection</span></span>,<br />                            <span class="methodparam"><span class="type">void** </span><span class="parameter">virtualAddress</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>This function allows you to map the memory in physical memory
+starting at <code class="parameter">physicalAddress</code> and extending for
+<code class="parameter">numBytes</code> bytes into your team's address space. The
+kernel creates an area named <code class="parameter">areaName</code> mapped into
+the memory address <code class="parameter">virtualAddress</code> and returns its
+<span class="type">area_id</span> to the caller. <code class="parameter">numBytes</code> must be
+a multiple of <code class="constant">B_PAGE_SIZE</code> (4096).</p><p><code class="parameter">spec</code> must be either
+<code class="constant">B_ANY_KERNEL_ADDRESS</code> or
+<code class="constant">B_ANY_KERNEL_BLOCK_ADDRESS</code>. If
+<code class="parameter">spec</code> is <code class="constant">B_ANY_KERNEL_ADDRESS</code>,
+the memory will begin at an arbitrary location in the kernel address space.
+If spec is <code class="constant">B_ANY_KERNEL_BLOCK_ADDRESS</code>, then the memory
+will be mapped into a memory location aligned on a multiple of
+<code class="constant">B_PAGE_SIZE</code>.</p><p><code class="parameter">protection</code> is a bitmask consisting of the
+fields <code class="constant">B_READ_AREA</code> and
+<code class="constant">B_WRITE_AREA</code>, as discussed in
+<a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a>.</p><p><a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a>
+returns an <span class="type">area_id</span> for the newly-created memory if
+successful or an error code on failure. The error codes are the same as
+those for
+<a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="motherboard_version"></a><a id="io_card_version"></a>
+motherboard_version(), io_card_version()</h3></div></div></div><a id="id923168" class="indexterm"></a><a id="id923175" class="indexterm"></a><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">motherboard_version</span>();</code><code class="methodsynopsis c"><span class="type">long </span><span class="methodname">io_card_version</span>();</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>These functions return the current versions of the motherboard and of the
+I/O card. These functions are only available on PowerPC-based systems
+(they're intended for use on the BeBox).</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="platform"></a>platform()</h3></div></div></div><a id="id923240" class="indexterm"></a><code class="methodsynopsis c"><span class="type">platform_type </span><span class="methodname">platform</span>();</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>Returns the current platform, as defined in
+<code class="filename">kernel/OS.h</code>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="register_kernel_daemon"></a><a id="unregister_kernel_daemon"></a>
+register_kernel_daemon(), unregister_kernel_daemon()</h3></div></div></div><a id="id923298" class="indexterm"></a><a id="id923305" class="indexterm"></a><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">register_kernel_daemon</span>(<span class="methodparam"><span class="type">void </span> (*<span class="parameter">func</span>(<span class="type">void* </span>, <span class="type">int </span>)</span>,<br />                           <span class="methodparam"><span class="type">void* </span><span class="parameter">arg</span></span>,<br />                           <span class="methodparam"><span class="type">int </span><span class="parameter">freq</span></span>);</code><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">unregister_kernel_daemon</span>(<span class="methodparam"><span class="type">void </span> (*<span class="parameter">func</span>(<span class="type">void* </span>, <span class="type">int </span>)</span>,<br />                             <span class="methodparam"><span class="type">void* </span><span class="parameter">arg</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>Adds or removes daemons from the kernel. A kernel daemon function is
+executed approximately once every <code class="parameter">freq</code>/10 seconds.
+The kernel calls <code class="parameter">func</code> with the arguments
+<code class="parameter">arg</code> and an iteration value that increases by
+<code class="parameter">freq</code> on successive calls to the daemon
+function.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="send_signal_etc"></a>send_signal_etc()</h3></div></div></div><a id="id923442" class="indexterm"></a><code class="methodsynopsis c"><span class="type">int </span><span class="methodname">send_signal_etc</span>(<span class="methodparam"><span class="type">thread_id </span><span class="parameter">thid</span></span>,<br />                    <span class="methodparam"><span class="type">uint </span><span class="parameter">sig</span></span>,<br />                    <span class="methodparam"><span class="type">uint32 </span><span class="parameter">flags</span></span>);</code><p>Declared in: <code class="filename">drivers/KernelExport.h</code></p><p>This function is a counterpart to <code class="function">send_signal()</code> in the Posix layer, which
+is not exported for drivers.</p><p><code class="parameter">thid</code> is the <span class="type">thread_id</span> of the
+thread the signal should be sent to, and <code class="parameter">sig</code> is the
+signal type to send, just like in <code class="function">send_signal()</code>. The
+<code class="parameter">flags</code> argument can be used to specify flags to
+control the function:</p><table class="variablelist constants"><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_CHECK_PERMISSION</code></span></p></td><td><p>The signal will only be sent if the destination
+thread's uid and euid are the same as the caller's.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_DO_NOT_RESCHEDULE</code></span></p></td><td><p>The kernel won't call the scheduler after sending the
+signal. You should specify this flag when calling
+<code class="function">send_signal_etc()</code> from
+an interrupt handler.</p></td></tr></tbody></table><table class="variablelist returncodes"><thead><tr><th>Return Code</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_OK</code>.</span></p></td><td><p>The signal was sent.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_BAD_VALUE</code>.</span></p></td><td><p>The signal type is invalid.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_BAD_THREAD_ID</code>.</span></p></td><td><p>The thread ID is invalid.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_NOT_ALLOWED</code>.</span></p></td><td><p>The permission check failed
+(if <code class="constant">B_CHECK_PERMISSION</code> was
+specified).</p></td></tr></tbody></table></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="spawn_kernel_thread"></a>spawn_kernel_thread()</h3></div></div></div><a id="id923668" class="indexterm"></a><code class="methodsynopsis c"><span class="type">thread_id </span><span class="methodname">spawn_kernel_thread</span>(<span class="methodparam"><span class="type">thread_entry </span><span class="parameter">func</span></span>,<br />                              <span class="methodparam"><span class="type">const char* </span><span class="parameter">name</span></span>,<br />                              <span class="methodparam"><span class="type">long </span><span class="parameter">priority</span></span>,<br />                              <span class="methodparam"><span class="type">void* </span><span class="parameter">data</span></span>);</code><p>Declared in:  <code class="filename">drivers/KernelExport.h</code></p><p>This function is a counterpart to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>
+in the Kernel Kit, which
+is not exported for drivers. It has the same syntax as the Kernel Kit
+function, but is able to spawn threads in the kernel's memory space.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="spin"></a>spin()</h3></div></div></div><a id="id923757" class="indexterm"></a><code class="methodsynopsis c"><span class="type">void </span><span class="methodname">spin</span>(<span class="methodparam"><span class="type">bigtime_t </span><span class="parameter">microseconds</span></span>);</code><p>Declared in:  <code class="filename">drivers/KernelExport.h</code></p><p>Executes a delay loop lasting at least the specified number of
+microseconds. It could last longer, due to rounding errors, interrupts,
+and context switches.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="DeviceDrivers_ConstantsDefinedTypes.html">Constants And Defined Types</a>  Up: <a href="DeviceDrivers.html">Device Drivers</a>  Next: <a href="DeviceDrivers_MessageConstants.html">Message Constants</a> </div><div id="footerB"><div id="footerBL"><a href="DeviceDrivers_ConstantsDefinedTypes.html" title="Constants And Defined Types"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="DeviceDrivers_MessageConstants.html" title="Message Constants"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

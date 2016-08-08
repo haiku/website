@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-20.html" title="Issue 2-20, May 21, 1997" /><link rel="next" href="Issue2-22.html" title="Issue 2-22, June 4, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-20.html" title="Issue 2-20, May 21, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-22.html" title="Issue 2-22, June 4, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-20.html">Issue 2-20, May 21, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-22.html">Issue 2-22, June 4, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-21"></a>Issue 2-21, May 28, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-21"></a>Be Engineering Insights: BScreens and Puppy Paws</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Scott</span> <span class="surname">Bronson</span></span></div></div></div><p>
+The beauty and sensibility of a final result often belies the time and
+effort that went into creating it. Good dancers appear to have been born
+moving effortlessly. An attractive, well-dressed human being likely
+didn't wake up looking quite so polished. Everything we see, from the
+most majestic landscape to the least significant spore, required a period
+of growth. Whatever the refinement of the result, this means that
+everything went through periods of lankiness and growing pains. Puppy
+paws appear far too big for the legs they're mounted on. A baby's head
+dwarfs its tiny body. When growing, dependencies require that some parts
+grow faster and be in place sooner than others. A browse through the DR9
+Advanced Access header files will hint at things to come, like multiple
+displays. The header file Screen.h describes the new API for applications
+to obtain information about screens in a remarkably dynamic multiple
+screen environment.
+</p><p>
+Imagine a full multitasking operating system that will allow displays to
+come and go at will. Let's say the user is done at the office (imagine!)
+and—without restarting—unplugs his BeOS notebook from his 17"
+monitor, tucks it under his arm, and takes it home. Without any help, the
+OS notices that the 17" CRT is gone and the 14" built-in LCD display
+should be the new main screen. In a flurry of windows moving and
+updating, everything in the system shifts to the new configuration with
+no surprises for the user.
+</p><p>
+Certainly a nice image. But not without a few minor problems to solve.
+For instance, how does a program refer to specific screens when they can
+appear and disappear at will? It cannot use a pointer, as it is hard to
+tell when the pointer is invalid, and the consequences for misuse are
+dire. Neither can it use a "GetNthScreen" call, as the screen indexes
+will change when screens are added and removed (when monitor 1 is
+removed, monitor 2 becomes monitor 1, monitor 3 becomes monitor 2, and so
+on).
+</p><p>
+The solution is the screen_id, a unique, opaque 32-bit identifier,
+representing a screen attached to the computer. When a screen is
+disconnected, its <span class="type">screen_id</span> falls into permanent disuse. When it is
+reconnected, it is assigned a new ID. Because screen_ids are meant to be
+lightweight, they are not persistent across boots. A solution involving
+far more than 32 bits will be developed later to persistently identify
+screens.
+</p><p>
+And, now the star of the show. The <code class="classname">BScreen</code> is an extremely lightweight,
+easy to construct class that represents a single screen. <code class="classname">BScreen</code>s are
+meant to be constructed immediately when information is needed, and to
+exist for as short a time as possible. Although construction and
+destruction take insignificant time, some of the calls (such as
+BaseAddress and BytesPerRow) are slower than you might expect because
+they involve a synchronous round-trip AppServer request.
+</p><p>
+To prevent race conditions with the results of the <code class="classname">BScreen</code> functions, the
+display will not change when any <code class="classname">BScreen</code> objects referring to it are in
+existence. The display is locked in the <code class="classname">BScreen</code>'s constructor and freed
+in the destructor so neither the Screen preferences panel nor anybody
+else will be able to change the horizontal or vertical size, bit depth,
+color palette, or anything else that might affect client applications.
+This is why it is extremely important to destroy the <code class="classname">BScreen</code>, allowing
+the display to change again, as soon as possible. A user won't react
+kindly to an application hogging his screen, and when informed which is
+the culprit (it's not hard to figure out who is misusing the <code class="classname">BScreen</code>),
+will remorselessly blow it away.
+</p><pre class="programlisting cpp">
+class <code class="classname">BScreen</code> {
+
+    <code class="classname">BScreen</code>( <span class="type">screen_id</span> id=<code class="constant">B_MAIN_SCREEN_ID</code> );
+    <code class="classname">BScreen</code>( <span class="type"><code class="classname">BWindow</code> *</span><code class="parameter">win</code> );
+    ~<code class="classname">BScreen</code>();
+</pre><p>
+The best way to construct a <code class="classname">BScreen</code> object is to pass in a window. The
+constructor will return the screen that contains that window (or the
+majority of the window). If you need more flexibility, you can pass the
+ID of the desired screen. Because <code class="classname">BScreen</code>s are meant to be created on the
+stack, the destructor should be called automatically. Manually creating
+and deleting <code class="classname">BScreen</code>s on the heap is a sure recipe for leaks (again,
+likely leading to an irate user and your application's unceremonious
+termination).
+</p><pre class="programlisting cpp">
+    <span class="type">bool</span>    <code class="methodname">IsValid</code>();
+</pre><p>
+When screens can come and go at will, it will be possible for the <code class="classname">BScreen</code>
+constructor to be passed a <span class="type">screen_id</span> which is no longer valid. The
+<code class="classname">BScreen</code> will be constructed anyway, but will refer to the main screen
+instead of the screen you asked for. This is so you don't have to do
+error checking every single time you construct a <code class="classname">BScreen</code>. Accidentally
+using the main screen will prevent crashing, and will generally produce
+acceptable results anyway. IsValid will return false if the <code class="classname">BScreen</code>
+refers to the main screen instead of the screen you asked for.
+</p><pre class="programlisting cpp">
+    <span class="type">color_space</span>  <code class="methodname">ColorSpace</code>();
+    <code class="classname">BRect</code>        <code class="methodname">Frame</code>();
+    <span class="type">screen_id</span>    <code class="methodname">ID</code>();
+    <span class="type">void*</span>        <code class="methodname">BaseAddress</code>();
+    <span class="type">uint32</span>       <code class="methodname">BytesPerRow</code>();
+    <span class="type">status_t</span>     <code class="methodname">WaitForRetrace</code>();
+</pre><p>
+These calls are pretty much self-explanatory, except that <code class="methodname">WaitForRetrace</code>
+is temporarily unimplemented (it just returns <code class="constant">B_ERROR</code> right now).
+</p><pre class="programlisting cpp">
+    <span class="type">uint8</span>      <code class="methodname">IndexForColor</code>( <span class="type">rgb_color</span> rgb );
+    <span class="type">uint8</span>      <code class="methodname">IndexForColor</code>( <span class="type">uint8</span> <code class="parameter">r</code>, <span class="type">uint8</span> <code class="parameter">g</code>, <span class="type">uint8</span> <code class="parameter">b</code>,
+               <span class="type">uint8</span> <code class="parameter">a</code>=0 );
+    <span class="type">rgb_color</span>  <code class="methodname">ColorForIndex</code>( <span class="type">constuint8</span> <code class="parameter">index</code> );
+</pre><p>
+The BeOS has a system color table that applies to every bitmap, every
+8-bit screen, basically everywhere indexed color is used. VRAM is cheap
+enough now that if you need realistic color, it is much easier to simply
+set the display to 32-bit color than to manage and arbitrate the palette
+(even with full OS support). So why not make these calls global? Because
+even though this capability will likely go unused in the BeOS, the
+hardware DOES allow each individual screen to have its own color
+environment.
+</p><pre class="programlisting cpp">
+    <span class="type">uint8</span>        <code class="methodname">InvertIndex</code>( <span class="type">uint8</span> <code class="parameter">index</code> );
+</pre><p>
+Passed a color index, <code class="methodname">InvertIndex</code> returns the index of a suitable
+inverse. It uses the inversion map returned by <code class="code"><code class="methodname">ColorMap</code>()-&gt;<code class="varname">inversion_map</code></code>.
+</p><pre class="programlisting cpp">
+    <span class="type">constcolor_map*</span> <code class="methodname">ColorMap</code>();
+</pre><p>
+<code class="methodname">ColorMap</code>() allows you to save time by doing your own table lookups. Don't
+use the color map after its <code class="classname">BScreen</code> has been destructed. Suitably bad
+things will happen.
+</p><pre class="programlisting cpp">
+    <span class="type">rgb_color</span>    <code class="methodname">DesktopColor</code>();
+    <span class="type">void</span>         <code class="methodname">SetDesktopColor</code>( <span class="type">rgb_color</span> <code class="parameter">rgb</code>,
+                 <span class="type">bool</span> <code class="parameter">stick</code>=<code class="constant">true</code> );
+</pre><p>
+These set the screen's desktop color. If stick is <code class="constant">true</code>, then it saves the
+change to disk. If not, then the desktop color change will last only
+until the computer is restarted.
+</p><pre class="programlisting cpp">
+};
+
+inline <span class="type">uint8</span> <code class="classname">BScreen</code>::<code class="methodname">IndexForColor</code>( <span class="type">rgb_color</span> <code class="parameter">rgb</code> )
+  { return <code class="methodname">IndexForColor</code>( <code class="parameter">rgb</code>.<code class="varname">red</code>, <code class="parameter">rgb</code>.<code class="varname">green</code>, <code class="parameter">rgb</code>.<code class="varname">blue</code>,
+    <code class="parameter">rgb</code>.<code class="varname">alpha</code> ); }
+</pre><p>
+Finally, a pinch of syntactic sugar.
+</p><p>
+Let's see how to use <code class="classname">BScreen</code>. First, a simple example that draws a
+rectangle, colored the inverse of the desktop color, in a view.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MyView</code>::<code class="methodname">Draw</code>( <code class="classname">BRect</code> <code class="parameter">where</code> )
+{
+    <code class="classname">BRect</code> <code class="varname">area</code>( 10, 10, 110, 110 );
+    <span class="type">rgb_color</span> <code class="varname">deskcolor</code>;
+
+    <code class="classname">BScreen</code> <code class="varname">screen</code>( <code class="methodname">Window</code>() );
+
+    <span class="comment">// Now, the screen containing the majority of the window</span>
+    <span class="comment">// has been locked. It will not change while the</span>
+    <span class="comment">// function is executing.</span>
+
+    <code class="varname">deskcolor</code> = <code class="varname">screen</code>.<code class="methodname">DesktopColor</code>();
+    if( <code class="varname">screen</code>.<code class="methodname">ColorSpace</code>() == <code class="constant">B_COLOR_8_BIT</code> ) {
+        <span class="comment">// do the inversion calculation using indexed colors</span>
+        <span class="type">uint8</span> <code class="varname">icol</code> = <code class="varname">screen</code>.<code class="methodname">InvertIndex</code>(
+            <code class="varname">screen</code>.<code class="methodname">IndexForColor</code>(<code class="varname">deskcolor</code>) );
+        <code class="methodname">SetHighColor</code>( <code class="varname">screen</code>.<code class="methodname">ColorForIndex</code>(<code class="varname">icol</code>) );
+    } else {
+        <span class="comment">// Invert the rgb_color</span>
+        <code class="methodname">SetHighColor</code>( ~<code class="varname">rcol</code>.<code class="varname">red</code>, ~<code class="varname">rcol</code>.<code class="varname">green</code>, ~<code class="varname">rcol</code>.<code class="varname">blue</code> );
+    }
+
+    <code class="methodname">FillRect</code>( <code class="varname">area</code> );
+
+    <span class="comment">// The screen variable is destroyed, and its display</span>
+    <span class="comment">// released and allowed to change again, when this</span>
+    <span class="comment">// function returns.</span>
+}
+</pre><p>
+If the screen is currently in 8-bit mode, the inversion calculation is
+done using indexed colors. This is not strictly necessary—inverting
+the rgb_color would provide visually acceptable results—but this is a
+good example of how to manipulate color indexes.
+</p><p>
+Otherwise, if the screen is not in 8-bit-mode, the screen must be in a
+direct mode, and we'll calculate the inverse directly from the color's
+individual components. Finally, the rect is filled in, and the desktop
+color's inverse is on screen.
+</p><p>
+A somewhat more advanced usage of <code class="classname">BScreen</code> (snipped from the Connect
+source code):
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">Border</code>::<code class="methodname">MessageReceived</code>( <span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">m</code>)
+{
+    <span class="type">constcolor_map *</span><code class="varname">cm</code> = <code class="classname">BScreen</code>( <code class="methodname">Window</code>( )).<code class="methodname">ColorMap</code>( );
+    if (<code class="parameter">m</code>-&gt;<code class="varname">what</code> &lt; sizeof(<code class="varname">cm</code>-&gt;<code class="varname">color_list</code>)/
+        sizeof(<code class="varname">cm</code>-&gt;<code class="varname">color_list</code>[0])) {
+        <code class="methodname">SetViewColor</code>( <code class="varname">cm</code>-&gt;<code class="varname">color_list</code>[<code class="parameter">m</code>-&gt;<code class="varname">what</code>]);
+        <code class="methodname">Invalidate</code>( );
+    }
+}
+</pre><p>
+First, notice that the <code class="classname">BScreen</code> object is anonymous—it was never given
+a name. The rules of construction and destruction still apply, so the
+<code class="classname">BScreen</code> will not be destroyed until the flow of execution leaves the
+enclosing brackets; in this case, when the function returns. Even in the
+worst case, <code class="classname">Border</code>::<code class="methodname">MessageReceived</code> takes a tiny amount of time to
+execute, so this is acceptable. The variable cm will go out of scope when
+the <code class="classname">BScreen</code> is destroyed, so its validity is ensured for the duration of
+the function.
+</p><p>
+The conditional makes sure that the index <code class="code"><code class="varname">m</code>-&gt;<code class="varname">what</code></code> falls within the bounds
+of the color table. Then, using a simple table lookup (instead of the
+slightly more expensive <code class="methodname">ColorForIndex</code> call), the appropriate <span class="type">rgb_color</span> is
+passed to <code class="methodname">SetViewColor</code>. Simple, straightforward, and there is no chance
+that the color table will change or disappear until the function returns.
+</p><p>
+<code class="classname">BScreen</code> is not meant to be used to lock the screen (though it can
+certainly be misused to do that for now). A more sensible way to allow
+applications to directly and asynchronously modify screen bits (i.e. DMA)
+is in development.
+</p><p>
+Do you remember get_screen_info and friends from the DR8 InterfaceDefs.h?
+They're still there in the Advanced Access DR9, but they are tiny little
+functions implemented using <code class="classname">BScreen</code>s. They will go away in the full DR9
+release. Use the old API at your peril.
+</p><p>
+So, yes, with <code class="classname">BScreen</code> I've added a tiny bit of lankiness to the DR9 BeOS.
+Lanky not because it's hard to use (at least, I sure tried to make it
+simple), but because significant parts of it are not used today. However,
+just as a dog's legs eventually grow to fit its paws, the BeOS will grow
+to fit its header files, and the result will be lean, fast, and powerful.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-21-2"></a>Be Engineering Insights: Unicode UTF-8</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Don</span> <span class="surname">Larkin</span></span></div></div></div><p>
+You may have heard that DR9 adopts the Unicode Standard for encoding
+characters and, in particular, the UTF-8 transformation of Unicode
+character values. You can read all about UTF-8 in "The Unicode Standard,
+Version 2.0" published by Addison-Wesley, but here's a synopsis for those
+of you that don't have the book.
+</p><p>
+Unicode is a universal encoding scheme for all the characters in the
+major scripts of the world—including, among others, extended Latin,
+Cyrillic, Greek, Devanagiri, Telugu, Hebrew, Arabic, Tibetan, and the
+various character sets used by Chinese, Japanese, and Korean. It assigns
+a unique and unambiguous 16-bit value to each character, making it
+possible for characters from various languages to co-exist in the same
+document. Unicode makes it simpler to write language-aware software
+(though it doesn't solve all the problems). It also makes a wide variety
+of symbols available to an application even if it's not concerned with
+internationalization.
+</p><p>
+Unicode's one disadvantage is that all characters have a width of 16
+bits. Although 16 bits are necessary for a universal encoding and a fixed
+width is important for the standard, there are many contexts in which
+byte-sized characters would be easier to work with and take up less
+memory (besides being more familiar and backwards compatible with
+existing code). UTF-8 is designed to address this problem.
+</p><p>
+UTF-8 stands for "UCS Transformation Format, 8-bit form" (and UCS stands
+for "Universal Multiple-Octet Character Set," another name for Unicode).
+UTF-8 transforms 16-bit Unicode values into a variable number of 8-bit
+units. It takes advantage of the fact that for values less than 0x0080,
+the Unicode character set matches the 7-bit ASCII character set—in
+other words, Unicode adopts the ASCII standard, but encodes each
+character in 16 bits. UTF-8 strips ASCII values back to 8 bits and uses
+two or three bytes to encode Unicode values over 0x007f.
+</p><p>
+The high bit of each UTF-8 byte indicates the role it plays in the
+encoding: If the high bit is 0, the byte stands alone and encodes an
+ASCII value. If the high bit is 1, the byte is part of a multiple-byte
+character representation.
+</p><p>
+In addition, the first byte of a multibyte character indicates how many
+bytes it takes to represent the character: The number of high bits that
+are set to 1 (before a bit is 0) is the number of bytes in the encoding.
+Therefore, the first byte of a multibyte character will always have at
+least two high bits set. The other bytes in a multibyte encoding have
+just one high bit set.
+</p><p>
+To illustrate, here is how UTF-8 arranges the bits in one-, two-, and
+three-byte encodings (where a '0' or '1' indicates a control bit
+specified by the standard and an 'x' is a bit that contributes to the
+character value):
+</p><pre class="screen">
+1:    0 x x x x x x x
+
+2:    1 1 0 x x x x x   1 0 x x x x x x
+
+3:    1 1 1 0 x x x x   1 0 x x x x x x   1 0 x x x x x x
+</pre><p>
+Note that any 16-bit value can be encoded in three UTF-8 bytes. However,
+UTF-8 discards leading zeroes and always uses the fewest possible number
+of bytes, so it can encode Unicode values less than 0x0080 in a single
+byte and values less than 0x0800 in two bytes.
+</p><p>
+In addition to the codings illustrated above, UTF-8 takes four bytes to
+translate a Unicode "surrogate pair"—two conjoined 16-bit values that
+together encode a character that's not part of the standard. Surrogates
+are extremely rare. See "The Unicode Standard" for details.
+</p><p>
+The UTF-8 encoding scheme has several advantages:
+</p><ul class="itemizedlist"><li><p>
+The single byte that encodes an ASCII value can't be confused with a
+byte that's part of a multiple-byte encoding. You can test a UTF-8 byte
+for an ASCII value without considering its context; if there's a match,
+you can be sure the byte is the ASCII character. UTF-8 is fully
+compatible with ASCII.
+</p></li><li><p>
+The first (or only) byte of a character can't be confused with a byte
+inside a multibyte sequence. It's simple to find where a character
+begins. For example, this macro does the job:
+</p><pre class="programlisting c">
+#define BEGINS_CHAR(<code class="parameter">byte</code>) ((<code class="parameter">byte</code> &amp; 0xc0) != 0x80)
+</pre></li><li><p>
+The string functions in the standard C library—such as,
+<code class="function">strcasecmp()</code>, <code class="function">strcat()</code>,
+and <code class="function">strlen()</code>—can operate on a UTF-8 string.
+</p><p>
+However, it's important to remember that <code class="function">strlen()</code> measures the string
+in bytes, not characters. Some Interface Kit functions, like
+<code class="methodname">GetEscapements()</code> in the <code class="classname">BFont</code> class, ask for a character count;
+<code class="function">strlen()</code> can't provide the answer. Instead, you need to do something
+like this to count the characters in a UTF-8 string:
+</p><pre class="programlisting c">
+<span class="type">int32</span> <code class="varname">count</code> = 0;
+while ( *<code class="varname">p</code> != '\0' ) {
+    if ( BEGINS_CHAR(*<code class="varname">p</code>) )
+        <code class="varname">count</code>++;
+    <code class="varname">p</code>++;
+}
+</pre></li><li><p>
+Also, you should be careful when using the string comparison functions
+to order a set of strings. Unicode tries to be a universal encoding and
+orders characters in a way that's generically correct. However, it may
+not be correct for specific characters for specific languages. (Because
+it follows ASCII, UTF-8 is correct for English.)
+</p></li><li><p>
+For European languages, UTF-8 generally yields more compact data
+representations than would Unicode. Most of the characters in a string
+can be encoded in a single byte. In many other cases, UTF-8 is no less
+compact than Unicode.
+</p></li></ul><p>
+The BeOS assumes UTF-8 encoding in most cases. For example, a <code class="constant">B_KEY_DOWN</code>
+message reports the character that's mapped to the key the user pressed
+as a UTF-8 value. The message has a data array named "byte" with each
+byte of the encoding as a separate item. The bytes are extracted from the
+array and passed as a string to the new version of <code class="methodname">KeyDown()</code>, along with
+the byte count:
+</p><pre class="programlisting cpp">
+virtual <span class="type">void</span> <code class="methodname">KeyDown</code>(<span class="type">const char *</span><code class="parameter">bytes</code>, <span class="type">int32</span> <code class="parameter">numBytes</code>);
+</pre><p>
+You can expect the "bytes" string to always contain at least one byte.
+And, of course, you can test it for any ASCII value without caring that
+it's UTF-8:
+</p><pre class="programlisting cpp">
+if ( <code class="varname">bytes</code>[0] == <code class="constant">B_TAB</code> )
+    . . .
+</pre><p>
+Similarly, BeOS objects that display text in the user interface—such
+as window titles and button labels—expect to be passed UTF-8 encoded
+strings, and will pass you a UTF-8 string if you ask for the title or
+label.
+
+Although the <code class="classname">BFont</code> class allows other encodings, which you may need to
+use from time to time, the system fonts are stuck with UTF-8. It's
+recommended that you stick with it as well wherever possible.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-21"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+What kind of programmer are you? That's what I ask myself on a regular
+basis. Am I motivated by fame, fortune, prestige, or something like a
+desire to change the world?
+</p><p>
+Well, honestly, it's a combination of all of these. I've done the mission
+critical custom app thing to great success, and now I've moved on to more
+interesting things. When I program the BeOS, I'm excited. I mean really.
+Staying up until 4am for that "one more compile" just so you can see
+picture in picture video running on a standard BeOS machine?
+</p><p>
+Well, that's what I did this weekend.
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/videomania.tgz
+</p><p>
+I don't watch TV that much, but when a TV tuner/video capture card costs
+only $127 at Fry's, how could I possibly resist. The interesting thing
+about the Hauppauge board is that it has a tuner, and composite video
+inputs. You can switch between them on the fly. With two of these boards
+in your machine, you basically have 4 video input sources. This is better
+than my TV at home, and costs a lot less. I'm telling you, if you haven't
+already gone out and bought one of these capture cards yet, now would be
+a good time.
+</p><p>
+The other interesting thing about the Hauppauge board is that it works
+better at full screen rather than smaller. Why is that? DMA my fine
+fellow, DMA. The Hauppauge board, or more accurately the Brooktree Bt848
+video capture chip, does DMA transfers directly into video memory if you
+tell it to. So full screen 60 fields per second 32 bit color looks pretty
+cool, and you don't need high energy machines to achieve this
+performance. When you display at a smaller scale, the Bt848 has to do
+some scaling. This doesn't really slow it down, but the quality isn't as
+good. The beauty of DMA is that the CPU doesn't really get involved. A
+lowly PowerPC 603 66MHz could do the job.
+</p><p>
+The thing that keeps me programming is the leap frog inspiration that
+really cool technology causes. Once you have one of these capture cards,
+you might think of ways to improve your "entertainment system." You might
+add easy access to the web and TV Guide, or you might find it interesting
+to add control of your FireWire-based VCR and CD players. Whatever your
+motivation, there's nothing like getting all excited about driving a
+tractor all over the apps that other poor farmers are still struggling
+with.
+</p><p>
+Judging from our mail and BeDevTalk postings, you're all very active with
+DR9. We're pumping out sample apps as fast as we can, and working on
+documentation. Keep sending us your input as to how we can better serve
+you. Without your efforts, this platform will be a technology looking for
+a solution. Keep up the good work and keep sending in that valuable
+praise and criticism. We in turn will continue to try and provide you
+with the best platform upon which you can dream up your killer apps.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-21"></a>Back From Europe</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I spent a week in the old country, meeting software developers, investors
+and business partners, mostly from France, but also from other parts of
+Europe. We've invested early in Europe, based on a combination of beliefs
+and connections. The connections relate to my checkered past in the
+computer industry over there. I worked in the French as well as the
+European HQ of my alma mater Hewlett-Packard, at Data General, at Exxon
+Office Systems (briefly, quickly recognizing the error) and starting
+Apple France, before fulfilling an old dream and moving to the Silicon
+Valley. As a result, when we started the company, we benefited from a
+hospitable European network. Friends invested in the company and
+introduced us to other investors; we abducted people to California and
+linked up again with associates from earlier lives.
+</p><p>
+In many respects, the company probably wouldn't be around if it weren't
+for our European connections. In 1991, when we started raising money, US
+investors were understandably reluctant. Microsoft was already perceived
+as the invincible juggernaut—the agility came later when they became a
+born-again Internet company. At the time, PDAs, set-top boxes and 3DO
+game consoles were in fashion and we couldn't quite demonstrate our OS
+side by side with older platforms. The "no legacy, no baggage" equation
+was hard to explain.
+</p><p>
+In so called "high-tech" industries, Europe is perceived as having fallen
+behind the US. In several instances, it is even true as in the case of
+the PC business. Companies such as Olivetti or Nixdorf were once industry
+leaders. Their misfortunes haven't dulled European appetites for new
+technology. In many respects "conservative" Europeans are more daring
+than New World players. VCRs, CDs and, more recently, the Macintosh and
+digital cellular telephones enjoyed a better early acceptance in the old
+continent than in the US. (Once the new standards get accepted in the US,
+the market quickly makes up for a late start.)
+</p><p>
+In Be's case, our unconventional proposition found early takers in
+Europe. Some investors were not awed by the Microsoft "Über alles"
+mystique, others saw in us the Silicon Valley connection. One of them
+told us bluntly he'd "never invest in a deal like this based in Europe"...
+</p><p>
+European developers react in a similar fashion. First, in an apparent
+paradox, just like the blunt investor, many local developers would be
+reluctant to bet their time and energy on a European media OS. And,
+second, our evangelism efforts got "traction" earlier in Europe than in
+the US. Does it mean the famous "tractor app" will come from Europe
+rather than the US? It is still too early to tell, but we see another
+positive factor in our European connection. It is even harder to make
+money in the software business in Europe than it is in the US. As a
+result of our use of the Net to market and deliver software, European
+developers see the BeOS as a way to break into the US market unavailable
+with the conventional distribution network. Our goal is to make their
+hopes come true.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-20.html">Issue 2-20, May 21, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-22.html">Issue 2-22, June 4, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-20.html" title="Issue 2-20, May 21, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-22.html" title="Issue 2-22, June 4, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

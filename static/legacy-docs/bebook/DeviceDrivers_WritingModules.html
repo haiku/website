@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - Special Topics - Device Drivers</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="DeviceDrivers.html" title="Device Drivers" /><link rel="prev" href="DeviceDrivers_WritingDrivers.html" title="Writing Drivers" /><link rel="next" href="DeviceDrivers_UsingModules.html" title="Using Modules" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="DeviceDrivers_WritingDrivers.html" title="Writing Drivers"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="DeviceDrivers_UsingModules.html" title="Using Modules"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - Special Topics - Device Drivers</div></div><div id="headerB">Prev: <a href="DeviceDrivers_WritingDrivers.html">Writing Drivers</a>  Up: <a href="DeviceDrivers.html">Device Drivers</a>  Next: <a href="DeviceDrivers_UsingModules.html">Using Modules</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_WritingModules"></a>Writing Modules</h2></div></div></div><p>Modules provide services that can be used by other modules, by device
+drivers, and by the kernel itself. They can be dynamically loaded and
+unloaded by the kernel, as needed. If a client can't find a module it
+needs, it will still load, which gives it the opportunity to find another
+way to perform the desired tasks, or to disable those features of itself.</p><p>Modules, like drivers, export an API through a structure that provides
+pointers to the functions provided by the module, along with other
+information about the module. You do this by expanding upon the basic
+module definition in <code class="filename">drivers/module.h</code>.
+For example, you might define
+your module information structure like this:</p><pre class="programlisting example c">#define <code class="constant">MY_MODULE_NAME</code> "generic/mymodule/v1"
+
+<span class="type">struct my_module_info</span> {
+   <span class="type">module_info</span> <code class="varname">module</code>;
+   <span class="type">int32</span> (*<code class="varname">function1</code>)();
+   <span class="type">int32</span> (*<code class="varname">function2</code>)();
+   <span class="type">void</span> (*<code class="varname">configure</code>)(<span class="type">int32</span> <code class="parameter">parameter</code>, <span class="type">int32</span> <code class="parameter">value</code>);
+};</pre><p>Note that the first field in your module information structure is a
+<span class="type">module_info</span>, which looks like this:</p><pre class="programlisting definition c"><span class="type">struct module_info</span> {
+   <span class="type">const char*</span><code class="varname">name</code>;
+   <span class="type">uint32</span> <code class="varname">flags</code>;
+   <span class="type">status_t</span> (*<code class="varname">std_ops</code>);
+};</pre><p>The <code class="varname">name</code> field should be a pointer to the driver's name as indicated in
+your module's header file (in this example, <code class="constant">MY_MODULE_NAME</code>).</p><p>The <code class="varname">flags</code> field specifies which flags should be in effect for your
+module. Currently, the <code class="constant">B_KEEP_LOADED</code> flag is the only one available; as
+expected, it tells the kernel not to unload your module when nobody is
+using it; normally, the first time your module is requested by someone
+calling <a class="link" href="DeviceDrivers_WritingModules.html#get_module" title="get_module"><code class="function">get_module()</code></a>,
+the kernel loads it. With each subsequent call to
+<a class="link" href="DeviceDrivers_WritingModules.html#get_module" title="get_module"><code class="function">get_module()</code></a>,
+a reference count is incremented. Every time
+<a class="link" href="DeviceDrivers_WritingModules.html#put_module" title="put_module"><code class="function">put_module()</code></a>
+is called to release the module, the reference count is decremented. When
+the counter reaches zero, the module is unloaded. <code class="constant">B_KEEP_LOADED</code> prevents
+unloading from taking place.</p><p><code class="varname">std_ops</code> is a pointer to a function that your module must provide. This
+function is called to handle standard module operations. Currently, there
+are only two of these operations (initialization and uninitialization).
+Your module's <code class="function">std_ops()</code> function will probably look something like this:</p><pre class="programlisting example c">static <span class="type">status_t</span> <code class="function">std_ops</code>(<span class="type">int32</span> <code class="parameter">op</code>, ...) {
+   switch(<code class="parameter">op</code>) {
+      case <code class="constant">B_MODULE_INIT</code>:
+         <span class="comment">/* do whatever you need to do */</span>
+         break;
+      case <code class="constant">B_MODULE_UNINIT</code>:
+         <span class="comment">/* do whatever you need to do */</span>
+         break;
+      default:
+         return <code class="constant">B_ERROR</code>;   <span class="comment">/* necessary, for future expansion */</span>
+   }
+   return <code class="constant">B_OK</code>;
+}</pre><p>It's important to return <code class="constant">B_ERROR</code> for any unknown operations, in case
+future versions of the kernel define additional operations.</p><p>Exporting your module to the outside world is similar to publishing
+device driver hooks, but since you define the hooks yourself, it's
+slightly more involved. Your module needs to have a filled-out version of
+your module's information structure, like this:</p><pre class="programlisting example c">static <span class="type">struct my_module_info</span> <code class="varname">my_module</code> {
+   {
+      <code class="constant">MY_MODULE_NAME</code>,   <span class="comment">/* module name */</span>
+      0,   <span class="comment">/* flags */</span>
+      <code class="varname">std_ops</code>
+   },
+   <code class="varname">function1</code>,
+   <code class="varname">function2</code>,
+   <code class="varname">configure</code>
+};</pre><p>When loading your module, the kernel looks for a symbol called "modules"
+that contains a list of pointers to the modules you export, terminated by
+a <code class="constant">NULL</code>:</p><pre class="programlisting example c">_EXPORT <span class="type">module_info*</span><code class="varname">modules</code>[] = {
+   (<span class="type">module_info*</span>) &amp;<code class="varname">my_module</code>,
+   <code class="constant">NULL</code>
+};</pre><p>This is how the kernel finds out what modules are available for use by
+drivers (or by other modules). See the
+"<a class="link" href="DeviceDrivers_UsingModules.html" title="Using Modules">Using Modules</a>" section for
+details on how modules are accessed by other drivers or modules.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Module_Functions"></a>Module Functions</h3></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="get_module"></a>get_module</h4></div></div></div><a id="id462948" class="indexterm"></a><code class="methodsynopsis c"><span class="type">status_t </span><span class="methodname">get_module</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">path</span></span>,<br />                    <span class="methodparam"><span class="type">module_info** </span><span class="parameter">info</span></span>);</code><p>Declared in: <code class="filename">drivers/module.h</code></p><p>The <code class="function">get_module()</code> function obtains infomation
+about the module at the <code class="parameter">path</code> specified and
+increases the modules internal reference count.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="put_module"></a>put_module</h4></div></div></div><a id="id463018" class="indexterm"></a><code class="methodsynopsis c"><span class="type">status_t </span><span class="methodname">put_module</span>(<span class="methodparam"><span class="type">const char* </span><span class="parameter">path</span></span>);</code><p>Declared in: <code class="filename">drivers/module.h</code></p><p>This function decreases the modules internal reference count and
+if the count is zero the module is unloaded from memory</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="DeviceDrivers_WritingDrivers.html">Writing Drivers</a>  Up: <a href="DeviceDrivers.html">Device Drivers</a>  Next: <a href="DeviceDrivers_UsingModules.html">Using Modules</a> </div><div id="footerB"><div id="footerBL"><a href="DeviceDrivers_WritingDrivers.html" title="Writing Drivers"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="DeviceDrivers_UsingModules.html" title="Using Modules"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

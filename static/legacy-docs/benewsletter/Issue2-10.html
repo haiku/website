@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-9.html" title="Issue 2-9, March 5, 1997" /><link rel="next" href="Issue2-11.html" title="Issue 2-11, March 19, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-9.html" title="Issue 2-9, March 5, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-11.html" title="Issue 2-11, March 19, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-9.html">Issue 2-9, March 5, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-11.html">Issue 2-11, March 19, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-10"></a>Issue 2-10, March 12, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-10"></a>Be Engineering Insights: By The Node Monitor</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+The Node Monitor is a new service that will accompany the DR9 file
+system. It lets your application ask to be notified when certain changes
+are made to a file or directory. For example, you can "watch for" the
+creation and deletion of files within a directory, for the modification
+of a specific file's attributes or name, and so on.
+</p><p>
+As a built-in feature of the file system, the Node Monitor is part of the
+kernel: It's always there. However, it's anticipated that most
+applications won't need the Node Monitor; watching the state of the file
+system is important to servers and to navigational applications like the
+Tracker, but your Tetris killer—or even your Excel insulter --
+probably isn't going to care.
+</p><p>
+The Node Monitor is, in our estimation, an advanced feature; the API for
+the Monitor is, suitably, rather low level—it's not downright
+unfriendly, but it does have a somewhat more mechanical view of the
+identity of files, as we're about to see.
+</p><p>
+CAVEAT: The API that we'll be looking at throughout this article isn't
+set in stone. Although the general concepts should remain valid, some of
+the names may change before DR9 is released.
+</p><p>
+To tell the Node Monitor that you want to watch for changes, you use the
+global watch_for() function:
+</p><pre class="programlisting c">
+<code class="function">watch_for</code>(<span class="type">ulong</span> <code class="parameter">flags</code>, <span class="type">dev_t</span> <code class="parameter">device</code>, <span class="type">ino_t</span> <code class="parameter">inode</code>,
+  <span class="type">const<code class="classname">BHandler</code> *</span><code class="parameter">handler</code>, <span class="type">const<code class="classname">BLooper</code> *</span><code class="parameter">looper</code>);
+</pre><p>
+The file or directory (or "node") that you're watching is represented by
+the combination of the function's device and inode arguments. (Conversion
+between device/inode and the <span class="type">entry_ref</span> structure/C++ objects, which were
+described in last week's Newsletter, will be provided by the Storage Kit.)
+</p><p>
+The activities that you're interested in watching are represented by the
+constants that you pass through the flags argument:
+</p><ul class="itemizedlist"><li><p>
+<code class="constant">B_WATCH_NAME</code> means you want to be told whenever the node is renamed.
+This includes being moved to a new directory.
+</p></li><li><p>
+<code class="constant">B_WATCH_STAT</code> watches for changes to the stat structure. This is the
+structure that records a node's size, creation and modification dates,
+permissions, and so on.
+</p></li><li><p>
+<code class="constant">B_WATCH_ATTR</code> watches for changes to the node's attributes. (See Be
+Newsletter #51 for more on attributes.)
+</p></li><li><p>
+<code class="constant">B_WATCH_DIRECTORY</code> watches for any changes to the list of files that a
+directory contains. In other words, it watches for files that are added
+to or removed from the directory. Obviously, this flag only applies to
+directory nodes.
+</p></li></ul><p>
+The special flag <code class="constant">B_STOP_WATCHING</code> can be passed to stop watching the node.
+</p><p>
+When a change is detected, the Node Monitor generates a <code class="classname">BMessage</code> and
+sends it to the "watcher" (a <code class="classname">BHandler</code> object) that's specified in the
+<code class="function">watch_for()</code> call. The watcher receives the message in its
+<code class="methodname">MessageReceived()</code> function. (The Node Monitor divines the target from the
+handler and looper arguments through a series of logical steps that are
+really not very interesting.)
+</p><p>
+Each of the watched-for flags corresponds to a particular type of
+message: <code class="constant">B_WATCH_NAME</code> generates a <code class="constant">B_ENTRY_MOVED</code>
+message, <code class="constant">B_WATCH_STAT</code>
+generates <code class="constant">B_STAT_CHANGED</code>, and so on. We'll look at an example of the
+Monitor's messaging later in this article.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id551772"></a>Monitor Vs. Live Queries</h3></div></div></div><p>
+<span class="foreignphrase"><em class="foreignphrase">Tres bien</em></span>, you dit to yourself,
+<span class="foreignphrase"><em class="foreignphrase">mais, comment c'est en mieux a la
+'Querie Vif!' en DRHuit?</em></span> ("How is this better than DR8's live queries?")
+</p><p>
+True, you could "watch" changes to files and directories in DR8 by
+installing a live query with the Storage Server—this is how the
+Browser kept its folder windows in synch with the file system, for
+example. But a live query can (or could) only watch for changes to fields
+in the database tables that represent the items in the file system. In
+other words, this sort of monitoring worked because certain file system
+parameters (file names, creation dates, and so on) were stored in the
+database. But in DR9 we're going start supporting foreign file systems,
+and these file systems (HFS and DOS, for starters) don't know anything
+about Be-native database facilities. Thus, a live query can't work on a
+foreign file.
+</p><p>
+This is where the Node Monitor can be useful: It's a "universal" service
+for spying on files and directories in any file system. Some file systems
+may not provide complete snoopage; it's likely that you won't be able to
+monitor attribute changes in DOS simply because DOS doesn't know about
+attributes. But one of the line items in the contract for becoming a
+"File System Handler" is that stat and directory-content information MUST
+be emulated. In other words, the DOS file system handler knows how to
+fake a stat structure. Thus, you'll be able to, at least, watch for
+changes to the arrangement of files in any mountable file system.
+</p><p>
+Note that the Node Monitor isn't a replacement for live queries. But
+neither are live queries going away: In DR9, you'll have the best of both
+worlds.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id551806"></a>Example (Print Server)</h3></div></div></div><p>
+Let's consider an application that uses the Node Monitor: the Print
+Server. When you print, the data that you're printing is written to a
+"spool file." It's the Print Server's responsibility to:
+</p><ul class="itemizedlist"><li><p>
+Detect the presence of a new spool file.
+</p></li><li><p>
+Wait for the file's "status" attribute to change to "waiting" (this
+indicates that the file is ready to be printed).
+</p></li><li><p>
+Change the status to "printing" and print the file.
+</p></li></ul><p>
+Spool files are always written to a known spool directory; to detect new
+spool files, the Print Server asks the Node Monitor to inform it of new
+entries in this directory:
+</p><pre class="programlisting cpp">
+<code class="classname">PrintServer</code>::<code class="methodname">PrintServer</code>() : <code class="classname">BApplication</code>('PRNT')
+{
+  <span class="type">dev_t</span> <code class="varname">spoolDevice</code>;
+  <span class="type">ino_t</span> <code class="varname">spoolInode</code>;
+
+  <span class="comment">// Get the device and inode of the spool directory</span>
+  <code class="function">get_inode_for_path</code>("/boot/system/spool", &amp;<code class="varname">spoolDevice</code>, &amp;<code class="varname">spoolInode</code>);
+
+  <span class="comment">// Start watching for new files in that directory.</span>
+  <span class="comment">// The final two arguments tell the Monitor to send</span>
+  <span class="comment">// notifications to this object's preferred handler.</span>
+  <code class="function">watch_for</code>(<code class="constant">B_WATCH_DIRECTORY</code>, <code class="varname">spoolDevice</code>, <code class="varname">spoolInode</code>, <code class="constant">NULL</code>, <code class="varname">this</code>);
+
+  <span class="comment">// We're also going to need another looper later.</span>
+  <code class="varname">fStatusWatcher</code> = new <code class="classname">StatusWatcher</code>();
+  ...
+}
+</pre><p>
+When a spool file is created, a <code class="constant">B_ENTRY_CREATED</code> message is sent to
+PrintServer's main loop. The <code class="varname">what</code> for Node Monitor messages is always
+<code class="constant">B_FS_NOTIFICATION</code>. The Monitor message type is in the <code class="varname">opcode</code> field:
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="classname">PrintServer</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>)
+{
+  <span class="type">dev_t</span> <code class="varname">fileDevice</code>;
+    <span class="type">ino_t</span> <code class="varname">fileInode</code>;
+
+  switch (<code class="parameter">msg</code>-&gt;<code class="varname">what</code>) {
+  . . .
+
+  case <code class="constant">B_FS_NOTIFICATION</code>:
+    switch(<code class="parameter">msg</code>-&gt;<code class="methodname">FindLong</code>("opcode")) {
+
+    case <code class="constant">B_ENTRY_CREATED</code>:
+      <span class="comment">// Get the device and inode for the file;</span>
+      <span class="comment">// these are stored in the message.</span>
+      <code class="varname">fileDevice</code> = <code class="parameter">msg</code>-&gt;<code class="methodname">FindLong</code>("device");
+      <code class="varname">fileInode</code> = <code class="parameter">msg</code>-&gt;<code class="methodname">FindLong</code>("node");
+</pre><p>
+At this point, the Server knows the identity (as a device/inode) of the
+new spool file. Now it waits for the "status" attribute to change to
+"waiting" by asking for an attribute-has-changed notification. Obviously,
+the Server has to find a different watcher for these notifications --
+that's why we defined the <code class="varname">fStatusWatcher</code> object:
+</p><pre class="programlisting cpp">
+      <code class="function">watch_for</code>(<code class="constant">B_WATCH_ATTR</code>, <code class="varname">fileDevice</code>, <code class="varname">fileInode</code>, <code class="constant">NULL</code>, <code class="varname">fStatusWatcher</code>);
+      . . .
+    }
+  }
+}
+</pre><p>
+(Note: There's a race condition in this code: What happens if the spool
+file is already "waiting" when the first notification is processed? The
+solution is left as an exercise for the reader.)
+</p><p>
+Over in the <code class="classname">StatusWatcher</code> handler, we find...
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="classname">StatusWacher</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>)
+{
+  <span class="type">dev_t</span> <code class="varname">fileDevice</code>;
+  <span class="type">ino_t</span> <code class="varname">fileInode</code>;
+  <code class="classname">BFile</code> <code class="varname">spoolFile</code>;
+  <span class="type">char</span> <code class="varname">buf</code>[16];
+
+  switch (<code class="parameter">msg</code>-&gt;<code class="varname">what</code>) {
+  case <code class="constant">B_FS_NOTIFICATION</code>:
+    switch(<code class="parameter">msg</code>-&gt;<code class="methodname">FindLong</code>("opcode")) {
+
+    case <code class="constant">B_ATTR_CHANGED</code>:
+      <span class="comment">// make sure this is the status attribute</span>
+      <span class="comment">// that has changed.</span>
+      if (<code class="function">strcmp</code>(<code class="parameter">msg</code>-&gt;<code class="methodname">FindString</code>("attr"), "status") != 0)
+        break;
+
+      <span class="comment">// Again, convert the msg into a</span>
+      <span class="comment">// device/inode and thence to a BFile...</span>
+      <code class="varname">fileDevice</code> = <code class="parameter">msg</code>-&gt;<code class="methodname">FindLong</code>("device");
+      <code class="varname">fileInode</code> = <code class="parameter">msg</code>-&gt;<code class="methodname">FindLong</code>("node");
+      <code class="varname">spoolFile</code> = <code class="classname">BFile</code>(<code class="varname">fileDevice</code>, <code class="varname">fileInode</code>);
+
+      <span class="comment">// ...and read the "status" attribute.</span>
+      <code class="varname">spoolFile</code>.<code class="methodname">ReadAttr</code>("status", <code class="varname">buf</code>, sizeof(<code class="varname">buf</code>));
+
+      <span class="comment">/* if the status isn't "waiting", get out. */</span>
+      if (<code class="function">strcmp</code>(<code class="varname">buf</code>, "waiting") != 0)
+    break;
+
+      <span class="comment">/* Set the status to "printing" */</span>
+      <span class="comment">/* and print the file. */</span>
+      <code class="varname">spoolFile</code>.<code class="methodname">WriteAttr</code>("status", "printing", strlen("printing")+1);
+      <code class="methodname">SendToPrinter</code>(<code class="varname">spoolFile</code>);
+      . . .
+</pre><p>
+Again, remember that the file system API is still subject to change, so
+don't start porting your code on the basis of the names shown here.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-10"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+The early adopters and developers on a new OS platform exhibit behavior
+that might be considered obsessive and irrational. When I first received
+my <span class="trademark">BeBox</span>™ last year, I couldn't help but read every shred of
+information available in the newsgroups, and I hungered for e-mail
+exchanges with like-minded folks. I longed for new web sites and new
+software on any ftp site.
+</p><p>
+This hunger and desire reaches a fevered pitch as a 'release' date
+approaches. DR5, DR6, DR7... Well, it's been a long time since a release,
+and DR8.2 for many has been the first release. Not wanting anyone to
+burst a blood vessel waiting for their next fix, we've decided to release
+DR8.3. This is really just a maintenance release and doesn't offer any
+new functionality. You'll find all the details about this release on our
+Web site this week. The general gist is, this release is for the Power
+Mac only, not for the BeBox (BeOS for BeBox does not have the limitations
+that DR8.3 removes).
+</p><p>
+In DR8.2, the font renderer had a limited license that required us to
+have a termination date, past which the OS wouldn't operate. We've
+changed font providers, and this requirement has been removed.
+</p><p>
+Serial support wasn't included in the DR8.2 CD that shipped with MacTech.
+This release includes it.
+</p><p>
+There may also be a few more bug fixes, but that was not the purpose of
+this release. The long and short of it is, IF YOU'RE RUNNING DR8.2 ON A
+POWER MAC, YOU SHOULD DEFINITELY INSTALL THIS UPGRADE!!
+</p><p>
+You don't want to interrupt your endless stream of BeOS fun, so get this
+thing and install it immediately!!
+</p><p>
+Since we're the digital content creation platform of choice for
+discriminating artists, I thought I'd throw up some more code of the
+digital content variety. There have been quite a few MPEG encoders and
+decoders in the air for the BeOS. I thought I'd add the code for the
+Berkeley decoder just for fun.
+</p><p>
+ftp://ftp.be.com/pub/Samples/mpeg_lib.tgz
+</p><p>
+This library isn't the fastest, or smartest, or highest quality thing in
+the world. But the code is understandable, easy to make into a shared
+library, and it's free. It should be useful to those who endeavor to do
+similar things in the BeOS.
+</p><p>
+We will continue to provide innovative fresh fertile ground upon which
+you can program your heart away. And in the long run, you'll be satisfied
+with a job well done, until the next release.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-10"></a>Who's Stupid?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We are, of course, not the programmer, or the user of our software.
+Making your customer feel stupid should be prohibited by the
+Constitution, and in any case, generating such feelings is always harmful
+to business. Put another way, while we can sometimes be forgiven for
+embarrassing mistakes, we won't make friends by generating feelings of
+inadequacy, especially if they're followed by a realization that the
+mistake was ours in the first place. Hence our decision to post our bugs
+on our Web site. Starting with developers, we want to get in the habit of
+mapping the minefield as accurately as we can. This will save everyone
+time and energy, a good reason to start with. Then, as more eyes see the
+range of reported problems, some pattern recognition might take place,
+meaning one or more individuals will pick up on a bad habit, or a regular
+trap, and share their knowledge with the community. In the same vein, our
+example might encourage BeOS application developers to do the same for
+their customers—and for the rest of us—with similar benefits.
+</p><p>
+This is all nice and good, but what about disadvantages? For instance,
+will the competition use this against us? Possibly. We might save their
+harried Competitive Studies people some time. But nasty bugs end up
+reported one way or the other, so we might as well do the reporting
+ourselves, thus minimizing distortion. Another possible criticism leveled
+at us for posting our bugs is you don't show customers the inside of the
+sausage factory. They don't want to know. To this, my answer is that if I
+start a sausage factory, I have to make a much better sausage than the
+established industrial meat processors. And, assuming I actually make a
+better product, I then make a point of seeking out sausage connoisseurs
+and taking them through the kitchen. They see the ingredients coming in,
+they watch the mixing process... I sense some problems with this kind of
+metaphor, the penalty, I guess for venturing out of my usual range.
+Still, many great restaurants feature a visible kitchen. For us, letting
+light in on our OS-making process is a healthy constraint. We'll be
+embarrassed on a regular basis, always good for the product and the soul.
+And we'll also get more helpful suggestions along the way than if we
+didn't open our doors.
+</p><p>
+Of course, as the bug reports show, we still have a lot to do and a lot
+to prove. Ironically, a maturing OS will mean even more bugs reported,
+not fewer, as our system gains more flesh and is stressed by more
+applications and more users.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-10"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552533"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552539"></a>Subject: Time is running out!</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Streams</h5></div></div></div><p>
+More suggestions and discussion of features that are essential—or,
+at least, desirable—for a baseline (future backwards-compatible)
+release. This week:
+</p><ul class="itemizedlist"><li><p>
+Intelligent versioning
+</p></li><li><p>
+Coalesce view update messages from the app_server (when requested)
+</p></li><li><p>
+STREAMS support
+</p></li><li><p>
+Networked BMessages
+</p></li><li><p>
+UNIX-style man pages
+</p></li><li><p>
+A well-defined system directory tree
+</p></li></ul><p>
+There was some debate over STREAMS. Some folks think that BSD sockets
+are not only better, but that having two network port models is
+confusing.
+</p><p>
+Obviously, not all of the requests are essential to a baseline customer
+release.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552604"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552610"></a>Subject: endian-ness</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Intel port == bad!<br />
+AKA: Dave's Raves
+</h5></div></div></div><p>
+Was Brad Taylor's article in last week's Newsletter, in which he
+described the pitfalls that one should avoid when sending data between
+machines that are, potentially, differently byte-ordered, a hint of
+ports to come?
+</p><p>
+This speculation led to a discussion of the history of the
+little-endian/big-endian battle of the (byte) sexes. The history lesson
+then followed its own logic into the future, which led to general
+crystal ball gazing and a fantasy about little brown men that, frankly,
+I had trouble following.
+</p><p>
+We also heard arguments over the desirability of an Intel port. On the
+pro side is the thought that general proliferation of the BeOS is a
+Good Thing. Con has it that an alliance with Intel would be (for now)
+an unnecessary, resource-guzzling distraction. No it wouldn't. Yes it
+would.
+</p><p>
+THE BE LINE: As many of you pointed out, Brad Taylor's article was a
+sincere tutorial on good network programming practice. No "hints" were
+intended.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552655"></a>Subject: Overclocking your BeBox?</h4></div></div></div><p>
+This thread, which sprang from the endian-ness discussion, discussed
+the benefits/detriments of "overclocking" (or, more accurately,
+"undertiming") the CPU.
+</p><p>
+Overclocking increases the speed of the CPU beyond its rated limit;
+typical overclocking techniques involve soldering a faster oscillator
+onto the motherboard (think of it as dangling a bigger carrot in front
+of the hamster). It works—but does it decrease the life expectancy
+of the chip? Some folks say, "You bet it does."
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552678"></a>Subject: Funky networking apps</h4></div></div></div><p>
+Various listeners volunteered descriptions of their personal
+programming projects (whether actually implemented or not). Among other
+things, we heard about...
+</p><ul class="itemizedlist"><li><p>
+A socket server that could be used as the basis for networked
+scripting [Jon Ragnarrson]
+</p></li><li><p>
+A port of socket++ [Howard Berkey]
+</p></li><li><p>
+A network-playable Stratego game [Ficus Kirkpatrick]
+</p></li></ul><p>
+Other network ideas:
+</p><p>
+What about moving the network layer into the kernel? This idea met some
+amount of horrified resistance.
+</p><p>
+Some old favorites, such as picking up an entire executable and sending
+it down the wire, were trotted out and banged around.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552728"></a>Subject: On stability of APIs</h4></div></div></div><p>
+Looking ahead to subsequent customer releases, will BeOS 2.0 break all
+1.0 applications? Would modular libraries (rather than the monolithic
+libbe.so) help?
+</p><p>
+This led to a discussion of relative pathnames in #include directives
+and whether "greg" is "bill". Slow week.
+</p><p>
+THE BE LINE: In DR9, libbe WILL be broken into separate libraries. The
+divisions will primarily follow the kits.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id552753"></a>Subject: Who's buried in Grant's Tomb?</h4></div></div></div><p>
+Some possibilities: Grant, Lee, Lee Grant, Grant Tinker, Lee Tucker,
+John Smiley, "smileys," Liam Neeson, Neil Sedaka, Otis Redding, Marvin
+Gardens, Marvin Hamlisch, Ham, Shem, H.C. Earwicker, Gomer, Homer,
+Onan, Conan, Robert Donat, the Donner Party, Guess Who's Coming to
+Dinner?, Sidney Poitier, Sidney Greenstreet, On Green Dolphin Street,
+Where's Someone I Can Meet, Flipper, Ishmael, Billy Budd, Peter Grimes,
+Jon Vickers, Vic Damone, Joey Ramone, Patti Lupone, Lucille Ball, Bud
+Cort, Cary Grant, Grant's Kills Ants.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-9.html">Issue 2-9, March 5, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-11.html">Issue 2-11, March 19, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-9.html" title="Issue 2-9, March 5, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-11.html" title="Issue 2-11, March 19, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

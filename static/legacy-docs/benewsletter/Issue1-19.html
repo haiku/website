@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-18.html" title="Issue 1-18, April 10, 1996" /><link rel="next" href="Issue1-20.html" title="Issue 1-20, April 24, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-18.html" title="Issue 1-18, April 10, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-20.html" title="Issue 1-20, April 24, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-18.html">Issue 1-18, April 10, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-20.html">Issue 1-20, April 24, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-19"></a>Issue 1-19, April 17, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-19"></a>Be Engineering Insights: Writing Network Applications for the BeBox</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Bradley</span> <span class="surname">Taylor</span></span></div></div></div><p>
+Whether you want to write an entire Web browser or just want to add a
+small networking feature to your application, this article is for you.
+For purposes of this article, I classify network applications into three
+areas:
+</p><ul class="itemizedlist"><li><p>
+Applications that follow a standard protocol such as FTP.
+</p></li><li><p>
+Applications that use their own protocol ("original applications"),
+but are designed to work across several operating systems.
+</p></li><li><p>
+Original applications that only work under a single type of operating
+system.
+</p></li></ul><p>
+For standard protocols, there is undoubtedly some freely available Unix
+code that will do the trick for you. A little searching around on the
+Internet will find the code you want. It will be socket-based, and will
+already be designed and debugged—all you have to do is port it to the
+BeBox. And since the API on the BeBox approximates sockets, porting
+socket-based code shouldn't be much trouble.
+</p><p>
+For original applications which you hope to port to other operating
+systems, you might need some help. If you aren't already familiar with
+sockets, a good place to start is "Unix Network Programming", by W.
+Richard Stevens. The most important point to keep in mind when you're
+designing your protocol is that different processors represent the C data
+types differently. The most common causes of problems are assumptions
+about the sizes of the basic types, field alignment within structures,
+and the endian-ness of multiple-byte data. There are a number of ways to
+deal with these issues:
+</p><ul class="itemizedlist"><li><p>
+The simplest method is to convert everything into text before sending
+it to the network. Text is, of course, extremely portable, and has the
+added advantage of being easy to debug since you can easily see from a
+captured data packet exactly what was sent. Text conversion may seem
+inefficient, but many fine protocols—including HTTP—use this
+technique. Furthermore, if your application is intended to run across
+the Internet, the inefficiency won't be noticed since the Internet runs
+at a pretty slow speed.
+</p></li><li><p>
+Beyond that, there are several commercial and free packages that can
+make your life easier. One free package, which has already been ported
+to several platforms, is the Sun RPC/XDR source code distribution. It
+is widely available on CD-ROM and through various FTP sites on the
+Internet.
+</p></li></ul><p>
+Okay, perhaps you are saying, "Standards? We don't need no stinkin'
+standards!". You just want to write something that is BeBox specific, and
+you really don't want to use text or learn about some stinkin' RPC
+package. I have just the thing for you...
+</p><p>
+I've written a couple of C++ classes (NetServer and NetClient) that send
+and receive BMessages over a network. If you're familiar with BMessages,
+you should have no problem with these classes.
+</p><p>
+A NetServer object listens for in-coming requests (BMessages) that are
+sent by NetClient objects. When it receives a message, NetServer does
+whatever it is that you need it to do, and then sends a response to the
+NetClient.
+</p><p>
+A typical NetServer setup looks like this:
+</p><pre class="programlisting">
+<code class="classname">BMessage</code> *<code class="varname">request</code>;
+<code class="classname">BMessage</code> *<code class="varname">reply</code>;
+<code class="classname">NetServer</code> *<code class="varname">server</code>;
+
+<code class="varname">server</code> = new <code class="classname">NetServer</code>(<code class="varname">UDP_port</code>);
+for (;;) {
+   <code class="varname">server</code>-&gt;<code class="methodname">ReceiveMessage</code>(&amp;<code class="varname">request</code>);
+   <code class="varname">reply</code> = new <code class="classname">BMessage</code>();
+
+   <span class="comment">/* Here's where your application-specific
+    * code goes, including the formulation of
+    * the reply message.
+    */</span>
+
+    <code class="varname">server</code>-&gt;<code class="methodname">SendReply</code>(<code class="varname">reply</code>);
+    delete <code class="varname">request</code>;
+    delete <code class="varname">reply</code>;
+}
+</pre><p>
+As shown above, the <code class="classname">NetServer</code> is created in
+reference to a <acronym class="acronym">UDP</acronym> port
+number (the argument to the constructor). You can use any port in the
+range 1 through 65535, but stick to ports above number 1024—lower ports
+are reserved for standard protocols like FTP. Also, you should make the
+port number configurable if you intend to ship your application. This
+way, if it conflicts with another application, the user can select
+another port to resolve the conflict.
+</p><p>
+On the client side, the NetClient configuration looks like this:
+</p><pre class="programlisting">
+<code class="classname">BMessage</code> <code class="varname">request</code>;
+<code class="classname">BMessage</code> *<code class="varname">reply</code>;
+<code class="classname">NetClient</code> *<code class="varname">client</code>;
+
+<code class="varname">client</code> = new <code class="classname">NetClient</code>(<code class="varname">serverHostName</code>, <code class="varname">UDP_port</code>);
+
+<span class="comment">/* format your BMessage here */</span>
+<code class="varname">client</code>-&gt;<code class="methodname">SendMessage</code>(&amp;<code class="varname">request</code>, &amp;<code class="varname">reply</code>);
+<span class="comment">/* examine the reply */</span>
+</pre><p>
+The <code class="classname">NetClient</code> is served by a <code class="classname">NetServer</code>
+that's running on the machine
+"serverHostName" and that has the given UDP port number. The
+communication between the client and the server is straightforward: The
+<code class="classname">NetClient</code> sends its message, the <code class="classname">NetServer</code>
+receives it and sends a reply,
+the <code class="classname">NetClient</code> receives the reply, and then (possibly) sends another
+message, and so on.
+</p><p>
+Implicit in all this is that these object use the UDP protocol. You may
+be aware that UDP has a reputation for losing packets. The
+NetServer/<code class="classname">NetClient</code> model protects against lost packets (or, in the model
+world, lost messages) through a feature of the <code class="classname">NetClient</code> object: Every
+<code class="classname">NetClient</code> has its own timeout threshold and retransmission count. If the
+<code class="classname">NetClient</code> doesn't hear from its NetServer by the time its timeout has
+expired, it retransmits its message. The object continues to retransmit
+at regular intervals until a reply shows up, or until the retransmit
+count is exhausted.
+</p><p>
+Given this scheme, the NetServer must be prepared to receive duplicate
+messages. Each message is tagged with a unique transaction ID; the
+NetServer can check IDs as they arrive through its <code class="methodname">CurrentTransactionID()</code>
+function, and can compare the current ID with a list of the most
+recently-received IDs (which you have to maintain yourself). If it's
+already seen a particular ID, it should regard the current message as a
+duplicate.
+</p><p>
+I've left out some details here such as error checking for the sake of a
+simple discussion. However, the sample code on the FTP server does deal
+with errors, as well as some other features of the classes not mentioned
+here. You can download it from
+ftp://ftp.be.com/pub/contrib/code/netmessage.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-19"></a>Be Developer Profile: Dynamix, Inc</h2></div></div></div><p>
+It's a bit like those television ads where adults are embarrassed to
+admit they love corn flakes. Home computers users say they buy their
+computers to do work, when the truth is, a lot of them are booting up to
+play games.
+</p><p>
+For proof, just consider the recently-released Software Publishers
+Association (SPA) data: 1995 entertainment software sales revenues were
+up almost 43 percent in North America. And last year, the SPA reported
+that a third of the households that used computer games had more than 10
+games.
+</p><p>
+Randy Thompson, a director at Dynamix,Inc., an Oregon-based entertainment
+software developer, isn't surprised. Dynamix (a division of Sierra
+On-Line) has been producing games for more than 10 years. Their titles
+include: Red Baron, The Incredible Machine, Aces Over Europe, EarthSiege,
+and Front Page Sports Football. The 130-person company develops for
+Windows, Macintosh, PlayStation, and Sega—and now they're considering
+adding the BeBox to the list.
+</p><p>
+“<span class="quote">The computer industry has become stagnant,</span>” Thompson says. “<span class="quote">If you want
+to develop a mass-market product, DOS/Wintel and Macintosh are pretty
+much the choices. But neither of these giants can raise the technology
+bar. The Amiga injected some life back into the industry, but it was an
+ill-fated system.</span>” Thompson sees potential for the BeBox to wake up a
+slumbering industry, and to do so with a brighter fate.
+</p><p>
+“<span class="quote">The BeBox is an exciting new computer platform, and we want to get in on
+the ground floor,</span>” he says. “<span class="quote">Technologically, the BeBox is superior to
+all the systems we currently develop for. It's got a clean OS with an
+incredibly rich set of standard features: audio, video, and I/O ports.</span>”
+</p><p>
+Their first BeBox project will be a real-time 3D game using
+motion-captured, polygon-based characters. They hope to release the game
+internally by the end of the year—at that point, they'll decide whether
+to release it publicly. After that, they're planning multi-player games
+that can be played over a local area network, or remotely over the
+Internet.
+</p><p>
+Since they're owned by one of the largest publishers in the world,
+Dynamix doesn't face the retail shelf-space challenges a small developer
+might. Thompson does, however, encourage the “<span class="quote">shelf-space challenged</span>” to
+consider the advantages of Be's software distribution model. Games
+customers are hungry for the latest software, and electronic distribution
+could make a real difference to a small developer's bottom line.
+</p><p>
+Based on the initial grass-roots interest in the BeBox, Thompson sees
+great potential for a “<span class="quote">loyal, if not large, user base.</span>” If their
+programmers are any indication, he'll be right. “<span class="quote">Our programmers have
+been pushing harder than anyone to get a BeBox in-house. They can't wait
+to get their hands on one.</span>”
+</p><p>
+For more information on Dynamix or their products, visit their Web site:
+http://www.sierra.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-19"></a>Financing The Future</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last Friday we closed a $14 million financing round with major Silicon
+Valley venture firms and earlier supporters of our company. And so we
+open a new chapter of Be's life.
+</p><p>
+The investors:
+</p><ul class="itemizedlist"><li><p>
+The round is led by David Marquardt of August Capital. David was an
+early (and then only) venture investor in Microsoft, and sits on their
+board. He invested in and sat on Sun Microsystems' board in the early
+days as well. August Capital is a new fund, started by David last
+August (hence the name).
+</p></li><li><p>
+New Entreprise Associates (NEA) is represented by Mark Perry. NEA is
+one of the largest Silicon Valley venture firms with about $700 million
+under management.
+</p></li><li><p>
+Alta Technologies, represented by Garrett Gruener, is based in San
+Francisco. This is a newly formed fund led by Jean Deleage, formerly of
+Burr Egan and Deleage. Jean and his team's reputation was such that he
+raised his $100 million fund in a single presentation to Calpers, the
+California state employees retirement fund.
+</p></li><li><p>
+AVI Management Partners is represented by Barry Weinman. As some of
+you know, AVI is a local fund led by Peter Wolken.
+</p></li><li><p>
+Christian Marchandise represents a group of French investors from a
+previous round.
+</p></li><li><p>
+We also enjoyed renewed support from some of our earliest investors,
+such as Newtek Ventures, Innolion, Convergences and Star Ventures, as
+well as personal friends of mine.
+</p></li><li><p>
+I'm also re-investing in this round—it's a great deal.
+</p></li></ul><p>
+For more details see our press release on www.be.com.
+</p><p>
+As I wrote above, this is a new chapter. The previous ones have been
+challenging, character building, learning experiences—pick your
+bromide. Assembling a team and developing the technology, our real
+assets, have been the easiest part, at least when compared to fund
+raising. I had no experience on that subject when I started the company
+and it showed.
+</p><p>
+When we started in October 1990, right after I left Apple, the idea of
+building yet-another-platform wasn't popular in financial circles, to say
+the least. NeXT and Momenta were burned in the collective consciousness;
+Go/EO were not far from doing it again. So, the company started from my
+back pocket and from the checkbooks of people such as Seymour Cray, and
+friends from HP and Bull.
+</p><p>
+In our first round of financing, the venture arm of the largest French
+bank, Credit Lyonnais, stepped in as the lead investor. That turned out
+to be helpful in the short term, but it became difficult when this lead
+investor turned out to a be a large distressed bank, unable to support
+the company when AT&amp;T gave up on the Hobbit, the microprocessor used for
+our first design (the PowerPC didn't exist when we started). This
+happened at the beginning of 1994. We had to scramble to implement a new
+PPC-based design, port our software to it and raise more money. AT&amp;T
+helped a bit, and Christian Marchandise led a second round in 1995.
+</p><p>
+Then came the Agenda demo in October 1995; this was the turning point.
+Two of our new investors were in the room when our demo got a standing
+ovation. The press was generous to us, and developers started to support
+our platform.
+</p><p>
+One night at dinner after Agenda, John Fry remarked we had been very
+lucky. As I acquiesced he made two remarks to explain his point. One of
+which gave me a retrospective chill: The Web did not exist when we
+started. It's the great equalizer, tremendously helpful to a small
+company such as ours. It helps our developers market their software and
+it is an exciting new application area for Be. We were lucky to introduce
+just as the Web was showing its muscle and gaining respect.
+</p><p>
+More sobering was his remark that we had been lucky to present our
+product after Windows 95 shipped. Indeed, had we met our schedule, we
+would have demoed at Demo 95—right when Microsoft was showing its $200
+million picture of the bride (Win95), if I can be forgiven this remark.
+Had we shown our product in February 1995, we would have gotten a
+commiserating pat on the back: “<span class="quote">Windows 95 will do everything you claim
+to do, and more.</span>” Instead, the market had met the mother-in-law in August
+when Windows 95 finally shipped. So, in October we got compared to the
+real product. A little luck helps.
+</p><p>
+Now we have the means to raise this promising child and allow the BeBox
+to reach its natural markets at the intersection of the Web, image
+processing, digital audio and video. To all the people who supported us,
+outside and inside, my heartfelt thanks. Let's move forward and develop
+this business.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-18.html">Issue 1-18, April 10, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-20.html">Issue 1-20, April 24, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-18.html" title="Issue 1-18, April 10, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-20.html" title="Issue 1-20, April 24, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

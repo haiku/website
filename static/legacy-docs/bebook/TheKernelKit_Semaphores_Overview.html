@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Kernel Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheKernelKit_Overview.html" title="The Kernel Kit" /><link rel="prev" href="TheKernelKit_Ports_Overview.html" title="Ports" /><link rel="next" href="TheKernelKit_Areas_Overview.html" title="Areas" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheKernelKit_Ports_Overview.html" title="Ports"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TheKernelKit_Areas_Overview.html" title="Areas"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Kernel Kit</div></div><div id="headerB">Prev: <a href="TheKernelKit_Ports_Overview.html">Ports</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheKernelKit_Areas_Overview.html">Areas</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheKernelKit_Semaphores_Overview"></a>Semaphores</h2></div></div></div><p>A semaphore acts as a key that a thread must acquire in order to continue
+execution. Any thread that can identify a particular semaphore can
+attempt to acquire it by passing its <span class="type">sem_id</span> identifier—a
+system-wide number that's assigned when the semaphore is created—to
+the <a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+function. The function blocks until the semaphore is
+actually acquired.</p><div class="admonition note"><div class="title">Note</div><div class="graphic"><img class="icon" alt="Note" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>An alternate function,
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem_etc"><code class="function">acquire_sem_etc()</code></a>
+lets you specify the amount of
+time you're willing to wait for the semaphore to be acquired, and let you
+acquire the semaphore more than once in a single go. Unless otherwise
+noted, characteristics ascribed to
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+apply to
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem_etc"><code class="function">acquire_sem_etc()</code></a>
+as well.)</p></div></div></div><p>When a thread acquires a semaphore, that semaphore (typically) becomes
+unavailable for acquisition by other threads. The semaphore remains
+unavailable until it's passed in a call to the
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+function.</p><p>The code that a semaphore "protects" lies between the calls to
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a> and
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>.
+The disposition of these functions in
+your code usually follows this pattern:</p><pre class="programlisting example c">if (<code class="function">acquire_sem</code>(<code class="varname">my_semaphore</code>) == <code class="constant">B_NO_ERROR</code>) {
+   <span class="comment">/* Protected code goes here. */</span>
+   <code class="function">release_sem</code>(<code class="varname">my_semaphore</code>);
+}</pre><p>Keep in mind that…</p><ul class="itemizedlist"><li><p>The calls to the acquire and release functions needn't be locally
+balanced (although this is by far the most common use). A semaphore can
+be acquired within one function and released in another. Acquisition
+and release of the same semaphore can even be performed by two
+different threads.</p></li><li><p>Checking the value returned by
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+is extremely important. If an acquire-blocked thread is unblocked by a
+signal (a return of <code class="constant">B_INTERRUPTED</code>), the thread
+shouldn't procede to the critical section.</p></li></ul><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_TheThreadQueue"></a>The Thread Queue</h3></div></div></div><p>Every semaphore has its own thread queue: This is a list that identifies
+the threads that are waiting to acquire the semaphore. A thread that
+attempts to acquire an unavailable semaphore is placed at the tail of the
+semaphore's thread queue where it sits blocked in the
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+call. Each call to
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+unblocks the thread at the head of that
+semaphore's queue, thus allowing the thread to return from its call to
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>.</p><p>Semaphores don't discriminate between acquisitive threads—they
+don't prioritize or otherwise reorder the threads in their
+queues—the oldest waiting thread is always the next to acquire the
+semaphore.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_TheThreadCount"></a>The Thread Count</h3></div></div></div><p>To assess availability, a semaphore looks at its thread count. This is a
+counting variable that's initialized when the semaphore is created.
+Ostensibly, a thread count's initial value (which is passed as the first
+argument to
+<a class="link" href="TheKernelKit_Semaphores.html#create_sem" title="create_sem()"><code class="function">create_sem()</code></a>)
+is the number of threads that can acquire the
+semaphore at a time. (As we'll see later, this isn't the entire story,
+but it's good enough for now.) For example, a semaphore that's used as a
+mutually exclusive lock takes an initial thread count of 1—in other
+words, only one thread can acquire the semaphore at a time.</p><div class="admonition note"><div class="title">Note</div><div class="graphic"><img class="icon" alt="Note" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>An initial thread count of 1 is by far the most common use; a thread
+count of 0 is also useful. Other counts are much less common.</p></div></div></div><p>Calls to <a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+and <a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+alter the semaphore's thread count:
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+decrements the count, and
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+increments it. When you call
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>,
+the function looks at the thread count
+(before decrementing it) to determine if the semaphore is available:</p><ul class="itemizedlist"><li><p>If the count is greater than zero, the semaphore is available for
+acquisition, so the function returns immediately.</p></li><li><p>If the count is zero or less, the semaphore is unavailable, and the
+thread is placed in the semaphore's thread queue.</p></li></ul><p>The initial thread count isn't an inviolable limit on the number of
+threads that can acquire a given semaphore—it's simply the initial
+value for the sempahore's thread count variable. For example, if you
+create a semaphore with an initial thread count of 1 and then immediately
+call
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+five times, the semaphore's thread count will increase
+to 6. Furthermore, although you can't initialize the thread count to
+less-than-zero, an initial value of zero itself is common—it's an
+integral part of using semaphores to impose an execution order (as
+demonstrated later).</p><p>Summarizing the description above, there are three significant thread
+count value ranges:</p><ul class="itemizedlist"><li><p>A positive thread count (<em class="replaceable"><code>n</code></em>) means that there are no threads in the
+semaphore's queue, and the next <em class="replaceable"><code>n</code></em>
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+calls will return without blocking.</p></li><li><p>If the count is 0, there are no queued threads, but the next
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+call will block.</p></li><li><p>A negative count (-<em class="replaceable"><code>n</code></em>) means there are
+<em class="replaceable"><code>n</code></em> threads in the semaphore's
+thread queue, and the next call to
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+will block.</p></li></ul><p>Although it's possible to retrieve the value of a semaphore's thread
+count (by looking at a field in the semaphore's <span class="type">sem_info</span> structure, as
+described later), you should only do so for amusement—while you're
+debugging, for example.</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>You should never predicate your code on the basis of a semaphore's
+thread count.</p></div></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_DeletingASemaphore"></a>Deleting a Semaphore</h3></div></div></div><p>Every semaphore is owned by a team (the team of the thread that called
+<a class="link" href="TheKernelKit_Semaphores.html#create_sem" title="create_sem()"><code class="function">create_sem()</code></a>).
+When the last thread in a team dies, it takes the team's
+semaphores with it.</p><p>Prior to the death of a team, you can explicitly delete a semaphore
+through the
+<a class="link" href="TheKernelKit_Semaphores.html#delete_sem" title="delete_sem()"><code class="function">delete_sem()</code></a>
+call. Note, however, that delete_sem() must be
+called from a thread that's a member of the team that owns the
+semaphore—you can't delete another team's semaphores.</p><p>You're allowed to delete a semaphore even if it still has threads in its
+queue. However, you usually want to avoid this, so deleting a semaphore
+may require some thought: When you delete a semaphore (or when it dies
+naturally), all its queued threads are immediately allowed to
+continue—they all return from
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+at once. You can distinguish between a "normal" acquisition and a
+"semaphore deleted" acquisition by the value that's returned by
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+(the specific return values are listed in the function descriptions).</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_InterApplicationSemaphores"></a>Inter-application Semaphores</h3></div></div></div><p>The <span class="type">sem_id</span> number that identifies a semaphore is a system-wide
+token—the <span class="type">sem_id</span> values that you create in your application will
+identify your semaphores in all other applications as well. It's
+possible, therefore, to broadcast the <span class="type">sem_id</span> numbers of the semaphores
+that you create and so allow other applications to acquire and release
+them—but it's not a very good idea.</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>A semaphore is best controlled if it's created, acquired, released, and
+deleted within the same team.</p></div></div></div><p>If you want to provide a protected service or resource to other
+applications, you should accept messages from other applications and then
+spawn threads that acquire and release the appropriate semaphores.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_Examples"></a>Semaphore Examples</h3></div></div></div><p>The following sections provides examples of typical semaphore use.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_Example1"></a>Semaphore Example 1: Locking</h4></div></div></div><p>The most typical use of a semaphore is to protect a chunk of code that
+can only be executed by one thread at a time. The semaphore acts as a
+lock;
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+locks the code,
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+releases it. Semaphores
+that are used as locks are (almost always) created with a thread count of
+1.</p><p>As a simple example, let's say you keep track of a maximum value like
+this:</p><pre class="programlisting example c"><span class="comment">/* max_val is a global. */</span>
+<span class="type">uint32</span> <code class="varname">max_val</code> = 0;
+...
+
+<span class="comment">/* bump_max() resets the max value, if necessary. */</span>
+<span class="type">void</span> <code class="function">bump_max</code>(<span class="type">uint32</span> <code class="parameter">new_value</code>)
+{
+   if (<code class="parameter">new_value</code> &gt; <code class="varname">max_value</code>)
+      <code class="varname">max_value</code> = <code class="parameter">new_value</code>;
+}</pre><p><code class="function">bump_max()</code> isn't thread safe; there's a race condition between the
+comparison and the assignment. So we protect it with a semaphore:</p><pre class="programlisting example c"><span class="type">sem_id</span> <code class="varname">max_sem</code>;
+<span class="type">uint32</span> <code class="varname">max_val</code> = 0;
+
+...
+<span class="comment">/* Initialize the semaphore during a setup routine. */</span>
+<span class="type">status_t</span> <code class="function">init()</code>
+{
+   if ((<code class="varname">max_sem</code> = <code class="function">create_sem</code>(1, "max_sem")) &lt; <code class="constant">B_NO_ERROR</code>)
+      return <code class="constant">B_ERROR</code>;
+   ...
+}
+<span class="type">void</span> <code class="function">bump_max</code>(<span class="type">uint32</span> <code class="parameter">new_value</code>)
+{
+   if (<code class="function">acquire_sem</code>(max_sem) != <code class="constant">B_NO_ERROR</code>)
+      return;
+   if (<code class="parameter">new_value</code> &gt; <code class="varname">max_value</code>)
+      <code class="varname">max_value</code> = <code class="parameter">new_value</code>;
+   <code class="function">release_sem</code>();
+}</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_Example2"></a>Semaphore Example 2: Benaphores</h4></div></div></div><p>A "benaphore" is a combination of an atomic variable and a semaphore that
+can improve locking efficiency. If you're using a semaphore as shown in
+the previous example, you should consider using a benaphore instead (if
+you can).</p><p>Here's the example re-written to use a benaphore:</p><pre class="programlisting example c"><span class="type">sem_id</span> <code class="varname">max_sem</code>;
+<span class="type">uint32</span> <code class="varname">max_val</code> = 0;
+<span class="type">int32</span> <code class="varname">ben_val</code> = 0;
+
+<span class="type">status_t</span> <code class="function">init</code>()
+{
+   <span class="comment">/* This time we initialized the semaphore to 0. */</span>
+   if ((<code class="varname">max_sem</code> = <code class="function">create_sem</code>(0, "max_sem")) &lt; <code class="constant">B_NO_ERROR</code>)
+      return <code class="constant">B_ERROR</code>;
+   ...
+}
+<span class="type">void</span> <code class="function">bump_max</code>(<span class="type">uint32</span> <code class="parameter">new_value</code>)
+{
+   <span class="type">int32</span> <code class="varname">previous</code> = <code class="function">atomic_add</code>(&amp;<code class="varname">ben_val</code>, 1);
+   if (<code class="varname">previous</code> &gt;= 1)
+      if (<code class="function">acquire_sem</code>(<code class="varname">max_sem</code>) != <code class="constant">B_NO_ERROR</code>)
+         goto get_out;
+
+   if (<code class="parameter">new_value</code> &gt; <code class="varname">max_value</code>)
+      <code class="varname">max_value</code> = <code class="parameter">new_value</code>;
+
+get_out:
+   <code class="varname">previous</code> = <code class="function">atomic_add</code>(&amp;<code class="varname">ben_val</code>, -1);
+   if (<code class="varname">previous</code> &gt; 1)
+      <code class="function">release_sem</code>(<code class="varname">max_sem</code>);
+}</pre><p>The point, here, is that
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+is called only if it's known (by checking the previous value of
+<code class="varname">ben_val</code>) that some other thread is in the
+middle of the critical section. On the releasing end, the
+<a class="link" href="TheKernelKit_Semaphores.html#release_sem" title="release_sem(), release_sem_etc()"><code class="function">release_sem()</code></a>
+is called only if some other thread has since entered the function (and
+is now blocked in the
+<a class="link" href="TheKernelKit_Semaphores.html#acquire_sem" title="acquire_sem(), acquire_sem_etc()"><code class="function">acquire_sem()</code></a>
+call). An important point, here, is that the semaphore is initialized to 0.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Semaphores_Example3"></a>Semaphore Example 3: Imposing an Execution Order</h4></div></div></div><p>Semaphores can also be used to coordinate threads that are performing
+separate operations, but that need to perform these operations in a
+particular order. In the following example, we have a global buffer
+that's accessed through separate reading and writing functions.
+Furthermore, we want writes and reads to alternate, with a write going
+first.</p><p>We can lock the entire buffer with a single semaphore, but to enforce
+alternation we need two semaphores:</p><pre class="programlisting example c"><span class="type">sem_id</span> <code class="varname">write_sem</code>, <code class="varname">read_sem</code>;
+<span class="type">char</span> <code class="varname">buffer</code>[1024];
+
+<span class="comment">/* Initialize the semaphores */</span>
+<span class="type">status_t</span> <code class="function">init</code>()
+{
+   if ((<code class="varname">write_sem</code> = <code class="function">create_sem</code>(1, "write")) &lt; <code class="constant">B_NO_ERROR</code>) {
+      return;
+   if ((<code class="varname">read_sem</code> = <code class="function">create_sem</code>(0, "read")) &lt; <code class="constant">B_NO_ERROR</code>) {
+      <code class="function">delete_sem</code>(<code class="varname">write_sem</code>);
+      return;
+   }
+}
+
+<span class="type">status_t</span> <code class="function">write_buffer</code>(<span class="type">const char *</span><code class="parameter">src</code>)
+{
+   if (<code class="function">acquire_sem</code>(<code class="varname">write_sem</code>) != <code class="constant">B_NO_ERROR</code>)
+      return <code class="constant">B_ERROR</code>;
+
+   <code class="function">strncpy</code>(<code class="varname">buffer</code>, <code class="parameter">src</code>, 1024);
+
+   <code class="function">release_sem</code>(<code class="varname">read_sem</code>);
+}
+
+<span class="type">status_t</span> <code class="function">read_buffer</code>(<span class="type">char *</span><code class="parameter">dest</code>, <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+   if (<code class="function">acquire_sem</code>(<code class="varname">read_sem</code>) != <code class="constant">B_NO_ERROR</code>)
+      return <code class="constant">B_ERROR</code>;
+
+   <code class="function">strncpy</code>(<code class="parameter">dest</code>, <code class="varname">buffer</code>, <code class="parameter">len</code>);
+
+   <code class="function">release_sem</code>(<code class="varname">write_sem</code>);
+}</pre><p>The initial thread counts ensure that the buffer will be written to
+before it's read: If a reader arrives before a writer, the reader will
+block until the writer releases the <code class="varname">read_sem</code> semaphore.</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheKernelKit_Ports_Overview.html">Ports</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheKernelKit_Areas_Overview.html">Areas</a> </div><div id="footerB"><div id="footerBL"><a href="TheKernelKit_Ports_Overview.html" title="Ports"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TheKernelKit_Areas_Overview.html" title="Areas"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

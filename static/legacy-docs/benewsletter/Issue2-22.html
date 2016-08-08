@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-21.html" title="Issue 2-21, May 28, 1997" /><link rel="next" href="Issue2-23.html" title="Issue 2-23, June 11, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-21.html" title="Issue 2-21, May 28, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-23.html" title="Issue 2-23, June 11, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-21.html">Issue 2-21, May 28, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-23.html">Issue 2-23, June 11, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-22"></a>Issue 2-22, June 4, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-22"></a>Be Engineering Insights: The new font engine, PART 1: Drawing characters
+in the correct position</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+Believe me, I really wanted to write an interesting article about a
+surprising subject but...this is just YAAAAA (yet another article about
+Advanced Access Preview Release). And if you want my opinion, we will
+probably continue like this for a few months. :-)
+</p><p>
+If you've seen the huge list of new features, you've probably noticed
+that the font engine has changed. Improving the appearance of small point
+size TrueType fonts was our main goal. The extensive use of anti-aliasing
+is certainly the most immediately noticeable part of these changes, but
+perhaps not the most effective. Although smoothing the shape of bitmaps
+on the screen is clearly a way to make them look better, optimizing the
+relative position of each pair of contiguous characters can also greatly
+improve the overall appearance of a string. By extending our "spacing
+model" we've introduced some subtleties that you must be aware of, at
+least if you want to use its full power properly.
+</p><p>
+First, let's run down the list of the goals of the new font engine:
+</p><ul class="itemizedlist"><li><p>
+It should be as WYSIWYG as possible
+</p></li><li><p>
+Fonts should scale smoothly
+</p></li><li><p>
+The spacing mode must be adaptable to get optimal results for
+different needs
+</p></li><li><p>
+It must support Unicode UTF-8 (the only encoding scheme used
+throughout the system), and standard 8-bit character sets like
+ISO-Latin (which can only be used in a <code class="classname">BView</code>)
+</p></li></ul><p>
+Consequence #1: External bitmap fonts are no longer supported. They're
+replaced by a private format that's anti-aliased and that can be
+hand-tuned. We'll be distributing a set of utilities (with sources) that
+will...
+</p><ul class="itemizedlist"><li><p>
+Let you hand-tune specific point sizes of an existing scalable
+TrueType font.
+</p></li><li><p>
+Convert an existing bitmap font into the Be format as long as you
+ALSO have the corresponding scalable font for those bitmaps.
+</p></li></ul><p>
+(And just to head off confusion: If ALL you have is a bitmap font—in
+other words, no corresponding scalable version—then you're out of
+luck. Back to our story...)
+</p><p>
+With these tools, you'll be able to get a very nice looking bitmap font
+at any size. For example, we will use these tools to integrate bitmaps
+for small size TrueType Kanji.
+</p><p>
+Consequence #2: All metric processing is now done in floating-point (with
+the exception of bitmap glyphs—we don't support sub-pixel positioning
+in the current engine). Floating-point metrics let us define a better
+character spacing model. So let me now introduce to you our four spacing
+modes:
+</p><p>
+<code class="constant">B_CHAR_SPACING</code>,
+<code class="constant">B_STRING_SPACING</code>,
+<code class="constant">B_BITMAP_SPACING</code>, and
+<code class="constant">B_FIXED_SPACING</code>.
+</p><p>
+Let's go through a quick overview of what these different modes are
+supposed to do.
+</p><p>
+<code class="constant">B_CHAR_SPACING</code> Spacing Mode:
+</p><p>
+This is the old spacing mode used in DR8. It's clearly a good way to get
+<acronym class="acronym" title="What You See Is What You Get">WYSIWYG </acronym>
+printing, it scales smoothly, and handles rotated and sheared
+fonts very well. Plus, it's really easy to use...but it has one big
+fault: It can't improve the readability of small point sizes. So, for
+drawing a lot of small text, <code class="constant">B_CHAR_SPACING</code> is a very bad choice.
+</p><p>
+<code class="constant">B_STRING_SPACING</code> Spacing Mode:
+</p><p>
+This mode is also <acronym class="acronym">WYSIWYG</acronym> and it scales smoothly, but it doesn't handle
+rotated or sheared fonts. But it does have one important advantage: It
+uses a dynamic kerning algorithm to improve the individual position of
+each character inside a string without modifying the string's total width.
+</p><p>
+This feature makes <code class="constant">B_STRING_SPACING</code> the most difficult of the four modes
+for the programmer to manage.
+</p><p>
+<code class="constant">B_BITMAP_MODE</code> Spacing Mode:
+</p><p>
+This mode doesn't care that much about being <acronym class="acronym">WYSIWYG</acronym>, so if you print,
+widths and positions can change slightly. Also, it doesn't scale very
+smoothly. Its main features are that it's easy to use, and it gives a
+very good result when you draw a lot of small text on the screen.
+</p><p>
+<code class="constant">B_FIXED_SPACING</code> Spacing Mode:
+</p><p>
+This mode is designed to improve the appearance of non-proportional fonts
+by making all glyphs (of such fonts) share the same width (called
+"escapement"). This common escapement is an integer, so you can get
+perfectly regular columns of text.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565038"></a>Choosing a Mode</h3></div></div></div><p>
+Here's a fast summary of which mode you should use, based on your needs:
+</p><ul class="itemizedlist"><li><p>
+You don't care about all those damned spacing modes. You just want to
+draw some text on the screen.
+</p><p>
+==&gt; <code class="constant">B_BITMAP_SPACING</code> (default mode).
+</p></li><li><p>
+You want to draw a lot of small text on the screen, with the best
+possible quality.
+</p><p>
+==&gt; <code class="constant">B_BITMAP_SPACING</code>
+</p></li><li><p>
+You want regular columns of non-proportional text—for a source
+code editor, for example.
+</p><p>
+==&gt; <code class="constant">B_FIXED_SPACING</code>
+</p></li><li><p>
+You want to draw fancy characters (rotated, sheared, big size).
+</p><p>
+==&gt; <code class="constant">B_CHAR_SPACING</code>
+</p></li><li><p>
+You want to be able to scale text smoothly, but you don't care about
+getting the best quality.
+</p><p>
+==&gt; <code class="constant">B_CHAR_SPACING</code>
+</p></li><li><p>
+You want to be able to scale text smoothly, and get something as nice
+as possible.
+</p><p>
+==&gt; <code class="constant">B_STRING_SPACING</code>
+</p></li><li><p>
+Your name is Rico Tudor (and you wonder why the system doesn't just
+open Terminal full screen at boot).
+</p><p>
+==&gt; <code class="constant">B_FIXED_SPACING</code>
+</p></li><li><p>
+You want to be as WYSIWYG as possible, even if the screen doesn't
+look much better than DR8.
+</p><p>
+==&gt; <code class="constant">B_CHAR_SPACING</code>
+</p></li><li><p>
+You want to be as WYSIWYG as possible, and get something as nice as
+possible on screen.
+</p><p>
+==&gt; <code class="constant">B_STRING_SPACING</code>
+</p></li></ul><p>
+Details For those who are still not clear about which mode they should
+use, or who would like a fuller description of the consequences of using
+one mode versus another, it's time to describe the subtleties of each
+mode in much more detail.
+</p><p>
+In the following material, each mode is described thus:
+</p><ul class="itemizedlist"><li><p>
+Metrics: A technical definition of how the mode handles metric
+processing.
+</p></li><li><p>
+Breaking string: The consequences of redrawing only part of a string.
+</p></li><li><p>
+On the screen: A description of what quality you can expect at small
+point sizes on the screen.
+</p></li><li><p>
+WYSIWYG Conformance: A description of the conformance between width
+and position on the screen and width and position when printing.
+</p></li><li><p>
+Fast StringWidth(): A description of how to compute the width of a
+string by hand. This problem deserves a bit more of explanation; see
+the addendum at the end of this article for the full story.
+</p></li><li><p>
+Fast Escapements: This section discusses ways of optimizing the
+computation of individual character escapements (so you can handle
+caret position and text selection properly). This usually isn't a
+performance problem, but it can't hurt to speed it up.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565237"></a>B_CHAR_SPACING Mode Details:</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565243"></a>Metrics:</h4></div></div></div><p>
+Respects the exact printing metric for each character. This mode will put
+characters on the screen at their most accurate printing approximation
+(exactly what DR8 was doing with scalable fonts). Nothing is done to
+improve the readability of text on screen, so it can support all standard
+geometric transformation without problem (smooth scaling, rotated and
+sheared text).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565260"></a>Breaking string:</h4></div></div></div><p>
+&lt; DrawString("microsoft") &gt;<br />
+&lt; DrawString("micro") DrawString("soft") &gt;<br />
+&lt; DrawString("mic") DrawString("ros") DrawString("oft") &gt;
+</p><p>
+These three will all give exactly the same result.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565283"></a>On the screen:</h4></div></div></div><p>
+Looks bad. Characters can collide at small point sizes. Spacing between
+characters is poor.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565295"></a>WYSIWYG Conformance:</h4></div></div></div><p>
+Good. The left side of each character is at its best approximated
+position, but the right limit of a string or a line can be offset by more
+than one pixel. This is because a small "hinted" glyph could be much
+wider than the real glyph.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565310"></a>Fast StringWidth():</h4></div></div></div><p>
+Simple. Just add all the escapements and multiply by the size:
+</p><pre class="screen">
+StringWidth = (sum of individual escapements) x
+              (specific point size)
+</pre><p>
+Since the escapements are size-independent, they can be cached.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565333"></a>Fast Escapements:</h4></div></div></div><p>
+Simple. Multiply the escapement by the size:
+</p><pre class="screen">
+RealEscapement = (individual escapement) x
+                 (specific point size)
+</pre><p>
+Again, the escapement can be cached.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565356"></a>B_STRING_SPACING Mode Details:</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565362"></a>Metrics:</h4></div></div></div><p>
+Respects the printing metric for each string. It uses the printing width
+to determine the area that can be used to display glyphs, then it
+optimizes the position of each character within this area to get a better
+spacing and avoid collisions as much as possible. Consequently, the exact
+position of each character is not predictable without the context of the
+string that it's contained in. Also, editing a string affects the
+position of all its characters—the characters wiggle around as the
+user types. The problem is particularly visible if you draw the full line
+of text with one <code class="methodname">DrawString()</code>.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565377"></a>Breaking string:</h4></div></div></div><pre class="screen">
+&lt; DrawString("microsoft") &gt;
+&lt; DrawString("micro") DrawString("soft") &gt;
+&lt; DrawString("mic") DrawString("ros") DrawString("oft") &gt;
+</pre><p>
+These will all give the same total width, but individual characters can
+occupy slightly different positions in each case. The first case will
+have the best spacing overall.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565397"></a>On the screen:</h4></div></div></div><p>
+Medium/Good. Characters can touch one another, collisions are unlikely.
+Spacing between characters is much more regular.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565410"></a>WYSIWYG Conformance:</h4></div></div></div><p>
+Good. The left and right sides of each string are supposed to be at their
+best approximation of their printing value. Individual character position
+inside the string can be slightly different. The difference can be really
+significant if you draw a full line at a time.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565425"></a>Fast StringWidth():</h4></div></div></div><p>
+Simple (sort of). You have to get the individual escapements as they
+would be in <code class="constant">B_CHAR_SPACING</code> mode, add them up, and multiply by the size:
+</p><pre class="screen">
+StringWidth =
+  (sum of individual escapement in <code class="constant">B_CHAR_SPACING</code> mode) x
+  (specific point size)
+</pre><p>
+You can cache the string's total escapement.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565456"></a>Fast Escapements:</h4></div></div></div><p>
+Not so great. You have to call <code class="methodname">GetEscapements()</code> for each size, for each
+specific string. Nothing can be cached.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565474"></a>B_BITMAP_SPACING Mode Details:</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565480"></a>Metrics:</h4></div></div></div><p>
+Calculates a specific bitmap escapement for each character, for each
+size, depending on its bitmap appearance (NOT on its printing metric).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565494"></a>Breaking string:</h4></div></div></div><pre class="screen">
+&lt; DrawString("microsoft") &gt;
+&lt; DrawString("micro") DrawString("soft") &gt;
+&lt; DrawString("mic") DrawString("ros") DrawString("oft") &gt;
+</pre><p>
+These will all give exactly the same result.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565512"></a>On the screen:</h4></div></div></div><p>
+Very good. Characters should almost never touch. Spacing is quite regular.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565524"></a>WYSIWYG Conformance:</h4></div></div></div><p>
+Very bad. At small sizes, a string on the screen will be noticeably wider
+(a few percents) than when printed. The opposite is possible, but
+unlikely.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565538"></a>Fast StringWidth():</h4></div></div></div><p>
+Not good. Escapements are per character, per size:
+</p><pre class="screen">
+StringWidth =
+(sum of individual escapements for one specific
+ point size) x
+(that specific point size)
+</pre><p>
+Note: The measurement of the escapement for a particular character is
+given in point size-independent units (this makes scaling easier). This
+is why, in the formula shown here, you have to get the escapement
+measurement based on the point size and then multiply that measurement by
+the point size.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565564"></a>Fast Escapements:</h4></div></div></div><p>
+Not good.
+</p><pre class="screen">
+RealEscapement =
+(individual escapement for one specific point size) x
+(that specific point size).
+</pre></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565582"></a>B_FIXED_SPACING Mode Details:</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565588"></a>Metrics:</h4></div></div></div><p>
+Rounds the fixed width of each character to an integral value. Should be
+used with non-proportional fonts only.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565601"></a>Breaking string:</h4></div></div></div><pre class="screen">
+&lt; DrawString("microsoft") &gt;
+&lt; DrawString("micro") DrawString("soft") &gt;
+&lt; DrawString("mic") DrawString("ros") DrawString("oft") &gt;
+</pre><p>
+These will all give exactly the same result.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565619"></a>On the screen:</h4></div></div></div><p>
+Good. You get the same width for each column. That doesn't protect you
+completely against glyphs touching one another, but such problems should
+be limited.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565633"></a>WYSIWYG Conformance:</h4></div></div></div><p>
+Horrible. You will almost never get the same width. You can have a
+typical error up to plus-or-minus 5%, or even 10% at very small sizes.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565646"></a>Fast StringWidth():</h4></div></div></div><p>
+Ideal. You need to cache only one escapement per size.
+</p><pre class="screen">
+StringWidth = (count of character) x
+              (escapement for one specific size) x
+              (that specific point size).
+</pre></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565665"></a>Fast Escapements:</h4></div></div></div><p>
+Ideal. One escapement per size.
+</p><pre class="screen">
+RealEscapement = (escapement for one specific size) x
+                 (that specific point size).
+</pre></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565683"></a>Addendum: More on StringWidth()</h3></div></div></div><p>
+<code class="methodname">StringWidth()</code> is a synchronous client/server call. Consequently, it's
+quite slow—it's slowness is one of the most serious performance
+problems in the graphics system. Currently, there are two ways to get
+around the problem:
+</p><ul class="itemizedlist"><li><p>
+You can reduce the client/server overhead by bundling up a bunch of
+strings in the <code class="methodname">GetStringWidths()</code> call. The advantage of this method is
+that it's easy to use and (pay attention) IT WILL REMAIN COMPATIBLE
+WITH FUTURE ADVANCED SPACING MODES (such as real kerning). However,
+this solution may not be as fast as you need.
+</p></li><li><p>
+A faster approach is to compute the string width yourself. They're
+YOUR strings. That's what the "Fast StringWidth()" sections were all
+about.
+</p></li></ul><p>
+Next week, I'll comment on a few other subtleties of the new font engine,
+but for now I hope this helps you understand which spacing mode you
+should use. If you still have questions about spacing modes, do not
+hesitate to email me at: pierre@be.com.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Support2-22"></a>Sailing to Support Nirvana, PART 1</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ed</span> <span class="surname">Romson</span></span></div></div></div><p>
+In Be Newsletter #72, I wrote about the kind of support we were
+establishing to serve developers and end-users. This time, I'd like to
+tackle the question of how to set up support within an organization. Let
+me start by clarifying terms; by using the term "support," I am referring
+to the technical support of customers. There are other issues involved in
+Customer Service; publishing your product, order taking, money collection
+and distribution, to name a few. While those tasks are within the scope
+of our Customer Support department here at Be, they are not going to be
+covered here.
+</p><p>
+Many developers "fall" into technical support, that is, they publish a
+product—be it freeware, shareware or a commercial application—then
+sit back and hope that the phone does not ring. It will, I promise you.
+Even if you include a disclaimer in your shareware product that is in 72
+point type and says "Technical support is not included with this
+product," you'll get a ton of email, and even phone calls (it is uncanny
+how some people are able find you). So, let's start with this premise:
+Every product needs support.
+</p><p>
+The level of staffing, expense and effort spent on technical support
+varies depending upon the level of sophistication of both the product and
+the company that produced it. You can compare this issue to the concept
+of sailing. Sailboats come in various sizes and have varied crew
+requirements. You can sail a small day-sailer with one person, zipping
+around the Bay all day, having a great time and getting one heck of a
+sunburn. You can sail a 40 foot sloop with two or three people, spend
+days on board, and go long distances: Trans-Atlantic or, like Erich --
+our Grand Vizier of Code—out to Hawaii. It costs more, but you
+experience different thrills and challenges (notice I did not say "you
+have more fun"). A large three masted barkentine, the workhorse of days
+past, requires a large crew and a major investment, but to some people's
+way of thinking it is the most comfortable way to travel and will allow
+the most work to be done.
+</p><p>
+Are you with a day-sailer kind of company? Most developers start here.
+One or two people, probably the same people who wrote the code, answer
+inquiries about the product and writing bug-fixes in between trying to
+get Version 2.0 out the door. You can survive like this for awhile, but
+eventually you must go with your core strengths. This is a theme I will
+return to often. Most programmers are good at...programming (duh!).
+Unless you really want to get out from behind the monitor and deal with
+&lt;gasp&gt; people, you'll need to rely on support professionals to help
+customers.
+</p><p>
+This brings you up to the 40 foot sloop range. You are still the skipper;
+your hand is firmly on the tiller. You may even haul a line now and then,
+that is, answer a particularly thorny question. You leave the day-to-day
+sailing to your crew, however. They become very good at answering
+questions and even set up a database of frequently asked questions,
+posting it to your web site. They become the subject matter experts,
+second in knowledge only to the people who actually write the central
+code.
+</p><p>
+Let's look at some of the economics of these support people and how you
+might go about deciding how big a crew to press. To start, you have to
+agree on a "fully loaded" price for each person. By fully loaded I'm
+referring to salary, fringe benefits, office space, equipment, phones,
+Internet access and other miscellaneous costs. I'll take a stab at an
+estimate based on my experience (admittedly with a large hardware and
+software manufacturer, which shall remain nameless). Let's use a round
+figure of US$100,000 per engineer (don't choke, just adjust the figure to
+match your experience and rerun the numbers).
+</p><p>
+Most good support people can handle between 25 to 40 contacts per day.
+Lots of factors go into this estimate; the complexity of the product,
+sophistication of the customer, tools that the support person is using
+and method of contact (email, phone, fax). I've managed organizations
+that were able to average 40 contacts per day. However, we hit that
+number after lots of work and with a staff of 29 that had been working
+together for over a year and had a constant flow of similar questions to
+answer. To be fair, and set proper expectations, I'll use a figure of 30
+contacts per day per person.
+</p><p>
+It is my opinion that, in order to provide for contingencies and for the
+mental health of your support people, a minimum staff of 2 is required.
+Otherwise, vacation, sick time, jury duty, you name it, hits and one of
+your people will be off listening to the defense attorney vehemently
+state that his client could not have been anywhere near the scene of the
+crime, while your support questions keep rolling in.
+</p><p>
+These "contingencies" bring up another issue, one that in Call Center
+parlance is known as an efficiency, staffing or load factor. It is a
+factor that modifies the equation to provide for the time that the
+support people are off for those events mentioned above. I can't tell you
+the amount of time Call Center managers spend arguing about this. Suffice
+it to say that, the "Theory According to Romson" is that one must allow
+for a 20% staffing factor (your mileage may vary). This factor will
+affect the number of calls per year each person will be able to take.
+</p><pre class="screen">
+**Chart 1**
+
+Personnel cost (per person)...................$100,000
+Number of contacts handled/day/person...............30
+Number of people.....................................2
+Efficiency factor..................................0.8
+Number of work days................................260
+Calls handled/person/year.........................6240
+Cost per contact................................$16.03
+</pre><p>
+You'll notice that you are able to calculate a rough cost per contact
+from this model. Keep that number in mind, you can compare it to what is
+available if you decide to hire a crew from the outside (also known as
+outsourcing).
+</p><p>
+Forecasting the number of contacts you will be offered is like
+forecasting the weather. Worse, actually, since it depends on a sales
+forecast rather than a butterfly flapping its wings in Brazil. Given this
+challenge, support managers use a number of formulas to come up with a
+forecast. The factors that figure into this formula are much the same as
+mentioned above regarding the type of product, customer, and contact
+methods you encounter. Many software companies use between 35% and 50%
+for a contact rate. That means for every 100 units sold, you'll get 35
+questions. If you include hardware in that equation (like that unnamed
+"fruit" company) the factor could go as high as 150%. Add novice users,
+and it soars to 300%. Another reason your call rate could be as high as
+300% is if your product is so complex that the user must call for
+installation help. Some LAN products come to mind.
+</p><p>
+Experience in taking calls and email will give you a real contact rate,
+but the most common dilemma encountered when setting up support is that
+you must start with a guess. Make an educated guess and verify it with
+experience, but have a contingency plan, in case the contacts go through
+the roof. For our hypothetical voyage upon the Sea of Support, I'll use a
+midrange contact rate of 50%.
+</p><p>
+Given that rate and the calculations we went through above, it appears
+that your 2 Support Engineers will be able to handle the results of the
+sale of 25,000 copies of your software (two people taking 6,420 calls per
+year, each call being the result of the sale of 2 copies of the product =
+24,960 units). Not enough to match your sales forecast? Congratulations!
+The formula can extend to millions of units; just add people.
+</p><p>
+Aye, but there's the rub. Do you want to invest in additional high priced
+support personnel in-house or should you look to an outside company to do
+the first-line support for you? You are quickly moving up to a much
+larger sailboat and you'll need to decide if you want to sail her
+yourself or let an experienced captain and crew take you into the future.
+</p><p>
+That is a discussion for next time. Come on back to the Be Newsletter
+next week, and we'll get into outsourcing, loss of quality control,
+vendor management, and more sailing metaphors.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-22"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+So, what multimedia OS would be complete without pretty good support for
+FireWire? If you were at the Be Developer's Conference and attended the
+session covering video, you saw a lot of slides about where to get info
+on FireWire and a number of the other technologies that we will be
+supporting in the future. One piece of the demo that we did then was
+released last week. The VideoMania application didn't do any FireWire,
+but it did the Picture-In-Picture thing. Well, how about camera control,
+VCR control, and the rest.
+</p><p>
+What are we missing? Well, FireWire is a relatively new technology, and
+there aren't a lot of APIs in OSes to support it yet. We do have a
+working framework for it though.
+</p><p>
+ftp://ftp.be.com/pub/samples/fire.tgz
+</p><p>
+This archive contains a driver for the Adaptec FireWire board, as well as
+a whole lot of stuff to support the AV/C command set. We want your input
+as to how we can make it better. We want to provide a number of classes
+that make AV support relatively trivial in the BeOS. We have the Midi
+Kit, the Media Kit, and now the AV Kit in the makings. This is your
+chance to get in on it while it's still in the oven.
+</p><p>
+What will be added over time is support for the various subtypes
+available in FireWire, that means cameras, TV tuners, and monitors. At
+least according to the spec. Right now, there is only support for camera
+and VCR subtypes.
+</p><p>
+If that's not enough, I hear Geoff Woodcock has been working on a ISO9660
+file system extension. I don't want to steal his thunder, because it
+makes for a good tutorial on writing file system extensions. I will say
+that it is quite a relief to be able to mount standard CD and get at my
+shovelware easily without having to go through a floppy or network
+transfer phase. Keep a lookout in the ftp.be.com/pub/dr9/samples
+directory for these goodies.
+</p><p>
+Well, summer is rapidly upon us here in California. 102 degrees one day,
+rain the next, followed by fog. Ahhh, what a life. The DR9 samples are
+flowing, apps are coming in, and the world is a wonderful place. If you
+don't believe it, then you're not programming on the BeOS. Have you
+bought your Hauppauge tuner card yet? If you haven't, you're missing out
+on all the fun.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-"></a>Nice Product, But...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+The dreaded sentence. We heard it often, in various guises. In the VC
+trade, the kind condemnation is worded as "interesting." The "but" is a
+way to introduce the objection that the better product won't win. Look at
+Betamax, look at the Mac. I won't get into the Macintosh story for today,
+but let's take a look at the Betamax story. There is more than meets the
+lore.
+</p><p>
+Yes, when comparing the polar display of VHS and Betamax video output on
+an oscilloscope, the Beta standard stood as clearly superior. And Sony
+sold much Betacam equipment to the pros. That didn't happen with the
+consumer version, Betamax. Why? Was it a case of the mighty, foxy
+Matsushita steamrollering poor little Sony?
+</p><p>
+Consumer Reports gave us the answer a few years back. Yes, Betamax looked
+better on the scope, but... not on the TV. Using a double blind
+experiment (where neither the person running the test nor the subject
+know which parameters are used) with ordinary program material, a panel
+of viewers could not distinguish between a VHS and a Betamax recording
+displayed on a run-of-the-mill TV set. For the consumer, Betamax didn't
+yield better viewing than VHS.
+</p><p>
+Things got worse for Betamax: Consumer Reports then looked at the repair
+history of VCRs. All the Matsushita brands (National, Panasonic,
+Technics...) stood at the top of the quality scale, and Sony at the
+bottom. (At the risk of angering Sony fans, Sony's conversion to VHS
+hasn't improved their standing, they still rank at the bottom of quality
+surveys.) QED: the customer is smart. Or to quote a past Vice-President:
+"The market's invisible hand has spoken."
+</p><p>
+Betamax lost fairly.
+</p><p>
+Now, the above doesn't imply we'll succeed because we have a superior
+product. We're working on it, we hope to be on our way, but we haven't
+proven that yet. And, as the "product" word implies, there are many
+factors involved. The meaning of "better" is one of them. In a metaphoric
+view, an operating system is a musical instrument. As such, "better" has
+to be qualified: for whom, for what. As musical instruments go, not every
+piece of music written for one instrument can be felicitously rendered on
+any other one. An organ toccata won't play on a flute; string glissandi
+won't render on a piano. Our goal always has been to provide an
+opportunity for composers, programmers, to write music that couldn't be
+easily written elsewhere, or that wouldn't play as well elsewhere. In
+addition, Be music can be marketed, delivered and updated inexpensively
+on the Web, thus lowering the cost of entering the market. Basically, all
+you need is sweat equity—I was going to write: "a better product."
+</p><p>
+Another way to look at "better" is this: think of three categories.
+Better than yesterday, impossible yesterday and unthinkable yesterday.
+Place them on a horizontal axis from left to right. In general, the
+profit opportunity improves as one moves towards the right. On the left,
+marginal improvements, in the middle, removal of painful obstacles, on
+the right, a brain-teaser. Note I wrote "unthinkable yesterday" in order
+to afford us the benefit of hindsight, of retroactive recognition of the
+inconceivable. Examples abound: four years ago, who thought of the Web?
+It has quickly shifted left at least one column. I'd say two if there was
+a T3 line into every home; that's almost unthinkable.
+</p><p>
+Back to the original challenge, if we are perceived as merely offering
+marginal improvements upon existing OS platforms, then the "nice product,
+but" sentence is justified. The competition will easily catch up with us
+and we'll fail. Fortunately, in our chosen field of media applications,
+we've been able to locate much of our work in the "impossible before" (at
+the PC level). As for the "unthinkable," we'll have to wait until it
+becomes retroactively obvious.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-22"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566075"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566081"></a>Subject: Get Working Directory</h4></div></div></div><p>
+Where should application specific data (settings) be saved? How do you
+find these files? As many users pointed out, the new FindDirectory
+mechanism (unimplemented in AA:PR) and the file system layout map will
+help answer these questions.
+</p><p>
+Most of them, anyway: Chris Hanson suggested that a settings API would
+be even better. Rather than making an app find the directory in which
+it would then save its settings, why not just provide a function that
+does all that for you: You pass in the settings data, it finds the
+correct place and saves them.
+</p><p>
+To some, this solution sounds a bit too much like Windows' registry.
+The registry concept may be sound, but, as Dave Haynie put it:
+</p><p>
+“<span class="quote">It's...horrible when you're running the same installation over a
+network, or on the same machine under different OSes. The Windows
+registry concept, if not implementation, isn't that bad if you're a
+single system unnetworked home user, but it fails in pretty much every
+other case.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566123"></a>Subject: How to reuse my DesktopImage ?</h4></div></div></div><p>
+A number of folks having fun with the new Tracker. Hints, tips, and
+requests regarding the Tracker's desktop window, displaying background
+images in windows, and so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566137"></a>Subject: Generic Printer Driver</h4></div></div></div><p>
+Is it possible to provide a generic printer driver (emphasis on
+"generic"). Given the number of different printers that are commonly
+available (emphasis on "common"), most folks voted for "no." It's
+better, at least for starters, to provide one or two specific drivers
+for a couple of "de facto standard" printers than it is to try to
+generalize the problem and solve it in the printer architecture.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id566155"></a>Subject: Replicants</h4></div></div></div><p>
+Do Replicants work if the "parent" app is moved? Not now, but they
+will, someday. This led to a larger discussion—one we're all
+familiar with by now—about installation, registration, and file
+dependencies. Many folks want a way to mark dependent files such that
+when a given file is deleted or moved, the dependent files are acted
+upon appropriately. Again, the forthcoming FindDirectory was invoked as
+a feature worth waiting for. And, again, a "Preferences Manager"-style
+app (or, at least, API) was requested.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-21.html">Issue 2-21, May 28, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-23.html">Issue 2-23, June 11, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-21.html" title="Issue 2-21, May 28, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-23.html" title="Issue 2-23, June 11, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

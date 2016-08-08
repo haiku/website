@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 5: 2000</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume5.html" title="Volume 5: 2000" /><link rel="prev" href="Issue5-5.html" title="Issue 5-5, February 2, 2000" /><link rel="next" href="Issue5-7.html" title="Issue 5-7, February 16, 2000" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue5-5.html" title="Issue 5-5, February 2, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue5-7.html" title="Issue 5-7, February 16, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 5: 2000</div></div><div id="headerB">Prev: <a href="Issue5-5.html">Issue 5-5, February 2, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-7.html">Issue 5-7, February 16, 2000</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue5-6"></a>Issue 5-6, February 9, 2000</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering5-6"></a>Be Engineering Insights: A Device Driver Is Worth a Thousand Words</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Brian</span> <span class="surname">Swetland</span></span></div></div></div><p>
+Once upon a time I wrote an article about using
+<acronym class="acronym" title="Universal Serial Bus">USB</acronym> from user space.
+Those tools are handy for prototyping and many simple projects, but often
+you need a real <acronym class="acronym">USB</acronym> driver (perhaps to fit into an existing driver model
+like mice, keyboards, or audio devices). We'll take a look at the gritty
+details and some important rules for <acronym class="acronym">USB</acronym> drivers. A sample driver that
+can dump raw audio data to <acronym class="acronym">USB</acronym> speakers is provided to illustrate the
+points below.
+</p><p>
+This article refers to the V2 version of the bus manager that will ship
+in BeOS 5. The sample code includes header files for this new interface.
+Please note that this code will not operate correctly under R4.x (and
+will not even build if you use the system headers).
+</p><p>
+You can get the source code and follow along if you like:
+&lt;ftp://ftp.be.com/pub/samples/drivers/usb_speaker.zip&gt;.
+</p><p>
+The USB 1.1 Specification and specific device class specifications are
+available online in PDF format:
+<a class="ulink" href="http://www.usb.org/developers/docs.html">http://www.usb.org/developers/docs.html</a>.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id451877"></a>The USB Bus Manager</h3></div></div></div><p>
+The Universal Serial Bus is far more dynamic than some of the other
+busses we support under BeOS. Users can and will hot plug and unplug
+devices. The dull old "load driver," "look for devices," "publish
+devices," techniques will not work very well here. We're using USB as a
+test bed for the next revision of the BeOS driver model, which will treat
+all busses as dynamic entities and be better prepared for other
+interesting device events, like power management.
+</p><p>
+When a <acronym class="acronym">USB</acronym> driver loads, it's expected to register itself with the bus
+manager using <code class="code"><code class="varname">usb</code>-&gt;<code class="function">register_driver()</code></code>.
+The name of the driver must be
+provided (so the bus manager can reload it on demand), as well as a list
+of supported devices. This takes the form of an array of
+<span class="type">usb_support_descriptor</span> structures. Each entry represents a pattern that
+may have a value (or the wild card 0) for the class, subclass, protocol,
+vendor, and device fields. The sample driver provided supports <acronym class="acronym">USB</acronym> audio
+devices (all devices that have a class value of 1).
+</p><p>
+Once registered, the driver must request notification of devices that it
+may be interested in. A set of <span class="type">notify_hooks</span> (currently <code class="function">device_added</code> and
+<code class="function">device_removed</code>) are installed using
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">install_notify()</code></code>. These hooks
+must be uninstalled before the driver unloads using
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">uninstall_notify()</code></code>.
+</p><p>
+Once the hooks are installed, <code class="function">device_added()</code> will be called every time a
+device that matches (in its <span class="type">configuration_descriptor</span> or an interface
+descriptor) the pattern in one of the supplied support descriptors
+appears. If there are already such devices plugged in, these calls will
+occur before <code class="function">install_notify</code> returns.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id452379"></a>Adding and Removing Devices</h3></div></div></div><p>
+The <code class="function">device_added()</code> hook receives a <span class="type">usb_device</span> pointer (the opaque handle
+that represents a particular <acronym class="acronym">USB</acronym> device on the bus). The driver may
+further investigate the device (for example, our sample only supports
+audio devices that support 16-bit stereo streams) and indicate whether it
+wants to keep it.
+</p><p>
+If <code class="constant">B_OK</code> is returned, the driver may use the <span class="type">usb_device</span> handle and any
+associated resources until <code class="function">device_removed()</code> is called. Once
+<code class="function">device_removed()</code> returns, the driver MAY NOT use these resources again.
+The <code class="parameter">cookie</code> parameter of <code class="function">device_added</code> provides a value that will be passed
+to <code class="function">device_removed</code>. If <code class="function">device_added()</code> returns
+<code class="constant">B_ERROR</code>, the driver receives
+no further notification and may not use the usb_device.
+</p><p>
+When <code class="code"><code class="varname">usb</code>-&gt;<code class="function">uninstall_notify()</code></code>
+is called, any devices that still exist are
+"removed" (<span class="type">device_removed</span> is called).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id452465"></a>Putting Theory into Practice</h3></div></div></div><p>
+The sample driver maintains a list of devices it knows about (by way of
+<code class="function">device_added()</code> calls). The list is protected by a lock and also generates
+the list of device names when <code class="function">publish_devices()</code> is called. Each device
+entry contains information needed for transfers, a count of how many
+instances of it are open, and a unique number allocated on creation. When
+a device is removed, its entry is removed from the list, but only
+actually removed from memory if the open count is zero.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id513962"></a>Devices, Interfaces, Endpoints, and Pipes</h3></div></div></div><p>
+As mentioned above, each device is represented by a usb_device pointer
+(an opaque object). The properties of a device, its configurations,
+interfaces, and endpoints are described by various descriptors defined by
+the <acronym class="acronym">USB</acronym> specification (Chapter 9, in particular, is very useful). The
+header <code class="filename">USB_spec.h</code>
+contains constants and structures for the various
+standard descriptors.
+</p><p>
+Every device has at least one—and possibly several—configurations.
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">get_nth_configuration()</code></code>
+may be used to obtain a <span class="type">configuration_info</span>
+object that describes a particular configuration.
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">set_configuration()</code></code>
+is used to select a configuration and inform the
+device of that choice. A configuration value of <code class="constant">NULL</code> means "unconfigure."
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">get_configuration()</code></code>
+returns the current configuration (or <code class="constant">NULL</code> if
+the device is not configured).
+</p><p>
+The <span class="type">configuration_info</span> structure contains the configuration descriptor,
+as well as an array of <span class="type">interface_list</span> structures. Each <span class="type">interface_list</span>
+represents one interface, which may have several alternates. An alternate
+interface often provides a slightly different version of the same
+resource (for example, an audio device may provide 16-bit stereo, 8-bit
+mono, and several other formats).
+</p><p>
+The <span class="type">interface_list</span> also indicates the currently active interface (the
+default is always alt[0]). This value may only be set by
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">set_alt_interface()</code></code>
+and must never be changed by hand. IMPORTANT:
+<code class="function">set_alt_interface()</code> MUST happen before
+<code class="function">set_configuration()</code>—this is a
+limitation in the current <acronym class="acronym">USB</acronym> stack.
+</p><p>
+Each interface has a descriptor, a number of endpoints (which may be
+zero), and a list of "generic" descriptors—descriptors specific to the
+interface (audio interfaces provide a descriptor that describes the audio
+data format, for example).
+</p><p>
+Each endpoint structure includes the endpoint descriptor (which indicates
+the type, direction, max bandwidth, as per the <acronym class="acronym">USB</acronym> spec) as well as a
+pointer to a <span class="type">usb_pipe</span>. Initially, every endpoint's <span class="type">usb_pipe</span> pointer is
+<code class="constant">NULL</code>, but when a device is configured (with
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">set_configuration()</code></code>), the
+pipes of the active interfaces are valid handles used to send or receive
+data.
+</p><p>
+Here's an example of a typical audio device (usually the audio streaming
+interface has several alternates with various other supported formats):
+</p><pre class="screen">
+usb_device
+  configuration[0]
+    interface[0]
+      (class 1, subclass 1: Audio Control)
+      alternate[0]
+    interface[1]
+      (class 1, subclass 2: Audio Streaming)
+      alternate[0]
+        (default, uses no bandwidth)
+      alternate[1]
+        endpoint[0]
+        (isochronous out, 56 bytes per packet max)
+        generic[0..2]
+        (audio descriptors, format 8-bit mono)
+      alternate[2]
+        endpoint[0]
+        (isochronous out, 224 bytes per packet max)
+        generic[0..2]
+        (audio descriptors, format 16-bit stereo)
+    interface[2]
+      (class 3: Human Interface (volume buttons))
+      alternate[0]
+        endpoint[0]
+        (interrupt in, 1 byte per packet max)
+        generic[0]
+        (HID descriptor)
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id516523"></a>Sending and Receiving Data</h3></div></div></div><p>
+One very important thing to remember with <acronym class="acronym">USB</acronym> drivers is that you can't
+use stack-allocated structures with the <code class="function">queue_*()</code> IO functions. They are
+completed in a service thread that doesn't have access to the stack that
+the operations were initiated from. If you use stack-allocated
+structures, your driver will crash. Also, the current stack requires that
+data buffers for bulk, isochronous, and interrupt transactions be
+contiguous in physical memory. This limitation may be lifted in a future
+version, but for now, be careful.
+</p><p>
+Every device has a pipe to endpoint 0, the default control pipe. The
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">send_request()</code></code>
+call is used to send control requests (which involve
+an 8-byte command sent from the host, optionally followed by some number
+of bytes sent to or received from the device). Control requests are used
+to configure devices, clear error conditions, and do other housekeeping.
+Many of the convenience functions provided by the bus manager (set/clear
+feature, get_descriptor, and so on) result in control requests.
+</p><p>
+For any other type of transaction you'll need a <span class="type">usb_pipe</span> object, which
+will be allocated to each endpoint in each active interface when
+<code class="function">set_configuration()</code> succeeds as described above.
+</p><p>
+The <code class="code"><code class="varname">usb</code>-&gt;<code class="function">queue_interrupt()</code></code> and
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">queue_bulk()</code></code> calls may be used to
+enqueue requests to interrupt or bulk endpoints, respectively. A callback
+must be provided to allow the stack to inform your driver when the
+requests complete. The direction of data transfer is dictated by the
+direction of the endpoint (as detailed in its descriptor). The callback
+is called on completion of the transaction (with success or failure) or
+if the transfer is cancelled with
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">cancel_queued_transfers()</code></code>.
+</p><p>
+Isochronous transfers are more complicated, and require that the driver
+inform the stack ahead of time so that adequate resources may be
+dedicated. Since isochronous transfers provide guaranteed bandwidth, the
+stack needs to pre-allocate various transfer descriptors specific to the
+host controller to insure that everything is handled in a timely fashion.
+</p><p>
+<code class="code"><code class="varname">usb</code>-&gt;<code class="function">set_pipe_policy()</code></code>
+is employed to configure an isochronous pipe in
+this fashion. It uses the provided buffer count to determine how many
+requests may be outstanding at once, the duration in milliseconds to
+determine the number of frames of data that will be provided, and the
+sample size to insure that frames are always a correct multiple of the
+sample size.
+</p><p>
+usb-&gt;queue_isochronous() starts an isochronous transfer on the next
+frame. While bulk and interrupt transfers provide a simple actual_length
+parameter to their callback, which indicates how much data has been sent
+or received (in the event of a short transfer), isochronous pipes use
+run-length encoding records to describe which data actually made it
+intact (since it's possible that only bits and pieces of an inbound
+isochronous stream arrived intact). The USB_rle.h header has extensive
+comments explaining these structures.
+</p><p>
+In the current stack, it takes 10ms for the first isochronous transfer on
+a pipe to start. Provided you keep queuing up additional transfers, there
+will be one packet per frame.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id516658"></a>About USB Transactions</h3></div></div></div><p>
+Isochronous transactions get dedicated bandwidth and happen every frame.
+Delivery is not guaranteed, but timing is.
+</p><p>
+Interrupt transactions are scheduled to happen on a polling interval of N
+milliseconds (no less often than once every N frames). They give the
+device (for example, a mouse) an opportunity to send some data (up to the
+specified max packet size) or a NAK, indicating no data is ready.
+</p><p>
+Control requests actually consist of two or three transactions—a setup
+phase to send the 8-byte control message, an optional data phase for the
+device to send or receive data, and an acknowledge phase where the data
+(or lack thereof) is acknowledged or an error is signaled via a STALL
+condition.
+</p><p>
+Bulk transactions guarantee delivery but not timing—they use as much
+bandwidth as is available (and not allocated to interrupt or isochronous
+transfers) to send or receive data.
+</p><p>
+Every endpoint specifies a max packet size—the <acronym class="acronym">USB</acronym> stack will never
+violate this size and will break up longer queued requests into as many
+individual packets as required to complete the request. The exception is
+isochronous transactions, which must declare buffering information ahead
+of time with <code class="function">set_pipe_policy()</code>
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id516711"></a>The Sample Driver (usb_speaker)</h3></div></div></div><p>
+A full <acronym class="acronym">USB</acronym> Audio driver is a fairly complex beast—the sample provided
+works with <acronym class="acronym">USB</acronym> Audio Spec-compliant devices, but only if they provide a
+16-bit stereo interface. The sample only handles 44KHz sample rates --
+you can use it by copying a raw 44.1KHz, 16-bit stereo audio file
+(perhaps a CD track saved to disk) to
+<code class="filename">/dev/misc/usb_speaker/0</code>, provided
+you have a compatible USB audio device plugged in.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop5-6"></a>Developers' Workshop: The Quick Version of Drag'n'Drop</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ken</span> <span class="surname">McDonald</span></span></div></div></div><p>
+This week's article is all about making use of Drag'n'Drop with BeOS, an
+apparently simple task that has some unseen (but useful) complications.
+This is going to be a "high-level" article. By some strange coincidence,
+I've just finished writing the detailed documentation for drag'n'drop,
+which should be on the Be Web Site soon, so you can look there for code
+examples, and all the picky details.
+</p><p>
+First, a bit of history, which will be particularly important to those of
+you who have been programming BeOS for a long time, and think that the
+way you did drag'n'drop way back when is the way you should do it now.
+Here's the history:
+</p><div class="orderedlist"><ol><li><p>
+In earlier versions of the BeOS, dragging an object from one place to
+another corresponded to sending a message from one place to the other.
+</p></li><li><p>
+Now, it's different.
+</p></li></ol></div><p>
+I did say a _bit_ of history.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id516813"></a>Why Did We Complicate Drag'n'Drop?</h3></div></div></div><p>
+The old method of drag'n'drop was simple. I might, for example, have some
+text selected in a word-processing application. Assuming the application
+supported drags, I could, onscreen, drag the text selection "onto" a
+<span class="application">Tracker</span> folder. Internally, this would result
+in a <code class="classname">BMessage</code> object being
+sent from the application to <span class="application">Tracker</span>; among other things, the message
+would contain a string corresponding to the dragged text. Tracker, upon
+receiving that message, could inspect it, say, "Aha! Here's some text
+data", and make a clipping file out of it.
+</p><p>
+Now, what happens if the user drags that text onto the trashcan, rather
+than onto the desktop or a <span class="application">Tracker</span> folder? Intuitively, it would make
+sense that this should do the same thing as hitting the "delete" key--it
+should delete the selected text from within the application. However,
+this requires an action on the part of the word-processing application;
+Tracker can't "reach in" and yank out that text. Unfortunately, since
+(under the old-style drag'n'drop) only one message was sent, from the
+application to Tracker, there's no way <span class="application">Tracker</span> can request this action of
+the word processor. Too bad.
+</p><p>
+A different facet of this communications problem can be seen by thinking
+about a slightly different scenario; dragging selected text from a Web
+browser to a word processor. There are two obvious formats the browser
+could provide this text in; it could provide the text as "plain" text,
+losing all of the formatting imparted by the <acronym class="acronym">HTML</acronym> markup tags, or it
+could provide it as "HTML text", keeping the <acronym class="acronym">HTML</acronym> markup tags.
+Unfortunately, the browser has no way to decide between the two without
+knowing more about the receiving application; if the receiver
+"understands" <acronym class="acronym">HTML</acronym>, the browser should probably provide all of the text,
+including the markup, but if the receiver doesn't understand <acronym class="acronym">HTML</acronym>, then
+it would make more sense for the browser to strip out the <acronym class="acronym">HTML</acronym> tags
+before bundling up the text and sending it off to the word processor.
+Figuring this out requires some sort of negotiation between the browser
+and word processor, or more generally, between the sending application
+and receiving application.
+</p><p>
+The two above shortcomings of "old-style" drag'n'drop--the inability of
+the receiver to request actions of the sender, and the inability to
+negotiate an "optimal" data format between the sender and receiver--led
+to the more recent drag'n'drop protocol, negotiated drag'n'drop.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id516911"></a>A Negotiated Settlement; There will be Peace in Our Time</h3></div></div></div><p>
+Negotiated drag'n'drop causes (up to) three <code class="classname">BMessage</code>s to be sent, for
+every drag'n'drop the user performs. Here's what the dataflow looks like:
+</p><p>
+&lt;http://www-classic.be.com/aboutbe/benewsletter/resources/dragdrop.jpg&gt;
+</p><p>
+The whole purpose of negotiated drag'n'drop is (surprise!) negotiation,
+and the communication to accomplish that negotiation is accomplished via
+a predetermined set of message fields in the messages that are flung back
+and forth--these fields, and what goes in them, are the negotiation
+protocol. I won't go into all of the gory details (that's what the
+reference material is for), but let's go back to our example of dragging
+text from a Web browser to a word processor to see some of the things
+that might happen.
+</p><p>
+When the user drags and drops the selected text from the web browser to
+the word processor, the first message (which is called the _drag message_
+in the diagram) will be sent. This message will contain a bunch of
+information in various message fields; of interest to us right now are
+the "be:actions" and "be:types" message fields. "be:actions" contains a
+list of actions that the sending application (the web browser, in this
+case) is willing to perform on the dragged data. In this example,
+"be:actions" might contain the <code class="constant">B_COPY_TARGET</code>
+and <code class="constant">B_TRASH_TARGET</code> values,
+indicating that the web browser is willing to either provide a copy of
+the dragged data, or to delete it. "be:types" is a list of MIME types
+indicating the data formats that the browser is willing to provide the
+text in; obvious values for this list are "text/plain" for plaintext, and
+"text/html" for text including HTML markup, but what goes in here depends
+solely on what the sender application is willing and able to provide.
+Note that we don't send any "real" data in the drag message, i.e. the
+text itself isn't sent yet.
+</p><p>
+Now, the word processor receives the drag message, and according to the
+negotiation protocol, it knows it can make two choices from the options
+provided in the drag message; it can choose the action it will request
+the browser to perform, and it can request the data format it wants data
+in. If our word processor were really a trashcan, it might request the
+<code class="constant">B_TRASH_TARGET</code> action, but it isn't, so it will
+request the <code class="constant">B_COPY_TARGET</code>
+action, stating that it wants a copy of the data for its own use. As for
+the data format, well, that's up to it and what it can handle; if it can
+parse <acronym class="acronym">HTML</acronym>, then choosing a format of "text/html" will let it preserve
+some or all of the formatting of the original text, otherwise a choice of
+"text/plain" will still get the text itself across, and is simple to use.
+Let's say it chooses "text/plain"; it then bundles up the chosen
+<code class="constant">B_COPY_TARGET</code> action and the chosen "text/plain" data format into a new
+<code class="classname">BMessage</code>, and shoots that message back to the browser as the negotiation
+message.
+</p><p>
+When the browser gets the negotiation message, it figure out what the
+other application wants, and (in this case) puts a plaintext copy of the
+selected text into a new <code class="classname">BMessage</code>, and sends that message--the data
+message--back to the word processor. End of process.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id516997"></a>Even More...</h3></div></div></div><p>
+Actually, you can do even more than this with negotiated drag'n'drop. You
+can pass data through a file, rather than through a <code class="classname">BMessage</code>, convenient
+for passing around those 100 megabyte video clips that don't fit too well
+in memory. You can exercise finer control over which data formats are
+used for the interchange of data. And, by the way, the Translation Kit
+works just great when used in conjunction with drag'n'drop.
+</p><p>
+But all that deserves its own explanation, in the reference material.
+(Which is to say, I want to wrap this article up). Once you know the
+basics of the drag'n'drop negotiation, and the reasons for that
+negotiation (as you do now, right?), all of the details fall into place
+easily.
+</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue5-5.html">Issue 5-5, February 2, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-7.html">Issue 5-7, February 16, 2000</a> </div><div id="footerB"><div id="footerBL"><a href="Issue5-5.html" title="Issue 5-5, February 2, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue5-7.html" title="Issue 5-7, February 16, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

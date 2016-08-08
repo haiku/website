@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-47.html" title="Issue 2-47, November 26, 1997" /><link rel="next" href="Issue2-49.html" title="Issue 2-49, December 10, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-47.html" title="Issue 2-47, November 26, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-49.html" title="Issue 2-49, December 10, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-47.html">Issue 2-47, November 26, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-49.html">Issue 2-49, December 10, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-48"></a>Issue 2-48, December 3, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-48"></a>Be Engineering Insights: Writing Add-ons in C++</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+When the compiler sees a function, it creates a symbol that encapsulates
+the function's prototype. This is called "name mangling"; the mangled
+symbol name is how your application's compiled code identifies the
+functions that it calls.
+</p><p>
+It used to be that few application developers needed to worry about how a
+function's name was mangled. But as more and more programmers use
+"add-ons," the issue of understanding and decoding mangled names becomes
+more important. This article explains name mangling basics, how mangling
+affects add-ons, and what you can do to make your life (and the lives of
+the developers that will load your add-ons) easier.
+</p><p>
+Here's a simple name-mangling example. Compiling for the PPC, the
+Metrowerks compiler turns this function declaration:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="function">fred</code>(<span class="type">unsigned long</span>, <span class="type">int *</span>);
+</pre><p>
+into this:
+</p><pre class="screen">
+fred__FUlPi
+</pre><p>
+The amusingly euphonious "FUlPi" actually means something:
+</p><ul class="itemizedlist"><li><p>
+"F" indicates that this is a function.
+</p></li><li><p>
+"Ul" represents the type of the first argument (unsigned long).
+</p></li><li><p>
+"Pi" (pointer to int) is the type of the second argument.
+</p></li></ul><p>
+Let's look at an example of a C++ member function:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">foo</code>::<code class="methodname">fred</code>(<span class="type">const char *</span>, <span class="type">short</span>);
+</pre><p>
+This becomes:
+</p><pre class="screen">
+fred__3fooFPCcs
+</pre><ul class="itemizedlist"><li><p>
+"3" is the string length of the class name ("foo").
+</p></li><li><p>
+"foo" is the class name.
+</p></li><li><p>
+"F" is the function indicator.
+</p></li><li><p>
+"PCc" stands for "pointer to const char" (the first argument).
+</p></li><li><p>
+"s" stands for short (the second argument).
+</p></li></ul><p>
+Now assume you're writing an add-on in C++. Let's consider first the
+simple case of exporting a function. (We'll look at exporting classes
+later.)
+</p><p>
+Here's our add-on source:
+</p><pre class="programlisting cpp">
+<span class="comment">// declaration, possibly in a separate header file</span>
+#pragma export on
+<span class="type">int</span> <code class="function">fred</code>(<span class="type">unsigned long</span>, <span class="type">int *</span>);
+#pragma export reset
+
+<span class="comment">// definition</span>
+<span class="type">int</span> <code class="function">fred</code>(<span class="type">unsigned long</span> <code class="parameter">i</code>, <span class="type">int *</span><code class="parameter">p</code>)
+{
+    return <code class="parameter">p</code>[<code class="parameter">i</code>];
+}
+</pre><p>
+Here's the code that loads the add-on, does the symbol lookup, and then
+invokes the function:
+</p><pre class="programlisting cpp">
+<span class="type">image_id</span> <code class="varname">imid</code>;
+<span class="type">int</span> (*<code class="varname">f</code>)(<span class="type">unsigned long</span>, <span class="type">int*</span>);
+
+static <span class="type">int</span> <code class="varname">p</code>[] = { 9, 2, 7, 1 };
+
+<span class="comment">// Load the add-on</span>
+<code class="varname">imid</code> = <code class="function">load_add_on</code>("my_add_on");
+if (<code class="varname">imid</code> &lt; 0) {
+  ... <span class="comment">// add-on not found</span>
+}
+
+<span class="comment">// Find the symbol for the fred() function</span>
+if (<code class="function">get_image_symbol</code>(<code class="varname">imid</code>, "fred__FUlPi",
+    <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">f</code>) !=  <code class="constant">B_NO_ERROR</code>) {
+  ... <span class="comment">// symbol not found</span>
+}
+
+<span class="comment">// Invoke the function</span>
+<code class="function">printf</code>("f(%d, %.8x) = %d\n", 1, &amp;<code class="varname">p</code>[0], (*<code class="varname">f</code>)(1, <code class="varname">p</code>));
+...
+</pre><p>
+<span class="foreignphrase"><em class="foreignphrase">Tres bien</em></span>, you think. But you have sinned in your ignorance. The mangling
+scheme that I have just described applies to the PowerPC compiler. It
+does not apply to the Metrowerks compiler for Intel. That means you have
+just written code that is not portable. Our function <code class="function">fred()</code> would
+actually be mangled this way for Intel:
+</p><pre class="screen">
+?fred@@YAHKPAH@Z
+</pre><p>
+Just as cryptic as the PPC—and even more fun to say out loud.
+</p><p>
+The best solution to this problem is to avoid it altogether by
+"externing" your add-on functions. The fred() function declaration, for
+example, would look like this:
+</p><pre class="programlisting cpp">
+#pragma export on
+extern "C" <span class="type">int</span> <code class="function">fred</code>(<span class="type">unsigned long</span>, <span class="type">int *</span>);
+#pragma export reset
+</pre><p>
+The definition remains unchanged.
+</p><p>
+The lookup code also remains unchanged, with the exception of the symbol
+name that is now unmangled:
+</p><pre class="programlisting cpp">
+<span class="comment">// Lookup the extern'ed fred() function.</span>
+if (<code class="function">get_image_symbol</code>(<code class="varname">imid</code>, "fred",
+    <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">f</code>) !=  <code class="constant">B_NO_ERROR</code>)
+</pre><p>
+This code (when compiled for the target platform) will run on both the
+PPC and Intel versions of the BeOS.
+</p><p>
+Let's now talk about how to export a class from an add-on. Because the
+class constructors and destructor are mangled, we cannot invoke them
+directly in a portable manner. The solution is to write and export a
+function that creates an instance of our class. Of course, this function
+needs to be externed to avoid name mangling.
+</p><p>
+Let's say we want to export a class Pet.
+</p><p>
+Here's <code class="filename">Pet.h</code>:
+</p><pre class="programlisting cpp">
+class <code class="classname">Pet</code> {
+  public:
+    <code class="methodname">Pet</code>(<span class="type">const char *</span><code class="parameter">name</code>);
+    virtual <code class="methodname">~Pet</code>();
+    virtual <span class="type">const char *</span><code class="methodname">name</code>();
+
+  private:
+    <span class="type">char</span> <code class="varname">buf</code>[32];
+};
+</pre><p>
+And <code class="filename">Pet.cpp</code>:
+</p><pre class="programlisting cpp">
+#include &lt;string.h&gt;
+#include "Pet.h"
+
+#pragma export on
+extern "C" <span class="type"><code class="classname">Pet</code> *</span> <code class="function">instantiate_pet</code>(<span class="type">const char *</span><code class="parameter">name</code>);
+#pragma export reset
+
+<span class="type"><code class="classname">Pet</code> *</span><code class="function">instantiate_pet</code>(<span class="type">const char *</span><code class="parameter">name</code>)
+{
+  return new <code class="classname">Pet</code>(<code class="parameter">name</code>);
+}
+
+<code class="classname">Pet</code>::<code class="methodname">Pet</code>(<span class="type">const char *</span><code class="parameter">name</code>)
+{
+  <code class="function">strncpy</code>(<code class="varname">buf</code>, <code class="parameter">name</code>, 32);
+  <code class="varname">buf</code>[31] = '\0';
+}
+
+<code class="classname">Pet</code>::<code class="methodname">~Pet</code>()
+{
+}
+
+<span class="type">const char *</span><code class="classname">Pet</code>::<code class="methodname">name</code>()
+{
+  return &amp;<code class="varname">buf</code>[0];
+}
+</pre><p>
+And here's the application code that loads the add-on and instantiates
+the object:
+</p><pre class="programlisting cpp">
+#include "Pet.h"
+
+...
+<span class="type">image_id</span>  <code class="varname">imid</code>;
+<span class="type"><code class="classname">Pet</code> *</span><code class="varname">myPet</code>;
+<span class="type"><code class="classname">Pet</code> *</span>(*<code class="varname">f</code>)(<span class="type">const char *</span>);
+
+<code class="varname">imid</code> = <code class="function">load_add_on</code>("Pet");
+if (<code class="varname">imid</code> &lt; 0) {
+   ... <span class="comment">// add-on not found</span>
+}
+
+if (<code class="function">get_image_symbol</code>(<code class="varname">imid</code>, "instantiate_pet",
+    <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">f</code>) != <code class="constant">B_NO_ERROR</code>)  {
+      ... <span class="comment">// symbol not found</span>
+}
+<code class="varname">myPe</code>t= (*<code class="varname">f</code>)("fido");
+<code class="function">printf</code>("pet name is %s\n", <code class="varname">myPet</code>-&gt;<code class="methodname">name</code>());
+delete <code class="varname">myPet</code>;
+...
+</pre><p>
+Note that only <code class="function">instantiate_pet()</code> is exported from the add-on. Because all
+the functions called from the application are <code class="code">virtual</code>
+(<code class="classname">Pet</code>::<code class="methodname">~Pet()</code> and
+<code class="classname">Pet</code>::<code class="methodname">name()</code>), their invocations go through the virtual table, which is
+pointed to by the instantiated object. Therefore no symbol of class Pet
+is explicitly referenced by the application.
+</p><p>
+In a future article, we'll look at a more difficult—and more practical
+—example, such as subclassing <code class="classname">BView</code> in an add-on.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-48-2"></a>A Remembrance of Things Past: Processor-Independent Device Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Arve</span> <span class="surname">Hjønnevåg</span></span></div></div></div><p>
+If you have previously written or are now writing a device driver for
+BeOS you may be interested in learning how to make it work on the
+upcoming BeOS for x86 hardware. In order for a driver to work on
+different hardware platforms, it must be independent of any special
+processor feature. To help you avoid creating dependencies, I've
+formulated four general rules for writing device drivers:
+</p><div class="orderedlist"><ol><li><p>
+Do not use assembly language without providing a fallback for other
+processors.
+</p></li><li><p>
+Use endian-independent code to access external devices.
+</p></li><li><p>
+Use system functions for all timing and delays.
+</p></li><li><p>
+Use macros to access ISA I/O.
+</p></li></ol></div><p>
+If you follow these rules, a simple recompile will make the driver work
+on a different processor, in most cases. For further explanation, read on.
+</p><p>
+First, if you use assembly language, always provide a C version of the
+same code and use the preprocessor to include the right code at compile
+time. A simple example might look like this:
+</p><pre class="programlisting c">
+#if __POWERPC__
+__asm <span class="type">long long</span>
+<code class="function">longlongzero</code>()
+{
+  li  r4, 0
+  li  r3, 0
+  blr
+}
+#elif __INTEL__
+__declspec(naked)
+<code class="function">longlongzero</code>()
+{
+  asm {
+    mov  eax, 0
+    mov edx, 0
+    ret
+  }
+}
+#else
+<span class="type">long long</span>
+<code class="function">longlongzero</code>()
+{
+  return 0;
+}
+#endif
+</pre><p>
+Second, the device that the driver controls may have commands and
+arguments in a specific byte order. Let's say that our device has a
+16-bit command register mapped in memory at address MYCMDADDR. The device
+expects a command in little endian byte order and it defines two
+commands: LAUNCH=0x0100 and DISARM=0x0001.
+</p><p>
+To make the driver source code processor-independent, use the macro
+B_HOST_TO_LENDIAN_INT16(arg), defined in
+<code class="filename">support/byteorder.h</code>, whenever
+you write to the command register:
+</p><pre class="programlisting c">
+<span class="type">void</span>
+<code class="function">guard_thread</code>()
+{
+  while(1) {
+    *MYCMDADDR = <code class="function">B_HOST_TO_LENDIAN_INT16</code>( DISARM );
+    <code class="function">snooze</code>(1000000);
+  }
+}
+</pre><p>
+The third item on the checklist is timing. Take a device that has a
+command register but provides no acknowledgment that the command has been
+received. If a command is written to the command register before the
+device reads the first command, the first command will be overwritten.
+Since we know, however, that the device processes a command in 5
+microseconds, if the driver needs to write two commands, we just put a 5
+microsecond delay, spin (5), between the two commands. In cases when the
+register is used by different functions, the driver may work fine without
+adding any delay—though this is bound to break on a future system.
+</p><p>
+One way to ensure that no command is missed is by always adding a delay
+after sending a command. But although this method always works, it is
+only efficient when commands are sent in large chunks. A better way to
+solve the problem is by always accessing the command register through one
+function. This will add a delay only when it is needed. The following
+function shows you how to do this:
+</p><pre class="programlisting c">
+<span class="type">void</span>
+<code class="function">SendCommand</code>(<span class="type">command_t</span> <code class="parameter">command</code>)
+{
+  static <span class="type">bigtime_t</span> <code class="varname">lasttime</code> = 0;
+  while((lasttime + 5) &gt; <code class="function">system_time</code>()) ;
+  *COMMANDADDR = <code class="function">B_HOST_TO_xENDIAN_COMMAND_T</code>(<code class="parameter">command</code>);
+  <code class="varname">lasttime</code> = <code class="function">system_time</code>();
+}
+</pre><p>
+Fourth and finally, we need to macro-ize access to ISA I/O. On PowerPC
+hardware the ISA I/O space is mapped in memory and can be accessed by
+normal memory operations, while the x86 hardware uses special I/O
+instructions to do this. The next release of BeOS will have predefined
+macros that allow the same code to do ISA I/O on both platforms. These
+macros are not defined in PR2, but using your own macros to read and
+write to I/O addresses will make the switch easier.
+</p><p>
+Using macros to access I/O changes the previous example to look like this:
+</p><pre class="programlisting c">
+<span class="type">void</span>
+<code class="function">SendCommand</code>(<span class="type">command_t</span> <code class="parameter">command</code>)
+{
+  static <span class="type">bigtime_t</span> <code class="varname">lasttime</code> = 0;
+  while((<code class="varname">lasttime</code> + 5) &gt; <code class="function">system_time</code>()) ;
+  <code class="function">ISA_WRITE_COMMAND_T</code>(COMMANDPORT,
+                      <code class="function">B_HOST_TO_xENDIAN_COMMAND_T</code>(<code class="parameter">command</code>));
+  <code class="varname">lasttime</code> = <code class="function">system_time</code>();
+}
+</pre><p>
+Now, when you receive the next BeOS release, you can define
+<code class="function">ISA_WRITE_COMMAND_T</code> to expand to the corresponding system-supplied macro.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop2-48"></a>Developers' Workshop: Axe</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><p>
+"Developers' Workshop" is a new weekly feature that provides answers to
+our developers' questions. Each week, a Be technical support or
+documentation professional will choose a question (or two) sent in by an
+actual developer and provide an answer.
+</p><p>
+We've created a new section on our website. Please send us your
+Newsletter topic suggestions by visiting the website at:
+http://www.be.com/developers/suggestion_box.html.
+</p><p>
+This week's request was sent in by Mrs. Rose Hovick of Seattle,
+Washington:
+</p><p>
+"Can I have an example of a working app that uses the General MIDI
+synthesizer?"
+</p><p>
+Sure. If you make a donation at the $0 dollar level, you can download a
+program called Axe from the MIDI section of Be's source code site:
+</p><p>
+ftp://ftp.be.com/pub/samples/preview/midi_kit/Axe.zip
+</p><p>
+Axe is a mindless sound-generating program with a simple, no-help-needed
+interface. It displays a round playing field that looks something like a
+radar screen; it also displays a two-tiered palette of instruments,
+divided into orchestral groups.
+</p><p>
+Choose an instrument (from the lower palette) and then click in the radar
+screen; you've just composed the first note of the rest of your life.
+Choose another instrument, click another note. Lather, rinse, repeat.
+Don't force the music, it will come to you. It will breathe, expand, and,
+frankly, it will sound like garbage. Axe isn't Art.
+</p><p>
+When you click in the playing field, a little circle appears under the
+mouse. When the little red bead that's circling the radar screen passes
+by your note circle, a noise is made. The pitch of the noise depends on
+how close you are to the center of the radar: Pitch heightens as you
+approach the perimeter. To erase a note, click on the little note circle.
+To erase everything, hit the space bar.
+</p><p>
+This all may sound like a joke—and it is, sort of—but it's the kind
+of joke that you can waste many hours laughing at. And it comes with
+source code so you can make it even funnier. The code isn't heavily
+commented, so I'll point out some features and caveats:
+</p><ul class="itemizedlist"><li><p>
+Axe uses the big General MIDI synthesizer
+(/boot/beos/etc/synth/big_synth.sy). If you don't already have a copy
+of the synthesizer, you can download it by going to:
+</p><p>
+http://www.be.com/products/beos_download/packages.html
+</p></li><li><p>
+The entire synthesizer file is loaded when the app is launched, so
+start-up time takes awhile—ten seconds or so, depending on the speed
+of your machine. This is an eternity compared to most apps.
+</p></li><li><p>
+The two circles within the radar screen designate the C below middle
+C (the inner circle) and the C above middle C (the outer circle).
+Musically, this is the "sweet zone" for many instruments, although for
+our purposes, it's just as interesting to avoid this section—try
+dropping a clump of baritone sax notes an octave or two below this zone
+for a satisfying growl.
+</p></li><li><p>
+Don't be timid or discrete. You can't write music with this thing,
+all you can do is make noise, so the more notes the better.
+</p></li><li><p>
+You can't change the speed of the radar's sweep. And, if you're a
+code-fiddler, I implore you not to add such a feature. Dogged
+periodicity is Axe's most important characteristic. If the frequency of
+the sweep were alterable, the illusion would fall apart.
+</p></li><li><p>
+The menu items aren't connected to anything. I was going to put in
+some wire so you could save a "performance," but I forgot to list it as
+a goal.
+</p></li><li><p>
+The cpu-wasting graphics look best in 32-bit.
+</p></li></ul><p>
+Here's one of my favorite Axe tricks: Lay down a series of low-pitched
+timpani notes that circumnavigate the radar. Look for the instruments
+called "Halo" and "Manhole" in the "Music FX" section; put in a few of
+lines of these in the sweet section—combined, they sound like an angel
+with a hangover. Now stare at the center of the radar for awhile (the
+"burn in" circles) and pretend you're floating five feet above your body.
+Instant near-death experience.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-48"></a>UI and the Integrated Browser</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I've been toying with idea of a tongue-in-cheek column in which I would
+claim that the Department of Justice was suing us for bundling a browser
+with the BeOS. Clearly, in our case (the column would continue), Janet's
+hounds weren't sniffing the foul odor of monopolistic abuse of power.
+Instead, their warrant was misguided egalitarianism, a posture of
+fairness in going after the smallest as well as the mightiest of
+offenders.
+</p><p>
+But with the Bill and Joel (Klein) show entering a dull third act of
+highly technical lawyering, my proposed column lost its edge. We'll know
+more by Friday, but the smart money is betting on a protracted, confusing
+fight that will ultimately be rendered moot by Windows 98 and its
+integrated browser.
+</p><p>
+Regardless of the legal outcome, and even though the integration of
+Explorer isn't really "done" yet, we can already recognize the influence
+of Web browser UI on general UI ideals. Like it or not, Web browsers are
+changing the way desktops look and feel. It may be half-baked, but with
+Windows and Explorer we have a large scale experiment in UI integration.
+So far, the results are mixed:
+</p><ul class="itemizedlist"><li><p>
+The Big Idea was to "seamlessly" integrate all sources of data. My
+hard disk and my favorite Web site were to look and feel the same. A
+nice idea—but, currently, not a practical one: Remote data could
+easily be made to look like the contents of a hard disk, but until
+bandwidth limitations are overcome, the "feel" won't be the same.
+</p><p>
+Of course, we'll have DSL lines or cable modems in a not-too-distant
+future but, as a somewhat privileged T-1 user, I can attest to the fact
+line speed isn't everything. The entire Web fabric needs an overhaul
+before we can fuse the UI paradigms (that's the one and only time I'll
+use the "p" word today).
+</p></li><li><p>
+Conversely, making the contents of a folder look like a Web page
+doesn't improve my ability to navigate large amounts of data and, in
+some cases, increases the feel of clutter.
+</p></li><li><p>
+The "Channels" experiment is even less convincing but, as it is even
+younger than the browser, we can leave it for another day.
+</p></li><li><p>
+"Push" has been criticized for being nothing more than a classical
+client-server interaction in disguise—but isn't disguise the basis
+of a UI? E-mail is a very successful push application when you're on a
+LAN, and reverts to the original form with a dial-up connection.
+Hopefully, with time, we'll become better at sorting out the types of
+data we want pushed to our desk and the ones we'd prefer browsing for.
+</p></li><li><p>
+Some other modest "improvements" have fallen out of browser
+integration, such as auto-highlighting when the cursor hovers over an
+object, and one-click action (as opposed to selection). Nothing to
+criticize here—but these aren't really new. If memory serves, we saw
+these with HyperCard ca. 1987.
+</p></li></ul><p>
+So, aside from a few nice tweaks, the merger of the browser UI with the
+more conventional desktop feels forced. After a while, most users turn
+off the Web-like desktop for a simpler, more intuitive icons-and-folders
+mode, saving Web mode for Web interaction.
+</p><p>
+Modality—having different ways to approach different data—has long
+been bemoaned as wrong-headed and overly restrictive. An illustrious
+computer scientist acquiantance still sports a "NO MODES" license plate.
+This was a meaningful protest in the days when the UI controlled (or
+"guided," in softspeak) the user. But what we're starting to find, in
+this experiment, is that if the context is truly different enough, we
+like modes. You can't hammer a nail with a loaf of bread.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-47.html">Issue 2-47, November 26, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-49.html">Issue 2-49, December 10, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-47.html" title="Issue 2-47, November 26, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-49.html" title="Issue 2-49, December 10, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

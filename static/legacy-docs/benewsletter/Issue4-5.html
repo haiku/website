@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-4.html" title="Issue 4-4, January 27, 1999" /><link rel="next" href="Issue4-6.html" title="Issue 4-6, February 10, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-4.html" title="Issue 4-4, January 27, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-6.html" title="Issue 4-6, February 10, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-4.html">Issue 4-4, January 27, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-6.html">Issue 4-6, February 10, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-5"></a>Issue 4-5, February 3, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-5"></a>Be Engineering Insights: BScreen Improvements for R4</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Trey</span> <span class="surname">Boudreau</span></span></div></div></div><p>
+If you look at <code class="filename">Screen.h</code>
+and compare the contents to the documentation in
+the Release 4 Be Book, you'll find a whole slew of new functionality that
+isn't documented. The fine folks in the technical documentation
+department didn't ignore these changes. Rather, the responsible engineer
+(that would be me) didn't get around to telling them about the changes.
+Oops...
+</p><p>
+As penance, I'll do a quick rundown of some of the new features in the R4
+<code class="classname">BScreen</code>. Let's start at the top.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id534741"></a>Locking Semantics</h3></div></div></div><p>
+The restriction on holding a <code class="classname">BScreen</code> for long periods of time has been
+removed. Creating a <code class="classname">BScreen</code> no longer locks the display. This isn't a
+problem for older programs that use and quickly dispose of the <code class="classname">BScreen</code>,
+but new programs that hold a <code class="classname">BScreen</code> for long periods of time must
+realize that the information returned from various member functions like
+<code class="methodname">Frame()</code>, <code class="methodname">ColorSpace()</code>, etc.,
+will get "stale" if the user changes
+workspaces, or in the future if the affected window changes displays
+(graphics devices). New apps need to watch for <code class="methodname">WorkspaceChanged()</code>
+notifications and retrieve any relevant info from the <code class="classname">BScreen</code> by
+re-calling the appropriate member functions. No matter how old the
+<code class="classname">BScreen</code> is, the member functions always return current information.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">WaitForRetrace</code>();
+<span class="type">status_t</span> <code class="methodname">WaitForRetrace</code>(<span class="type">bigtime_t</span> <code class="parameter">timeout</code>);
+</pre><p>
+Now that we can hold onto a <code class="classname">BScreen</code> for long periods of time, and since
+the graphics driver architecture in R4 supports notification of vertical
+retrace events, <code class="methodname">WaitForRetrace()</code> has been activated. Without parameters,
+<code class="methodname">WaitForRetrace()</code> will wait forever for a vertical retrace event.
+<code class="methodname">WaitForRetrace(bigtime_t)</code> will wait for up to "timeout" microseconds for
+the retrace event. Both functions return <code class="constant">B_ERROR</code> if the underlying driver
+doesn't support retrace notification (like R3 drivers running in
+compatibility mode), or <code class="constant">B_OK</code> if the retrace event was caught.
+<code class="methodname">WaitForRetrace(timeout)</code> will return <code class="constant">B_TIMED_OUT</code>
+if the timeout expired
+before the retrace event occurred.
+</p><p>
+With this info in hand, we can empirically determine the refresh rate of
+the current display mode with code like the following from my FrameRate
+test program (available for download at
+[ftp://ftp.be.com/pub/samples/graphics/FrameRate.zip]:
+</p><pre class="programlisting cpp">
+<span class="comment">// One second worth of microseconds</span>
+#define <code class="constant">ONE_SECOND</code> 1000000
+<span class="comment">// SLOTS needs to be a power of 2.  256 is just over 2
+// seconds worth of measurements at 120Hz and just over 4
+// seconds worth of measurements at 60Hz (a common range of
+// vertical refresh rates for displays, coincidentally :-)</span>
+#define <code class="constant">SLOTS</code> 256
+
+<span class="type">int32</span> <code class="function">rate_calc_thread</code>(<span class="type">void *</span> <code class="parameter">_rw</code>) {
+  <span class="type"><code class="classname">RateWindow</code> *</span><code class="varname">rw</code> = (<span class="type"><code class="classname">RateWindow *</code></span>)<code class="parameter">_rw</code>;
+  <code class="classname">BScreen</code> <code class="varname">bs</code>(<code class="varname">rw</code>);
+  <span class="type"><code class="classname">RateView</code> *</span>rv = rw-&gt;rv;
+  <span class="type">bigtime_t</span> <code class="varname">last_time</code>, <code class="varname">tmp_diff</code>;
+  <span class="type">bigtime_t</span> <code class="varname">this_time</code>, <code class="varname">time_diff</code> = 0;
+  <span class="type">bigtime_t</span> <code class="varname">diffs</code>[<code class="constant">SLOTS</code>];
+  <span class="type">status_t</span> <code class="varname">result</code>;
+  <span class="type">int</span> <code class="varname">i</code>;
+
+  <span class="comment">// if the driver doesn't support retrace events
+  // give up now</span>
+  <code class="varname">result</code> = <code class="varname">bs</code>.<code class="methodname">WaitForRetrace</code>();
+  if (<code class="varname">result</code> != <code class="constant">B_OK</code>) return <code class="varname">result</code>;
+  <code class="varname">last_time</code> = <code class="function">system_time</code>();
+  <code class="varname">bs</code>.<code class="methodname">WaitForRetrace</code>();
+  <code class="varname">this_time</code> = <code class="function">system_time</code>();
+  <code class="varname">tmp_diff</code> = <code class="varname">this_time</code> - <code class="varname">last_time</code>;
+  <span class="comment">// Initialize diffs array so it takes less time to
+  // converge.</span>
+  for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="constant">SLOTS</code>; <code class="varname">i</code>++) {
+    <code class="varname">diffs</code>[<code class="varname">i</code>] = <code class="varname">tmp_diff</code>;
+    <code class="varname">time_diff</code> += <code class="varname">tmp_diff</code>;
+  }
+  <code class="varname">i</code> = 1;
+  <span class="comment">// sync up again before entering the timing loop</span>
+  <code class="varname">bs</code>.<code class="methodname">WaitForRetrace</code>();
+  <code class="varname">last_time</code> = <code class="function">system_time</code>();
+  while (<code class="varname">rw</code>-&gt;<code class="varname">run_thread</code>) {
+    <code class="varname">result</code> = <code class="varname">bs</code>.<code class="methodname">WaitForRetrace</code>();
+    <code class="varname">this_time</code> = <code class="function">system_time</code>();
+    if (<code class="varname">result</code> == <code class="constant">B_OK</code>) {
+      <span class="comment">// subtract out the oldest measurement and
+      // replace it with the one we just took</span>
+      <code class="varname">time_diff</code> -= <code class="varname">diffs</code>[<code class="varname">i</code>];
+      <code class="varname">diffs</code>[<code class="varname">i</code>] = <code class="varname">this_time</code> - <code class="varname">last_time</code>;
+      <code class="varname">time_diff</code> += <code class="varname">diffs</code>[<code class="varname">i</code>];
+      <span class="comment">// wrap around at the end</span>
+      <code class="varname">i</code>++; <code class="varname">i</code> &amp;= (<code class="constant">SLOTS</code>-1);
+      <code class="varname">last_time</code> = <code class="varname">this_time</code>;
+      <span class="comment">// to reduce jitter, only update the display
+      // every 8th frame</span>
+      if ((<code class="varname">i</code> &amp; 0x7)== 0) {
+        <code class="varname">rv</code>-&gt;<code class="varname">rate</code> = ((<span class="type">double</span>)<code class="constant">ONE_SECOND</code> * <code class="constant">SLOTS</code>)
+                    / (<span class="type">double</span>)<code class="varname">time_diff</code>;
+        <span class="comment">// and only if it's not already busy</span>
+        if (<code class="varname">rw</code>-&gt;<code class="methodname">LockWithTimeout</code>(0) == <code class="constant">B_OK</code>) {
+          <code class="varname">rv</code>-&gt;<code class="methodname">Invalidate</code>();
+          <code class="varname">rw</code>-&gt;<code class="methodname">Unlock</code>();
+        }
+      }
+    } else return <code class="constant">B_ERROR</code>;
+  }
+  return <code class="constant">B_OK</code>;
+}
+</pre><p>
+The rest of the program is a fairly boring exercise in a minimalist user
+interface :-)
+</p><p>
+It's important to know that it's not guaranteed you can catch every
+retrace event. If you don't get enough CPU cycles to complete your work
+and get back to the <code class="methodname">WaitForRetrace()</code>, you'll drop a frame. Also, your
+thread might not be the only one running that wants notification of
+retrace events, so there's no way to guarantee that your code will run
+during the blanking interval.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id535331"></a>New Mode Handling Functions</h3></div></div></div><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">GetModeList</code>(<span class="type">display_mode **</span><code class="parameter">mode_list</code>, <span class="type">uint32 *</span><code class="parameter">count</code>);
+</pre><p>
+This code retrieves a list of <span class="type">display_mode</span> structures (defined in
+<code class="filename">Accelerant.h</code>) from the graphics
+driver for this screen, and updates count
+to reflect the number of modes. The memory pointed at by <code class="parameter">**mode_list</code>
+becomes the responsibility of the caller, and must be <code class="function">free()</code>'d when it's
+no longer needed.
+</p><p>
+Note that the list returned by the driver may not be exhaustive—it may
+be capable of setting a mode that is not returned in the list, or it may
+not. It does guarantee that the device in question can support the
+returned modes, but it doesn't guarantee that your monitor can support
+them.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">GetMode</code>(<span class="type">display_mode *</span><code class="parameter">mode</code>);
+</pre><p>
+Retrieve the current screen settings as a <span class="type">display_mode</span>.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span>
+  <code class="methodname">SetMode</code>(<span class="type">display_mode *</span><code class="parameter">mode</code>, <span class="type">bool</span> <code class="parameter">makeDefault</code> = <code class="constant">false</code>);
+</pre><p>
+Configure the screen according to <span class="type">display_mode</span>.
+If <code class="parameter">makeDefault</code> is <code class="constant">true</code>,
+this mode will become the default mode for the current workspace.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">GetDeviceInfo</code>(<span class="type">accelerant_device_info *</span><code class="parameter">adi</code>);
+
+<span class="type">status_t</span> <code class="methodname">GetPixelClockLimits</code>(<span class="type">display_mode *</span><code class="parameter">mode</code>,
+  <span class="type">uint32 *</span><code class="parameter">low</code>, <span class="type">uint32*</span> <code class="parameter">high</code>);
+
+<span class="type">status_t</span>
+<code class="methodname">GetTimingConstraints</code>(<span class="type">display_timing_constraints *</span><code class="parameter">dtc</code>);
+</pre><p>
+Please ignore these for now, as support for them in the drivers is
+incomplete. We'll document them as well as add some other functionality
+here when things settle down (peek in
+<code class="filename">Accelerant.h</code> for clues). I realize
+the mode setting functions aren't as useful as they could be without
+these functions, but we're getting there. Thanks for your patience.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id535548"></a>Display Power Management</h3></div></div></div><pre class="programlisting cpp">
+<span class="type">uint32</span> <code class="methodname">DPMSCapabilites</code>(<span class="type">void</span>);
+</pre><p>
+Returns a bitmask of
+<acronym class="acronym" title="Display Power Management Signaling">DPMS</acronym>
+capabilities. For most devices that support
+<acronym class="acronym">DPMS</acronym>, the returned value will be
+<code class="code"><code class="constant">B_DPMS_ON</code> | <code class="constant">B_DPMS_STANDBY</code> |
+<code class="constant">B_DPMS_SUSPEND</code> | <code class="constant">B_DPMS_OFF</code></code>.
+If <acronym class="acronym">DPMS</acronym> is not supported by the driver, zero
+is returned.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">SetDPMS</code>(<span class="type">uint32</span> <code class="parameter">dpms_state</code>);
+</pre><p>
+Set the <acronym class="acronym">DPMS</acronym> state for the device to the requested value. Only one of the
+<acronym class="acronym">DPMS</acronym> capabilities reported by the driver should specified. Specifying
+more than one state results in driver-specific behavior—it may choose
+from among the specified modes, or ignore the request completely. Returns
+<code class="constant">B_OK</code> if all went well.
+</p><pre class="programlisting cpp">
+<span class="type">uint32</span> <code class="methodname">DPMSState</code>(<span class="type">void</span>);
+</pre><p>
+Retrieve the current <acronym class="acronym">DPMS</acronym> status from the device. If the driver doesn't
+support <acronym class="acronym">DPMS</acronym>, the returned value is undefined.
+</p></div><p>
+That pretty much covers it for this article. As more of the graphics
+devices get R4 drivers, support for these new APIs will increase. R4.1
+adds R4-style drivers for the currently supported ATI devices on Intel,
+as well as for the Matrox Gx00 series of cards. If I'm not mistaken,
+we'll slip an Intel i740 driver in there, too.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing4-5"></a>Get Ready for Resellers and OEMs</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Johnson</span></span></div></div></div><p>
+We want all our developers to know that we've launched a drive to recruit
+resellers for the BeOS. We hope that you'll help out by visiting
+resellers in your area to tell them about the BeOS. Let them know that
+they will make money selling it, along with your third-party apps. Please
+point resellers to our new Reseller Program web pages
+[http://www.be.com/resellers/programintro.html] to help them get started.
+</p><p>
+Please take the time to check out this section of the Be web site
+yourselves. The Reseller Program is a self-contained information source
+for computer stores, PC assemblers, OEMs, and others who want to start
+making money selling the BeOS.
+</p><p>
+A very important page of reseller info that we'll put up ASAP is for YOU.
+We want to refer resellers, PC assemblers, and OEMs from around the world
+to YOU, the BeOS developer community. They'll be able to contact you
+directly to set up deals with the information on this upcoming page.
+</p><p>
+Now here are two things you can do to prepare for doing business with
+resellers and others:
+</p><div class="orderedlist"><ol><li><p>
+Develop policies and prices for selling software to resellers and PC
+builders. Think about special offers you can make to small and large PC
+assemblers. How about a free "lite" version of your product? If they're
+putting your product directly on the hard drive of a new PC, can you give
+them a special "bundle" price, since you aren't paying for disks and
+manuals?
+</p></li><li><p>
+Set up a web page explaining your policies. You don't have to put your
+confidential reseller prices on the web—you can ask them to contact
+you for prices. You should post contact info, phone numbers, and so on.
+Look at our Reseller Program web page for ideas. Check the web to see how
+other companies do this.
+</p></li><li><p>
+Send me the URL of your reseller-oriented web site, so we can add it
+to our upcoming ISV reseller programs web page. My e-mail is
+davej@be.com. I'll take a look at your page, maybe make some
+recommendations, and then put your contact information on our page.
+</p></li></ol></div><p>
+Yes, that's three things. I just wanted to be sure you're paying
+attention. This is opportunity knocking.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-5"></a>Developers' Workshop: Cults and Kool-Aid</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><p>
+We're bellying up to Release 4.1, which means that I can grab some
+release notes, shove them into an article, and still keep my place in
+line to the hot tub. Look at some of this:
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id535831"></a>The BeIDE</h3></div></div></div><p>
+The BeIDE editor can look up terms in the Be Book. Alt-Double-Click on a
+term and you're halfway there. An exact match immediately brings up the
+appropriate page in your favorite non-integrated <acronym class="acronym">HTML</acronym> viewer; inexact
+matches go out on the web to spend e-dollars on e-books and
+e-pornography (buy one, get one free).
+</p><p>
+External editors, such as, say, <span class="application">Eddie</span>, are supported.
+</p><p>
+The Find panel has a regular expression formula palette. It's sort of
+like putting a <acronym class="acronym" title="Graphical User Interface">GUI</acronym>
+on <code class="command">grep</code>.
+</p><p>
+Bits and pieces: You can add a new file to a project from the Save File
+panel. Selecting and copying files from the Project window adds their
+names to the clipboard. Build-abort is more robust, if that makes sense.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id535882"></a>Other Apps and Preferences</h3></div></div></div><p>
+<span class="application">NetPositive</span> supports
+<acronym class="acronym" title="Portable Network Graphics">PNG</acronym>.
+</p><p>
+Duncan Wilcox's <span class="application">Blanket</span> is now part of the BeOS, only now it's called
+<span class="application">ScreenSaver</span>.
+</p><p>
+There's a new <span class="application">Zip-O-Matic</span> <span class="application">Tracker</span> add-on.
+</p><p>
+The Find panel presents a handy little draggable icon that represents
+your new query.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id535932"></a>Networking</h3></div></div></div><p>
+<acronym class="acronym" title="Point to Point Protocol">PPP</acronym>
+auto-dialing is supported (again), and has been improved.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id535950"></a>Kernel and Kernel Drivers</h3></div></div></div><p>
+Down in the kernel, young Cyril has been obsessing over interrupts,
+alarms, timeouts, the failures of communism, and the curvature of the
+Swedes. There are at least three new ways to put a stop to all that, no
+matter what it is: Through the kernel alarm API (<code class="function">set_alarm()</code>), through
+the driver timer API (<code class="function">add_timer()</code>), or through
+the new <code class="function">send_signal_etc()</code>
+call.
+</p><p>
+There's a new
+<acronym class="acronym" title="Personal Computer Memory Card International Association">PCMCIA</acronym>
+API so you can interface with your Rowenta Iron
+(oops, that's an iMac, now in all your favorite fruit flavors. What is it
+about cults and Kool-Aid?)
+</p><p>
+Miscellaneous improvements: Reduced memory footprint. Improved boot
+loader (with startling new electric blue graphics). Improved PowerPC
+compiler and linker. Improved, more reliable kernel debugger (on Intel).
+More accurate timing for <code class="function">snooze()</code>, timeouts, and the like.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536003"></a>Printing</h3></div></div></div><p>
+The new transport layer architecture dramatically increases the number of
+printing configurations that are supported on the BeOS. There are six
+transport avenues: Parallel port, Serial port, AppleTalk, Microsoft
+Network, <acronym class="acronym">USB</acronym>, and Print to File.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536021"></a>And More</h3></div></div></div><p>
+Of course there's more, but I'm getting wet.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-5"></a>Another Bedtime Story</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+In the past, when Microsoft has pointed to us as a "competitive threat,"
+I called the statement a "DOJ bedtime story." As befits a hot political
+issue such as the impact of mighty Microsoft on consumers and on the
+industry, the bedtime story is told in two courts—in Judge Jackson's
+court in Washington, DC, and the court of public opinion beyond the
+limits of judicial review.
+</p><p>
+In both courts, Microsoft diligently depicts itself as a company under
+constant threat from dangerous competitors, such as Linux and the BeOS.
+For two recent examples of the "beleaguered Microsoft" bedtime story, see
+Chairman Gates' statements at the company's annual shareholders meeting
+before Christmas, or the statement made by Paul Maritz in District Court
+Monday last week.
+</p><p>
+We would feel validated, as we say in California, if we didn't have to
+wonder why a minuscule company like ours is held in such high regard by
+the giant. But there's more—a new bedtime story, from Monday this
+week. This one is about an integrated browser, which BeOS has, just like
+Windows 98. See, the story goes—Be does it too.
+</p><p>
+Our thanks for the plug, but alas, our <span class="application">NetPositive</span> browser isn't
+integrated. In fact, we're doing our best to let other browsers—BeOS
+versions of <span class="application">Opera</span> and <span class="application">Mozilla</span>,
+to name two—flourish on the BeOS
+platform without playing games with OS features, or with commercial
+relationships. Our browser is an application, just like a word processor,
+and it is removed just as easily. I recall us jokingly referring to it in
+one of our press releases as "DOJ-approved."
+</p><p>
+When you remove the <span class="application">NetPositive</span> browser, all you lose is the ability to
+read <acronym class="acronym">HTML</acronym> documents locally or on the Web. One might object that other
+applications, such as a mail client, are affected. If you remove
+NetPositive, clicking on a <acronym class="acronym">URL</acronym> no longer takes you "there." Right. If you
+remove the printer, the word processor no longer prints. This doesn't
+mean the printer or the driver is "integrated" in the OS in the sense
+that removing <span class="application">Explorer</span> would cripple Windows 98.
+</p><p>
+In Microsoft Word, you can paste a "live"
+<span class="application">Excel</span> document into your text. But that doesn't
+mean <span class="application">Excel</span> is integral to
+<span class="application">Word</span>. If you remove
+<span class="application">Excel</span> it doesn't cripple
+<span class="application">Word</span>—it just stops you from doing a
+"live" paste of a spreadsheet inside your text document.
+</p><p>
+Microsoft's ignorance of the difference between their way of integrating
+<span class="application">Explorer</span> and our simpler way of offering
+<span class="application">NetPositive</span> as a true
+application puzzles me. The information is there—it's plain and
+accessible. Microsoft has purchased many copies of our product and, on
+Monday last week, they claimed in court they had taken the time to browse
+our Web site in order to analyze our business. If that claim is true,
+they should revise the browser bedtime story.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-4.html">Issue 4-4, January 27, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-6.html">Issue 4-6, February 10, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-4.html" title="Issue 4-4, January 27, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-6.html" title="Issue 4-6, February 10, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-11.html" title="Issue 3-11, March 18, 1998" /><link rel="next" href="Issue3-13.html" title="Issue 3-13, April 1, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-11.html" title="Issue 3-11, March 18, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-13.html" title="Issue 3-13, April 1, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-11.html">Issue 3-11, March 18, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-13.html">Issue 3-13, April 1, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-12"></a>Issue 3-12, March 25, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-12"></a>Be Engineering Insights: New Windows of Opportunity (Part II:
+BDirectWindow)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+“<span class="quote">The needs of digital content design, not to mention physics and
+economics, are coming into conflict with current OS architectures. A new
+definition, the Media OS, can unlock the door to more powerful
+media-based personal systems, and extract more performance from the
+systems we are using today.</span>”
+</p><p>
+This is the summary of a very interesting technical white paper, The
+Media OS, http://www.be.com/products/beos/mediaos.html, which points out
+a harsh reality of today's computer systems: Even though the hardware
+necessary to create a blazingly fast media workstation is available now
+(and at affordable prices), legacy operating systems won't let go of the
+leash. Unshackling the hardware is exactly what we have been trying to
+address in designing the BeOS to smoothly handle multiple heavy duty
+tasks at the same time.
+</p><p>
+Be's commitment to the media world has been strongly strengthened in the
+last few months, thanks to the work of our new media team. On the graphic
+server side, adding support for 15 and 16 bits per pixel color depth was
+the first step toward integrating the new media framework. The creation
+of <code class="classname">BDirectWindow</code>, the topic of today's lecture, is a second step.
+</p><p>
+Let's imagine you have a fast and cheap piece of video acquisition
+hardware—say, the Bt848 based card ($90.00)—and a fast,
+moderately-priced Matrox AGP graphics accelerator ($200-250). You want
+the AGP to display a video stream sent in realtime by the Bt848. How are
+you going to do that? On a legacy OS, the standard answer is to DMA every
+frame to an off-screen buffer in main memory and then shuffle each buffer
+to the screen using the graphics system. In no time you've earned
+yourself a hefty overhead and some synchronization problems.
+</p><p>
+So the geek in the corner raises his hand and asks: "Why not DMA directly
+into the frame buffer?"
+</p><p>
+Good question.
+</p><p>
+It's possible—but you'll have to switch to exclusive full screen mode.
+No more windows, and, in many cases, no more graphic system support (who
+needs that ;-). What you gain in improved bandwidth, you lose in
+extensibility, scaleability, and general usefulness.
+</p><p>
+Then our friend speaks again: "So why not access the frame buffer
+directly, but stay synchronized with the windowing system at the same
+time?"
+</p><p>
+And the rest of the class laughs.
+</p><p>
+Back in the real world, there are a few architectures that attempt to
+juggle direct buffer access with a general windowing system, but they're
+usually limited to "temporary exclusive access." This means you can lock
+the entire screen, query the state of a window, do whatever direct access
+you need, and then unlock the screen.
+</p><p>
+Unfortunately, these implementations perform poorly, they're very heavy
+to use, and they don't respect any reasonable scheduling expectations
+(it's impossible to avoid dropping frames if you do anything else at the
+same time). Clearly not what you would expect from a multimedia
+workstation.
+</p><p>
+Now it's time to look at <code class="classname">BDirectWindow</code>.
+</p><p>
+Simply put, <code class="classname">BDirectWindow</code> gives you exactly what we've been describing --
+except it should really work. <code class="classname">BDirectWindow</code>
+is derived from <code class="classname">BWindow</code> and,
+unlike its bastard cousin <code class="classname">BWindowScreen</code>, it quacks
+just like a <code class="classname">BWindow</code>.
+Every function implemented by <code class="classname">BWindow</code> is
+supported by <code class="classname">BDirectWindow</code>; even
+the constructors use the same parameters. <code class="classname">BDirectWindow</code> is so similar to
+BWindow that you can replace all your <code class="classname">BWindow</code> objects with
+<code class="classname">BDirectWindow</code>s, and your app would look and perform exactly as it did
+before.
+</p><p>
+In addition to supporting the <code class="classname">BWindow</code>
+API, <code class="classname">BDirectWindow</code> defines five new
+functions, the most interesting of which is the hook function
+<code class="methodname">DirectConnected()</code>:
+</p><pre class="programlisting cpp">
+virtual <span class="type">void</span> <code class="methodname">DirectConnected</code>(<span class="type">direct_buffer_info *</span><code class="parameter">info</code>);
+</pre><p>
+<code class="methodname">DirectConnected()</code> communicates directly with the window manager in the
+app server. It gives you a full description of the region of the graphics
+frame buffer that you're allowed to access directly (i.e. the visible
+part of the content area of your window) and is called whenever the state
+of the region changes, such as when your window is obscured by some other
+window. You job is to do whatever you need to do to and then get out --
+the window manager is waiting for you!
+</p><p>
+(Typically, "what you need to do" means changing the graphic context
+that's used by the thread that you created to control the animation or
+streaming—or whatever you're doing.)
+</p><p>
+The argument to <code class="methodname">DirectConnected()</code> is a
+pointer to a <span class="type">direct_buffer_info</span>
+struct:
+</p><pre class="programlisting cpp">
+typedef struct {
+  <span class="type">direct_buffer_state</span>    <code class="varname">buffer_state</code>;
+  <span class="type">direct_driver_state</span>    <code class="varname">driver_state</code>;
+  <span class="type">void          *</span><code class="varname">bits</code>;
+  <span class="type">void          *</span><code class="varname">pci_bits</code>;
+  <span class="type">int32</span>          <code class="varname">bytes_per_row</code>;
+  <span class="type">uint32</span>         <code class="varname">bits_per_pixel</code>;
+  <span class="type">color_space</span>    <code class="varname">pixel_format</code>;
+  ...            ...
+  <span class="type">uint32</span>         <code class="varname">clip_list_count</code>;
+  <span class="type">clipping_rect</span>  <code class="varname">window_bounds</code>;
+  <span class="type">clipping_rect</span>  <code class="varname">clip_bounds</code>;
+  <span class="type">clipping_rect</span>  <code class="varname">clip_list</code>[1];
+} <span class="type">direct_buffer_info</span>;
+</pre><ul class="itemizedlist"><li><p>
+<code class="varname">buffer_state</code>, when masked with
+<code class="constant">B_DIRECT_MODE_MASK</code>, tells you the state
+of frame buffer access:
+</p><pre class="programlisting cpp">
+switch (<code class="varname">info</code>-&gt;<code class="varname">buffer_state</code> &amp; <code class="constant">B_DIRECT_MODE_MASK</code>) {
+  case <code class="constant">B_DIRECT_START</code> : <span class="comment">/* Access is initiated. */</span>
+    ...
+  case <code class="constant">B_DIRECT_STOP</code> : <span class="comment">/* Access has ended. */</span>
+    ...
+  case <code class="constant">B_DIRECT_MODIFY</code> : <span class="comment">/* The buffer has changed. */</span>
+    ...
+}
+</pre><p>
+You always get a <code class="constant">B_DIRECT_START</code> when the window is opened, followed by
+any number of <code class="constant">B_DIRECT_MODIFY</code> states, and
+then a <code class="constant">B_DIRECT_STOP</code> when the
+window is dragged or closed, or if the screen resolution changes. (A
+"window dragged" or "resolution changed" stop command would be followed
+immediately by another start.)
+</p><p>
+Other buffer_state masks tell you if the visible portion of the buffer
+has changed (<code class="constant">B_CLIPPING_MODIFIED</code>), if the window has been resized
+(<code class="constant">B_BUFFER_RESIZED</code>) or has moved
+(<code class="constant">B_BUFFER_MOVED</code>), or if the frame buffer
+has been reset (<code class="constant">B_BUFFER_RESET</code>).
+</p></li><li><p>
+<code class="varname">driver_state</code> indicates the state of the
+graphics card. <code class="constant">B_MODE_CHANGED</code>
+means that the resolution/depth of the screen changed since the last
+DirectConnected was called. <code class="constant">B_DRIVER_CHANGED</code> means that your window was
+moved onto another monitor.
+</p></li><li><p>
+<code class="varname">bits</code> is a pointer to the frame buffer data (in your app's memory space).
+</p></li><li><p>
+<code class="varname">pci_bits</code> is the address of the frame buffer in the pci memory space.
+You need this if you're doing <acronym class="acronym">DMA</acronym>.
+</p></li><li><p>
+<code class="varname">bytes_per_row</code>, <code class="varname">bits_per_pixel</code>, and
+<code class="varname">pixel_format</code> describe the size and
+format of the frame buffer pixel data.
+</p></li><li><p>
+<code class="varname">window_bounds</code> and <code class="varname">clip_bounds</code>
+are bounds rectangles that enclose the
+entire window and the visible portion of the window.
+</p></li><li><p>
+<code class="varname">clip_list_count</code> and <code class="varname">clip_list</code>
+are the number of rectangles that make up
+the visible portions of the window, and the rectangles themselves.
+RESPECTING THE CLIPPING AREA IS ABSOLUTELY MANDATORY. It won't be
+enforced for you by the system (it can't, as you get direct access to the
+frame buffer). This means your clipping code has to be as good as the
+system clipping code. This is probably the biggest drawback of
+<code class="classname">BDirectWindow</code>.
+</p></li></ul><p>
+The <span class="type">direct_buffer_info</span> structure itself is obsolete as soon as
+<code class="methodname">DirectConnected()</code> exits, but the information it contains remains valid as
+defined by the protocol.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id675942"></a>An Example</h3></div></div></div><p>
+This brief excerpt shows a simplified <code class="classname">BDirectWindow</code> constructor,
+destructor, and <code class="methodname">DirectConnected()</code> implementation. The object is designed
+to use DMA:
+</p><pre class="programlisting cpp">
+<code class="classname">MyDirectWindow</code>::<code class="methodname">MyDirectWindow</code>(...) : <code class="classname">BDirectWindow</code>(...)
+{
+  <code class="function">open_dma_control</code>();
+  <code class="varname">connected</code> = <code class="constant">false</code>;
+  <code class="varname">connection_disabled</code> = <code class="constant">false</code>;
+  <code class="varname">my_locker</code> = new <code class="classname">BLocker</code>();
+}
+
+<code class="classname">MyDirectWindow</code>::<code class="methodname">~MyDirectWindow</code>()
+{
+  <code class="varname">connection_disabled</code> = <code class="constant">true</code>;
+  <code class="methodname">Hide</code>();
+  <code class="methodname">Sync</code>();
+  delete <code class="varname">my_locker</code>;
+  <code class="function">close_dma_control</code>();
+}
+
+<span class="type">void</span> <code class="classname">MyDirectWindow</code>::<code class="methodname">DirectConnected</code>(<code class="parameter">info</code>)
+{
+  if (!connected &amp;&amp; connection_disabled) return;
+  <code class="varname">my_locker</code>-&gt;<code class="methodname">Lock</code>();
+  switch (<code class="varname">info</code>-&gt;<code class="varname">buffer_state</code> &amp; <code class="constant">B_DIRECT_MODE_MASK</code>)
+  case <code class="constant">B_DIRECT_START</code> :
+    <code class="varname">connected</code> = <code class="constant">true</code>;
+    <code class="function">init_direct_screen_access_context</code>();
+    <code class="function">start_dma</code>();
+    break;
+
+  case <code class="constant">B_DIRECT_STOP</code> :
+    <code class="function">stop_dma</code>();
+    <code class="varname">connected</code> = <code class="constant">false</code>;
+    break;
+
+  case <code class="constant">B_DIRECT_MODIFY</code> :
+    <code class="function">update_direct_screen_access_context</code>();
+    <code class="function">modify_dma</code>();
+    break;
+  }
+  <code class="varname">my_locker</code>-&gt;<code class="methodname">Unlock</code>();
+}
+</pre><p>
+Note the <code class="methodname">Hide()</code> and <code class="methodname">Sync()</code>
+calls in the destructor. This sequence, and
+the "connection" flags that predicate the <code class="methodname">DirectConnected()</code> call, ensure
+that the <code class="classname">BDirectWindow</code> will stop direct access after the destruction has
+started.
+</p><p>
+Many more examples using <code class="classname">BDirectWindow</code> should be available in the
+following weeks.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676155"></a>BDirectWindow as a BWindow</h3></div></div></div><p>
+<code class="classname">BDirectWindow</code> is a dual object, with two completely independent parts (a
+regular <code class="classname">BWindow</code> and a direct screen access context). The parts should
+intermingle as little as possible. This split is necessary for two
+reasons:
+</p><p>
+Reason #1: The direct window context lives in the present; <code class="classname">BWindow</code> lags
+behind. The graphics state information you get from <code class="methodname">DirectConnected()</code> is
+guaranteed to be valid (within the limits defined by the protocol)
+because the function is synchronized with the app server. <code class="classname">BWindow</code>, on the
+other hand, is detached from the server by a mostly asynchronous protocol.
+</p><p>
+Reason #2: The two parts use entirely different protocols for
+communicating with the app server. If you mix the protocols—in other
+words, if you make normal <code class="classname">BWindow</code> calls from
+within <code class="methodname">DirectConnected()</code> --
+you'll deadlock. If that happens, the app_server will look for any teams
+that aren't responding to <code class="methodname">DirectConnected()</code> calls within a reasonable
+amount of time (a couple seconds), and kill them. (It's not pretty, but
+at least you won't bring the whole graphics system down.)
+</p><p>
+Unfortunately, you have to use <code class="classname">BWindow</code>
+(or <code class="classname">BView</code>) calls to get event
+messages, so you can't shut out the <code class="classname">BWindow</code> world altogether. Just be
+extremely careful to never use a "normal" <code class="classname">BWindow</code> call in a portion of
+code that can block <code class="methodname">DirectConnected()</code>. Note that it's possible for the
+Interface Kit and the Game Kit contexts to share the content area of a
+window, but, again, you have to be very careful. We'll post some sample
+code to the web site to demonstrate how to do it.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676249"></a>BWindow or BDirectWindow?</h3></div></div></div><p>
+<code class="classname">BDirectWindow</code> is certainly a very powerful API, but at the same time it's
+a tricky one. When you use the direct frame buffer access capability of
+<code class="classname">BDirectWindow</code>, you assume responsibility for two non-trivial operations:
+You have to...
+</p><div class="orderedlist"><ol><li><p>
+Perform all drawing operations yourself (no drawing functions are
+available to help you), and...
+</p></li><li><p>
+Respect the clipping region.
+</p></li></ol></div><p>
+The first task usually means writing more drawing code (including
+handling different frame buffer formats, which means recognizing
+different pixel depths and endiannesses). The second task just makes the
+first one much more complex, since you need to do both drawing and
+clipping in one pass. This compounded complexity should weed out "casual"
+development. (In the future, we'll work on a low-level API that combines
+software and the hardware's accelerated functions to help you perform
+these tasks, but for this release you're on your own.)
+</p><p>
+Furthermore, <code class="classname">BDirectWindow</code>s can be difficult to debug since a deadlock or
+crash in the <code class="methodname">DirectConnected()</code> function will force the app_server to kill
+your team...which doesn't leave you much to debug. But, by design, only a
+small portion of code should be executed in <code class="methodname">DirectConnected()</code>—it
+should only change the drawing context, it shouldn't do the drawing
+itself—so deadlocks and crashes should be rare.
+</p><p>
+We recommend <code class="classname">BDirectWindow</code>s for use in these four scenarios (only):
+</p><div class="orderedlist"><ol><li><p>
+<code class="classname">BDirectWindow</code> is ideal if you're DMAing a stream of graphic frames
+(like video) directly from another PCI card. It will be very fast,
+will use barely any CPU cycles, will use your PCI bus more efficiently
+and will get you a much smoother streaming.
+</p></li><li><p>
+<code class="classname">BDirectWindow</code> is also the way to go if you want to smoothly animate
+a small number of pixels inside a big area of the screen.
+</p></li><li><p>
+If you need to guarantee that your animation (in general) is as
+smooth as possible, <code class="classname">BDirectWindow</code> can give you *some* advantage. A
+thread that's performing <code class="classname">BDirectWindow</code>-based animation is limited only
+by scheduling issues and the frame buffer's bus bandwidth limitations,
+whereas threads going through the app server are limited by the
+client/server protocol and the server synchronization mechanism.
+Nevertheless, in common cases this difference isn't perceptible, so
+only people who really know what they're doing (and what they want)
+should try to use BDirectWindow in this case (crazy geeks for example
+:-).
+</p></li><li><p>
+The last scenario is a more specific application: If you're
+creating an engine that processes an input stream to generate a big
+graphic output stream (typically video), then you can benefit by
+sending the output directly to the frame buffer instead of through an
+off-screen buffer. The idea is that you'll avoid a useless pass
+through the main memory system, and, in some cases, you'll also reduce
+the bandwidth going through your L2 cache since you're reducing the
+exchange between your L2 and your main memory system. This sort of
+bandwidth reduction can significantly improve the overall performance
+of the system. Also, since you have to do both processing and clipping
+at the same time, this is a very nice way to implement lazy processing.
+</p></li></ol></div><p>
+In all other cases, we strongly recommend that you either...
+</p><div class="orderedlist"><ol><li><p>
+Use the standard <code class="classname">BView</code> drawing function to draw directly on screen,
+or...
+</p></li><li><p>
+Draw into a (main memory) off-screen buffer (i.e. a <code class="classname">BBitmap</code>) first,
+and then blit the bitmap through <code class="classname">BView</code>'s
+<code class="methodname">DrawBitmap()</code> function.
+</p></li></ol></div><p>
+An aside: One thing we *strongly* discourage is the reimplementation of
+<code class="methodname">DrawBitmap()</code>. You may think you've found some great trick that makes
+<code class="methodname">DrawBitmap()</code> faster, or that extends its features, but by cutting
+yourself loose from Be's drawing mechanism you lose any future
+improvements that we incorporate into the system (due to graphic driver
+architecture changes, for example).
+</p><p>
+In conclusion, we would like you to imagine what will happen when you use
+<code class="classname">BDirectWindow</code> in your applications. You will see ordinary apps that are
+streaming live video, doing smooth pixel animation, doing real time lazy
+video buffering, and certainly a lot of other cool effects (I'm scared
+just thinking what our geeks are going to do with this :-). You will move
+direct windows, resize them, superimpose them, switch resolutions on the
+fly. For example, we tried 3 video windows streaming 30 fps, two 320x240,
+one 640x480, 16 or 32 bpp, or 8 software animations in 400x300.
+</p><p>
+And the great thing is that it all looks like a "normal" graphics system;
+The user won't notice that <code class="methodname">DirectConnected()</code> functions are being sent in
+parallel, or that multiple threads are generating new DMA commands as the
+window sizes change, or that interrupts are reprogramming DMA controllers
+on the fly for every change...
+</p><p>
+And that's when innovation is at its best, when it gives us more of what
+we want, but with a transparency that "hides" the machinery.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-12"></a>Developers' Workshop: Release 3 and You</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+This week brings a bevy of topics from the BeDC and BeDevTalk.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676501"></a>Importing and Exporting Symbols</h3></div></div></div><p>
+There was quite a furor on BeDevTalk over this topic following my last
+Newsletter article previewing Release 3. Many of these concerns and
+questions reappeared during various sessions at last week's BeDC. I
+figured I'd take the opportunity to clarify our position regarding
+importing and exporting of symbols, and to go into detail about the issue
+overall.
+</p><p>
+First off, we are specifically discussing the exporting of symbols from
+libraries (including add-ons), and the importing of those symbols into
+applications. There are three different methods that work for both PPC
+and x86, and each has its strengths and weaknesses. Before detailing
+these, however, we need to review some general issues that affect all of
+them.
+</p><p>
+The main caveat is that on x86 whether a symbol is exported or imported
+is determined at compile time, not link time. Furthermore, the very first
+time a symbol is found determines whether it is imported or exported.
+This is very important. If you want to import or export a symbol it's
+important to specify it at the very beginning of your code. Any other
+import or export specification is ignored.
+</p><p>
+Another caveat is that the import and export of symbols is compiler- and
+linker-specific. A method that is supported in one compiler is not
+guaranteed to be supported by another. For now, while only the Metrowerks
+compiler and linker are available for the platform, this is not an issue.
+But in the future, as more compiler vendors choose to support the BeOS,
+this will become significant. Before questions about additional compiler
+support start rolling in, we are actively pursuing the matter, but
+Metrowerks will be our provider for the foreseeable future.
+</p><p>
+Importing symbols is of primary importance when linking against a
+library. When you are loading an add-on you are explicitly finding the
+symbols yourself, so they only need to be exported. Even when you are
+dealing with a library, importing symbols from that library isn't
+mandatory. On PPC, there is no need to declare any global symbols as
+importable (although there is no harm either).
+</p><p>
+On x86, however, there is an advantage to declaring symbols importable:
+speed. With the symbol declared importable, you need only a single
+instruction to find the associated code. If the symbol is not declared
+importable, two instructions are required. This slows down your code,
+perhaps imperceptibly, but slows it nonetheless. We recommend explicitly
+importing symbols, to gain the speed benefit on x86.
+</p><p>
+Now, on to the various import and export methods.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676567"></a>Export Files</h3></div></div></div><p>
+The first and least compatible method for importing and exporting symbols
+is through the use of export files. The theory behind this method is to
+first compile the library and explicitly export all global symbols to a
+text file. Then this text file is edited and used to define exactly what
+symbols are imported or exported.
+</p><p>
+While this method works for both platforms, the format of the export
+files differs across platforms. On PPC an .exp file is used, and on x86
+either the CMD or <code class="filename">.def</code> file format is used. This requires a different
+file for each platform, and these files require updating whenever new
+symbols are needed for export. This could lead to a lot of management
+issues.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676597"></a>#pragma export &amp; #pragma import</h3></div></div></div><p>
+The traditional PPC method for exporting symbols is to wrap a group of
+symbols in <code class="code">#pragma export on</code> and <code class="code">#pragma export reset</code>. These symbols are
+then exported. This is what you are probably familiar with in your
+current code. It works perfectly well with the current compiler (much
+better than the export files, as the declarations are contained in your
+current header or code files) and is much easier to keep updated.
+</p><p>
+There will be some amount of shuffling to make sure that the export or
+import declarations are wrapped around the first declaration of the
+symbols, but this system works well on both platforms. The shuffling
+needed could either be a good deal of work, or not, depending on the
+state of your current code. However, this method is unlikely to be
+supported by different compilers for the BeOS, as <code class="code">#pragma</code>s are by
+definition very compiler specific.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676637"></a>__declspec(dllimport) &amp; __declspec(dllexport)</h3></div></div></div><p>
+As you may have heard by now, this is our recommended method for both
+platforms. While it's not very pleasing aesthetically, <code class="code">__declspec()</code> does
+have redeeming qualities. Foremost among them is that it is "the way," as
+defined by a large, unnamed software company with close to 95% of the OS
+market. Also, compiler vendors who cater to that market (and who are the
+most likely candidates for new tools for the BeOS) already implement that
+method. To put it plainly, most if not all development tools we are
+likely to see ported to the BeOS will support this method.
+</p><p>
+Regardless of whether you choose to use <code class="code">#pragma export</code> or <code class="code">__declspec()</code>,
+we recommend that you implement a forward declaration header file. This
+file declares every global symbol to import or export from your library
+or application. The file can then be included at the top of every file to
+make sure that the first declaration of a symbol properly specifies its
+import or export status. The declaration header file can easily handle
+both import and export of the symbols.
+</p><p>
+Since you'd need to write this file from scratch we recommend that you
+just use the <code class="code">__declspec()</code> format, to ease the move to other compilers in
+the future. The real advantage of a forward declaration file is that it
+is a single file that works on both platforms and explicitly declares
+what will be exported, and it does not require any code changes when
+something needs to be exported. A simple change to the header file and a
+recompile does the trick.
+</p><p>
+As requested on BeDevTalk, here is an example application and library
+that shows an example of using forward declaration files to control
+export and import of symbols. It uses the multi-platform makefile I
+mentioned in my last Newsletter article, updated for PPC for Release 3.
+The makefile can be downloaded separately from the second link:
+</p><p>
+Import Export sample:
+ftp://ftp.be.com/pub/samples/intro/obsolete/impexp.zip
+</p><p>
+Release 3 PPC and x86 makefile:
+ftp://ftp.be.com/pub/samples/intro/obsolete/Makefile
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676713"></a>Cross-Compiling</h3></div></div></div><p>
+Another topic discussed at the BeDC was cross-compiling. The new
+Metrowerks tools that will soon be available include PPC compilers and
+linkers that produce x86 executables and x86 compilers and linkers that
+produce PPC executables. To use these tools you need to copy over the
+appropriate libraries from either x86 or PPC to link against.
+</p><p>
+At this point, we do not feel confident recommending the cross-platform
+tools for a simple reason: testing. We haven't done enough testing at Be
+to ensure that these tools work as they are supposed to, although
+Metrowerks has done extensive tests. The main reason we are discouraging
+their use, however, is that we feel developers need to adequately test
+their own applications—on both platforms. If developers are going to
+have both platforms available for testing, they might as well compile on
+the appropriate platform and be done with it.
+</p><p>
+What we suggest for people who do not have access to both platforms --
+especially our new x86 developers who might have difficulty obtaining
+compatible PPC hardware—is that developers team up to make sure that
+software is thoroughly tested before being released to the public. We
+cannot state this strongly enough. There are enough byte order issues and
+other problems to make testing both binaries exceedingly important—as
+important as ensuring that both flavors of the BeOS have all of the same
+applications available.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676737"></a>Resource Conversion</h3></div></div></div><p>
+My final topic concerns a failure on our part when producing the Release
+3 CDs that will be available to you soon. In the documentation for Moving
+from PR2 to Release 3, we discuss some rather limited resource conversion
+tools rescvt_PPC and rescvt_intel. These tools extract the resource fork
+from a PPC executable, perform some byte-swapping on its contents, and
+convert the data to the x86 resource format. Full docs on their use are
+in the above file. The problem is that the tools themselves can't be
+found in /boot/beos/bin as noted. We forgot them.
+</p><p>
+So here they are:
+ftp://ftp.be.com/pub/samples/intro/obsolete/rescvt_ppc.zip
+ftp://ftp.be.com/pub/samples/intro/obsolete/rescvt_intel.zip
+</p><p>
+Some quick reminders about these tools are in order. They are extremely
+limited. They will convert and swap Application Info data, <code class="classname">BMessage</code>s,
+Icons, mime-types, and not much else. Any developer-defined resources
+will not be swapped or exported, and user-defined data in <code class="classname">BMessage</code>s may
+be corrupted by this process. If you only use resources for basic
+application information, these tools should work fine. If you use them
+for anything else, you are much better off creating the tools from
+scratch for x86.
+</p><p>
+We are working on a cross-platform resource format, and hope to have it
+available by R4, but it is possible it might slip beyond that time.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-12"></a>Erich Ringewald</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We had a grand time last week at the BeDC, our developers' conference in
+Santa Clara. In many respects, it was a coming out party or, if you
+prefer, our first baby steps in the Intel world—well-received ones, it
+seems. And today, I want to pay homage to someone who played a key role
+in the development of our company and our product: Erich Ringewald.
+</p><p>
+Around this time last year, as Intel engineers moved into a cubicle in
+our office and started working with us on the port, and as we were making
+fund raising plans, Erich let me know he didn't see himself forever in
+his combined CTO and VP of Engineering jobs. We started looking at what
+this meant for him and for us, whether, for instance, he would some day
+dedicate himself full-time to the CTO job.
+</p><p>
+A year later, the BeOS runs on Intel, we've raised about $26 million (we
+got more investors in the last few days preceding yesterday night's "last
+call"), and Erich has decided to get a taste of the consulting world.
+I've always valued Erich's unique combination of technical and business
+insights and I wasn't surprised when he told us he'd immediately found
+two valuable assignments as a consultant.
+</p><p>
+I first met Erich at Apple. His office wasn't far from mine on the 3rd
+floor of the De Anza III building in Cupertino, where he worked on
+MultiFinder with Phil Goldman, now at WebTV. He later moved to Apple's
+European R&amp;D group in Paris. That's where I met him during Christmas
+1990, shortly after starting Be. He'd heard I was "doing something" with
+Steve Sakoman, he was interested, he joined us, moved back to the US,
+became the head of our software group, and built a small group of very
+capable programmers who, in turn, built a small and very capable OS.
+</p><p>
+Erich sometimes jokingly referred to himself as a "cheap-seeking"
+missile. I, personally, and the company, more generally, owe a great deal
+to his penchant for parsimony, whether in furniture or in system
+architecture. After years of working for a very rich employer, I needed
+this kind of detox, and the company would have died from "rich"
+architectural decisions. Erich fit very much the player-coach model we
+wanted for executives in our company. He wasn't afraid to crawl under
+desks to wire the company, observing that CTO really meant Chief
+Telephony Officer.
+</p><p>
+In February 1994, AT&amp;T told us they weren't going forward with their
+Hobbit microprocessor development. This meant Steve Sakoman's labor of
+love, a two-CPU, three-DSP dream media and communications machine was
+gone. Imagine you're the publisher and your author just lost his
+manuscript. Lightning struck and the hard disk and the back-up are both
+gone. What do you do? You tell the author this is a great opportunity:
+the great novel is really in him, not on the disk, and this is his chance
+to fix the problem that was bugging him with the main character, and to
+rework the ending of chapter two. But it's highly unlikely the author
+will have the psychic energy to restart from a blank screen. Steve didn't
+believe he could build a new machine from a new processor again and left
+Be, for a while, to go work at Zenith Data Systems and Silicon Graphics.
+He rejoined us in 1996.
+</p><p>
+When Steve left, Erich took the reins. We hired Joe Palmer, who built the
+BeBox on the basis of a design started by Glenn Adler, now at Phillips in
+Holland. In the Fall of 1995, we made our debut at Agenda. Dave
+Marquardt, who was to become our lead investor, was in the room when the
+BeBox demonstrated by Steve Horowitz got a standing ovation. As a result,
+we finally got support from premier Silicon Valley venture firms. The
+rest is pretty much in the public record.
+</p><p>
+As you can see, when I wrote earlier Erich played "a key role in the
+development of our company and our product," I wasn't embellishing the
+facts. For this, and for many other more personal aspects of our
+relationship, including his encyclopedic interests and nanosecond wit, I
+am in Erich's debt, as is our entire company. We all wish him the best in
+the next phase of a fulfilling professional life and hope he'll see fit
+to give us the benefit of his insights from time to time.
+</p><p>
+And let's also wish success to our VP of Engineering, Steve Sakoman, who
+helped cement our collaboration with Intel and who will lead us into
+honoring the opportunity before us.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-12"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676910"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id676917"></a>Subject: serious development tools discussion</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: GNU tools and much more</h5></div></div></div><p>
+Fred Fish would like Be to come up with a better development tool
+solution. He would like to see (at least) the following improvements:
+</p><div class="orderedlist"><ol><li><p>
+Fully documented file formats for objects, archives, executables,
+and debugging formats.
+</p></li><li><p>
+Fully documented C++ runtime requirements and data layout
+(exception support, vtables, etc.).
+</p></li><li><p>
+System include files that are non-vendor specific and are owned by
+Be, so that Be has absolute control over making changes when necessary.
+</p></li></ol></div><p>
+Mr. Fish goes on to nominate GNU as a reasonable solution.
+</p><p>
+Eric Berdahl thinks Mr. Fish is not out of water, but...,
+</p><p>
+“<span class="quote">These suggestions, while not out of line with Be's interests, do not
+directly contribute to their business... Although it's far from optimal
+for us developers, multiple executable formats and tool sets don't
+prevent us from developing BeOS applications—it just makes it a little
+bit harder.</span>”
+</p><p>
+And from Jon Watte:
+</p><p>
+“<span class="quote">There is no such [binary/archive] format for which tools are readily
+available, else it would probably have been done a long time ago... The
+biggest problem with switching formats is not the switching itself, it's
+finding compilers, linkers and debuggers that work with the new format on
+BeOS.</span>”
+</p><p>
+There was some debate over the merits of the GNU formats and tools: Is
+GNU/GCC/GDB a reasonable candidate for a universal solution.
+</p><p>
+Hamish Alan Carr turned the topic on its head: Rather than a single
+universal solution, why not go for a universal accommodation:
+</p><p>
+“<span class="quote">...the ideal solution would be one in which the primary tool gave equal
+support to the Unix way, the Mac way, and, yes, the Win95 way... I think
+that what this means in practice is: Ability to run *multiple* executable
+formats - let the market decide which is the best.</span>”
+</p><p>
+The thread then turned to technical issues: How similar to COFF is PE? Is
+PEF the same as ELF? What changes would be needed at the kernel level to
+support new (or multiple) formats?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id677025"></a>Subject: converting resources from PR2 to Release 3</h4></div></div></div><p>
+The Release Notes for Release 3 mentioned resource conversion tools
+called "rescvt_intel" and "rescvt_PPC". They don't seem to be on the CD.
+What happened?
+</p><p>
+THE BE LINE: The resource conversion tools accidentally fell off the CD.
+You should be able to get them from the web site; see Stephen Beaulieu's
+article in this Newsletter for details.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id677046"></a>Subject: MouseMoved() again</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Why not 2 mouses?</h5></div></div></div><p>
+More mouse event discussion, but first...
+</p><p>
+A CORRECTION: When last we met, the summary irresponsibly agreed with a
+statement that a <code class="constant">B_MOUSE_MOVED</code> event is sent only once for every four
+pixels of movement. There *is* a (private) heuristic that throws out
+"excessive" mouse messages, but it *isn't* based on a hard pixel count.
+</p><p>
+The truth is this: You are guaranteed to get at least one mouse moved
+event for every "burst" of mouse movement, regardless of how far the
+mouse travelled; furthermore, you're guaranteed to get an event message
+for the mouse's "at rest" location after a burst.
+</p><p>
+If the mouse moves slowly enough, you'll get a message for every pixel
+the mouse touches. We apologize for the confusion.
+</p><p>
+Other questions:
+</p><div class="orderedlist"><ol><li><p>
+Are mouse coordinates in sub-pixel precision? (No)
+</p></li><li><p>
+Is <code class="methodname">MouseExited()</code> necessary? Some other view will receive a
+corresponding <code class="methodname">MouseEntered()</code> (in which the cursor can be set), so it
+isn't clear what <code class="methodname">MouseExited()</code> is supposed to do. It was argued that
+this would mean that EVERY view would have to implement <code class="methodname">MouseEntered()</code>
+to set the cursor.
+</p></li><li><p>
+Do non-active windows need to track the mouse? They do if they want
+to special case the cursor for drag-and-drop.
+</p></li></ol></div><p>
+In the meantime, Yukio Hirose proposed that the OS be able to handle
+multiple mice. Christian Bauer found a bug in this notion...
+</p><p>
+“<span class="quote">...having two mouse pointers would also mean having two active windows
+and unless you also have two keyboards, you have a problem deciding which
+window receives keyboard events.</span>”
+</p><p>
+...but then solved the bug with hardware:
+</p><p>
+“<span class="quote">On the other hand, if you _have_ two keyboards, two people could work on
+one computer at the same time without the need for additional terminals
+and that's something I really wish to have sometimes. If BeOS had support
+for multiple monitors, this could even be a replacement for the lack of a
+networked GUI for some applications.</span>”
+</p><p>
+Dave Haynie noticed that this sort of set up sounds a lot like a feature
+of the Amiga OS:
+</p><p>
+“<span class="quote">There was a central input.device task that managed a variety of general
+purpose I/O. In came events, like moving a mouse, pen on a tablet, etc.,
+maybe both at the same time. Out came 'cooked' formal event objects,
+which could describe any kind of I/O event. All you would need is a
+facility to manage a couple of this kind of event stream, and of course
+an easy program option to select which event stream or stream the program
+listens to.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id677184"></a>Subject: BEOS:TYPE attribute</h4></div></div></div><p>
+Some file type attribute questions and observations:
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id677197"></a><a id="id677199"></a>Q:</td><td><p>
+Why is the MIME type data constant (<code class="constant">B_MIME_STRING_TYPE</code>) declared in
+<code class="filename">Mime.h</code> and not
+<code class="filename">TypeConstants.h</code>?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+To promote that niggling irritant that resolves as a pearl.
+</p></td></tr><tr class="question"><td><a id="id677227"></a><a id="id677230"></a>Q:</td><td><p>
+How do you set a file's MIME type?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Through <code class="methodname">BNodeInfo::SetType()</code>.
+</p></td></tr><tr class="question"><td><a id="id677245"></a><a id="id677248"></a>Q:</td><td><p>
+When writing string data as an attribute, should you write the <code class="constant">NULL</code> as
+part of the data?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+By convention, yes. It's not illegal to exclude the <code class="constant">NULL</code>, but it's not
+a good idea.
+</p></td></tr></tbody></table></div></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-11.html">Issue 3-11, March 18, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-13.html">Issue 3-13, April 1, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-11.html" title="Issue 3-11, March 18, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-13.html" title="Issue 3-13, April 1, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

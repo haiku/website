@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-22.html" title="Issue 3-22, June 3, 1998" /><link rel="next" href="Issue3-24.html" title="Issue 3-24, June 17, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-22.html" title="Issue 3-22, June 3, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-24.html" title="Issue 3-24, June 17, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-22.html">Issue 3-22, June 3, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-24.html">Issue 3-24, June 17, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-23"></a>Issue 3-23, June 10, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-23"></a>Be Engineering Insights: Getting Mounted</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Polic</span></span></div></div></div><p>
+Mounting a volume under the BeOS requires identifying and passing three
+parameters to the <code class="function">mount()</code> function. The first parameter is the file
+system that the volume was initialized with (for the mount to succeed, a
+file system add-on of the same name must exist in the
+<code class="filename">/boot/beos/system/add-ons/kernel/file_systems</code> directory).
+</p><p>
+The second parameter is the mount point—the location that the newly
+mounted volume will be referenced from (typically this is at root level
+but in theory can be anywhere).
+</p><p>
+The last parameter is the device driver used to access the volume.
+</p><p>
+NOTE: I lied, there are actually *six* parameters defined for the <code class="function">mount()</code>
+prototype in <code class="filename">/boot/develop/headers/posix/unistd.be.h</code>
+but the last three are currently not used and should be set to 0.
+</p><p>
+Device drivers for accessing volumes come in two flavors: physical and
+logical. A physical driver allows complete and total access to all blocks
+on the device. A physical driver can only be used to mount a device that
+does not contain a partition map or has multiple sessions. A logical
+driver allows only indirect access to a range of blocks on the device and
+is used for mounting individual partitions and sessions.
+</p><p>
+Physical (raw) drivers are installed by the system at boot time for all
+recognizable devices. To look for and install raw drivers for devices
+after boot, there are two "rescan" drivers, <code class="filename">/dev/disk/scsi/rescan</code> and
+<code class="filename">/dev/disk/ide/rescan</code>...
+</p><pre class="programlisting c">
+if ((<code class="varname">dev</code> = <code class="function">open</code>("/dev/disk/ide/rescan",0)) &gt;=0) {
+  <code class="function">ioctl</code>(<code class="varname">dev</code>, <code class="constant">B_SCSI_SCAN_FOR_DEVICES</code>);
+  <code class="function">close</code>(<code class="varname">dev</code>);
+}
+</pre><p>
+Logical drivers are constructed by creating a new device and using an
+ioctl to set the range of accessible blocks...
+</p><pre class="programlisting c">
+<span class="type">char</span>    <code class="varname">path</code>[256];
+<span class="type">char</span>    <code class="varname">tmp</code>[256];
+<span class="type">int32</span>   <code class="varname">dev</code>;
+partition_info  <code class="varname">partition</code>;
+
+<code class="function">strncpy</code>(<code class="varname">tmp</code>, <code class="constant">DEVICE_PATH</code>,
+  <code class="function">strlen</code>(<code class="constant">DEVICE_PATH</code>) - <code class="function">strlen</code>("/raw"));
+<code class="function">sprintf</code>(<code class="varname">path</code>, "%s/%d_%d", <code class="varname">tmp</code>, <code class="varname">session</code>, <code class="varname">partition</code>);
+
+if ((<code class="varname">dev</code> = <code class="function">create</code>(<code class="varname">path</code>, 0666)) &gt;= 0) {
+  <code class="varname">partition</code>.<code class="varname">offset</code> = <code class="varname">offset</code>;
+    <span class="comment">/* offset from start of physical device in bytes */</span>
+  <code class="varname">partition</code>.<code class="varname">size</code> = <code class="varname">size</code>;
+    <span class="comment">/* length of partition in bytes */</span>
+  <code class="varname">partition</code>.<code class="varname">logical_block_size</code> = <code class="varname">block_size</code>;
+    <span class="comment">/* physical block size*/</span>
+  <code class="varname">partition</code>.<code class="varname">session</code> = <code class="varname">session</code>;      <span class="comment">/* session ID */</span>
+  <code class="varname">partition</code>.<code class="varname">partition</code> = <code class="varname">partition</code>;  <span class="comment">/* partition ID */</span>
+  <code class="function">strcpy</code>(partition.device, DEVICE_PATH);
+  <code class="function">ioctl</code>(<code class="varname">dev</code>, <code class="constant">B_SET_PARTITION</code>, &amp;<code class="varname">partition</code>);
+  <code class="function">close</code>(<code class="varname">dev)</code>;
+}
+else {
+  <span class="comment">// error creating logical device</span>
+}
+</pre><p>
+The BeOS comes with a number of add-ons to help determine session
+offsets, what type of partition map, if any, and what types of file
+systems exist on a device. These add-ons are located in the
+<code class="filename">/boot/beos/system/add-ons/drive_setup/</code>
+directory. To use these add-ons,
+you first need to determine if the device is a CD. To do this, use the
+<code class="constant">B_GET_GEOMETRY</code> ioctl call and test against <code class="constant">B_CD</code>...
+</p><pre class="programlisting c">
+<span class="type">bool</span>    <code class="varname">is_cd</code>;
+<span class="type">int32</span>   <code class="varname">dev</code>;
+<span class="type">device_geometry</span>  <code class="varname">geometry</code>;
+
+if ((<code class="varname">dev</code> = <code class="function">open</code>(<code class="constant">DEVICE_PATH</code>, 0)) &gt;= 0) {
+  if (<code class="function">ioctl</code>(<code class="varname">dev</code>, <code class="constant">B_GET_GEOMETRY</code>, &amp;<code class="varname">geometry</code>) == <code class="constant">B_NO_ERROR</code>) {
+    <code class="varname">is_cd</code> = (<code class="varname">geometry</code>.<code class="varname">device_type</code> == <code class="constant">B_CD</code>);
+  }
+  else {
+    <span class="comment">// media not loaded</span>
+  }
+  <code class="function">close</code>(<code class="varname">dev</code>);
+}
+else {
+  <span class="comment">// error accessing device</span>
+}
+</pre><p>
+If the device is indeed a CD, use the session add-on to locate the
+offset, length, and type of each session...
+</p><pre class="programlisting c">
+#define DS_SESSION_ADDONS   "drive_setup/session/"
+#define DS_GET_NTH_SESSION  "ds_get_nth_session"
+
+typedef struct {
+  <span class="type">uint64</span>  <code class="varname">offset</code>;;    <span class="comment">/* in device blocks */</span>
+  <span class="type">uint64</span>  <code class="varname">blocks</code>;    <span class="comment">/* number of blocks in session */</span>
+  <span class="type">bool</span>    <code class="varname">data</code>;      <span class="comment">/* true: data session, session */</span>
+} <span class="type">session_data</span>;
+
+<span class="type">bool</span>        <code class="varname">have_session</code> = <code class="constant">false</code>;
+<span class="type">int32</span>       <code class="varname">block_size</code>;
+<span class="type">int32</span>       <code class="varname">dev</code>;
+<span class="type">int32</span>       <code class="varname">index</code> = 0;
+<code class="classname">BDirectory</code>  <code class="varname">dir</code>;
+<code class="classname">BEntry</code>      <code class="varname">entry</code>;
+<code class="classname">BPath</code>       <code class="varname">path</code>;
+<span class="type">device_geometry</span>  <code class="varname">geometry</code>;
+<span class="type">image_id</span>         <code class="varname">image</code>;
+<span class="type">session_data</span>     <code class="varname">session</code>;
+<span class="type">status_t</span>    (*ds_get_nth_session)(<span class="type">int32</span>, <span class="type">int32</span>, <span class="type">int32</span>,
+  <span class="type">session_data*</span>);
+
+if (<code class="function">ioctl</code>(<code class="varname">dev</code>, <code class="constant">B_GET_GEOMETRY</code>, &amp;<code class="varname">geometry</code>) == <code class="constant">B_NO_ERROR</code>) {
+  <code class="varname">block_size</code> = <code class="varname">geometry</code>.<code class="varname">bytes_per_sector</code>;
+  <code class="function">find_directory</code>(<code class="constant">B_BEOS_ADDONS_DIRECTORY</code>, &amp;<code class="varname">path</code>);
+  <code class="varname">dir</code>.<code class="methodname">SetTo</code>(<code class="varname">path</code>.<code class="methodname">Path</code>());
+  <code class="varname">dir</code>.<code class="methodname">FindEntry</code>(<code class="constant">DS_SESSION_ADDONS</code>, &amp;<code class="varname">entry</code>);
+  <code class="varname">dir</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">entry</code>);
+  if (<code class="varname">dir</code>.<code class="methodname">InitCheck</code>() == <code class="constant">B_NO_ERROR</code>) {
+    <code class="varname">dir</code>.<code class="methodname">Rewind</code>();
+    while (!<code class="varname">have_session</code>) {
+      <span class="comment">/* try loading the next add-on */</span>
+      if (<code class="varname">dir</code>.<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">entry</code>) &gt;= 0) {
+        <code class="varname">entry</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>);
+        if ((<code class="varname">image</code> = <code class="function">load_add_on</code>(<code class="varname">path</code>.<code class="methodname">Path</code>())) &gt;= 0) {
+          if (<code class="function">get_image_symbol</code>(<code class="varname">image</code>, <code class="constant">DS_GET_NTH_SESSION</code>,
+            <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">ds_get_nth_session</code>) &gt;= 0) {
+            <code class="varname">have_session</code> = <code class="constant">true</code>;
+            while ((*<code class="varname">ds_get_nth_session</code>)(<code class="varname">dev</code>, <code class="varname">index</code>,
+              <code class="varname">block_size</code>, <code class="varname">session</code>) == <code class="constant">B_NO_ERROR</code>) {
+              ...
+              <code class="varname">index</code>++;
+            }
+          }
+          <code class="function">unload_add_on</code>(<code class="varname">image</code>);
+        }
+      }
+      else
+        break;
+    }
+  }
+}
+</pre><p>
+If the device is not a CD or for each session of a multi-session CD, use
+the partition add-ons to determine if there is a partition map and, if
+so, the <code class="varname">offset</code>; and length for each individual partition...
+</p><pre class="programlisting c">
+#define <code class="constant">DS_PARTITION_ID</code>    "ds_partition_id"
+#define <code class="constant">DS_PARTITION_MAP</code>   "ds_get_nth_map"
+
+typedef struct {
+  <span class="type">char</span>    partition_name[B_FILE_NAME_LENGTH];
+  <span class="type">char</span>    partition_type[B_FILE_NAME_LENGTH];
+  <span class="type">char</span>    file_system_short_name[B_FILE_NAME_LENGTH];
+  <span class="type">char</span>    file_system_long_name[B_FILE_NAME_LENGTH];
+  <span class="type">char</span>    volume_name[B_FILE_NAME_LENGTH];
+  <span class="type">char</span>    mounted_at[B_FILE_NAME_LENGTH];
+  <span class="type">uint32</span>  logical_block_size;
+  <span class="type">uint64</span>  <code class="varname">offset</code>;;    <span class="comment">/* in logical blocks from start of session */</span>
+  <span class="type">uint64</span>  blocks;    <span class="comment">/* in logical blocks */</span>
+  <span class="type">bool</span>    hidden;    <span class="comment">/* non-file system partition */</span>
+  <span class="type">bool</span>    reserved1;
+  <span class="type">uint32</span>  reserved2;
+} <span class="type">partition_data</span>;
+
+  <span class="type">bool</span>      <code class="varname">have_map</code> = <code class="constant">false</code>;
+  <span class="type">bool</span>      (*<code class="varname">ds_partition_id</code>)(<span class="type">uchar *</span>, <span class="type">int32</span>);
+  <span class="type">uchar     *</span><code class="varname">block</code>;
+  <span class="type">int32</span>     <code class="varname">index</code> = 0;
+  <code class="classname">BDirectory</code>  <code class="varname">dir</code>;
+  <code class="classname">BEntry</code>      <code class="varname">add_on</code>;
+  <code class="classname">BEntry</code>      <code class="varname">entry</code>;
+  <code class="classname">BPath</code>       <code class="varname">path</code>;
+  <span class="type">image_id</span>    <code class="varname">image</code>;
+  <span class="type">partition_data</span>  <code class="varname">partition</code>;
+  <span class="type">status_t</span>    (*<code class="varname">ds_get_nth_map</code>)(<span class="type">int32</span>, <span class="type">uchar*</span>, <span class="type">uint64</span>,
+    <span class="type">int32</span>, <span class="type">int32</span>, <span class="type">partition_data*</span>);
+
+  <code class="varname">block</code> = (<span class="type">uchar *</span>)<code class="function">malloc</code>(<code class="varname">block_size</code>);
+  <code class="function">lseek</code>(<code class="varname">dev</code>, <code class="varname">session</code>-&gt;<code class="varname">offset</code>; * <code class="varname">block_size</code>, 0);
+  if (<code class="function">read</code>(<code class="varname">dev</code>, <code class="varname">block</code>, <code class="varname">block_size</code>) == <code class="varname">block_size</code>) {
+    <code class="function">find_directory</code>(<code class="constant">B_BEOS_ADDONS_DIRECTORY</code>, &amp;<code class="varname">path</code>);
+    <code class="varname">dir</code>.<code class="methodname">SetTo</code>(<code class="varname">path</code>.<code class="methodname">Path</code>());
+    <code class="varname">dir</code>.<code class="methodname">FindEntry</code>(<code class="constant">DS_PART_ADDONS</code>, &amp;<code class="varname">entry</code>);
+    <code class="varname">dir</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">entry</code>);
+    if (<code class="varname">dir</code>.<code class="methodname">InitCheck</code>() == <code class="constant">B_NO_ERROR</code>) {
+      <code class="varname">dir</code>.<code class="methodname">Rewind</code>();
+      while (!<code class="varname">have_map</code>) {
+        <span class="comment">/* try loading the next add-on */</span>
+        if (<code class="varname">dir</code>.<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">add_on</code>) &gt;= 0) {
+          <code class="varname">add_on</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>);
+          if ((<code class="varname">image</code> = <code class="function">load_add_on</code>(<code class="varname">path</code>.<code class="methodname">Path</code>())) &gt;= 0) {
+            if (<code class="function">get_image_symbol</code>(<code class="varname">image</code>, <code class="constant">DS_PARTITION_ID</code>,
+              <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">ds_partition_id</code>) &gt;= 0) {
+              <span class="comment">/* add-on recognize this map? */</span>
+              if ((*<code class="varname">ds_partition_id</code>)(<code class="varname">block</code>, <code class="varname">block_size</code>)) {
+                <code class="varname">have_map</code> = <code class="constant">true</code>;
+                if (<code class="function">get_image_symbol</code>(<code class="varname">image</code>, <code class="constant">DS_PARTITION_MAP</code>,
+                  <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">ds_get_nth_map</code>) &gt;= 0) {
+                  <span class="comment">/* gather info about each partition */</span>
+                  while ((*<code class="varname">ds_get_nth_map</code>)(<code class="varname">dev</code>, <code class="varname">block</code>,
+                    <code class="varname">session</code>-&gt;<code class="varname">offset</code>;, <code class="varname">fBlockSize</code>, <code class="varname">index</code>,
+                    &amp;<code class="varname">partition</code>) == <code class="constant">B_NO_ERROR</code>) {
+                    ...
+                    <code class="varname">index</code>++;
+                  }
+                }
+              }
+            }
+          }
+          <code class="function">unload_add_on</code>(<code class="varname">image</code>);
+        }
+        else
+          break;
+      }
+    }
+    <code class="function">free</code>(<code class="varname">block</code>);
+  }
+</pre><p>
+The file system add-ons are used to determine the type of file system a
+partition, session or raw device was initialized with...
+</p><pre class="programlisting c">
+#define <code class="constant">DS_FS_ADDONS</code>    "drive_setup/fs/"
+#define <code class="constant">DS_FS_ID</code>        "ds_fs_id"
+
+<span class="type">bool</span>    (*<code class="varname">ds_fs_id</code>)(<span class="type">partition_data*</span>, <span class="type">int32</span>, <span class="type">uint64</span>, <span class="type">int32</span>);
+<span class="type">bool</span>    <code class="varname">have_fs</code> = <code class="constant">FALSE</code>;
+<code class="classname">BDirectory</code>  <code class="varname">dir</code>;
+<code class="classname">BEntry</code>      <code class="varname">entry</code>;
+<code class="classname">BPath</code>       <code class="varname">path</code>;
+<span class="type">image_id</span>    <code class="varname">image</code>;
+
+<code class="function">find_directory</code>(<code class="constant">B_BEOS_ADDONS_DIRECTORY</code>, &amp;<code class="varname">path</code>);
+<code class="varname">dir</code>.<code class="methodname">SetTo</code>(<code class="varname">path</code>.<code class="methodname">Path</code>());
+<code class="varname">dir</code>.<code class="methodname">FindEntry</code>(<code class="constant">DS_FS_ADDONS</code>, &amp;<code class="varname">entry</code>);
+<code class="varname">dir</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">entry</code>);
+if (<code class="varname">dir</code>.<code class="methodname">InitCheck</code>() == <code class="constant">B_NO_ERROR</code>) {
+  <code class="varname">dir</code>.<code class="methodname">Rewind</code>();
+  while (!<code class="varname">have_fs</code>) {
+    <span class="comment">/* try loading next add-on */</span>
+    if (<code class="varname">dir</code>.<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">entry</code>) &gt;= 0) {
+      <code class="varname">entry</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>);
+      if ((<code class="varname">image</code> = <code class="function">load_add_on</code>(<code class="varname">path</code>.<code class="methodname">Path</code>())) &gt;= 0) {
+        if (<code class="function">get_image_symbol</code>(<code class="varname">image</code>, <code class="constant">DS_FS_ID</code>,
+          <code class="constant">B_SYMBOL_TYPE_TEXT</code>, &amp;<code class="varname">ds_fs_id</code>) = 0) {
+          <span class="comment">/* add-on recognize this file system? */</span>
+          if ((*<code class="varname">ds_fs_id</code>)(<code class="varname">partition</code>, <code class="varname">dev</code>, <code class="varname">session</code>-&gt;<code class="varname">offset</code>;,
+            <code class="varname">block_size</code>)) {
+            ...
+            <code class="varname">have_fs</code> = <code class="constant">TRUE</code>;
+          }
+        }
+        <code class="function">unload_add_on</code>(<code class="varname">image</code>);
+      }
+    }
+    else
+      break;
+  }
+}
+</pre><p>
+If the file system was successfully identified by the add-on, the
+<code class="varname">file_system_short_name</code>, <code class="varname">file_system_long_name</code>
+and <code class="varname">volume_name</code> fields of
+the <code class="varname">partition_data</code> structure will be filled in with the correct values.
+The volume name can be used to create the mount point and the
+<code class="varname">file_system_short_name</code> is used for the mount function...
+</p><pre class="programlisting c">
+<span class="type">char</span>       <code class="varname">mount_point</code>[<code class="constant">B_FILE_NAME_LENGTH</code>];
+<span class="type">char</span>       <code class="varname">tmp</code>[<code class="constant">B_FILE_NAME_LENGTH</code>];
+<span class="type">int32</span>      <code class="varname">index</code> = 1;
+<span class="type">int32</span>      <code class="varname">loop</code>;;
+<code class="classname">BDirectory</code> <code class="varname">directory</code>;
+
+<span class="comment">/* if there is no volume name, use a default */</span>
+if (!<code class="function">strlen</code>(<code class="varname">partition</code>.<code class="varname">volume_name</code>))
+  <code class="function">sprintf</code>(<code class="varname">tmp</code>, "/disk");
+else {
+  <span class="comment">/* create mount point at root */</span>
+  <code class="function">sprintf</code>(<code class="varname">tmp</code>, "/%s", <code class="varname">partition</code>.<code class="varname">volume_name</code>);
+  <span class="comment">/* convert any forward slashes to ':' */</span>
+  for (<code class="varname">loop</code>; = 1;
+       <code class="varname">loop</code>; &lt; <code class="function">strlen</code>(<code class="varname">partition</code>.<code class="varname">volume_name</code>);
+       <code class="varname">loop</code>;++)
+    if (<code class="varname">tmp</code>[<code class="varname">loop</code>;] == '/')
+      <code class="varname">tmp</code>[<code class="varname">loop</code>;] = ':';
+  }
+}
+<span class="comment">/* make sure name is unique or if not unique, */</span>
+<span class="comment">/* make sure existing directory is empty */</span>
+<code class="function">strcpy</code>(<code class="varname">mount_point</code>, <code class="varname">tmp</code>);
+while (1) {
+  if (<code class="function">mkdir</code>(<code class="varname">mount_point</code>, 0777) &gt;= 0)
+    break;
+  <code class="varname">directory</code>.<code class="methodname">SetTo</code>(<code class="varname">mount_point</code>);
+  if ((!<code class="varname">directory</code>.<code class="methodname">InitCheck</code>()) &amp;&amp;
+    (!<code class="varname">directory</code>.<code class="methodname">CountEntries</code>()))
+    break;
+  <code class="function">sprintf</code>(<code class="varname">mount_point</code>, "%s%d", <code class="varname">tmp</code>, <code class="varname">index</code>++);
+}
+<span class="comment">/* try mounting */</span>
+if (<code class="function">mount</code>(<code class="varname">partition</code>.<code class="varname">file_system_short_name</code>, <code class="varname">mount_point</code>,
+  <code class="varname">device_path</code>, 0, <code class="constant">NULL</code>, 0) &lt; 0) {
+  <span class="comment">/* error mounting device */</span>
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-23"></a>Developers' Workshop: MIDI Masterpieces</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id705973"></a><a id="id705975"></a>Q:</td><td><p>
+Having just read a book on baroque counterpoint I'm now ready to
+create masterpieces (in
+<acronym class="acronym" title="Musical Instrument Digital Interface">MIDI</acronym>
+format) that are indistinguishable from
+those of Bach, Handel, and Cannabich (my favorite!). However, I can't
+play a musical instrument and I'm not that great at reading music,
+either. Can I create <acronym class="acronym">MIDI</acronym> files by typing them in?—Dick "Really Scary
+Spice" Wagner, Bayreuth, Germany
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Well, Dick, you've dropped in at the right moment. I just popped a
+little <acronym class="acronym">MIDI</acronym>-generating language out of the oven. Mmmmm, smell the aroma
+of copy-and-paste composition churned out by tone-deaf hobbyists whose
+musical education ended right after they learned that tritones sound
+really creepy.
+</p></td></tr></tbody></table></div><p>
+Before we go any further, let's do some weeding. If you don't need to
+generate <acronym class="acronym">MIDI</acronym>, or if you'd rather use a GUI to enter data, leave the
+room. Or just skip down to the final paragraph where we pay our respects
+to one of the creators of the Headspace General <acronym class="acronym">MIDI</acronym> synthesizer.
+</p><p>
+For the rest of you, you'll soon be generating chromatic scales as easily
+as...
+</p><pre class="programlisting">
+Xchannel(1);
+Xvoice(B_BANJO);
+for (int i = 0; i &lt; 12; i++ ) {
+  Xnote(c4+1, 1.0, 0.5, 0.0);
+  Xinc(1.0);
+}
+</pre><p>
+Talk about fun. How about this:
+</p><pre class="programlisting">
+Xchannel(1);
+Xvoice(B_OBOE);
+Xnote(c5, 4.0, 0.5, 0.0); <span class="comment">// play a note</span>
+XskewA(0.0);              <span class="comment">// start a pitch bend trajectory</span>
+XampA(1.0);               <span class="comment">// start an amplitude trajectory</span>
+Xinc(4.0);                <span class="comment">// wait for beats</span>
+XskewZ(-1.0);             <span class="comment">// stop the pitch bend trajectory</span>
+XampZ(0.0);               <span class="comment">// stop the amplitude trajectory</span>
+</pre><p>
+This generates an oboe tone on c5 (the c above middle c), and then, over
+the next four beats (seconds, by default) bends the note down to bf4 and
+fades the note out. One more; this produces a cloud of swirly metal for
+about 20 seconds:
+</p><pre class="programlisting">
+Xvoice(B_REVERSE_CYMBAL);
+for (int i = 0; i &lt; 100; i++) {
+  Xabs(1.5);
+  Xinc((rand()%100)/5.0);
+  Xnote((rand()%30)+40, (rand()%100)/40.0+.2,
+    ((rand()%100)/200.0)+.3, 0.);
+}
+</pre><p>
+Everything you need to scare your dog is contained in this tar file:
+</p><p>
+ftp://ftp.be.com/pub/samples/midi_kit/obsolete/EdMidi.zip
+</p><p>
+When you unpack the tar file, it will create a directory called "EdMidi"
+that contains the following seven files in three parts:
+</p><ul class="itemizedlist"><li><p>
+Part 1: <code class="filename">edmidi.cpp</code>, <code class="filename">p2kn.h</code>,
+<code class="filename">axe_names.h</code> These file create the
+"edmidi" application. Throw all three files into a new BeIDE project,
+add libmidi and libmedia, and compile the app.
+</p></li><li><p>
+Part 2: <code class="filename">lbjtest.cpp</code>, <code class="filename">langMacros.h</code>,
+<code class="filename">pitches.h</code> <code class="filename">lbjtest.cpp</code> is an
+example of a file that, when compiled and run, creates new data that
+you feed to edmidi (the reverse cymbal code above is taken from
+<code class="filename">lbjtest.cpp</code>). The file includes
+<code class="filename">langMacros.h</code> and <code class="filename">pitches.h</code>; the latter
+defines an array of human-parsable note names, such as c4 (middle c),
+cs4 (c-sharp above), bff3 (b <span class="type">double</span>-flat below), and so on.
+</p></li><li><p>
+Part 3: <code class="filename">edmidi.lang</code> This is a text file that describes the data
+format that edmidi expects, and that explains the macros that are
+defined in <code class="filename">langMacros.h</code>. It's not the most robust documentation, but it
+will do for now.
+</p></li></ul><p>
+The process goes something like this:
+</p><div class="orderedlist"><ol><li><p>
+Copy and modify lbjtest.cpp, mixing and matching the Xmumble()
+macros that are listed in langMacros.h (and described in edmidi.lang).
+</p></li><li><p>
+Compile lbjtest.cpp as, say, LbjTest.
+</p></li><li><p>
+Run LbjTest and capture the output (for convenience, I use the
+extension ".lbj", but it isn't required): $ LbjTest &gt; test1.lbj
+</p></li><li><p>
+If you want, you can edit the test1.lbj file. You can even create
+such files by hand by using the language format described in Part 1 of
+edmidi.lang.
+</p></li><li><p>
+Pass test1.lbj to edmidi: $ edmidi test1.lbj
+</p></li><li><p>
+edmidi will think for a little bit, and then will produce the file
+"test.midi" (the filename is declared in the lbjtest.cpp file). It
+will also play the file, spitting out statistics as it does, and
+prompting you to replay:
+</p><pre class="screen">
+$ edmidi test1.lbj
+Last timestamp: 23.225000
+Max notes: 74
+Writing midi test.midi
+Setting sampling rate 44100
+Replay [y]?
+</pre></li></ol></div><p>
+If you pass it a trailing "r" argument, edmidi will record the playback
+to a sound file:
+</p><pre class="screen">
+$ edmidi lbjtest.lbj r
+Recording to
+Last timestamp: 23.225000
+Max notes: 74
+Writing midi test.midi
+Writing sound lbjtest.snd
+Setting sampling rate 44100
+Replay [y]?
+</pre><p>
+edmidi will also let you mute and solo individual channels. It also has a
+number of other options that you can dump by typing 'edmidi' with no
+argument.
+</p><p>
+Now to the serious and unfortunate part of the column. Last Friday, Jim
+Nitchalls, one of the creators of the Headspace synthesizer, died. I met
+Jim eons ago when we both were working in or around Electronic Arts.
+Every couple of years since then, our paths would cross with us on them
+at the same time; one particularly cogent collision is when he called me
+up two years ago to see if Be could use a General <acronym class="acronym">MIDI</acronym> synthesizer.
+</p><p>
+You may have seen Jim, possibly even chatted with him, at one of the Be
+Developer Conferences. If you've never actually used the Headspace
+synthesizer, you should try it sometime. Utter Jim's name and generate a
+burst of voice #126 (0-based).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-23"></a>Our New Developer Programs</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+If you haven't already visited the Developer section of our Web site, I'd
+like to direct your attention to
+</p><p>
+http://www.be.com/developers/developer_program/devprogram_overview.html.
+</p><p>
+As the end of the <acronym class="acronym" title="Uniform Resource Locator">URL</acronym>
+implies, it contains an overview of our new tiered
+developer programs, as well as pointers to more detailed information.
+</p><p>
+This should provide you with the information you need in order to decide
+which of the three programs is right for you. For my part, I'd like to
+review the philosophy behind these changes, as well as what we are trying
+to accomplish for the Be community.
+</p><p>
+As obvious as we think it is, it bears repeating that an operating system
+is useless in itself. Developers make it useful with the applications
+they build for it. Only after we have applications that proclaim the
+strengths of the BeOS (and we believe we have some already) can we think
+of the other constituencies in the Be community—our customers,
+shareholders, business partners, and employees.
+</p><p>
+So, why do we charge for developer programs if we believe developers are
+so important? Don't we risk turning away the next Mitch Kapor, or even
+the next Paul Allen?
+</p><p>
+As you'll see in looking through the new programs, we are trying to
+juggle a contradiction. We want to make sure enthusiasts can try their
+hand at writing code for the BeOS in the largest possible numbers at the
+least possible expense. That requires access to a computer and to a copy
+of the BeOS. There is no annual fee at this level. Our Web site and
+newsgroups provide technical documentation, and access to libraries and
+newsletters. Your creations will be featured in the BeWare section of our
+Web site.
+</p><p>
+For people or companies who make a business of writing BeOS commercial
+applications we want to offer more support. These developers get more
+technical and marketing assistance, their CodeWarrior tools are included
+in the $299 annual fee, and we'll enthusiastically distribute your
+commercial software through BeDepot.com.
+</p><p>
+Developers with a large organization can use the $599 Corporate program
+with even more technical and marketing support, along with one copy of
+the BeOS and all upgrades released during the subscription year, a copy
+of the current
+<acronym class="acronym" title="Integrated Development Environment">IDE</acronym>,
+<span class="application">CodeWarrior</span>, and <span class="application">PackageBuilder</span> (which lets
+developers build packages that can be installed with <span class="application">SoftwareValet</span>).
+Corporate developers can also buy additional seats (BeOS, CodeWarrior,
+and <span class="application">PackageBuilder</span> tools) "wholesale" at $99 each.
+</p><p>
+Further provisions ease the transition for existing developers,
+especially CodeWarrior customers. It's that simple.
+</p><p>
+We've already received some feedback on the letter we sent to existing
+developers. One suggestion was to use Silver, Gold, and Platinum labels
+for the three tiers. Personally, I prefer the suggestion from a Be
+executive (who requested anonymity): Geek, Midnight Programmer, and
+Commercial, if I remember correctly.
+</p><p>
+Our hope is that the no-fee program will continue to attract individuals
+who are intrigued with the BeOS and want to try writing an application.
+If our product and our company do a good job for them, they'll go up one
+level, and make a business out of their experiment. If we all do what
+we're supposed to do, they'll go to the top—and us with them. Or else
+they'll happily make shareware because that's what they like to do.
+</p><p>
+We learned a long time ago it's not our place to tell a developer what to
+do. It works much better the other way around when programmers who
+actually struggle with the platform and the marketplace tell us what to
+do with our APIs and our marketing programs. Their suggestions are always
+colorful and useful.
+</p><p>
+Speaking of hue and abuse, we're off to NYC next week for PC Expo. If
+you're in town, look for us at the friendly Jacob Javits Convention
+Center. We'll see if New York City unions and waiters are a match for
+French ones. More exciting still, we'll be showing off the newest BeOS
+applications running on Release 3.1.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-22.html">Issue 3-22, June 3, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-24.html">Issue 3-24, June 17, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-22.html" title="Issue 3-22, June 3, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-24.html" title="Issue 3-24, June 17, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-28.html" title="Issue 4-28, July 14, 1999" /><link rel="next" href="Issue4-30.html" title="Issue 4-30, July 28, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-28.html" title="Issue 4-28, July 14, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-30.html" title="Issue 4-30, July 28, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-28.html">Issue 4-28, July 14, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-30.html">Issue 4-30, July 28, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-29"></a>Issue 4-29, July 21, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-29"></a>Be Engineering Insights: BeOS Kernel Programming Part V: Interfacing With
+<acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym></h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dmitriy</span> <span class="surname">Budko</span></span></div></div></div><p>
+The goal of this article is to describe how BeOS device drivers
+communicate with devices on the most common busses—<acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym>.
+</p><p>
+There are many types of hardware busses in the current PCs and Macs: <acronym class="acronym">ISA</acronym>,
+<acronym class="acronym">ADB</acronym>, <acronym class="acronym">SCSI</acronym>, <acronym class="acronym">PCI</acronym>
+<acronym class="acronym">USB</acronym>, <acronym class="acronym">AGP</acronym>, <acronym class="acronym">VLB</acronym>,
+<acronym class="acronym">IEEE 1394</acronym>, <acronym class="acronym">I2C</acronym>,
+etc., but the majority of
+devices are located on <acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym> busses, so this article will focus on
+them. The question I'll answer is how a BeOS device driver can access a
+hardware device on <acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym> busses. But before going into the BeOS
+details I'll briefly describe the software-visible characteristics of <acronym class="acronym">ISA</acronym>
+and <acronym class="acronym">PCI</acronym>.
+</p><p>
+<acronym class="acronym">ISA</acronym> appeared on the first IBM PC (8088), and was slightly refined in the
+later IMB PC AT (80286). Since then there have been no changes and <acronym class="acronym">ISA</acronym>
+has become old and difficult to use. Fortunately, it's begun to be
+replaced. The latest Intel chipset i810 doesn't directly support <acronym class="acronym">ISA</acronym>.
+</p><p>
+There are two address spaces on <acronym class="acronym">ISA</acronym>: one is a 64kB I/O space and another
+is a 16 MB memory space. An <acronym class="acronym">ISA</acronym> device may occupy portions of both
+address spaces and respond to I/O and memory read/write cycles initiated
+by another device on the bus, usually a CPU. In this case the device is
+passive and the CPU has to read/write data from/to the device to/from
+system <acronym class="acronym">RAM</acronym>.
+</p><p>
+An <acronym class="acronym">ISA</acronym> device can be more active and can transfer data without constant
+attention from a CPU by using an 8237-style DMA controller (as the
+majority of <acronym class="acronym">ISA</acronym> sound cards do) or by being an <acronym class="acronym">ISA</acronym>
+bus master (a few <acronym class="acronym">SCSI</acronym>
+and <acronym class="acronym">LAN</acronym> adapters do this). <acronym class="acronym">ISA</acronym>
+<acronym class="acronym">DMA</acronym> is obsolete and convoluted; this
+article does not discuss it.
+</p><p>
+The <acronym class="acronym">PCI</acronym> bus is a modern, sane replacement for <acronym class="acronym">ISA</acronym> and has multiple
+advantages over it. A system can have multiple <acronym class="acronym">PCI</acronym> busses, <acronym class="acronym">PCI</acronym> has *good*
+PnP, it's faster (132 MB/s theoretical bandwidth, 100 MB/s throughput
+with the real hardware: Matrox Millennium II and Intel 440LX chipset),
+etc.
+</p><p>
+In general <acronym class="acronym">PCI</acronym> is a 32-bit bus. There are 64-bit data transfer and 64-bit
+addressing versions of <acronym class="acronym">PCI</acronym> but they are currently used only in high-end
+servers.
+</p><p>
+<acronym class="acronym">PCI</acronym> (32-bit version) has three address spaces:
+</p><div class="orderedlist"><ol><li><p>
+A 4 GB I/O space (all real devices use only the first 64 kB because
+x86 CPUs can *directly* address only 64 kB of I/O address space, PPC
+doesn't have *special* I/O instructions.) Normally, devices use this
+space for I/O control and status registers. The system has to be very
+conservative in reordering/combining/caching all accesses to this space.
+</p></li><li><p>
+4 GB of memory space. Usually devices use this space for
+high-performance I/O registers, data FIFOs, access to internal <acronym class="acronym">RAM</acronym>
+(like frame buffers), etc. Depending on the purpose these registers may
+be cacheable or uncacheable.
+</p></li><li><p>
+<acronym class="acronym">PCI</acronym> specifications recommend using the memory space. Some devices
+include both versions (I/O and memory) of the same registers for
+compatibility with old 16-bit software.
+</p></li></ol></div><p>
+<acronym class="acronym">PCI</acronym> configuration address space. This supports 256 busses; each bus
+can have 32 devices; each device can have eight functions; and each
+function can have 256 bytes of registers. The configuration address of
+a device is fixed by the <acronym class="acronym">PCI</acronym> slot it's plugged into or by the
+motherboard if it is a fixed motherboard device.
+</p><p>
+This address space is used to provide information about devices, to
+configure <acronym class="acronym">PCI</acronym> devices before they can appear in I/O or memory space,
+and to set up device specific options.
+</p><p>
+Many <acronym class="acronym">PCI</acronym> devices, especially high-performance ones, can be <acronym class="acronym">PCI</acronym> bus
+masters, which lets them transfer data from/to <acronym class="acronym">RAM</acronym> or another <acronym class="acronym">PCI</acronym> device
+without direct intervention from the CPU. How then, does a BeOS kernel
+device driver interact with <acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym>? By way of BeOS <acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym>
+kernel modules, defined in
+<code class="filename">ISA.h</code> and
+<code class="filename">PCI.h</code>.
+The relevant portion of these modules is as follows:
+</p><pre class="programlisting c">
+typedef <span class="type">struct isa_module_info</span> isa_module_info;
+<span class="type">struct_isa_module_info</span> {
+..............................
+    <span class="type">uint8</span>           (*read_io_8) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>);
+    <span class="type">void</span>            (*write io 8) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>,
+                <span class="type">uint8</span> <code class="parameter">value</code>);
+    <span class="type">uint16</span>          (*read_io_16) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>);
+    <span class="type">void</span>            (*write io 16) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>,
+<span class="type">uint16</span> <code class="parameter">value</code>);
+    <span class="type">uint32</span>          (*read io 32) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>);
+    <span class="type">void</span>            (*write io 32) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>,
+<span class="type">uint32</span> <code class="parameter">value</code>);
+
+
+    <span class="type">void *</span>          (*ram address) (<span class="type">const void *</span>
+<code class="parameter">physical_address_in_system_memory</code>);
+ ........................
+};
+
+<span class="type">struct pci_module_info</span> {
+    <span class="type">bus_manager_info</span>    <code class="varname">binfo</code>;
+
+    <span class="type">uint8</span> (*<code class="varname">read_io_8</code>) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>);
+    <span class="type">void</span> (*<code class="varname">write_io_8</code>) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>, <span class="type">uint8</span> <code class="parameter">value</code>);
+    <span class="type">uint16</span> (*<code class="varname">read_io_16</code>) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>);
+    <span class="type">void</span> (*<code class="varname">write_io_16</code>) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>, <span class="type">uint16</span> <code class="parameter">value</code>);
+    <span class="type">uint32</span> (*<code class="varname">read_io_32</code>) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>);
+    <span class="type">void</span> (*<code class="varname">write_io_32</code>) (<span class="type">int</span> <code class="parameter">mapped_io_addr</code>, <span class="type">uint32</span> <code class="parameter">value</code>);
+
+    <span class="type">long</span> (*<code class="varname">get_nth_pci_info</code>) (
+        <span class="type">long</span> <code class="parameter">index</code>, <span class="comment">/* index into pci device table */</span>
+        <span class="type">pci_info *</span><code class="parameter">info</code>  <span class="comment">/*caller-supplied buffer for info*/</span>
+        );
+
+    <span class="type">uint32</span> (*<code class="varname">read_pci_config</code>) (
+        <span class="type">uchar</span>   <code class="parameter">bus</code>,    <span class="comment">/* bus number */</span>
+        <span class="type">uchar</span>   <code class="parameter">device</code>, <span class="comment">/* device # on bus*/</span>
+        <span class="type">uchar</span>   <code class="parameter">function</code>,   <span class="comment">/* function # in device */</span>
+        <span class="type">uchar</span>   <code class="parameter">offset</code>, <span class="comment">/* offset in configuration space */</span>
+        <span class="type">uchar</span>   <code class="parameter">size</code>    <span class="comment">/* # bytes to read (1, 2 or 4) */</span>
+        );
+
+    <span class="type">void</span> (*<code class="varname">write_pci_config</code>) (
+        <span class="type">uchar</span>   <code class="parameter">bus</code>,        <span class="comment">/* bus number */</span>
+        <span class="type">uchar</span>   <code class="parameter">device</code>,     <span class="comment">/* device # on bus */</span>
+        <span class="type">uchar</span>   <code class="parameter">function</code>,   <span class="comment">/* function # in device */</span>
+        <span class="type">uchar</span>   <code class="parameter">offset</code>, <span class="comment">/* offset in configuration space */</span>
+        <span class="type">uchar</span>   <code class="parameter">size</code>, <span class="comment">/* # bytes to write (1, 2 or 4) */</span>
+        <span class="type">uint32</span>  <code class="parameter">value</code>       <span class="comment">/* value to write */</span>
+        );
+
+    <span class="type">void*</span> (*<code class="varname">ram_address</code>) (
+        <span class="type">const void *</span><code class="parameter">physical_address_in_system_memory</code>);
+};
+</pre><p>
+The general API of BeOS modules has already been described in a previous
+newsletter article,
+"<a class="xref" href="Issue4-28.html#Engineering4-28" title="Be Engineering Insights: BeOS Kernel Programming Part IV: Bus Managers">Be Engineering Insights: BeOS Kernel Programming Part IV: Bus Managers</a>," by
+Brian Swetland
+</p><p>
+So I'll focus on <acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym> specifics.
+</p><div class="orderedlist"><ol><li><p>
+First, how do find your device? Usually this is done in
+<code class="function">init_hardware()</code> and/or <code class="function">init_driver()</code>
+hooks. For <acronym class="acronym">ISA</acronym>, however, there is no easy
+way to find or detect a device, so an <acronym class="acronym">ISA</acronym> driver has to:
+</p><ul class="itemizedlist"><li><p>
+Just assume that its hardware is here, or
+</p></li><li><p>
+Try to detect the device by poking into the appropriate places, or
+</p></li><li><p>
+Use the Configuration Manager, which is a theme for another article.
+</p></li></ul><p>
+Finding a <acronym class="acronym">PCI</acronym> device is easy. Use <code class="function">get_nth_pci_info()</code> to iterate through
+the list of all <acronym class="acronym">PCI</acronym> devices in the system to find your device. For
+example, the following code shows how to find a <acronym class="acronym">PCI</acronym> USB UHCI controller
+and check what specific version it is:
+</p><pre class="programlisting c">
+<span class="type">bool</span> <code class="function">uhci_present</code>(<span class="type">void</span>)
+{
+   <span class="type">pci_info</span> <code class="varname">info</code>;
+   <span class="type">int</span>   <code class="varname">i</code>;
+
+   for (<code class="varname">i</code> = 0; ; <code class="varname">i</code>++)
+   {
+       if (<code class="varname">pcim</code>-&gt;<code class="function">get_nth_pci_info</code> (<code class="varname">i</code>, &amp;<code class="varname">info</code>) != <code class="constant">B_OK</code>)
+          return <code class="constant">FALSE</code>; <span class="comment">/* Error or end of device list
+          */</span>
+
+
+       <span class="comment">/* do not support PIIX3 - too many HW bugs */</span>
+       if (<code class="varname">info</code>.<code class="varname">vendor_id</code> == 0x8086 &amp;&amp; <code class="varname">info</code>.<code class="varname">device_id</code> ==
+                  0x7020)
+           continue;
+
+
+       if (<code class="varname">info</code>.<code class="varname">class_base</code> == <code class="constant">PCI_serial_bus</code> &amp;&amp;
+           <code class="varname">info</code>.<code class="varname">class_sub</code> == <code class="constant">PCI_usb</code> &amp;&amp;
+           <code class="varname">info</code>.<code class="varname">class_api</code> == <code class="constant">PCI_usb_uhci</code> )
+              break;
+    }
+    return <code class="constant">TRUE</code>;            <span class="comment">/* Device was found */</span>
+}
+</pre></li><li><p>
+Next, how do you find the resources the device uses (I/O and/or memory
+addresses, IRQs, etc). This is done in <code class="function">init_driver()</code> hook. For <acronym class="acronym">ISA</acronym> you
+have to use the same methods as you would for finding the device. For <acronym class="acronym">PCI</acronym>
+use the pci info structure that you use to find the device. Remember that
+<code class="function">init_hardware()</code> is called only once and the driver can be unloaded
+afterwards, so the driver can't easily remember the information from
+<code class="function">init_hardware()</code>. For example:
+</p><pre class="programlisting c">
+<span class="comment">/* find PCI bus, device, function, IO, IRQ */</span>
+for (<code class="varname">i</code> = 0; ; <code class="varname">i</code>++)
+{
+    if (<code class="varname">pcim</code>-&gt;<code class="function">get_nth_pci_info</code> (<code class="varname">i</code>, &amp;<code class="varname">info</code>) != <code class="constant">B_OK</code>)
+        return <code class="constant">B_ERROR</code>; <span class="comment">/* Error or end of device
+        list*/</span>
+       if (<code class="varname">info</code>.<code class="varname">class_base</code> == <code class="constant">PCI_serial_bus</code> &amp;&amp;
+           <code class="varname">info</code>.<code class="varname">class_sub</code> == <code class="constant">PCI_usb</code> &amp;&amp;
+           <code class="varname">info</code>.<code class="varname">class_api</code> == <code class="constant">PCI_usb_uhci</code> )
+              break;
+}
+<span class="comment">/* Handle broken devices that violate PCI_spec and</span>
+don't use base register 0. */
+for( <code class="varname">base_reg_num</code>=0; (<code class="varname">base_reg_num</code> &lt; 6) &amp;&amp;
+    (<code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_registers</code>[<code class="varname">base_reg_num</code>] == 0);
+    <code class="varname">base_reg_num</code>++)
+    ;
+<span class="comment">/* refuse to find the controller and don't load the
+driver if the controller is disabled in BIOS. */</span>
+if( (<code class="varname">base_reg_num</code> == 6) ||
+    (<code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">interrupt_line</code> == 0) ||
+    (<code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">interrupt_line</code> == 0xFF) )
+{
+    <code class="function">dprintf</code>("USB HC is disabled by BIOS\n");
+    return <code class="constant">B_ERROR</code>;
+}
+
+<span class="comment">/* remember the resources */</span>
+<code class="varname">access_range</code>.<code class="varname">range_start</code> =
+    <code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_registers</code>[<code class="varname">base_reg_num</code>];
+
+<code class="varname">access_range</code>.<code class="varname">range_length</code> =
+<code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_sizes</code>[<code class="varname">base_reg_num</code>];
+
+<code class="varname">access_range</code>.<code class="varname">range_in_memory_space</code> =
+!(<code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_flags</code>[<code class="varname">base_reg_num</code>] &amp;
+<code class="constant">PCI_address_space</code>);
+<code class="varname">irq</code> = <code class="varname">info</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">interrupt_line</code>;
+</pre></li><li><p>
+Now you enable and map registers. To do this, set the appropriate bits
+in the control registers of the <acronym class="acronym">PCI</acronym> device, including I/O access enable,
+memory access enable, and bus master enable. For example:
+</p><pre class="programlisting c">
+<code class="varname">command_reg</code> = <code class="varname">pcim</code>-&gt;<code class="function">read_pci_config</code>(
+    <code class="varname">bus</code>, <code class="varname">device</code>, <code class="varname">function</code>,  <code class="constant">PCI_command</code>, 2);
+
+<code class="varname">command_reg</code> |= <code class="constant">PCI_command_io</code> | <code class="constant">PCI_command_memory</code> |
+<code class="constant">PCI_command_master</code>;
+
+<code class="varname">pcim</code>-&gt;<code class="function">write_pci_config</code>(
+    <code class="varname">bus</code>, <code class="varname">device</code>, <code class="varname">function</code>, <code class="constant">PCI_command</code>, 2,
+    <code class="varname">command_reg</code>);
+</pre></li><li><p>
+If the device registers are located in memory space, the device driver
+has to map this memory by <code class="function">map_physical_memory()</code> with the appropriate
+flags, then use the returned virtual address of the area as a pointer to
+the registers. For example, (without error handling) from the generic
+graphics driver, frame buffer in [0], control registers in [1] (complete
+source code is on BeOS CD):
+</p><pre class="programlisting c">
+<code class="function">sprintf</code>(<code class="varname">buffer</code>, "%04X %04X %02X%02X%02X regs",
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">vendor_id</code>, <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">device_id</code>,
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">bus</code>, <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">device</code>,
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">function</code>);
+<code class="varname">si</code>-&gt;<code class="varname">regs_area</code> = <code class="function">map_physical_memory</code>(
+    <code class="varname">buffer</code>,
+    (<span class="type">void *</span>) <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_registers</code>[1],
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_sizes</code>[1],
+    <code class="constant">B_ANY_KERNEL_ADDRESS</code>,
+    0, <span class="comment">/* B_READ_AREA + B_WRITE_AREA, */ /* neither
+    read nor write, to hide it from user space apps */</span>
+    (<span class="type">void **</span>)&amp;(<code class="varname">di</code>-&gt;<code class="varname">regs</code>));
+
+
+<code class="function">sprintf</code>(<code class="varname">buffer</code>, "%04X %04X %02X%02X%02X framebuffer",
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">vendor_id</code>, <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">device_id</code>,
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">bus</code>, <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">device</code>,
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">function</code>);
+<code class="varname">si</code>-&gt;<code class="varname">fb_area</code> = <code class="function">map_physical_memory</code>(
+    <code class="varname">buffer</code>,
+    (<span class="type">void *</span>) <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_registers</code>[0],
+    <code class="varname">di</code>-&gt;<code class="varname">pcii</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_sizes</code>[0],
+    <code class="constant">B_ANY_KERNEL_BLOCK_ADDRESS</code> | <span class="comment">/* BLOCK - try to use
+special features of the CPU like BAT or large pages */</span>
+    <code class="constant">B_MTR_WC</code>, <span class="comment">/* use write combining */</span>
+    <code class="constant">B_READ_AREA</code> + <code class="constant">B_WRITE_AREA</code>,
+    &amp;(<code class="varname">si</code>-&gt;<code class="varname">framebuffer</code>));
+</pre></li><li><p>
+Now use <code class="function">read/write_io_xx()</code> functions to read/write 1/2/4 bytes from/to
+a device register if the register is in the I/O space of <acronym class="acronym">ISA</acronym> or <acronym class="acronym">PCI</acronym>.
+</p><p>
+Example from the USB HC driver:
+</p><pre class="programlisting c">
+<span class="type">uint16</span> <code class="varname">frame_number</code> = <code class="varname">pcim</code>-&gt;<code class="function">read_io_16</code>(
+       <code class="varname">access_range</code>.<code class="varname">range_start</code> + 6);
+</pre><p>
+Use pointers to read/write data if the registers are located in memory
+space.
+</p><p>
+Writing four bytes to the beginning of the frame buffer:
+</p><pre class="programlisting c">
+*(<span class="type">uint32*</span>)(<code class="varname">si</code>-&gt;<code class="varname">framebuffer</code>) = 0x44332211;
+</pre></li><li><p>
+The purpose, arguments, and use of all the functions above should be
+clear to anyone who is familiar with <acronym class="acronym">ISA</acronym> and <acronym class="acronym">PCI</acronym>. But what does void* ram
+address( const void *physical address in system memory); do? If the
+device is using bus mastering, the driver has to <code class="function">lock_memory()</code> and
+<code class="function">get_memory_map()</code> for all data buffers and tell the device to use returned
+physical <acronym class="acronym">RAM</acronym> addresses. However, this is not enough. On some systems,
+like the BeBox, the <acronym class="acronym">RAM</acronym> address ! = <acronym class="acronym">PCI</acronym> address, so the driver has to
+convert the <acronym class="acronym">RAM</acronym> address to a <acronym class="acronym">PCI</acronym> address for each physical entry by
+calling <code class="function">ram_address()</code>. Here's an example, with no error handling:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> <code class="function">foo_write</code>(<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>,
+    <span class="type">const void *</span><code class="parameter">data</code>, <span class="type">size_t *</span><code class="parameter">numBytes</code>)
+{
+    <span class="type">int</span> <code class="varname">i</code>;
+    <span class="type">physical_entry</span>   <code class="varname">sg_list</code>[<code class="constant">MAX_FOO_SG_ENTRIES</code>];
+
+    <code class="function">lock_memory</code>(<code class="parameter">data</code>, *<code class="parameter">numBytes</code>,
+        <code class="constant">B_DMA_IO</code> | <code class="constant">B_READ_DEVICE</code>);
+        <span class="comment">/* flags for cache coherency on some systems */</span>
+       <code class="function">get_memory_map</code>(
+           <code class="parameter">data</code>, *<code class="parameter">numBytes</code>, &amp;<code class="varname">sg_list</code>, <code class="constant">MAX_FOO_SG_ENTRIES</code>);
+    for(<code class="varname">i</code>=0; <code class="varname">sg_list</code>.<code class="varname">size</code> != 0; <code class="varname">i</code>++)
+        <code class="varname">sg_list</code>[<code class="varname">i</code>].<code class="varname">address</code>  = <code class="varname">pcim</code>-&gt;
+            <code class="function">ram_address</code>(<code class="varname">sg_list</code>[<code class="varname">i</code>].<code class="varname">address</code>);
+    <code class="function">send_sg_list_to_foo</code>(&amp;<code class="varname">sg_list</code>);
+    <code class="function">start_foo_bus_master_read</code>();
+    <code class="function">block_until_foo_interrupt</code>();
+    return <code class="function">check_status</code>(<code class="parameter">numBytes</code>);
+}
+</pre></li></ol></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-29-2"></a>Be Engineering Insights: Farewell BSound and BSoundFile (All Hail
+BGameSound and BMediaFile)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jon</span> <span class="surname">Watte</span></span></div></div></div><p>
+Among other important improvements in BeOS Release 4.5 is the <code class="classname">BMediaFile</code>,
+which gives access to various kinds of media file formats, and <code class="classname">BGameSound</code>
+(with subclasses), which allows simple but efficient playback of sound
+effects and background sounds. The <code class="classname">BSoundFile</code> class has been with us for
+a long time, and was starting to show its age. Many older programs that
+still run on PowerPC depend on idiosyncrasies of this class, so rather
+than make it use the same mechanism as <code class="classname">BMediaFile</code> to access data, which
+would break the previous semantic of the file (we tried this), we decided
+to stay compatible, and suggest that all newer applications use
+<code class="classname">BMediaFile</code> for all their media reading/writing needs.
+</p><p>
+However, if you have an application which uses <code class="classname">BSoundFile</code>, you may need
+some features that <code class="classname">BMediaFile</code> and <code class="classname">BMediaTrack</code> don't provide. Most
+notably, <code class="classname">BMediaTrack</code> reads audio frames in blocks of a predetermined
+size, whereas <code class="classname">BSoundFile</code> lets you read any number of frames at any time.
+<code class="classname">BMediaTrack</code> also may not be precise in seeking to a specified frame
+location (because of compression algorithm constraints). I present here a
+simple wrapper for <code class="classname">BMediaTrack</code>, known as <code class="classname">ATrackReader</code>. It lets you treat
+a generic media file, accessed internally through a <code class="classname">BMediaFile</code> object,
+much like a <code class="classname">BSoundFile</code>. It's also a good introduction to using
+<code class="classname">BMediaFile</code>/<code class="classname">BMediaTrack</code> to read data in general.
+</p><p>
+If you use a <code class="classname">BSoundPlayer</code> with a number of
+<code class="classname">BSound</code>s to play sound effects,
+you'll probably want to change over to the new <code class="classname">BGameSound</code> system the next
+time you overhaul your code. <code class="classname">BGameSound</code> is designed to allow for hardware
+acceleration in a future version of BeOS (when this will happen is TBD),
+and it's also designed to be really simple to use! If you used <code class="classname">BSound</code>
+with a chunk of data in memory as your data, you now create a
+<code class="classname">BSimpleGameSound</code> object. If you use <code class="classname">BSound</code> with a large-ish sound file on
+disk for background music or other something similar, you now create a
+<code class="classname">BFileGameSound</code>.
+</p><p>
+<code class="classname">BSimpleGameSound</code> can be created either with a pointer to data and a
+description of the data pointed to (it should be uncompressed PCM sample
+data), or with an entry ref, in which case it will load the sound file
+from disk (uncompressing, if necessary) into memory so it's always
+readily available to be played. The <code class="classname">BGameSound</code> system makes a copy of the
+data you provide it, so you can free that memory as soon as the object is
+created. If you need more than one copy of the same sound running, you
+can call <code class="methodname">Clone()</code> to get a second <code class="classname">BSimpleGameSound</code> which references the
+same data as the first. When you make a <code class="methodname">Clone()</code>, that clone references
+the same internal copy with a reference count, so no extra memory is
+wasted. The Be Book accidentally documents an earlier behaviour where
+data was copied inside <code class="methodname">Clone()</code>.
+</p><p>
+To play the sound, just call <code class="methodname">StartPlaying()</code> on it.
+</p><p>
+<code class="classname">BFileGameSound</code> is created with an <span class="type">entry_ref</span> as argument, and can
+optionally be set to looping or non-looping mode. When you call
+<code class="methodname">StartPlaying()</code>, it will start playing, and keep going until you stop it
+with <code class="methodname">StopPlaying()</code>, or, if it's not looping, until it reaches the end of
+the file.
+</p><p>
+It's important to note that the first <code class="classname">BGameSound</code> instance you create
+determines the format of the connection between <code class="classname">BGameSound</code> and the Audio
+Mixer. In our sample program, we create a dummy 44 kHz stereo sound and
+immediately delete it to establish the connection in a known format,
+since otherwise the first file the user drags into the program will
+determine the format that all files will be played back as.
+</p><p>
+All <code class="classname">BGameSound</code> instances that are playing are mixed into one connection
+to the Audio Mixer; this connection is currently named after your
+application with no way of changing it. In some future version of the
+API, we may let you create more than one connection, and name these
+connections. That's what the <code class="classname">BGameSoundDevice</code> argument is for in the
+constructors for these classes; however, we currently only support the
+default (<code class="constant">NULL</code>) device, so you can leave it to the default value without
+worrying about it.
+</p><p>
+If you want to set the pan position or gain (volume) of a <code class="classname">BGameSound</code>, you
+do that by calling <code class="methodname">SetPan()</code> and
+<code class="methodname">SetGain()</code>. The "duration" parameter
+(which is optional) allows you to specify that the change should take
+place over some amount of time, if the sound is currently playing. Thus,
+if a file was playing, and you wanted to fade it out over the course of
+two seconds for a soft ending, you could call
+<code class="code">SetGain(0.0, 2000000LL)</code>.
+</p><p>
+You can also change the effective sampling rate of a <code class="classname">BGameSound</code>. This
+changes both the pitch and duration of the sound. The <code class="classname">BGameSound</code> system
+contains a built-in software resampler which uses a fast, reasonable
+quality 0-th order resampler. There is no additional overhead of playing
+a sound at some other sampling frequency than the one you initially
+specify. However, there is no <code class="methodname">SetSamplingRate()</code> function; instead, you
+have to use the low-level <code class="methodname">SetAttributes()</code> function to change the
+<code class="constant">B_GS_SAMPLING_RATE</code> attribute. Again, you can specify a duration during which
+the change ramps in. Thus, if you're playing a sound at a 22000 Hz
+sampling rate, and ramp it to 12000 Hz with a duration of 500000, it will
+take approximately half a second for the full change to take effect. The
+resulting sound effect is similar to a tape deck or record slowing down.
+Specific details are found in the <code class="filename">gameplay.cpp</code> file in the source code
+that goes with this article:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/game_kit/gameplay.zip&gt;.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-29"></a>Developers' Workshop: The Magic of Messages Part 1: The Sending</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+In the next couple of installments, we'll delve into the gory details of
+what happens when you send a <code class="classname">BMessage</code> in the BeOS. I won't be discussing
+archival or other ancillary uses of <code class="classname">BMessage</code>s here. We'll just look at
+pure, simple messaging—BeOS-style.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id804206"></a>The Whole Enchilada</h3></div></div></div><p>
+Let's start with an overview of the messaging process. To begin, let's
+say I have a message that I want to deliver to a particular messaging
+target (called a "handler" in BeOS). That messaging target lives in a
+process, called a "looper," somewhere in my system. The looper's job is
+to receive incoming messages and reroute them to the appropriate
+messaging target.
+</p><p>
+To send a message to a handler, I create an object which acts as the
+delivery mechanism for the message, called a messenger. I set this
+messenger up to point at my handler, and tell it to send my message, also
+specifying a place where replies to this message can go. The messenger,
+in turn, turns my message into a flattened stream of data and writes it
+to a low-level data queue called a port. Once the writing is done, the
+message has been delivered.
+</p><p>
+On the destination end, the port serves as the mailbox of the looper with
+whom my target resides. The looper reads the data from the port and
+reconstructs a message from the data. It then passes the message through
+a series of steps that determine who the final handler of the message
+should be. Finally, once the handler has been determined, the looper
+tells the handler to handle the message. The handler does whatever is
+necessary to respond to the message, including the option to send back a
+reply to the message, or to claim ownership of the message for later
+processing. Once the handler is done with the message, the looper gets
+rid of the message (unless it's been detached), and goes back to look for
+any other incoming messages.
+</p><p>
+Now that you've seen what the whole enchilada looks like, let's get down
+to business.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id804243"></a>Step 1: Create</h3></div></div></div><p>
+The first step to sending a message, of course, is creating it. As you
+probably know, a <code class="classname">BMessage</code> contains a <code class="varname">what</code> field that briefly identifies
+the contents of the <code class="classname">BMessage</code>, and a number of labeled fields that contain
+the data.
+</p><p>
+Generally, when you're creating <code class="classname">BMessage</code>s to send to somebody, it works
+extremely well to allocate them on the stack. You retain ownership of the
+message when you send it, and the message is automatically cleaned up for
+you when you're done.
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">myMsg</code>;
+<code class="varname">myMsg</code>.<code class="varname">what</code> = 'RUSH';
+<code class="varname">myMsg</code>.<code class="methodname">AddInt32</code>("shrug", 2112);
+<code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(&amp;<code class="varname">myMsg</code>);
+</pre><p>
+One exception to this is if you're creating a "model message" for some
+other object to use for sending messages, such as <code class="classname">BInvoker</code>-derived
+classes. In these cases, you'll be handing the messages off to somebody
+else, so you'll need to allocate them on the free store:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BMessage</code>*</span> <code class="varname">myMsg</code> = new <code class="classname">BMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+<span class="type"><code class="classname">BMenuItem</code>*</span> <code class="varname">item</code> = new <code class="classname">BMenuItem</code>("Quit", <code class="varname">myMsg</code>, 'Q');
+<span class="comment">// item now owns myMsg, and will delete myMsg when it's
+// done with it</span>
+</pre><p>
+There are a host of functions that let you throw all kinds of data into a
+<code class="classname">BMessage</code>, including raw data if you need to. There is a similar set of
+functions for retrieving stuff from a <code class="classname">BMessage</code>. One stumbling point that
+I regularly see has to do with ownership of the data that gets stashed in
+the <code class="classname">BMessage</code>. When you use the
+<code class="classname">BMessage</code>::<code class="methodname">Add...</code> functions, the data is
+always copied into the message for you, so you're responsible for
+cleaning up anything that you add to the message. For example, let's say
+you had an array of data you wanted to stuff into a <code class="classname">BMessage</code>. You can't
+just add the data into a <code class="classname">BMessage</code> and forget about it; you have to clean
+it up afterwards:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">myMsg</code>('BARF');
+<span class="type">float*</span> <code class="varname">buf</code> = new <span class="type">float</span>[256];
+...
+<code class="varname">myMsg</code>.<code class="methodname">AddData</code>("stuff", <code class="constant">MY_STUFF_TYPE</code>, &amp;<code class="varname">buf</code>, 256*<code class="function">sizeof</code>(<span class="type">float</span>));
+<span class="comment">// buf still belongs to us, so we have to clean it up!</span>
+delete [] <code class="varname">buf</code>;
+</pre><p>
+The ownership rules for retrieving data are trickier, and are a common
+source of errors. Most of the time when you retrieve data, the data is
+copied into whatever you pass into the <code class="classname">BMessage</code>::<code class="methodname">Find....</code> functions, so
+there are no complications. However, in the special cases of <code class="methodname">FindData()</code> and
+<code class="methodname">FindString()</code>, the pointer you get back actually points to data inside the
+<code class="classname">BMessage</code>, and you have to copy it out yourself!
+</p><p>
+For example, let's say you're going to retrieve a string from a message.
+Be careful that you're doing the right thing...
+</p><pre class="programlisting cpp">
+<span class="comment">// the wrong way</span>
+<span class="type"><code class="classname">BMessage</code>*</span> <code class="varname">msg</code> = ...
+<span class="type">const char*</span> <code class="varname">msgstr</code> = <code class="varname">msg</code>-&gt;<code class="methodname">FindString</code>("my string");
+delete <code class="varname">msg</code>;
+<span class="comment">// msg has been deleted, so msgstr is now invalid!</span>
+
+<span class="comment">// the right way</span>
+<span class="type"><code class="classname">BMessage</code>*</span> <code class="varname">msg</code> = ...
+<span class="type">const char*</span> <code class="varname">msgstr</code> = <code class="varname">msg</code>-&gt;<code class="methodname">FindString</code>("my string");
+<span class="comment">// copy the data out of the message, so that
+// it'll be valid when msg goes away!
+// BString does this for us . . .</span>
+<code class="classname">BString</code> <code class="varname">str</code>(<code class="varname">msgstr</code>);
+delete <code class="varname">msg</code>;
+</pre><p>
+A <code class="classname">BMessage</code> can technically store as much data as you have memory for,
+though you'll see that it's probably not a good idea to stash megabytes
+of data into a <code class="classname">BMessage</code> for purposes of messaging.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id804626"></a>Step 2: Target</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id804632"></a>Handlers and Loopers</h4></div></div></div><p>
+Once we've created the <code class="classname">BMessage</code>, we need to know where to send it. All
+potential targets of a message derive from a class called <code class="classname">BHandler</code>. Many
+Application and Interface Kit classes derive from <code class="classname">BHandler</code>: applications,
+windows, views, controls, and so forth.
+</p><p>
+One interesting fact about the BeOS is that you cannot send messages
+directly to a <code class="classname">BHandler</code>. The only objects capable of actually receiving a
+<code class="classname">BMessage</code> are objects called <code class="classname">BLooper</code>s.
+Applications and windows are both examples of
+<code class="classname">BLooper</code>s.
+</p><p>
+A <code class="classname">BLooper</code> is an object whose job is to receive messages and dispatch them
+as they arrive. This behavior makes <code class="classname">BLooper</code>s the "Grand Central Stations"
+of the messaging world.
+</p><p>
+BLoopers maintain a list of targets (i.e.,
+<code class="classname">BHandler</code>s). When you send a message to a target, it
+actually makes its way to the <code class="classname">BLooper</code> that owns the
+target. The <code class="classname">BLooper</code> finds the target among its list
+of <code class="classname">BHandler</code>s and dispatches the message to the
+target. Because of this, your target must belong to some
+<code class="classname">BLooper</code>; you cannot just send a message to a
+<code class="classname">BHandler</code> floating in free space.
+(<code class="classname">BLooper</code> also derives from
+<code class="classname">BHandler</code>, so you can also send messages to the
+<code class="classname">BLooper</code> itself.)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id804736"></a>Messengers</h4></div></div></div><p>
+The fundamental delivery mechanism of the BeOS messaging system is
+<code class="classname">BMessenger</code>. <code class="classname">BMessenger</code>s
+are lightweight objects that identify a message
+target in your system. Let's examine how to use <code class="classname">BMessenger</code>s to specify
+various kinds of targets:
+</p><ul class="itemizedlist"><li><p>
+Local Targets
+</p><p>
+The easiest case is sending a message to a target in our own application
+(what I call "app-local targets"). In this case, we can create the
+<code class="classname">BMessenger</code> and target the recipient directly.
+</p><p>
+If you look at the <code class="classname">BMessenger</code> constructor, you'll see that there are
+three useful ways you can construct the messenger for delivery to
+app-local targets:
+</p><div class="orderedlist"><ol><li><p>
+To specify the "preferred handler" of a looper (i.e., the handler
+that you get with <code class="classname">BLooper</code>::<code class="methodname">PreferredHandler()</code>):
+</p><pre class="programlisting cpp">
+<code class="classname">BMessenger</code> <code class="varname">msgr</code>(<code class="constant">NULL</code>, <code class="varname">window</code>);
+</pre><p>
+If there is no preferred handler, this will target the looper itself.
+</p><p>
+Note that <code class="classname">BWindow</code>s have a special interpretation for the preferred
+handler. In a <code class="classname">BWindow</code>, the preferred handler is the view that
+currently has the focus.
+</p></li><li><p>
+To specify a particular handler:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessenger</code> <code class="varname">msgr</code>(<code class="varname">view</code>, <code class="constant">NULL</code>);
+</pre><p>
+The looper in this case is assumed to be the handler's owner, but you
+can redundantly specify the looper if you want; the <code class="classname">BMessenger</code> will
+perform a sanity check for you.
+</p></li><li><p>
+To specify the looper itself as the target:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessenger</code> <code class="varname">msgr</code>(<code class="varname">window</code>, <code class="constant">NULL</code>);
+</pre><p>
+Although this looks similar to (1), there's a big difference in
+behavior! Be sure that you recognize this distinction.
+</p><p>
+For app-local targets, there are also ways to send a message that don't
+require us to create a <code class="classname">BMessenger</code>; I'll talk about those a little later.
+</p></li></ol></div></li><li><p>
+Remote Targets
+</p><p>
+Now, what if we want to send a message to a target in some other
+application? In this case, the <code class="classname">BHandler</code> lives in a different address
+space, so we unfortunately can't create a <code class="classname">BMessenger</code> to target that
+BHandler directly. What we *can* do, however, is target the remote
+application itself, and ask the application to create the messenger for
+us. Here's what you do:
+</p><div class="orderedlist"><ol><li><p>
+Create a messenger to the application, either by team ID or
+signature.
+</p></li><li><p>
+Using this messenger, send a message that requests a new messenger
+for the target that you desire.
+</p></li><li><p>
+Retrieve the new messenger from the reply, and use that to send a
+message to your target.
+</p></li></ol></div><p>
+This technique requires you to work out a messaging protocol between
+yourself and the remote application for identifying the target. Scripting
+is a great way to do this if the application supports it (as many Be apps
+do). For example, using Attila Mezei's "hey" command line tool (available
+on BeWare), I can do the following:
+</p><pre class="programlisting cpp">
+hey Tracker get Window 0
+</pre><p>
+This sends a message off to the Tracker application, and receives in
+return a messenger that targets the first window in the Tracker's window
+list. If you want to learn more about scripting, take a gander at:
+</p><p>
+http://www-classic.be.com/developers/developer_library/scripting.html
+</p></li><li><p>
+Extremely Remote Targets
+</p><p>
+Finally, let's entertain the possibility that we want to send a message
+to a target on some other machine. Interestingly, there are a few
+third-party developers that have created solutions for this, providing
+BMessenger-derived classes that allow you to specify targets on machines
+across a network. See BeWare (http://www.be.com/beware/) for more details.
+</p></li></ul></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id805012"></a>Step 3: Send</h3></div></div></div><p>
+Now that you have a <code class="classname">BMessage</code> and a target
+<code class="classname">BHandler</code>, how do you send the
+message? There are two approved ways of doing this, and one sneaky
+shortcut. I'll discuss the approved ways first; the sneaky shortcut will
+have to wait until next week.
+</p><ul class="itemizedlist"><li><p>
+<code class="classname">BMessenger</code>::<code class="methodname">SendMessage()</code> can send a message to either app-local or
+remote targets. It can either take a <code class="classname">BMessage</code>
+or just a <code class="varname">what</code> code
+(which it quickly wraps a <code class="classname">BMessage</code> around). It can also deliver messages
+in one of two ways:
+</p><div class="orderedlist"><ol><li><p>
+In an "asynchronous send," you specify an optional target to send
+the reply to. Any reply to this message will be sent to that target.
+If no target is specified, the reply is sent to your application
+object.
+</p></li><li><p>
+In a "synchronous send," you can receive the reply directly. In
+this case, the <code class="classname">BMessenger</code> sets up a temporary reply mechanism and
+waits until the recipient sends a reply back to it before returning.
+If you choose to use a synchronous send, make sure you're not sending
+the message to your own looper, or a deadlock is almost sure to
+result! There's also an optional "reply timeout" value if you're only
+willing to wait a certain amount of time for a reply to get back to
+you.
+</p></li></ol></div></li><li><p>
+<code class="classname">BLooper</code>::<code class="methodname">PostMessage()</code> is a method you can use to send messages to
+app-local targets. It effectively does the work of creating a <code class="classname">BMessenger</code>
+and calling <code class="methodname">SendMessage()</code> for you. You call it on the <code class="classname">BLooper</code> that owns
+your target. Here are three ways you can identify targets with
+<code class="methodname">PostMessage()</code>:
+</p><div class="orderedlist"><ol><li><p>
+To specify a particular handler:
+<code class="code"><code class="varname">window</code>-&gt;<code class="methodname">PostMessage</code>(<code class="varname">msg</code>, <code class="varname">view</code>);</code>
+</p></li><li><p>
+To specify the looper's preferred handler:
+<code class="code"><code class="varname">window</code>-&gt;<code class="methodname">PostMessage</code>(<code class="varname">msg</code>, <code class="constant">NULL</code>);</code>
+</p></li><li><p>
+There are two ways to specify the looper itself:
+<code class="code"><code class="varname">window</code>-&gt;<code class="methodname">PostMessage</code>(<code class="varname">msg</code>);
+<code class="varname">window</code>-&gt;<code class="methodname">PostMessage</code>(<code class="varname">msg</code>, <code class="varname">window</code>);</code>
+</p></li></ol></div></li></ul><p>
+As you can see from the above, there is an important, and often
+confusing, distinction to make between passing a <code class="constant">NULL</code> handler and passing
+no handler at all!
+</p><p>
+Like <code class="methodname">SendMessage()</code>, <code class="methodname">PostMessage()</code>
+allows you to pass a <code class="varname">what</code> code instead of
+a full-fledged <code class="classname">BMessage</code>. Unlike
+<code class="methodname">SendMessage()</code>, <code class="methodname">PostMessage()</code> does NOT allow
+you to do a synchronous send: replies go to your application object, or
+to a reply handler if you've specified one.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id805248"></a>Pay No Attention to the Man Behind the Curtain</h3></div></div></div><p>
+Some of you may be wondering how messages actually travel from one
+application to another. I'll break the magician's creed of secrecy and
+tell you that no voodoo is involved. In fact, the underlying mechanism
+for passing messages in the BeOS is the port. If you've ever run
+'listport' from a Terminal, this will probably come as little surprise to
+you.
+</p><p>
+For those of you who think the Kernel Kit is a package of frozen corn, a
+little orientation here may be in order. A port is a kernel primitive
+that implements a "message queue." At this low level, a "message" is
+little more than a buffer of raw data. There are two basic operations you
+can do with a port:
+</p><ul class="itemizedlist"><li><p>
+Write to the port. You provide a buffer of data. This data is copied
+into the port's queue as a brand-new message—in other words, each time
+you write to the port, the data is treated as a new entity. When you
+create the port, you tell it the maximum number of items that it can
+contain. If you try to write a new item when the port is full, you
+generally wait until items are removed before placing your item in the
+queue (with the option to just give up if a specified amount of time has
+elapsed, and the queue is still full).
+</p></li><li><p>
+Read from the port. Again, you provide a buffer of data. If there are
+any items in the queue, the oldest item's data is copied into your
+buffer, and the item is removed from the queue. If you try to read from
+an empty port, you generally wait until an item arrives before reading it
+(again, with the option to bail out if you feel that you've spent too
+long waiting).
+</p></li></ul><p>
+One nice thing about ports is that they work extremely well in
+multithreaded situations. Generally, you use ports by having one thread
+read from the port, and many threads write data to the port. By using
+ports to send data between threads, you can avoid the Evil Deadlocks that
+direct data access can cause. Even better, ports can be accessed from any
+address space, so inter-application communication is a snap with them as
+well.
+</p><p>
+How are ports used in the messaging system? Well, each <code class="classname">BLooper</code> maintains
+its own port, which serves as the delivery repository for incoming
+messages. The looper's thread then repeatedly reads items from this port
+and handles them as it sees fit.
+</p><p>
+So, here's what happens behind the scenes when you send the message:
+</p><div class="orderedlist"><ol><li><p>
+The message is flattened into a raw data buffer. Flattening turns
+the <code class="classname">BMessage</code> into a stream of raw data, which can be reconstituted
+elsewhere. Information about the message's intended target is also
+saved into this buffer as well.
+</p></li><li><p>
+This raw data is written to the target looper's port.
+</p></li></ol></div><p>
+Because of this delivery mechanism, the message you hand off to
+<code class="methodname">SendMessage()</code> is NOT the same message that the target receives! Instead, a
+copy of the data is sent to the destination. Because the flattening and
+copying of data takes a certain amount of time, it's definitely a good
+idea to keep the size of your <code class="classname">BMessage</code> contents down. If you must throw
+around large amounts of data between applications, consider using shared
+memory areas to store the bulk of your data instead.
+</p><p>
+Another important detail is that the looper's port has a limited size.
+Most of the time, the port is more than big enough for your messaging
+needs, but under heavy load, that port can fill up—and if you're not
+ready to handle this case, there's a subtle bug just waiting to bite you
+when you need it least!
+</p><p>
+If a looper's port is chock full of messages when you try to send a
+message, you'll have to wait until the port has emptied a bit before you
+can write the message data to the port. This will affect you in different
+ways, depending on whether you're using <code class="methodname">PostMessage()</code>
+or <code class="methodname">SendMessage()</code>. If
+you're using <code class="methodname">PostMessage()</code>, the function will immediately return with an
+error (<code class="constant">B_WOULD_BLOCK</code>) if it can't write the message data, and the message
+won't be sent. If you're using <code class="methodname">SendMessage()</code>, you specify a "send timeout"
+value to indicate how long you're willing to wait for the message to be
+delivered. If you don't specify a timeout, the <code class="classname">BMessenger</code> will patiently
+wait forever for the write to succeed.
+</p><p>
+The very important corollary to this behavior is that, if you use
+<code class="methodname">PostMessage()</code> or specify a send timeout
+in <code class="methodname">SendMessage()</code>, there's a
+possibility that your message won't be delivered because the function has
+timed out. Many people don't take this detail into account in their code,
+and during crunch time, they'll sometimes get bit by this subtle problem.
+So, if your message absolutely has to get delivered, make sure you check
+the return value from <code class="methodname">PostMessage()</code>
+and <code class="methodname">SendMessage()</code>, and do something
+appropriate if the function times out!
+</p><p>
+That's it for this week. Next week, we'll examine what happens on the
+other side of the connection...
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-29"></a>Be Quiet...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Concerned readers have written to ask why I stopped writing my weekly
+column. The cheeky answer is that I've been suspended by the
+<acronym class="acronym" title="Securities and Exchange Commission">SEC</acronym>, but the
+truth is quite the contrary, as you'll read in a moment.
+</p><p>
+For the past four weeks, we've been involved in what is ritually called
+an IPO Road Show, touring the U.S. and Europe to meet with institutional
+investors. During that time, and for 25 days following today's IPO, we're
+in what is called a "quiet period." This means that we cannot make any
+comments that could be construed as "promoting" our public offering. The
+company's only allowable public statement on this matter is contained in
+the prospectus, a document filed under <acronym class="acronym">SEC</acronym> supervision.
+</p><p>
+Under such conditions, given my occasional recourse to poetic license, I
+decided that temporary silence was the safest choice of words. Also, the
+Road Show process undeniably consumed a great deal of time and psychic
+energy.
+</p><p>
+But to return to the <acronym class="acronym">SEC</acronym>—I come from a different culture. Not so long
+ago in France and other European countries, insider trading wasn't a
+crime. In any case, Europe's clubby, opaque business culture makes
+enforcement of prohibitions on such things difficult. Publicly traded
+companies publish their numbers months, not days after the close, and
+shareholders are subjects, not bosses.
+</p><p>
+Consequently, I like the climate of greater trust the <acronym class="acronym">SEC</acronym> fosters in its
+watchdog and, I might add, guide dog role here in the U.S. I've read many
+complaints about the "Plain English" rule. From my perspective, however,
+purging prospectuses and other filings of "whereases" and "foregoings"
+can only benefit normal humans who want to trust the investment process.
+In our case, the <acronym class="acronym">SEC</acronym> was extremely punctual, helpful, civil, and service
+oriented, right through the very last nervous moments of the process.
+</p><p>
+I'll be back soon with road stories and other anecdotes—stand by.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-28.html">Issue 4-28, July 14, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-30.html">Issue 4-30, July 28, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-28.html" title="Issue 4-28, July 14, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-30.html" title="Issue 4-30, July 28, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

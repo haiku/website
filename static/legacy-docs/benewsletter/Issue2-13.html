@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-12.html" title="Issue 2-12, March 26, 1997" /><link rel="next" href="Issue2-14.html" title="Issue 2-14, April 9, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-12.html" title="Issue 2-12, March 26, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-14.html" title="Issue 2-14, April 9, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-12.html">Issue 2-12, March 26, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-14.html">Issue 2-14, April 9, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-13"></a>Issue 2-13, April 2, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-13"></a>Be Engineering Insights: Fun with Semaphores</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+You're in your back yard with a basket of ducks and an ax. You grab a
+duck out of the basket, chop off its head, and then put the body back in
+the basket. You repeat the process until a neighbor stops by and idly
+reaches in and grabs a duck—the same duck that you're reaching for.
+But you don't notice that your neighbor has your duck, so instead of
+chopping off a duck's head, you chop off your own hand. What you've got
+is a synchronization problem.
+</p><p>
+Operating systems can have synchronization problems, too. One problem
+that was recently brought to our attention was this: How do you protect a
+large array of data (a basket of ducks) so multiple threads (neighbors)
+can uniquely access different elements without locking up the entire
+array?
+</p><p>
+An obvious way to enforce this sort of protection is to create an array
+of semaphores that matches the size of the data array. Each semaphore
+would control access to a specific element in the data array.
+Unfortunately, this is a general solution only if the semaphore pool is
+infinite. But it's not, so it isn't.
+</p><p>
+The solution we came up with is to use an array of semaphores of a much
+smaller size than the size of the array; each semaphore is responsible
+for the protection of N elements. The way you map semaphores to data
+depends on the way the array is usually accessed. If the access is
+typically sequential, you could use a simple modulo function:
+</p><pre class="programlisting c">
+&lt;type&gt; <code class="varname">data_array</code>[<code class="constant">SIZE_ARRAY</code>];
+<span class="type">sem_id</span> <code class="varname">semaphores</code>[<code class="constant">SIZE_SEM</code>];
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">void</span> <code class="function">init</code>()
+{
+  <span class="type">int</span> <code class="varname">i</code>;
+
+  for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="constant">SIZE_SEM</code>; <code class="varname">i</code>++)
+    <code class="varname">semaphores</code> = <code class="function">create_sem</code>(1, "a_sem");
+}
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">void</span> <code class="function">lock_item</code>(<span class="type">int</span> <code class="parameter">item_number</code>)
+{
+  <span class="type">int</span> <code class="varname">sem_number</code>;
+
+  <code class="varname">sem_number</code> = <code class="parameter">item_number</code> % <code class="constant">SIZE_SEM</code>;
+  <code class="function">acquire_sem</code>(<code class="varname">sem_number</code>);
+}
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">void</span> <code class="function">unlock_item</code>(<span class="type">int</span> <code class="parameter">item_number</code>)
+{
+  <span class="type">int</span> <code class="varname">sem_number</code>;
+
+  <code class="varname">sem_number</code> = <code class="varname">item_number</code> % <code class="constant">SIZE_SEM</code>;
+  <code class="function">release_sem</code>(<code class="varname">sem_number</code>);
+}
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">void</span> <code class="function">a_thread_access</code>(<span class="type">int</span> <code class="parameter">item</code>)
+{
+  <code class="function">lock_item</code>(<code class="parameter">item</code>);
+  <code class="function">do_something_with_data</code>();
+  <code class="function">unlock_item</code>(<code class="parameter">item</code>);
+}
+
+<span class="comment">//-------------------------------------------------</span>
+</pre><p>
+Voila—very simple to use and gives you most of the concurrency that a
+full semaphore array would give you! You could, of course, use benaphores
+instead of semaphores to boost the performance.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555002"></a>Another Problem</h3></div></div></div><p>
+Another problem you might find is the need for a thread to be able to
+make nested acquire and release calls on the same semaphore. For example,
+let's say you've written a recursive function that has the recursion
+point in the middle of a protected section:
+</p><pre class="programlisting c">
+<span class="type">void</span> <code class="function">tailspin</code>()
+{
+  ...
+  <code class="function">acquire_sem</code>(<code class="varname">a</code>);
+  if (...)
+    <code class="function">tailspin</code>();
+  <code class="function">release_sem</code>(<code class="varname">a</code>);
+  ...
+}
+</pre><p>
+A simple semaphore won't work: The second time you try to acquire the
+semaphore, you'll block, since the semaphore doesn't know that you are
+the thread that already holds the lock!
+</p><p>
+Here's a simple way to do it:
+</p><pre class="programlisting c">
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">thread_id</span>  <code class="varname">sem_owner</code>;
+<span class="type">sem_id</span>     <code class="varname">the_sem</code>;
+<span class="type">long</span>       <code class="varname">sem_owner_count</code>;
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">void</span> <code class="function">init</code>()
+{
+  <code class="varname">the_sem</code> = <code class="function">create_sem</code>(1, "a_sem");
+  <code class="varname">sem_owner_count</code> = 0;
+  <code class="varname">sem_owner</code> = 0;
+}
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">long</span>  <code class="function">do_lock_multi</code>()
+{
+  <span class="type">thread_id</span>  <code class="varname">owner</code> = <code class="function">find_thread</code>(<code class="constant">NULL</code>);
+
+  if (<code class="varname">owner</code> == <code class="varname">sem_owner</code>) {
+     <code class="varname">sem_owner_count</code>++;
+     return(<code class="varname">owner</code>);
+  }
+
+  <code class="function">acquire_sem</code>(<code class="varname">the_sem</code>);
+
+  <code class="varname">sem_owner</code> = <code class="varname">owner</code>;
+  <code class="varname">sem_owner_count</code> = 1;
+  return(<code class="varname">owner</code>);
+}
+
+<span class="comment">//-------------------------------------------------</span>
+
+<span class="type">void</span>  <code class="function">do_unlock_multi</code>()
+{
+  <code class="varname">sem_owner_count</code>--;
+
+  if (<code class="varname">sem_owner_count</code> &lt;= 0) {
+     <code class="varname">sem_owner</code> = -1;
+     <code class="varname">sem_owner_count</code> = 0;
+     <code class="function">release_sem</code>(<code class="varname">the_sem</code>);
+  }
+}
+
+<span class="comment">//-------------------------------------------------</span>
+</pre><p>
+Now you can write your function as...
+</p><pre class="programlisting c">
+<span class="type">void</span> <code class="function">tailspin</code>()
+{
+  ...
+  <code class="function">do_lock_multi</code>();
+  if (...)
+    <code class="function">tailspin</code>();
+  <code class="function">do_unlock_multi</code>();
+  ...
+}
+</pre><p>
+Once again, you could replace the semaphore by a benaphore.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555268"></a>One Last Word</h3></div></div></div><p>
+While looking at Application Server performance, I noticed that some
+applications are using the <code class="constant">B_OP_OVER</code> mode to draw bitmaps that don't
+contain transparency. This can slow redrawing by as much as a factor of
+two! For simple, nontransparent drawing, use <code class="constant">B_OP_COPY</code>.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-13-2"></a>Be Engineering Insights: "Dear Webmaster..."</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ron</span> <span class="surname">Theis</span></span></div></div></div><p>
+Tens of thousands of people visit the Be Web site every week in a quest
+for information. Some of these people know exactly what they want --
+they've seen the Be Web site dozens of times and are interested primarily
+in a few key items. Others are new to Be and the BeOS and want basic
+information. It's inevitable that some of these people will click on one
+of those little "mailto:webmaster@be.com" links at the bottom of every
+Web page and submit e-mail. Some people will search the Web site long and
+hard and will think carefully before sending their e-mail (that's good),
+while others will click the "mailto" link as soon as possible and ignore
+the information on the Web site in order to have their hand held.
+</p><p>
+Some of the more common e-mails are presented below, for your perusal.
+</p><p>
+"The following link is broken."<br />
+"There's a misspelling on this page."
+</p><p>
+We love broken link reports! Spelling error reports too! If it's broken
+or misspelled on the Be Web site, then we aren't aware of it yet. Broken
+links and spelling errors are typically fixed within minutes of us
+reading the report. Just send along the URL of the erroneous document
+with the error and we'll fix it.
+</p><p>
+"More your development is prayed".<br />
+"I have received disturbed version of BeOS."<br />
+"Why does motherboard smoke?"
+</p><p>
+Some of our users do not speak English as their native language, and
+interpreting some of their e-mail can be tricky. Phrases like "More your
+development is prayed" (Amen!) pop up from time to time, as do paragraphs
+whose sentence structure resembles haiku ("Be is wonderful. More OS do
+you provide. Soon will I buy it.") Unfortunately, these brave souls are
+trying to translate their language straight into English, and it doesn't
+always come out right. We try to match up the writer with someone at Be
+who might have a better chance of speaking their native language, but
+that's not always possible, and we're forced to guess what the e-mail
+means. Sometimes "Why does motherboard smoke" actually means "I
+unsoldered some diodes on the motherboard and it started smoking."
+</p><p>
+"Could I please please please please please get a beta of the BeOS? I've
+tested lots of other kewl stuff and I need the BeOS now! I need the BeOS!
+I need the BeOS! I need the BeOS! Now! Now! Now!"
+"I will give you my left arm for a beta version of the BeOS."
+</p><p>
+Boy, we received tons of e-mail like this from the 1996 August Macworld
+through our MacTech CD release. Since we don't have the beta program
+these people imagine, we couldn't send them anything. If we ever start a
+beta program where we distribute beta copies of the BeOS to the general
+public (don't hold your breath), sign-up instructions will be plainly
+posted on the Be Web site, believe me. In the meantime, users can sign up
+on the Web site for Preview Release notification at
+&lt;http://www.be.com/products/beos_preview/index.html&gt;.
+</p><p>
+(The actual e-mails used more exclamation points, too.)
+</p><p>
+"Why don't you have any animated GIFs on your site?"
+</p><p>
+Animated GIFs are a "third-party opportunity." In fact, Macworld's
+on-line presence usually has some interesting ones involving the Be logo.
+Frames, Java, and JavaScript are also left for others to implement on
+their own sites. There are too many improvements we can make to the site
+that don't require delving into those technologies.
+</p><p>
+"I read something about you guys somewhere—tell me all about your
+company and products"
+</p><p>
+Sorry, we don't like to give out information like that.
+</p><p>
+"Will the BeOS work on my Power Mac? I've checked the Web site, but I'm
+certain you're withholding information and actually know more than you're
+telling."
+</p><p>
+This isn't the X-Files, so no, our BeOS Compatibility Chart shares most
+current information we have. No conspiracies here, Mulder.
+</p><p>
+"You guys suck!"
+</p><p>
+Detailed descriptions of why we suck are much more useful.
+</p><p>
+"You guys rule!"
+</p><p>
+Well, detailed descriptions of why we rule are also useful. It always
+helps to know why we're good or bad in a customer's eyes.
+</p><p>
+"Your Web site is the greatest! You're the greatest Webmaster ever!"
+</p><p>
+Uh, Mom, quit writing to me at work.
+</p><p>
+"This Web site feature is really nice, but I wish it did x, y, or z, too."
+</p><p>
+Running a Web site like Be's is a lot like fighting the hydra (see
+Theseus v. Hydra, 4000 B.C.). Every time we add a new feature, visitors
+request two more features that could extend the site's functionality even
+further. This happens with just about everything: A day after the bug
+reports were placed on-line, we received requests for bug searches by
+developer ID. Suggestions are excellent and we definitely evaluate every
+one, but sometimes receiving feature requests can be frustrating, since
+it's often tougher to implement features than the user realizes (in this
+case, though, bug searching by developer ID will be implemented). That
+said, feature requests are always encouraged.
+</p><p>
+Speaking of the on-line bug reports, we've observed some interesting side
+effects of placing them on the Web that we really didn't anticipate. Some
+people are going back through their bugs from last year and writing to
+say, "Actually it isn't a bug, I figured out what I was doing wrong."
+Others are sifting through the "unreproducible" bugs and trying to
+reproduce them. Once they manage to reproduce them in a reliable manner,
+they write to tell us how. These are great time-savers for us and a
+totally unexpected artifact of placing the bugs on-line.
+</p><p>
+Another interesting side effect is an increased rate of bug reporting. We
+were receiving a bug every few days before posting them on the Web site;
+now we're receiving four or five every day. Either by raising the
+awareness of the fact that we accept bug reports on-line, or by showing
+that maybe we haven't heard about every bug people have found, we're
+getting more reports. Solid, reproducible bugs only help to improve the
+next release of the BeOS....
+</p><p>
+The Web site has other improvements on the way, including:
+</p><ul class="itemizedlist"><li><p>
+A more condensed BeWare format in addition to the current one. With
+well over 300 registered applications, things have been getting crowded
+in BeWare.
+</p></li><li><p>
+More programming tutorials. The reaction to the "Approaching Be"
+tutorial has been outstanding, and more tutorials are in the works --
+especially as the Preview Release draws near.
+</p></li><li><p>
+Better integration of the Web site and list server.
+</p></li><li><p>
+An even beefier Support area, integrated with our other support
+methods.
+</p></li></ul><p>
+Recently, Michael Alderete has come on board at Be to provide Web-based
+support information. He monitors the various channels through which we
+receive trouble notifications and posts the answers in the Support area
+of the Web site (&lt;http://www.be.com/support/index.html&gt;). One of our
+goals is to have people check the Web site first whenever they have a
+problem—the vast majority of the questions people ask are already
+answered there. While people are welcome to write to CustSupport@be.com,
+and Webmaster@be.com for customer support, and Web site issues, it's
+often quicker and easier to check the Support area of the Web site for
+answers first!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-13"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+HDTV, Convergence, DVD, CD-ROM, I'm so confused! Here we are approaching
+the dawn of a new millennium, and I don't even own a home stereo system!
+My TV consists of the monitor from my Commodore 64 hooked up to a 12 year
+old VCR. Am I ready for the digital age?
+</p><p>
+Luckily, my computer systems are much better equipped. My <span class="trademark">BeBox</span>™ has a
+Hauppauge digitizer tuner, which is just as good as having a TV on my
+desktop while I work. Nothing like I Love Lucy reruns to keep you
+productive. The first taste of video I had on the BeBox was a QuickCam
+driver. And then the Hauppauge board hooked me up to a VCR or camera, and
+now, the driver supports the TV/cable tuner. I'm a pig in slop I tell you.
+</p><p>
+&lt;ftp://ftp.be.com/pub/Samples/tvtune.tgz&gt;
+</p><p>
+I just makes me laugh. A couple of years ago, a video digitizer cost so
+much, and now I have a complete digitally tunable TV on a card. Who needs
+a V-chip, how about an application that senses the commercials and blanks
+them out. I expect someone to create a VCR. Just like in Windows you have
+those "rack" applications that show a nice stereo console for CD, MIDI,
+.WAV, and all that. How about a TV, VCR, camcorder, "rack." I'm waiting...
+</p><p>
+April Fools! I always hate this because I'm a bit gullible and can never
+quite tell when I'm being taken. I recently read an article that talked
+about a computer based on tubes from Russia. I should have known. It's
+simply too outrageous to think that there could be a computer that you
+could make run faster or slower by turning a knob, but I was falling for
+it, then I checked the date on the magazine and slapped my forehead.
+</p><p>
+Well, wouldn't it be great if there were an April fool's issue of
+something that made a bunch of outlandish claims that all turned out to
+be true.
+</p><p>
+April 1, 1997<br />
+MENLO PARK
+</p><p>
+Today, in an announcement that shocked and elated an industry, small
+upstart Be, Inc. has become the de facto standard operating system.
+Several industry insiders were contacted to get their reactions to the
+stunning news.
+</p><p>
+Larry Ellison of prophetic orb fame had this to say, "I was going to buy
+Apple, but once I consulted with my guru, I found out that the OS was the
+most important component of a system, and I gave up on Apple and invested
+in Be."
+</p><p>
+Bill Gates, famed ski bunny and island hopper stated, "When you have as
+much money as I do, you don't get bothered with the details. DOS and
+Windows have been good to me. I had given up on the OS game and started
+concentrating on my house. When I found that all the components in my
+house ran the BeOS, I decided to invest big time, except, they won't
+return my calls.
+</p><p>
+Jon Warnock, Gil Amelio, and Steve Jobs could not be reached for comment.
+</p><p>
+In other news, to further enhance their capabilities as a digital content
+creation platform, Be's famed developer support organization released yet
+another of their fine sample applications, proving once again that being
+good doesn't have to come hard.
+</p><p>
+&lt;ftp://ftp.be.com/pub/contrib/gfx/lib/imaging.tgz&gt;
+</p><p>
+The sample is said to hold the secrets to high-speed bitmap manipulation
+using the BeOS. William Adams, the creator of the library simply said,
+"Hey, why the heck not."
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-13"></a>Temptations</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Writing a column on April Fool's Day brings many tempting topics to mind.
+But a fake press release, with a carefully selected choice of buzzwords
+and content-free sentences trumpeting Be's licensing of OpenDoc, would be
+poor timing after all. It's one thing to have fun at the expense of the
+powerful, it's another to satirize people when they're in trouble. And we
+find several recent decisions at Apple, such as dropping OpenDoc, rather
+encouraging. OpenDoc had ambitious goals, but the size of the
+implementation, its timing, and the arrival of Java made it a problematic
+proposition even before the purchase of NeXT.
+</p><p>
+Still on the April Fool's topic, Gateway 2000 just announced their
+acquisition of the assets of Amiga Technologies, the German company that
+had acquired rights to the Amiga from Commodore after the company went
+under. I learned this from one of our engineers, an early Amiga fan, who
+e-mailed me a copy of a Reuters dispatch. Seeing the date, knowing he's
+prone to pranks, remembering his association with the Amiga, I thought he
+had crafted the whole story and proceeded to congratulate him on yet
+another bit of creative writing. At first, I didn't believe his protests,
+he was laughing too hard while explaining he was too busy working on DR9.
+He pointed me to Gateway's Web site, and I stopped suspecting a prank
+when I saw the March 27 date on the Gateway announcement. My guess is
+that Gateway is looking for multimedia expansions to their product line.
+They've been shipping the large-screen PC TV for a while, and Amiga used
+to be the multimedia innovator in the PC business before Commodore and
+Escom (the German company that owned Amiga Technologies) got in trouble,
+taking the Amiga with them. Amiga technologies might have had some
+exciting technology under development. We'll see. It's good to know a
+company such as Gateway is interested in the Amiga world.
+</p><p>
+Last week I received more e-mail than usual following my column on
+developments in the ISP business. I expressed hope that the ISP business
+would move away from the all-you-can- eat fixed-pricing model. Readers
+appeared mostly supportive of that position. Some pointed out they had
+been doing it for some time, others hoped that very inexpensive basic
+access would be maintained while more expensive tiers are developed,
+offering better speed, better access guarantees, or a broader range of
+personal Web hosting services, for instance. What was even more pleasant
+was that some of the e-mail came from outside the US. The Internet hasn't
+always developed overseas as fast as in the US, but the interest isn't
+weaker, it's mostly a problem of government-owned telcos often not being
+very competitive. This isn't the case everywhere. Scandinavian countries,
+for instance, are both very wired and very wireless (for example,
+Ericsson and Nokia) and have a high rate of net use. And Finland begot
+Linux.
+</p><p>
+One reader questioned my choice of topic. What does the ISP business have
+to do with the BeOS business? As one investor put it, Be was born on the
+Web. Without the Web, I doubt we'd still exist. I doubt we could
+evangelize, agitprop, support, and distribute without the Web. Netscape,
+Sun, and others have shown that the Web has opened up new opportunities,
+new avenues for new platforms. They make the case there are alternatives
+to the "one OS" view of the world. They make the case so well the giant
+finally woke up. Without a healthy ISP industry, the net gets a lot less
+interesting, less investment, less competition, less progress, less silly
+experimenting, less serendipity. All this matters a great deal to our
+developers and to ourselves.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-13"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555718"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555724"></a>Subject: New File Selector in DR9?</h4></div></div></div><p>
+More UI and functionality suggestions for the Open/Save Panel:
+</p><ul class="itemizedlist"><li><p>
+Let the user type a pathname.
+</p></li><li><p>
+Provide a "file dependency" check; if the user deletes a file
+upon which other files depend, an alert (or whatever) should open.
+</p></li><li><p>
+Provide a means for sizing the panel as a percentage of the
+monitor size.
+</p></li></ul><p>
+This last suggestion (the panel should be proportioned to the monitor)
+was met with disagreement: The panel should simply remember the size
+that the user last set it to. But what happens when you switch between
+workspaces that are running at different screen size resolutions?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555767"></a>Subject: another teaser...</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: multi-device file system</h5></div></div></div><p>
+File system questions and answers:
+</p><ul class="itemizedlist"><li><p>
+Does the journaller journal data? No, just the file system
+structure.
+</p></li><li><p>
+Should the journaller log data changes? Mixed reaction, here.
+Some folks think it would be a good idea, others think that if you
+want to protect the integrity of your data, you should simply
+practice safe saving in your app.
+</p></li><li><p>
+Can the journal for disk A be written to disk B? Not in DR9.
+</p></li><li><p>
+Will third parties be able to write a file system handler? Yes,
+but not yet... the file system handler interface won't be published
+in DR9.
+</p></li></ul></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555815"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555821"></a>Subject: Be debugger</h4></div></div></div><p>
+Debugger requests:
+</p><ul class="itemizedlist"><li><p>
+Allow the debugger to be preloaded so it will respond faster to a
+crash.
+</p></li><li><p>
+Provide a no-update debugger mode. It's difficult to debug a
+full-screen game (for example) when the debugger adds uncertainty.
+</p></li><li><p>
+It would really be nice if the debugger could pop through the
+stack frames.
+</p></li><li><p>
+The debugger should support copy and paste.
+</p></li></ul></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555860"></a>Subject: Bloody HCI thread</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+Subject: Solution to the key/button problem<br />
+Subject: To BeBoxes have an option key?<br />
+Subject: Interface Experts
+</h5></div></div></div><p>
+Cursor keys: Should they display a default behavior? Will this be
+described in the UI Guidelines? Peter Urbanec provided a detailed list
+of suggested behaviors.
+</p><p>
+There was also multiple mouse click and modified mouse click talk: What
+message(s) should an app receive when the user clicks the mouse? Should
+the user be able to remap these messages?
+</p><p>
+Finally: Are "Human Interface" experts worthwhile?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555896"></a>Subject: File Servers/Attributes</h4></div></div></div><p>
+An initial query—what happens to a file's attributes when it's
+copied to a non-BeFS machine?—led to a comparison with other file
+systems. This led to a discussion of NFS; specifically, is TCP or UDP
+better suited for network file transfer? Some folks think the TCP
+overhead isn't worth the heightened reliability, particularly since
+file transfer is "error prone" anyway. Well, then, what about T/TCP?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id555914"></a>Subject: Benaphore alterations</h4></div></div></div><p>
+Building a better mousetrap. A suggestion for an improved benaphore was
+posted. Listeners wrote in with comments.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-12.html">Issue 2-12, March 26, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-14.html">Issue 2-14, April 9, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-12.html" title="Issue 2-12, March 26, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-14.html" title="Issue 2-14, April 9, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

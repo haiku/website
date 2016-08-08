@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-15.html" title="Issue 3-15, April 15, 1998" /><link rel="next" href="Issue3-17.html" title="Issue 3-17, April 28, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-15.html" title="Issue 3-15, April 15, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-17.html" title="Issue 3-17, April 28, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-15.html">Issue 3-15, April 15, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-17.html">Issue 3-17, April 28, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-16"></a>Issue 3-16, April 22, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-16"></a>Be Engineering Insights: A BView In An Add-on</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+A few months ago, I wrote an article on how to export C++ code from an
+add-on ("Writing add-ons in C++",
+www.be.com/aboutbe/benewsletter/Issue102.html#Insight). The article
+described the fundamental issues of name mangling and object
+instantiation. There was also some sample code, but it was fairly
+abstract. With this article, I'd like to show you some code that's a more
+practical demonstration of C++ add-ons.
+</p><p>
+The code I'll be playing with is a modified version of HelloWorld
+(/optional/sample-code/HelloWorld on the Release 3 CD). I won't show the
+entire project here—we'll just be looking at the modifications—so
+you may want to open up the status quo project on your local machine.
+</p><p>
+In our modified HelloWorld, the app's <code class="classname">BView</code>
+object (<code class="classname">HelloView</code>) is loaded
+from an add-on file (which we'll call <code class="filename">HelloViewAddon</code>). Because the
+HelloView code lives in an add-on, we don't need the <code class="filename">HelloView.cpp</code> and
+<code class="filename">HelloView.h</code> files, so they're
+removed from the project. The only change
+we make in the remaining code (i.e. in <code class="filename">HelloApplication.cpp</code>/<code class="filename">.h</code> and
+<code class="filename">HelloWindow.cpp</code>/<code class="filename">.h</code>) is to change
+the <code class="classname">HelloWindow</code> constructor so that it
+loads the add-on and instantiates the <code class="classname">HelloView</code> object:
+</p><pre class="programlisting cpp">
+#include &lt;stdio.h&gt;
+#include &lt;image.h&gt;
+#include &lt;Application.h&gt;
+#include "HelloWindow.h"
+
+<span class="type">const char</span> <code class="constant">AddonName</code>[] = "HelloViewAddon";
+
+<span class="comment">// name of the routine exported from the add-on that</span>
+<span class="comment">// instantiates an object of our BView class</span>
+<span class="type">const char</span> InstantiatorName[] = "instantiate_view";
+
+<code class="classname">HelloWindow</code>::<code class="methodname">HelloWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>)
+             : <code class="classname">BWindow</code>(<code class="parameter">frame</code>, "Hello", <code class="constant">B_TITLED_WINDOW</code>,
+                       <code class="constant">B_NOT_RESIZABLE</code> | <code class="constant">B_NOT_ZOOMABLE</code> )
+{
+  <span class="type"><code class="classname">BView</code>     *</span><code class="varname">aView</code>;
+  <span class="type">image_id</span>  <code class="varname">add_on_id</code>;
+
+  <span class="comment">// notice the prototype of the view instantiation</span>
+  <span class="comment">// function</span>
+  <span class="type"><code class="classname">BView</code>    *</span>(*<code class="varname">instantiate</code>)(<code class="classname">BRect</code>, <span class="type">const char *</span>);
+
+  <span class="comment">// set up a rectangle</span>
+  <code class="classname">BRect</code> <code class="varname">aRect</code>( <code class="methodname">Bounds</code>() );
+
+  <span class="comment">// load the add-on.</span>
+  <code class="varname">add_on_id</code> = <code class="function">load_add_on</code>(<code class="constant">AddonName</code>);
+  if (<code class="varname">add_on_id</code>  &lt;= 0) {
+    <code class="function">printf</code>("cannot load addon\n");
+    return;
+  }
+
+  <span class="comment">// get a pointer to the instantiation routine</span>
+  <span class="comment">// in the add-on</span>
+  if (<code class="function">get_image_symbol</code>(<code class="varname">aid</code>, <code class="constant">InstantiatorName</code>,
+        <code class="constant">B_SYMBOL_TYPE_ANY</code>, &amp;<code class="varname">instantiate</code>) != <code class="constant">B_OK</code>) {
+    <code class="function">printf</code>("cannot find function in add-on\n");
+    return;
+  }
+
+  <span class="comment">// invoke the instantiation routine to create a new view</span>
+  <code class="varname">aView</code> = (*<code class="varname">instantiate</code>)(<code class="varname">aRect</code>, "HelloView");
+
+  <span class="comment">// add the view to the window</span>
+  <code class="methodname">AddChild</code>(<code class="varname">aView</code>);
+}
+
+<span class="type">bool</span> <code class="classname">HelloWindow</code>::<code class="methodname">QuitRequested</code>()
+{
+  <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+  return(<code class="constant">true</code>);
+}
+</pre><p>
+The add-on consists of its own project that contains the HelloView.cpp/.h
+files, somewhat modified, that we removed from the HelloWorld project.
+HelloView draws a line of text but it doesn't respond to user actions, so
+we only have to rewrite the Draw() function.
+</p><pre class="programlisting cpp">
+#include "HelloView.h"
+
+<span class="comment">// the text to draw</span>
+static <span class="type">const char</span>  <code class="constant">gText</code>[] = "Hello";
+
+<span class="comment">// The constructor simply sets up the font drawing</span>
+<span class="comment">// environment.</span>
+<code class="classname">HelloView</code>::<code class="methodname">HelloView</code>(<code class="classname">BRect</code> <code class="parameter">bounds</code>, <span class="type">const char *</span><code class="parameter">name</code>)
+  : <code class="classname">BView</code>(<code class="parameter">bounds</code>, <code class="parameter">name</code>, <code class="constant">B_FOLLOW_ALL</code>, <code class="constant">B_WILL_DRAW</code>)
+{
+  <code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+  <code class="methodname">SetFontSize</code>(24);
+}
+
+<span class="comment">// The destructor does not do anything</span>
+<code class="classname">HelloView</code>::<code class="methodname">~HelloView</code>()
+{
+}
+
+<span class="comment">// The Draw function draws the text. For that it has to</span>
+<span class="comment">// get some font information and position the pen</span>
+<span class="comment">// appropriately.</span>
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+  <code class="classname">BRect</code>       <code class="varname">bounds</code> = <code class="methodname">Bounds</code>();
+  <code class="classname">BFont</code>       <code class="varname">font</code>;
+  <span class="type">font_height</span> <code class="varname">fheight</code>;
+  <span class="type">edge_info</span>   <code class="varname">eInfo</code>;
+  <code class="classname">BPoint</code>      <code class="varname">loc</code>;
+
+  <code class="methodname">GetFontHeight</code>(&amp;<code class="varname">fheight</code>);
+  <code class="methodname">GetFont</code>(&amp;<code class="varname">font</code>);
+  <code class="varname">font</code>.<code class="methodname">GetEdges</code>(<code class="constant">gText</code>, 1, &amp;<code class="varname">eInfo</code>);
+  <code class="varname">loc</code>.<code class="varname">x</code> = <code class="varname">bounds</code>.<code class="varname">left</code> + (2 - <code class="varname">eInfo</code>.<code class="varname">left</code>);
+  <code class="varname">loc</code>.<code class="varname">y</code> = <code class="varname">bounds</code>.<code class="varname">bottom</code> - (1 + <code class="varname">fheight</code>.<code class="varname">descent</code>);
+  <code class="methodname">MovePenTo</code>(<code class="varname">loc</code>);
+  <code class="methodname">DrawString</code>(<code class="constant">gText</code>);
+}
+
+<span class="comment">// The instantiation function returns a new HelloView</span>
+<span class="comment">// object. It has to be exported and unmangled, as described</span>
+<span class="comment">// in the previous article.</span>
+
+extern "C" __declspec(dllexport) <span class="type"><code class="classname">HelloView</code> *</span>
+<code class="function">instantiate_view</code>(<code class="classname">BRect</code> <code class="parameter">bounds</code>, <span class="type">const char *</span><code class="parameter">name</code>);
+
+<span class="type"><code class="classname">HelloView</code> *</span>
+<code class="function">instantiate_view</code>(<code class="classname">BRect</code> <code class="parameter">bounds</code>, <span class="type">const char *</span><code class="parameter">name</code>)
+{
+  return new <code class="classname">HelloView</code>(<code class="parameter">bounds</code>, <code class="parameter">name</code>);
+}
+</pre><p>
+Here's HelloView.h:
+</p><pre class="programlisting cpp">
+#ifndef _HELLO_VIEW_H
+#define _HELLO_VIEW_H
+
+#include &lt;BeBuild.h&gt;
+#include &lt;InterfaceDefs.h&gt;
+#include &lt;View.h&gt;
+
+class <code class="classname">HelloView</code> : public <code class="classname">BView</code>
+{
+
+public:
+    <code class="methodname">HelloView</code>(<code class="classname">BRect</code> <code class="parameter">bounds</code>, <span class="type">const char *</span><code class="parameter">name</code>);
+virtual <code class="methodname">~HelloView</code>();
+
+virtual <span class="type">void</span> <code class="methodname">Draw</code>(<code class="classname">BRect</code> <code class="parameter">bounds</code>);
+};
+
+#endif <span class="comment">/* _HELLO_VIEW_H */</span>
+</pre><p>
+Don't forget:
+</p><ul class="itemizedlist"><li><p>
+Select "Shared library" as the project type.
+</p></li><li><p>
+On PPC only: set "Use #pragma" under project Settings/PPC PEF.
+</p></li><li><p>
+The add-on has to be named "HelloViewAddon" and must live in a
+directory that's listed in the ADDON_PATH environment variable.
+Typically, you create an "add-ons" directory in the application
+directory, and put the add-on there.
+</p></li></ul><p>
+This simple example shows how to make a program modular and extendible.
+Instead of loading a fixed add-on, the application could look in a
+directory for all available add-ons. Almost anything can be imported as
+an add-on: views, windows, menus, young Swedish women. What's important
+is to take care in designing the interface between your application and
+the add-ons that it imports.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-16-2"></a>Be Engineering Insights: Multiculturalism, Be, and You</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Andrew</span> <span class="surname">Kimpton</span></span></div></div></div><p>
+Originally, this article was written in the immediate aftermath of the
+BeDC. But schedules change (even at Be), so I apologize if some of the
+highlights of the developer conference have already receded into the
+mists of memory—although I hope that isn't the case.
+</p><p>
+The BeDC offered a number of opportunities for everyone involved—some
+obvious, some not so obvious. We all trust that you felt you benefited
+from the sessions, and from meeting with the Be Team and with your fellow
+developers.
+</p><p>
+As I stood on the stage in the closing session and looked out on all of
+you, I realized another part of the Be "magic." Not only do I work with a
+group of talented people, I also work with a *multinational* group of
+talented people (a French CEO, and an English VP of Marketing only begins
+to give the game away). Be has 15 (or so) nationalities/ethnic
+backgrounds represented in its work force, and, although it is a small
+company, it is very aware of its place in the world.
+</p><p>
+As you read this I'll have travelled to (and returned from) our Paris
+office, which handles our European business (and most significantly) our
+European developers. Do you care that I spent Easter in Paris (no
+probably not, and since the trip included a visit to Euro Disney in the
+*snow*, do not feel too envious!)? However, our small band of merry men
+and women in Paris (and our slightly larger band in Menlo Park) present
+some interesting opportunities to our developers. How so?
+</p><p>
+Right now Be conforms to previous historical examples of new operating
+system companies. We have a small (but loyal and growing) band of small
+(but very talented) developers, all of whom see the advantages and
+opportunities of our new operating system. However, one advantage you may
+have missed—perhaps because it's not technical (no brilliant soaring
+through the galaxy demonstrations)—is that we quite firmly grasp the
+opportunities, and complications, of a world market. We should do, after
+all, since we are from all over the world.
+</p><p>
+Christophe Droulers from Be Europe mentioned this briefly in his BeDC
+session, but I'm here to give it a louder airing right now: Let those of
+us in Be Europe help all the North American developers find markets in
+Europe for their products. And, since the Atlantic Ocean is a two-way
+street, let those of us at Be Inc. help all the European developers find
+markets in North America for their products.
+</p><p>
+My colleagues in Paris and the rest of us on Frank Boosman's Developer
+Relations staff communicate regularly, and enjoy sharing our experiences
+of new software from our developers. Furthermore, we enjoy demonstrating
+that software wherever we can, be it at a large exhibition or to a small
+user group.
+</p><p>
+However, our assistance can go much further than simply being
+demonstrators-at-large for your product. Given its small size, Be already
+makes use of third-party companies to assist in customer support and also
+distribution. In Europe SITEL performs these roles for us with a talented
+and Be-aware staff (who are just as multilingual as many of us at Be).
+</p><p>
+For those of you thinking about porting or creating a piece of software
+for the BeOS, Europe also has an enviable pool of development talent. A
+quick glance down the BeWare submissions list, and a glance at recent
+winners of the Be Masters awards, shows just how many talented
+individuals there are in Europe. Telecommuting is just one way to make
+use of such talent in far off places.
+</p><p>
+The world is a large place and I'm proud to work in a company which seems
+to gather a fair-sized chunk of it in a single office. It's also a large
+market and we can help all of you find a place in it. I hope you enjoyed
+the BeDC and I hope to see you and those who couldn't make it this time
+at the next one in the Autumn (Fall for those of you from the left-hand
+side of the Atlantic).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-16"></a>Developers' Workshop: Script the Vote!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+A Yahoo Online survey became quite a topic of interest and discussion
+here at Be last Thursday. Our friends at Yahoo posted a survey asking
+readers to vote for their favorite operating system from the following
+choices: Windows, Mac OS, Unix, BeOS, PalmPilot, and Nintendo 64. As a
+company we were gratified that our OS was listed specifically, especially
+when other popular choices were stuffed into a generic Unix category. We
+were a bit puzzled, though, with the results that first appeared.
+</p><p>
+With roughly 50,000 votes cast the Mac OS was leading the pack by a large
+margin. The breakdown was Mac OS 62%, Unix 19%, BeOS 9%, Windows 7%,
+Nintendo 64 2%, and PalmPilot 0%. This seemed odd, given market realities.
+</p><p>
+On closer examination we discovered that there was no limit to the number
+of times that a given person or machine could vote in the poll. Yahoo had
+no "One Person, One Vote" security in place. In short, stuffing the
+ballot box was, if not legal, certainly possible.
+</p><p>
+Since the policy seemed to be "Vote Early, Vote Often," and the Mac
+Evangelists had more than a three-day head start in stuffing the ballot
+box, we decided to take drastic action. The "Script the Vote" campaign
+was born.
+</p><p>
+Early in the campaign we got tired of the "Tally My Vote" --&gt; "Back
+Button" --&gt; "Tally My Vote" strategy. At least, we got tired of doing
+this by hand. But since the BeOS in general, and NetPositive in
+particular, is highly scriptable, we soon gave our mouse fingers a break.
+</p><p>
+Here is the original script submitted by the engineer in charge of
+scripting:
+</p><p>
+"Try this script: (It's more complex than hoped because of some goofy
+behavior in the "Back" button of NetPositive). This assumes that the
+window in question is the first NP window and that the radio_button for
+the BeOS is already selected."
+</p><pre class="programlisting">
+<code class="varname">i</code>=0
+while <code class="constant">true</code>
+do
+  <code class="varname">i</code>=`expr $<code class="varname">i</code> + 1`
+  echo "iteration $<code class="varname">i</code>"
+  doo NetPositive set Value of View 6 of View 0 View 4 of
+    View 1 of Window 0 to 1 &gt; /dev/null
+  sleep 6
+  doo NetPositive set Value of View "back" of Window 0 to
+    $<code class="varname">i</code> &gt; /dev/null
+  sleep 4
+done
+</pre><p>
+This significantly improved our voting rate, and freed our engineers to
+deal with other, possibly more important, issues. But it didn't seem to
+satisfy the more rabid ballot stuffers on staff. Further investigation
+revealed that the survey itself was managed through an HTTP GET request.
+In other words, all the voting information was contained in the URL
+itself. Simply scripting NetPositive to constantly hit the Reload button
+increased speed dramatically.
+</p><p>
+But it *still* wasn't good enough for some of us. If it was just a matter
+of submitting a URL, why not write a full-fledged voting application? So,
+while I started working on the VoteBe app, Ficus Kirkpatrick took another
+crack at a scripting solution. He wrote a bash script that launched
+multiple copies of lynx, the text-only browser, and submitted requests.
+</p><p>
+Those of you in the know might realize that there is no port of lynx for
+the BeOS. We must in all honesty reveal that at this stage of the game
+much of our voting came from five or so Linux boxes <span class="type">float</span>ing around the
+company. The same script would have worked wonders on the BeOS, if a
+version of lynx had been available.
+</p><p>
+At this point we were, through our various enterprises, submitting BeOS
+votes at a rate of 60-70 a second. Needless to say, our percentage of the
+pie increased greatly (just over 20% at its peak).
+</p><p>
+But all good things must end, and as is often the case, our VP of Sales
+and Marketing, Alex Osadzinski—ever the voice of maturity and reason
+at Be—was the killjoy. (Hi, Alex 8^) He noted with some unease that
+"Le Grand Fromage" would probably be displeased with our morning's
+efforts, and that perhaps our energies would be better spent elsewhere.
+We assented, and turned our attention to voting for Nintendo 64 (still a
+measly 2% of the vote at this time). This was not exactly what Alex had
+in mind, but nobody gets their way all the time.
+</p><p>
+So now Nintendo 64 picked up quite a bit of momentum. After an hour of
+voting it had about 17% of the pie. Then disaster struck: Yahoo's voting
+server became unresponsive. Connections had slowed down as time went on,
+but now we could get nothing. Fearful that we had crashed Yahoo's server,
+we pulled our voters away from the ballot boxes and went back to work.
+</p><p>
+An hour or so later we happened to check the site again and discovered to
+our surprise that others had also championed the cause of Nintendo 64.
+The N64 vote was at 30%, with the Mac OS down to 31%. N64 was so close to
+becoming the Internet OS of choice that we mobilized the voters again to
+push it over the top.
+</p><p>
+We did end up pushing the Nintendo 64 platform to 38%, ahead of the Mac
+OS, but it appears that Yahoo has adjusted their figures to compensate
+for our ballot stuffing. You can view the final results here:
+</p><p>
+<a class="ulink" href="http://features1.yahoo.com/survey/tally?Dir=survey&amp;Tmpl=19980413.html&amp;Id=199804 13&amp;Count=5&amp;MaxWidth=100&amp;Strip=1">http://features1.yahoo.com/survey/tally?Dir=survey&amp;Tmpl=19980413.html&amp;Id=199804 13&amp;Count=5&amp;MaxWidth=100&amp;Strip=1</a>
+</p><p>
+So, where was I during all of this? After the initial shutdown of the
+Yahoo server, I stopped doing real work on my VoteBe application. I had a
+very primitive version that submitted votes to the PoorMan server running
+on my BeBox. It worked. When we started up the voting again I used it for
+awhile, but it was never distributed to the company as a whole.
+</p><p>
+But, with my Newsletter article deadline looming, I decided that this was
+a fun story to tell and that, after beefing it up a bit, my voter
+application would make a fine bit of basic sample networking code. So,
+point your favorite ftp client to...
+</p><p>
+ftp://ftp.be.com/pub/samples/network_kit/VoteOften.zip
+</p><p>
+...and download this example of how to write a simple, threaded BeOS
+networking application. (Note that the use of this program and its
+derivatives should be reserved for special voting occasions. It is very
+uncool to use software like this to pound a server that has not asked for
+it. Be kind and don't try this one at home.)
+</p><p>
+On an entirely different subject, I want to remind you that Be is still
+looking for qualified engineers to fill many different positions. A full
+listing of available jobs can be found at
+http://www.be.com/aboutbe/jobs/index.html.
+</p><p>
+Note especially that we are still looking to fill a DTS Engineering
+position. As you can guess from the vote-o-rama story, this is a very
+serious place to work.
+</p><p>
+I'll be back in four to six weeks with more sample code. In the meantime,
+enjoy our regularly scheduled Developer Workshops, and look for the first
+article from our newest DTS Engineer, Michael Morrissey, sometime very
+soon.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-16"></a>What Do We Do, What Do We Say About Windows 98?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+A number of betas for Windows 98 have been circulating for a while. As a
+registered Microsoft developer, I got the Release Candidate 0 in the
+latest shipment of my MSDN subscription and installed it on one of my PCs
+in the office.
+</p><p>
+The procedure is painless and very automated. It appears to faithfully
+keep old Windows 95 settings and shows pleasant attention to details. For
+instance, the installation program asks you to restart your computer,
+then offers to do it for you after 15 seconds, assuming you're bored or
+on a coffee break.
+</p><p>
+The only glitch I encountered was that the system didn't respond to my
+shared (via a switchbox) keyboard and mouse when Windows 98 first started
+"for good" after completing the updating process. Mysteriously, the
+problem disappeared after I hit reset and rebooted.
+</p><p>
+Windows 98 doesn't behave very differently from Windows 95, unlike the
+bumpy transition one experienced when moving from 3.1 to the modern 95
+version. The user interface is smoother: nice gradients on some windows'
+top bars, animations with menus. Perhaps more important, Windows 98 now
+supports multiple monitors without the need to resort to high-wire
+tricks, something the Macintosh has done for awhile—and something we
+plan to do for R5.
+</p><p>
+Does Windows 98 make a big difference? As many industry observers have
+already explained, one can get most of the Win98 feature set in the
+latest '95 service release, a few additions available on the Web, and
+Internet Explorer 4.0. Put another way, Windows 98 provides a nicer
+integration (a questionable word in some locales) of already available
+features. By now, the integrated browser with e-mail client and news
+reader is a non-event.
+</p><p>
+More interesting is the use of an Internet connection to keep your system
+updated. Before, one could do this by hand; now it is automated, or
+semi-automated. Your permission is required to inspect your system, and
+download and install the new and improved application and drivers.
+</p><p>
+This is nice. It is likely to make customers happy and configurations
+easier to maintain. It might even lower the cost of supporting these more
+stable configurations. This is a more gratifying aspect of Web
+integration than the desktop channels most Explorer 4 customers turn off
+or never look at. Oops, I just read in news.com, honest, Microsoft will
+let OEMs ship Windows 98 with the channel bar hidden.
+</p><p>
+On the Be side, if you look at BeDepot and Software Valet, you can see
+the implementation of a similar concept. It will be interesting to watch
+the large-scale Windows 98 implementation for good and bad ideas to
+stimulate our own thinking. Of course, the higher degree of
+semi-automated intimacy between Microsoft and its customers will raise
+questions. Is this another case of leveraging the knowledge and control
+of the platform into an unfair or unbreakable advantage?
+</p><p>
+Still on the topic of better integration, the Universal Serial Bus is now
+even more "official" than in the latest Windows 95 OSR2.1 "with USB
+support." USB devices have been slow to come to market, probably as a
+reaction to the delays with Windows 97. No one wants an unsupported
+product clogging the distribution channels. Hopefully, with Windows 98,
+USB devices will become a market reality.
+</p><p>
+This, in turn, will help us: configurations with richer I/O will be
+easier to put together, something we'll enjoy as we develop our
+specialized audio-video platform. With a little bit of luck, the broad
+deployment of USB will kill off the pesky ISA bus.
+</p><p>
+On the performance side, we heard Windows 98 was going to speed things
+up. This appears to be true: on two identical systems, Eudora, Explorer,
+and Outlook Express do appear to launch faster. Booting the system, on
+the other hand, doesn't appear to have gained anything. And when it comes
+to video performance, Windows 98 doesn't show much improvement when
+compared to Windows 95, or to the BeOS.
+</p><p>
+Running Windows and BeOS systems side by side shows the advantage we
+enjoy in A/V applications when capturing, mixing, and rendering several
+streams. It is this kind of side by side demonstration that makes the
+simplest case for the BeOS: a specialized OS coexisting with the
+general-purpose Windows, complementing it in A/V applications where its
+general nature and its Office Automation roots put it at a disadvantage.
+</p><p>
+At an investor meeting this week-end, one participant who saw our
+demonstration, stated that this was well and good but, doesn't Microsoft
+have a successful history of fixing their problems and catching up with
+the innovators? See fourteen years of Microsoft eating into the lead
+Apple used to enjoy with the Macintosh.
+</p><p>
+That is very much on our mind—and was when we started our company.
+Operating system go through life phases. They improve very quickly during
+their youth, they mature, get comfortable, and start aging. Depending
+upon their genes, their parents, they age at different speeds, with more
+or less grace—but they all age.
+</p><p>
+Microsoft has stated Windows 98 is the last Windows "classic." For a
+while, Windows NT has been positioned as the "professional" Windows for
+robust, enterprise applications. The party line is that the version of
+Windows after 98 will be a "consumer" version of NT 5.0. This is entirely
+possible, and it probably won't change the complementary relationship
+between the general-purpose Windows and the specialized BeOS.
+</p><p>
+According to Microsoft officials quoted in Information Week a few months
+ago, NT 5.0 sports more than 25 million lines of source code. For
+reference purposes, with the usual caveats associated with such
+comparisons, the BeOS still weighs in well below a million lines. If the
+NT 5.0 stats are accurate, we are more than one order of magnitude apart.
+</p><p>
+We won't do what they do best in enterprise and office automation
+applications. Conversely, the maturing 98 and the robust NT may not
+axiomatically catch up with us in a few areas where we perform rather
+nimbly. Of course, we realize we have much to do and much to prove in
+order to convert our potential advantage into a successful market reality.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-16"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685302"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685309"></a>Subject: [ANN] SigWorld</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Signal handlers</h5></div></div></div><p>
+An initial application announcement was rescinded when it was pointed out
+that the implementation may not be signal-handler safe. Be should publish
+a list of functions that *are* handler-safe (suggests Chris Herborth).
+Olaf Seibert claims that...
+</p><p>
+“<span class="quote">According to the C standard, the only thing that you are allowed to do
+in a signal handler is change global variables of type <code class="code">volatile
+sig_atomic_t</code> and return.</span>”
+</p><p>
+Popping up a bit, Gerardo Diaz Cuellar asked a few questions:
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id685347"></a><a id="id685349"></a>Q:</td><td><p>
+What's a signal?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+It's an asynchronous 'message' that's handled by your app through the
+invocation of an (app-designated) "signal handler" function.
+</p></td></tr><tr class="question"><td><a id="id685363"></a><a id="id685365"></a>Q:</td><td><p>
+How are signals sent to an app?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Whenever your code returns from a system call, and every time the
+scheduler considers your thread for execution, a check is made whether
+there are any signals pending.
+</p></td></tr><tr class="question"><td><a id="id685379"></a><a id="id685382"></a>Q:</td><td><p>
+What happens if an app doesn't designate a signal handler for a
+particular signal?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+The system defines default behavior for all signals; for most signals,
+the default behavior is to simply kill the app.
+</p></td></tr><tr class="question"><td><a id="id685396"></a><a id="id685398"></a>Q:</td><td><p>
+So what sort of apps need to handle signals?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+In general, only apps that have "special needs." But Chris Herborth
+suggests that it might not be a bad idea to include signal handling as
+idiot protection:
+</p><p>
+“<span class="quote">Imagine a situation like this:...user has focus-follows-mouse turned
+on,...starts app from Terminal...bumps mouse [so it's] over Terminal
+[but] doesn't notice that top window doesn't have focus...whacks ^C
+intending for some keyboard shortcut to go off, and the program instead
+vanishes (due to an uncaught SIGINT...)</span>”
+</p><p>
+Mr. Herborth's suggestion launched a mini-controversy about what an app
+should do when handed a SIGINT. He later added this:
+</p><p>
+“<span class="quote">I'm not suggesting that 'real' BeOS applications should ignore SIGINT
+(or other deadly signals), I'm suggesting that they should quit
+gracefully</span>”
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685443"></a>Subject: Attribute storage requirements</h4></div></div></div><p>
+Chris Tate wants to know how to calculate the disk storage for a set of
+attributes. Dominic Giampaolo responds:
+</p><p>
+“<span class="quote">In general if your attributes are small and there aren't lots of other
+attributes associated with the file (i.e. besides BEOS:TYPE) then there
+is zero extra storage used because you attributes will wind up in the
+fast-attribute area. The fast attribute area is slightly over 700 bytes
+in size. The size needed for an attribute is the size of the name of the
+attribute, the size of the data and 8 bytes for overhead.</span>”
+</p><p>
+“<span class="quote">If your attributes do not fit into this fast attribute area then they
+will require 1 disk block for the i-node of the attribute and at least 1
+more disk block for the data. At some point in the future I may store the
+data of an attribute in the attribute i-node if it is small enough
+although that's a far-off kind of thing.</span>”
+</p><p>
+“<span class="quote">And just in case anyone is thinking about it, there is not, nor will
+there be a way, to request that attributes go into the fast attribute
+area as doing that would expose too many details of the implementation of
+BFS in the higher level API which is a bad thing.</span>”
+</p><p>
+Mr. Tate asks: Does the 1+1 disk block business really mean (at least) 2
+blocks for *each* attribute that doesn't fit in the fast area?
+</p><p>
+Dominic answers: Yes (with a concession that this isn't great, but...)
+</p><p>
+Mr. Tate asks: [Does the] attributes' indexed/non-indexed state...affect
+this?
+</p><p>
+Dominic answers: No.
+</p><p>
+Kenneth Flaxman asks: Aside from using extra storage, are there reasons
+to try not to exceed the 700 byte fast-attribute area?
+</p><p>
+Dominic answers: No. Whether an attribute uses the fast attribute area or
+not is _completely_ transparent to application programs. There are no
+other differences.
+</p><p>
+David Evans asks: Can an attribute be split between the i-node "cache"
+and other blocks?
+</p><p>
+Dominic answers: C'mon, I'm crazy but not _that_ crazy :-)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685537"></a>Subject: BeOS On FTP !!!!!! NOT GOOD!</h4></div></div></div><p>
+Patrick Lantz wants to squash the OS pirates that sail the FTP seas:
+</p><p>
+“<span class="quote">If Be Inc, added a BAD Sector or a unstable 0/1 on a sector on the CD,
+and the installer checked for the bad Sector / Unstable Sector when
+installing most of the illegal copies will disapper.</span>” [sic]
+</p><p>
+Marco Nelissen thinks the check would be futile:
+</p><p>
+“<span class="quote">...some guy with too much time on his hands would spend an hour
+disabling the check. Copy protection doesn't work.</span>”
+</p><p>
+Angus Mackay finds solace in disinformation:
+</p><p>
+“<span class="quote">...the solution is to covertly get someone else to do an equal crack
+that sometimes does something bad. 1 time in 10 nuke all the data on the
+disk it's being run on or something. Then people will fear the crack and
+only the die hard crackers will use it.</span>”
+</p><p>
+Yeah, well, uhm...okay. Oh gosh, look at the time, I really have to go.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685594"></a>Subject: Realtime priority idea</h4></div></div></div><p>
+Chris Russo has a solution to the runaway realtime thread problem:
+</p><p>
+“<span class="quote">How about a 'Allow real-time processes?' checkbox in some control panel?
+Then, the user could decide whether to allow the machine to be taken
+over.</span>”
+</p><p>
+But, Jon Watte points out, the priority isn't the problem:
+</p><p>
+“<span class="quote"><code class="constant">B_REAL_TIME</code> priority is there for a reason, and if you only use it when
+you should, you won't hog anyone's machine. It's all these compute bound
+threads with high priority that slow the machine down. Even high non-
+real-time priorities suck away responsiveness.</span>”
+</p><p>
+Mr. Watte also pointed out a little known fact:
+</p><p>
+“<span class="quote">With the CURRENT scheduler, if a thread has a priority that is 16 or
+more higher than the others available, that thread will always be
+scheduled, and will thus in effect act like a realtime thread... This
+behaviour may change later. Or it may not. Stay in the 5-20 range for
+best effect.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685652"></a>Subject: Proposed UI feature request:</h4></div></div></div><p>
+How about <span class="type">double</span>-clicking an app icon (in Deskbar) to unhide the app's
+hidden windows (suggests Roberto JP)? Jon Watte thinks the current "Show
+All" in the Deskbar app menu is good enough (and avoids the "it's a
+single-click, oops, nope, it's a <span class="type">double</span>-click" problem).
+</p><p>
+Same topic, different angle, from Hanan Y Jacob:
+</p><p>
+“<span class="quote">...perhaps u only want it to show the windows that were open in the
+current workspace... otherwise were u to open four tracker windows in
+four diff. workspaces then hit show-all you would be spun round through 4
+workspaces which i dew find irritating.</span>”
+</p><p>
+(Actually, u don't spin round all those workspaces.)
+</p><p>
+Other feature requests:
+</p><ul class="itemizedlist"><li><p>
+a key-combo that hides the active window
+</p></li><li><p>
+keyboard-only file copy/move
+</p></li><li><p>
+visual clipboard
+</p></li><li><p>
+full, global keymapping
+</p></li><li><p>
+spring-loaded folders (ala Mac 8)
+</p></li></ul></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-15.html">Issue 3-15, April 15, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-17.html">Issue 3-17, April 28, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-15.html" title="Issue 3-15, April 15, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-17.html" title="Issue 3-17, April 28, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

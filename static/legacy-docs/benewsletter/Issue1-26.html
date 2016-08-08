@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-25.html" title="Issue 1-25, May 29, 1996" /><link rel="next" href="Issue1-27.html" title="Issue 1-27, June 12, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-25.html" title="Issue 1-25, May 29, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-27.html" title="Issue 1-27, June 12, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-25.html">Issue 1-25, May 29, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-27.html">Issue 1-27, June 12, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-26"></a>Issue 1-26, June 5, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-26"></a>Be Engineering Insights: Benaphores</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoit</span> <span class="surname">Schillings</span></span></div></div></div><p>
+Programming in a multithreaded environment can be tricky. The key is to
+synchronize your threads' access to the data structures that you define.
+The classical way to synchronize threads is to wrap a mutex around each
+critical section through the use of a semaphore. In other words:
+</p><pre class="programlisting cpp">
+<code class="function">acquire_sem</code>(<code class="varname">a_protection_semaphore</code>)
+<span class="comment">/*
+  Critical Section:
+  Manipulate the Data Structure Here.
+*/</span>
+<code class="function">release_sem</code>(<code class="varname">a_protection_semaphore</code>).
+</pre><p>
+This is a perfectly valid use of a semaphore—but at a cost. Typically,
+acquiring and releasing a semaphore takes about 35 microseconds. This
+overhead can add significantly to the cost of manipulating the data
+structure. It's not unusual for the semaphore calls to take more time
+than the critical section itself.
+</p><p>
+There is a better way. In the app server, we use a slight variation on
+the semaphore idea which some of us called the "benaphore." A benaphore
+is a combination of an "atomic" variable (a variable that's used in
+<code class="function">atomic_add()</code> calls) and a semaphore. You use the atomic variable to test
+whether the current invasion of the critical section needs the mutex, and
+then you acquire the semaphore only if the mutex is called for. On the
+way out of the critical section, the variable is once again checked to
+see if some other thread is waiting to enter the section; if there is
+such a thread, the semaphore is released. This is easier to express in
+code.
+</p><p>
+First, we declare and initialize our variables.
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="varname">benaphore_atom</code>;
+<span class="type">sem_id</span> <code class="varname">benaphore_sem</code>;
+
+<span class="type">long</span> <code class="function">init_benaphore</code>()
+{
+   <code class="varname">benaphore_lock</code> = 0;
+   <code class="varname">benaphore_sem</code> = <code class="function">create_sem</code>("benaphore", 0);
+
+   if (<code class="varname">benaphore_sem</code> &lt; <code class="constant">B_NO_ERROR</code>)
+      return <code class="constant">B_ERROR</code>;
+   else
+      return <code class="constant">B_NO_ERROR</code>;
+}
+</pre><p>
+Next, we define two new functions, <code class="function">acquire_benaphore()</code> and
+<code class="function">release_benaphore()</code>.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">acquire_benaphore</code>()
+{
+   <span class="type">long</span> <code class="varname">previous_value</code>;
+   <code class="varname">previous_value</code> = <code class="function">atomic_add</code> (&amp;<code class="varname">benaphore_atom</code>, 1);
+
+   if (<code class="varname">previous_value</code> &gt; 0)
+      <code class="function">acquire_sem</code>(<code class="varname">benaphore_sem</code>);
+}
+
+<span class="type">void</span> <code class="function">release_benaphore</code>()
+{
+   <span class="type">long</span> <code class="varname">previous_value</code>;
+   <code class="varname">previous_value</code> = <code class="function">atomic_add</code> (&amp;<code class="varname">benaphore_atom</code>, -1);
+
+   if (<code class="varname">previous_value</code> &gt; 1)
+      <code class="function">release_sem</code>(<code class="varname">benaphore_sem</code>);
+}
+</pre><p>
+Finally, we replace the <code class="function">acquire_sem()</code> and
+<code class="function">release_sem()</code> calls with calls
+to <code class="function">acquire_benaphore()</code> and <code class="function">release_benaphore()</code>.
+</p><pre class="programlisting cpp">
+<code class="function">acquire_benaphore</code>();
+<span class="comment">/* Critical Section */</span>
+<code class="function">release_benaphore</code>();
+</pre><p>
+Before each trip into the critical section, the visiting thread checks
+the value of the atomic variable and, at the same time, increments the
+variable's value (this retrieve-and-increment simultaneity is the
+function's atomicity). If the pre-incremented value isn't 0, then some
+other thread is currently in the critical section and so our access must
+be controlled by the semaphore. Conversely, if the pre-incremented atomic
+value is 0, then our thread can charge on in without waiting to acquire
+the semaphore.
+</p><p>
+Now consider what happens on the way out of the critical section. Again
+the atomic variable's value is retrieved and set (decremented, in this
+case) at the same time. A pre-decrement value that's greater than 1
+indicates that one or more threads is waiting to enter the critical
+section: We give the next thread the go-ahead by releasing the semaphore.
+On the other hand, if the atomic value is 1, no other thread is waiting
+(remember, our thread incremented the atomic value to 1 itself). So we
+move on without releasing the semaphore.
+</p><p>
+Why is the benaphore better than the plain semaphore? Because checking
+the value of an atomic variable is a *lot* faster than acquiring a
+semaphore. In the case where the critical section is rarely contested (in
+other words, where the section is usually visited by only one thread at a
+time), the time saved can be enormous: An uncontested trip through the
+critical section that's protected by a benaphore has an overhead of under
+1.5 microseconds. That's twenty times faster than using a semaphore.
+</p><p>
+Of course, the benaphore imposes an overhead of its own (the atomic
+variable check); this overhead is unnecessary if there's a lot of
+contention for the critical section. But even in the worst case, the
+atomic variable overhead gets lost in the noise of the context switch.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-26"></a>Be Developer Profile: CodeGen, Inc.</h2></div></div></div><p>
+As its name implies, CodeGen, Inc. is in the business of generating code.
+The three-person company, located in San Francisco, serves the computer
+industry with products such as <span class="trademark">SmartAlloc</span>™, a C memory allocator;
+<span class="trademark">SmartCollect</span>™, a garbage-collecting memory allocator; and
+<span class="trademark">SmartFirmware</span>™, an OpenFirmware implementation for embedded systems.
+They also do contract programming.
+</p><p>
+Chairman Parag Patel says the BeBox is the only system that's fun and
+easy to program and use. “<span class="quote">The Mac ceased being fun quite some time ago,
+and PCs have never been fun under any operating system—it really beats
+programming for Windows NT (shiver!). As for UNIX, see 'The UNIX-HATERS
+Handbook' for more comments.</span>”
+</p><p>
+“<span class="quote">In many ways, the BeBox is what I wish the Mac could be. It's a way cool
+box with a nice lightweight OS and class library, it has multithreading
+that doesn't suck, reliable memory-protection, enough POSIX stuff to port
+things easily, and a database for a file system. Tons of I/O is nice too.</span>”
+</p><p>
+Thomas J. Merritt, president of CodeGen, isn't sure what business Be will
+end up in, but says, “<span class="quote">It's clear with the interest it's generating and
+the coolness of the box, it's going to find a niche somewhere.</span>”
+</p><p>
+“<span class="quote">I think it would make a terrific networking server. The only other thing
+that comes close in price/performance is a generic PC loaded with
+FreeBSD, but that's a pain to configure. Windows NT and pay-for UNIX cost
+more, and other desktop OS's don't offer memory protection or other
+niceties the BeBox has.</span>” Parag adds, “<span class="quote">With the GeekPort, the BeBox could
+also be nice as a user-friendly factory floor controller.</span>”
+</p><p>
+Parag and Thomas plan to do contract programming (such as device driver
+ports) for the BeBox in addition to developing their own products. So
+far, they've ported SmartAlloc to the BeBox, and plan to port their host
+implementation of SmartFirmware later this summer.
+</p><p>
+“<span class="quote">We'd like to create something for the BeBox. Maybe a decent HTML WYSIWYG
+editor, of which none exist as yet on any platform. Heck, something as
+simple as WriteNow for the Be would be nice, too.</span>”
+</p><p>
+For more information on CodeGen, Inc., visit their web site at
+http://www.cgt.com or send e-mail to Parag or Thomas at parag@cgt.com or
+tjm@cgt.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-26"></a>The Cryptography Dilemma</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We all agree we need good cryptography. It's good for privacy, it's good
+for business. The only remaining obstacles are governments, bureaucrats,
+politicians, individuals, and groups who use national security and the
+fear of crime to further their quest for power, budgets, and votes. The
+argument is this: Criminals and enemies can't be allowed to communicate
+under the cloak of impenetrable cryptography, the consequences would be
+too dire for the nation's security, the safety of our families and
+possessions. As a result, our government has banned export of hard
+encryption technology and has promoted various soft encoding schemes for
+domestic purposes. Both are failing and there is hope that fearful and
+brutish common sense will give way to facts and the calculus of
+consequences. Or, it might just be a dollop of good old greed lubricating
+the wheels of commerce.
+</p><p>
+Domestically, the talk of putting our keys in escrow isn't going down
+very well. For all the reassuring talk of judicial oversight and due
+process in allowing government agencies access to our encrypted data, we
+harbor a healthy distrust of the police, bureaucrats, and intelligence
+agencies. Perhaps this is nothing but a projection of our low
+self-esteem. Or just a reaction to the enduring spectacle of corruption
+and incompetence in various guardian agencies. We don't trust the
+trustees. Furthermore, an escrow scheme might violate principles of good
+design: The keys have to be stored under lock and key. That lock could be
+broken by negligence or malice. A single point of failure might expose a
+large number of keys. The problems don't stop here. More generally, any
+encryption soft enough to be penetrated by bureaucrats is also vulnerable
+to sophisticated hackers and criminals, or an alliance of both. Consider
+the vintage air traffic control systems. Government might not enjoy a
+monopoly on the best computers and programmers. As a result, billions of
+electronic messages and transactions might be vulnerable to sophisticated
+crooks. In the name of fighting crime, we might abet it.
+</p><p>
+Internationally, the situation is worse. Hard cryptography is considered
+a munition and its export is illegal. As a result, US cryptography
+companies are losing export business and software publishers have to
+forbid export of US products containing "dangerous" encoding; they must
+create weaker versions for overseas markets. This in a world where
+software travels in a pocket, on a laptop, or in files over the Net.
+Besides losses and inconvenience, these ineffectual restrictions engender
+scorn and ridicule on the international scene. There is hope, though. For
+years, Phil Zimmerman, the inventor of PGP (Pretty Good Privacy), was
+harassed by the Feds. He was suspected of violating the law restricting
+the export of his public-key encryption software, as if, for the reasons
+stated above, anyone could prevent his code from traveling abroad. With a
+reluctant bow to reality, charges have been dropped—for now, they
+said. And, once again, Japan, Inc. is coming to the rescue, providing
+helpful disruption. NTT, the big and powerful Japanese telephone company,
+helped by a constitution much more protective of privacy than ours, is
+preparing to market hard encryption chips. Now our politicians have the
+fig leaf they need. Instead of using the fear of crime to get votes, they
+can use the fear of losing jobs. We can't let foreign companies dominate
+the encryption market and take jobs from US workers: Let's update our
+legislation. It's nice to see business interests aligned with our privacy
+needs.
+</p><p>
+As one of our investors says, Be was born on the web. So more than
+established businesses, we need the web to gain critical mass, to reach
+and support developers and customers all over the world. Soon we'll sell
+the BeBox on the web. We'll help developers market their applications and
+deliver software on the web. Micro transactions, the delivery of
+intellectual property, even the availability of play-only content, all
+depend on the worldwide availability of unencumbered hard cryptography.
+Call it what you will: Greed, commerce, or the need for privacy,
+governments (not just ours) will have to bow to reality and stay out of
+the way.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-25.html">Issue 1-25, May 29, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-27.html">Issue 1-27, June 12, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-25.html" title="Issue 1-25, May 29, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-27.html" title="Issue 1-27, June 12, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

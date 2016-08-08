@@ -1,0 +1,923 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-32.html" title="Issue 4-32, August 11, 1999" /><link rel="next" href="Issue4-34.html" title="Issue 4-34, August 25, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-32.html" title="Issue 4-32, August 11, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-34.html" title="Issue 4-34, August 25, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-32.html">Issue 4-32, August 11, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-34.html">Issue 4-34, August 25, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-33"></a>Issue 4-33, August 18, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-33"></a>Be Engineering Insights: Hacking the Stack</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Scott</span> <span class="surname">Barta</span></span></div></div></div><p>
+The lack of debugging tools on the BeOS often means that you
+have to roll your own. Writing good debugging tools isn't an
+easy proposition, but some simple stuff is within reach.
+</p><p>
+Call stack tracing (like <code class="code">MALLOC_DEBUG</code> does for blocks) is
+one of the easiest and most useful tricks to have in your
+toolbox. It's pretty nice to be able to attach a call stack
+to an object so that when something goes wrong with it later
+on, you can tell where it came from. This technique is good
+not only for memory trashers, but synchronization bugs, too.
+</p><p>
+Stack crawling inside your own program is made possible by a
+quick hack that Ficus worked up one afternoon, being put to
+use in the leak checker and in <code class="code">MALLOC_DEBUG</code>. It consists of
+a function that looks a given depth into the call stack and
+returns the address it finds there. It does this by walking
+each stack frame and grabbing return addresses from the
+specific point where they live in that architecture.
+</p><p>
+A limitation of <code class="code">MALLOC_DEBUG</code> is the fact that it doesn't
+resolve the return addresses into symbols. This is pretty
+easy to do, however, so we'll explain the process here.
+</p><p>
+The Kernel Kit provides a set of image functions intended to
+help you extract symbols not only from shared libraries, but
+executable files as well.
+</p><p>
+Given an image id obtained from get next image info, you can
+run through all the symbols contained in a loaded image and
+extract them using <code class="function">get_nth_image_symbol</code>, which gives you
+addresses, symbol names, and symbol types. Once stored in a
+table, it's a fairly simple task for your program to resolve
+each return address in a stack crawl and dump the results to
+stdout or to your favorite place for debug output and other
+trivia.
+</p><p>
+Responsible Be engineers always include some usable snippets
+of code in their articles; you can download a copy of the
+code for this article from the address below. I'll try to
+keep the explanations brief, as the code is fairly simple.
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/kernel kit/StackHack.zip&gt;
+</p><p>
+A call to <code class="function">init_sym_table()</code> from <code class="function">main()</code> is the all that is
+necessary to read symbols from loaded images and store the
+data in a global table (which you need to free yourself).
+</p><p>
+Return addresses located at a given depth in the stack are
+obtained through <code class="function">get_caller_address()</code>. It walks the stack,
+looking for valid return addresses in the stack frames. The
+level parameter specifies which return address to find.
+</p><p>
+Be aware that GCC's  -fomit-frame-pointer  option will cause
+a nasty crash if try to do this, because there will be
+no stack frames to walk. Use this only when building your
+debugging builds with   -fomit-frame-pointer  turned off.
+</p><p>
+Once you have an address, you can use <code class="function">lookup_symbol()</code> to
+find the symbol name and offset from the function beginning.
+</p><p>
+A quick look at the function shows that, given an address,
+<code class="function">lookup_symbol()</code> does a modified binary search of its sorted
+list of symbols to find a match and calculate the offset.
+</p><p>
+That's about all there is to it. Feel free to use the code
+in your own programs to try to track down various and sundry
+memory problems. They can be really tough to find and fix,
+especially given the sparse set of BeOS debugging tools.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-33-2"></a>Be Engineering Insights: Font Sensitivity Training</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Chinn</span></span></div></div></div><p>
+This article offers some tips and techniques for creating a clean,
+font-sensitive, consistent user interface. Putting together a good UI
+isn't difficult, but it requires a little extra thought about sizing and
+placement of UI elements and a basic understanding of how our view system
+works.
+</p><p>
+To have a consistent interface you must first understand what the views
+will use for layout and placement. The <code class="classname">BBox</code> is the only Interface Kit
+class that, by default, sets its view font to <code class="varname">be_bold_font</code>; all other
+views use <code class="varname">be_plain_font</code> unless they're set otherwise. So—what is be
+plain font or <code class="varname">be_bold_font</code>? In the first panel of the Fonts preference
+application you'll see the current system settings for the plain, bold,
+and fixed fonts the system is using. Next, open the
+<code class="filename">Fonts.h</code> interface
+file. Near the bottom of the file you'll find this:
+</p><pre class="programlisting cpp">
+extern  IMPEXP_BE <span class="type">const <code class="classname">BFont</code>*</span> <code class="varname">be_plain_font</code>;
+extern  IMPEXP_BE <span class="type">const <code class="classname">BFont</code>*</span> <code class="varname">be_bold_font</code>;
+extern  IMPEXP_BE <span class="type">const <code class="classname">BFont</code>*</span> <code class="varname">be_fixed_font</code>;
+</pre><p>
+You can use these three globals to reference the current fonts for each
+of the three system settings. Two items to note are calculating the
+height of a control and the width of text based on the desired font. You
+can do this easily by using
+</p><pre class="programlisting cpp">
+<span class="type">float</span> <code class="varname">stringwidth</code>
+    = <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("some piece of text");
+</pre><p>
+which will return the width necessary to draw "some piece of text" in
+whatever the current plain font might be. To calculate the font height,
+try using
+</p><pre class="programlisting cpp">
+<span class="type">static float</span>
+<code class="function">FontHeight</code>(<span class="type">const <code class="classname">BFont</code>*</span> <code class="parameter">font</code>, <span class="type">bool</span> <code class="parameter">full</code>)
+{
+    <span class="type">font_height</span> <code class="varname">finfo</code>;
+    <code class="parameter">font</code>-&gt;<code class="methodname">GetHeight</code>(&amp;<code class="varname">finfo</code>);
+    <span class="type">float</span> <code class="varname">h</code> = <code class="varname">finfo</code>.<code class="varname">ascent</code> + <code class="varname">finfo</code>.<code class="varname">descent</code>;
+
+    if (<code class="parameter">full</code>)
+        <code class="varname">h</code> += <code class="varname">finfo</code>.<code class="varname">leading</code>;
+
+    return <code class="varname">h</code>;
+}
+</pre><p>
+This will return the correct height necessary for all the text to be
+visible for any font.
+</p><p>
+Please note that the font settings for the following examples aren't
+necessarily recommended, but are used here as an example of how settings
+affect view layout.
+</p><p>
+We'll assume that these views have the following code as their parent,
+and that the code is added to a window:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BBox</code>*</span> <code class="varname">box</code> = new <code class="classname">BBox</code>(<code class="classname">Bounds</code>(), "background",
+    <code class="constant">B_FOLLOW_ALL</code>,
+    <code class="constant">B_WILL_DRAW</code> | <code class="constant">B_FRAME_EVENTS</code>,
+    <code class="constant">B_PLAIN_BORDER</code>);
+<code class="methodname">AddChild</code>(<code class="varname">box</code>);
+</pre><p>
+Many classes in the Interface Kit size themselves based on the plain font
+setting, although some do not. Most initially use some basic default
+values for layout, and many of these values should be overridden to
+achieve a clean interface. Now then, let's take a look at a number of the
+Interface Kit classes.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id809927"></a>BStringView</h3></div></div></div><p>
+A <code class="classname">BStringView</code> is a simple view that displays static, noneditable text.
+It's often used to display information such as labels or the status of
+some process. Remember when you're using a <code class="classname">BStringView</code> that it requires
+adequate space, both width and height, to display completely any text
+that it might hold.
+</p><p>
+To properly size a <code class="classname">BStringView</code>, try this:
+</p><pre class="programlisting cpp">
+<code class="classname">BRect</code> <code class="varname">frame</code>(10, 10,
+    10 + <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("Just a string"),
+    10 + <code class="function">FontHeight</code>(<code class="varname">be_plain_font</code>, <code class="constant">true</code>));
+
+<span class="type"><code class="classname">BStringView</code>*</span> <code class="varname">stringview</code> = new <code class="classname">BStringView</code>(<code class="varname">frame</code>,
+    "string",
+    "Just a string");
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">stringview</code>);
+</pre><p>
+If you do this the string will always be completely displayed to the
+user, regardless of the current plain font settings.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id810029"></a>BTextView</h3></div></div></div><p>
+A <code class="classname">BTextView</code>, unlike a <code class="classname">BStringView</code>,
+can be an editable text field for
+displaying multi-line text. As with sizing the <code class="classname">BStringView</code>, correct
+initial sizing of a <code class="classname">BTextView</code> can also be done quite easily:
+</p><pre class="programlisting cpp">
+<code class="varname">frame</code>.<code class="methodname">Set</code>(10, <code class="varname">stringview</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code>+10,
+        <code class="methodname">Bounds</code>().<code class="methodname">Width</code>()-10,
+        <code class="varname">stringview</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code>+10 + 3 +
+            (3 * <code class="function">FontHeight</code>(<code class="varname">be_plain_font</code>, <code class="constant">true</code>)) + 3);
+
+<span class="comment">//
+//    The text rect is inset a bit so that there
+//    is a reasonable gutter surrounding the text
+//</span>
+<code class="classname">BRect</code> <code class="varname">textrect</code>(<code class="varname">frame</code>);
+<code class="varname">textrect</code>.<code class="methodname">OffsetTo</code>(0,0);
+<code class="varname">textrect</code>.<code class="methodname">InsetBy</code>(2,2);
+
+<span class="type"><code class="classname">BTextView</code>*</span> <code class="varname">textview</code> = new <code class="classname">BTextView</code>(<code class="varname">frame</code>, "text",
+    <code class="varname">textrect</code>,
+    <code class="constant">B_FOLLOW_LEFT_RIGHT</code> | <code class="constant">B_FOLLOW_TOP</code>,
+    <code class="constant">B_WILL_DRAW</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">textview</code>);
+</pre><p>
+This creates a simple editable text area that displays three full lines.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id810197"></a>BTextControl, BMenuField</h3></div></div></div><p>
+A <code class="classname">BTextControl</code> is a mixed control; the left portion is a static label,
+the right portion is a field that allows text entry and can send a
+message notifying the host that the text has been modified. A <code class="classname">BMenuField</code>
+is similar, but has a pop-up menu on the right.
+</p><p>
+As with the previous classes, sizing is important for display, but for
+this class, the height is set by the class once it is added to a parent.
+Note that both of these classes include a label that displays static
+text. Rather than just placing multiple <code class="classname">BTextControl</code>s
+or <code class="classname">BMenuField</code>s with
+their left edges aligned, you can get a more pleasing effect by aligning
+the controls at their Divider, the line that divides the label from the
+actual control. Once again, you can accomplish this by doing some initial
+calculations and by understanding the controls themselves.
+</p><pre class="programlisting cpp">
+<span class="type">const char* const</span> <code class="constant">kAnythingStr</code> = "Anything";
+<span class="type">const char* const</span> <code class="constant">kNumbersOnlyStr</code> = "10 Numbers Only";
+
+<span class="type">float</span> maxlabelwidth =
+    <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kNumbersOnlyStr</code>) + 5;
+<span class="type">float</span> labelwidth =
+    <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kAnythingStr</code>) + 5;
+<span class="comment">//
+//    based on the longest label "Anything"
+//    simply calculate from that controls divider
+//    to where a smaller label should start
+//</span>
+<code class="varname">frame</code>.<code class="varname">left</code> = (10 + <code class="varname">maxlabelwidth</code>) - <code class="varname">labelwidth</code>;
+<span class="comment">//
+//    make this view relative to the last view added
+//    it will resize itself vertically
+//    so, just create a valid BRect
+//</span>
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">textview</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code> + 10;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<span class="type"><code class="classname">BTextControl</code>*</span> <code class="varname">tc1</code> = new <code class="classname">BTextControl</code>(<code class="varname">frame</code>, "any text",
+    <code class="constant">kAnythingStr</code>, <code class="constant">kAnythingStr</code>, <code class="constant">NULL</code>,
+    <code class="constant">B_FOLLOW_LEFT_RIGHT</code> | <code class="constant">B_FOLLOW_TOP</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">tc1</code>);
+<span class="comment">//
+//    set the divider and alignment
+//    so that it looks good
+//</span>
+<code class="varname">tc1</code>-&gt;<code class="methodname">SetDivider</code>(
+    <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kAnythingStr</code>) + 5);
+<code class="varname">tc1</code>-&gt;<code class="methodname">SetAlignment</code>(<code class="constant">B_ALIGN_RIGHT</code>, <code class="constant">B_ALIGN_LEFT</code>);
+
+<span class="comment">//
+//    once again, place the next view below the last
+//</span>
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">tc1</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code> + 5;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">left</code> = 10;
+<span class="comment">//
+//    calculate the actual width based on the
+//    text and font
+//</span>
+<code class="varname">frame</code>.<code class="varname">right</code> =
+    <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kNumbersOnlyStr</code>) + 5 +
+    10 + (<code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>("0")*10) + 10;
+<span class="type"><code class="classname">BTextControl</code>*</span> tc2 = new <code class="classname">BTextControl</code>(<code class="varname">frame</code>,
+    "numbers only",
+    <code class="constant">kNumbersOnlyStr</code>,
+    "0987654321",<code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">tc2</code>);
+<code class="varname">tc2</code>-&gt;<code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+<code class="varname">tc2</code>-&gt;<code class="methodname">SetDivider</code>(
+    <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kNumbersOnlyStr</code>) + 5);
+<code class="varname">tc2</code>-&gt;<code class="methodname">SetAlignment</code>(<code class="constant">B_ALIGN_RIGHT</code>, <code class="constant">B_ALIGN_LEFT</code>);
+<span class="comment">//
+//    here is a bit of extra code that
+//    shows how to limit a BTextView to
+//    a specific set of characters
+//</span>
+<span class="type"><code class="classname">BTextView</code>*</span> <code class="varname">tv</code> = <code class="varname">tc2</code>-&gt;<code class="methodname">TextView</code>();
+<code class="varname">tv</code>-&gt;<code class="methodname">SetMaxBytes</code>(10);
+for (<span class="type">long</span> <code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 256; <code class="varname">i</code>++)
+    <code class="varname">tv</code>-&gt;DisallowChar(i);
+for (<span class="type">long</span> <code class="varname">i</code> = '0'; <code class="varname">i</code> &lt;= '9'; <code class="varname">i</code>++)
+    <code class="varname">tv</code>-&gt;<code class="methodname">AllowChar</code>(<code class="varname">i</code>);
+<code class="varname">tv</code>-&gt;<code class="methodname">AllowChar</code>(<code class="constant">B_BACKSPACE</code>);
+
+<span class="comment">//    and, now for a couple BMenuFields
+//
+//    build up a sample menu
+//</span>
+<span class="type"><code class="classname">BPopUpMenu</code>*</span> <code class="varname">menu</code> = new <code class="classname">BPopUpMenu</code>("a simple menu");
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("First Item", <code class="constant">NULL</code>));
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Second Item", <code class="constant">NULL</code>));
+<code class="varname">menu</code>-&gt;<code class="methodname">ItemAt</code>(0)-&gt;<code class="methodname">SetMarked</code>(<code class="constant">true</code>);
+<span class="comment">//
+//    place this control relative to the BTextControls
+//</span>
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">tc2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code> + 10;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">left</code> = (<code class="varname">tc2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">left</code> + <code class="varname">tc2</code>-&gt;Divider()) -
+    (<code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("A Longer Label")+5);
+<span class="comment">//
+//    and, again, calculate the correct width based
+//    on the text and font
+//</span>
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code>
+    + <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("A Longer Label")
+    + <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("Second Item") + 30;
+<span class="type"><code class="classname">BMenuField</code>*</span> <code class="varname">menubtn1</code> = new <code class="classname">BMenuField</code>(<code class="varname">frame</code>,
+    "menu/menufield",
+    "A Longer Label", <code class="varname">menu</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">menubtn1</code>);
+<code class="varname">menubtn1</code>-&gt;<code class="methodname">SetDivider</code>(
+    <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("A Longer Label") + 5);
+
+<span class="comment">//
+//    and, create a second one
+//</span>
+<code class="varname">menu</code> = new <code class="classname">BPopUpMenu</code>("a simple menu");
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Some Item", <code class="constant">NULL</code>));
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Another Item", <code class="constant">NULL</code>));
+<code class="varname">menu</code>-&gt;<code class="methodname">ItemAt</code>(1)-&gt;<code class="methodname">SetMarked</code>(<code class="constant">true</code>);
+<code class="varname">menu</code>-&gt;<code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">menubtn1</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code>;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">left</code> = (<code class="varname">menubtn1</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">left</code>
+    + <code class="varname">menubtn1</code>-&gt;<code class="methodname">Divider</code>()) -
+      (<code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>("Menu")+5);
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code>
+    + <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>("Menu")
+    + <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("Another Item") + 30;
+<span class="type"><code class="classname">BMenuField</code>*</span> <code class="varname">menubtn2</code> = new <code class="classname">BMenuField</code>(<code class="varname">frame</code>,
+    "menu/menufield",
+    "Menu", <code class="varname">menu</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">menubtn2</code>);
+<code class="varname">menubtn2</code>-&gt;<code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+<code class="varname">menubtn2</code>-&gt;<code class="methodname">SetDivider</code>(
+    <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>("Menu")+5);
+</pre><p>
+Not only will the dividers be aligned, but there will be no dead space to
+the left of the label. The effect is that only the label and the control
+will be clickable, resulting in a moderately cleaner UI.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id811147"></a>BButton</h3></div></div></div><p>
+A <code class="classname">BButton</code> is a simple push button. It's easy to create and use, but
+tricky to have it show its display label correctly. As with a
+<code class="classname">BTextControl</code>, a <code class="classname">BButton</code>'s
+height is based on the current plain font. Its
+width, though, should be calculated and padded with respect to the plain
+font.
+</p><pre class="programlisting cpp">
+<span class="comment">//    the default minimum width of a button used by Be
+//</span>
+<span class="type">const float</span> <code class="constant">kMinimumButtonWidth</code> = 75.0;
+<span class="type">const char* const</span> <code class="constant">kOkayStr</code> = "Okay";
+<span class="type">const char* const</span> <code class="constant">kLongStr</code>
+    = "Some extra long button name";
+
+<span class="type">float</span> width = <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kOkayStr</code>) + 20;
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">menubtn2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code> + 10;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">left</code> = 10;
+<span class="comment">//
+//    accommodate a longer width, depending on the text
+//    and the font, else use the default minimum size
+//</span>
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code>
+    + ((<code class="varname">width</code> &gt; <code class="constant">kMinimumButtonWidth</code>)
+        ? <code class="varname">width</code> : <code class="constant">kMinimumButtonWidth</code>);
+<span class="type"><code class="classname">BButton</code>*</span> <code class="varname">btn1</code> = new <code class="classname">BButton</code>(<code class="varname">frame</code>, "button",
+    <code class="constant">kOkayStr</code>, <code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">btn1</code>);
+
+<span class="comment">//
+//    and, add another wider button
+//</span>
+<code class="varname">width</code> = <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>(<code class="constant">kLongStr</code>) + 20;
+<code class="varname">frame</code>.<code class="varname">left</code> = <code class="varname">frame</code>.<code class="varname">right</code> + 10;
+<code class="varname">frame</code>.<code class="varname">right</code>
+    = <code class="varname">frame</code>.<code class="varname">left</code> + ((<code class="varname">width</code> &gt; <code class="constant">kMinimumButtonWidth</code>)
+        ? <code class="varname">width</code> : <code class="constant">kMinimumButtonWidth</code>);
+<span class="type"><code class="classname">BButton</code>*</span> <code class="varname">btn2</code> = new <code class="classname">BButton</code>(<code class="varname">frame</code>, "button",
+    <code class="constant">kLongStr</code>, <code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">btn2</code>);
+<code class="varname">btn2</code>-&gt;<code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id811454"></a>BCheckBox, BRadioButton</h3></div></div></div><p>
+The last two controls I'll address are <code class="classname">BCheckBox</code>
+and <code class="classname">BRadioButton</code>. Both
+are standard and, like <code class="classname">BButton</code>, their height is sized appropriately,
+based on the current plain font. Note that to create a more intuitive UI,
+sizing the width appropriately will make your controls a bit cleaner.
+Once again, use <code class="methodname">StringWidth()</code> and some padding for the frame when creating
+these controls.
+</p><pre class="programlisting cpp">
+<code class="varname">frame</code>.<code class="varname">left</code> = 10;
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code> + 20 +
+    <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>("Bold RadioButton");
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">btn2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code> + 10;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code>+1;
+<span class="type"><code class="classname">BRadioButton</code>*</span> <code class="varname">rb1</code> = new <code class="classname">BRadioButton</code>(<code class="varname">frame</code>,
+    "radio button", "Bold RadioButton", <code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">rb1</code>);
+<code class="varname">rb1</code>-&gt;<code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">rb1</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code>;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code> + 20 +
+    <code class="varname">be_bold_font</code>-&gt;<code class="methodname">StringWidth</code>("RadioButton");
+<span class="type"><code class="classname">BRadioButton</code>*</span> <code class="varname">rb2</code> = new <code class="classname">BRadioButton</code>(<code class="varname">frame</code>,
+    "radio button", "RadioButton", <code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">rb2</code>);
+<code class="varname">rb2</code>-&gt;<code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">rb1</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">top</code>;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">left</code> = <code class="varname">rb1</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">right</code> + 20;
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code> + 20 +
+    <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("CheckBox");
+<span class="type"><code class="classname">BCheckBox</code>*</span> <code class="varname">cb1</code> = new <code class="classname">BCheckBox</code>(<code class="varname">frame</code>, "checkbox",
+    "CheckBox", <code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">cb1</code>);
+
+<code class="varname">frame</code>.<code class="varname">top</code> = <code class="varname">rb2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">top</code>;
+<code class="varname">frame</code>.<code class="varname">bottom</code> = <code class="varname">frame</code>.<code class="varname">top</code> + 1;
+<code class="varname">frame</code>.<code class="varname">right</code> = <code class="varname">frame</code>.<code class="varname">left</code> + 20 +
+    <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("Longer CheckBox Title");
+<span class="type"><code class="classname">BCheckBox</code>*</span> <code class="varname">cb2</code> = new <code class="classname">BCheckBox</code>(<code class="varname">frame</code>, "checkbox",
+    "Longer CheckBox Title", <code class="constant">NULL</code>);
+<code class="varname">box</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">cb2</code>);
+</pre><p>
+As with the labels for a <code class="classname">BTextControl</code>
+or <code class="classname">BMenuField</code>, the only portion of
+the <code class="classname">BCheckBox</code> or <code class="classname">BRadioButton</code>
+that is clickable is now the label and the
+control itself.
+</p><p>
+Notice that many of these examples use a previous control to initially
+place the next control. Doing this makes your layout sensitive to the
+font height; also, controls set up this way will not collide with each
+other upon display.
+</p><p>
+Lastly, the window should flow with the font sensitivity of the views
+that it contains. Here, a basic heuristic is used to determine what the
+height and width should be:
+</p><pre class="programlisting cpp">
+<span class="comment">//
+//    the height of the window will be relative
+//    to the last control added, in this case the
+//    last BCheckBox
+//    the width of the window will be based on the
+//    control that has its right edge furthest to
+//    the right, in this case either the last
+//    BCheckBox or the second BButton
+//</span>
+<span class="type">float</span> <code class="varname">right</code> = (<code class="varname">cb2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">right</code> &gt; <code class="varname">btn2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">right</code>)
+    ? <code class="varname">cb2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">right</code> : <code class="varname">btn2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">right</code>;
+<code class="methodname">ResizeTo</code>(<code class="varname">right</code> + 10, <code class="varname">cb2</code>-&gt;<code class="methodname">Frame</code>().<code class="varname">bottom</code> + 10);
+</pre><p>
+Add the above code to a window of an application and run it. All the
+controls will be visible and sized appropriately. The views themselves
+will not overrun their siblings and only the visible portions of the
+controls will be active. Now open the Fonts preference application and
+select any set of fonts, close the panel, and open the test application
+again. While the panel may be larger, or possibly smaller, the same
+criteria will hold true.
+</p><p>
+So, why bother with these extra calculations and concerns? Simple—to
+make your interface consistent and always usable. Since the user can
+configure his system in many ways, particularly the choice of fonts,
+applications should defer to the user's wishes.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-33"></a>Developers' Workshop: Pulse—The Next Generation</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Daniel</span> <span class="surname">Switkin</span></span></div></div></div><p>
+The BeOS Pulse utility has—until now—actually been two and a half
+programs: the standard app you open in the Tracker, and a MiniPulse
+version that works as either an application or a replicant. In this
+article (and the accompanying modifications) I'll explain the
+consolidation of these two apps into one that's tied together through the
+GUI. Combining the two boosts responsiveness, adds a preferences panel,
+and uses some newer APIs. The techniques I'll discuss could spice up any
+old application, without requiring drastic changes. You can grab the new
+source code here:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/application kit/Pulse.zip&gt;
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id812078"></a>Normal Mode, With a Vengeance</h3></div></div></div><p>
+The first thing you notice when you build and launch Pulse is... nothing
+different. That's because this version intentionally retains the visual
+elements that made it a classic. When you right-click in the window,
+though, you'll start to see the changes. The organizational theme of the
+new Pulse is that it can be run in three different modes, one of them a
+replicant in the Deskbar. The pop-up context menu presents you with the
+other two available choices.
+</p><p>
+Taking a step back, let's run through how Pulse got its name. <code class="classname">BView</code>s that
+need to do regular (but not precisely timed) work can be constructed with
+the <code class="constant">B_PULSE_NEEDED</code> flag. The hook function
+<code class="classname">BView</code>::<code class="methodname">Pulse()</code> is then called
+at intervals determined by its window, which can be set with
+<code class="classname">BWindow</code>::<code class="methodname">SetPulseRate()</code>. This setting affects all views attached to that
+window.
+</p><p>
+All three modes contain a view that descends from a class called
+<code class="classname">PulseView</code>. Its job is to build the parts of the pop-up menu that they all
+share, and to launch the menu when the view is clicked. Consider this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">PulseView</code>::<code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">point</code>) {
+    <code class="classname">BPoint</code> <code class="varname">cursor</code>;
+    <span class="type">uint32</span> <code class="varname">buttons</code>;
+    <code class="methodname">MakeFocus</code>(<code class="constant">true</code>);
+    <code class="methodname">GetMouse</code>(&amp;<code class="varname">cursor</code>, &amp;<code class="varname">buttons</code>, <code class="constant">true</code>);
+
+    if (<code class="varname">buttons</code> &amp; <code class="constant">B_SECONDARY_MOUSE_BUTTON</code>) {
+        <code class="methodname">ConvertToScreen</code>(&amp;<code class="varname">point</code>);
+        <code class="varname">popupmenu</code>-&gt;<code class="methodname">Go</code>(<code class="varname">point</code>, <code class="constant">true</code>, <code class="constant">false</code>, <code class="constant">true</code>);
+    }
+}
+</pre><p>
+What's important here is that the menu is launched asynchronously, and
+the <code class="methodname">Go()</code> call returns immediately. The
+<code class="classname">BMenuItem</code> that is chosen (if one
+is chosen) sends a copy of its message when it is invoked. If the <code class="methodname">Go()</code>
+method were synchronous, no <code class="methodname">Pulse()</code> events would be received as long as
+the menu was held down, and hence there would be no redraws. As we say
+around here, <code class="constant">B_DONT_DO_THAT</code>. Similarly, the
+<code class="classname">BAlert</code>-based About boxes in
+Pulse are launched with
+<code class="code"><code class="varname">alert</code>-&gt;<code class="methodname">Go</code>(<code class="constant">NULL</code>)</code>,
+the asynchronous version. In
+general, if you need to know which button the user clicked, give a valid
+<code class="classname">BInvoker</code> and check the "which" field when the message arrives.
+</p><p>
+The real work of <code class="classname">PulseView</code> is to calculate system activity. This is done
+by examining the <span class="type">system_info</span> struct as follows:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">PulseView</code>::<code class="methodname">Update</code>() {
+    <span class="type">system_info</span> <code class="varname">sys_info</code>;
+    <code class="function">get_system_info</code>(&amp;<code class="varname">sys_info</code>);
+    <span class="type">bigtime_t</span> <code class="varname">now</code> = <code class="function">system_time</code>();
+
+    for (<span class="type">int</span> <code class="varname">x</code> = 0; <code class="varname">x</code> &lt; <code class="varname">sys_info</code>.<code class="varname">cpu_count</code>; <code class="varname">x</code>++) {
+        <span class="type">double</span> <code class="varname">cpu_time</code> = (<span class="type">double</span>)
+            (<code class="varname">sys_info</code>.<code class="varname">cpu_infos</code>[<code class="varname">x</code>].<code class="varname">active_time</code> -
+            <code class="varname">prev_active</code>[<code class="varname">x</code>]) / (<code class="varname">now</code> - <code class="varname">prev_time</code>);
+        <code class="varname">prev_active</code>[<code class="varname">x</code>] = <code class="varname">sys_info</code>.<code class="varname">cpu_infos</code>[<code class="varname">x</code>].<code class="varname">active_time</code>;
+        if (<code class="varname">cpu_time</code> &lt; 0) <code class="varname">cpu_time</code> = 0;
+        if (<code class="varname">cpu_time</code> &gt; 1) <code class="varname">cpu_time</code> = 1;
+        <code class="varname">cpu_times</code>[<code class="varname">x</code>] = <code class="varname">cpu_time</code>;
+    }
+    <code class="varname">prev_time</code> = <code class="varname">now</code>;
+}
+</pre><p>
+The active time variable is the number of microseconds spent doing work
+on this CPU since the machine was booted. The activity for this processor
+is determined by the change in this figure divided by the amount of time
+that has passed since the last call to <code class="methodname">Update()</code>.
+</p><p>
+For lucky users with multiple CPUs, this class also controls processor
+enabling and disabling. This is accomplished by telling the scheduler not
+to assign any work to that CPU. In the BeBox days, you could turn off
+both processors. This had two purposes: the geek thrill that you could do
+it, and to show how fast the BeOS can reboot. As much fun as that used to
+be, Pulse now does a sanity check to prevent disabling the last enabled
+CPU.
+</p><p>
+Going back to <code class="classname">NormalPulseView</code>, there are now two
+ways to show off disabling CPUs: with the <code class="classname">CPUButton</code>s
+(which are also replicants), or through the pop-up menu. To make sure we
+stay consistent, the <code class="methodname">Update()</code> function keeps the
+<code class="classname">BMenuItem</code>s current, and the
+<code class="classname">CPUButtons</code> take care of themselves, as is necessary
+when they're not attached to our window.
+</p><p>
+If you've dived into the Pulse source before, you might notice that
+<code class="classname">CPUButton</code> used to be a <code class="classname">BPictureButton</code>.
+It's now been rewritten to inherit
+from <code class="classname">BControl</code> directly and do its own drawing, as you'll see later on.
+For now, check out how <code class="classname">CPUButton</code> tracks the mouse asynchronously (does a
+pattern begin to emerge?):
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">CPUButton</code>::<code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">point</code>) {
+    <code class="methodname">SetValue</code>(!<code class="methodname">Value</code>());
+    <code class="methodname">SetTracking</code>(<code class="constant">true</code>);
+    <code class="methodname">SetMouseEventMask</code>(<code class="constant">B_POINTER_EVENTS</code>,
+        <code class="constant">B_LOCK_WINDOW_FOCUS</code>);
+}
+
+<span class="type">void</span> <code class="classname">CPUButton</code>::<code class="methodname">MouseMoved</code>(<code class="classname">BPoint</code> <code class="parameter">point</code>, <span class="type">uint32</span> <code class="parameter">transit</code>,
+    <span class="type">const <code class="classname">BMessage</code> *</span><code class="parameter">message</code>) {
+
+    if (<code class="methodname">IsTracking</code>()) {
+        if (<code class="parameter">transit</code> == <code class="constant">B_ENTERED_VIEW</code> ||
+            <code class="parameter">transit</code> == <code class="constant">B_EXITED_VIEW</code>)
+                <code class="methodname">SetValue</code>(!<code class="methodname">Value</code>());
+    }
+}
+
+<span class="type">void</span> <code class="classname">CPUButton</code>::<code class="methodname">MouseUp</code>(<code class="classname">BPoint</code> <code class="parameter">point</code>) {
+    if (<code class="methodname">Bounds</code>().<code class="methodname">Contains</code>(<code class="parameter">point</code>)) <code class="methodname">Invoke</code>();
+    <code class="methodname">SetTracking</code>(<code class="constant">false</code>);
+}
+</pre><p>
+That's all you need for the guts of a two-state button that doesn't hog
+the window's thread while the mouse button is down.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id812698"></a>Preferences—A New Hope</h3></div></div></div><p>
+Rather than set your options from the command line, Pulse now uses a GUI
+to set (and remember) your choices. Pulse will launch in the mode you
+last left it in, unless you launch from the command line and force either
+ -normal ,   -mini , or
+  -deskbar modes . This is for the sake of compatibility
+and for users who like to launch Pulse as a replicant from
+<code class="filename">~/config/boot/UserBootscript</code>.
+</p><p>
+Preferences are stored through the <code class="classname">Prefs</code> class, which writes them as
+attributes to a file in the user's settings directory. This is important
+-- while BeOS is single-user at the moment, it may not always be so, and
+from now on it will be considered bad form (and soon it will be
+impossible) to attach your settings as attributes to the application
+itself. To get started, you need to find the user's settings directory:
+</p><pre class="programlisting cpp">
+<code class="classname">BPath</code> <code class="varname">path</code>;
+<code class="function">find_directory</code>(<code class="constant">B_USER_SETTINGS_DIRECTORY</code>, &amp;<code class="varname">path</code>);
+<code class="varname">path</code>.<code class="methodname">Append</code>("Pulse settings");
+<code class="varname">file</code> = new <code class="classname">BFile</code>(<code class="varname">path</code>.<code class="methodname">Path</code>(),
+    <code class="constant">B_READ_WRITE</code> | <code class="constant">B_CREATE_FILE</code>);
+</pre><p>
+Always use <code class="function">find_directory()</code> for this purpose; do not hard code a path to
+<code class="filename">~/config/settings</code>. Because
+<code class="classname">BFile</code> subclasses <code class="classname">BNode</code>, you can then read and
+write your attributes using the standard <code class="methodname">ReadAttr()</code> and <code class="methodname">WriteAttr()</code>
+functions. The Prefs class in Pulse has a number of wrapper methods that
+will handle common errors and insert a default value if a given attribute
+was not found. I'd be happy to round out this class with the other
+popular data types and put it in the Developer Library. Drop me a line if
+this would be helpful.
+</p><p>
+So—what's so great about GUI preferences? The ability to change
+Pulse's colors in real time! At the moment, <code class="classname">BColorControl</code>
+ignores the <code class="constant">B_ASYNCHRONOUS_CONTROLS</code> flag, so
+for real time updates you have to subclass
+it and override one important method:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">RTColorControl</code>::<code class="methodname">SetValue</code>(<span class="type">int32</span> <code class="parameter">color</code>) {
+    <code class="classname">BColorControl</code>::<code class="methodname">SetValue</code>(<code class="varname">color</code>);
+    <code class="methodname">Invoke</code>();
+}
+</pre><p>
+This forces the color control to send its model message every time
+there's a change, rather than only when the mouse button is released. Its
+parent, a <code class="classname">ConfigView</code>, then packages all the
+<code class="classname">PulseView</code> settings that we're
+updating. But how does this message find its way to the views to do their
+drawing? Pulse uses a simple message model to make sure everything is
+notified correctly: the window or view that spawns the <code class="classname">PrefsWindow</code> passes
+a <code class="classname">BMessenger</code> to itself in the constructor, so messages can find their way
+home. The <code class="classname">ConfigViews</code> just borrow this messenger.
+</p><p>
+On the receiving end, the appropriate <code class="methodname">MessageReceived()</code> passes the
+message to <code class="methodname">UpdateColors()</code> There the message
+is decoded and <code class="methodname">Draw()</code> is
+called to make the new settings take effect. <code class="methodname">Update()</code> is not called
+because we don't want to recalculate system activity as we drag—this
+would make the <code class="classname">ProgressBars</code> flicker and change rapidly.
+</p><p>
+These real time color changes explain why <code class="classname">CPUButton</code> now does its own
+drawing—you wouldn't want to create a new <code class="classname">BPicture</code> and redraw it each
+time a new message arrived. We want to encourage programs whose settings
+take effect immediately. Only changes that involve a significant amount
+of work should require an Apply button.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id812966"></a>Mini Mode—Exactly Like You, But 1/8th Your Size</h3></div></div></div><p>
+<code class="classname">MiniPulseView</code> is based on Arve's <span class="application">MiniPulse</span> application, as is
+<code class="classname">DeskbarPulseView</code>. It implements its own <code class="methodname">UpdateColors()</code> method to set all
+three variables when messages arrive. Note that you must specify the
+target for your <code class="classname">BMenuItem</code>s in
+<code class="methodname">AttachedToWindow()</code>. Because <code class="classname">BPopUpMenu</code>s
+never get attached to a window, their targets can't default to the
+window's handler. And since we launch the pop-up menu asynchronously, we
+don't wait around to find out which item was selected.
+</p><p>
+To reduce flicker, we call
+<code class="code"><code class="methodname">SetViewColor</code>(<code class="constant">B_TRANSPARENT_COLOR</code>)</code> to prevent
+the view from being redrawn in its background color. This is only useful
+if your <code class="methodname">Draw()</code> method will touch every pixel of the view, which it does.
+To facilitate smooth resizing, <code class="classname">PulseView</code>
+passes the <code class="constant">B_FRAME_EVENTS</code> flag
+to the <code class="classname">BView</code> constructor. Taking advantage of this is as simple as
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MiniPulseView</code>::<code class="methodname">FrameResized</code>(<span class="type">float</span> <code class="parameter">width</code>, <span class="type">float</span> <code class="parameter">height</code>)
+{
+    <code class="methodname">Draw</code>(<code class="methodname">Bounds</code>());
+}
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id813083"></a>Deskbar Mode—The Quickening</h3></div></div></div><p>
+<code class="classname">DeskbarPulseView</code> essentially drops a
+<code class="classname">MiniPulseView</code> into the Deskbar, so
+you can see what your system is up to at a glance. For a refresher course
+in replicants, check out Eric Shepherd's tutorial:
+</p><p>
+<a class="xref" href="Issue4-27.html#DevWorkshop4-27" title="Developers' Workshop: Stepping Up To the Deskbar">Developers' Workshop: Stepping Up To the Deskbar</a>
+</p><p>
+The replicant is constructed and added with the <code class="classname">BDeskbar</code> class, which is
+new in R4.5. This is done by building an instance of the view with the
+standard constructor, which gets archived. Two important notes here are
+that standard Deskbar replicants should be 16x16 pixels (remember, that's
+<code class="code"><code class="classname">BRect</code> <code class="varname">r</code>(0, 0, 15, 15))</code>,
+and that you should delete the new instance after
+calling <code class="classname">BDeskbar</code>::<code class="methodname">AddItem()</code>. The Pulse replicant permits variable width,
+but the height is always fixed. If you want your replicant to be wider
+than 16 pixels, try to keep it reasonable so that you don't overwrite the
+time. A good test is to move the Deskbar to one of the vertical
+orientations, where the tray width is fixed. Pulse makes 50 pixels the
+upper limit for width. The lower limit is based on the number of CPUs you
+have, such that each one will have at least a one-pixel-wide activity bar.
+</p><p>
+Since replicants have to handle their own messages, <code class="methodname">AttachedToWindow()</code>
+sets all targets to itself:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessenger</code> <code class="methodname">messenger</code>(<code class="varname">this</code>);
+<code class="varname">mode1</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">messenger</code>);
+// etc.
+</pre><p>
+And now for the nonintuitive part. The Pulse replicant doesn't use
+<code class="methodname">Pulse()</code>. The reasoning goes like this: if you want to receive regular
+events, you probably want to control how often they occur, and that
+setting affects all views attached to your window. From now on, you
+should consider <code class="classname">BWindow</code>::<code class="methodname">SetPulseRate()</code> off limits as a Deskbar
+replicant, because the Deskbar itself may need to do periodic work at its
+own pace. This may be enforced in the future. In general it's a bad idea
+to the set the pulse rate from any replicant that might be used in
+someone else's window—it's not courteous.
+</p><p>
+But fear not—we can still respond to periodic events by constructing a
+<code class="classname">BMessageRunner</code>, an often unnoticed addition from R4. Using the messenger
+from above in <code class="methodname">AttachedToWindow()</code>, use
+</p><pre class="programlisting cpp">
+<code class="varname">messagerunner</code> = new <code class="classname">BMessageRunner</code>(<code class="varname">messenger</code>,
+    new <code class="classname">BMessage</code>(<code class="constant">PV_REPLICANT_PULSE</code>), 200000, -1);
+</pre><p>
+This delivers messages to <code class="classname">DeskbarPulseView</code>::<code class="methodname">MessageReceived()</code> every 1/5th
+of a second until messagerunner is deleted. To prevent any work from
+being done in <code class="methodname">Pulse()</code>, override
+<code class="classname">MiniPulseView</code>'s version with an empty
+function.
+</p><p>
+Two final points about replicants: on PowerPC, you'll need to use
+specific linker settings. From BeIDE choose either "All Globals" or "Use
+.exp file". From a makefile add the following after the makefile engine
+#include:
+</p><pre class="programlisting sh">
+ifeq ($(CPU),ppc)
+    LDFLAGS += -export all
+endif
+</pre><p>
+The other option is to force your replicant class to be exported. In that
+case you want the "Use #pragma" option, so you don't expose your naming
+conventions to the world. The code looks like this:
+</p><pre class="programlisting cpp">
+#include &lt;interface/BView.h&gt;
+#include &lt;BeBuild.h&gt;
+
+class  EXPORT <code class="classname">MyView</code> : public <code class="classname">BView</code> {
+    <span class="comment">// the usual stuff goes here</span>
+}
+</pre><p>
+The other thing to remember is that you'll have to kill and restart the
+Deskbar each time you want to try a new version of your replicant. This
+is because the code runs in the Deskbar's memory space. When you try to
+launch a new version, the old code is still cached and is used instead.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id813322"></a>Conclusion—Beyond Thunderdome</h3></div></div></div><p>
+I hope this article provides some good tips on how to write BeOS apps
+that are responsive and use the newest APIs. Feel free to contact me with
+questions, comments, and requests. And no, you can't disable all CPUs --
+the kernel no longer allows it. The sanity check used to perform this
+function; now it just warns the user that the request can't be completed.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BitByBit4-33"></a>Bit By Bit: Opening Files</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+Rephrase inches towards usability. This week—opening files from the
+command line in Terminal. To make each file open up in its own phrase
+window, type:
+</p><pre class="screen">
+Rephrase &lt;space separated file names&gt;
+</pre><p>
+You can find this version of Rephrase at:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/tutorials/rephrase/rephrase0.1d2.zip&gt;
+</p><p>
+Rephrase 0.1d2 New Features<br />
+Open Files from command line arguments at launch<br />
+Multiple Windows
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id813402"></a>Programming Concepts</h3></div></div></div><p>
+You access files in BeOS through the classes of the Storage Kit.
+Conceptually, the Storage Kit consists of two types of objects: those
+representing a location in a filesystem, and those representing the
+content at a specific location.
+</p><p>
+The objects representing a location include:
+</p><ul class="itemizedlist"><li><p>
+<span class="type">entry_ref</span>—a location expressed through a name, a directory token,
+and a volume token. <span class="type">entry_ref</span>s are usually the most efficient way to
+represent a location, but they must be converted to a more useful
+format to do much real work.
+</p></li><li><p>
+<code class="classname">BPath</code>—a convenience class representing a location as a string. It
+provides the means to manipulate and parse the path string. A path
+string is the appropriate method to persistently store a location, as
+an <span class="type">entry_ref</span>'s tokens can change across a reboot.
+</p></li><li><p>
+<code class="classname">BEntry</code>—a class representing a location. It provides information
+about that location, including whether a file exists there. It also
+provides facilities to rename, move, or remove a file at that location.
+</p></li></ul><p>
+The content at a specific location is represented by subclasses of <code class="classname">BNode</code>.
+This version of Rephrase deals with one such class, the <code class="classname">BFile</code>, and only
+with it's creation. The <code class="classname">BFile</code> is manipulated
+through the <code class="classname">BTextView</code>.
+</p><p>
+For more detailed information on the Storage Kit or on BeOS installation
+see:<br />
+<a class="link bebook" href="../BeBook/TheStorageKit.html">TheStorageKit.html</a>
+</p><p>
+<code class="classname">BApplication</code> has a hook function <code class="methodname">ArgvReceived()</code> that passes in any
+command line arguments passed to the application. Rephrase interprets
+these arguments as a list of files to open. In <code class="methodname">ArgvReceived()</code> Rephrase
+translates each file name to a <code class="classname">BEntry</code>, and if there is a file at that
+location, puts the appropriate <span class="type">entry_ref</span> in a
+<code class="constant">B_REFS_RECEIVED</code> message,
+which it passes to <code class="methodname">RefsReceived()</code>.
+</p><p>
+<code class="methodname">RefsReceived()</code> is a <code class="classname">BApplication</code>
+hook function that presents a <code class="classname">BMessage</code>
+with one or more <span class="type">entry_ref</span>s for the app to process. In Rephrase, the
+appropriate action is to open a new window for each specified ref. In the
+future, the system will call <code class="methodname">RefsReceived()</code> when files are dropped onto
+the Rephrase binary. It made sense to put the file opening code where it
+will be used.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id813565"></a>Implementation Details</h3></div></div></div><div class="orderedlist"><ol><li><p>
+If you accept command line arguments to open files, you should call
+<code class="methodname">RefsRecieved()</code> directly from <code class="methodname">ArgvReceived()</code>.
+Why? The <code class="methodname">ReadyToRun()</code>
+hook provides a last chance to prepare for user interaction. It is
+called after all launch-time messages have been handled. Posting the
+<code class="constant">B_REFS_RECEIVED</code> message results in <code class="methodname">ReadyToRun()</code> being called before
+<code class="methodname">RefsReceived()</code>. This creates the default phrase editing window in
+addition to any windows opened by <code class="methodname">RefsReceived()</code>. This is not the
+intended behavior. [<code class="filename">Rephrase.cpp</code>:84-85]
+</p></li><li><p>
+Windows can call <code class="methodname">Show()</code> in their constructor. This ensures that the
+window will be shown when created. Try to be consistent—pick a
+place to call <code class="methodname">Show()</code> and stick with it. [<code class="filename">pDisplay.cpp</code>:75]
+</p></li><li><p>
+An application that opens multiple windows should make the effort
+to ensure that they don't all open right on top of one another. The
+pDisplay class keeps track of the next position for a window. It tiles
+the windows across the screen in rows, until the screen is filled,
+then starts over. [<code class="filename">pDisplay.cpp</code>:140-167]
+</p></li><li><p>
+The <code class="classname">BWindow</code> and <code class="classname">BView</code> system lets you find a view by its name.
+<code class="classname">BWindow</code>::<code class="methodname">FindView()</code> and <code class="classname">BView</code>::<code class="methodname">FindView()</code>
+return a <span class="type"><code class="classname">BView</code>*</span> with the
+given name if one exists. Use a safe casting mechanism to the
+appropriate <code class="classname">BView</code> subclass, and always make sure you actually have a
+view before acting on it. <code class="methodname">FindView()</code>
+returns <code class="constant">NULL</code> if no view is found
+and <code class="function">dynamic_cast()</code> returns <code class="constant">NULL</code> if the view is not of the specified
+type. When you need to refer to a specific view often, it's wiser to
+cache a pointer to the view when it is created. The <code class="classname">BTextView</code> will be
+an obvious choice as Rephrase develops. [<code class="filename">pDisplay.cpp</code>:123]
+</p></li><li><p>
+You can also search a <code class="classname">BMenu</code> hierarchy
+for <code class="classname">BMenuItem</code>s with a given
+name. Accordingly, we don't hold onto a pointer to the "About
+Rephrase" item any longer, but simply look it up. Submenus added to a
+<code class="classname">BMenu</code> (which includes <code class="classname">BMenuBar</code>s)
+have a <code class="classname">BMenuItem</code> created for them. To
+find a submenu, look for the <code class="classname">BMenuItem</code> with the correct name and call
+<code class="methodname">Submenu()</code> to get the menu object. [<code class="filename">pDisplay.cpp</code>:60-66]
+</p></li><li><p>
+Instead of reading contents out of the file directly, Rephrase
+currently uses the version of <code class="classname">BTextView</code>::<code class="methodname">SetText()</code> that accepts a
+<code class="classname">BFile</code> pointer as an argument. This is a matter of convenience in these
+early stages. In an upcoming installment we'll show how to read and
+write to the <code class="classname">BFile</code>. [<code class="filename">pDisplay.cpp</code>:131]
+</p></li><li><p>
+<code class="classname">BMessage</code> is a class that acts as a data container. It provides easy
+methods to add and find data and to query what types of data are
+available. [<code class="filename">Rephrase.cpp</code>:88-108]
+</p></li><li><p>
+I've fixed an off-by-one bug from 01.d1. Views should not overlap:
+accordingly the <code class="classname">BTextView</code> should start one pixel below the end of the
+menu. [<code class="filename">pDisplay.cpp</code>:47]
+</p></li></ol></div></div><p>
+Next Week: Resizing and Scroll bars
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-33"></a>After the Quiet Period</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We're now out of the customary 25-day period after the effective date of
+an IPO—July 20th in our case—during which we were embargoed from
+making public statements. The idea behind the silence is to let the
+market "digest" the news of an IPO before a company can offer information
+not contained in its prospectus. The prospectus, edited under the
+watchful eye of the SEC, contains the data investors use to evaluate the
+pros and cons of buying stock in a company.
+</p><p>
+The rule is that you're not supposed to add anything to a prospectus
+during the IPO process for 25 days after the offering is made. The very
+simple, sensible idea behind this rule is to level the investing field
+and make sure all investors operate with the same set of data. This makes
+investors trust the workings of the market and is good for the investing
+business.
+</p><p>
+Moving from lofty principles to practical consequences, maintaining this
+atmosphere of good faith creates certain restrictions that every public
+company operates under. For instance, when discussing the future of our
+business, in this newsletter or elsewhere, we have to be careful not to
+impart information that would create an imbalance between individuals who
+received the data and the public at large. So, in the interest of balance
+we shouldn't make revenue or earnings projections or issue statements
+that would lead one to infer such a forecast.
+</p><p>
+More specifically, we can say this new release is terrific because it
+contains these new features and fixes these embarrassing bugs. We can
+even say it's better than the Sumo Wrestler OS for digital media over
+broadband, but we cannot say that it will increase our revenue and
+earnings by such and such percentage. If the spirit of the moment carries
+us away and moves us to make such an imprudent statement, we're obliged
+to immediately put out a press release disclosing the information to the
+general public, in order to restore a level playing field.
+</p><p>
+Today's story doesn't say how the SEC and others would view repeat or
+seriously disruptive incidents. In the same vein—giving investors
+equal access to information and enough time to process it—earnings
+reports are released right after the market closes, giving investors time
+to sleep on the news.
+</p><p>
+Lastly, a word about a paragraph you might have seen in many press
+releases, including our recent earnings statement. The paragraph starts
+like this: "The statements contained in this Press Release may contain
+'forward-looking statements.' Actual events or results may differ
+materially as a result of risks...," etc. The intent is to remind readers
+of press releases, or audiences listening to speeches, not to mistake
+some forward-looking statements for actual forecasts. For instance,
+discussion of future releases may or may not contain forward-looking
+statements, and companies entertaining such discussions may or may not
+want to remind readers of the limits and context.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-32.html">Issue 4-32, August 11, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-34.html">Issue 4-34, August 25, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-32.html" title="Issue 4-32, August 11, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-34.html" title="Issue 4-34, August 25, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

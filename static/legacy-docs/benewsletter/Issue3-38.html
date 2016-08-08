@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-37.html" title="Issue 3-37, September 16, 1998" /><link rel="next" href="Issue3-39.html" title="Issue 3-39, September 30, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-37.html" title="Issue 3-37, September 16, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-39.html" title="Issue 3-39, September 30, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-37.html">Issue 3-37, September 16, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-39.html">Issue 3-39, September 30, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-38"></a>Issue 3-38, September 23, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-38"></a>Be Engineering Insights: While You're Waiting For R4...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steve</span> <span class="surname">Sakoman</span></span></div></div></div><p>
+As I write this we have just passed the feature freeze milestone for BeOS
+R4. Now the period of intense testing and bug fixing begins, culminating
+in that joyful last minute drive to the local CD duplicators
+(conveniently located just down the street from Baron and Dominic's
+favorite watering hole and entertainment emporium).
+</p><p>
+One of the first things we do during this test period is to begin using
+the new release for all our daily work. Therefore, I'm writing this
+article on my freshly built copy of R4. I'll resist the temptation to
+regale you with a list of all the wonderful new features in R4. Instead,
+I'll devote the rest of this article to describing some fun you can have
+with the BeOS and video capture while you wait for us to finish R4.
+</p><p>
+You can find a copy of the source code I'll be talking about (and the
+application binaries themselves) at
+</p><p>
+http://www.sakoman.com/
+</p><p>
+First a warning. The low-level video API used in these demo apps
+shouldn't be the basis for any commercial applications. It will be
+deprecated with the next release. R4 will ship with a brand new media
+kit; using its API will ensure your future happiness and prosperity. Of
+course, we'll provide similar sample code for the new API!
+</p><p>
+You'll also need a video capture card. We support any of the
+Bt848/Bt878/Bt879-based video capture cards from a number of different
+manufacturers: Hauppauge, Intel, Miro, Diamond, Avermedia, US Robotics
+(expect to spend $79-$129).
+</p><p>
+You'll find three applications in the distribution: a TV/video viewer
+with full-screen capability, a still and motion video capture program,
+and a simple "webcam." There's too much code to discuss in detail here,
+so I'll keep the discussion at a fairly high level. The basic structure
+of all three applications is similar, and consists of four basic building
+blocks.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id739821"></a>The SourceWIndow class</h3></div></div></div><p>
+<code class="classname">SourceWIndow</code> is a subclass of
+<code class="classname">BDirectWindow</code>. Its constructor looks like
+this:
+</p><pre class="programlisting cpp">
+<code class="methodname">SourceWindow</code>( <code class="classname">BRect</code> <code class="parameter">frame</code>,
+              <span class="type">char *</span><code class="parameter">name</code>,
+              <span class="type">char *</span><code class="parameter">device</code>,
+              <span class="type"><code class="classname">BVideoImage</code> **</span><code class="parameter">captureRingBuffer</code> = <code class="constant">NULL</code>,
+              <span class="type">int32</span> <code class="parameter">ringBufferCount</code> = 1,
+              <span class="type">void **</span><code class="parameter">vbiBuffer</code> = <code class="constant">NULL</code>);
+</pre><p>
+Here's where the real work gets done. When constructed with none of its
+optional parameters, this class creates a <code class="classname">BDirectWindow</code> and displays the
+captured video directly to the screen. The class handles window movement,
+resizing (from 640x480 to 80x60), and colorspace/workspace changes with
+no action required on the part of the parent. All controls for the class
+are implemented with <code class="classname">BMessage</code>s and are constructed in a way that allows
+you to directly set the <code class="classname">SourceWindow</code> as the target for your UI widget
+messages: i.e., sliders for brightness and contrast; popup menus for
+video sources and formats; text boxes for channel selection.
+</p><p>
+The optional parameters allow access to some of the more advanced
+features of <code class="classname">SourceWIndow</code>. If you specify a capture ring buffer, the video
+input is split into two streams. The F1 (odd) fields of the video stream
+continue to be displayed in the <code class="classname">BDirectWIndow</code>, but the window size is now
+limited to 320x240. The F2 (even) fields are captured in the specified
+ring buffer. The image size and color space for the two streams are
+independent. For example, the displayed image can be a resizable RGB32
+image, and the captured image can be fixed at 352x240 YUV411. This
+feature is used in both the video capture app and the webcam app. See the
+source code for details.
+</p><p>
+The final optional parameter gives access to the portion of the video
+signal dedicated to digital information services (closed captions,
+teletext, Intercast). SourceWindow provides the raw samples of data
+captured during the vertical blanking interval (VBI) of the video signal.
+Decoding is left as an exercise for the programmer, though the TV viewing
+app does demonstrate the capture of US closed captions.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id739958"></a>The ControlWindow Class</h3></div></div></div><p>
+This class implements the UI for each of the applications using <code class="classname">BTabView</code>
+and standard BeOS UI widgets. The hardware setup and video controls tab
+views are the same for all three apps. Additional tab views are added as
+appropriate for each application; i.e., still and motion capture tabs for
+the grabber application, and configuration info for the webcam app.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id739979"></a>The Settings Class</h3></div></div></div><p>
+Many thanks to Pavel Cisler for contributing this code. This class
+handles saving and restoring user settings for the application controls
+and preferences. The settings are stored as plain text in
+<code class="filename">/boot/config/settings/bt848/settingsN</code> (again where N is 0 to 3, depending
+on the number of capture cards you have in your system). All three
+applications share the same settings files.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740000"></a>The Application Specific Code</h3></div></div></div><p>
+The application-specific code is located in the same source file as the
+application constructor. In the case of the TV app, the only
+application-specific code is the closed caption decoder. This is
+implemented as a separate thread that collects and decodes the closed
+caption information contained in each video frame (at the blazingly fast
+rate of 4 characters per frame, or 120 characters/sec). The closed
+caption information is sent to a terminal window; it won't be seen unless
+the application is run from a terminal command line. One could also
+redirect the output to a file if interested in capturing the text of the
+evening news or a favorite TV show.
+</p><p>
+The video capture application (grabber) implements the still frame
+capture feature in its <code class="methodname">MessageReceived()</code> function, in response to a button
+push from the <code class="classname">ControlWindow</code>. This code uses the Translation Kit to save
+the captured image. The motion capture feature is implemented as a
+separate thread. We routinely capture uncompressed 352x240, 16-bit per
+pixel images at 30 fps (along with the 44.1khz stereo audio) to an
+inexpensive UltraDMA hard drive (about 5 Mbytes/sec sustained data rate).
+The app currently saves in a simple raw format. This code provides a
+simple example of how to get high throughput from the Be file system.
+</p><p>
+The webcam app is similar to the grabber app. The main difference is in
+the code used to post the captured image to your web site. I used two
+excellent network libraries authored by Be's own Howard Berkey. You can
+pick up copies on BeWare at
+</p><p>
+http://www.be.com/beware/Development/Nettle.html<br />
+http://www.be.com/beware/Network/Synchronizer.html
+</p><p>
+These libraries reduce the effort required to post a captured image to
+the web to only eight lines of code:
+</p><pre class="programlisting cpp">
+<span class="comment">/* ftp the local file to our web site */</span>
+    <code class="classname">FtpClient</code>   <code class="varname">ftp</code>;
+    <code class="varname">ftp</code>.<code class="methodname">setPassive</code>(<code class="varname">fPassiveFtp</code>);
+    if (<code class="varname">ftp</code>.<code class="methodname">connect</code>(<code class="varname">fServer</code>, <code class="varname">fLogin</code>, <code class="varname">fPassword</code>))  <span class="comment">// connect to server</span>
+      if (<code class="varname">ftp</code>.<code class="methodname">cd</code>(<code class="varname">fDirectory</code>))   <span class="comment">// cd to desired directory</span>
+        if (<code class="varname">ftp</code>.<code class="methodname">putFile</code>(<code class="varname">fFileName</code>, "temp"))   <span class="comment">// send file to server</span>
+          if (<code class="varname">ftp</code>.<code class="methodname">moveFile</code>("temp",<code class="varname">fFileName</code>)) <span class="comment">// change to desired name</span>
+                 break;
+    <code class="methodname">Alert</code>("Ftp Connection failed!");
+</pre><p>
+We've set up a webcam using this app here at Be. You can sneak a peak at
+what's going on in our lunch area (and other locations) by pointing your
+browser to:
+</p><p>
+http://www.sakoman.com/codycam/
+</p><p>
+You may wonder why the app is called CodyCam. It's named for my
+13-year-old son Cody, who worked here this summer as an unpaid QA intern.
+He was the "project lead" in putting together the first webcam
+implementation: a shell script that used the grabber application to
+capture the image and the command line ftp program to send it to his web
+site. We've upgraded his implementation to use the CodyCam app. It runs
+24 hours a day—don't be suprised to see some of us sleeping on those
+$10 couches between now and the R4 release!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-38"></a>Who Is Your Customer?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Johnson</span></span></div></div></div><p>
+When I talk to software companies I often ask, "Who is your customer?"
+All too often I hear the answer, "Everybody," and I realize they haven't
+thought this through. How much does it cost to market your product to
+"everybody?" What advertising message do you craft that applies to
+"everybody"?
+</p><p>
+So—here's an exercise in defining your customer narrowly, and what
+that can lead to. First, I'll talk about how it helps lower your
+marketing costs, then about how a clear customer definition affects
+development issues and support.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740228"></a>A Thought Experiment</h3></div></div></div><p>
+Let's start with a narrowly defined customer. Red plastic. Who do you
+sell red plastic to? Everybody. Suppose that instead of making red
+plastic products you make taillight covers for the 1994 Fort Taurus. Your
+customer is owners of 1994 Ford Tauruses (with broken taillight covers).
+Suppose that you want to let them know about your product.
+</p><p>
+There's a highway near Be which at many times of the day seems to have
+most of the cars in California on it. What a great place to put a
+billboard for your taillight covers! "Everybody" will see the ad! The
+billboard company offers the really low price of one penny per car that
+passes that billboard. Your ad will only cost you—let's see, one penny
+times most of the cars in the world equals—around $100,000 a day.
+</p><p>
+Now suppose there's a turnoff to a highway that only 1994 model cars
+drive on. The billboard company wants 5 cents per car here, but since
+there are fewer cars the cost is only $50,000 a day. This is better
+because the cars you aren't reaching aren't your buyers anyway.
+</p><p>
+At another turnoff for Fords only billboards cost 25 cents per car, and
+at turnoff from there for Tauruses only the billboard charge is 75 cents
+per car. You reach far fewer cars and pay maybe $1 per car, which seems
+high compared to a penny for "everybody." To further complicate your
+decision, there's a billboard just past Bob's Driving Range for Really
+Bad Golfers where most of the golf balls are hit onto the highway, where
+they break the—you guessed it—taillight covers! That billboard
+costs $2.50 per car! Since every car is a potential buyer for your
+taillight covers and none of the cars you've eliminated will ever be a
+potential buyer, this is a much better place to advertise than on the
+billboard that reached "everybody." You're now reaching all your
+customers for around $2,500 instead of $100,000.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740268"></a>What Was the Point of That Overly Long Story?</h3></div></div></div><p>
+This story illustrates how a narrow definition of your product makes
+decisions about where to advertise and how much to spend easier. Instead
+of selling taillight covers to everybody, we narrowed the customer down
+to buyers of 1994 Ford Taurus taillight covers. When you think about how
+you can narrow your own customer definition you'll discover that a number
+of problems with development, marketing, and sales begin to answer
+themselves.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740287"></a>Engineers Often Do It Backwards</h3></div></div></div><p>
+Maybe I'm approaching this backwards—asking you to define your
+customer after you already have a product. But in the software business
+I've often seen technically oriented people come up with what they think
+is a great product and only then look at the business realities. (I'm not
+a marketing person making fun of engineers; I have my own BeMasters
+award. I did it this way myself for too long. It was an expensive
+lesson.) The reality is that to make money you have to serve the needs of
+a particular bunch of customers—to fill a demand in a market. What
+business types do is determine a market that needs to be served, analyze
+of the market's financial structure, and then come up with a product that
+meets those needs while grabbing enough revenue from those customers to
+make a profit. But I see a lot of developers who already have the product
+and are starting to figure out how to sell it.
+</p><p>
+[Now a BeOS plug—the BeOS is an excellent platform upon which to build
+new products. See my article <a class="xref" href="Issue2-45.html#Marketing2-45" title="How to Make a Million Dollars Developing for the BeOS (No Kidding)">How to Make a Million Dollars Developing for the BeOS (No Kidding)</a>]
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740308"></a>Generic Word Processor</h3></div></div></div><p>
+So you have a product—a generic word processor—and you need to find
+customers. Your brother-in-law, who works in medical insurance and needs
+lots of medical transcriptions done, is always complaining about his
+generic word processor—it doesn't format the transcriptions correctly,
+and has many other shortcomings. He'd pay three times what that generic
+word processor costs because it would still save him money.
+</p><p>
+An idea forms. I have a generic word processor that I'm having trouble
+selling even for a low price. I'm aware of a "market" for a specialized
+word processor buyers would pay a lot for...
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740333"></a>Falling Into Place</h3></div></div></div><p>
+Narrowly defining your customer can clarify many marketing and
+development questions. For example, with a generic word processor you
+have the problem of reaching everyone who writes anything. But if your
+product is a medical transcription word processor you start with a
+clearer idea of who you need to reach and how to reach them. Development
+issues come together, like defining a feature set. Sales channels start
+to become apparent.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740352"></a>Reaching the Customer</h3></div></div></div><p>
+With the medical transcription word processor as your product, does it
+seem easier to figure out how to reach medical transcribers than
+"everybody?" You can go to insurance companies and sales offices,
+malpractice attorneys, hospitals, etc. What you need to do is easier to
+understand as you narrow your definition of who the customer is.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740369"></a>Development Issues</h3></div></div></div><p>
+If your customers are medical transcribers, what features do you want to
+add? How about a medical spelling dictionary? Specialized formatting for
+insurance company medical transcription documents? What kind of
+documentation does the specific customer need?
+</p><p>
+Also, methodology for determining your product's feature set defines
+itself. Unlike a product targeted at "everybody," it's easier to decide
+on a good feature set for a product targeted to medical transcribers; you
+observe them at work and ask what they think would improve their
+productivity.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740393"></a>Expanding Your Efforts</h3></div></div></div><p>
+Now that you've defined your customer narrowly, you may find that you
+want to expand from the niche you've captured. This differs from your
+original position of trying to market a generic word processor to
+"everybody." For one thing, you might have found a steady revenue base to
+finance the cost of developing the product further. You also have the
+ability (and experience) to start marketing the expanded product to new
+areas.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-38"></a>Developers Workshop: Scribble Scrabble</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+Many beginning developers we speak with wonder what porting their
+application from Windows to BeOS entails. This article makes a start
+towards answering that question. My goal is to illustrate some of the
+differences between the popular Microsoft Foundation Class (MFC) library
+for Windows and the BeOS API.
+</p><p>
+Since a developer workshop without sample code is like a kindergarten
+classroom without Play Doh, I submit the following for you toddlers to
+investigate:
+</p><p>
+ftp://ftp.be.com/pub/samples/intro/doodle.zip
+</p><p>
+Doodle is essentially a rewrite of the infamous "Scribble" MFC tutorial
+for the BeOS. It's a simple drawing application which supports common
+application features such as file I/O, printing, toolbars, a most
+recently used (MRU) file list, and multiple document views. It implements
+most of the functionality of its Windows cousin.
+</p><p>
+Those of you who are familiar with the MFC library may want to compare
+this code directly with the Scribble source code, available on the Visual
+C++ CD-ROM. I've sprinkled comments across Doodle's code to note specific
+comparisons between the BeOS API and the MFC library; you can browse
+these by searching the source tree for the text "MFC NOTE." Even if
+you're not a rabid Windows aficionado, however, you may still find some
+things in the sample code useful, such as the document architecture and
+toolbars.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740476"></a>Comparing the BeOS API to Windows: a First Look</h3></div></div></div><p>
+The BeOS API presents a level of abstraction somewhere between the Win32
+C-based API and the MFC library. Superficially, the BeOS API bears a
+greater resemblance to the MFC library: it's primarily object oriented,
+and many BeOS API classes are similar to their Microsoft counterparts
+(BRect = CRect, BWindow = CWnd, BView = CView, etc.). However, the MFC
+library provides many things beyond Windows operating system basics that
+the BeOS API doesn't—such as standard command implementations, a
+document management system, and dialog data exchange/validation. In this
+sense, the BeOS API more closely resembles the Win32 API. (On the other
+hand, the BeOS API does do a lot of stuff that the MFC library doesn't;
+I'll cover some of these features below.)
+</p><p>
+I've written Doodle from scratch, without using third party libraries,
+resource editors, or even Microsoft code. This way, you can see exactly
+what the raw BeOS API gives you. Because the BeOS API is at a lower level
+of abstraction, I've provided some of the functionality that's standard
+with the MFC library. The amount of code you'll see in Doodle is
+considerably more than the equivalent in the Scribble tutorial.
+</p><p>
+For the rest of the article I'll document specific design and behavioral
+differences between the MFC library and the BeOS API that I encountered
+while writing Doodle, from general issues to coding specifics.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740506"></a>Multithreading</h3></div></div></div><p>
+One of the most critical differences between Windows and Be programming
+is the threading model. In MFC, you can (and many applications often do)
+get away with using only one thread: the main application thread, which
+implements the main message loop that dispatches messages to all the
+application's windows. While this simplifies development, it's
+unsatisfactory for many applications, including media-based ones, because
+each of your windows, views, and documents is competing for that one
+thread's time. For example, a window in the background doing calculations
+could prevent a window in the foreground from processing messages or
+responding to user input. Multithreading allows these tasks to be
+scheduled separately, so windows can operate smoothly and independently.
+</p><p>
+You can do multithreading in MFC, but you have to implement the different
+threads yourself. Also, the maps the MFC library uses to translate
+between Windows handles and MFC library objects are thread-local, making
+it impossible to pass MFC library classes that use Windows resources
+between threads. Instead, a thread has to pass the lower-level handle to
+the other thread, which wraps a new MFC library object around it on the
+other side.
+</p><p>
+The BeOS takes a different approach. Since each window you create runs in
+its own thread, just about every Be application automatically takes
+advantage of multiple threads. Unlike the MFC library, however, BeOS
+objects have no problems being shared between threads, and many objects
+even help you control access to them through built-in locking mechanisms.
+</p><p>
+In Doodle, this threading model adds some complexity to the system. One
+of the big questions is what to do about the documents, which can be
+associated with multiple window threads, and may want to do calculations
+separately from each other and the other threads. To allow each document
+to function as independently as possible, I decided to derive the
+document class from BLooper, to make documents event- driven objects that
+each run in their own thread, similar to an MFC user interface thread.
+</p><p>
+Such a multithreaded situation requires careful planning (or
+debugging...) of communication between the document, window/view, and
+application threads. I've chosen to have the document communicate with
+the app and windows via asynchronous messages, whereas the windows and
+application communicate with the document through locked, direct access.
+Since the document won't need to lock the windows or application,
+deadlocks are avoided.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740552"></a>Multiple Document Interface and Frame Windows</h3></div></div></div><p>
+There is no MDI analog in BeOS as there is in the MFC library, where the
+main application window is a frame that encloses the document, or
+"child," windows. Thus, porting MDI applications requires extra thought.
+</p><p>
+In writing Doodle and doing away with Scribble's frame window, I divided
+the frame window responsibility among several objects. The application
+became the natural receptacle for Window/Cascade and Window/Tile
+commands; menus and menu handling moved into the child windows; and
+toolbars were transformed into autonomous windows.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740576"></a>Messaging</h3></div></div></div><p>
+Simply put, the built-in messaging mechanism in BeOS is much more
+powerful than what the MFC library provides. Rather than being limited to
+moldy WPARAM and LPARAM arguments, a message in BeOS is a powerful object
+that packages any kind of data in a simple, structured format. BMessage
+also supports scripting, two-way, and inter- application communication.
+Given the extra capabilities of messages, it's a good idea to rethink
+communication strategies in your application; many types of communication
+can be rewritten using messaging in a much more succinct and elegant way.
+</p><p>
+Take, for example, the MRU file list in Doodle. I set up each MRU item in
+the File menu with a message that is dispatched to the application
+whenever the item is invoked. The message contains an entry_ref that
+locates the file to open. These messages end up being processed in
+exactly the same way that Tracker and File/Open entry references are
+processed, so no extra coding is needed.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740597"></a>Modal Windows</h3></div></div></div><p>
+As you would expect in a heavily multithreaded system, BeOS objects work
+particularly well in asynchronous situations. The messaging system is a
+big part of the reason. Instead of trying to access the data directly
+from the modeless window, it's trivial to parcel the data into a BMessage
+and dispatch that to the target instead. This helps eliminate unwanted
+dependencies between the dialog and the recipient.
+</p><p>
+By comparison, modal dialogs are actually more complicated to code in
+BeOS's multithreaded environment because not only does the user interface
+have to limit your actions to the modal window, but the calling thread
+has to block and wait for the modal dialog to finish. The BeOS handles
+the modal UI behavior for you, but you have to implement the thread
+synchronization yourself. For these reasons, and because modeless dialogs
+are often more natural for the user, I generally prefer to use modeless
+dialogs. Dialogs such as the File/Open dialog are implemented as modeless.
+</p><p>
+Still, there are some things that you're best off waiting for. In
+File/Close, for instance, you want to make sure not to delete the window
+or its associated document before the user has a chance to save the
+document's data. This means that the File/Save dialog needs to behave
+modally. In case you do need to implement modal dialogs, Doodle's Pen
+Widths dialog serves as an example.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740628"></a>Graphics Architecture</h3></div></div></div><p>
+Although, unlike many BeOS applications, Doodle's drawing tasks are very
+simple, it's enough to demonstrate that the BeOS graphics architecture is
+more streamlined and versatile than its MFC library counterpart. For
+example:
+</p><div class="orderedlist"><ol><li><p>
+Views know how to draw themselves, and don't rely on an ephemeral
+device context for rendering. (However, in order to draw they must be
+attached to a window or bitmap.)
+</p></li><li><p>
+The BeOS coordinate system is <span class="type">float</span>ing point-based, supporting
+subpixel precision and hassle-free scaling.
+</p></li><li><p>
+The BeOS's concept of mapping modes is a bit different from the MFC
+library. By default, the BeOS works in a typographical mapping mode where
+1 unit translates to 1 pixel on the screen, or 1 point (= 20 twips = 1/72
+inch) on the printed page. It differs slightly from the MFC direct
+mapping modes because the y axis points down. For printing in Doodle, I
+perform an isotropic scaling on the <code class="classname">BView</code> to emulate Scribble's mapping
+mode of MM_LOENGLISH (1 unit = .01 in.) on the printed page.
+</p></li></ol></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740681"></a>Resources</h3></div></div></div><p>
+The only thing I use resources for in Doodle is to store simple
+application data such as signature, icons, and acceptable MIME types.
+These are easy to add to a resource file through the FileTypes preference
+panel. However, you'll notice that the stuff you would normally put into
+a Windows resource, like dialog layouts, menus, accelerators, and
+toolbars, has been coded by hand in Doodle. The BeOS's resource format is
+certainly capable of handling these kinds of data, but there's no
+standard way of editing or using those resources in an application.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740692"></a>The Registry</h3></div></div></div><p>
+Say good-bye to RegEdit—love it or hate it, in BeOS, you won't be
+needing it. You can access the MIME-based BeOS application roster through
+the FileTypes preference panel, or query it programmatically through
+<code class="classname">BRoster</code> and <code class="classname">BMimeType</code>.
+There's also a directory in the system set aside
+for storing application-wide settings
+(<code class="filename">/boot/home/config/settings</code>). Doodle
+uses this area to store the entries in the MRU file list.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740722"></a>Storage</h3></div></div></div><p>
+Analogous to the MFC library's capabilities for serialization and
+structured storage, BeOS offers two classes for managing persistent data:
+<code class="classname">BFlattenable</code> (if you like serializing from
+streams), or <code class="classname">BArchivable</code>
+(which uses a <code class="classname">BMessage</code> to store the data). Because Doodle doesn't need
+any particular control over how the data is written in the file, and the
+items being stored are standard types which <code class="classname">BMessage</code> supports, I used
+<code class="classname">BArchivable</code> in the implementation.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id740758"></a>Conclusion</h3></div></div></div><p>
+I've covered a lot of significant differences between the Be Way of doing
+things, and that Other Way. If you look further, however, you'll realize
+that I've only scratched the surface of comparisons between BeOS and
+Windows development. I've left some important areas for future
+columnists: graphics, audio/video/image manipulation, the file system,
+the add-on/linked library architecture, embedded objects, memory
+management... the list goes on. Though MFC and the BeOS API may look
+similar, the BeOS API is definitely a different animal.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-38"></a>Wintel Restructured?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+In the past few weeks, there's been an unusual amount of media
+speculation regarding a change in the Wintel alliance. Not surprisingly,
+we've been asked what we think of all this and how it affects our future
+in the x-86 world.
+</p><p>
+The interest in the matter is understandable—a tremendous amount of
+energy is stored in the bond between Microsoft and Intel. Intel people,
+by the way, resent the term "Wintel." They refer to it as a typo, and
+they don't like having their company name mangled. With a name like Be,
+we have some sympathy for their position.
+</p><p>
+As to the energy stored in the bond, consider the following scenario. On
+the right, a Pentium processor. On the left, a processor of identical
+computing capabilities, power consumption, and cost, but which doesn't
+run Windows software. Which processor will sell for more?
+</p><p>
+A tremendous amount of profits, shareholder value, and billions of
+dollars are "stored" in the bond between Windows and Intel x-86
+processors. I use the x-86 expression with intent and, in explaining my
+intent, I should refine my use of "Windows." I should write "Windows 9x,"
+because this is the only strain of Windows that is so firmly bonded to
+the x-86 processors. Windows NT runs on other processors (MIPS and
+Alpha). As for the PowerPC, Windows NT ran on it, although I don't know
+if the latest release still does or if future versions will.
+</p><p>
+When the hardware independence of Windows NT was first announced, there
+was much speculation about a diminished role for Intel processors and, as
+a consequence, about a better future for competing architectures.
+Instead, the Pentium took the lion's share of NT systems. With the
+benefit of hindsight, we can appreciate the weight of binary
+compatibility with the huge portfolio of Windows "classic" applications.
+Windows NT might have been hardware independent, but the legacy of
+Windows applications wasn't.
+</p><p>
+For the sake of completeness, various solutions exist to run x-86
+application binaries on Windows NT systems (or Unix, for that matter)
+based on other processors, but slower performance and other complications
+prevented such arrangements from becoming mainstream. The result is that
+Windows NT appears firmly bonded to Intel processors, for the time being.
+It's not yet clear what will happen with NT 5.0, especially if a
+"consumer version" of NT becomes the successor to Windows 98.
+</p><p>
+Windows CE presents a different situation. If anything, it isn't seen at
+all on x-86 processors. There might be technical and business reasons for
+this: power consumption and price. Perhaps, but the fact remains, and
+many have seen it as yet another potential fracture in the
+Intel-Microsoft alliance.
+</p><p>
+On the other hand, Intel appears intent on using the ARM processors for
+consumer-oriented embedded applications, a segment from which it has been
+absent. This could involve Windows CE, or Wind River Systems, a company
+Intel is allied with. Wind River makes the highly respected VxWorks: one
+of its many claims to fame is providing the software platform for the
+Mars Pathfinder vehicle.
+</p><p>
+But the most visible agent of change appears to be Linux. Recently,
+Oracle committed itself to this increasingly popular version of Unix. Not
+to be left behind, IBM has announced the availability of DB2 products on
+Linux. This is, of course, yet another phase of the Unix vs. NT struggle
+for enterprise applications.
+</p><p>
+Whether or not Intel saw it coming, reacted to this, or had reasons of
+their own, I won't speculate. What remains is that Intel, through a
+number of executive pronouncements, has declared itself in favor of
+Linux. Hence the speculation about a fracture in the historic bond
+between Microsoft and Intel. Allegedly, one very senior executive stated
+something to the effect Microsoft software ran on other processors and
+Intel ought to support several operating systems.
+</p><p>
+This leads us to the unavoidable question: How does all this affect us? I
+wish I could predict in detail where this is going but, in general, I
+view it as a positive development—with some caveats. One qualification
+is the role Linux plays in the marketplace. As mentioned above, this
+concerns the Windows NT vs. Unix battle for enterprise applications. Over
+time, through the good work of the Linux community, Linux has become a
+credible Unix alternative, not just to NT, but to the "captive" versions
+of Unix offered by players such as Sun, HP, and others.
+</p><p>
+An "unshackled" version of Unix is attractive to Oracle in its struggle
+against Microsoft. In Oracle's mind, if Windows NT becomes the sole
+enterprise applications platform, over time, Microsoft will leverage
+ownership of the OS into dominating the enterprise segments Oracle today
+derives its profits from. IBM probably follows a similar line of
+reasoning.
+</p><p>
+We are not in the battle to become an alternative to Windows NT in
+enterprise applications. Our goal is to coexist with, rather than replace
+the general-purpose Windows 98, to complement it in media-rich
+applications where its office-productivity roots prevent it from making
+the best use of the underlying hardware.
+</p><p>
+Another caveat lies in the phrase "credible Unix alternative." We're not
+attempting a better implementation of an existing OS, and we have more to
+do and to prove in order to achieve the same level of credibility that
+Linux now enjoys. The upcoming Release 4 of the BeOS will be an
+opportunity to make serious progress in that direction.
+</p><p>
+In a world where the dominant belief is that we are confined to a one-OS
+space, it's difficult to make our more ecumenical case. As you can
+imagine, we welcome the shift in common wisdom the success of Linux has
+brought. An interesting question remains: What will happen to the energy
+stored in the (ambi)valence bond?
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-37.html">Issue 3-37, September 16, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-39.html">Issue 3-39, September 30, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-37.html" title="Issue 3-37, September 16, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-39.html" title="Issue 3-39, September 30, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

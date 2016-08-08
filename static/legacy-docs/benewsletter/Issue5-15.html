@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 5: 2000</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume5.html" title="Volume 5: 2000" /><link rel="prev" href="Issue5-14.html" title="Issue 5-14, April 5, 2000" /><link rel="next" href="Issue5-16.html" title="Issue 5-16, April 19, 2000" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue5-14.html" title="Issue 5-14, April 5, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue5-16.html" title="Issue 5-16, April 19, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 5: 2000</div></div><div id="headerB">Prev: <a href="Issue5-14.html">Issue 5-14, April 5, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-16.html">Issue 5-16, April 19, 2000</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue5-15"></a>Issue 5-15, April 12, 2000</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering5-15"></a>Be Engineering Insights: Writing Video Drivers for BeOS</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Andrew</span> <span class="surname">Kimpton</span></span></div></div></div><p>
+Like many engineers, I get a lot of my motivation from having something
+new on my desk, a gadget, widget (or toy, as my wife prefers to call it).
+I recently bought a new Sony laptop, which like most on the market uses a
+Neomagic graphics controller. BeOS runs just fine on this notebook. Mine
+even came with two 4GB partitions on the 8GB drive--made just for
+multiple OS's!
+</p><p>
+BeOS supports the Neomagic family of graphics controllers from the old
+Neomagic 128 (aka 2070) through to the newer Neomagic 256AV (aka 2200)
+and the variants in between. Unfortunately, that support is achieved
+through the "old" style app server add-ons, rather than the newer (and
+blessed) app server accelerants. Whilst it works it's not "current" and
+doesn't do some things I'd like - such as centering the display when the
+resolution is less than the size of the
+<acronym class="acronym" title="Liquid Crystal Display">LCD</acronym> panel,
+or supporting <acronym class="acronym">DPMS</acronym> to
+turn the display off when not in use. So, given the hardware and
+motivation, here's an example of an app server accelerant you can write
+for the Neomagic chips.
+</p><p>
+Oh, yes...one last "wrinkle" - there's no public documentation available
+on these chips, so our information is derived from the sources contained
+within the XFree86 X-Windows server for Un*x, and from previous
+experience with programming
+<em class="firstterm"><acronym class="acronym" title="Video Graphics Array">VGA</acronym></em>
+controllers (the sort of stuff I'm afraid
+you can't easily find in a single book; you have to get "apprenticed" to
+a master and learn it that way 8-)
+</p><p>
+This is a fairly large project, so it'll be split up into a few
+newsletter articles. Initially we'll look at the significant parts of the
+kernel level hardware driver, then the parts of the app server accelerant
+necessary for basic framebuffer access. We'll also cover a couple of
+bells and whistles: subsequent articles will deal with adding support for
+a hardware cursor and handling hardware acceleration of 2D operations.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id434657"></a>The Kernel Driver</h3></div></div></div><p>
+For video cards the kernel driver is a fairly simple beast (in most
+cases), providing a mechanism to establish that a card is installed and
+to map sections of the cards Memory into the address space for others to
+access. The driver may also need to provide a couple of convenience
+routines for accessing <acronym class="acronym">VGA</acronym> registers and possibly an interrupt handler,
+if you need to do something special, such as catch the vertical blanking
+moment.
+</p><p>
+Taking a look through the source for the driver (<code class="filename">driver.c</code>)
+<code class="function">init_hardware()</code> simply walks the list of <acronym class="acronym">PCI</acronym> devices to establish whether
+something significant to this driver is installed. <code class="function">init_driver()</code> is a
+little more interesting. It allocates some per-driver storage and creates
+a lock that we can use to serialize access to the driver. Once again, it
+looks for installed hardware by calling <code class="function">probe_devices()</code>. Finally it
+optionally adds some extra commands to the kernel debugger. This is a
+useful trick that lets us print out significant information from within
+the kernel debugger; it's perfectly feasible to use this technique from
+any driver.
+</p><p>
+If the hardware is not installed, <code class="function">init_driver()</code> will never be called and
+the commands never added to the kernel debugger. <code class="function">probe_devices()</code> again
+walks the list of installed hardware,building a
+<code class="filename">/dev/graphics</code> entry for
+each piece of hardware that is significant to this driver. The name of
+the entry follows a set of rules defined by Trey Boudreau, which allows
+<code class="command">ls /dev/graphics</code> to be decoded by humans to determine installed hardware
+and its location on the <acronym class="acronym">PCI</acronym> bus. <code class="function">publish_devices()</code> simply uses the array
+created during <code class="function">probe_devices()</code> to tell the OS what should be presented in
+<code class="filename">/dev/graphics</code>.
+Only two of the remaining functions deserve any special
+attention: the open and control functions. The first time this device is
+opened (generally by the app-server) <code class="function">nm_opened()</code> will call <code class="function">first_open()</code>.
+<code class="function">first_open()</code> will allocate an area that will be shared between the driver
+and the accelerant. It will contain pointers to certain parts of the card
+and other useful pieces of configuration information, such as the
+cardinfo structure globally referenced as "ci" in both the driver and the
+accelerant. <code class="function">first_open()</code> will also call <code class="function">map_physical_memory()</code> to map the
+device's framebuffer RAM and memory-mapped registers into accessible
+memory so that the app server and its accelerant can write to them. You
+would set up and install an interrupt handler inside <code class="function">first_open()</code> if you
+needed one.
+</p><p>
+<code class="function">nm_control()</code> is where most of the work during operation is performed.
+This function provides one standard <code class="function">ioctl()</code> selector and three private
+ones. The standard selector required for all graphics device drivers is
+<code class="constant">B_GET_ACCELERANT_SIGNATURE</code>. During the app server startup it scans and
+opens each entry in <code class="filename">/dev/graphics</code>
+and then calls <code class="function">ioctl()</code> with
+<code class="constant">B_GET_ACCELERANT_SIGNATURE</code> for the opened device. Graphics devices should
+then return a string with the name of the accelerant for this device. The
+app server will load this accelerant and continue the initialization
+process through the accelerant.
+</p><p>
+The three private <code class="function">ioctl()</code> selectors in our driver are actually quite
+standard and will probably be needed by any driver. Since the card_info
+structure is stored in an area, if the ID of that area is known it can be
+cloned and then shared by multiple applications. It's this mechanism that
+allows the accelerant to share data with the driver. Lastly, we need to
+be able to read and write <acronym class="acronym">VGA</acronym> registers. These registers reside in the
+bottom of system memory (at locations such as 0x3d4). They can only be
+written to or read from by kernel software, so we provide two <code class="function">ioctl()</code>
+selectors that allow arbitrary access for byte reads and writes to this
+area.
+</p><p>
+The remainder of the kernel driver is largely standard or even
+unimplemented. Reading and writing to the graphics device doesn't make as
+much sense as you might at first think. Other functions simple reverse he
+work of their partners (<code class="function">nm_open()</code> and <code class="function">nm_close()</code>). For more information
+on general driver "things," Todd Thomas's recent articles on USB drivers
+(Parts 1 and 1.01) are a good source
+(<a class="xref" href="Issue5-11.html#DevWorkshop5-11" title="Developers' Workshop: Writing a USB Video Camera Driver, Part 1">Developers' Workshop: Writing a USB Video Camera Driver, Part 1</a>)
+and
+(<a class="xref" href="Issue5-12.html#DevWorkshop5-12" title="Developers' Workshop: Writing a USB Video Camera Driver, Part 1.01">Developers' Workshop: Writing a USB Video Camera Driver, Part 1.01</a>).
+</p><p>
+And now on to the app server accelerant. An accelerant has one primary
+entry point - <code class="function">get_accelerant_hook()</code> - which returns the addresses of
+other functions as requested by the app server.
+</p><p>
+The functions are in five groups:
+</p><ul class="itemizedlist"><li><p>
+Accelerant initialization and "cloning" - used mostly by the Game Kit
+for <code class="classname">BWindowScreen</code>
+</p></li><li><p>
+Mode configuration - determining supported screen resolutions and
+depths, setting a given mode, handling the palette for 8-bit (256
+color) modes, and handling Display Power Management System (<acronym class="acronym">DPMS</acronym>).
+</p></li><li><p>
+Cursor management - setting the cursor shape and mask, and moving the
+location of the cursor onscreen.
+</p></li><li><p>
+Synchronization - reporting which of the app server's BLIT requests
+have completed.
+</p></li><li><p>
+2D Acceleration - carrying out BLIT requests to use hardware features
+(if available) to perform fast fills or copy areas of the screen.
+</p></li></ul><p>
+At the early stage of accelerant development only the Init function and
+mode onfiguration are mandatory in order to actually see the desktop on
+screen. If the clone functions are not implemented <code class="classname">BWindowScreen</code> will not
+work, and without an implementation of hardware cursor functions
+<code class="classname">BDirectWindow</code> will not work fully. Also, there is a significant
+performance penalty for not mplementing the 2D acceleration features,
+since the system CPU will have o do work that could be off-loaded onto
+the graphics chip. But hey! You'll see "something"!
+</p><p>
+So let's plough on with the work. Our <code class="function">init()</code> function
+uses the <code class="constant">GETGLOBALS</code>
+ioctl selector to retrieve the <span class="type">area_id</span> of the Card Info structure the
+hardware river setup. We call <code class="function">clone_area()</code> with that <span class="type">area_id</span> so that we
+have a shared area of memory that the driver and accelerant can
+communicate through. We then set some basic information in that
+structure, such as memory size, etc. We also build a list of available
+display modes that we can use later during the mode setting process.
+</p><p>
+Mode configuration can often seem the most complicated part of the
+process, and can also be the most frustrating, since problems at this
+stage ill nearly always result in either no display at all or an
+unreadable display. The app server calls four functions to handle mode
+configuration: <code class="function">_get_accelerant_mode_count()</code> to find how many different
+modes are available; <code class="function">_get_mode_list()</code> to return a complete list of all
+available modes; and <code class="function">_propose_display_mode()</code> when small adjustments have
+been made to a previously chosen mode. These adjustments are the sort of
+thing that would result from using the slider in the Screen Preferences
+panel to adjust the refresh rate, and the call can actually be ignored -
+as is the case in this driver. Finally <code class="function">_set_display_mode()</code> does all the
+real work. Ultimately <code class="function">_set_display_mode()</code> calls <code class="function">SetupCRTC()</code> in this
+sample driver to get all the work done. Let's walk through this function
+and look at what it does.
+</p><p>
+Much current graphics chip programming still carries lots of legacy from
+<acronym class="acronym">VGA</acronym> (and even earlier) display standards. All of our clock values
+(particularly the value for horizontal timing) need to be converted from
+"pixel" values to "character" values; this means dividing by 8, since
+characters are 8 pixels wide. For simplicity, we'll also extract the
+values for vertical timing into local variables too, to make the code a
+little easier to read.
+</p><p>
+In order to have the electron beam of a CRT paint an image, the beam (a
+pretty analog device) needs a certain amount of setup time before and
+after the actual drawing area. This could be considered to be when the
+beam is scanning in space outside the edge of the picture tube. There is
+also a certain amount of time required for the beam to retrace from the
+right edge of the screen to the left edge, and from the bottom to the
+top. So hsyncstartand hsyncend correspond to "edges" of the area. hdisp
+is the actual time the beam is "painting" visible data, htotal is the
+total time required to draw one line and retrace back to the beginning of
+the next.
+</p><p>
+Driving all of this is a clock that needs to be correctly programmed to
+give the appropriate pulse rate to drive the whole analog system.
+Fortunately for us, in this example we're driving an <acronym class="acronym">LCD</acronym> screen directly
+(as opposed to driving an external <acronym class="acronym">LCD</acronym> panel through a standard <acronym class="acronym">VGA</acronym>
+connector), so programming the clock is unnecessary (we'll cover it in
+another article dealing with simultaneous display on the <acronym class="acronym">LCD</acronym> and an
+external monitor).
+</p><p>
+The code should be self-explanatory but there are some points worth
+noting: The Neomagic chip uses the basic standard <acronym class="acronym">VGA</acronym> registers and adds
+some extensions. <acronym class="acronym">VGA</acronym> registers are programmed by writing an index value
+to a particular location and then writing the 1-byte data value to the
+location after the index. After the data has been written the index is
+assumed to have incremented by one, so writing to the data location a
+second time will write to the next register in the table. There are four
+main groups of registers. The attribute and sequence egisters generally
+contain the standard values seen in this sample. The CRT controller and
+Extension registers need to be programmed on a per mode basis in many
+cases, and it is these registers that are often extended for additional
+features (as can be seen in the Neomagic chip).
+</p><p>
+Finally, there are the DAC and palette registers. One section of code in
+the driver appears to read and discard a value from the DAC register four
+times before writing 0 to the register. This apparent waste of reads is
+necessary to "uncover" a particular DAC register before writing a value
+to it. The palette of the Neomagic chips is 6 bits each for Red, Green,
+and Blue (except in 24bpp mode when it's 8 bits). The size of the per
+"gun" values of a palette varies from chip to chip; however if your image
+seems too dark, washed out, or has a particular colour cast to it, you're
+probably not shifting the palette values appropriately before writing to
+them.
+</p><p>
+After talking extensively about the indexed style of <acronym class="acronym">VGA</acronym> registers, it's
+worth noting that some vendors have switched to more "regular"
+memory-mapped registers for their <acronym class="acronym">PCI</acronym>/AGP video controllers (thankfully).
+3Dfx is one good example of this, and is a company which has published
+its register specifications.
+</p><p>
+Our example driver is at this point functional: it displays a picture,
+allows you to chose different display modes, and even supports <acronym class="acronym">DPMS</acronym>.
+However, it's not fast, and doesn't have a hardware cursor. Those are
+both topics for a future article in the next couple of weeks.
+</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue5-14.html">Issue 5-14, April 5, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-16.html">Issue 5-16, April 19, 2000</a> </div><div id="footerB"><div id="footerBL"><a href="Issue5-14.html" title="Issue 5-14, April 5, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue5-16.html" title="Issue 5-16, April 19, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-41.html" title="Issue 3-41, October 14, 1998" /><link rel="next" href="Issue3-43.html" title="Issue 3-43, October 27, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-41.html" title="Issue 3-41, October 14, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-43.html" title="Issue 3-43, October 27, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-41.html">Issue 3-41, October 14, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-43.html">Issue 3-43, October 27, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-42"></a>Issue 3-42, October 21, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-42"></a>Be Engineering Insights: Optimizing Your Applications for Cache and
+Memory Access</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dmitriy</span> <span class="surname">Budko</span></span></div></div></div><p>
+Today's high-performance CPUs (Pentium II, PowerPC 604) are fast, but
+without a good memory and cache system they are helpless. Just try using
+any Intel system with the cache disabled in the BIOS setting! The CPU
+will spend 95% of its time waiting for data from RAM or waiting until
+data is written to RAM.
+</p><p>
+Caches minimize this time by keeping the most recently used data in small
+but fast memory near the CPU. Normally, this is all an application
+programmer needs to know, because all details related to cache/memory
+coherency, bus mastering devices, and multiple CPUs for an application
+are transparent.
+</p><p>
+Nevertheless, if you care about the performance of your code you have to
+know much more, or your code will run faster on an old Pentium 166 MHz
+system than on a new, fast Pentium II 300 MHz system with 512K cache,
+<acronym class="acronym" title="Synchronous Dynamic Random Access Memory">SDRAM</acronym>, etc.
+</p><p>
+You don't believe it—or you think that this code must be black magic,
+written in assembler? Wrong. The example I'm presenting here is very
+simple and straightforward, but *is* memory intensive. High-memory
+traffic is also characteristic of BeOS multimedia applications.
+</p><p>
+The example program is the primitive implementation of the classic
+<a class="link" href="http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Erastosthenes Sieve</a>
+algorithm for searches of prime numbers. This
+implementation can be sped up easily but I preferred here to focus on
+cache effects.
+</p><p>
+The main loop is terse:
+</p><pre class="programlisting c">
+for(<code class="varname">i</code>=2; <code class="varname">i</code>&lt;=<code class="varname">sqrt_max</code>; <code class="varname">i</code>++) <span class="comment">/* don't search all numbers */</span>
+  {
+    if(!<code class="varname">list</code>[<code class="varname">i</code>])   <span class="comment">/* i is a prime number */</span>
+      {
+        <span class="comment">/* mark as non-prime all multiples of i */</span>
+        for(<code class="varname">j</code>=<code class="varname">i</code>+<code class="varname">i</code>; <code class="varname">j</code>&lt;=<code class="varname">nmax</code>; <code class="varname">j</code>+=<code class="varname">i</code>)
+          <code class="varname">list</code>[<code class="varname">j</code>] = 1;
+      }
+  }
+</pre><p>
+As you see, the code is very straightforward but it runs faster on a
+Pentium 166 than on a Pentium II 300 MHz! Here's the full text of the
+test program:
+</p><pre class="programlisting c">
+#include &lt;OS.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include &lt;string.h&gt;
+
+#define <code class="constant">NMAX</code> (8*1024*1024)
+
+<span class="type">double</span> <code class="function">get_sec</code>(<span class="type">void</span>)
+{
+  return (<span class="type">double</span>)<code class="function">system_time</code>()/1.0e6;
+}
+
+<span class="comment">/* simple implementation */</span>
+<span class="type">void</span> <code class="function">sieve1</code>(<span class="type">unsigned char*</span> <code class="parameter">list</code>, <span class="type">int</span> <code class="parameter">nmax</code>)
+{
+  <span class="type">int</span> <code class="varname">i</code>,<code class="varname">j</code>;
+  <span class="type">int</span> <code class="varname">sqrt_max</code>;
+
+  <code class="varname">sqrt_max</code> =  (<span class="type">int</span>)(<code class="function">sqrt</code>(<code class="parameter">nmax</code>)+0.5);
+
+  for(<code class="varname">i</code>=2; <code class="varname">i</code>&lt;=<code class="varname">sqrt_max</code>; <code class="varname">i</code>++)
+  {
+    if(!<code class="parameter">list</code>[<code class="varname">i</code>])
+    {
+      for(<code class="varname">j</code>=<code class="varname">i</code>+<code class="varname">i</code>; <code class="varname">j</code>&lt;=<code class="parameter">nmax</code>; <code class="varname">j</code>+=<code class="varname">i</code>)
+        <code class="parameter">list</code>[<code class="varname">j</code>] = 1;
+    }
+  }
+}
+
+<span class="comment">/* the same but without unnecessary memory writes */</span>
+<span class="type">void</span> <code class="function">sieve2</code>(<span class="type">unsigned char*</span> <code class="parameter">list</code>, <span class="type">int</span> <code class="parameter">nmax</code>)
+{
+  <span class="type">int</span> <code class="varname">i</code>,<code class="varname">j</code>;
+  <span class="type">int</span> <code class="varname">sqrt_max</code>;
+
+  <code class="varname">sqrt_max</code> =  (<span class="type">int</span>)(<code class="function">sqrt</code>(<code class="parameter">nmax</code>)+0.5);
+
+  for(<code class="varname">i</code>=2; <code class="varname">i</code>&lt;=<code class="varname">sqrt_max</code>; <code class="varname">i</code>++)
+  {
+    if(!<code class="parameter">list</code>[<code class="varname">i</code>])
+    {
+      for(<code class="varname">j</code>=<code class="varname">i</code>+<code class="varname">i</code>; <code class="varname">j</code>&lt;=<code class="parameter">nmax</code>; <code class="varname">j</code>+=<code class="varname">i</code>)
+        if(!<code class="parameter">list</code>[<code class="varname">j</code>])     <span class="comment">/* it's not already marked */</span>
+          <code class="parameter">list</code>[<code class="varname">j</code>] = 1;   <span class="comment">/* mark it */</span>
+    }
+  }
+}
+
+<span class="comment">/* the same but use only 1 bit not 1 byte per number */</span>
+#define <code class="function">TEST_LIST_BIT</code>(<code class="parameter">n</code>) ( (<code class="varname">list</code>[<code class="parameter">n</code>&gt;&gt;3] &amp;  (1&lt;&lt;(<code class="parameter">n</code>&amp;7))) != 0)
+#define <code class="function">SET_LIST_BIT</code>(<code class="parameter">n</code>)  ( (<code class="varname">list</code>[<code class="parameter">n</code>&gt;&gt;3] |= (1&lt;&lt;(<code class="parameter">n</code>&amp;7)))  )
+
+<span class="type">void</span> <code class="function">sieve3</code>(<span class="type">unsigned char*</span> <code class="parameter">list</code>, <span class="type">int</span> <code class="parameter">nmax</code>)
+{
+  <span class="type">int</span> <code class="varname">i</code>,<code class="varname">j</code>;
+  <span class="type">int</span> <code class="varname">sqrt_max</code>;
+
+  <code class="varname">sqrt_max</code> =  (<span class="type">int</span>)(<code class="function">sqrt</code>(<code class="parameter">nmax</code>)+0.5);
+
+  for(<code class="varname">i</code>=2; <code class="varname">i</code>&lt;=<code class="varname">sqrt_max</code>; <code class="varname">i</code>++)
+  {
+    if(!<code class="function">TEST_LIST_BIT</code>(<code class="varname">i</code>))
+    {
+      for(<code class="varname">j</code>=<code class="varname">i</code>+<code class="varname">i</code>; <code class="varname">j</code>&lt;=<code class="parameter">nmax</code>; <code class="varname">j</code>+=<code class="varname">i</code>)
+        <code class="function">SET_LIST_BIT</code>(<code class="varname">j</code>);
+    }
+  }
+}
+
+<span class="type">void</span> <code class="function">sieve4</code>(<span class="type">unsigned char*</span> <code class="parameter">list</code>, <span class="type">int</span> <code class="parameter">nmax</code>)
+{
+  <span class="type">int</span> <code class="varname">i</code>,<code class="varname">j</code>;
+  <span class="type">int</span> <code class="varname">sqrt_max</code>;
+
+  <code class="varname">sqrt_max</code> =  (<span class="type">int</span>)(<code class="function">sqrt</code>(<code class="parameter">nmax</code>)+0.5);
+
+  for(<code class="varname">i</code>=2; <code class="varname">i</code>&lt;=<code class="varname">sqrt_max</code>; <code class="varname">i</code>++)
+  {
+    if(!<code class="function">TEST_LIST_BIT</code>(<code class="varname">i</code>))
+    {
+      for(<code class="varname">j</code>=<code class="varname">i</code>+<code class="varname">i</code>; <code class="varname">j</code>&lt;=<code class="parameter">nmax</code>; <code class="varname">j</code>+=<code class="varname">i</code>)
+        if(!<code class="function">TEST_LIST_BIT</code>(<code class="varname">j</code>))
+          <code class="function">SET_LIST_BIT</code>(<code class="varname">j</code>);
+    }
+  }
+}
+
+<span class="type">double</span> <code class="function">profile_sieve</code>(<span class="type">void</span> (*<code class="parameter">sf</code>)(<span class="type">unsigned char*</span>, <span class="type">int</span>),
+  <span class="type">const char*</span> <code class="parameter">name</code>, <span class="type">unsigned char*</span> <code class="parameter">list</code>, <span class="type">int</span> <code class="parameter">nmax</code>)
+{
+  <span class="type">double</span>    <code class="varname">t1</code>, <code class="varname">t2</code>, <code class="varname">dt</code>;
+
+  <code class="function">memset</code>(<code class="parameter">list</code>, 0, <code class="parameter">nmax</code>);
+  <code class="varname">t1</code> = <code class="function">get_sec</code>();
+  <code class="parameter">sf</code>(<code class="parameter">list</code>, <code class="parameter">nmax</code>);
+  <code class="varname">t2</code> = <code class="function">get_sec</code>();
+  <code class="varname">dt</code> = <code class="varname">t2</code> - <code class="varname">t1</code>;
+
+  <code class="function">printf</code>("%s: %4.3f sec\n", <code class="parameter">name</code>, <code class="varname">dt</code>);
+  return <code class="varname">dt</code>;
+}
+
+<span class="type">unsigned char</span> <code class="varname">primes_list</code>[<code class="constant">NMAX</code>+1];
+
+<span class="type">int</span> <code class="function">main</code>()
+{
+  <code class="function">profile_sieve</code>(<code class="function">sieve1</code>, "sieve1", <code class="varname">primes_list</code>, <code class="constant">NMAX</code>);
+  <code class="function">profile_sieve</code>(<code class="function">sieve2</code>, "sieve2", <code class="varname">primes_list</code>, <code class="constant">NMAX</code>);
+  <code class="function">profile_sieve</code>(<code class="function">sieve3</code>, "sieve3", <code class="varname">primes_list</code>, <code class="constant">NMAX</code>);
+  <code class="function">profile_sieve</code>(<code class="function">sieve4</code>, "sieve4", <code class="varname">primes_list</code>, <code class="constant">NMAX</code>);
+
+  return 0;
+}
+</pre><p>
+The results with gcc -O3 and Metrowerks cc -O3 (smaller numbers are
+better) in seconds are
+</p><pre class="screen">
+          PPC 604e 132    Pentium 166       PentiumII 300
+sieve1       9.36            1.97              2.75
+sieve2       6.97            3.83              1.76
+sieve3       4.80            3.72              1.48
+sieve4       3.53            2.80              1.03
+</pre><p>
+On the sieve1 function, the Pentium 166 is much faster than the Pentium
+II 300. What's wrong with this version?
+</p><p>
+Pentium Pro and Pentium II processors have a "write allocate by
+read-for-ownership" cache, whereas the Pentium processor has a
+"no-write-allocate; write through on write miss" cache. On Pentium Pro
+and Pentium II processors, when a write occurs and the write misses the
+cache, the entire 32-byte cache line is fetched.
+</p><p>
+On the Pentium processor, when the same write miss occurs, the write is
+simply sent out to memory. Write allocate is generally advantageous,
+since sequential stores are merged into burst writes and the data remains
+in the cache for use by later loads. This is why P6- family processors
+and PowerPC 603 and 604 adopted this write strategy, and why some Pentium
+processor system designs implement it for the L2 cache, even though the
+Pentium processor uses write-through on a write miss.
+</p><p>
+However, write allocate can be a disadvantage in code where:
+</p><ul class="itemizedlist"><li><p>
+Just one piece of a cache line is written.
+</p></li><li><p>
+The entire cache line is not read.
+</p></li><li><p>
+Strides are larger than the 32-byte cache line.
+</p></li><li><p>
+Writes are made to a large number of addresses.
+</p></li></ul><p>
+When a large number of writes occur within an application, as in the
+sieve1 function, and both the stride is longer than the 32-byte cache
+line and the array is large, every store on a Pentium Pro or Pentium II
+processor will cause an entire cache line to be fetched. In addition,
+this fetch will probably replace one (sometimes two) dirty cache lines.
+</p><p>
+What are the possible optimizations?
+</p><p>
+Sieve2 checks the value prior to writing, and thus reduces the number of
+writes of dirty cache lines to memory.
+</p><p>
+Sieve3 packs the byte array into bit array, thereby reducing the size of
+the array, which reduces memory and cache traffic.
+</p><p>
+Sieve4 use both techniques.
+</p><p>
+So, when you write performance-critical code think about cache behavior.
+This article illustrates only one specific speed trap—there are many
+more. For a better understanding of how interactions between hardware and
+software affect performance, I recommend the excellent textbook
+</p><p>
+Computer Architecture: A Quantitative Approach,<br />
+by David Patterson and John Hennesy, ISBN 1-55860-329-8.
+</p><p>
+Specific recommendations for Intel CPUs are in the
+</p><p>
+Intel Architecture Optimizations Manual,<br />
+<a class="link" href="http://developer.intel.com/design/pentiumii/manuals/242816.htm">http://developer.intel.com/design/pentiumii/manuals/242816.htm</a>
+</p><p>
+which was used as a reference for this article.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-42-2"></a>Be Engineering Insights: Scrolling to Oblivion</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steven</span> <span class="surname">Black</span></span></div></div></div><p>
+Hello again. After my initial idea for a Newsletter article fell through,
+(alas, it even had functional example code), I had to settle for
+something quick and straightforward, as QA, along with the rest of
+engineering, is busy preparing for R4.
+</p><p>
+So, we'll just talk about scrolling.
+</p><p>
+ftp://ftp.be.com/pub/samples/interface_kit/scrollbarapp.zip
+</p><p>
+In the Be API, there are <code class="classname">BScrollBar</code>s and
+<code class="classname">BScrollView</code>s. Most applications use
+<code class="classname">BScrollViews</code>. A few applications that want to override specific behavior
+don't use <code class="classname">BScrollView</code>s.
+</p><p>
+Applications like the <span class="application">Tracker</span>, with the horizontal scroll bar starting
+after the status area, and <span class="application">NetPositive</span> with scroll bars that disappear
+and reappear, do not use <code class="classname">BScrollView</code>s—they handle the scroll bars
+themselves.
+</p><p>
+Under normal circumstances you use <code class="classname">BScrollView</code>s and the scroll bars are
+handled more or less automatically. And that's the situation this article
+deals with.
+</p><p>
+Let's start out with a relatively common example for text. Suppose you
+have a <code class="classname">BTextView</code>, and you decide it should have one or more scroll bars.
+With the Be API it's completely painless to add them.
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BTextView</code> *</span><code class="varname">text</code>;
+. . .
+<code class="classname">BRect</code> fr = frame; <span class="comment">// derived from the window frame</span>
+<code class="varname">fr</code>.<code class="varname">right</code> -= <code class="constant">B_V_SCROLL_BAR_WIDTH</code> + 1;
+<code class="varname">fr</code>.<code class="varname">bottom</code> -= <code class="constant">B_H_SCROLL_BAR_HEIGHT</code> + 1;
+. . .
+
+<code class="varname">text</code> = new <code class="classname">BTextView</code>(<code class="varname">fr</code>, "textView", <code class="varname">textrect</code>,
+  <code class="constant">B_FOLLOW_ALL_SIDES</code>, <code class="constant">B_WILL_DRAW</code> | <code class="constant">B_NAVIGABLE</code>);
+
+<code class="methodname">AddChild</code>(new <code class="classname">BScrollView</code>("TextScroll", <code class="varname">text</code>,
+  <code class="constant">B_FOLLOW_ALL_SIDES</code>, 0, <code class="constant">true</code>, <code class="constant">true</code>));
+</pre><p>
+The frame must include space around it for the scroll bars. If your frame
+doesn't take into account the size of the scroll bars, the scroll bars
+may not be visible, which would make them useless.
+</p><p>
+You also need to specify your initial text rectangle. (Note that the text
+rectangle is specific to the text view and differs from the view's frame
+rectangle.) While the bottom of this rectangle will grow to fit, the left
+and right coordinates determine things such as where line wrap occurs and
+where text aligns for right and centered alignment. (If you don't use
+line wraps, the text disappears when it reaches the bounds of the text
+rectangle.)
+</p><p>
+When you create the <code class="classname">BScrollView</code>, you specify
+the <code class="classname">BView</code> that will be
+surrounded and controlled by it, followed by your resizing mode and flags
+as usual, and more importantly, which scroll bars you want to have (both
+horizontal and vertical).
+</p><p>
+<code class="classname">BTextView</code>s handle the scroll bars automatically. The scroll bars are
+automatically resized as the content of the <code class="classname">BTextView</code> grows and shrinks.
+If you can use a fixed text frame, you may only need to call
+<code class="code"><code class="methodname">SetWordWrap</code>(<code class="constant">true</code>)</code>,
+and only if you want word wrapping.
+</p><p>
+However, many applications use text views for other purposes than simple
+direct user input. Medium-sized to large scrollable <code class="classname">BTextView</code>s are quite
+common. Almost all of them have some form of word wrap. This is all
+handled the same way if you're wrapping at a constant location. However,
+if your view is being resized, you'll probably want to adjust your text
+rectangle to match.
+</p><p>
+There are two different, nonexclusive kinds of word wrap. There's
+wrapping at a fixed point, and there's wrapping at the edge of the view.
+The key to each is when you wrap at a fixed point you emulate physical
+(i.e., hardware) limitations, and when you wrap at the edge of the view,
+you no longer require the horizontal scroll bar.
+</p><p>
+The key to wrapping at the edge of the view is to catch <code class="methodname">FrameResized()</code>
+messages and properly adjust your text frame when they occur.
+</p><p>
+If you don't want to wrap at all, you need to make sure your text region
+is large enough for all of your text. Many programs just allocate a
+presumably larger-than-needed text rectangle. (Examples of this approach
+include at least one popular programmer's editor on BeWare.) Most people
+can get away with just counting the lines and finding the longest line
+available—though this gets slow with large files.
+</p><p>
+However, I digress—let's get back to scrolling.
+</p><p>
+<code class="classname">BTextView</code>s pretty much take care of themselves, after they're all
+configured. All the scroll bar handling is done by the <code class="classname">BTextView</code>. Views
+containing images are much more interesting, as you need to create that
+view and handle the scroll bar on your own.
+</p><p>
+Images are typically contained in <code class="classname">BBitmap</code>s in memory. Views support a
+variety of pleasant ways to draw <code class="classname">BBitmap</code>s. Another pleasantry: though
+image storage formats vary dramatically, with the Translation Kit it's
+easy to take a file and get a <code class="classname">BBitmap</code> from it (providing the appropriate
+Translator exists for that format, of course).
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BBitmap</code> *</span><code class="varname">image</code>;
+<code class="varname">image</code> = <code class="classname">BTranslationUtils</code>::<code class="methodname">GetBitmapFile</code>(<code class="varname">name</code>);
+</pre><p>
+That's really all you need to get an image from a filename in BeOS. And
+-- you must remember to link in the Translation Kit, as it's not normally
+included. It's all in <code class="filename">libtranslation.so</code>.
+</p><p>
+Additionally, some scaling is often required. I identify two different
+types of scaling. There's scaling to fit the window, done by some
+arbitrary percentage. There's also scaling to fit the screen while
+keeping the aspect ratio, which is actually an adaptation of scaling by a
+fixed percentage.
+</p><p>
+The first thing to be aware of with images and scroll views is that not
+much is handled automatically. You're going to need to make some sort of
+view for the <code class="classname">BBitmap</code> to be in, and it will at least need a Draw method.
+</p><p>
+We've already mentioned the basic <code class="classname">BScrollView</code> call, so I won't rehash
+that. Instead I'll concentrate on things you need to do for
+non-<code class="classname">BTextView</code>s.
+</p><p>
+Images have a fixed size, and if you're not scaling the image, you'll
+either have the view background color, or, if you've set the background
+color to a transparent color (either <code class="constant">B_TRANSPARENT_32_BIT</code> or
+<code class="constant">B_TRANSPARENT_8_BIT</code>), you'll have garbage in the section of the view not
+covered by the image. You can remedy this problem by properly setting
+(and resetting) the size of the <code class="classname">BWindow</code> and view involved.
+</p><p>
+The view containing the image needs to adjust the scroll bars as needed.
+This includes the proportion, the range, and the steps. Instead of trying
+to explain what I think are rather straightforward calls to adjust the
+scroll bar, here's the section of the code that I used.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TImageView</code>::<code class="methodname">FixupScrollbars</code>(<span class="type">void</span>)
+{
+  <code class="classname">BRect</code> <code class="varname">bounds</code>;
+  <span class="type"><code class="classname">BScrollBar</code> *</span><code class="varname">sb</code>;
+
+  <code class="varname">bounds</code> = <code class="classname">Bounds</code>();
+  <span class="type">float</span> <code class="varname">myPixelWidth</code> = <code class="varname">bounds</code>.<code class="methodname">Width</code>();
+  <span class="type">float</span> <code class="varname">myPixelHeight</code> = <code class="varname">bounds</code>.<code class="methodname">Height</code>();
+  <span class="type">float</span> <code class="varname">maxWidth</code> = 1, <code class="varname">maxHeight</code> = 1;
+
+  if(<code class="varname">image</code>!=<code class="constant">NULL</code>){
+    <span class="comment">// get max size of image</span>
+    <code class="methodname">GetMaxSize</code>(&amp;<code class="varname">maxWidth</code>, &amp;<code class="varname">maxHeight</code>);
+  } else fprintf(<code class="varname">stderr</code>, "Image is null\n");
+
+  <span class="type">float</span> <code class="varname">propW</code> = <code class="varname">myPixelWidth</code>/<code class="varname">maxWidth</code>;
+  <span class="type">float</span> <code class="varname">propH</code> = <code class="varname">myPixelHeight</code>/<code class="varname">maxHeight</code>;
+
+  <span class="type">float</span> <code class="varname">rangeW</code> = <code class="varname">maxWidth</code> - <code class="varname">myPixelWidth</code>;
+  <span class="type">float</span> <code class="varname">rangeH</code> = <code class="varname">maxHeight</code> - <code class="varname">myPixelHeight</code>;
+
+  if(<code class="varname">rangeW</code> &lt; 0)
+    <code class="varname">rangeW</code> = 0;
+
+  if(<code class="varname">rangeH</code> &lt; 0)
+    <code class="varname">rangeH</code> = 0;
+
+  if ((<code class="varname">sb</code>=<code class="methodname">ScrollBar</code>(<code class="constant">B_HORIZONTAL</code>))!=<code class="constant">NULL</code>) {
+    <code class="varname">sb</code>-&gt;<code class="methodname">SetProportion</code>(<code class="varname">propW</code>);
+    <code class="varname">sb</code>-&gt;<code class="varname">SetRange</code>(0, <code class="varname">rangeW</code>);
+
+    <span class="comment">// Steps are 1/8 visible window for small steps</span>
+    <span class="comment">// and 1/2 visible window for large steps</span>
+    <code class="varname">sb</code>-&gt;<code class="methodname">SetSteps</code>(<code class="varname">myPixelWidth</code> / 8.0, <code class="varname">myPixelWidth</code> / 2.0);
+  }
+
+  if ((<code class="varname">sb</code>=<code class="methodname">ScrollBar</code>(<code class="constant">B_VERTICAL</code>))!=<code class="constant">NULL</code>) {
+    <code class="varname">sb</code>-&gt;<code class="methodname">SetProportion</code>(<code class="varname">propH</code>);
+    <code class="varname">sb</code>-&gt;<code class="methodname">SetRange</code>(0, <code class="varname">rangeH</code>);
+
+    <span class="comment">// Steps are 1/8 visible window for small steps</span>
+    <span class="comment">// and 1/2 visible window for large steps</span>
+    <code class="varname">sb</code>-&gt;<code class="methodname">SetSteps</code>(<code class="varname">myPixelHeight</code> / 8.0, <code class="varname">myPixelHeight</code> / 2.0);
+  }
+}
+</pre><p>
+For the views <code class="methodname">FrameResized()</code>, as well as any other place it may change, a
+simple call to <code class="methodname">FixupScrollbars</code> adjusts the scroll bars.
+</p><p>
+You might be wondering what's needed to scale the image. Would you
+believe: nothing! The <code class="methodname">DrawBitmap()</code> methods allow you to specify source and
+destination rectangles, and if they're different in size, the source
+rectangle will be scaled appropriately.
+</p><p>
+The sample code is readily available. It can handle images and text
+files. For images it shows them maximized to perspective and zoomed. For
+text files, it starts out not wrapping them.
+</p><p>
+Since too few image programs actually allow you to view files maximized
+to perspective, the sample code should be mildly useful. (If you view it
+as an excuse to learn some <span class="application">Tracker</span> scripting, too, it could be highly
+useful for those who wish to browse image files.)
+</p><p>
+I lifted some of the image-related stuff from George Hoffman's
+<span class="application">QuickPaint</span>
+sample code, so credit for that goes to him.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-42"></a>Developers Workshop: Untangling Threads</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michael</span> <span class="surname">Morrissey</span></span></div></div></div><p>
+If you've never given much thought to what multithreading is and how it
+works, chances are that your code may have routines which could greatly
+benefit if modified to take advantage of threading. Often applications
+have small, helper functions which contribute significantly to the
+running time of the application, and threading these functions frequently
+can lead to enormous speed improvements on multiprocessor machines.
+</p><p>
+In this article, we'll be looking at one such helper function, the world-
+famous Quicksort routine. We'll investigate what makes a routine a good
+candidate for threading, give some general design tips, and offer
+questions to keep in mind when threading your code.
+</p><p>
+Before you look at the sample code, you might want to skim through the Be
+Book's section on
+<a class="link bebook" href="../BeBook/TheKernelKit_ThreadsAndTeams_Overview.html">Threads</a>,
+and the one on
+<a class="link bebook" href="../BeBook/TheKernelKit_Semaphores_Overview.html">Semaphores</a>.
+You can get the sample code from here:
+</p><p>
+ftp://ftp.be.com/pub/samples/intro/QSort.zip
+</p><p>
+The sample code version of Quicksort is not meant to be put into a
+library, but rather to be used as a tool for experimentation.
+Consequently, there are three command-line arguments: the first specifies
+the size of the array to be created and filled with random integers, the
+next argument specifies the maximum number of threads to spawn for
+sorting, and the third argument specifies a threshold variable, which
+indicates the size of the smallest array which is to spawn a thread. The
+program also creates a <code class="classname">BStopWatch</code>, which will give you a rough idea of
+how the arguments affect the runtime of the sort.
+</p><p>
+First, about the algorithm: Quicksort is the canonical divide-and-conquer
+algorithm. The general idea is this: given an array of numbers, choose a
+"pivot value"; ideally, the pivot is the mean value of the array. Then
+reorder the elements of the array so that elements less than the pivot
+appear on the low end of the array, and elements greater than the pivot
+appear on the high end. You now have partitioned the array into two
+sub-arrays: one with values less than pivot, one with values greater than
+pivot. Now recursively apply this algorithm to each of the two
+sub-arrays, partitioning each of the sub-arrays into two more sub-arrays.
+In this way, you order the entire array by working on consecutively
+smaller and smaller arrays.
+</p><p>
+Quicksort is good for large arrays, but inefficient on smaller ones. For
+this reason, one optimization which is generally made is to order small
+sub-arrays using a straight insertion-sort, rather than partitioning down
+to single elements. This results in a great speed up, and the sample code
+uses it in the <code class="methodname">Partition()</code> function, for sub-arrays with less than 20
+elements. (The value of 20 is somewhat arbitrary; try changing it to see
+if there's any effect.)
+</p><p>
+At this point, you might be saying to yourself, "We have the regular,
+unthreaded version of Quicksort. Great! Now how do we thread it?" If
+you're wondering about that, back up! The question that you should be
+wondering about is: "Is threading this algorithm going to speed up the
+running time of this algorithm?" Threading an algorithm doesn't always
+improve running time, and it can even hurt running time. There's nothing
+worse than rewriting a piece of code to make it run faster, only to
+discover that you've slowed it down. (Trust me.) Unfortunately, there's
+no simple way to decide whether or not threading is a good idea. You can,
+however, look for some tell-tale signs, use your best judgement, and
+experiment.
+</p><p>
+One of the most important questions to ask is, "Will the data the threads
+are working on overlap or be mutually exclusive?" If the data is
+independent, the need for synchronization between the threads is greatly
+reduced, which saves on both running time and on your effort in
+implementing the algorithm. If the data overlaps, you'll have to
+carefully consider how to synchronize your threads so that they don't
+clobber each other's work, and also so that they aren't spending all of
+their time competing for control of a variable rather than doing "real"
+work.
+</p><p>
+The next question to ask is, "Does the amount of work each thread will
+perform significantly outweigh the overhead of managing the thread?" As
+light-weight as they are, threads still have overhead, in the form of
+kernel calls, memory allocation, and context-switching. If your thread
+isn't going to spend a fair amount of time computing, the overhead might
+not be worth it.
+</p><p>
+I must admit that Quicksort for integers fails this test. Comparing
+integers is very inexpensive, and does not far outweigh the cost of
+spawning a new thread. It's easy to imagine, however, sorting an array of
+a user-defined type which has an expensive comparison operation, such as
+sorting an array of complex numbers. For simplicity's sake, rather than
+defining my own type and templatizing the <code class="classname">QSort</code> class, I compare the
+logarithms of an array of integers (rather than the integers themselves).
+The resulting ordering is the same as if I'd ordered the integers
+directly, but the logarithm operations are expensive enough to make
+threading worthwhile.
+</p><p>
+Your next question might be, "How will I know when my algorithm has
+finished?" That sounds like a funny question if you're only used to
+working with single-threaded algorithms, but it's quite important in the
+multithreaded world. Threads are not guaranteed to execute in a
+particular order (unless you synchronize them to do so explicitly), so
+you cannot predicate your termination condition on the order of
+execution. In Quicksort, when an element is put into its correct place in
+the overall array, a counter which refers to "elements yet to be sorted"
+is decremented. When the counter reaches zero, a semaphore is released,
+indicating to the managing thread that the sorting is finished and the
+child threads are finished.
+</p><p>
+Another crucial question is, "How many threads should I start?" Surprise
+-- there's no easy answer to this question either. In the case of
+Quicksort, it doesn't do much good to have more threads running that
+processors. That's because when a Partition thread is running, it can run
+straight through, as fast as it can, since it doesn't try to acquire
+variables which other threads might be using, which could cause
+contention. Some algorithms may benefit from having more threads than
+processors, since while one thread is idle, waiting to acquire a shared
+resource, another thread can be running.
+</p><p>
+Not having more threads than processors (for Quicksort) is only half of
+the situation. Ideally, you'd like to have at exactly as many threads as
+processors running at any point in time, so as to keep all of the
+processors working. Just spawning threads and giving them an initial
+amount of work to do is not enough—one thread might finish sorting a
+sub-array faster than the others. It would be good if this thread could
+go back and help out the other threads which are still running. So in the
+<code class="classname">QSort</code> constructor, we create a semaphore and give it a thread count of
+THREADS (from <code class="varname">argv</code>):
+</p><pre class="programlisting cpp">
+<code class="classname">QSort</code>::<code class="methodname">QSort</code>(<span class="type">int32 *</span><code class="parameter">vector</code>, <span class="type">int32</span> <code class="parameter">count</code>)
+{
+  <span class="type">system_info</span> <code class="varname">info</code>;
+  <code class="function">get_system_info</code>(&amp;<code class="varname">info</code>);
+  <code class="varname">cpu_count</code> = <code class="varname">info</code>.<code class="varname">cpu_count</code>;
+
+  <span class="comment">// this is our "pool" of worker threads...</span>
+  <code class="varname">workthread</code> = <code class="function">create_sem</code>(THREADS, "workthread");
+
+  <span class="comment">// for real code, you'd have a thread count of cpu_count...</span>
+  <span class="comment">// workthread = create_sem(cpu_count, "workthread");</span>
+
+  ...
+}
+</pre><p>
+The <code class="varname">workthread</code> semaphore controls how many threads can be started. Before
+a worker thread is spawned, it tries to acquire the <code class="varname">workthread</code> semaphore.
+If it is immediately available, a worker thread is spawned and resumed:
+</p><pre class="programlisting cpp">
+if(<code class="varname">big</code> &amp;&amp;
+   <code class="function">acquire_sem_etc</code>(<code class="varname">thisclass</code>-&gt;<code class="varname">workthread</code>, 1, <code class="constant">B_TIMEOUT</code>, 0)
+     == <code class="constant">B_NO_ERROR</code>)
+{
+  <span class="comment">// there's a worker thread available...</span>
+
+  <code class="varname">tid</code> = <code class="function">spawn_thread</code>(<code class="varname">Partition</code>, "Partition", <code class="constant">B_NORMAL_PRIORITY</code>,
+          new <code class="classname">WorkUnit</code>(<code class="varname">start</code>, <code class="varname">j</code>, <code class="varname">thisclass</code>, <code class="constant">true</code>));
+
+  <span class="comment">// if spawn_thread failed, we can still continue...</span>
+  if(<code class="varname">tid</code> &lt; 0)
+  {
+    <code class="methodname">Partition</code>(new <code class="classname">WorkUnit</code>(<code class="varname">start</code>, <code class="varname">j</code>, <code class="varname">thisclass</code>, <code class="constant">false</code>));
+  }
+  else
+  {
+    <code class="function">resume_thread</code>(<code class="varname">tid</code>);
+  }
+}
+else <span class="comment">// no available worker threads in the pool...</span>
+{
+  <code class="methodname">Partition</code>(new <code class="classname">WorkUnit</code>(<code class="varname">start</code>, <code class="varname">j</code>, <code class="varname">thisclass</code>, <code class="constant">false</code>));
+}
+</pre><p>
+If there are no available threads in the pool, that is, if
+<code class="code"><code class="function">acquire_sem</code>(<code class="varname">workthread</code>)</code>
+would block, then we simply call <code class="methodname">Partition()</code>
+directly without starting a new thread and without waiting for one to
+become available. Naturally, when a thread has finished processing, it
+must release the <code class="varname">workthread</code> semaphore, effectively returning the thread
+to the pool...
+</p><pre class="programlisting cpp">
+<span class="comment">// if we were spawned, then add a "thread" back into the pool...</span>
+if(<code class="varname">unit</code>-&gt;<code class="varname">spawned</code>)
+{
+  <code class="function">release_sem</code>(<code class="varname">thisclass</code>-&gt;<code class="varname">workthread</code>);
+}
+</pre><p>
+Typically, rather than creating a thread every time it is taken from the
+pool, and killing the thread every time it is returned to the pool, you
+would simply resume and suspend the same threads, and feed the awakened
+thread fresh data. For this sample code, I chose not to implement that
+strategy for reasons of clarity. You should take a few minutes and think
+about how you'd restructure this program to use the "traditional pool"
+scheme, how you'd get fresh data into the threads, and how you might
+modify the mechanism which detects when the sort is finished.
+</p><p>
+One final thought: keep in mind that you want your routine to scale as
+nicely as possible from a single-processor machine to a multi-processor
+machine. Compare the single thread version of your routine on a
+single-processor system with the multithreaded version of your routine on
+a single-processor system. Is the multithreaded version much slower? If
+it is, can you rework your threading model to reduce that discrepancy? If
+not, you may want to consider special-casing your routine on
+single-processor systems.
+</p><p>
+I strongly encourage you to play around with the arguments to this
+program, and see how the size of the array, the number of threads in the
+pool, and the threshold variable interact and affect running time of this
+program. Then try looking at your own code for functions which might
+benefit from threading. If you think you have a good candidate,
+experiment!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-42"></a>PC Shift</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This is Agenda time, a yearly industry conference which always takes
+place in Phoenix, Arizona, in a resort, The Phoenician, once famous for
+its prominence in the real estate debacle of an earlier decade. So, in
+taxpayer subsidized splendor we spin and schmooze—and hear preachers
+warning us about the danger of government intervention in our affairs.
+</p><p>
+Still on symbols, last year's Agenda opening day was made memorable by
+the "surprise" DOJ suit against Microsoft. During the morning's coffee
+break, video was piped on the screen as attendees walked in and out of
+the room. At first, some of us thought this was one of the spoofs we're
+regularly treated to, but no, this was the Bill and Janet (now Joel)
+reality show.
+</p><p>
+A year later, on the very same opening day, the trial opens, and, for the
+first time since the beginning of Agenda, Bill Gates isn't at the
+conference. This was deemed such a momentous change by Agenda organizers
+they e-mailed attendees in advance essentially offering their money back
+if Bill's absence killed their interest in the conference.
+</p><p>
+On the one hand this is laudable truth-in-conferencing on the part of the
+organizers. On the other hand, the implication that there is so much
+value in the submissive hope of being able to touch a fringe of the
+emperor's tunic. One is happy to report the assumption of such a supine
+position wasn't supported by attendance numbers: there was the usual
+turnout of industry grandees and smaller entrepreneurial fry as well as
+many last minute pleas to get admitted to this "by invitation only"
+conference.
+</p><p>
+Another observable change is what some call the shift from MIPS to Mbps,
+the feeling that what we need most isn't faster processors but faster
+connections to the great network in our future. Indeed, one can feel the
+frustration at PCs with more computing power and storage than an early
+Cray supercomputer, connected to the Internet via a 56Kbps modem.
+</p><p>
+Dave Nagel, the head of AT&amp;T Labs, commenting on the impact of broadband
+home connections, observed the experience was so good customers couldn't
+bear the thought of going back to the old POTS days and turned into
+broadband evangelists. "If it's offered where you live, get it, if not,
+demand it and, if you don't get it, move to a place that has it." In
+other words, now that we have the $500 PC running Office and Explorer, we
+need a $50 per month high-speed connection. Call it a "T1 in every pot,"
+at least figuratively speaking.
+</p><p>
+This, in turn, gives rise to more connected thoughts, home networking and
+Internet multimedia appliances. AT&amp;T, Philips and Cisco, from their
+vantage points, all stressed the importance of such technologies and
+products in creating new user experiences, not just smaller/cheaper
+versions of what we have today, and in reaching new users, not just
+relieving current users from their frustrations—and from more of their
+money.
+</p><p>
+But, of course, there is the other side of the issue, the side that says
+we need more MIPS. Or, perhaps better stated, both sides are right, we
+need more Mbps and more MIPS. If all I want to do is run Microsoft Office
+and Explorer with a POTS connection, the $500 PC offers an unbeatable
+price-performance combination. If, on the other hand, I want to capture,
+edit, produce and polish video, sound, music, 3D animations, or play
+really good games, the 450MHz "supercomputer" doesn't look so overpowered
+anymore.
+</p><p>
+That's the point Andy Grove made in his opening Monday morning talk and
+demos. But first, we were treated to a live videoconferenced ion-beam
+healing session. The patient? A processor chip in Santa Clara. Some
+attendees thought it a little too geeky; personally, I see it as
+providing a nice balance to Steve (Forbes), who shared his well-pressed,
+high-level vision of our industry's role in the future of our country.
+</p><p>
+Staying on the "Why We Need More MIPS" message, Intel's chairman then
+treated us to demonstrations of Pentium-based systems: Dell servers
+running Linux, newly converted Silicon Graphics systems running Windows
+NT, and a sample of Intel's upcoming processors running BeOS audio, video
+and 3D applications, drawing nice applause and looking quite smooth when
+compared to the SGI system. A nice milestone in fulfilling the goal set
+our by one of our shareholders who, before investing, teasingly called Be
+"The Poor Man's Silicon Graphics," promptly rephrased "SGI for the Rest
+Of Us" by others who wanted more than the poor man's goal.
+</p><p>
+Some found strange symbolism in the demonstration of several OS platforms
+just as the DOJ-MS anti-trust suit opened on the other side of the
+country. Personally, I hope this kind of demonstration will soon become
+unremarkable.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-41.html">Issue 3-41, October 14, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-43.html">Issue 3-43, October 27, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-41.html" title="Issue 3-41, October 14, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-43.html" title="Issue 3-43, October 27, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

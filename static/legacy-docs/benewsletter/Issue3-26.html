@@ -1,0 +1,727 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-25.html" title="Issue 3-25, June 24, 1998" /><link rel="next" href="Issue3-27.html" title="Issue 3-27, July 8, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-25.html" title="Issue 3-25, June 24, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-27.html" title="Issue 3-27, July 8, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-25.html">Issue 3-25, June 24, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-27.html">Issue 3-27, July 8, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-26"></a>Issue 3-26, July 1, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-26"></a>Be Engineering Insights: Getting Your Translator Add-ons to Use the
+Translation Kit</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jon</span> <span class="surname">Watte</span></span></div></div></div><p>
+One of the many good things in BeOS Release 3 was the addition of
+system-wide translation services through the Translation Kit. While
+translation between different data formats was previously available in
+the form of a third-party library named Datatypes, having a Kit in the
+BeOS makes it easier to use and install, because you can assume it's
+always there. The Translation Kit will load any old-style Datatypes
+add-ons, but the interface used by Datatypes is deprecated.
+</p><p>
+The actual work of translating data in the Translation Kit is performed
+by add-ons known as translators. This article explains what a translator
+add-on must do to be used by the Translation Kit, and what it can do to
+be a well-behaved citizen in the world of data format conversions.
+</p><p>
+But first, the code! The archive can be found at:
+</p><p>
+ftp://ftp.be.com/pub/samples/translation_kit/ppm.zip
+</p><p>
+The purpose of our translator is to allow applications to read and write
+the <acronym class="acronym" title="Portable PixMap">PPM</acronym>
+bitmap file format. I chose <acronym class="acronym">PPM</acronym> because it is a format that is
+fairly simple to understand, while having enough variation to illustrate
+how to configure a translator add-on. It is also a fairly popular format
+for UNIX-style image processing tools.
+</p><p>
+For translation to work, there has to be some common ground between the
+translators, and the applications using them. For bitmap graphics, this
+common ground is found in the <code class="constant">B_TRANSLATOR_BITMAP</code> format, a format
+designed to be easily readable and writable to <code class="classname">BBitmap</code> system objects.
+The format of a <code class="constant">B_TRANSLATOR_BITMAP</code> formatted file is simple:
+</p><p>
+First, there is the file header, which consists of a struct:
+</p><pre class="programlisting c">
+struct <span class="type">TranslatorBitmap</span> {
+  <span class="type">uint32</span>       <code class="varname">magic</code>;    <span class="comment">/*  B_TRANSLATOR_BITMAP  */</span>
+  <code class="classname">BRect</code>        <code class="varname">bounds</code>;
+  <span class="type">uint32</span>       <code class="varname">rowBytes</code>;
+  <span class="type">color_space</span>  <code class="varname">colors</code>;
+  <span class="type">uint32</span>       <code class="varname">dataSize</code>;
+};
+</pre><p>
+As you can see, all elements of this struct are 32 bytes in size (except
+for the <code class="classname">BRect</code>, but all elements in a
+<code class="classname">BRect</code> are 4 bytes in size) so there
+should be no alignment problems when reading/writing this struct on
+different platforms. However, the byte order needs to be well defined,
+and since Datatypes was around long before the x86 port of BeOS, the
+well-defined byte order of the <span class="type">TranslatorBitmap</span> struct is big-endian.
+</p><p>
+The <code class="varname">magic</code> field should be set to the
+<code class="constant">B_TRANSLATOR_BITMAP</code> constant,
+swapped to big-endian if necessary.
+</p><p>
+The <code class="varname">bounds</code> field should be set to the
+<code class="methodname">Bounds()</code> that a <code class="classname">BBitmap</code>
+system object would use to contain the image. Note that
+<code class="methodname">Bounds()</code>.<code class="varname">right</code> is ONE LESS than
+the width of the image in pixels, because the 0-th pixel counts as one
+pixel. Again, you need to swap the <code class="classname">BRect</code> members as
+necessary.
+</p><p>
+For <code class="varname">rowBytes</code>, see below.
+</p><p>
+<code class="varname">colors</code> is one of the values defined in
+<code class="filename">GraphicsDefs.h</code> which describe
+various ways you can interpret the raw pixel data. In R4, there will be
+more values defined for a color_space, although not all values work if
+you use <code class="methodname">DrawBitmap()</code> to draw such a bitmap to the screen. In the sample
+source, we have cribbed the definitions for <code class="constant">B_CMYK32</code> and relatives from
+R4 so that we can illustrate how to convert between color spaces.
+</p><p>
+<code class="varname">dataSize</code>, lastly, should tell how much pixel data follows the header,
+but the size of the header (32 bytes) does not count. This should always
+be set as follows:
+</p><pre class="programlisting">
+<code class="varname">header</code>.<code class="varname">dataSize</code> = (<code class="varname">header</code>.<code class="varname">bounds</code>.<code class="methodname">Width</code>()+1)*<code class="varname">header</code>.<code class="varname">rowBytes</code>
+</pre><p>
+Again, be careful about byte-swapping.
+</p><p>
+After this struct the actual data of the bitmap follows directly, from
+left to right, top to bottom, padded to <code class="varname">rowBytes</code> bytes per scanline.
+<code class="varname">rowBytes</code> is typically the smallest multiple of four bytes that will fit
+the width of the bitmap of whole pixels across.
+</p><p>
+The general rule with regards to byte-swapping is to swap only when you
+need to read or write data, and keep it in the native format internally.
+Doing this ensures that you can easily access the values of the header.
+For instance, if you were to write a <code class="classname">BBitmap</code> out in the
+<code class="constant">B_TRANSLATOR_FORMAT</code> format, here's how you could do it:
+</p><pre class="programlisting">
+<span class="type">status_t</span> <code class="methodname">WriteBitmap</code>(<span class="type"><code class="classname">BBitmap</code> *</span> <code class="parameter">map</code>, <span class="type"><code class="classname">BDataIO</code> *</span> <code class="parameter">out</code>)
+{
+  <code class="classname">TranslatorBitmap</code> <code class="varname">header</code>;
+
+  <span class="comment">/* prepare header */</span>
+  <code class="varname">header</code>.<code class="varname">magic</code> = <code class="constant">B_TRANSLATOR_BITMAP</code>;
+  <code class="varname">header</code>.<code class="varname">bounds</code> = <code class="parameter">map</code>-&gt;<code class="methodname">Bounds</code>();
+  <code class="varname">header</code>.<code class="varname">rowBytes</code> = <code class="parameter">map</code>-&gt;<code class="methodname">BytesPerRow</code>();
+  <code class="varname">header</code>.<code class="varname">colors</code> = <code class="parameter">map</code>-&gt;<code class="methodname">ColorSpace</code>();
+  <code class="varname">header</code>.<code class="varname">dataSize</code> = <code class="varname">header</code>.<code class="varname">rowBytes</code>*(<code class="varname">header</code>.<code class="varname">bounds</code>.<code class="methodname">Width</code>()+1);
+
+  <span class="comment">/* swap header */</span>
+  <code class="varname">header</code>.<code class="varname">magic</code> =
+    <code class="function">B_HOST_TO_BENDIAN_INT32</code>(<code class="varname">header</code>.<code class="varname">magic</code>);
+  <code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">left</code> =
+    <code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">left</code>);
+  <code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">top</code> =
+    <code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">top</code>);
+  <code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">right</code> =
+    <code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">right</code>);
+  <code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">bottom</code> =
+    <code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">bounds</code>.<code class="varname">bottom</code>);
+  <code class="varname">header</code>.<code class="varname">rowBytes</code> =
+    <code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">rowBytes</code>);
+  <code class="varname">header</code>.<code class="varname">colors</code> =
+    (<span class="type">color_space</span>)<code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">colors</code>);
+  <code class="varname">header</code>.<code class="varname">dataSize</code> =
+    <code class="function">B_HOST_TO_BENDIAN_FLOAT</code>(<code class="varname">header</code>.<code class="varname">dataSize</code>);
+
+  <span class="comment">/* write header */</span>
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="parameter">out</code>-&gt;<code class="methodname">Write</code>(&amp;<code class="varname">header</code>, sizeof(<code class="varname">header</code>));
+
+  <span class="comment">/* write data */</span>
+  if (<code class="varname">err</code> == sizeof(<code class="varname">header</code>)) {
+    <code class="varname">err</code> = <code class="parameter">out</code>-&gt;<code class="methodname">Write</code>(<code class="parameter">map</code>-&gt;<code class="methodname">Bits</code>(),
+           <code class="function">B_BENDIAN_TO_HOST_INT32</code>(<code class="varname">header</code>.<code class="varname">dataSize</code>));
+    if (<code class="varname">err</code> == <code class="function">B_BENDIAN_TO_HOST_INT32</code>(<code class="varname">header</code>.<code class="varname">dataSize</code>)) {
+      <code class="varname">err</code> = <code class="constant">B_OK</code>;
+    }
+  }
+  return (<code class="varname">err</code> &gt; <code class="constant">B_OK</code>) ? <code class="constant">B_IO_ERROR</code> : <code class="varname">err</code>;
+}
+</pre><p>
+I have sloppily been saying "file format" above; the truth is
+that any <code class="classname">BPositionIO</code> object can be used by a
+translator, and as long as you can <code class="methodname">Seek()</code> and
+<code class="methodname">SetSize()</code> and <code class="methodname">Read()</code> and
+<code class="methodname">Write()</code> it, it needn't be a
+<code class="classname">BFile</code> proper. It can be one of the system classes
+<code class="classname">BMallocIO</code> or <code class="classname">BMemoryIO</code>, or it
+can be your own class that knows how to read and write data to some special
+storage you're using. This is used by the system class
+<code class="classname">BBitmapStream</code>, which knows how to present a
+<code class="classname">BBitmap</code> as a "stream" of data.
+</p><p>
+Now, your job as a bitmap image translator is to read data in your
+"special" file format from the input stream, and write it to the output
+stream in the "standard" bitmap format as explained above. You should
+also be capable of doing the reverse: reading data in the "standard"
+bitmap format, and writing it out in your special format. This
+reading/writing is done in the exported <code class="methodname">Translate()</code> function.
+</p><p>
+<code class="methodname">Translate()</code> is passed an input and output stream, type information that a
+previous call to <code class="methodname">Identify()</code> returned, possibly a
+<code class="classname">BMessage</code> containing some
+configuration information and out-of-bounds information, and a requested
+output format type. This type is a four-letter type code as found in and
+other system headers, and the specific value is taken from your
+<code class="varname">outputFormats[]</code> array or the return data from
+<code class="methodname">Identify()</code>. If there is no
+type code defined for the format you're dealing with, you have to make
+one up. When you do, remember that Be reserves all type codes that
+consist solely of upper case letters, digits, the underscore character
+and space. Your best bet is to use lowercase letters in your own type
+codes.
+</p><p>
+There are standard formats for some other kinds of data besides bitmap
+images. You can find them in
+<code class="filename">TranslatorFormats.h</code>, and they are also
+described in the Translation Kit chapter of the online Be Book.
+</p><p>
+There are some things that you need to get the Translation Kit to the
+point where it calls your <code class="methodname">Translate()</code> function. There are many
+translators installed in a typical user's system, so how does it know
+which translator to use? Typically, a translator is selected in one of
+two ways:
+</p><p>
+1) An application that implements an "export" menu item, such as the
+<span class="application">Becasso</span> paint program, or the R4 version of <span class="application">ShowImage</span>, calls on the
+Translation Kit to list all available translators, and to select those
+that say that they can translate from the <code class="constant">B_TRANSLATOR_BITMAP</code> format to
+some other format. It then lets the user choose one of these translators
+using some UI (a dialog or menu, typically) and tell the Translation Kit
+to especially use the translator selected.
+</p><p>
+For this to work, your translator needs to tell the world what formats it
+can read and write. It does so in the <code class="varname">inputFormats[]</code> and <code class="varname">outputFormats[]</code>
+arrays. These are arrays of struct translation_format, terminated by a
+format with all 0 values. While exporting these arrays is called
+"optional" in the documentation, applications that want to perform an
+export will not know about your translator unless it exports these arrays.
+</p><p>
+Also note that there is no way to specify that only certain combinations of
+input and output file formats are good. Once you declare some input formats
+and some output formats, any combination of them may be used by the
+Translation Kit, including, in some degenerate cases, translating the SAME
+format (i e <code class="constant">B_TRANSLATOR_BITMAP</code> to
+<code class="constant">B_TRANSLATOR_BITMAP</code>). You decide how to best deal with
+this situation; just copying &gt;from input to output is acceptable,
+although if your translator can also do some other tricks (like the color
+space conversion of <span class="application">PPMTranslator</span>) you might
+want to do that even on same-format translations.
+</p><p>
+2) An application that accepts "any file" and then uses the
+Translation Kit to figure out what it was will cause your
+<code class="methodname">Identify()</code> function to be called. The role of your
+<code class="methodname">Identify()</code> function is to look at the beginning of
+the file and figure out if it is in one of the formats you know how to
+handle or not. Note that Identify() is often called before
+<code class="methodname">Translate()</code>, even if the application selects your
+translator specifically, so you have to do a good job here.
+</p><p>
+Because the <code class="classname">BPositionIO</code> passed for input may have
+some special meaning, such as reading from a network socket, you should not
+read more data than you need to make an educated guess as to the format of
+data you're passed. Similarly, calling <code class="methodname">Size()</code> or
+<code class="methodname">Seek()</code> relative to the end-of-file of the
+<code class="classname">BPositionIO</code> might be an expensive operation that
+causes the entire file to be downloaded to disk before it returns, so it
+should be avoided in your <code class="methodname">Identify()</code> function. If
+not, you might not recognize the format, and then the user wasted an hour
+on a 28.8 kbps download just to get nothing useful out. Also, some
+applications use the Translation Kit only to identify what something is;
+they don't actually <code class="methodname">Translate()</code> it. Wasting time
+getting to the end of the file is then doubly pointless.
+</p><p>
+There are some additional required data items you need to export from
+your translator for the Translation Kit to use it. They tell the world
+your translator's name, some information about it, and the version. If
+there are two translators with the same name but different versions
+installed, the Translation Kit may choose to use only the latest version,
+for instance. Thus, you should make sure that you always bump the version
+number when releasing a new version of your translator, and that you
+never change your translator's name (as seen in
+<code class="varname">translatorName[]</code>) once
+it's set.
+</p><p>
+<code class="varname">translatorInfo[]</code> is your personal soap box, and is a great place to put
+shareware notices, copyright information, URLs, or secret cabal messages.
+Except that then they wouldn't be secret anymore.
+</p><p>
+There are three more optional functions that you may choose to export,
+even though your translator will work and be used by the Translation Kit
+without them.
+</p><p>
+<code class="methodname">MakeConfig()</code> allows you to create a
+<code class="classname">BView</code> (to which you can add other
+<code class="classname">BView</code>s such as <code class="classname">BCheckBox</code>es
+and <code class="classname">BMenuField</code>s) that a client application can add
+to a window and display on screen. The purpose of this view should be to
+twiddle whatever tweakable parameters your translator has, and the View
+should remember these changes for later uses. You can see this implemented
+in the <span class="application">PPMTranslator</span> as the struct
+<span class="type">ppm_settings</span> variable <code class="varname">g_settings</code>, and the
+<code class="classname">PrefsLoader</code> class instance
+<code class="varname">g_prefs_loader</code>.
+</p><p>
+<code class="methodname">GetConfigMessage()</code> should return a
+"snapshot" of the current settings in the message passed to it.
+An application can pass a copy of this "snapshot" message data to
+a later call to <code class="methodname">Translate()</code>, and your translator
+should then use whatever settings are kept in that message rather than the
+defaults. Similarly, an application can pass a copy of the data in this
+message to <code class="methodname">MakeConfig()</code> to have the view
+preconfigured to the settings stored in that message rather than the
+current defaults (although the translator is allowed to change the defaults
+to what's in the message, as done in
+<span class="application">PPMTranslator</span>).
+</p><p>
+These two functions together make it possible to create an application
+which can present a UI for choosing a translator, to configure that
+translator, and later to use that specific translator/configuration pair
+to actually perform a translation. Great for automated batch conversions,
+for instance!
+</p><p>
+For more detailed information on the functions used by the Translation
+Kit, look at the Translation Kit chapter of the Be Book, the section on
+writing a Translator add-on.
+</p><p>
+The last optional function is <code class="function">main()</code>. On the BeOS, there really isn't
+any difference between shared libraries, add-ons, and applications,
+except in the way they're used and what you call them. You can load an
+application as an add-on, or launch a shared library, providing that the
+executable in question exports the right functions. To be an application,
+all you have to do is to export a symbol named <code class="function">main()</code>.
+</p><p>
+<span class="application">PPMTranslator</span> takes advantage of this schizophrenia to do something
+useful when <span class="type">double</span>-clicked—it runs its own control panel by calling
+its own <code class="methodname">MakeConfig()</code> function and adding the resultant View to a window,
+and then quits when the window is closed. I recommend that all translator
+add-ons do the same thing; that gives a user an easy way of setting the
+defaults for use by applications that don't display translator user
+interfaces, and users also get something useful out of <span class="type">double</span>-clicking
+what might be an unknown executable found on their disk.
+</p><p>
+Once your translator is debugged and ready to ship, you only need to make
+sure it gets installed where the Translation Kit will find it. By
+default, the Translation Kit will look in the following three places for
+Translator add-ons:
+</p><pre class="screen">
+/boot/home/config/add-ons/Translators/
+/boot/beos/system/add-ons/Translators/—reserved for Be
+/boot/home/config/add-ons/Datatypes/  —for old Datatypes
+</pre><p>
+However, the user can change this behaviour by setting the environment
+variable <code class="envar">TRANSLATORS</code>. Users who do this are considered power users, so
+making sure your translator gets installed in
+<code class="filename">~/config/add-ons/Translators/</code>
+by default is the right thing to do.
+</p><p>
+Before I end this article, I want to explain a few things about the code
+included with this article.
+</p><p>
+First, there is downloading and installing the code. Just get it from the
+URL above, put it where you usually put sample source code, and un-zip it
+(or let the Expand-o-matic do it for you). Then, in a Terminal window,
+"cd" to the newly un-zipped folder, and type <code class="command">make
+install</code> to build and install the
+<span class="application">PPMTranslator</span> and the
+<code class="command">translate</code> command-line tool. Documentation for the use
+of <code class="command">translate</code> is scarce, but you have the source, so you
+should be able to figure it out from there.
+</p><p>
+<span class="application">PPMTranslator</span> should be doing most things
+"right" and thus be suitable as sample source. If you find
+something you don't like or think might be a bug, I'd be interested in
+hearing about it, and fixing the archive.
+</p><p>
+The utilities in <code class="filename">colorspace.cpp</code> are intended as a quick way to get the
+job done when you need to output data in some color_space format other
+than what you have. They are not intended as a high-quality color
+convolution or separation package. Specifically, the conversion to
+grayscale is sub par, and the conversion to/from CMY(K), while correct,
+assumes that you're using perfect inks on perfect paper. I wish!
+</p><p>
+If you read through the sources and conclude that Release 4 will define new
+values for the <span class="type">color_space</span> enum for color spaces not
+previously defined in , you are correct. However, there is one caveat:
+while using this enum to communicate color space information is convenient,
+not all applications or classes will support all color spaces. Drawing a
+<code class="classname">BBitmap</code> in the <code class="constant">B_CMYK32</code> color
+space to a <code class="classname">BView</code> will not work; nor can you draw
+into a <code class="classname">BBitmap</code> with a color space of
+<code class="constant">B_YCrCb_422</code>. Still, having names for these spaces is
+better than a complete vacuum.
+</p><p>
+What are you waiting for? The source is there to explore, and the world
+is waiting for your translators! Shoo!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-26-2"></a>Be Engineering Insights: How to Avoid Engineering Pitfalls That Defeat
+Global Sales</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Lynn</span> <span class="surname">Fredricks</span></span></div></div></div><p>
+Your programmers work 24-hour days to get your product ready for domestic
+sales. But, although 50% or more of your revenue is on the line, you
+don't think to ask them to test the product under the German or Japanese
+version of the operating system. It's only after your product starts
+appearing on shelves at CompUSA that the Vice President of Worldwide
+Sales asks you to demonstrate this hot application running under the
+Japanese operating system for a group of high-ranking executives from
+Tokyo. After the fourth crash and reboot, you realize that something
+isn't right with your product. Your VP apologizes, then says goodbye to
+the high- ranking executives and to 30% of worldwide revenue.
+</p><p>
+For most development houses with an international presence, international
+sales account for upwards of 40% of total revenue. These revenues,
+however, can be severely reduced or eliminated for any software release
+when products aren't engineered for sales in international markets. In
+effect, your engineering department determines your global sales
+strategy, which may well end up defeated by or suffering from long and
+expensive localization processes because software products have been
+written with only a single target language in mind.
+</p><p>
+Before localizing your software, you need to internationalize it.
+Internationalization is the process of creating a single code tree that
+is easily localized to multiple languages. Before spec, during
+development, and through final code freeze, your engineers should be
+well-versed in writing international software. Here are five of the most
+common pitfalls that cripple or defeat the international value of
+software products.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711137"></a>Language Code Incompatibility</h3></div></div></div><p>
+English letters are usually presented as single-byte characters.
+Japanese, Chinese, and Korean characters are <span class="type">double</span>-byte. Some text can
+be represented vertically. In the Middle East, some languages flow from
+right to left. All platforms have API calls to display all major
+languages, including US English. A program can automatically display
+date, time, and other culture standards by querying the operating system.
+Make sure your programmers learn and use these APIs wherever characters
+are displayed.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711160"></a>Third-Party Components</h3></div></div></div><p>
+Some components may not be localizable. A third-party vendor may not
+license a component for international distribution, or may demand
+additional licensing requirements and fees to localize it for you. Before
+a component is even tested for use in a product, require a sign-off for
+worldwide rights and compatibility with all international versions of the
+OS your company targets.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711177"></a>Hardcoded Resources</h3></div></div></div><p>
+Your programmers always keep pieces of text, pictures, and sounds in a
+separate, editable resource file, right? If resources aren't kept
+separate from the start, your programmers will either have to re-engineer
+later, or comb through your source code every time you localize into
+another language. Separate resources are relatively easy to edit,
+reducing engineering costs considerably, or allowing you to outsource
+localization entirely.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711196"></a>Non-Existent SDKs</h3></div></div></div><p>
+Almost every SDK starts as English-only. Even Sun's Java Development Kit
+only recently added true international support. If your product is
+dependent on a third-party SDK, ensure that it is either compatible with
+targeted international operating systems, or that you are absolutely sure
+that international versions will be available by the time you are ready
+to localize.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711214"></a>Non-Standard Docs and Help</h3></div></div></div><p>
+Tech writers and help authors like to adapt as much as possible to the
+platform they are writing for, and add improvements with incremental
+releases. Usually, help systems, as well as electronic documentation
+systems and players, do not exist on all platforms and language versions,
+increasing development costs for these systems. Every new or different
+word in the documentation has to be translated, copy-edited, and
+re-published. Therefore, it is practical and cost-effective to
+standardize on cross-platform, open systems, and to enforce a company
+policy of standardized product terminology.
+</p><p>
+International success depends not only on the savvy of your business
+development team, but on a cooperative and proactive understanding of how
+to create an internationalized product. Being aware of the pitfalls and
+integrating strategies into your product specifications will allow you to
+realize your global revenue potential.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711234"></a>About The Author</h3></div></div></div><p>
+Lynn Fredricks is the President of Proactive International, an
+international business development company that establishes worldwide
+distribution networks for software developers. Proactive International
+specializes in high-profile distribution between North America and Japan,
+as well as providing product and business analysis for large
+international corporations. Additional information can be found at
+http://www.proactive-intl.com/.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-26"></a>Developers' Workshop: Putting Pen to Paper</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michael</span> <span class="surname">Morrissey</span></span></div></div></div><p>
+A while back, Stephen Beaulieu mentioned that
+<acronym class="acronym" title="Developer Technical Support">DTS</acronym> has divided support
+responsibilities for the various areas which make up the BeOS, based on
+familiarity, experience, and preference. The areas which fell towards me
+include <span class="trademark">OpenGL</span>®, POSIX, Replicants, hardware, and printing. When I
+think about what I'd like to write for my Newsletter articles, I look
+into the questions which have come my way recently to see what people are
+asking about. This article was going to be on <span class="trademark">OpenGL</span>®, but people
+asked about printing last week, so that's what we'll look at.
+<span class="trademark">OpenGL</span>®
+will have to wait until my next article!
+</p><p>
+Printing is a great topic, because it produces a physical representation
+of your work. It's very validating. You can hang your hardcopy on your
+office wall, show it to your friends, and just generally impress people
+with it. Portable, high-contrast displays are wonderful, but printing
+will always be valuable. As I once heard it put so eloquently, the
+paperless office is as much a myth as the paperless bathroom. (There's a
+very subtle <span class="type">double</span> entendre in there, "for the connoisseur" as Jean-Louis
+might say.)
+</p><p>
+Benoît Schillings wrote an excellent article...
+</p><p>
+<a class="xref" href="Issue3-18.html#Engineering3-18" title="Be Engineering Insights: Proper Printing">Be Engineering Insights: Proper Printing</a>
+</p><p>
+...a short while back which explained how to get up and running with
+printing on the BeOS. I want to expand on that article just a little,
+showing a couple of techniques which you may want to incorporate into
+your own applications. The code we'll be adding printing to is
+none-other-than Dynadraw, the perfect vehicle for showing off printing.
+You can grab the source code from:
+</p><p>
+ftp://ftp.be.com/pub/samples/interface_kit/dynadraw3.zip
+</p><p>
+In printing out <span class="application">Dynadraw</span> views, it would be nice to have two modes: one
+in which one pixel on the screen corresponds to one typographical point
+on the page, and another where the entire view is scaled to fit on a
+single page. Correspondingly, under the <span class="guimenu">Printing</span> menu, you'll find the
+item <span class="guimenuitem">Scale to Page</span> which has a check next to it. The check implies that
+we'll scale the view to the page, and the absence of the check implies
+that we'll produce "life size" output.
+</p><p>
+The <code class="classname">DDWindow</code> class manages the printing, and is the target of the two new
+messages, <code class="constant">PRINT_REQ</code> and <code class="constant">SCALE_PAGE</code>.
+<code class="constant">SCALE_PAGE</code> notifies the <code class="classname">FilterView</code>
+that we're toggling printing modes. <code class="constant">PRINT_REQ</code> calls the imaginatively
+named <code class="methodname">DoPrint()</code>, which sets up the print job, requests the view to draw
+in the correct position, spools pages, and commits the job.
+</p><p>
+The most important thing to do when creating a print job is to set the
+print settings. This is usually done by making a call to
+<code class="classname">BPrintJob</code>::<code class="methodname">ConfigPage()</code>. These settings are stored
+in a <code class="classname">BMessage</code>, which you can get a pointer to by
+calling <code class="classname">BMessage</code>::<code class="methodname">Settings()</code>. It is extremely
+instructive to view the contents of this message when investigating or
+debugging by calling <code class="methodname">PrintToStream()</code> on the
+message—try uncommenting these lines in
+<code class="methodname">DoPrint()</code> and then running the application from a
+<span class="application">Terminal</span> window:
+</p><pre class="programlisting cpp">
+  <code class="function">printf</code>("printSettings message:\n"
+  <code class="varname">printSettings</code>-&gt;<code class="methodname">PrintToStream</code>();
+</pre><p>
+Next we calculate how wide and how long the printout will be. We do this
+by taking the ratio of our view width to our printable rectangle width,
+and rounding up with the ceiling function. The total number of sheets,
+therefore, is horizontal sheets multiplied by vertical sheets. We then
+loop through the pages, offsetting the current page rectangle to the top
+of the next page.
+</p><p>
+With the current page rectangle lined up correctly, we call
+<code class="classname">BPrintJob</code>::<code class="methodname">DrawView()</code>, which calls
+<code class="classname">FilterView</code>::<code class="methodname">Draw()</code> with the rectangle
+described by <code class="varname">curPageRect</code>, and positions the output at (0,0) on the page.
+Having drawn, we add the page to the spool file, check that we haven't
+been interrupted, and continue the loop. Finally, we commit the job, and
+send the spool file to the printer.
+</p><p>
+The <code class="classname">FilterView</code>::<code class="methodname">Draw()</code> function needs to be modified only slightly. If
+the view is being printed and the user has selected <span class="guimenuitem">Scale To Page</span>, then
+we determine a scaling factor and apply it. We determined the scaling
+factor here by finding the horizontal scaling factor and the vertical
+scaling factor, and taking the smaller of the two. We call <code class="methodname">SetScale()</code>
+with this argument after reducing it by an epsilon, to make it more
+attractive on the page. (Note that <code class="methodname">SetScale()</code> takes a <span class="type">double</span>, with 1.0 ==
+100%, that is, full size.)
+</p><p>
+The <code class="classname">BView</code>::<code class="methodname">IsPrinting()</code> function is critical to
+any application which does printing. It allows the
+<code class="methodname">Draw()</code> function to modify its behavior for the
+printed page versus the screen. Any "screen-only" code you have
+in your draw function should be wrapped in an "if
+(<code class="code">!<code class="methodname">IsPrinting()</code></code>)..." check.
+</p><p>
+As you can see, the <code class="classname">BPrintJob</code> class and the
+<code class="classname">BView</code> class work hand-in-hand
+to allow you to add quick and easy printing to your applications. Read
+Benoît's article, read about <code class="classname">BPrintJob</code> in the
+Be Book, and try it yourself! Happy printing!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-26"></a>Pros and Cons</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This is not about making a m?salliance of respected professionals and
+confidence men in the same column. No, today's topic is an attempt to
+balance two opposing views of an issue. That is, the good and bad sides
+of a hypothetical venture fund whose sole purpose would be investing in
+Be developers.
+</p><p>
+Actually, this isn't so hypothetical. This week's choice of topic was
+triggered by reactions to a mention on our site of Marco Bernasconi's
+BeFund:
+</p><p>
+http://www.befund.com/
+</p><p>
+Marco, a long-time friend of Be, is based in Switzerland, and he *is* the
+fund.
+</p><p>
+We're all grateful for Marco's role as an "angel" to Be developers and,
+as the celestial label implies, this is not a classical Silicon Valley
+venture fund. What many correspondents have asked, however, is whether
+there should be a standard venture fund for BeOS-centric companies. I'll
+try to reproduce their arguments for and against, taking full
+responsibility for whatever distortions I might introduce in the process.
+</p><p>
+On the pro side, several readers point to the keiretsu approach adopted
+by Kleiner Perkins in convincing other investors to join them in
+investments supporting the Go/Eo platform. More recently, Kleiner Perkins
+took a similar course in leading the creation of a Java Fund.
+</p><p>
+As is now well understood, the reasoning behind this kind of venture
+investment is that a new platform needs a critical mass of symbionts such
+as software or hardware developers; the platform support fund provides
+capital to these helper companies.
+</p><p>
+If the platform "ignites," all investors, whether in the platform company
+or in third-party companies, are in a good position to profit handsomely
+for being in before success became retroactively obvious. If critical
+mass isn't achieved, well, they tried, as manly venture investors are
+supposed to do.
+</p><p>
+Critics of the idea call it "dirigiste" (that is, interventionist), an
+affront to the way things are done in free-market heaven. Essentially,
+they say, if a start-up offers a money-making opportunity, it will get
+financed. There is so much capital available right now that any good team
+with a good business plan will attract funding.
+</p><p>
+In other words, if the free market doesn't fund BeOS developers, listen
+to what investors are saying: the business plan won't work. Perhaps it's
+the team, or the product; more likely there isn't enough confidence that
+the platform will reach critical mass and reward investors accordingly.
+</p><p>
+Furthermore, opponents of the idea point out, the Go/Eo keiretsu didn't
+go anywhere, and there is doubt that Java will ever ascend to the
+Windows-killer platform status originally ordained for it. In other
+words, the dirigiste idea doesn't work, critics say, looking at my
+passport.
+</p><p>
+Others take a different perspective. They point out that most large
+companies now deploy a strategic investment fund of one kind or another.
+These days, one of the most visible examples is Intel, but from Adobe and
+AT&amp;T to 3Com and Cisco, "everybody does it." That does not automatically
+make it a good idea, but one is tempted to assume these companies have a
+different conduit for their philanthropic activities.
+</p><p>
+In other words, all these CEOs, and their boards of directors, believe in
+the divine intervention of the free market for most things, but they are
+collectively willing to put billions in play when it comes to creating
+critical mass, or a self-fulfilling prophecy, rather than letting nature
+take its course. If memory serves, in the early eighties, a rich Apple
+took a 20% equity position in the new and, at the time, unproven Adobe.
+That investment helped the rise of the Macintosh platform and Apple made
+a killing of Microsoft proportions on its Adobe stake.
+</p><p>
+In fairness, the examples go back and forth, and for every success story
+one may find failures of Momenta proportions. There is no absolute truth
+in this matter of platform-support investments. There is only risk
+taking, and the small matter of execution.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-26"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711759"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711765"></a>Subject: Alternative access to the BeOS API</h4></div></div></div><p>
+Is it possible to produce a Be app by cross-compiling on another
+platform? The libraries are, as Ernest S. Tomlinson pointed out,
+"Portable Executable binaries", so some clever compiler direction should
+do the trick. Right?
+</p><p>
+Fred Fish pointed to a tract in the Microsoft Developer Network Library
+called "Learn System-Level Win32 Coding Techniques by Writing an API Spy
+program" that shows you "how to make all client-sharedlib calls go
+through some private code you supply." Thomas Hudson nominated Chris
+Herborth's port of SWIG
+</p><p>
+http://www.be.com/beware/Development/SWIG.html
+</p><p>
+which "analyzes C++ code and generates an interface to various scripting
+languages such as TCL/Tk, Python, Perl..."
+</p><p>
+There was some shouting from the "feel the pain" crowd (REAL BeOS
+developers use MW/BeIDE). And some listeners took the opportunity to
+re-open the binary format debate (ELF vs PEF/PE).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711806"></a>Subject: BHandler destructors not called</h4></div></div></div><p>
+Should a <code class="classname">BHandler</code> be destroyed when its
+<code class="classname">BLooper</code> is destroyed? Jesse Hall
+sees the looper/handler relationship as similar to that of window/view.
+And just as dying windows destroy their views, loopers should clean up
+after themselves.
+</p><p>
+But maybe not: Matt Brubeck thinks unhitching the fate of a handler from
+its (current) looper makes message redirection easier, particularly when
+the looper is a window.
+</p><p>
+THE BE LINE: To paraphrase Peter Potrebic, the fact that a destructed
+looper doesn't destroy its attached handlers is not a bug, and won't
+change. However, the looper should (but doesn't) remove its handlers
+while its being destroyed. This is a bug and will be fixed.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711843"></a>Subject: buggy rint()</h4></div></div></div><p>
+Tinic Uro submitted a mathlib mystery spot:
+</p><pre class="programlisting c">
+<code class="function">printf</code>("%f\n",(<span class="type">float</span>)<code class="function">rint</code>(8.5));
+<code class="function">printf</code>("%f\n",(<span class="type">float</span>)<code class="function">rint</code>(9.5));
+</pre><p>
+..produces '8' and '10'. Why?
+</p><p>
+Jens Kilian offered an explanation:
+</p><p>
+“<span class="quote">This is the American way to round a number—if it's exactly halfway
+between integers, it is rounded to the EVEN one. The German way, which I
+and (presumably) you were taught, is to simply take ceil(x + 0.5), always
+rounding UP when halfway between numbers.</span>”
+</p><p>
+International relations at stake, a number of listeners wrote in to
+suggest using <code class="function">floor()</code> and <code class="function">ceil()</code>
+(or, for the latter, <code class="code">floor(x+.5)</code>)
+instead of <code class="function">rint()</code>.
+</p><p>
+THE BE LINE: (From Mani Varadarajan)
+</p><p>
+“[<code class="function">rint()</code>'s behavior] is correct. To prevent skewing rounding errors only
+one way, it is a well-established rule that one should always round to
+the even number if a number is exactly between an even and odd value
+(pardon the lack of precise mathematical terminology).
+</p><p>
+If the rule were to round always up, the error would be skewed in one
+direction. This evens out the error.”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711945"></a>Subject: Java tools</h4></div></div></div><p>
+What's Be's Java policy? It was announced that Be had been dealt into
+Sun's <span class="type">float</span>ing crap game, but have they ante'd up? Is there a JVM on the
+horizon?
+</p><p>
+THE BE LINE: Be is NOT an official Java licensee. We'd love to see a JVM
+running on the BeOS, but we have no plans to work on one ourselves.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id711968"></a>Subject: Interface paradigm questions</h4></div></div></div><p>
+The windows for all instances of a multi-launch app are listed together
+in the Deskbar's app window list. How do you tell which windows belong to
+which instance of the app? Suggestions:
+</p><ul class="itemizedlist"><li><p>
+Map your windows to logical units. For Felix (for example), this
+means each window would represent a distinct server, and tab views
+within the window would serve the various channels on that server.
+</p></li><li><p>
+Go "docu-centric" and teach the windows to identify themselves. In
+the context of the previously proposed Felix example, a window would
+name the server &amp; channel to which it's connected. You don't really
+care which instance of the app runs a particular window, all you care
+about is the window's target/contents.
+</p></li><li><p>
+Make your app single launch, multi-window. Why relaunch the app just
+to open another channel? If the app is well-written, you should ALWAYS
+be able to get another window.
+</p></li></ul><p>
+Fine suggestions all, each with their own set of advantages and
+blemishes. And of the latter for the latter, comes this from Matt Brubeck:
+</p><p>
+“<span class="quote">I have <span class="application">NetPositive</span> running in workspace three. I want to open a
+<span class="application">NetPositive</span> window in workspace one. Ideally, I should be able to go to
+workspace one, launch <span class="application">NetPositive</span>, and have it open a new window.
+Currently, I have to go to workspace three, tell <span class="application">NetPositive</span> to open a
+new window, use <span class="application">Workspaces</span> to drag the window to workspace one, then go
+to workspace one. Bleah.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id712048"></a>Subject: printing long longs</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id712057"></a><a id="id712059"></a>Q:</td><td><p>
+How do you <code class="function">printf</code>() a 64-bit integer?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="function">printf</code>("%Ld", n)
+</p></td></tr></tbody></table></div></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-25.html">Issue 3-25, June 24, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-27.html">Issue 3-27, July 8, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-25.html" title="Issue 3-25, June 24, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-27.html" title="Issue 3-27, July 8, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

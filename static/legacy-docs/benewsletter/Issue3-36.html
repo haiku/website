@@ -1,0 +1,864 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-35.html" title="Issue 3-35, September 2, 1998" /><link rel="next" href="Issue3-37.html" title="Issue 3-37, September 16, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-35.html" title="Issue 3-35, September 2, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-37.html" title="Issue 3-37, September 16, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-35.html">Issue 3-35, September 2, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-37.html">Issue 3-37, September 16, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-36"></a>Issue 3-36, September 9, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-36"></a>Be Engineering Insights: Changes in the BeOS Driver API</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+Oh no, you think, yet another article about drivers. Are they crazy about
+drivers at Be, or what? Ouaire iz ze beauty in driverz? The truth is that
+I would have loved to write about another (hotter) topic, one that has
+kept me very busy for the past few months, but my boss said I couldn't
+(flame him at cyrilsboss@be.com ;-). I guess I'll have wait until it
+becomes public information. In the meantime, please be a good audience,
+and continue reading my article.
+</p><p>
+Before I get on with the meat of the subject, I'd like to stress that the
+following information pertains to our next release, BeOS Release 4.
+Because R4 is still in the making, most of what you read here is subject
+to change in the details, or even in the big lines. Don't write code
+today based on the following. It is provided to you mostly as a hint of
+what R4 will contain, and where we're going after that.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id734122"></a>Introduction of Version Control</h3></div></div></div><p>
+That's it. We finally realized that our driver <acronym class="acronym">API</acronym> was not perfect, and
+that there was room for future improvements, or "additions." That's why
+we'll introduce version control in the driver <acronym class="acronym">API</acronym> for R4. Every driver
+built then and thereafter will contain a version number that tells which
+<acronym class="acronym">API</acronym> the driver complies to.
+</p><p>
+In concrete terms, the version number is a driver global variable that's
+exported and checked by the device file system at load time. In
+<code class="filename">Drivers.h</code>
+you'll find the following declarations:
+</p><pre class="programlisting cpp">
+#define  <code class="constant">B_CUR_DRIVER_API_VERSION</code>  2
+extern  _EXPORT <span class="type">int32</span>  <code class="varname">api_version</code>;
+</pre><p>
+In your driver code, you'll need to add the following definition:
+</p><pre class="programlisting cpp">
+#include &lt;Drivers.h&gt;
+...
+<span class="type">int32</span>  <code class="varname">api_version</code> = <code class="constant">B_CUR_DRIVER_API_VERSION</code>.
+</pre><p>
+Driver <acronym class="acronym">API</acronym> version 2 refers to the new (R4)
+<acronym class="acronym">API</acronym>. Version 1 is the R3 <acronym class="acronym">API</acronym>.
+If the driver <acronym class="acronym">API</acronym> changes, we would bump the version number to 3. Newly
+built drivers will have to comply to the new <acronym class="acronym">API</acronym> and declare 3 as their
+<acronym class="acronym">API</acronym> version number. Old driver binaries would still declare an old
+version (1 or 2), forcing the device file system to translate them to the
+newer <acronym class="acronym">API</acronym> (3). This incurs only a negligible overhead in loading drivers.
+</p><p>
+But, attendez, vous say. What about pre-R4 drivers, which don't declare
+what driver <acronym class="acronym">API</acronym> they comply to? Well, devfs treats drivers without
+version number as complying to the first version of the API—the one
+documented today in the Be Book. Et voila.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id734250"></a>New Entries in the device_hooks Structure</h3></div></div></div><p>
+I know you're all dying to learn what's new in the R4 driver API... Here
+it is, revealed to you exclusively! We'll introduce scatter-gather and (a
+real) select in R4, and add a few entries in the device_hooks structure
+to let drivers deal with the new calls.
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id734264"></a>Scatter-gather</h4></div></div></div><p>
+As discreetly announced by Trey in his article
+<a class="xref" href="Issue3-35.html#Engineering3-35" title="Be Engineering Insights: An Introduction to the Input Server">Be Engineering Insights: An Introduction to the Input Server</a>, we've
+added 2 new system calls, well known to the community of UNIX programmers:
+</p><pre class="programlisting cpp">
+struct <span class="type">iovec</span> {
+  <span class="type">void   *</span><code class="varname">iov_base</code>;
+  <span class="type">size_t</span>  <code class="varname">iov_len</code>;
+};
+typedef struct <span class="type">iovec</span> <span class="type">iovec</span>;
+
+extern <span class="type">ssize_t</span>   <code class="function">readv_pos</code>(<span class="type">int</span> <code class="parameter">fd</code>, <span class="type">off_t</span> <code class="parameter">pos</code>,
+  <span class="type">constiovec *</span><code class="parameter">vec</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+extern <span class="type">ssize_t</span>   <code class="function">writev_pos</code>(<span class="type">int</span> <code class="parameter">fd</code>, <span class="type">off_t</span> <code class="parameter">pos</code>,
+  <span class="type">constiovec *</span><code class="parameter">vec</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+</pre><p>
+These calls let you read and write multiple buffers to/from a file or a
+device. They initiate an IO on the device pointed to by <code class="parameter">fd</code>, starting at
+position <code class="parameter">pos</code>, using the <code class="parameter">count</code> buffers described in the array <code class="parameter">vec</code>.
+</p><p>
+One may think this is equivalent to issuing multiple simple reads and
+writes to the same file descriptor—and, from a semantic standpoint, it
+is. But not when you look at performance!
+</p><p>
+Most devices that use <acronym class="acronym" title="Direct Memory Access">DMA</acronym>
+are capable of "scatter-gather." It means that
+the <acronym class="acronym">DMA</acronym> can be programmed to handle, in one shot, buffers that are
+scattered throughout memory. Instead of programming N times an IO that
+points to a single buffer, only one IO needs to be programmed, with a
+vector of pointers that describe the scattered buffers. It means higher
+bandwidth.
+</p><p>
+At a lower level, we've added two entries in the <span class="type">device_hooks</span> structure:
+</p><pre class="programlisting cpp">
+typedef <span class="type">status_t</span> (*<span class="type">device_readv_hook</span>)
+  (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>, <span class="type">constiovec *</span><code class="parameter">vec</code>,
+   <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">size_t *</span><code class="parameter">numBytes</code>);
+
+typedef <span class="type">status_t</span> (*<span class="type">device_writev_hook</span>)
+  (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>, <span class="type">constiovec *</span><code class="parameter">vec</code>,
+   <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">size_t *</span><code class="parameter">numBytes</code>);
+
+typedef struct {
+  ...
+  <span class="type">device_readv_hook</span>  <code class="varname">readv</code>;
+    <span class="comment">/* scatter-gather read from the device */</span>
+  <span class="type">device_writev_hook</span> <code class="varname">writev</code>;
+    <span class="comment">/* scatter-gather write to the device  */</span>
+} <span class="type">device_hooks</span>;
+</pre><p>
+Notice that the syntax is very similar to that of the single read and
+write hooks:
+</p><pre class="programlisting cpp">
+typedef <span class="type">status_t</span> (*<span class="type">device_read_hook</span>)
+  (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>, <span class="type">void *</span><code class="parameter">data</code>,
+   <span class="type">size_t *</span><code class="parameter">numBytes</code>);
+
+typedef <span class="type">status_t</span> (*<span class="type">device_write_hook</span>)
+  (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>, <span class="type">constvoid *</span>data,
+   <span class="type">size_t *</span><code class="parameter">numBytes</code>);
+</pre><p>
+Only the descriptions of the buffers differ.
+</p><p>
+Devices that can take advantage of scatter-gather should implement these
+hooks. Other drivers can simply declare them <code class="constant">NULL</code>. When a <code class="function">readv()</code> or
+<code class="function">writev()</code> call is issued to a driver that does not handle scatter-gather,
+the IO is broken down into smaller IO using individual buffers. Of
+course, R3 drivers don't know about scatter-gather, and are treated
+accordingly.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id734662"></a>Select</h4></div></div></div><p>
+I'm not breaking the news either with this one. Trey announced in his
+article last week the coming of <code class="function">select()</code>. This is another call that is
+very familiar to UNIX programers:
+</p><pre class="programlisting cpp">
+extern <span class="type">int</span> <code class="function">select</code>(<span class="type">int</span> <code class="parameter">nbits</code>,
+      struct <span class="type">fd_set *</span><code class="parameter">rbits</code>,
+      struct <span class="type">fd_set *</span><code class="parameter">wbits</code>,
+      struct <span class="type">fd_set *</span><code class="parameter">ebits</code>,
+      struct <span class="type">timeval *</span><code class="parameter">timeout</code>);
+</pre><p>
+<code class="parameter">rbits</code>, <code class="parameter">wbits</code> and <code class="parameter">ebits</code>
+are bit vectors. Each bit represents a file
+descriptor to watch for a particular event:
+</p><ul class="itemizedlist"><li><p>
+<code class="parameter">rbits</code>: wait for input to be available (read returns something
+immediately without blocking)
+</p></li><li><p>
+<code class="parameter">wbits</code>: wait for output to drain (write of 1 byte does not block)
+</p></li><li><p>
+<code class="parameter">ebits</code>: wait for exceptions.
+</p></li></ul><p>
+<code class="function">select()</code> returns when at least one event has occurred, or when it times
+out. Upon exit, <code class="function">select()</code> returns (in the different bit vectors) the file
+descriptors that are ready for the corresponding event.
+</p><p>
+<code class="function">select()</code> is very convenient because it allows a single thread to deal
+with multiple streams of data. The current alternative is to spawn one
+thread for every file descriptor you want to control. This might be
+overkill in certain situations, especially if you deal with a lot of
+streams.
+</p><p>
+<code class="function">select()</code> is broken down into two calls at the
+driver <acronym class="acronym">API</acronym> level: one hook
+to ask the driver to start watching a given file descriptor, and another
+hook to stop watching.
+</p><p>
+Here are the two hooks we added to the <span class="type">device_hooks</span> structure:
+</p><pre class="programlisting cpp">
+struct <span class="type">selectsync</span>;
+typedef struct <span class="type">selectsync</span> <span class="type">selectsync</span>;
+
+typedef <span class="type">status_t</span> (*<span class="type">device_select_hook</span>)
+  (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">uint8</span> <code class="parameter">event</code>, <span class="type">uint32</span> <code class="parameter">ref</code>, <span class="type">selectsync *</span><code class="parameter">sync</code>);
+
+typedef <span class="type">status_t</span> (*<span class="type">device_deselect_hook</span>)
+  (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">uint8</span> <code class="parameter">event</code>, <span class="type">selectsync *</span><code class="parameter">sync</code>);
+
+#define  <code class="constant">B_SELECT_READ</code>       1
+#define  <code class="constant">B_SELECT_WRITE</code>      2
+#define  <code class="constant">B_SELECT_EXCEPTION</code>  3
+
+typedef struct {
+  ...
+  <span class="type">device_select_hook</span>    <code class="varname">select</code>;    <span class="comment">/* start select */</span>
+  <span class="type">device_deselect_hook</span>  <code class="varname">deselect</code>;  <span class="comment">/* stop select */</span>
+} <span class="type">device_hooks</span>;
+</pre><p>
+<code class="parameter">cookie</code> represents the file descriptor to watch. event tells what kind of
+event we're waiting on for that file descriptor. If the event happens
+before the deselect hook is invoked, then the driver has to call:
+</p><pre class="programlisting cpp">
+extern <span class="type">void</span> <code class="function">notify_select_event</code>(<span class="type">selectsync *</span><code class="parameter">sync</code>, <span class="type">uint32</span> <code class="parameter">ref</code>);
+</pre><p>
+with the <code class="parameter">sync</code> and <code class="parameter">ref</code>
+it was passed in the select hook. This happens
+typically at interrupt time, when input buffers are filled or when output
+buffers drain. Another place where <code class="function">notify_select_event()</code> is likely to be
+called is in your select hook, in case the condition is already met there.
+</p><p>
+The deselect hook is called to indicate that the file descriptor
+shouldn't be watched any more, as the result of one or more events on a
+watched file descriptor, or of a timeout. It is a serious mistake to call
+<code class="function">notify_select_event()</code> after your deselect hook has been invoked.
+</p><p>
+Drivers that don't implement <code class="function">select()</code> should
+declare these hooks <code class="constant">NULL</code>.
+<code class="function">select()</code>, when invoked on such drivers, will return an error.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id735030"></a>Introduction of "Bus Managers"</h3></div></div></div><p>
+Another big addition to R4 is the notion of "bus managers." Arve wrote a
+good article on this, which you'll find at:
+<a class="xref" href="Issue3-20.html#Engineering3-20" title="Be Engineering Insights: Splitting Device Drivers and Bus Managers">Be Engineering Insights: Splitting Device Drivers and Bus Managers</a>
+</p><p>
+Bus managers are loadable modules that drivers can use to access a
+hardware bus. For example, the R3 kernel calls which drivers were using
+looked like this:
+</p><pre class="programlisting cpp">
+extern <span class="type">long</span> <code class="function">get_nth_pci_info</code>(<span class="type">long</span> <code class="parameter">index</code>, <span class="type">pci_info *</span><code class="parameter">info</code>);
+
+extern <span class="type">long</span> <code class="function">read_pci_config</code>(<span class="type">uchar</span> <code class="parameter">bus</code>, <span class="type">uchar</span> <code class="parameter">device</code>,
+  <span class="type">uchar</span> <code class="parameter">function</code>, <span class="type">long</span> <code class="parameter">offset</code>, <span class="type">long</span> <code class="parameter">size</code>);
+
+extern <span class="type">void</span> <code class="function">write_pci_config</code>(<span class="type">uchar</span> <code class="parameter">bus</code>, <span class="type">uchar</span> <code class="parameter">device</code>,
+  <span class="type">uchar</span> <code class="parameter">function</code>, <span class="type">long</span> <code class="parameter">offset</code>, <span class="type">long</span> <code class="parameter">size</code>, <span class="type">long</span> <code class="parameter">value</code>);
+...
+</pre><p>
+Now, they're encapsulated in the <acronym class="acronym">PCI</acronym> bus manager. The same happened for
+the <acronym class="acronym">ISA</acronym>, <acronym class="acronym">SCSI</acronym> and <acronym class="acronym">IDE</acronym>
+bus related calls. More busses will come. This
+makes the kernel a lot more modular and lightweight, as only the code
+handling the present busses are loaded in memory.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id735201"></a>A New Organization for the Drivers Directory</h3></div></div></div><p>
+In R3, <code class="filename">/boot/beos/system/add-ons/kernel/drivers/</code> and
+<code class="filename">/boot/home/config/add-ons/kernel/drivers/</code> contained the drivers. This
+flat organization worked fine. But it had the unfortunate feature of not
+scaling very well as you add drivers to the system, because there is no
+direct relation between the name of a device you open and the name of the
+driver that serves it. This potentially causes all drivers to be searched
+when an unknown device is opened.
+</p><p>
+That's why we've broken down these directories into subdirectories that
+help the device file system locate drivers when new devices are opened.
+</p><ul class="itemizedlist"><li><p>
+<code class="filename">../add-ons/kernel/dev/</code>
+mirrors the devfs name space using symlinks and
+directories
+</p></li><li><p>
+<code class="filename">../add-ons/kernel/bin/</code>
+contains the driver binaries
+</p></li></ul><p>
+For example, the serial driver publishes the following devices:
+</p><pre class="screen">
+ports/serial1
+ports/serial2
+</pre><p>
+It lives under <code class="filename">../add-ons/kernel/bin/</code>
+as <code class="filename">serial</code>, and has the following
+symbolic link set up:
+</p><p>
+<code class="filename">../add-ons/kernel/drivers/dev/ports/serial</code> -&gt; <code class="filename">../../bin/serial</code>
+</p><p>
+If "fred", a driver, wishes to publish a ports/XYZ device, then it should
+setup this symbolic link:
+</p><p>
+<code class="filename">../add-ons/kernel/drivers/dev/ports/fred</code> -&gt; <code class="filename">../../bin/fred</code>
+</p><p>
+If a driver publishes devices in more than one directory, then it must
+setup a symbolic link in every directory in publishes in. For example,
+driver "foo" publishes:
+</p><pre class="screen">
+fred/bar/machin
+greg/bidule
+</pre><p>
+then it should come with the following symbolic links:
+</p><p>
+<code class="filename">../add-ons/kernel/drivers/dev/fred/bar/foo</code> -&gt; <code class="filename">../../../bin/foo</code><br />
+<code class="filename">../add-ons/kernel/drivers/dev/greg/foo</code> -&gt; <code class="filename">../../bin/foo</code>
+</p><p>
+This new organization speeds up device name resolution a lot. Imagine
+that we're trying to find the driver that serves the device
+<code class="filename">/dev/fred/bar/machin</code>.
+In R3, we have to ask all the drivers known to
+the system, one at a time, until we find the right one. In R4, we only
+have to ask the drivers pointed to by the links in
+<code class="filename">../add-ons/kernel/drivers/dev/fred/bar/</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id735373"></a>Future Directions</h3></div></div></div><p>
+You see that the driver world has undergone many changes in BeOS Release
+4. All this is nice, but there are other features that did not make it
+in, which we'd like to implement in future releases. Perhaps the most
+important one is asynchronous IO. The asynchronous <code class="function">read()</code> and <code class="function">write()</code>
+calls don't block—they return immediately instead of waiting for the
+IO to complete. Like <code class="function">select()</code>, asynchronous IO makes it possible for a
+single thread to handle several IOs simultaneously, which is sometimes a
+better option than spawning one thread for each IO you want to do
+concurrently. This is true especially if there are a lot of them.
+</p><p>
+Thanks to the driver API versioning, we'll have no problems throwing the
+necessary hooks into the <span class="type">device_hooks</span> structure while remaining backward
+compatible with existing drivers.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-36-2"></a>Be Engineering Insights: Higher-Performance Display</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Baptiste</span> <span class="surname">Quéru</span></span></div></div></div><p>
+In application writing, the Interface Kit (and the Application Server
+which runs underneath the Kit) are responsible for handling all the
+display that finally goes on screen. They provide a nice, reasonably fast
+way to develop a good GUI for your application.
+</p><p>
+Sometimes however, they aren't fast enough, especially for game writing.
+Using a windowed-mode <code class="classname">BDirectWindow</code> sometimes helps (or doesn't slow
+things down, in any case), but you still have to cooperate with other
+applications whose windows can suddenly overlap yours or want to use the
+graphics accelerator exactly when you need it. Switching to a full-screen
+<code class="classname">BDirectWindow</code> improves things a little more, but you may still want even
+higher performance. What you need is a <code class="classname">BWindowScreen</code>.
+</p><p>
+The <code class="classname">BWindowScreen</code> basically allows you to establish an (almost) direct
+connection to the graphics driver, bypassing (almost) the whole
+Application Server. Its great advantage over <code class="classname">BDirectWindow</code> is that it
+allows you to manipulate all the memory from the graphics card, instead
+of just having a simple frame buffer. Welcome to the world of <span class="type">double</span>- (or
+triple-) buffering, of high-speed blitting, of 60+ fps performance.
+</p><p>
+Looks quite exciting, hey? Unfortunately, all is not perfect.
+<code class="classname">BWindowScreen</code> is a low-level API. This means that you'll have to do many
+things by hand that you were used to having the Application Server do for
+you. <code class="classname">BWindowScreen</code> is also affected by some hardware and software bugs,
+which can make things harder than they should be.
+</p><p>
+<code class="classname">BWindowScreen</code> reflects the R3 graphics architecture. That architecture is
+going away in R4, since it was becoming dated. The architecture that
+replaces it will allow some really cool things in later releases.
+<code class="classname">BWindowScreen</code> is still the best way to get high-performance full screen
+display in R4, though it too will be replaced by something even better in
+a later release.
+</p><p>
+Here is a code snippet, ready for you to use and customize:
+</p><pre class="programlisting cpp">
+#include &lt;Application.h&gt;
+#include &lt;WindowScreen.h&gt;
+#include &lt;string.h&gt;
+
+typedef <span class="type">long</span> (*<span class="type">blit_hook</span>)(<span class="type">long</span>,<span class="type">long</span>,<span class="type">long</span>,<span class="type">long</span>,<span class="type">long</span>,<span class="type">long</span>);
+typedef <span class="type">long</span> (*<span class="type">sync_hook</span>)();
+
+class <code class="classname">NApplication</code>:public <code class="classname">BApplication</code> {
+public:
+  <code class="classname">NApplication</code>();
+  <span class="type">bool</span> <code class="varname">is_quitting</code>;
+    <span class="comment">// So that the WindowScreen knows what to do</span>
+    <span class="comment">// when disconnected.</span>
+
+private:
+  <span class="type">bool</span> <code class="methodname">QuitRequested</code>();
+  <span class="type">void</span> <code class="methodname">ReadyToRun</code>();
+};
+
+class <code class="classname">NWindowScreen</code>:public <code class="classname">BWindowScreen</code> {
+public:
+  <code class="methodname">NWindowScreen</code>(<span class="type">status_t*</span>);
+
+private:
+  <span class="type">void</span> <code class="methodname">ScreenConnected</code>(<span class="type">bool</span>);
+  <span class="type">long</span> <code class="methodname">MyCode</code>();
+  static <span class="type">long</span> <code class="methodname">Entry</code>(<span class="type">void*</span>);
+  <span class="type">thread_id</span> <code class="varname">tid</code>;
+  <span class="type">sem_id</span> <code class="varname">sem</code>;
+  <span class="type">area_id</span> <code class="varname">area</code>;
+  <span class="type">uint8*</span> <code class="varname">save_buffer</code>;
+  <span class="type">uint8*</span> <code class="varname">frame_buffer</code>;
+  <span class="type">ulong</span> <code class="varname">line_length</code>;
+  <span class="type">bool</span> <code class="varname">thread_is_locked</code>;
+    <span class="comment">// small hack to allow to quit the</span>
+    <span class="comment">// app from ScreenConnected()</span>
+  <span class="type">blit_hook</span> <code class="varname">blit</code>;
+    <span class="comment">// hooks to the graphics driver functions</span>
+  <span class="type">sync_hook</span> <code class="varname">sync</code>;
+};
+
+main() {
+  <code class="classname">NApplication</code> <code class="varname">app</code>;
+}
+
+<code class="classname">NApplication</code>::<code class="methodname">NApplication</code>()
+   :<code class="classname">BApplication</code>("application/x-vnd.Be-sample-jbq1") {
+  <code class="methodname">Run</code>(); <span class="comment">// see you in ReadyToRun()</span>
+}
+
+<span class="type">void</span> <code class="classname">NApplication</code>::<code class="methodname">ReadyToRun</code>() {
+  <span class="type">status_t</span> <code class="varname">ret</code>=<code class="constant">B_ERROR</code>;
+  <code class="varname">is_quitting</code>=<code class="constant">false</code>;
+  <span class="type"><code class="classname">NWindowScreen</code>*</span> <code class="varname">ws</code>=new <code class="classname">NWindowScreen</code>(&amp;<code class="varname">ret</code>);
+    <span class="comment">// exit if constructing the WindowScreen failed.</span>
+  if ((<code class="varname">ws</code>==<code class="constant">NULL</code>)||(<code class="varname">ret</code>&lt;<code class="constant">B_OK</code>))
+    <code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+}
+
+<span class="type">bool</span> <code class="classname">NApplication</code>::<code class="methodname">QuitRequested</code>() {
+  <code class="varname">is_quitting</code>=<code class="constant">true</code>;
+  return <code class="constant">true</code>;
+}
+
+<code class="classname">NWindowScreen</code>::<code class="methodname">NWindowScreen</code>(<span class="type">status_t*</span> <code class="parameter">ret</code>)
+  :<code class="classname">BWindowScreen</code>("Example",<code class="constant">B_8_BIT_640x480</code>,<code class="parameter">ret</code>) {
+  <code class="varname">thread_is_locked</code>=<code class="constant">true</code>;
+  <code class="constant">tid</code>=0;
+  if (*<code class="parameter">ret</code>==<code class="constant">B_OK</code>) {
+    <span class="comment">// this semaphore controls the access to the WindowScreen</span>
+    <code class="varname">sem</code>=<code class="function">create_sem</code>(0,"WindowScreen Access");
+
+    <span class="comment">// this area is used to save the whole framebuffer when</span>
+    <span class="comment">// switching workspaces. (better than malloc()).</span>
+    <code class="varname">area</code>=<code class="function">create_area</code>("save",&amp;<code class="varname">save_buffer</code>,<code class="constant">B_ANY_ADDRESS</code>,
+      640*2048,<code class="constant">B_NO_LOCK</code>,<code class="constant">B_READ_AREA</code>|<code class="constant">B_WRITE_AREA</code>);
+
+    <span class="comment">// exit if an error occurred.</span>
+    if ((<code class="varname">sem</code>&lt;<code class="constant">B_OK</code>)||(<code class="varname">area</code>&lt;<code class="constant">B_OK</code>)) *<code class="parameter">ret</code>=<code class="constant">B_ERROR</code>;
+    else <code class="methodname">Show</code>(); <span class="comment">// let's go. See you in ScreenConnected.</span>
+  }
+}
+
+<span class="type">void</span> <code class="classname">NWindowScreen</code>::<code class="methodname">ScreenConnected</code>(<span class="type">bool</span> <code class="parameter">connected</code>) {
+  if (<code class="parameter">connected</code>) {
+    if ((<code class="methodname">SetSpace</code>(<code class="constant">B_8_BIT_640x480</code>)&lt;<code class="constant">B_OK</code>)
+         ||(<code class="methodname">SetFrameBuffer</code>(640,2048)&lt;<code class="constant">B_OK</code>)) {
+      <span class="comment">// properly set the framebuffer.</span>
+      <span class="comment">// exit if an error occurs.</span>
+      <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+      return;
+    }
+
+  <span class="comment">// get the hardware acceleration hooks. get them each time</span>
+  <span class="comment">// the WindowScreen is connected, because of multiple</span>
+  <span class="comment">// monitor support</span>
+  <code class="varname">blit</code>=(<span class="type">blit_hook</span>)<code class="methodname">CardHookAt</code>(7);
+  <code class="varname">sync</code>=(<span class="type">sync_hook</span>)<code class="methodname">CardHookAt</code>(10);
+
+  <span class="comment">// cannot work with no hardware blitting</span>
+  if (<code class="varname">blit</code>==<code class="constant">NULL</code>) {
+     <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+     return;
+  }
+
+  <span class="comment">// get the framebuffer-related info, each time the</span>
+  <span class="comment">// WindowScreen is connected (multiple monitor)</span>
+  <code class="varname">frame_buffer</code>=(<span class="type">uint8*</span>)(<code class="methodname">CardInfo</code>()-&gt;<code class="varname">frame_buffer</code>);
+  <code class="varname">line_length</code>=<code class="methodname">FrameBufferInfo</code>()-&gt;<code class="varname">bytes_per_row</code>;
+  if (<code class="varname">tid</code>==0) {
+    <span class="comment">// clean the framebuffer</span>
+    <code class="function">memset</code>(<code class="varname">frame_buffer</code>,0,2048*<code class="varname">line_length</code>);
+    <span class="comment">// spawn the rendering thread. exit if an error occurs.</span>
+    <span class="comment">// don't use a real-time thread. URGENT_DISPLAY is enough.</span>
+    if (((<code class="varname">tid</code>=<code class="function">spawn_thread</code>(<code class="varname">Entry</code>,"rendering thread",
+          <code class="constant">B_URGENT_DISPLAY_PRIORITY</code>,<code class="varname">this</code>))&lt;<code class="constant">B_OK</code>)
+       ||(<code class="function">resume_thread</code>(<code class="varname">tid</code>)&lt;<code class="constant">B_OK</code>))
+         <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+    } else
+      for (<span class="type">int</span> <code class="varname">y</code>=0;<code class="varname">y</code>&lt;2048;<code class="varname">y</code>++)
+        <span class="comment">// restore the framebuffer when switching back from</span>
+        <span class="comment">// another workspace.</span>
+        <code class="function">memcpy</code>(<code class="varname">frame_buffer</code>+<code class="varname">y</code>*<code class="varname">line_length</code>,
+          <code class="varname">save_buffer</code>+640*<code class="varname">y</code>,640);
+
+    <span class="comment">// set our color list.</span>
+    for (<span class="type">int</span> <code class="varname">i</code>=0;<code class="varname">i</code>&lt;128;<code class="varname">i</code>++) {
+      <span class="type">rgb_color</span> <code class="varname">c1</code>={<code class="varname">i</code>*2,<code class="varname">i</code>*2,<code class="varname">i</code>*2};
+      <span class="type">rgb_color</span> <code class="varname">c2</code>={127+<code class="varname">i</code>,2*<code class="varname">i</code>,254};
+      <code class="methodname">SetColorList</code>(&amp;<code class="varname">c1</code>,<code class="varname">i</code>,<code class="varname">i</code>);
+      <code class="methodname">SetColorList</code>(&amp;<code class="varname">c2</code>,<code class="varname">i</code>+128,<code class="varname">i</code>+128);
+    }
+
+    <span class="comment">// allow the rendering thread to run.</span>
+    <code class="varname">thread_is_locked</code>=<code class="constant">false</code>;
+    <code class="function">release_sem</code>(<code class="varname">sem</code>);
+  } else {
+    <span class="comment">// block the rendering thread.</span>
+    if (!<code class="varname">thread_is_locked</code>) {
+      <code class="function">acquire_sem</code>(<code class="varname">sem</code>);
+      <code class="varname">thread_is_locked</code>=<code class="constant">true</code>;
+    }
+
+    <span class="comment">// kill the rendering and clean up when quitting</span>
+    if ((((<span class="type"><code class="classname">NApplication</code>*</span>)<code class="varname">be_app</code>)-&gt;<code class="varname">is_quitting</code>)) {
+      <span class="type">status_t</span> <code class="varname">ret</code>;
+      <code class="function">kill_thread</code>(<code class="varname">tid</code>);
+      <code class="function">wait_for_thread</code>(<code class="varname">tid</code>,&amp;<code class="varname">ret</code>);
+      <code class="function">delete_sem</code>(<code class="varname">sem</code>);
+      <code class="function">delete_area</code>(<code class="varname">area</code>);
+    } else {
+      <span class="comment">// set the color list black so that the screen doesn't</span>
+      <span class="comment">// seem to freeze while saving the framebuffer</span>
+      <span class="type">rgb_color</span> <code class="varname">c</code>={0,0,0};
+      for (<span class="type">int</span> <code class="varname">i</code>=0;<code class="varname">i</code>&lt;256;<code class="varname">i</code>++)
+        <code class="methodname">SetColorList</code>(&amp;<code class="varname">c</code>,<code class="varname">i</code>,<code class="varname">i</code>);
+      <span class="comment">// save the framebuffer</span>
+      for (<span class="type">int</span> <code class="varname">y</code>=0;<code class="varname">y</code>&lt;2048;<code class="varname">y</code>++)
+        <code class="function">memcpy</code>(<code class="varname">save_buffer</code>+640*<code class="varname">y</code>,
+          <code class="varname">frame_buffer</code>+<code class="varname">y</code>*<code class="varname">line_length</code>,640);
+    }
+  }
+}
+
+<span class="type">long</span> <code class="classname">NWindowScreen</code>::<code class="methodname">Entry</code>(<span class="type">void*</span> <code class="parameter">p</code>) {
+  return ((<span class="type"><code class="classname">NWindowScreen</code>*</span>)<code class="parameter">p</code>)-&gt;<code class="methodname">MyCode</code>();
+}
+
+<span class="type">long</span> <code class="classname">NWindowScreen</code>::<code class="methodname">MyCode</code>() {
+  <span class="comment">// gain access to the framebuffer before writing to it.</span>
+  <code class="function">acquire_sem</code>(<code class="varname">sem</code>);
+  for (<span class="type">int</span> <code class="varname">j</code>=1440;<code class="varname">j</code>&lt;2048;<code class="varname">j</code>++) {
+    for (<span class="type">int</span> <code class="varname">i</code>=0;<code class="varname">i</code>&lt;640;<code class="varname">i</code>++) {
+      <span class="comment">// draw the background ripple pattern</span>
+      <span class="type">float</span> <code class="varname">val</code>=63.99*(1+cos(2*<code class="constant">PI</code>*((<code class="varname">i</code>-320)*(<code class="varname">i</code>-320)
+        +(<code class="varname">j</code>-1744)*(<code class="varname">j</code>-1744))/1216));
+      <code class="varname">frame_buffer</code>[<code class="varname">i</code>+<code class="varname">line_length</code>*<code class="varname">j</code>]=int(<code class="varname">val</code>);
+    }
+  }
+  <span class="type">ulong</span> <code class="varname">numframe</code>=0;
+  <span class="type">bigtime_t</span> <code class="varname">trgt</code>=0;
+  <span class="type">ulong</span> <code class="varname">y_origin</code>;
+  <span class="type">uint8*</span> <code class="varname">current_frame</code>;
+  while(<code class="constant">true</code>) {
+    <span class="comment">// the framebuffer coordinates of the next frame</span>
+    <code class="varname">y_origin</code>=480*(<code class="varname">numframe</code>%3);
+
+    <span class="comment">// and a pointer to it</span>
+    <code class="varname">current_frame</code>=<code class="varname">frame_buffer</code>+<code class="varname">y_origin</code>*<code class="varname">line_length</code>;
+
+    <span class="comment">// copy the background</span>
+    int <code class="varname">ytop</code>=<code class="varname">numframe</code>%608,<code class="varname">ybot</code>=<code class="varname">ytop</code>+479;
+    if (<code class="varname">ybot</code>&lt;608) {
+      <code class="function">blit</code>(640,1440+<code class="varname">ytop</code>,0,<code class="varname">y_origin</code>,639,479);
+    } else {
+      <code class="function">blit</code>(0,1440+<code class="varname">ytop</code>,0,<code class="varname">y_origin</code>,639,1086-<code class="varname">ybot</code>);
+      <code class="function">blit</code>(0,1440,0,<code class="varname">y_origin</code>+1087-<code class="varname">ybot</code>,639,<code class="varname">ybot</code>-608);
+    }
+
+    <span class="comment">// calculate the circle position. doing such calculations</span>
+    <span class="comment">// between blit() and sync() can save some time.</span>
+    <span class="type">uint32</span> <code class="varname">x</code>=287.99*(1+sin(<code class="varname">numframe</code>/72.));
+    <span class="type">uint32</span> <code class="varname">y</code>=207.99*(1+sin(<code class="varname">numframe</code>/52.));
+    if (<code class="varname">sync</code>) <code class="function">sync</code>();
+
+    <span class="comment">// draw the circle</span>
+    for (<span class="type">int</span> <code class="varname">j</code>=0;<code class="varname">j</code>&lt;64;<code class="varname">j</code>++) {
+      for (<span class="type">int</span> <code class="varname">i</code>=0;<code class="varname">i</code>&lt;64;<code class="varname">i</code>++) {
+        if ((<code class="varname">i</code>-31)*(<code class="varname">i</code>-32)+(<code class="varname">j</code>-31)*(<code class="varname">j</code>-32)&lt;=1024)
+          <code class="varname">current_frame</code>[<code class="varname">x</code>+<code class="varname">i</code>+<code class="varname">line_length</code>*(<code class="varname">y</code>+<code class="varname">j</code>)]+=128;
+      }
+    }
+
+    <span class="comment">// release the semaphore while waiting. gotta release it</span>
+    <span class="comment">// at some point or nasty things will happen!</span>
+    <code class="function">release_sem</code>(<code class="varname">sem</code>);
+
+    <span class="comment">// we're doing some triple buffering. unwanted things would</span>
+    <span class="comment">// happen if we rendered more pictures than the card can</span>
+    <span class="comment">// display. we here make sure not to render more than 55.5</span>
+    <span class="comment">// pictures per second.</span>
+    if (<code class="function">system_time</code>()&lt;<code class="varname">trgt</code>) <code class="function">snooze</code>(<code class="varname">trgt</code>-<code class="function">system_time</code>());
+    <code class="varname">trgt</code>=<code class="function">system_time</code>()+18000;
+
+    <span class="comment">// acquire the semaphore back before talking to the driver</span>
+    <code class="function">acquire_sem</code>(<code class="varname">sem</code>);
+    <span class="comment">// do the page-flipping</span>
+    <code class="methodname">MoveDisplayArea</code>(0,<code class="varname">y_origin</code>);
+    <span class="comment">// and go to the next frame!</span>
+    <code class="varname">numframe</code>++;
+  }
+  return 0;
+}
+</pre><p>
+There are some traps to be aware of before you begin playing with the
+<code class="classname">BWindowScreen</code>:
+</p><p>
+About <code class="methodname">BWindowScreen()</code>, <code class="methodname">SetSpace()</code>
+and <code class="methodname">SetFrameBuffer()</code>:
+</p><ul class="itemizedlist"><li><p>
+The constructor
+does not completely initialize the <code class="classname">BWindowScreen</code> internal data.
+</p></li><li><p>
+You should call <code class="methodname">Show()</code>, <code class="methodname">SetSpace()</code>
+and <code class="methodname">SetFrameBuffer()</code> *in that order*
+if you want the structures returned by <code class="methodname">CardInfo()</code>
+and <code class="methodname">FrameBufferInfo()</code>
+to be valid.
+</p></li><li><p>
+You should call <code class="methodname">Show()</code> just after
+constructing the <code class="classname">BWindowScreen</code>
+object, and call <code class="methodname">SetSpace()</code> and
+<code class="methodname">SetFrameBuffer()</code> in <code class="methodname">ScreenConnected()</code>
+*each time* your BWindowScreen is connected (not just the first time).
+</p></li><li><p>
+You should neither call <code class="methodname">SetSpace()</code> without
+<code class="methodname">SetFrameBuffer()</code> nor call
+<code class="methodname">SetFrameBuffer()</code> without <code class="methodname">SetSpace()</code>.
+Always call <code class="methodname">SetSpace()</code> *then*
+<code class="methodname">SetFrameBuffer()</code> for the best results.
+</p></li></ul><p>
+Choosing a good color_space and a good framebuffer size:
+</p><ul class="itemizedlist"><li><p>
+You should be aware that in R3.x some drivers do not support 16 bpp,
+and some others do not support 32 bpp. You should also know that some
+graphics cards do not allow you to choose any arbitrary framebuffer size;
+some will not accept a framebuffer wider than 1600 or 2048, or higher
+than 2048, some will only be able to use a small set of widths.
+</p></li><li><p>
+I recommend not using a framebuffer wider than the display area (except
+for temporary development reasons or if you don't care about
+compatibility issues). It's also a good idea not to use the full graphics
+card memory but to leave 1kB to 4kB unused (for the hardware cursor).
+</p></li><li><p>
+Here are some height limits you should not break if you want your
+program to be compatible with the mentioned cards:
+</p><ul class="itemizedlist"><li><p>
+in a <code class="constant">B_8_BIT_640x480</code> space:
+</p><p>
+640x1632 all 1MB cards<br />
+640x2048 2MB PowerMac 7300/7600/8500/8600, #9GXE64 (BeBox)<br />
+640x3270 all 2MB cards
+</p></li><li><p>
+in a <code class="constant">B_8_BIT_800x600</code> space:
+</p><p>
+800x1305 all 1MB cards<br />
+800x2048 2MB PowerMac 7300/7600/8500/8600, #9GXE64 (BeBox)<br />
+800x2180 2MB Matrox cards<br />
+800x2616 all 2MB cards
+</p></li><li><p>
+in a <code class="constant">B_16_BIT_640x480</code> space:
+</p><p>
+640x1635 all 2MB cards<br />
+640x3273 all 4MB cards
+</p></li><li><p>
+in a <code class="constant">B_16_BIT_800x600</code> space:
+</p><p>
+800x1308 all 2MB cards<br />
+800x2182 4MB Matrox cards<br />
+800x2618 all 4MB cards
+</p></li><li><p>
+in a <code class="constant">B_32_BIT_640x480</code> space:
+</p><p>
+640x1636 all 4MB cards
+</p></li><li><p>
+in a <code class="constant">B_32_BIT_800x600</code> space:
+</p><p>
+800x1309 all 4MB cards
+</p></li></ul></li></ul><p>
+<code class="methodname">MoveDisplayArea()</code> and hardware scrolling:
+</p><ul class="itemizedlist"><li><p>
+Although the Be Book says that <code class="methodname">MoveDisplayArea()</code> can be used for hardware
+scrolling, you shouldn't try to use it that way. Some graphics cards are
+known to not implement hardware scrolling properly. You should try to use
+<code class="methodname">MoveDisplayArea()</code> only with x=0, and only for page-flipping (not for real
+hardware scrolling).
+</p></li></ul><p>
+<code class="methodname">CardHookAt</code>(10) ("sync"):
+</p><ul class="itemizedlist"><li><p>
+One of the keys to high-performance—the graphics card hooks must be
+treated with special attention. If there is a sync function (hook number
+10), all other hooks can be asynchronous. Be careful to call the sync
+hook when it's needed (e.g., to synchronize hardware acceleration and
+framebuffer access, or to finish all hardware accelerations before
+page-flipping or before being disconnected from the screen).
+</p></li></ul><p>
+<code class="methodname">ScreenConnected()</code> and multiple monitors:
+</p><ul class="itemizedlist"><li><p>
+While R3 does not support any form of multiple monitors, future releases
+will. You should keep in mind that a <code class="classname">BWindowScreen</code> might be disconnected
+from one screen and reconnected to another one. Consequently, you must
+refresh the card hooks each time your <code class="classname">BWindowScreen</code> is connected, as well
+as any variable that could be affected by a change in <code class="methodname">CardInfo()</code> or
+<code class="methodname">FrameBufferInfo()</code>.
+</p></li></ul><p>
+<code class="methodname">MoveDisplayArea()</code> and the R3 Matrox driver:
+</p><ul class="itemizedlist"><li><p>
+In R3.x, <code class="methodname">MoveDisplayArea()</code> returns immediately but the display area is
+not effective until the next vertical retrace, except for the Matrox
+driver. The default Matrox driver actually waits until the next vertical
+retrace before returning (and sometimes misses a retrace and has to wait
+until the next one). There is an alternate Matrox driver at
+ftp://ftp.be.com/pub/beos_updates/r3/intel/Matrox.zip which returns
+immediately, but the display area is effective immediately as well. Seen
+from the program, this driver has the same behaviour as all other
+drivers, at the cost of a little tearing. It's advisable to use that
+driver when developing <code class="classname">BWindowScreen</code> applications under R3. (All drivers
+will have the same behaviour in R4.)
+</p></li></ul><p>
+About 15/16bpp:
+</p><ul class="itemizedlist"><li><p>
+We have discovered the bugs in the R3 drivers that affected 5/16bpp
+WindowScreens with ViRGE and Matrox cards. There are some updated drivers
+available at:
+ftp://ftp.be.com/pub/beos_updates/r3/intel/Matrox.zip and
+ftp://ftp.be.com/pub/beos_updates/r3/intel/virge.zip
+</p><p>
+Also be aware that some drivers do not support both 15bpp and 16bpp. Even
+worse, the old Matrox driver would use a 15bpp screen when asked for
+16bpp. Update your drivers!
+</p></li></ul></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-36"></a>Developers Workshop: Yet Another Locking Article</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+It is funny, but somewhat fitting that many times the Newsletter article
+you intend to write is not really the Newsletter article you end up
+writing. With the best of intentions, I chose to follow a recent trend in
+articles and talk about multithreaded programming and locking down
+critical sections of code and resources. The vehicle for my discussion
+was to be a Multiple-Reader Single-Writer locking class in the mode of
+<code class="classname">BLocker</code>, complete with <code class="methodname">Lock()</code>,
+<code class="methodname">Unlock()</code>, <code class="methodname">IsLocked()</code> and an
+Autolocker-style utility class. Needless to say, the class I was
+expecting is a far cry from what I will present today.
+</p><p>
+In the hopes of this being my first short Newsletter article, I will
+leave the details of the class to the sample code. For once it was
+carefully prepared ahead of time and is reasonably commented. I will
+briefly point out two neat features of the class before heading into a
+short discussion of locking styles. The first function to look at is the
+<code class="methodname">IsWriteLocked()</code> function, as it shows a way to cache the index of a
+thread's stack in memory, and use it to help identify a thread faster
+than the usual method, <code class="code">find_thread(NULL)</code>.
+</p><p>
+The stack_base method is not infallible, and needs to be backed up by
+<code class="code">find_thread(NULL)</code> when there is no match, but it is considerably faster
+when a match is found. This is kind of like the benaphore technique of
+speeding up semaphores.
+</p><p>
+The other functions to look at are the <code class="function">register_thread()</code> and
+<code class="function">unregister_thread()</code> functions. These are debug functions that keep state
+about threads holding a read-lock by creating a state array with room for
+every possible thread. An individual slot can be set aside for each
+thread and specified by performing an operation: <code class="code">thread_id %
+max_possible_threads</code>. Again, the code itself lists these in good detail.
+I hope you find the class useful. A few of the design decisions I made
+are detailed in the discussion below.
+</p><p>
+I want to take a little space to discuss locking philosophies and their
+trade-offs. The two opposing views can be presented briefly as "Lock
+Early, Lock Often" and "Lock Only When and Where Necessary." These
+philosophies sit on opposite ends of the spectrum of ease of use and
+efficiency, and both have their adherents in the company (understanding
+that most engineers here fall comfortably in the middle ground.)
+</p><p>
+The "Lock Early, Lock Often" view rests on the idea that if you are
+uncertain exactly where you need to lock, it is better to be extra sure
+that you lock your resources. It advises that all locking classes should
+support "nested" calls to <code class="methodname">Lock()</code>; in other words if a thread holds a lock
+and calls <code class="methodname">Lock()</code> again, it should be allowed to continue without
+deadlocking waiting for itself to release the lock. This increases the
+safety of the lock, by allowing you to wrap all of your functions in
+<code class="methodname">Lock()</code> / <code class="methodname">Unlock()</code> pairs
+and allowing the lock to take care of knowing if
+the lock needs to be acquired or not. An extension of this are
+Autolocking classes, which acquire a lock in their constructor and
+release it in their destructor. By allocating one of these on the stack
+you can be certain that you will safely hold the lock for the duration of
+your function.
+</p><p>
+The main advantage of the "Lock Early, Lock Often" strategy is its
+simplicity. It is very easy to add locking to your applications: create
+an Autolock at the top of all your functions and be assured that it will
+do its magic. The downside of this philosophy is that the lock itself
+needs to get smarter and to hold onto state information, which can cause
+some inefficiencies in space and speed.
+</p><p>
+At the other end of the spectrum is the "Lock Only When and Where
+Necessary." This philosophy asserts that programmers using the "Lock
+Early, Lock Often" strategy do not understand the locking requirements of
+their applications, and that is essentially a bug just waiting to happen.
+In addition, the overhead added to applications by locking when it is
+unnecessary (say, in a function that is only called &gt;from within another
+function that already holds the lock) and by using an additional class to
+manage the lock makes the application larger and less efficient. This
+view instead requires programmers to really design their applications and
+to fully understand the implications of the locking mechanisms chosen.
+</p><p>
+So, which is correct? I think it often depends on the tradeoffs you are
+willing to make. With locks with only a single owner, the state
+information needed is very small, and usually the lock's system for
+determining if a thread holds the lock is fairly efficient (see the
+stack_base trick mentioned above to make it a bit faster.) Another
+consideration is how important speed and size are when dealing with the
+lock. In a very crucial area of an important, busy program, like the
+app_server, increasing efficiency can be paramount. In that case it is
+much, much better to take the extra time to really understand the locking
+necessary and to reduce the overhead. Even better would be to design a
+global application architecture that makes the flow of information clear,
+and correspondingly makes the locking mechanisms much better (along with
+everything else.)
+</p><p>
+The <code class="classname">MultiLocker</code> sample code provided leans far to the efficiency side.
+The class itself allows multiple readers to acquire the lock, but does
+not allow these readers to make nested <code class="methodname">ReadLock()</code> calls. The overhead for
+keeping state for each readers (storage space and stomping through that
+storage space every time a <code class="methodname">ReadLock()</code> or
+<code class="methodname">ReadUnlock()</code> call was made) was
+simply too great. Writers, on the other hand, have complete control over
+the lock, and may make <code class="methodname">ReadLock()</code> or
+additional <code class="methodname">WriteLock()</code> calls after
+the lock has been acquired. This allows a little bit of design
+flexibility so that functions that read information protected by the lock
+can be safely called by a writer without code duplication.
+</p><p>
+The class does have a debug mode where state information is kept about
+readers so you can be sure that you are not performing nested
+<code class="methodname">ReadLock()</code>s. The class also has timing functions so that you can see how
+long each call takes in both DEBUG mode and, with slight modifications to
+the class, the benefits of the stack-based caching noted above. I have
+included some extensive timing information from my computers that you can
+look at, or you can run your own tests with the test app included. Note
+that the numbers listed are pretty close to the raw numbers of the
+locking overhead, as writers only increment a counter, and readers simply
+access that counter.
+</p><p>
+The sample code can be found at:
+</p><p>
+ftp://ftp.be.com/pub/samples/support_kit/MultiLock.zip
+</p><p>
+The class should be pretty efficient, and you are free to use it and make
+adjustments as necessary. My thanks go out to Pierre and George from the
+app_server team, for the original lock on which this is based, and for
+their assistance with (and insistence on) the efficiency concerns.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-36"></a>Is the A/V Space a Niche Market?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+And, if it is, are we wrong to focus on it? Can we pace off enough
+running room to launch the virtuous ascending spiral of developers
+begetting users begetting developers? Is the A/V space large enough to
+swing a cat and ignite a platform?
+</p><p>
+Perhaps there's another way to look at the platform question, one that's
+brought to mind by the latest turn of Apple's fortunes. Back in 1985,
+Apple had a bad episode: The founders were gone, the new Mac wasn't
+taking off and the establishment was dissing Apple as a toy company with
+a toy computer. The advice kept pouring in: reposition the company,
+refocus, go back to your roots, find a niche where you have a distinctive
+advantage. One seer wanted to position Apple as a supplier of
+Graphics-Based Business Systems, another wanted to make the company the
+Education Computer Company. Steve Jobs, before taking a twelve year
+sabbatical, convinced Apple to buy 20% of Adobe, and thus began the era
+of desktop publishing and the Gang of Four (Apple, Adobe, Aldus and
+Canon).
+</p><p>
+Apple focused on publishing, and is still focused on publishing (as
+evidenced by the other Steve—Ballmer—ardently promoting NT as *the*
+publishing platform). Does that make Apple a publishing niche player? Not
+really. iMac buyers are not snapping up the "beetle" Mac for publishing,
+they just want a nice general-purpose computer. Although Apple is still
+thrown into the publishing bin, the Mac has always strived to be an
+everyday personal computer, and the numbers show that this isn't mere
+delusion: For example, Macs outsell Photoshop ten to one. But let's
+assume that at the company's zenith, publishing made up as much as 25% of
+Apple sales. Even then, with higher margin CPUs, Apple couldn't live on
+publishing alone, hence the importance of a more consumer-oriented
+product such as the iMac and hence, not so incidentally, the importance
+of keeping Microsoft Office on the platform.
+</p><p>
+The question of the viability of an A/V strategy stems from us being
+thrown into the same sort of bin as our noble hardware predecessor. But
+at Be we have an entirely different business model. A hardware company
+such as Apple can't survive on a million units per year. Once upon a time
+it could, but those were the salad days of expensive computers and 66%
+gross margins. We, on the other hand, have a software-only business model
+and will do extremely well with less than a million units per year--and
+so will our developers. As a result, the virtuous spiral will ignite
+(grab a cat).
+</p><p>
+More important—and here we share Apple's "niche-yet-general" duality
+-- the question may be one that never needs to be answered: While BeOS
+shows its unique abilities in A/V, we're also starting to see
+applications for everyday personal computing. I'm writing this column on
+Gobe Productive and e-mailing it to the prose-thetic surgeon using
+Mail-It, both purchased using NetPositive and SoftwareValet.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-35.html">Issue 3-35, September 2, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-37.html">Issue 3-37, September 16, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-35.html" title="Issue 3-35, September 2, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-37.html" title="Issue 3-37, September 16, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-40.html" title="Issue 4-40, October 6, 1999" /><link rel="next" href="Issue4-42.html" title="Issue 4-42, October 20, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-40.html" title="Issue 4-40, October 6, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-42.html" title="Issue 4-42, October 20, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-40.html">Issue 4-40, October 6, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-42.html">Issue 4-42, October 20, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-41"></a>Issue 4-41, October 13, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-41"></a>Be Engineering Insights: Low-Latency Timing from the User Space</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jeff</span> <span class="surname">Bush</span></span></div></div></div><p>
+One of the more compelling things that sets BeOS apart from many other
+operating systems is its ability to get low-latency timing from user
+applications. There have been a few articles talking about high
+resolution timing for certain events, both from kernel and user space,
+but I would like to talk a little more about general strategies for
+writing timing critical apps, as well as giving a little more information
+about how BeOS works under the hood.
+</p><p>
+BeOS is probably best described as a "soft real time" operating system.
+It differs from "hard real time" operating systems—typically small
+embedded systems—in being more general purpose and having higher-level
+facilities, such as VM. However, it still allows very precise timing and
+latencies.
+</p><p>
+I will be referring specifically to scheduling latency in this article,
+that being the amount of time it takes an operating system to service
+hardware or timing requests. This is important, for example, in real time
+sound applications. Take a multitrack recorder app; you may want to lay
+down one instrument track, then go back and record another one. The app
+would play the first track as it recorded the second. You'd hear both
+tracks mixed together as they played back. But, if the sound takes too
+long to get from input to output, the user will notice an annoying delay.
+</p><p>
+In order to reduce this delay you need small audio buffers, which in turn
+require the app to wake up more often to read and write buffers to and
+from the audio device. If the app can't wake up fast enough you'll hear
+glitching and pops in the output and/or recorded data. Even for an
+amateur home producer, this would be unacceptable. One solution to this
+problem is to move the app's timing-critical code into a device driver,
+where it can be closer to the hardware. This is crufty, to say the least.
+</p><p>
+With BeOS you can get low latencies without resorting to this kind of
+trickery, as the sample code will demonstrate:
+</p><pre class="programlisting c">
+#include &lt;OS.h&gt;
+
+#define <code class="constant">SNOOZE_TIME</code> 150000
+
+int main()
+{
+  <span class="type">bigtime_t</span> <code class="varname">start</code>, <code class="varname">elapsed_time</code>;
+
+  <code class="function">set_thread_priority</code>(<code class="function">find_thread</code>(<code class="constant">NULL</code>), 120);
+  for (;;) {
+    <code class="varname">start</code> = <code class="function">system_time</code>();
+    <code class="function">snooze</code>(<code class="constant">SNOOZE_TIME</code>);
+    <code class="varname">elapsed_time</code> = <code class="function">system_time</code>() - <code class="varname">start</code>;
+    <code class="function">printf</code>("%Lu microseconds late\n", <code class="varname">elapsed_time</code> - <code class="constant">SNOOZE_TIME</code>);
+  }
+
+  return 0;
+}
+</pre><p>
+This app simply measures how accurate <code class="function">snooze()</code> is. You may be surprised
+to find that it's generally very close, depending on load. There are a
+number of reasons why BeOS is this accurate. The first is that it
+dynamically programs a hardware timer to go off exactly when the <code class="function">snooze()</code>
+expires. Also, the kernel is preemptive, which means the scheduler can be
+invoked, even while a thread is executing kernel code. It is the
+convention of a number of operating systems, especially some of the Un*x
+flavor, to reschedule in the kernel only when a thread explicitly blocks,
+or when a system call returns. The reason is that these are known points
+that are not in a kernel critical section. This simplifies the design of
+the kernel, because intricate locking is not required.
+</p><p>
+For server machines, where latency is not as important, this is adequate.
+However, this limits the system's ability to respond to interrupts as
+quickly as you might like. For example, let's say thread A sleeps on a
+semaphore, waiting for a hardware interrupt handler to release the
+semaphore. Thread B begins to run, then performs a system call which
+requires quite a bit of processing in the kernel. While thread B is doing
+its thing, an interrupt comes in (such as the hardware timer interrupt in
+the example used above) and sets thread A runnable. On some operating
+systems, thread A would not actually start until thread B finished
+whatever it was doing and returned from the system call. BeOS has been a
+multiprocessor OS from its infancy, requiring fine-grained locking in the
+kernel, and therefore does not have this restriction. Under BeOS, Thread
+A would start running as soon as the interrupt was handled, leaving
+Thread B ready but still in the kernel.
+</p><p>
+As a programmer, there are few things you need to be aware of when trying
+to get tight latencies. Cyril wrote an informative article detailing how
+the BeOS scheduler works at
+</p><p>
+<a class="xref" href="Issue1-37.html#Engineering1-37" title="Be Engineering Insights: The Kernel Scheduler and Real-Time Threads">Be Engineering Insights: The Kernel Scheduler and Real-Time Threads</a>
+</p><p>
+BeOS defines 120 priority levels, with priorities 100 and above being "real
+time." Being real time has two implications for threads. First, the
+thread will not be preempted, except by threads of higher priority. This
+gives you a guaranteed execution time. It also adds the responsibility
+that the thread get its work done in a short amount of time, lest it
+degrade system performance. And it says that the thread will start
+executing shortly after it becomes ready to run, even when the system is
+under load. The kernel enforces a rule that a real time thread will not
+sit in its ready queue unless an equal or higher real time thread is
+running.
+</p><p>
+VM is another issue to consider. If a thread page faults, it can easily
+wait 20 milliseconds for the data to be read off_the disk. While this is
+barely noticeable for many apps, it can be really bad for timing-critical
+apps. For this reason, you may want to store all your timing-critical
+data in locked areas (that is, <code class="function">create_area()</code> with
+the <code class="constant">B_FULL_LOCK</code> flag),
+or use the realtime allocator defined in
+<code class="filename">RealtimeAlloc.h</code>. Also, there are
+two functions called <code class="function">media_realtime_init_image()</code> and
+<code class="function">media_realtime_init_thread()</code>, defined in
+<code class="filename">MediaDefs.h</code>, that lock image areas and thread
+stacks, respectively.
+</p><p>
+Making VM calls, including <code class="function">create_area()</code>,
+<code class="function">delete_area()</code>, <code class="function">resize_area()</code>,
+<code class="function">find_area()</code>, <code class="function">get_area_info()</code>, etc.
+can cause unnecessary delays, as they
+perform quite a bit of locking in the kernel, and lower-priority threads
+may be holding those locks. As BeOS doesn't currently support priority
+inheritance, making these calls gives no guarantee that it will return as
+quickly as you may need it to. Try to avoid making these calls from
+timing sensitive code.
+</p><p>
+In many cases, it's desirable to perform file I/O associated with real
+time processing. Even if the disk can support the data rate you need (it
+generally can), disk access is very sporadic, being bound to the movement
+of a mechanical head, which is orders of magnitude slower than the
+processor. In this case, you can emulate async I/O by running another
+thread that reads data into a buffer, then having the real time thread
+work on the data within this buffer.
+</p><p>
+Note that a bit of restraint is important here. Locked memory is an
+expensive resource, and doing too much CPU-intensive processing in a real
+time thread can degrade system performance. Before trying some of these
+techniques, you should determine what your latency tolerances are and how
+well your app can handle them without locking memory or bumping up thread
+priorities.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-41"></a>Developers' Workshop: Serving It Up: Creating a Simple Server
+Application</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+BeOS provides a collection of C++ classes that make it a little easier to
+write networking software. These classes, <code class="classname">BNetAddress</code>,
+<code class="classname">BNetBuffer</code>,
+<code class="classname">BNetEndpoint</code>, and <code class="classname">BNetDebug</code>,
+give you friendly object-oriented access to networking.
+</p><p>
+In this article, we'll create a very simple server. It waits for
+connections on a specific port (hardcoded to 4242, but you could expand
+this to be configurable), and whenever a connection is made, it transmits
+the contents of a given file over the connection, then automatically
+closes the connection.
+</p><p>
+The program, called <span class="application">Responder</span>, is launched from the command line by
+typing <code class="command">responder filename</code>,
+where   filename  is the name of the file that
+should be sent when connections are made. The file can be any size, and
+can be binary or text. No attributes are preserved and no compression is
+done (this is a simple protocol, but you can expand on it if you want
+to). The assumption is that the connection is being established by a
+client application that knows what the file name and attributes should be
+(for example, a program that runs nightly to fetch updated data from a
+central server for a database solution).
+</p><p>
+You can build this program by copying the code into a source file and
+compiling it. Be sure to include the libnetapi.so library.
+</p><p>
+The <code class="function">main()</code> function's primary purpose is to parse the command line and
+spawn the listener thread. In a more perfect server application, it might
+also set up a user interface for configuring the server or monitoring the
+server's status. Let's have a look:
+</p><pre class="programlisting cpp">
+#include &lt;NetAddress.h&gt;
+#include &lt;NetEndpoint.h&gt;
+#include &lt;File.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;socket.h&gt;
+#include &lt;OS.h&gt;
+
+static <span class="type">long</span> <code class="function">responder_proc</code>(<span class="type">void *</span><code class="parameter">data</code>);
+static <span class="type">void</span> <code class="function">send_file</code>(<span class="type">const char *</span><code class="parameter">filename</code>, <code class="classname">BNetEndpoint</code> *<code class="parameter">connect</code>);
+static <span class="type">void</span> <code class="function">send_error</code>(<code class="classname">BNetEndpoint</code> *<code class="parameter">connect</code>);
+
+<span class="type">int</span> main(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char *</span><code class="parameter">argv</code>[]) {
+  <span class="type">char *</span><code class="varname">filename</code>;
+  <span class="type">thread_id</span> <code class="varname">responder_thread</code>;
+  <span class="type">status_t</span> <code class="varname">err</code>;
+
+  if (<code class="parameter">argc</code> != 2) {
+    <code class="function">printf</code>("usage: responder &lt;filename&gt;\n");
+    return 1;
+  }
+
+  <code class="varname">filename</code> = <code class="parameter">argv</code>[1];  <span class="comment">// Filename of file to send</span>
+
+  <code class="varname">responder_thread</code> = <code class="function">spawn_thread</code>(<code class="function">responder_proc</code>,
+        "File Responder", <code class="constant">B_NORMAL_PRIORITY</code>, <code class="varname">filename</code>);
+  <code class="function">resume_thread</code>(<code class="function">responder_thread</code>);
+  <code class="function">wait_for_thread</code>(<code class="function">responder_thread</code>, &amp;<code class="varname">err</code>);
+  return 0;
+}
+</pre><p>
+This is pretty basic stuff. The responder thread is spawned with
+<code class="constant">B_NORMAL_PRIORITY</code>, the filename specified on the command line is passed to it, and
+the thread is started by calling <code class="function">resume_thread()</code>.
+Then <code class="function">main()</code> waits for
+that thread to terminate before exiting the program.
+</p><p>
+The thread function, <code class="function">responder_proc()</code>, sets up a network listener on port
+4242 and handles incoming requests:
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="function">responder_proc</code>(<span class="type">void *</span><code class="parameter">data</code>) {
+  <code class="classname">BNetEndpoint</code> <code class="varname">endpoint</code>;
+
+  if (<code class="varname">endpoint</code>.<code class="methodname">InitCheck()</code> &lt; <code class="constant">B_OK</code>) {
+    return -1;
+  }
+  <code class="varname">endpoint</code>.<code class="methodname">Bind</code>(4242);    <span class="comment">// Bind to port 4242</span>
+  <code class="varname">endpoint</code>.<code class="methodname">Listen()</code>;      <span class="comment">// Listen for incoming connections</span>
+
+  while (1) {
+    <code class="classname">BNetEndpoint</code> *<code class="varname">connect</code> = <code class="constant">NULL</code>;
+    <code class="varname">connect</code> = <code class="varname">endpoint</code>.<code class="methodname">Accept()</code>;    <span class="comment">// Wait for a connection</span>
+    if (<code class="varname">connect</code>) {
+      <span class="type">char</span> <code class="varname">hostname</code>[256];
+      <span class="type">in_addr</span> <code class="varname">addr</code>;
+      <code class="varname">connect</code>-&gt;<code class="methodname">RemoteAddr()</code>.<code class="methodname">GetAddr</code>(<code class="varname">hostname</code>);
+      <code class="varname">connect</code>-&gt;<code class="methodname">RemoteAddr()</code>.<code class="methodname">GetAddr</code>(<code class="varname">addr</code>);
+      <code class="function">printf</code>("Connection from %s (%08X)\n", <code class="varname">hostname</code>, <code class="varname">addr.s_addr</code>);
+      <code class="function">send_file</code>((<span class="type">const char *</span>) <code class="parameter">data</code>, <code class="varname">connect</code>);
+      delete <code class="varname">connect</code>;
+    }
+  }
+
+  <code class="varname">endpoint</code>.<code class="methodname">Close()</code>;
+}
+</pre><p>
+It begins by creating a <code class="classname">BNetEndpoint</code>
+on the stack. The <code class="classname">BNetEndpoint</code> class
+represents one end of a network connection; all interactions on a
+connection are done through <code class="classname">BNetEndpoint</code> functions.
+<code class="methodname">BNetEndpoint::InitCheck()</code> is called to ensure that the endpoint was
+created without incident; it returns -1 at once if an error occurred
+during construction.
+</p><p>
+Then the endpoint is bound to port 4242, and <code class="methodname">BNetEndpoint::Listen()</code> is
+called to begin listening for incoming connections. By default, <code class="function">Listen()</code>
+allows up to five connection requests to be backlogged, but you can
+optionally specify this value. For our purposes, five is plenty.
+</p><p>
+A "while" loop, which never terminates, then begins. In real life, you'd
+have this loop terminate when the user clicked a "Stop server" button, or
+something similar. As it is, the server can only be terminated by
+pressing <span class="keysym">Control</span>+<span class="keysym">C</span>
+from the terminal, or by killing it. This loop
+repeatedly attempts to accept incoming connections, and sends the file
+over them.
+</p><p>
+First, the <code class="methodname">BNetEndpoint::Accept()</code> function is called. By default,
+<code class="methodname">Accept()</code> blocks indefinitely until a connection attempt occurs; you can
+optionally specify a timeout. Once a connection is made, a new
+<code class="classname">BNetEndpoint</code> is returned, which duplicates the original endpoint except
+that there's now a connection to the remote client. This new endpoint,
+connect, is used to interact with the newly connected remote system.
+</p><p>
+We first use the <code class="classname">BNetEndpoint</code> function <code class="methodname">RemoteAddr()</code> and the
+<code class="methodname">BNetAddress::GetAddr()</code> functions to get the hostname and IP address of
+the remote system, and then we print that information to the terminal as
+a rudimentary log. Then we call send file(), which we'll see momentarily,
+to actually transmit the file.
+</p><p>
+Finally, we delete the connection, which closes it and terminates the
+interaction. The loop then continues, calling <code class="methodname">Accept()</code> again to get the
+next client's request.
+</p><p>
+The <code class="function">send_file()</code> function does the real work of transmitting the file over
+the connection:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">send_file</code>(<span class="type">const char *</span><code class="parameter">filename</code>, <span class="type"><code class="classname">BNetEndpoint</code> *</span><code class="parameter">connect</code>) {
+  <span class="type">status_t</span> <code class="varname">err</code>;
+  <span class="type">off_t</span> <code class="varname">filesize</code>;
+  <span class="type">uint8</span> <code class="varname">buffer</code>[65536];
+
+  <span class="comment">// Open the file, abort if an error occurs.</span>
+
+  <code class="classname">BFile</code> <code class="varname">file</code>(<code class="varname">filename</code>, <code class="constant">B_READ_ONLY</code>);
+  if (<code class="varname">file</code>.<code class="methodname">InitCheck()</code> &lt; <code class="constant">B_OK</code>) {
+    <code class="function">send_error</code>(<code class="varname">connect</code>);
+    return;
+  }
+
+  <span class="comment">// Get the file size, abort on error.</span>
+
+  <code class="varname">err</code> = <code class="varname">file</code>.<code class="methodname">GetSize</code>(&amp;<code class="varname">filesize</code>);
+  if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>) {
+    <code class="function">send_error</code>(<code class="varname">connect</code>);
+    return;
+  }
+
+  <span class="comment">// Put the file size into the buffer and send it.</span>
+
+  <span class="type">char</span> <code class="varname">s</code>[64];
+  <code class="function">sprintf</code>(<code class="varname">s</code>, "%Ld\n", <code class="varname">filesize</code>);
+  <span class="type">int32</span> <code class="varname">count</code> = <code class="function">strlen</code>(<code class="varname">s</code>);
+  <code class="function">memcpy</code>(<code class="varname">buffer</code>, <code class="varname">s</code>, <code class="varname">count</code>);
+  <code class="varname">connect</code>-&gt;<code class="methodname">Send</code>(&amp;<code class="varname">buffer</code>, <code class="varname">count</code>);
+
+  <span class="comment">// Now read the file, in chunks, and stuff them into the buffer,
+  // sending the buffer each time.</span>
+
+  while (1) {
+    <span class="type">ssize_t</span> <code class="varname">size</code> = <code class="varname">file</code>.<code class="methodname">Read</code>(&amp;<code class="varname">buffer</code>, 65536);
+    <code class="varname">connect</code>-&gt;<code class="methodname">Send</code>(&amp;<code class="varname">buffer</code>, <code class="varname">size</code>);
+    if (<code class="varname">size</code> &lt; 65536) {
+      break;        <span class="comment">// We're done</span>
+    }
+  }
+}
+</pre><p>
+A 64KB buffer is allocated on the stack, and we then open the file for
+reading by creating a <code class="classname">BFile</code> object referencing the filename specified on
+launch. If an error occurs (as determined by calling <code class="methodname">BFile::InitCheck()</code>,
+we call send error() to transmit an error code (this is just the string
+"ERROR\n") and return at once.
+</p><p>
+Otherwise we get the file's size by calling <code class="methodname">BFile::GetSize()</code>. If an error
+occurs here, again, we send the error code and return.
+</p><p>
+Once we know the file size, we transmit it to the client by stuffing the
+size (in <acronym class="acronym">ASCII</acronym>) into the buffer and then transmitting it to the client
+using the <code class="methodname">BNetEndpoint::Send()</code> function, specifying a pointer to the
+buffer and the number of bytes in the string, not including the null
+terminator.
+</p><p>
+Then we use a loop to read the file in 64KB chunks, transmitting each
+chunk to the client. Once the entire file is sent, the loop ends and the
+transfer is complete. After <code class="function">send_file()</code> returns, the connection is closed
+by the responder thread.
+</p><p>
+Again, this is a very simple server application, but with only a little
+work, it can be adapted into a useful application. Add a little <acronym class="acronym">HTTP</acronym>
+protocol handling, and you have a rudimentary web server, for example.
+The basics are there; all that's needed is some protocol handling and a
+user interface.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-41"></a>The End Is Near!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+No, this isn't my contribution to The Great Millennium (or Halloween)
+Scare. It's about something much smaller—the size of transistors and
+the end of Moore's Law.
+</p><p>
+We just heard a warning from an Intel scientist: With the next generation
+of silicon fabrication technology, known as .1 micron, the basic storage
+or switching building block might become too small to be reliable. Too
+small, in this case, means the state of a building block might rely on
+less than a hundred electrons. Several factors can affect the actual
+number: manufacturing variances; quantum fluctuations; and various
+sources, natural or artificial, of radioactivity generating stray
+electrons.
+</p><p>
+When a binary state is built on millions of electrons dwelling in a
+silicon junction, a few stray electrons can hardly make a difference.
+With the base level down to a hundred or so, the scientist says, the
+distinction between zeroes and ones becomes unreliable. As a result,
+Moore's Law stops "working." In other words, we can no longer expect the
+price/performance ratio of our favorite silicon devices to double every
+18 months.
+</p><p>
+A historical note: When Gordon Moore, an Intel founder, first formulated
+the observation subsequently elevated and christened into a law bearing
+his name, the cycle was pegged at 24 months. Lately, meaning in the last
+36 months, progress has been arguably swifter. Just compare a 400 Mhz
+Celeron with a 100 Mhz Pentium of the Summer of '96 vintage.
+</p><p>
+Let's make two assumptions here. One, the Intel scientist is right and no
+amount of human ingenuity, even from Intel's competition, will change the
+situation. Two, I blush at the mere thought, this isn't a carefully
+crafted message from our friends, an artful set-up for some upcoming
+announcement.
+</p><p>
+Taking the story at face value, does it mean the end of the silicon go-go
+days? Perhaps, but let's look more closely at the consequences. Today's
+personal computers are imbalanced. By this I mean the speed of various
+organs is wildly out of whack, as exhibited by all sorts of caching
+schemes and memory and bus standards disagreements. I still wait for the
+leading computer magazines to buy a good logic analyzer and tell their
+readers how often one part of the system sits idle while another is
+choking. And, while they're at it, how long does the program counter
+point to OS code versus user applications?
+</p><p>
+I know, I know, good OS code does a lot of work so that applications just
+have to call for the right OS routines... If processors stop making the
+easy leaps we've learned to expect, generation after generation, perhaps
+the rest of the beloved PC clone organ bank will receive more attention.
+As a result, a 1GHz processor will run at full speed, instead of
+twiddling its thumbs, waiting for memory.
+</p><p>
+But maturation of silicon technology might lead to other
+reconsiderations. Moore's Law has been a source of cheap fixes, and we're
+grateful for those. But with these fixes no longer available in some
+version of the future, we might look again at our current brute force
+approach. Today, it doesn't matter much if a silicon architecture is less
+than perfect—tomorrow's generation will have twice the
+price/performance. Therefore, backwards compatibility, in spite of the
+layers of silt it generates, is inexpensive.
+</p><p>
+Actually, this holds true for software as well. That's why we have
+bloated, backwards compatible software, sitting atop large, backwards
+compatible microprocessors. The end of Moore's Law might cause a
+re-evaluation of the balance between the benefits of backwards
+compatibility and the cost of silt. Which is to say, new hardware and
+software architectures might arise from such re-evaluation. This leaves
+us with two partially interchangeable questions: When and on which life
+forms might such new architectures arise? On existing computing devices
+such as PCs, or on emerging ones in the sense that PCs were more than
+just smaller minicomputers?
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-40.html">Issue 4-40, October 6, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-42.html">Issue 4-42, October 20, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-40.html" title="Issue 4-40, October 6, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-42.html" title="Issue 4-42, October 20, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

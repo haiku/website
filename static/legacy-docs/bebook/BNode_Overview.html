@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Storage Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheStorageKit_Overview.html" title="The Storage Kit" /><link rel="prev" href="BMimeType_Overview.html" title="BMimeType" /><link rel="next" href="BNodeInfo_Overview.html" title="BNodeInfo" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="BMimeType_Overview.html" title="BMimeType"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheStorageKit_Overview.html" title="The Storage Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="BNodeInfo_Overview.html" title="BNodeInfo"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Storage Kit</div></div><div id="headerB">Prev: <a href="BMimeType_Overview.html">BMimeType</a>  Up: <a href="TheStorageKit_Overview.html">The Storage Kit</a>  Next: <a href="BNodeInfo_Overview.html">BNodeInfo</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Overview"></a>BNode</h2></div></div></div><a id="id608512" class="indexterm"></a><p>
+The <code class="classname">BNode</code> class gives you access to the data that a file system entry (a
+file, directory, or symbolic link) contains. There are two parts to this
+data:
+</p><div class="orderedlist"><ol><li><p>
+There's the "data portion" itself…
+</p></li><li><p>
+…and then there are the node's attributes.
+</p></li></ol></div><p>
+The content of the data portion depends on the node's flavor:
+</p><ul class="itemizedlist"><li><p>
+If it's a regular file, the data is whatever it is that the file is
+meant to contain: ASCII text, binary image or sound data, executable
+code, and so on. Note that resources (as created by the
+<a class="link" href="BResources.html" title="BResources"><code class="classname">BResources</code></a>
+class) are kept in the data portion.
+</p></li><li><p>
+If it's a directory, the data is the list of entries that the
+directory contains.
+</p></li><li><p>
+If it's a symbolic link, the data is the path of the "linked-to"
+file. The path can be absolute or relative.
+</p></li></ul><p>
+The content of the attributes, on the other hand, isn't qualified by the
+node's flavor: Any node can contain any set of attributes.
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Nodes_Are_Dumb"></a>Nodes are Dumb</h3></div></div></div><p>
+Keep in mind that the concept of a "node" designates the data parts (data
+and attributes) of a file (a file, directory, or link). Contrast this
+with an "entry," which designates the entity's location within the file
+system: For example, you can write to a "node" (but not an entry), and
+you can rename an "entry" (but not a node).
+</p><p>
+This isn't just a conceptual crutch, it's the law: Nodes really don't
+know where they're located. For example, you can't ask a node for its
+name, or for the identity of its parent. This has some serious
+implications, the most important of which is…
+</p><ul class="itemizedlist"><li><p>
+If you need to store a reference to a file (or directory, or symbolic
+link), don't store the node—in other words, don't cache the BNode
+object. Instead, store the information that you used to create the
+<code class="classname">BNode</code> (typically, a pathname or <span class="type">entry_ref</span> structure).
+</p></li></ul><p>
+Now that we've got that straight, we'll relax the rules a bit:
+</p><ul class="itemizedlist"><li><p>
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>
+objects are node/entry hybrids. A
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a> does know its
+own name (and parent, and so on).
+</p></li></ul><p>
+This doesn't really change the "store the info" rule. Even if you're
+dealing exclusively with <a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>
+objects, you should keep the
+generative information around. The primary reason for this is…
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id608683"></a>The "Node Pool" is Limited (File Descriptors)</h4></div></div></div><p>
+Every <code class="classname">BNode</code> object consumes a "file descriptor." Your application can
+only maintain 256 file descriptors at a time. Because of this limit, you
+shouldn't keep <code class="classname">BNode</code>s around that you don't need. Keep in mind that
+<a class="link" href="BEntry.html" title="BEntry"><code class="classname">BEntry</code></a>
+objects also consumes file descriptors (one per object).
+</p><div class="admonition note"><div class="title">Note</div><div class="graphic"><img class="icon" alt="Note" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>The file descriptor limit will probably be lifted, or at least
+settable, in a subsequent release. But even then you should be frugal.</p></div></div></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Derived_Classes_And_Their_Uses"></a>Derived Classes and their Uses</h3></div></div></div><p>
+<code class="classname">BNode</code> has three derived classes:
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>,
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>, and
+<a class="link" href="BSymLink.html" title="BSymLink"><code class="classname">BSymLink</code></a>. The
+derived classes define functions that let you access the node's data
+portion in the appropriate style; for example…
+</p><ul class="itemizedlist"><li><p>
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>
+implements <a class="link" href="BFile.html#BFile_Read" title="Read(), ReadAt(), Write(), WriteAt()"><code class="methodname">Read()</code></a> and
+<a class="link" href="BFile.html#BFile_Write"><code class="methodname">Write()</code></a> functions that let you retrieve
+arbitrary amounts of data from arbitrary positions in the file.
+</p></li><li><p>
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>
+implements functions, such as
+<a class="link" href="BDirectory.html#BDirectory_GetNextEntry" title="GetNextEntry(), GetNextRef(), GetNextDirents(), CountEntries(),Rewind()"><code class="methodname">GetNextEntry()</code></a> and
+<a class="link" href="BDirectory.html#BDirectory_FindEntry" title="FindEntry()"><code class="methodname">FindEntry()</code></a>,
+that read entries from the directory.
+</p></li><li><p>
+<a class="link" href="BSymLink.html" title="BSymLink"><code class="classname">BSymLink</code></a>'s
+<a class="link" href="BSymLink.html#BSymLink_ReadLink" title="ReadLink()"><code class="methodname">ReadLink()</code></a> returns the pathname that it contains.
+</p></li></ul><p>
+If you want to (sensibly) look at a node's data portion, you must create
+an instance of the appropriate derived class. In other words, if you want
+to browse a directory, you have to create a
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a> instance; if you
+want to write to a file, you create a
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>.
+</p><p>
+Be aware that it's not (always) an error to create an instance of the
+"wrong" derived class; setting a
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a> to a symbolic link, for example,
+will traverse the link such that the
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a> opens the file that the
+symbolic link is linked to. See the individual derived class
+specifications for more information.
+</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Instances"></a>BNode Instances</h3></div></div></div><p>
+In practice, you almost always want to create an instance of one of the
+<code class="classname">BNode</code>-derived classes; but if, for whatever reason, you find yourself
+holding a <code class="classname">BNode</code> instance, here's what you'll be able to do with it:
+</p><ul class="itemizedlist"><li><p>
+Read and write attributes. The attribute-accessing functions
+(<a class="link" href="BNode.html#BNode_ReadAttr" title="ReadAttr(), WriteAttr(), RemoveAttr()"><code class="methodname">ReadAttr()</code></a>,
+<a class="link" href="BNode.html#BNode_WriteAttr"><code class="methodname">WriteAttr()</code></a>,
+and so on) are general—they work
+without regard for the node's flavor. Thus, you don't need an instance
+of a specific derived class to read and write attributes.
+</p></li><li><p>
+Get stat information. The
+<a class="link" href="BStatable.html" title="BStatable"><code class="classname">BStatable</code></a>
+functions can be invoked on any flavor of node.
+</p></li><li><p>
+Lock the node. This prevents other "agents" (other objects, other
+apps, the user) from accessing reading or writing the node's data and
+attributes. See "<a class="xref" href="BNode_Overview.html#BNode_Node_Locking" title="Node Locking">Node Locking</a>".
+</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Converting_A_BNode"></a>Converting a BNode to an Instance of a Derived Class</h3></div></div></div><div class="admonition note"><div class="title">Note</div><div class="graphic"><img class="icon" alt="Note" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>This section describes situations and presents solutions to problems
+that are a bit esoteric. If you never create direct instances of BNode
+(and you never have to), then you should skip this and go to
+"<a class="xref" href="BNode_Overview.html#BNode_Node_Locking" title="Node Locking">Node Locking</a>".</p></div></div></div><p>
+There may be times when you find yourself holding on to a <code class="classname">BNode</code>
+(instance) that you want to convert into a
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>,
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>, or
+<a class="link" href="BSymLink.html" title="BSymLink"><code class="classname">BSymLink</code></a>.
+However, you can't go directly from a <code class="classname">BNode</code> instance to an
+instance of
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>,
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>, or
+<a class="link" href="BSymLink.html" title="BSymLink"><code class="classname">BSymLink</code></a>—you can't tell your
+<code class="classname">BNode</code> to "cast itself" as one of its children.
+</p><p>
+There are solutions, however…
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Converting_To_BDirectory"></a>Converting to BDirectory</h4></div></div></div><p>
+Converting from a <code class="classname">BNode</code> to a
+<a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>, while not transparent, is pretty
+simple: Grab the <span class="type">node_ref</span> out of the <code class="classname">BNode</code>
+and pass it to the <a class="link" href="BDirectory.html" title="BDirectory"><code class="classname">BDirectory</code></a>
+constructor or
+<a class="link" href="BDirectory.html#BDirectory_SetTo" title="SetTo(), Unset()"><code class="methodname">SetTo()</code></a>
+function. Regard this example function:
+</p><pre class="programlisting example cpp"><span class="type">void</span> <code class="function">Node2Directory</code>(<span class="type">BNode *</span><code class="parameter">node</code>, <span class="type">BDirectory *</span><code class="parameter">dir</code>)
+{
+   <span class="type">node_ref</span> <code class="varname">nref</code>;
+
+   if (!<code class="parameter">node</code> || !<code class="parameter">dir</code>) {
+      <code class="parameter">dir</code>.<code class="methodname">Unset</code>();
+      return;
+   }
+
+   <code class="varname">node</code>.<code class="methodname">GetNodeRef</code>(&amp;<code class="varname">nref</code>);
+
+   <span class="comment">/* Set the BDirectory. If nref isn't a directory node,
+   * the SetTo() will fail.
+   */</span>
+   <code class="parameter">dir</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">nref</code>);
+}</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Converting_To_BFile_Or_BSymLink"></a>Converting to BFile or BSymLink</h4></div></div></div><p>
+Converting a <code class="classname">BNode</code> instance to a
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a> or
+<a class="link" href="BSymLink.html" title="BSymLink"><code class="classname">BSymLink</code></a>
+isn't as neat as the
+foregoing. Instead, you have to cache the information that you used to
+initialize the <code class="classname">BNode</code> in the first place, and then reuse it to create the
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a> or
+<a class="link" href="BSymLink.html" title="BSymLink"><code class="classname">BSymLink</code></a>.
+</p><p>
+For example, let's say you receive an <span class="type">entry_ref</span>. You turn it into a
+<code class="classname">BNode</code>, but then decide you need the data-writing power of a
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>. If, in
+the meantime, you lost the original <span class="type">entry_ref</span>, you're sunk—there's
+nothing you can do.
+</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BNode_Node_Locking"></a>Node Locking</h3></div></div></div><p>
+Another feature provided by the <code class="classname">BNode</code> class is "node locking": Through
+<code class="classname">BNode</code>'s
+<a class="link" href="BNode.html#BNode_Lock" title="Lock(), Unlock()"><code class="methodname">Lock()</code></a>
+function you can restrict access to the node. The lock is removed when
+<a class="link" href="BNode.html#BNode_Unlock"><code class="methodname">Unlock()</code></a>
+is called, or when the <code class="classname">BNode</code> object is deleted.
+</p><ul class="itemizedlist"><li><p>
+When you lock a node, you prevent other objects (or agents) from
+reading or writing the node's data and attributes. No other agent can
+even open the node—other <code class="classname">BNode</code> constructions
+and POSIX <code class="function">open()</code>
+calls (on that node) will fail while you hold the lock.
+</p></li><li><p>
+You can only acquire a node lock if there are no file descriptors
+open on the node (with one exception). This means that no other <code class="classname">BNode</code>
+may be open on the node (locked or not), nor may the node be held open
+because of a POSIX <code class="function">open()</code> (or <code class="function">opendir()</code>) call.
+</p></li></ul><p>
+The one exception to the no-file descriptors rule has to do with
+<a class="link" href="BEntry.html" title="BEntry"><code class="classname">BEntry</code></a>s:
+Let's say you lock a directory, and then you initialize a
+<a class="link" href="BEntry.html" title="BEntry"><code class="classname">BEntry</code></a>
+to point to an entry within that directory. Even though the
+<a class="link" href="BEntry.html" title="BEntry"><code class="classname">BEntry</code></a>
+creates a file descriptor to the directory (as explained in the
+<a class="link" href="BEntry.html" title="BEntry"><code class="classname">BEntry</code></a>
+class), the initialization will succeed.
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id609368"></a>Implications</h4></div></div></div><p>
+For files (and, less importantly, symlinks), the implications of locking
+are pretty clear: No one else can read or write the file. For
+directories, it's worth a closer look:
+</p><ul class="itemizedlist"><li><p>
+Locking a directory means that the contents of the directory can't
+change: You can't create new nodes in the directory, or rename or
+remove existing ones. (You can, however, create abstract entries within
+the directory; see <a class="link" href="BEntry.html" title="BEntry"><code class="classname">BEntry</code></a>
+for more on abstract entries.)
+</p></li></ul><p>
+Locking a node does not lock the node's entry: You can't "lock out" entry
+operations, such as rename, move, and remove. Even if you have a node
+locked, the entry that acts as the "container" for that node could
+disappear. If you want to prevent such operations on a node's entry, lock
+the entry's parent directory.
+</p><p>
+In general, you should try to avoid locking your nodes. If you must lock,
+try to make it brief. The primary reason (and, pretty much, the only
+reason) to lock is if separate elements in the data and/or attributes
+must be kept in a consistent state. In such a case, you should hold the
+lock just long enough to ensure consistency.
+</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>You shouldn't use locks to "privatize" data. Locking isn't meant to be
+used as a heightened permissions bit.</p></div></div></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="BMimeType_Overview.html">BMimeType</a>  Up: <a href="TheStorageKit_Overview.html">The Storage Kit</a>  Next: <a href="BNodeInfo_Overview.html">BNodeInfo</a> </div><div id="footerB"><div id="footerBL"><a href="BMimeType_Overview.html" title="BMimeType"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheStorageKit_Overview.html" title="The Storage Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="BNodeInfo_Overview.html" title="BNodeInfo"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

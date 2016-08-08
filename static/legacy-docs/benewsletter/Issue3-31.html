@@ -1,0 +1,727 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-30.html" title="Issue 3-30, July 29, 1998" /><link rel="next" href="Issue3-32.html" title="Issue 3-32, August 12, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-30.html" title="Issue 3-30, July 29, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-32.html" title="Issue 3-32, August 12, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-30.html">Issue 3-30, July 29, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-32.html">Issue 3-32, August 12, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-31"></a>Issue 3-31, August 5, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-31"></a>Be Engineering Insights: "Threads Don't Like Playing Ping Pong," Part II</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+Last week, in the first part of this article
+<a class="xref" href="Issue3-30.html#Engineering3-30" title="Be Engineering Insights: &quot;Threads Don't Like Playing Ping Pong,&quot; Part I">Be Engineering Insights: "Threads Don't Like Playing Ping Pong," Part I</a>
+(which we strongly encourage you to read or read again before pursuing),
+we started studying the behavior of various systems of threads sharing a
+critical section through two different locking mechanisms: semaphores
+(TEST 1—An Ideal World), and benaphores (TEST 2—An Idealer World).
+</p><p>
+We then discovered that when two of those threads are in fair
+competition, a lot of unnecessary context switches are generated (TEST 3
+-- A Small Dose of Reality) as threads exchange control of the <acronym class="acronym">CPU</acronym>
+continuously (that's what we call playing ping pong), and benaphores lose
+most of their advantage (TEST 4—The Benaphore Curiosity). This ping
+pong game clearly affected the efficiency of the code, but as all tests
+were done in an ideal world (those threads were the only serious <acronym class="acronym">CPU</acronym>
+cycles consumers), the speed hit was only in the range of 1.4 to 2.5
+times slower.
+</p><p>
+In this second article, we now try to come closer to reality by adding
+more noise (more <acronym class="acronym">CPU</acronym> cycles consumers) in our test environment, but in a
+controlled fashion that gives us a chance to still understand what's
+really happening.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id719674"></a>TEST 5—Introducing the Dummy</h3></div></div></div><p>
+It's time to introduce our third player, the dummy thread. Its only goal
+in life is to stay around and use whatever <acronym class="acronym">CPU</acronym> cycles are available, if
+any. It never executes the same critical section as the other threads, so
+it never conflicts with them: it's just an independent <acronym class="acronym">CPU</acronym> cycles
+consumer.
+</p><p>
+As in test 1, we have a single <code class="constant">B_NORMAL_PRIORITY</code> thread passing through a
+semaphore. To disturb the environment a little, we introduce an unrelated
+<code class="constant">B_LOW_PRIORY</code> "dummy" thread. This dummy thread doesn't contend for the
+semaphore, and it's running at a lower priority, so it shouldn't really
+affect the graph of our "real" thread. Right?
+</p><pre class="screen">
+-------------One thread with dummy, semaphore, locking-------------
+
+32768|    A
+     |    A
+16384|   AA
+     .   ..
+ 4096|   AA
+     |  AAA
+     .  ...
+   64|  AAA   B
+     |  AAA   B
+   32|  AAA  BBBB
+     |  AAA  BBBB
+   16|  AAA  BBBBB
+     |  AAA  BBBBB
+    8|  AAA  BBBBB           C
+     |  AAA  BBBBB           C                              D
+    4|  AAA BBBBBB           CC                             D
+     |  AAA BBBBBB           CC                             D
+    2|  AAAABBBBBBB #        CC                             D   #
+     |  AAAABBBBBBB ##    # CCCC    #   #        #          DD  #
+     +!-------!-------!-------!--...-----!-------!-------!-------!---
+      0       8       16      32         512     1024    2048    4096
+</pre><p>
+And we're not disappointed. The main spike and "echoes" are almost
+identical to those in test 1 (A:99.64% &amp; 3.54us; B:0.31% &amp; 8.62us;
+C:0.02% &amp; 30.68us).
+</p><p>
+The only small difference (D) is the appearance of an infrequent (0.01%)
+hit at about 3020us. This represents the dummy thread that's being
+scheduled for the full 3000us scheduler quanta.
+</p><p>
+Analogously, the unlocking graph (not shown) looks nearly identical to
+the unlocking graph in test 1, but with the addition of an infrequent
+3020us hit. So in the case of a single thread, adding an unrelated low
+priority thread doesn't significantly disturb the system, which is just
+what we hoped for.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id719739"></a>TEST 6—We Go to Hell</h3></div></div></div><p>
+Now let's add a second real thread to contend for the semaphore. Just as
+test 5 was similar to test 1, here we hope to see results similar to test
+3 (two threads with no dummy), with the additional infrequent 3020us hit.
+</p><pre class="screen">
+-------------Two threads with dummy, semaphore, locking-------------
+
+   |        A
+512|        A
+   .        .
+   |        A                                          B
+ 64|        AA                                         B
+   |        AA                                         B
+ 32|        AA                                        BB
+   |        AA                                        BB       C
+ 16|        AA                                        BB       C
+   |       AAA                             D          BB       C
+  8|       AAA                           DDD          BB       C
+   |       AAA                           DDD         BBB   #   C
+  4|       AAA                           DDD        BBBB   #   C #  #
+   |       AAA                          DDDD        BBBB  ##   C #  #
+  2|       AAA       ##               DDDDDD        BBBB  ##   C #  ##
+   |       AAA   #  ### #      # ## DDDDDDDDD   # BBBBBBB ##  CCC#  ##
+   +!...!-----...---!-------!-------!-------!-------!-------!-------!--
+    0   16          128     256     512     1024    2048    4096    8192
+</pre><p>
+Holy moly, what the hell happened? We wanted order—we got a mess. Not
+only are the spikes all over the place, but there aren't enough samples.
+Until now, we'd been getting on the order of 100,000 samples per test.
+This time we only got about 2,000 (1,000 per thread).
+</p><p>
+Rather than analyze the spikes, let's look at this test from the CPU's
+perspective. We see that in the tests without the dummy thread, a single
+real thread spends about 45% of its time in the critical section--the
+rest is used for locking. With two real threads and no dummy, the "real
+work" percentage drops to 34% because of the additional context switch
+overhead. But with two threads and a dummy, the real work plummets to
+1.5%!
+</p><p>
+Now let's consider what happens when the scheduler runs. Here's what it
+sees:
+</p><ul class="itemizedlist"><li><p>
+one <code class="constant">B_NORMAL_PRIORITY</code> thread is blocked (it can't be rescheduled).
+</p></li><li><p>
+the other <code class="constant">B_NORMAL_PRIORITY</code> thread is ready to run.
+</p></li><li><p>
+the dummy <code class="constant">B_LOW_PRIORITY</code> thread is (always) ready to run.
+</p></li></ul><p>
+Most of the time, the scheduler chooses the available normal priority
+thread, which runs through the critical section and blocks soon after,
+causing the scheduler to run again. This doesn't take long—as we've
+seen, it takes less than 13us.
+</p><p>
+Less often, the scheduler will choose the low priority thread. Since this
+thread has nothing to block it, it uses up the entire 3000us scheduling
+quanta. In other words, although the low priority thread is chosen much
+less often, it runs more than 200 times *longer* than the high priority
+threads.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id719828"></a>Intermission</h3></div></div></div><p>
+Here we are in the middle of Act II. There are two bloody threads on the
+floor and it looks like the dummy did it. Or was it the kernel scheduler?
+</p><p>
+No, it's not the scheduler's fault. The scheduler only guarantees that a
+thread of higher priority will be *scheduled* more often than a thread of
+lower priority as long as they are both ready to run. It can't guarantee
+that the higher priority thread will *run* longer than the low priority
+thread. If the higher priority thread is "stupid" enough to block itself
+quickly, it will starve, higher priority or not. That's exactly what
+happened in this case.
+</p><p>
+In some cases, you can avoid this starvation problem by staying in the
+critical section as long as you can—as long as is fair to other
+competing threads. Let's try it and see what happens.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id719860"></a>TEST 7—We're Rescued</h3></div></div></div><p>
+This is similar to test 6 (two real threads, one dummy), but now the loop
+looks like this:
+</p><pre class="programlisting c">
+while (<code class="constant">true</code>) {
+    if (<code class="function">atomic_add</code>(&amp;<code class="varname">g_lock</code>, 1) &gt; 0)
+        <code class="function">acquire_sem</code>(<code class="varname">g_ben</code>);
+    <code class="varname">max</code> = <code class="function">system_time</code>()+<code class="constant">KEEP_IT_DELAY</code>;
+    do
+        <code class="function">do_critical_section</code>(6.1);
+    while (<code class="function">system_time</code>() &lt; <code class="varname">max</code>);
+    if (<code class="function">atomic_add</code>(&amp;<code class="varname">g_lock</code>, -1) &gt; 1)
+        <code class="function">release_sem</code>(<code class="varname">g_ben</code>);
+}
+</pre><p>
+We set <code class="constant">KEEP_IT_DELAY</code> to 2000us, a little less than the standard scheduler
+quanta. In other words, once the thread get the ownership of the critical
+section, it keeps using it longer than in the previous tests. Also notice
+that we're using a benaphore in this test.
+</p><p>
+Furthermore, the test will record the latency for each execution of the
+<code class="function">do_critical_section()</code> function, and not only once between each pair of
+locking and unlocking. For consistency with the other graph, we timed the
+<code class="code">do while()</code> loop mechanism as an equivalent of locking/unlocking, even if
+it's not really the case, so we expect to get a lot of hits close from 0
+latency.
+</p><pre class="screen">
+-------------Two threads with dummy, benaphore, locking-------------
+     |A
+32768|A
+     |A
+16384|A
+     |A
+ 8192|AA
+     ...
+  128|AA             B
+     ...             .
+   32|AA             B         C
+     ...             .         .
+    4|AA   D         B   #     C
+     |AA   DD        BB  #     C
+    2|AA   DD        BB  #  ###C     #
+     |AA   DD        BBBB# ####C # # #
+     +!-------!--...--!-------!-------!-------
+      0       8       2048    4096    8192
+</pre><p>
+We notice two things immediately: we got our 100,000 samples back (don't
+forget that there is twice as many samples that what we see here, as we
+have two working threads), and the latency is drastically improved.
+</p><ul class="itemizedlist"><li><p>
+(A) This is a count of the inner loop iterations that ran during the
+2000us "free time." It's close to 0, as we predicted. The probability
+is extremely high (99.65%) but mostly that's because we're counting the
+calls to <code class="function">do_critical_section()</code> rather than the real entire critical
+section (this wouldn't be an unfair count—but it's no longer cogent
+for comparison to the other tests).
+</p></li><li><p>
+(B) This is the ping pong case. The latency (2036us) is about what we
+expect; it signifies that this thread is blocked waiting for the other
+real thread to eat up its 2000us worth of scheduler quanta.
+</p></li><li><p>
+(C) This latency, at about 5000us is what happens when the thread has
+to wait for both the other real thread AND the dummy thread. The
+frequency is less than the one of B, which means that the dummy runs
+less often than the real threads, as expected.
+</p></li><li><p>
+(D) "scheduler echo" for A.
+</p></li></ul><p>
+But the real test is the <acronym class="acronym">CPU</acronym> usage. Here we see that 73% of the global
+CPU time is spent doing real work. This is an overly-idealized number,
+since our inner loop is unrealistically efficient (it can ALWAYS consume
+the entire 2000us that we give it).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id720034"></a>TEST 8—Apples and Oranges</h3></div></div></div><p>
+How much you actually gain by using the "saturate the quanta" solution
+compared to the plain, one-lock/one-inner loop method depends on the
+duration of the inner loop. Here are some measurements comparing the
+semaphore, benaphore, and benaphore+saturation methods for two normal
+priority threads, with and without a low priority dummy thread, for
+various length of the inner loop in microseconds (column "Duration"). The
+numbers in the body of the table is the fraction (in percent) of the <acronym class="acronym">CPU</acronym>
+time really used for processing of the <code class="function">do_critical_section()</code> function:
+</p><p>
+Without the dummy thread (ideal case):
+</p><pre class="screen">
+Duration :   semaphore     benaphore    saturation
+  0.289us      2.538         5.556        34.814
+  0.963us      8.428        11.457        64.997
+  6.113us     34.844        36.110        89.796
+ 58.029us     81.598        81.635        97.564
+580.736us     96.576        96.925        98.841
+</pre><p>
+As we would expect, the methods converge as the inner loop gets longer.
+And the benaphore shows that it really is better than a semaphore even
+when the threads are playing ping pong.
+</p><p>
+With the dummy thread (more realistic case):
+</p><pre class="screen">
+Duration :   semaphore     benaphore    benaphore+saturation
+  0.289us      0.077         0.081        29.781
+  0.963us      0.244         0.255        55.830
+  6.113us      1.585         1.891        73.439
+ 58.029us     14.316        14.913        81.629
+580.736us     63.184        61.326        84.439
+</pre><p>
+Here we see the advantage of the saturation method even with a long inner
+loop. Also, notice that the benaphore is still slightly more efficient
+than the semaphore.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id720101"></a>IN THE LOBBY</h3></div></div></div><p>
+The problem we identified (and fixed!) in the app server is exactly what
+we've been pointing out here. The names have been changed (our real
+threads were running at <code class="constant">B_DISPLAY_PRIORITY</code> and the "dummies" at
+<code class="constant">B_NORMAL_PRIORITY</code>), but the behaviour was the same.
+</p><p>
+And please, don't have any illusions about the numbers and statistics
+given in this article. The tests were run in unrealistically ideal
+circumstances: The system noise was reduced to a very low level, we never
+used more than three threads and one lock, and the memory system of the
+machine was not stressed at all. Real life is, of course, very very
+different.
+</p><p>
+But beyond the numbers, this article pointed out some general tendencies
+about the dynamics of synchronization systems, some problems that can
+occur and some of the bad side-effects they can generate.
+</p><p>
+We won't pretend that this was all-inclusive (we didn't even speak about
+a multiple-reader/ one-writer mechanism for example) or perfectly
+accurate, but we hope that it will give you hints about how to design
+more efficient and more stress-proof synchronization mechanisms. Luckily
+enough, most of you will never have to care about such issues. As for the
+other ones, please remember at least one thing:
+</p><p>
+"Threads don't like to play ping pong."
+</p><p>
+Post Script: For those who followed everything carefully, here's a puzzle
+for you: What test configuration is this locking graph coming from?
+</p><pre class="screen">
+512|        A
+   |        AA
+256|        AA
+   |        AA
+128|    B   AA                                             C
+   |    B   AA                                             C
+ 64|    B   AA                                             C
+   |   BB   AA                                            CC
+ 32|   BB   AA                                            CC
+   |   BB   AA                                            CC       D
+ 16|   BB   AA                                            CC       D
+   |   BB   AA                                 #         CCC       D
+  8|  BBB   AA                                ##         CCC       D
+   |  BBB   AA                                ##         CCC   #   D
+  4|  BBB   AAA                              ####        CCC  ##   D
+   |  BBB   AAA            #                 ####        CCC  ##  DD #
+  2|  BBB   AAA      #  #  #            #  # ####       CCCC ### DDD #   #
+   |  BBB   AAA      #  #  #       ### ###########  ##  CCCCC###DDDD #  ####
+   +!----...----!-...---!-------!-------!-------!-------!-------!-------!----
+    0           32      64      128     256     512     1024    2048    4096
+</pre></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-31"></a>Developers' Workshop: BeOS Programming Basics, Part 5</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+Before we begin, you should read the first four parts of this series,
+since this article continues our ongoing text editor project. These can
+be found at the following URLs:
+</p><p>
+<a class="xref" href="Issue3-7.html#DevWorkshop3-7" title="Developers' Workshop: BeOS Programming Basics: Part 1">Developers' Workshop: BeOS Programming Basics: Part 1</a><br />
+<a class="xref" href="Issue3-13.html#DevWorkshop3-13" title="Developers' Workshop: BeOS Programming Basics, Part 2">Developers' Workshop: BeOS Programming Basics, Part 2</a><br />
+<a class="xref" href="Issue3-19.html#DevWorkshop3-19" title="Developers' Workshop: BeOS Programming Basics: Part 3">Developers' Workshop: BeOS Programming Basics: Part 3</a><br />
+<a class="xref" href="Issue3-25.html#DevWorkshop3-25" title="Developers' Workshop: BeOS Programming Basics: Part 4">Developers' Workshop: BeOS Programming Basics: Part 4</a>
+</p><p>
+For the sake of our mail server, I won't be including the entire source
+code in these articles anymore. You can download the source code for this
+week's project from the Be FTP site:
+</p><p>
+ftp://ftp.be.com/pub/samples/intro/TextEditor.zip
+</p><p>
+Now that you're caught up, and have this week's source code, let's get
+started. Note that the <code class="classname">TextApp</code> and
+<code class="classname">TextWindow</code> classes and their related
+functions have been separated into two source files, and that there are
+now separate header files for each class. This makes it easier to follow
+the code.
+</p><p>
+This week, we'll add open and save file panels to our text editor, along
+with the code needed to actually save and load document files.
+</p><p>
+Look at the <code class="filename">TextApp.h</code> file, in
+the <code class="classname">TextApp</code> class definition. There are a
+few new items in here: a <code class="methodname">RefsReceived()</code> function, which is a standard
+member of the <code class="classname">BApplication</code> class; and the
+<code class="classname">BFilePanel</code> pointer, which will
+be used for the open document panel.
+</p><p>
+The <code class="classname">TextApp</code> constructor now includes the following line, which creates
+the open file panel (the panel isn't made visible, it's just created):
+</p><pre class="programlisting cpp">
+<code class="varname">openPanel</code> = new <code class="classname">BFilePanel</code>;
+</pre><p>
+Note also that the <code class="varname">windowRect</code> is now a global variable and is no longer
+messed around with in <code class="classname">TextApp</code>'s constructor. Since you can now create
+documents from multiple sources, we need more flexibility with this
+rectangle, so it can't remain local. The <code class="constant">WINDOW_REGISTRY_ADD</code> handler in
+<code class="classname">TextApp</code>::<code class="methodname">MessageReceived()</code> has changed so that a reply is always sent
+(instead of just when the window is untitled, and the reply includes a
+new <code class="constant">B_RECT_TYPE</code> field, <code class="varname">rect</code>,
+that specifies the frame rectangle to use
+for the new window.
+</p><p>
+<code class="methodname">MessageReceived()</code> has one addition to the switch statement that
+dispatches messages:
+</p><pre class="programlisting cpp">
+case <code class="constant">MENU_FILE_OPEN</code>:
+  <code class="varname">openPanel</code>-&gt;<code class="methodname">Show</code>();
+  break;
+</pre><p>
+When the Open option is selected from a window's File menu, the request
+is dispatched here, to the <code class="classname">TextApp</code>::<code class="methodname">MessageReceived()</code> function (we'll
+show how that's done when we get to it). This makes the open file panel
+visible, so the user can choose a file (or files) to open.
+</p><p>
+The <code class="classname">TextApp</code>::<code class="methodname">RefsReceived()</code> function receives as an argument a pointer to
+a message that indicates what file or files should be opened. This
+message contains a single field, <code class="varname">refs</code>, which contains one or more
+<span class="type">entry_ref</span> structures, each indicating a file to open.
+</p><p>
+<code class="methodname">RefsReceived()</code> is called whenever a user selects files to open in a file
+panel, drags files onto the application's icon, or <span class="type">double</span>-clicks them in
+the <span class="application">Tracker</span>.
+</p><p>
+The code is fairly simple. A <code class="code">do</code> loop iterates through all the items in
+the <code class="varname">refs</code> list until an error occurs and the loop ends. For each
+<span class="type">entry_ref</span> found, a new window is created:
+</p><pre class="programlisting cpp">
+new <code class="classname">TextWindow</code>(<code class="varname">windowRect</code>, &amp;<code class="varname">ref</code>);
+</pre><p>
+This uses a new <code class="classname">TextWindow</code> constructor that accepts an additional
+argument—an <span class="type">entry_ref</span> indicating what file to load up into the window.
+</p><p>
+Let's look at the changes to the <code class="classname">TextWindow</code> class, starting with the
+class itself:
+</p><pre class="programlisting cpp">
+class <code class="classname">TextWindow</code> : public <code class="classname">BWindow</code> {
+  public:
+    <code class="methodname">TextWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>);
+    <code class="methodname">TextWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>, <span class="type">entry_ref *</span><code class="parameter">ref</code>);
+    <code class="methodname">~TextWindow</code>();
+    virtual <span class="type">bool</span>  <code class="methodname">QuitRequested</code>();
+    virtual <span class="type">void</span>  <code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">message</code>);
+    virtual <span class="type">void</span>  <code class="methodname">FrameResized</code>(<span class="type">float</span> <code class="parameter">width</code>, <span class="type">float</span> <code class="parameter">height</code>);
+
+    <span class="type">status_t</span>  <code class="methodname">Save</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">message</code>);
+
+  private:
+    <span class="type">void</span>    <code class="methodname">_InitWindow</code>(<span class="type">void</span>);
+    <span class="type">void</span>    <code class="methodname">Register</code>(<span class="type">bool</span> <code class="parameter">need_id</code>);
+    <span class="type">void</span>    <code class="methodname">Unregister</code>(<span class="type">void</span>);
+
+    <span class="type"><code class="classname">BMenuBar</code>     *</span><code class="varname">menubar</code>;
+    <span class="type"><code class="classname">BTextView</code>    *</span><code class="varname">textview</code>;
+    <span class="type"><code class="classname">BScrollView</code>  *</span><code class="varname">scrollview</code>;
+    <span class="type"><code class="classname">BMenuItem</code>    *</span><code class="varname">saveitem</code>;
+    <span class="type"><code class="classname">BMessage</code>     *</span><code class="varname">savemessage</code>;
+    <span class="type">int32</span>        <code class="varname">window_id</code>;
+
+    <span class="type"><code class="classname">BFilePanel</code>   *</span><code class="varname">savePanel</code>;
+};
+</pre><p>
+There's a lot of new stuff in here, including the second <code class="classname">TextWindow</code>
+constructor, the private <code class="methodname">_InitWindow()</code> function, and the <code class="varname">saveitem</code>,
+<code class="varname">savemessage</code>, <code class="varname">window_id</code>, and <code class="varname">savePanel</code> fields.
+</p><p>
+The <code class="methodname">_InitWindow()</code> function (take a look, don't be shy) now handles most
+of the user interface setup for a new window. This lets us consolidate
+the code that's shared by both versions of the <code class="classname">TextWindow</code> constructor.
+The first constructor now calls <code class="methodname">_InitWindow()</code>
+and <code class="methodname">Show()</code> to set up the
+window and make it visible.
+</p><p>
+The second constructor is called when the new window needs to have a file
+loaded into it. <code class="methodname">_InitWindow()</code> is called to create the window, then the
+<code class="classname">BFile</code> object, <code class="varname">file</code>, is set to the
+<span class="type">entry_ref</span> of the file to open. If that
+succeeds, we can read in the file by getting its length (via the
+<code class="classname">BFile</code>::<code class="methodname">GetSize()</code> call), allocating enough memory to contain the file's
+data, and reading the file into the newly allocated block.
+</p><p>
+A little trick follows that will make more sense later: we create a
+<code class="constant">B_SAVE_REQUESTED</code> message referring to this file. This is the message
+that's sent to the <code class="classname">TextWindow</code>::<code class="methodname">MessageReceived()</code> function when it's time
+to save the file, and is how we keep track of where the file is located
+on disk. This message contains an <span class="type">entry_ref</span> named <code class="varname">directory</code> that
+indicates the directory in which the file is located, and a string called
+<code class="varname">name</code> that shows the name of the file itself. This message is kept in
+the <code class="varname">savemessage</code> field of the <code class="classname">TextWindow</code> object.
+</p><p>
+Finally, we use <code class="classname">BTextView</code>::<code class="methodname">SetText()</code> to set the window's text, set its
+title to the name of the file, and then free the allocated text buffer,
+before showing the window and returning. Once this is done, a new
+document window is created, with the name of the file that's been opened;
+the text in the window is the contents of the file. The window won't be
+visible until it's un-<code class="methodname">Minimize()</code>d, as described below.
+</p><p>
+The <code class="methodname">_InitWindow()</code> function's code is mostly the same as the user
+interface setup code from Part 4's <code class="classname">TextWindow</code> constructor, with these
+exceptions:
+</p><p>
+First, the following line is added so we know there isn't currently a
+<code class="varname">savemessage</code> available (which means the file has never been saved, and
+wasn't loaded from disk, so we don't know where to save it without asking
+the user):
+</p><pre class="programlisting cpp">
+<code class="varname">savemessage</code> = <code class="constant">NULL</code>;  <span class="comment">// No saved path yet</span>
+</pre><p>
+Second, the <span class="guimenu">File</span> menu's <span class="guimenuitem">Open</span>
+item's target is changed to point to the
+<code class="classname">TextApp</code> object, so it will handle the open requests:
+</p><pre class="programlisting cpp">
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>=new <code class="classname">BMenuItem</code>("Open" <code class="constant">B_UTF8_ELLIPSIS</code>,
+  new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_OPEN</code>), 'O'));
+<code class="varname">item</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">be_app</code>);
+</pre><p>
+Third, the <span class="guimenuitem">Save</span> option is disabled, since, by default, the document
+doesn't have any information available on where it should be saved (i.e.,
+there isn't a <code class="varname">savemessage</code>):
+</p><pre class="programlisting cpp">
+<code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">saveitem</code>=new <code class="classname">BMenuItem</code>("Save",
+  new <code class="classname">BMessage</code>(<code class="constant">MENU_FILE_SAVE</code>), 'S'));
+<code class="varname">saveitem</code>-&gt;<code class="methodname">SetEnabled</code>(<code class="constant">false</code>);
+</pre><p>
+Note that we keep a pointer to the <span class="guimenuitem">Save</span> item, so we can enable it later
+when the document has been saved for the first time using the
+<span class="guimenuitem">Save as</span>
+option.
+</p><p>
+Fourth, to support the <span class="guimenuitem">Undo</span> option, we add the following line:
+</p><pre class="programlisting cpp">
+<code class="varname">textview</code>-&gt;<code class="methodname">SetDoesUndo</code>(<code class="constant">true</code>);
+</pre><p>
+Fifth, we need to create the <span class="guimenu">Edit</span> menu and populate it with the options
+we want. This is similar to adding the <span class="guimenu">File</span> menu. Each item is added, and
+its target is set to be the <code class="classname">BTextView</code>, so the text view can handle the
+commands Undo, Cut, Copy, Paste, and Select All.
+</p><p>
+Sixth, the <code class="varname">savePanel</code> needs to be created.
+This is a <code class="constant">B_SAVE_PANEL</code> type
+<code class="classname">BFilePanel</code> object:
+</p><pre class="programlisting cpp">
+<code class="varname">savePanel</code> = new <code class="classname">BFilePanel</code>(<code class="constant">B_SAVE_PANEL</code>,
+  new <code class="classname">BMessenger</code>(<code class="varname">this</code>), <code class="constant">NULL</code>, <code class="constant">B_FILE_NODE</code>, <code class="constant">false</code>);
+</pre><p>
+The target for messages sent by the file panel is the <code class="classname">TextWindow</code>, so the
+<code class="classname">TextWindow</code>::<code class="methodname">MessageReceived()</code> function needs to be augmented to handle
+them.
+</p><p>
+Finally, <code class="methodname">_InitWindow()</code> calls
+<code class="methodname">Minimize()</code> to minimize the new window. This
+is a nifty trick that means that even when <code class="classname">BWindow</code>::<code class="methodname">Show()</code> is called, the
+window won't appear on screen, because it's minimized. This lets us play
+around with the window's title, position, and size before making the
+window visible. We have to <code class="methodname">Show()</code> the window to do these things, because
+it won't receive any messages until it's shown, and we have to receive
+the <code class="constant">WINDOW_REGISTRY_ADDED</code> message so we know what name and position to
+use for the new window. <code class="methodname">Show()</code> is called by the constructors, so it's not
+included in <code class="methodname">_InitWindow()</code>.
+</p><p>
+The <code class="classname">TextWindow</code> destructor has been augmented to delete
+the <code class="varname">savemessage</code>
+(if it exists) and the <code class="varname">savePanel</code>.
+</p><p>
+The <code class="methodname">MessageReceived()</code> function has been augmented as follows:
+</p><p>
+The <code class="constant">WINDOW_REGISTRY_ADDED</code> handler has been changed so that the window's
+title is set to "Untitled #" only if there isn't a <code class="varname">savemessage</code> attached;
+this lets the name we've specified when opening a new document actually
+stick (otherwise all windows would be given the name "Untitled#").
+</p><p>
+In addition, the <code class="varname">rect</code> parameter is checked, and if it exists, the
+window is repositioned to occupy the area of the screen indicated. The
+registry then determines where each window should be drawn. This allows
+easy custom window placement later (for instance, the current code
+doesn't handle the possibility that eventually you'll have enough windows
+that they'll wind up off screen—you should be able to fix this easily
+by correcting the <code class="constant">WINDOW_REGISTRY_ADD</code> code in
+the <code class="classname">TextApp</code> class. I'll
+leave that as an exercise).
+</p><p>
+Handlers have also been added for the <code class="constant">MENU_FILE_SAVEAS</code>,
+<code class="constant">MENU_FILE_SAVE</code>,
+and <code class="constant">B_SAVE_REQUESTED</code> commands. The <code class="classname">BFilePanel</code> is shown when
+<code class="constant">MENU_FILE_SAVEAS</code> is received. When
+<code class="constant">MENU_FILE_SAVE</code> is received, the <code class="methodname">Save()</code>
+function, which we'll examine next, is called, with a <code class="constant">NULL</code> argument
+passed. This indicates to <code class="methodname">Save()</code> that the savemessage already attached to
+the <code class="classname">TextWindow</code> should be used to determine where to save the file.
+<code class="constant">B_SAVE_REQUESTED</code>, indicates that the document should be saved at the
+location specified by the message, which is passed through to <code class="methodname">Save()</code>.
+</p><p>
+The <code class="methodname">Save()</code> function handles saving the document's text. When we opened
+the file, we used a <code class="classname">BFile</code> object to handle the file access. Here, just to
+show that it can be done, we'll use standard POSIX file commands.
+</p><p>
+<code class="methodname">Save()</code> accepts a single argument: a pointer
+to a <code class="classname">BMessage</code> that should be
+formatted in <code class="constant">B_SAVE_REQUESTED</code> style, indicating where to save the file.
+If <code class="constant">NULL</code> is specified, the <code class="varname">savemessage</code>
+field in the <code class="classname">TextWindow</code> will be
+used.
+</p><p>
+<code class="methodname">Save()</code> begins by checking to be sure
+that if <code class="constant">NULL</code> is specified, the
+<code class="varname">savemessage</code> has actually been initialized. If it
+hasn't been, <code class="constant">B_ERROR</code> is returned.
+</p><p>
+Then the <span class="type">entry_ref</span> of the save directory and the name of the file to be
+saved are peeled out of the message. A <code class="classname">BEntry</code> is set to the save
+directory, and <code class="classname">BEntry</code>::<code class="methodname">GetPath()</code> is called to
+obtain a <code class="classname">BPath</code> object
+representing that directory. <code class="classname">BPath</code>::<code class="methodname">Append()</code> is then called to append the
+filename to the path.
+</p><p>
+Now that we have a <code class="classname">BPath</code> representing the location of the file to be
+saved, we call <code class="function">fopen()</code> to open the file—the path name, as a standard
+string, is extracted by calling <code class="classname">BPath</code>::<code class="methodname">Path()</code>.
+</p><p>
+Then we just use standard POSIX file I/O calls to write the file and
+close it:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="function">fwrite</code>(<code class="varname">textview</code>-&gt;<code class="methodname">Text</code>(), 1, <code class="varname">textview</code>-&gt;<code class="methodname">TextLength</code>(), <code class="varname">f</code>);
+<code class="function">fclose</code>(<code class="varname">f</code>);
+</pre><p>
+The <code class="classname">BTextView</code>::<code class="methodname">Text()</code> function returns the
+contents of the <code class="classname">BTextView</code>, and
+<code class="classname">BTextView</code>::<code class="methodname">TextLength()</code> returns the size of the text in bytes.
+</p><p>
+If the write was successful, the window's title is set to the document
+name (in case it's been changed), the <span class="guimenuitem">Save</span> item in the File menu is
+enabled, and the <code class="varname">savemessage</code> is changed to indicate the new location of
+the file by deleting the existing message (if there is one) and replacing
+the pointer with a pointer to the message passed to <code class="methodname">Save()</code>. If the
+original message and the new message are the same, this is unnecessary
+(and dangerous) so we don't do it.
+</p><p>
+That's all for this time. This application is essentially complete; you
+might want to add code to present alerts to the user if an error occurs
+(errors are, currently, blissfully ignored). Check out the <code class="classname">BAlert</code> class
+in the Be Developer's Guide. Try to fix the registry to guarantee that
+windows will always appear on screen, instead of eventually disappearing
+off the bottom-right corner.
+</p><p>
+Next time, we'll start a new project, focusing on areas of the BeOS we
+haven't investigated yet (there are plenty of them!).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-31"></a>Relationships vs. Transactions</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This week's topic suggested itself as I was attempting to reorganize my
+e-mail inbox. We regularly get requests for two items: a downloadable
+version of the BeOS for Intel Architecture processors, and a trial
+version of the BeOS. I hope my discussion of these two topics will shed
+some light on what I mean by "Relationships vs. Transactions."
+</p><p>
+Let me start with the first item. Why don't we have a downloadable
+version of the IA (Intel Architecture) BeOS? Are we deaf or blind to what
+our customers want? Wouldn't it make more sense for would-Be users and
+for Be to deliver the BeOS electronically? Why acquire StarCode and chant
+the merits of SoftwareValet technology, why invest in BeDepot.com
+e-commerce and not offer an Intel download similar to the PowerPC
+download?
+</p><p>
+Similar is the operative word. Dated is another—our PowerPC download
+is not current. There isn't a version of the BeOS for G3 machines,
+because Apple declined to supply us with the technical data required to
+make sure the BeOS works on their new hardware. For our part, we declined
+to engage in arguments. It's their right to withhold such information
+and, in any case, we assume they're busy enough turning the ship around,
+with good results lately.
+</p><p>
+But that's no excuse for the lack of a PC download. Let's take another
+look at the facts. First, assuming you don't already have partitioning
+and boot manager software, you would have to download site preparation
+software and run it—that is, create a partition for the BeOS and
+install a boot manager.
+</p><p>
+Then, using your Windows browser, you'd have to download the BeOS and
+another Windows application that would take the BeOS download in your
+Windows partition and write it onto the BeOS partition you just created.
+Finally, you'd tell the boot manager the BeOS has landed and you're in
+business.
+</p><p>
+Contrast this with the current physical distribution method for the BeOS.
+You get two CDs and one floppy. One CD is for the PowerPC version of 3.1;
+it works on older, pre-G3 PowerPCs. The other is for the Intel-based 3.1;
+it contains Windows partitioning tools and BeOS files.
+</p><p>
+Once you've partitioned your hard disk, the floppy boots you into the
+BeOS. From that point installation proceeds from the CD onto the BeOS
+partition, without having to be stored in the Windows partition first
+before being transferred into the BeOS space.
+</p><p>
+We realize that the industry has already moved into a phase where
+software is increasingly available in a downloadable form. This creates
+an entirely normal expectation of being able to download the BeOS, just
+as you can the latest version of Netscape Communicator or the "free"
+version of Outlook 98.
+</p><p>
+What this expectation omits is the fact these products are downloaded
+from Windows for Windows. In our case, we have to download from Windows
+and install in a different world. Now add two more complications:
+partitioning and hardware support. In our constantly recalculated
+opinion, this makes the risk of starting our relationship with a bad
+experience too great.
+</p><p>
+You'll recall some of the humbling stories I've told here, such as the
+time one of our investors, and member of our board of directors, saw the
+data on his spouse's PC disappear because of a problem involving the
+switch between Windows FAT 16 and FAT 32 files systems. It's not that we
+wouldn't love the broader reach and higher volume of e-commerce
+transactions we'd generate if the BeOS were delivered electronically
+today. But...we don't think we've developed the knowledge and tools to
+meet the standards and expectations created by the now customary practice
+of downloading and installing into the same environment.
+</p><p>
+Looping back to the apparent inconsistency in our behavior—promoting
+BeDepot.com e-commerce but not offering a BeOS for Intel download --
+Software Valet does indeed promote the positive experience of downloading
+and installing into the same environment, once you've installed the BeOS.
+I'm aware that this may make our explanation of the situation sound
+flimsy. Frustration at being unable to download the BeOS resurfaces,
+because instant access is such a simple, powerful idea that it won't go
+away; we can brush it off, but it keeps coming back.
+</p><p>
+All I can say for now is that we're very aware of that and feel bad about
+not offering more than the explanation of our calculus of risk vs.
+reward. We apologize for the frustration and we hope to offer a simpler,
+safer solution in the future.
+</p><p>
+Which brings me to the trial version. "The Intel version isn't available
+for download and, compounding your problems, you have the nerve to ask
+people to buy your BeOS, sight unseen, without offering a trial version."
+Add or subtract a few choice words, that's how some correspondents
+question our personal or corporate sanity.
+</p><p>
+This is a little easier to explain—I mean answer. Please buy the
+product and return it for a full refund if you're not satisfied, no
+questions asked. We believe demands for a trial version to be entirely
+justified. Unfortunately, we don't have a solution today, but we can get
+around the problem with our offer of a straight refund.
+</p><p>
+The absence of a trial version isn't the only reason for the refund
+offer: We can't afford even one unhappy customer. In our business,
+word-of-mouth is still the most potent marketing weapon. At the very
+least, we want someone who tries the BeOS to say, "Well, it wasn't for
+me, but the Be folks treated me decently." At the very best, we want this
+pioneer to buttonhole others and persuade them to share his bliss. So,
+our offer of a refund would hold even if we had a trial version—or
+perhaps I should say *when* we have a trial version.
+</p><p>
+We'd like to do just that. PCs have been bootable from the now standard
+CD-ROM drive for awhile, and we're wondering if it would be a good idea
+to put together a version of the BeOS that boots from the CD-ROM. This
+has many built-in limitations, starting with performance. On the other
+hand, it requires no alteration of your hard disk, no partitioning, no
+boot manager. To be continued when we have more data.
+</p><p>
+In any event, we have another motivation to do better than provide
+logical but sometimes frustrating explanations—the threat of silence.
+By this I refer to a simple fact: arguments keep us alive, silence kills.
+I don't say this just because I was born and raised in Paris, where cab
+drivers and café waiters love to argue about anything.
+</p><p>
+No, what I mean is this—as long our beloved customer complains,
+argues, and otherwise seeks to alter our behavior, she or he is doing us
+two favors. First, we get a chance to put the relationship back on track
+and, second, we get an earful of information we can put to good use in
+other transactions. When the customer doesn't even bother to tell us
+what's wrong, we're dead—we have no information and no opportunity to
+apologize and correct a problem.
+</p><p>
+To all our honorable correspondents who care enough and hold us in high
+enough regard to offer energetic feedback, thank you. To the others who
+think we don't care or can't do anything about their problem, thank you
+for reconsidering and giving us a chance to do the right thing.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-30.html">Issue 3-30, July 29, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-32.html">Issue 3-32, August 12, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-30.html" title="Issue 3-30, July 29, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-32.html" title="Issue 3-32, August 12, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

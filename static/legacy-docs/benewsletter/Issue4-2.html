@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-1.html" title="Issue 4-1, January 6, 1999" /><link rel="next" href="Issue4-3.html" title="Issue 4-3, January 20, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-1.html" title="Issue 4-1, January 6, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-3.html" title="Issue 4-3, January 20, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-1.html">Issue 4-1, January 6, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-3.html">Issue 4-3, January 20, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-2"></a>Issue 4-2, January 13, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-2"></a>Be Engineering Insights: An Amusing Diversion, or How to Make Magnify
+Suck Up even More CPU Cycles</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Chin</span></span></div></div></div><p>
+A while ago we received a bug report that included scanned-in polaroids of
+an engineer's <acronym class="acronym" title="Basic Input/Output System">BIOS</acronym>
+screen and serial card. Pretty twisted—but we had fun using
+<span class="application">Magnify</span> to examine the pictures. The only
+problem was that the image that <span class="application">Magnify</span> showed
+was pixelated. The solution: <span class="application">Magnify</span> filter
+add-ons.
+</p><p>
+This article shows you how to add add-on functionality to <span class="application">Magnify</span>. It
+should also work as a tutorial for adding similar functionality to your
+own app. Add-on recognition is simple to incorporate, and it's a great
+way to extend, or have others extend, the functionality of an application.
+</p><p>
+To follow this article, open the sample source for <span class="application">Magnify</span> and copy and
+paste. Note that all of the image-manipulation work is done in the
+add-ons themselves; <span class="application">Magnify</span> just calls the add-on's functions to process
+the image.
+</p><p>
+We start by adding a couple of global variables to the app. The variables
+point to the filter's entry point function (<code class="varname">gFilterFunc</code>)
+and image id (<code class="varname">gAddOnImageID</code>). The function takes a
+<code class="classname">BBitmap</code> object; this is the image that the filter
+will work on:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> (*<code class="varname">gFilterFunc</code>)(<span class="type"><code class="classname">BBitmap</code>*</span>);
+<span class="type">image_id</span> <code class="varname">gAddOnImageID</code>;
+</pre><p>
+We initialize the variables in the <code class="classname">TWindow</code> constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">TWindow</code>::<code class="methodname">TWindow</code>(<span class="type">int32</span> <code class="parameter">pixelCount</code>)
+  : <code class="classname">BWindow</code>( <code class="classname">BRect</code>(0,0,0,0), "Magnify", <code class="constant">B_TITLED_WINDOW</code>,
+    <code class="constant">B_OUTLINE_RESIZE</code>)
+{
+  <code class="varname">gFilterFunc</code> = 0;
+  <code class="varname">gAddOnImageID</code> = 0;
+  ...
+}
+</pre><p>
+We also create a global function that examines <span class="application">Magnify</span>'s add-on directory
+(a subdirectory of the default add-on directory). We create a menu item
+for each file we find (each file is assumed to be a <span class="application">Magnify</span> filter):
+</p><pre class="programlisting cpp">
+static <span class="type">void</span>
+<code class="function">AddFilters</code>(<span class="type"><code class="classname">BMenu</code> *</span><code class="parameter">menu</code>)
+{
+  <code class="classname">BPath</code> <code class="varname">path</code>;
+  <code class="function">find_directory</code> (<code class="constant">B_USER_ADDONS_DIRECTORY</code>, &amp;<code class="varname">path</code>);
+  <code class="varname">path</code>.<code class="methodname">Append</code> ("Magnify");
+
+  <code class="classname">BDirectory</code> <code class="varname">dir</code>(<code class="varname">path</code>.<code class="methodname">Path</code>());
+
+  <span class="comment">//  only add the rest of the menu if filters exist</span>
+  if (<code class="varname">dir</code>.<code class="methodname">CountEntries</code>()
+    return;
+
+  <code class="parameter">menu</code>-&gt;<code class="methodname">AddSeparatorItem</code>();
+
+  <span class="type"><code class="classname">BMessage</code>*</span> <code class="varname">msg</code> = new <code class="classname">BMessage</code>('filt');
+  <code class="varname">msg</code>-&gt;<code class="methodname">AddString</code>("filter", "disable");
+  <span class="type"><code class="classname">BMenuItem</code>*</span> <code class="varname">menuItem</code> =
+    new <code class="classname">BMenuItem</code>("Disable Current Filter", <code class="varname">msg</code>);
+  <code class="parameter">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">menuItem</code>);
+
+  <span class="type">int32</span> <code class="varname">index</code>=1;
+  <span class="type">entry_ref</span> <code class="varname">ref</code>;
+
+  while (<code class="constant">true</code>) {
+    <span class="type">status_t</span> <code class="varname">err</code> = <code class="varname">dir</code>.fffffffffGetNextRef(&amp;ref);
+    if (<code class="varname">err</code> == <code class="constant">B_ENTRY_NOT_FOUND</code>)
+      break;
+    else {
+      <code class="varname">msg</code> = new <code class="classname">BMessage</code>('filt');
+      <code class="varname">msg</code>-&gt;<code class="methodname">AddString</code>("filter", <code class="varname">ref</code>.<code class="varname">name</code>);
+      <code class="varname">menuItem</code> = new <code class="classname">BMenuItem</code>(<code class="varname">ref</code>.<code class="varname">name</code>, <code class="varname">msg</code>);
+      <code class="parameter">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">menuItem</code>);
+      <code class="varname">index</code>++;
+    }
+  }
+}
+</pre><p>
+<code class="methodname">AddFilters()</code> is called alongside the app's other menu-building functions,
+in <code class="classname">TInfoView</code>'s <code class="methodname">AddMenu()</code> function:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TInfoView</code>::<code class="methodname">AddMenu</code>()
+{
+  <code class="varname">fMenu</code> = new <code class="classname">TMenu</code>(dynamic_cast(<code class="methodname">Window</code>()), "");
+  <code class="methodname">BuildInfoMenu</code>(<code class="varname">fMenu</code>);
+  <code class="methodname">AddFilters</code>(<code class="varname">fMenu</code>);
+  ...
+}
+</pre><p>
+When the user selects a filter from the menu, <code class="methodname">TWindow::MessageReceived()</code>
+catches the in-coming "load filter" message (which contains the name of
+the filter) and passes it to <code class="methodname">TWindow::LoadFilter()</code>:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TWindow</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code>*</span> <code class="parameter">m</code>)
+{
+  ...
+    case 'filt':
+      <code class="methodname">LoadFilter</code>(<code class="parameter">m</code>);
+      break;
+  ...
+}
+</pre><p>
+In <code class="methodname">TWindow::LoadFilter()</code>, we reconstruct the pathname to the filter, and
+load it by passing the pathname to <code class="function">load_add_on()</code> (first unloading the
+previous filter). We then call <code class="function">get_image_symbol()</code> to find the add-on's
+<code class="function">filter()</code> function—this is our interface to the add-on's functionality:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TWindow</code>::<code class="methodname">LoadFilter</code>(<span class="type"><code class="classname">BMessage</code>*</span> <code class="parameter">m</code>)
+{
+  <span class="type">char*</span> <code class="varname">fname</code>;
+  <code class="parameter">m</code>-&gt;<code class="methodname">FindString</code>("filter", (<span class="type">const char**</span>)&amp;<code class="varname">fname</code>);
+  if (<code class="varname">fname</code>) {
+
+    if (<code class="function">strcmp</code>(<code class="varname">fname</code>, "disable") == 0) {
+      <code class="varname">gFilterFunc</code> = 0;
+      <code class="varname">gAddOnImageID</code> = 0;
+      return;
+    }
+
+    <span class="comment">//  unload the previous add-on, free its memory, etc.</span>
+    if (<code class="varname">gFilterFunc</code>)
+      <code class="function">unload_add_on</code>(<code class="varname">gAddOnImageID</code>);
+
+    <code class="classname">BPath</code> <code class="varname">path</code>;
+    <code class="function">find_directory</code> (<code class="constant">B_USER_ADDONS_DIRECTORY</code>, &amp;<code class="varname">path</code>, <code class="constant">true</code>);
+    <code class="varname">path</code>.<code class="methodname">Append</code> ("Magnify");
+    <code class="varname">path</code>.<code class="methodname">Append</code>(<code class="varname">fname</code>);
+
+    <span class="comment">//  load the add-on</span>
+    <code class="varname">gAddOnImageID</code> = load_add_on(<code class="varname">path</code>.<code class="methodname">Path</code>());
+    if (<code class="varname">gAddOnImageID</code> &lt; 0) {
+      <code class="function">printf</code>("ERROR: can't load addon\n");
+      return;
+    }
+
+    <span class="comment">//  get the filter function symbol</span>
+    <span class="type">int</span> <code class="varname">result</code> = <code class="function">get_image_symbol</code>(<code class="varname">gAddOnImageID</code>, "filter",
+      <code class="constant">B_SYMBOL_TYPE_TEXT</code>,(<span class="type">void**</span>)&amp;<code class="varname">gFilterFunc</code>);
+    if (<code class="varname">result</code> &lt; 0) {
+      <code class="function">printf</code>("ERROR: can't get image symbol\n");
+      return;
+    }
+  }
+}
+</pre><p>
+The filter code is now loaded, and <code class="varname">gFilterFunc</code> points
+to its <code class="function">filter()</code>
+function. To call the function, all we have to do is pass it the bitmap
+that's displayed on screen and render the result. We do this from the
+<code class="methodname">TOSMagnify::CreateImage()</code> function, just before
+the <code class="methodname">DrawBitmap()</code> call:
+</p><pre class="programlisting cpp">
+<span class="type">bool</span>
+<code class="classname">TOSMagnify</code>::<code class="methodname">CreateImage</code>(<code class="classname">BPoint</code> <code class="parameter">mouseLoc</code>, <span class="type">bool</span> <code class="parameter">force</code>)
+{
+...
+      if (<code class="varname">gFilterFunc</code>)
+        (*<code class="varname">gFilterFunc</code>)(<code class="varname">fBitmap</code>);
+
+      <code class="methodname">DrawBitmap</code>(<code class="varname">fBitmap</code>, <code class="varname">srcRect</code>, <code class="varname">destRect</code>);
+...
+}
+</pre><p>
+What would add-on support be without some sample add-ons. Here is some
+sample source for a couple filters (thanks to Victor Tsou for coming up
+with this idea and creating both of these filters).
+</p><p>
+This first filter (continuously) rotates the <span class="application">Magnify</span> image.
+</p><pre class="programlisting cpp">
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;Bitmap.h&gt;
+
+extern "C" _EXPORT <span class="type">void</span> <code class="function">filter</code>(<span class="type"><code class="classname">BBitmap</code>*</span> <code class="parameter">image</code>);
+
+<code class="classname">BRect</code> <code class="varname">bounds</code>;
+<span class="type">uint32 *</span><code class="varname">bits</code> = <code class="constant">NULL</code>;
+<span class="type">int *</span>xcosT, <span class="type">*</span><code class="varname">xsinT</code>;
+<span class="type">int</span> <code class="varname">frame</code> = 30;
+
+#define <code class="function">max</code>(<code class="parameter">a</code>,<code class="parameter">b</code>) (((<code class="parameter">a</code>)&gt;(<code class="parameter">b</code>))?(<code class="parameter">a</code>):(<code class="parameter">b</code>))
+
+#define <code class="constant">PI</code> 3.14159265
+#define <code class="constant">SCALE</code> 1
+
+<span class="type">void</span>
+<code class="function">filter</code>(<span class="type"><code class="classname">BBitmap</code>*</span> <code class="parameter">image</code>)
+{
+  <code class="varname">frame</code> = (<code class="function">system_time</code>() / 200000) % 360;
+
+  if (<code class="varname">bits</code> &amp;&amp; (<code class="varname">bounds</code> != <code class="parameter">image</code>-&gt;<code class="methodname">Bounds</code>())) {
+    delete <code class="varname">bits</code>; <code class="varname">bits</code> = <code class="constant">NULL</code>;
+    delete <code class="varname">xcosT</code>; <code class="varname">xcosT</code> = <code class="constant">NULL</code>;
+    delete <code class="varname">xsinT</code>; <code class="varname">xsinT</code> = <code class="constant">NULL</code>;
+  }
+
+  if (!<code class="varname">bits</code>) {
+    <span class="type">int32</span> <code class="varname">m</code>;
+    <code class="varname">bounds</code> = <code class="parameter">image</code>-&gt;<code class="methodname">Bounds</code>();
+    <code class="varname">bits</code> = new uint32[(<code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>() / 4) *
+      (<code class="varname">bounds</code>.<code class="methodname">Height</code>() + 1)];
+    <code class="varname">m</code> = <code class="function">max</code>((int32)<code class="varname">bounds</code>.<code class="methodname">Width</code>(), (int32)<code class="varname">bounds</code>.<code class="methodname">Height</code>());
+    <code class="varname">xcosT</code> = new <span class="type">int</span>[<code class="varname">m</code>];
+    <code class="varname">xsinT</code> = new <span class="type">int</span>[<code class="varname">m</code>];
+  }
+
+  <span class="comment">// prepare for 27.5 fixed point</span>
+  <span class="type">float</span> <code class="varname">sinT</code> = 32*<code class="function">sin</code>(<code class="varname">frame</code>*<code class="constant">PI</code>/180*<code class="constant">SCALE</code>),
+        <code class="varname">cosT</code> = 32*<code class="function">cos</code>(<code class="varname">frame</code>*<code class="constant">PI</code>/180*<code class="constant">SCALE</code>);
+
+  <span class="type">int</span> <code class="varname">center_x</code> = <code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>()/8,
+      <code class="varname">center_y</code> = (<span class="type">int32</span>)<code class="varname">bounds</code>.<code class="methodname">Height</code>()/2;
+  <span class="type">int</span> <code class="varname">shiftx</code> = (<span class="type">int</span>)(-<code class="varname">center_x</code>*<code class="varname">cosT</code> - <code class="varname">center_y</code>*<code class="varname">sinT</code> +
+                 <code class="varname">center_x</code>*32),
+      <code class="varname">shifty</code> = (<span class="type">int</span>)(<code class="varname">center_x</code>*<code class="varname">sinT</code> - <code class="varname">center_y</code>*<code class="varname">cosT</code> +
+                 <code class="varname">center_y</code>*32);
+
+  <span class="type">int</span> <code class="varname">newx</code>, <code class="varname">newy</code>;
+  <span class="type">int32 *</span><code class="varname">dest_int32</code> = (<span class="type">int32 *</span>)<code class="varname">bits</code>,
+        *<code class="varname">bitmap_bits_int32</code> = (<span class="type">int32*</span>)<code class="parameter">image</code>-&gt;<code class="methodname">Bits</code>();
+  <span class="type">int</span> <code class="varname">width</code> = <code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>() / 4,
+     <code class="varname">height</code> = (<span class="type">int</span>)<code class="parameter">image</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Height</code>() + 1;
+
+  for (<span class="type">int</span> <code class="varname">z</code>=((<code class="varname">width</code> &gt; <code class="varname">height</code>)?<code class="varname">width</code>:<code class="varname">height</code>)-1;<code class="varname">z</code>&gt;-1;<code class="varname">z</code>--) {
+    <code class="varname">xcosT</code>[<code class="varname">z</code>] = (<span class="type">int</span>)(<code class="varname">z</code>*<code class="varname">cosT</code>); <code class="varname">xsinT</code>[<code class="varname">z</code>] = (int)(<code class="varname">z</code>*<code class="varname">sinT</code>);
+  }
+
+  for (<span class="type">int</span> <code class="varname">y</code>=0;<code class="varname">y</code>&lt;<code class="varname">height</code>;<code class="varname">y</code>++) {
+    <span class="type">int</span> <code class="varname">ysinT</code> = (<span class="type">int</span>)(<code class="varname">y</code>*<code class="varname">sinT</code>), <code class="varname">ycosT</code> = (int)(<code class="varname">y</code>*<code class="varname">cosT</code>);
+    <span class="type">int</span> <code class="varname">basex</code> = <code class="varname">ysinT</code> + <code class="varname">shiftx</code> + (3*<code class="varname">width</code> &lt;&lt; 5),
+      <code class="varname">basey</code> = <code class="varname">ycosT</code> + <code class="varname">shifty</code> + (3*<code class="varname">height</code> &lt;&lt; 5);
+    for (<span class="type">int</span> <code class="varname">x</code>=0;<code class="varname">x</code>&lt;<code class="varname">width</code>;<code class="varname">x</code>++) {
+      <code class="varname">newx</code> = ((<code class="varname">basex</code> + <code class="varname">xcosT</code>[<code class="varname">x</code>]) &gt;&gt; 5) % <code class="varname">width</code>;
+      <code class="varname">newy</code> = ((<code class="varname">basey</code> - <code class="varname">xsinT</code>[<code class="varname">x</code>]) &gt;&gt; 5) % <code class="varname">height</code>;
+      *(<code class="varname">dest_int32</code>++) =
+        <code class="varname">bitmap_bits_int32</code>[<code class="varname">newx</code> + <code class="varname">newy</code>*<code class="varname">width</code>];
+    }
+  }
+
+  <code class="function">memcpy</code>(<code class="parameter">image</code>-&gt;<code class="methodname">Bits</code>(), <code class="varname">bits</code>,
+    <code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>() * (<span class="type">int</span>)(<code class="varname">bounds</code>.<code class="methodname">Height</code>()));
+
+  <code class="varname">frame</code>++;
+}
+</pre><p>
+The second filter makes the image wave. Just build and run it, the visual
+is better than a description.
+</p><pre class="programlisting cpp">
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;Bitmap.h&gt;
+
+extern "C" _EXPORT <span class="type">void</span> filter(<span class="type"><code class="classname">BBitmap</code>*</span> <code class="parameter">image</code>);
+
+<code class="classname">BRect</code> bounds;
+<span class="type">uchar *</span>tbits;
+<span class="type">int32</span> bpr;
+
+#define <code class="constant">PI</code> 3.14159265
+
+<span class="type">void</span>
+<code class="function">filter</code>(<span class="type"><code class="classname">BBitmap</code>*</span> <code class="parameter">image</code>)
+{
+  <span class="type">int32</span> <code class="varname">w</code>, <code class="varname">h</code>, <code class="varname">x</code>, <code class="varname">y</code>;
+  <span class="type">uchar *</span><code class="varname">bits</code>;
+  <span class="type">int32</span> <code class="varname">bpp</code>;
+
+  <span class="type">int</span> <code class="varname">frame</code> = (<code class="function">system_time</code>() / 20000) % 360;
+
+  if (<code class="varname">tbits</code> &amp;&amp; ((<code class="varname">bounds</code> != <code class="parameter">image</code>-&gt;<code class="methodname">Bounds</code>()) ||
+                (<code class="varname">bpr</code> != <code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>()))) {
+    delete <code class="varname">tbits</code>; <code class="varname">tbits</code> = <code class="constant">NULL</code>;
+  }
+
+  if (!<code class="varname">tbits</code>) {
+    <code class="varname">bounds</code> = <code class="parameter">image</code>-&gt;<code class="methodname">Bounds</code>();
+    <code class="varname">tbits</code> = new <span class="type">uchar</span>[<code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>()];
+    <code class="varname">bpr</code> = <code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>();
+  }
+
+  <code class="varname">w</code> = (<span class="type">int32</span>)<code class="varname">bounds</code>.<code class="methodname">Width</code>() + 1;
+  <code class="varname">h</code> = (<span class="type">int32</span>)<code class="varname">bounds</code>.<code class="methodname">Height</code>() + 1;
+  <code class="varname">bits</code> = (<span class="type">uchar *</span>)<code class="parameter">image</code>-&gt;<code class="methodname">Bits</code>();
+
+  switch (<code class="parameter">image</code>-&gt;<code class="methodname">ColorSpace</code>()) {
+    case <code class="constant">B_RGB32</code> :
+    case <code class="constant">B_RGB32_BIG</code> :
+      <code class="varname">bpp</code> = 4; break;
+    case <code class="constant">B_RGB16</code> :
+    case <code class="constant">B_RGB16_BIG</code> :
+    case <code class="constant">B_RGB15</code> :
+    case <code class="constant">B_RGB15_BIG</code> :
+      <code class="varname">bpp</code> = 2; break;
+    case <code class="constant">B_CMAP8</code> :
+      <code class="varname">bpp</code> = 1; break;
+    default :
+      <code class="function">printf</code>("Unknown color space (%x)\n",
+        <code class="parameter">image</code>-&gt;<code class="methodname">ColorSpace</code>());
+      return;
+  }
+
+  for (<code class="varname">y</code>=0;<code class="varname">y</code>&lt;<code class="varname">h</code>;<code class="varname">y</code>++) {
+    <span class="type">int32</span> <code class="varname">delta</code> = (<span class="type">int32</span>)
+        (30 * <code class="function">sin</code>((10 * <code class="varname">frame</code> + <code class="varname">y</code>) * <code class="constant">PI</code>/180) +
+         15 * <code class="function">sin</code>(( 7 * <code class="varname">frame</code> + 3 * <code class="varname">y</code>) * <code class="constant">PI</code>/180));
+    <span class="type">uchar *</span><code class="varname">s</code>;
+
+    <code class="varname">s</code> = <code class="varname">bits</code> + <code class="varname">y</code> * <code class="parameter">image</code>-&gt;<code class="methodname">BytesPerRow</code>();
+
+    if (<code class="varname">delta</code> &lt; 0) {
+      <code class="varname">delta</code> = -<code class="varname">delta</code>;
+      <code class="function">memcpy</code>(<code class="varname">tbits</code>, <code class="varname">s</code>, <code class="varname">bpp</code> * <code class="varname">delta</code>);
+      <code class="function">memcpy</code>(<code class="varname">s</code>, <code class="varname">s</code> + <code class="varname">bpp</code> * <code class="varname">delta</code>, <code class="varname">bpp</code> * (<code class="varname">w</code> - <code class="varname">delta</code>));
+      <code class="function">memcpy</code>(<code class="varname">s</code> + <code class="varname">bpp</code> * (<code class="varname">w</code> - <code class="varname">delta</code>), <code class="varname">tbits</code>, <code class="varname">bpp</code> * <code class="varname">delta</code>);
+    } else if (<code class="varname">delta</code> &gt; 0) {
+      <code class="function">memcpy</code>(<code class="varname">tbits</code>, <code class="varname">s</code>, <code class="varname">bpp</code> * (<code class="varname">w</code> - <code class="varname">delta</code>));
+      <code class="function">memcpy</code>(<code class="varname">s</code>, <code class="varname">s</code> + <code class="varname">bpp</code> * (<code class="varname">w</code> - <code class="varname">delta</code>), <code class="varname">bpp</code> * <code class="varname">delta</code>);
+      <code class="function">memcpy</code>(<code class="varname">s</code> + <code class="varname">bpp</code> * <code class="varname">delta</code>, <code class="varname">tbits</code>, <code class="varname">bpp</code> * (<code class="varname">w</code> - <code class="varname">delta</code>));
+    }
+  }
+}
+</pre><p>
+To build these filters, create a BeIDE "SharedLibrary" project (one
+project for each filter), and move the results to
+<code class="filename">/boot/home/config/add-ons/Magnify</code>.
+Name the first filter "Rotate" and the
+second "Wave". Next time you launch <span class="application">Magnify</span>, you'll find the new menu
+items at the bottom of the pop-up list. Select a filter and watch the
+image.
+</p><p>
+What's next? How about combining filters and adding a game to <span class="application">Magnify</span>.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-2-2"></a>Be Engineering Insights: Useful Applications of BeOS Scripting</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jeff</span> <span class="surname">Bush</span></span></div></div></div><p>
+Contrary to its name, BeOS message scripting doesn't refer to a scripting
+language such a Perl or Awk. BeOS scripting is a format for passing
+messages between applications. Your programs already support scripting as
+many classes in the Interface Kit have it built in. The really
+interesting aspect of scripting is that applications can inter-operate
+without necessarily having to be specially designed to work together. The
+sample app, <span class="application">Thesaurus</span> demonstrates this principle. You can download it
+from here:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/application_kit/Thesaurus.zip&gt;
+</p><p>
+<span class="application">Thesaurus</span> lets you scan through text that's displayed by some other
+application, and replace words with their synonyms. Ok, it's not totally
+useful (unless you're writing a college paper maybe!), but it is mildly
+entertaining, and the code could easily be adapted to work as a spelling
+checker or similar application. The synonyms are taken from a file that's
+included in the optional/goodies folder on the R4 CD.
+</p><p>
+The basic operation of this application is relatively simple. <code class="classname">BTextView</code>
+has a property named "Text" which gives you access to the contents of the
+text view. This application reads some text, scans for a word that it has
+synonyms for, presents the list of choices to the user, and then sets the
+text depending on what the user chooses. Unfortunately, the text view
+scripting messages used by <span class="application">Thesaurus</span> don't yet belong to a suite, so if
+you try this with a program such as <span class="application">Eddie</span> or
+<span class="application">BeIDE</span>, you may find that it
+doesn't work.
+</p><p>
+One problem I ran into was how to find out which application <span class="application">Thesaurus</span>
+should talk to. An easy way to do it was to allow the user to drag an
+icon onto the app. The message that is dragged is just bogus. When the
+view in question receives it, it won't know how to handle it and will
+reply with <code class="constant">B_MESSAGE_NOT_UNDERSTOOD</code>. The returned message, however, will
+have a messenger to the view in question which we can use to talk to the
+app. This worked fine for <span class="application">BeMail</span>,
+but unfortunately <span class="application">StyledEdit</span> doesn't
+accept dropped messages. To solve this problem, I've added optional
+command line apps that can be used to manually select a target. In the
+case of <span class="application">StyledEdit</span>, you can use the optional command line arguments as
+follows:
+</p><pre class="screen">
+Thesaurus --app StyledEdit --window 0 --view text
+</pre><p>
+The meat and potatoes of <span class="application">Thesaurus</span> is in the
+<code class="classname">RemoteTextScanner</code> class. It handles communication
+with the targeted text view. The actual work for getting the text is done
+in <code class="methodname">FetchNextTextChunk()</code>, which fetches 1k of text
+from the targeted text view. <code class="classname">BTextView</code> has a
+property called "Text" which represents text that it contains.
+You can use an index specifier to choose which text you get back. The
+following code retrieves a chunk of text that starts at
+<code class="varname">fTextBufferOffset</code> and is
+<code class="constant">TEXT_BUFFER_SIZE</code> long:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">textRequestMessage</code>(<code class="constant">B_GET_PROPERTY</code>);
+
+<code class="varname">textRequestMessage</code>.<code class="methodname">AddSpecifier</code>("Text", <code class="varname">fTextBufferOffset</code>,
+  <code class="constant">TEXT_BUFFER_SIZE</code>);
+
+<code class="varname">fTextViewMessenger</code>.<code class="methodname">SendMessage</code>(&amp;textRequestMessage, &amp;<code class="varname">reply</code>);
+
+if (<code class="varname">reply</code>.<code class="methodname">FindString</code>("result", &amp;<code class="varname">text</code>) == <code class="constant">B_OK</code>)
+  <code class="function">strncpy</code>(<code class="varname">fTextBuffer</code>, <code class="varname">text</code>, <code class="constant">TEXT_BUFFER_SIZE</code>);
+</pre><p>
+That's it. Replacing the targeted word is almost as easy. In this case,
+we change the verb to <code class="constant">B_SET_PROPERTY</code>. It is then a two step process of
+removing the old text and inserting the new:
+</p><pre class="programlisting cpp">
+<span class="comment">// Erase the word that is going to be replaced</span>
+<code class="classname">BMessage</code> <code class="varname">reply</code>;
+<code class="classname">BMessage</code> <code class="varname">textDelMessage</code>(<code class="constant">B_SET_PROPERTY</code>);
+
+<code class="varname">textDelMessage</code>.<code class="methodname">AddSpecifier</code>("Text", <code class="varname">fCurrentWordOffset</code>,
+  <code class="varname">fCurrentWord</code>.<code class="methodname">Length</code>());
+
+<code class="varname">fTextViewMessenger</code>.<code class="methodname">SendMessage</code>(&amp;<code class="varname">textDelMessage</code>, &amp;<code class="varname">reply</code>);
+
+<span class="comment">// Now insert the new word beginning at the same location</span>
+<code class="classname">BMessage</code> <code class="varname">textSetMessage</code>(<code class="constant">B_SET_PROPERTY</code>);
+
+<code class="varname">textSetMessage</code>.<code class="methodname">AddString</code>("data", <code class="varname">newWord</code>);
+<code class="varname">textSetMessage</code>.<code class="methodname">AddSpecifier</code>("Text", <code class="varname">fCurrentWordOffset</code>,
+  <code class="function">strlen</code>(<code class="varname">newWord</code>));
+
+<code class="varname">fTextViewMessenger</code>.<code class="methodname">SendMessage</code>(&amp;<code class="varname">textSetMessage</code>, &amp;<code class="varname">reply</code>);
+</pre><p>
+The <code class="classname">BTextView</code> also has a "selection" property, which, as you might guess,
+allows us to change what text is selected. My plan was to set the
+selection to the currently selected word, so the user could see it in its
+context. This is where I ran into a little snag. It turns out that when
+the window containing a text view doesn't have the focus, the selection
+isn't highlighted. Since the thesaurus window has the focus when you're
+changing words, this won't work.
+</p><p>
+Luckily, the text view also has a property called "text_run_array". This
+property contains raw information about the font and color of text in the
+view, so it was a simple matter of setting the color of the word to red
+to indicate which word is currently being scanned. Note that this only
+works when multiple colors/fonts are enabled for the view, however, in
+most cases where you would want to use this app, they are.
+</p><p>
+There's quite a bit of room for improvement in this application: You
+could modify it to work within a selection by getting the selection
+property from the text view before starting, or improve the <acronym class="acronym">UTF8</acronym> support
+(<code class="classname">BTextView</code> does utilize <acronym class="acronym">UTF8</acronym>, so fixing this should be simple).
+</p><p>
+I hope this gets your creative juices flowing in thinking of ways to make
+applications more scriptable. The scripting mechanism is still evolving,
+so if you have ideas for new properties or suites, you can submit
+requests using the bug database.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-2"></a>Developers' Workshop: A Stitch in MIME</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+Sometimes when you're writing an application that reads data files, it
+makes a difference what type of data the file contains. The BeOS uses
+<acronym class="acronym" title="Multipurpose Internet Mail Extensions">MIME</acronym>
+types to describe the type of data contained in files. For example,
+<acronym class="acronym" title="American Standard Code for Information Interchange">ASCII</acronym>
+text files are type <span class="type">text/plain</span>, and
+<acronym class="acronym" title="HyperText Markup Language">HTML</acronym> files are <span class="type">text/html</span>.
+</p><p>
+Sometimes applications try to read these files but the type information
+isn't correct. The most common case of this occurs when a file has been
+archived using the "tar" utility, then unarchived. This utility doesn't
+preserve attributes such as the file's type, so the file is untyped.
+</p><p>
+If an application is trying to read the file and interpret its contents,
+this can complicate matters. For example, a web server application (such
+as, say, the <span class="application">PoorMan</span> web server that comes with the BeOS) needs to be
+able to tell the web browser receiving a file what type of file it is.
+</p><p>
+Here's some code that looks up the <acronym class="acronym">MIME</acronym> type of a file whose name is
+given by filename:
+</p><pre class="programlisting cpp">
+<code class="classname">BFile</code> <code class="varname">file</code>;
+<span class="type">char</span> <code class="varname">type</code>[256];
+<span class="type">status_t</span> <code class="varname">status</code>;
+
+<code class="varname">status</code> = <code class="varname">file</code>.<code class="methodname">SetTo</code>(<code class="varname">filename</code>, <code class="constant">B_READ_ONLY</code>);
+if (<code class="varname">status</code> == <code class="constant">B_OK</code>) {
+  <code class="classname">BNodeInfo</code> <code class="varname">ninfo</code>(&amp;<code class="varname">file</code>);
+  if (<code class="varname">ninfo</code>.<code class="methodname">GetType</code>(<code class="varname">type</code>)
+    <code class="function">printf</code>("Oh no! Can't get the type!\n");
+  }
+  else {
+    <code class="function">printf</code>("Type is %s\n", <code class="varname">type</code>);
+  }
+}
+</pre><p>
+This code just uses the <code class="methodname">BNodeInfo::GetType()</code>
+function to get the <acronym class="acronym">MIME</acronym>
+type of the file, and fails if the function returns an error (which
+typically indicates that the file doesn't have type information
+established).
+</p><p>
+You could write code to look at the file's extension and/or contents and
+figure out what type of data it contains, but this isn't an optimal
+solution because your application shouldn't have to be aware of every
+possible type of data the file might contain.
+</p><p>
+The BeOS provides a function, <code class="function">update_mime_info()</code>, that lets you ask the
+BeOS to attempt to identify the type of data in a file and update the
+file's type information.
+</p><p>
+Here's an altered version of the example code that uses
+<code class="function">update_mime_info()</code> to try to have BeOS identify the file's type:
+</p><pre class="programlisting cpp">
+<code class="classname">BFile</code> <code class="varname">file</code>;
+<span class="type">char</span> <code class="varname">type</code>[256];
+<span class="type">status_t</span> <code class="varname">status</code>;
+
+<code class="varname">type</code>[0] = '\0';
+<code class="varname">status</code> = <code class="varname">file</code>.<code class="methodname">SetTo</code>(<code class="varname">filename</code>, <code class="constant">B_READ_ONLY</code>);
+if (<code class="varname">status</code> == <code class="constant">B_OK</code>) {
+  <code class="classname">BNodeInfo</code> <code class="varname">ninfo</code>(&amp;<code class="varname">file</code>);
+  if (<code class="varname">ninfo</code>.<code class="methodname">GetType</code>(<code class="varname">type</code>) &lt; <code class="constant">B_OK</code>) {
+    <code class="function">update_mime_info</code>(<code class="varname">filename</code>, 0, 1, 0);
+    if (<code class="varname">ninfo</code>.<code class="methodname">GetType</code>(<code class="varname">type</code>) &lt; <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Can't get the type!\n");
+    }
+  }
+  if (<code class="function">strlen</code>(<code class="varname">type</code>)) {
+    <code class="function">printf</code>("Type is %s\n", <code class="varname">type</code>);
+  }
+}
+</pre><p>
+This version, if <code class="methodname">GetType()</code> fails, calls
+<code class="function">update_mime_info()</code> to ask the
+BeOS to attempt to identify the file. Once that's been done, <code class="methodname">GetType()</code> is
+called again to see if the type has been fixed. If not, an error message
+is displayed.
+</p><p>
+Let's look at <code class="function">update_mime_info()</code> in more depth. Here's the prototype:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="function">update_mime_info</code>(<span class="type">const char *</span><code class="parameter">path</code>,
+  <span class="type">int</span> <code class="parameter">recursive</code>,
+  <span class="type">int</span> <code class="parameter">synchronous</code>,
+  <span class="type">int</span> <code class="parameter">force</code>);
+</pre><p>
+The <code class="parameter">path</code> argument indicates the pathname of the file to update.
+</p><p>
+The <code class="parameter">recursive</code> argument indicates that if pathname indicates a directory,
+whether or not the entire directory tree at that point should be
+traversed, updating every file in the tree. If this value is 1, the tree
+is traversed recursively; if it's 0, only the indicated file is updated.
+</p><p>
+To ask <code class="function">update_mime_info()</code> to operate synchronously (so it will only
+return when it's finished updating), specify 1 for the <code class="parameter">synchronous</code>
+parameter. Specify 0 if you want <code class="function">update_mime_info()</code> to perform in the
+background; in this case, it returns immediately.
+</p><p>
+If the <code class="parameter">force</code> argument is 1, files are updated even if they already have
+type information specified. If it's 0, files with types assigned already
+are skipped.
+</p><p>
+<code class="function">update_mime_info()</code> returns a <code class="constant">B_OK</code>
+if all is well, otherwise it returns a
+negative value indicating the error that occurred.
+</p><p>
+If you haven't guessed already, this one function does at least 50% of
+the work of the mimeset utility. Most of the other 50% of the work is
+done by <code class="function">create_app_meta_mime()</code>, which updates
+application meta-<acronym class="acronym">MIME</acronym>
+information (it's called if the -apps or -all flag is specified to
+mimeset).
+</p><p>
+This may be helpful if you run into situations in which your application
+is trying to read files and is being confused by nonexistent type
+information.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-2"></a>The Next BeDC</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+On April 9 and 10, we'll hold our next Be Developer Conference in Palo
+Alto. Last year, the event spotlighted the first release of the BeOS for
+Intel-based PCs. This year we're on to our third Intel-based release (or
+fourth or fifth, depending on how you count 3.1, 3.2, 4.0 and the
+upcoming 4.1) and, indeed, we'll be happy to chat about the progress
+we've made in our UI, the kernel, the file system, etc. But at the April
+conference we're going to focus on the Media Kit, one of Release 4's most
+notable additions to the BeOS.
+</p><p>
+Given our Media OS banner, and our plans for a media-rich future for the
+Be commonwealth, this topic is clearly rich enough for several Developer
+Conferences. Using the Media Kit, and using it well, is essential to apps
+that want to be fast and flexible.
+</p><p>
+So, does this mean Be is only interested in Media Kit-based applications?
+I'll just summarize earlier statements made in this space: Media
+applications are the ones that are most likely to help distinguish the
+BeOS from its venerable elders. But drawn by media, BeOS users need to be
+delighted enough with our "everyday" apps—e-mail, Web browsing, word
+processing, spreadsheet—that they'll find no reason to leave.
+</p><p>
+Prior to the April BeDC we'll promote the BeOS Media Kit at events such
+as the NAMM Music Market in Los Angeles, January 28-31, the Frankfurt
+Musikmesse, March 3-7, and the CeBIT show in Hannover, March 18-24. Tim
+Self and his team expect a number of announcements for these events;
+these announcements will provide good technical (and business) cases,
+which we'll use to encourage more developers to embrace our technology.
+</p><p>
+In June we're off to PC Expo. Last year was the first time Be took part
+in a PC-centric trade show. This year we'll return with a proof of the
+concept that we demonstrated in 1998. This represents a lot of work --
+but this is fun work, and it's paying off. The Release 4 sales results so
+far are a gentle but firm tug that indicates traction: Distributors are
+paying their bills and ordering more. This motivates all of us for the
+next milestones and we all look forward to a fun and productive BeDC.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-1.html">Issue 4-1, January 6, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-3.html">Issue 4-3, January 20, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-1.html" title="Issue 4-1, January 6, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-3.html" title="Issue 4-3, January 20, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

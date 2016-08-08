@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-35.html" title="Issue 1-35, August 7, 1996" /><link rel="next" href="Issue1-37.html" title="Issue 1-37, August 21, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-35.html" title="Issue 1-35, August 7, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-37.html" title="Issue 1-37, August 21, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-35.html">Issue 1-35, August 7, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-37.html">Issue 1-37, August 21, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-36"></a>Issue 1-36, August 14, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-36"></a>Be Engineering Insights: Nino: A Simple Audio Test Bed</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Ferguson</span></span></div></div></div><p>
+The Media Kit provides two audio streams. The ADC stream carries data
+from the input source (line-in, CD, or microphone), and the DAC stream
+carries data to line-out and the built-in speaker. If you're
+experimenting with digital audio effects, then you may wish to connect
+the input stream to the output stream so that you can hear what your
+favorite audio CD sounds like when processed by your favorite audio
+algorithm.
+</p><p>
+The Nino ("noise in/noise out") class is a simple test bed that connects
+the two audio streams. A Nino object contains a pointer to a buffer, two
+semaphores for controlling the stream functions, and two <code class="classname">BAudioSubscriber</code>
+objects, one for the ADC stream and one for the DAC stream:
+</p><pre class="programlisting cpp">
+struct <span class="type">Nino</span> : <code class="classname">BObject</code>
+{
+  <code class="methodname">Nino</code> ();
+  <code class="methodname">~Nino</code> ();
+
+  <span class="type">char*</span> <code class="varname">buffer</code>;
+
+  <span class="type">sem_id</span> <code class="varname">bufferReady</code>;
+  <span class="type">sem_id</span> <code class="varname">bufferUsed</code>;
+
+  <span class="type"><code class="classname">BAudioSubscriber</code>*</span> <code class="varname">adcSubscriber</code>;
+  <span class="type"><code class="classname">BAudioSubscriber</code>*</span> <code class="varname">dacSubscriber</code>;
+};
+</pre><p>
+The global "stream functions" are called
+<code class="function">adc_reader()</code> and <code class="function">dac_writer()</code>.
+Each stream function is called once per buffer. When <code class="function">adc_reader()</code> gets a
+buffer, it releases the <code class="varname">bufferReady</code> semaphore and
+waits for <code class="function">dac_writer()</code>
+to release bufferUsed.
+</p><pre class="programlisting cpp">
+static <span class="type">bool</span>
+<code class="function">adc_reader</code> (<span class="type">void*</span> <code class="parameter">arg</code>, <span class="type">char*</span> <code class="parameter">adc_buf</code>, <span class="type">long</span> <code class="parameter">count</code>)
+{
+  <span class="type"><code class="classname">Nino</code>*</span> <code class="varname">my_nino</code> = (<span class="type"><code class="classname">Nino</code>*</span>) <code class="parameter">arg</code>;
+  <code class="varname">my_nino</code>-&gt;<code class="varname">buffer</code> = <code class="parameter">adc_buf</code>;
+  <code class="function">release_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferReady</code>);
+  <code class="function">acquire_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferUsed</code>);
+  return <code class="constant">TRUE</code>;
+}
+
+static <span class="type">bool</span>
+dac_writer (<span class="type">void*</span> <code class="parameter">arg</code>, <span class="type">char*</span> <code class="parameter">dac_buf</code>, <span class="type">long</span> <code class="parameter">count</code>)
+{
+  <span class="type"><code class="classname">Nino</code>*</span> <code class="varname">my_nino</code> = (<span class="type"><code class="classname">Nino</code>*</span>) <code class="parameter">arg</code>;
+  <code class="function">acquire_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferReady</code>);
+  <code class="function">memcpy</code> (<code class="parameter">dac_buf</code>, <code class="varname">my_nino</code>-&gt;<code class="varname">buffer</code>, <code class="parameter">count</code>);
+  <code class="function">release_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferUsed</code>);
+  return <code class="constant">TRUE</code>;
+}
+</pre><p>
+To simplify the example, these functions assume that both streams have
+the same buffer size. Also, to avoid erasing the output of other DAC
+stream subscribers, the call to <code class="function">memcpy()</code> should be replaced by a mixing
+function: You should add the contents of <code class="varname">my_nino-&gt;buffer</code> into <code class="varname">dac_buf</code>
+rather than simply clobbering the latter with the former.
+</p><p>
+The Nino constructor initializes the semaphores and subscribers and
+enters the subscribers into their respective streams.
+</p><pre class="programlisting cpp">
+<code class="classname">Nino</code>::<code class="methodname">Nino</code>()
+{
+  <code class="varname">bufferReady</code> = <code class="function">create_sem</code> (0, "buffer ready");
+  <code class="varname">bufferUsed</code> = <code class="function">create_sem</code> (0, "buffer used");
+
+  <code class="varname">adcSubscriber</code> = new <code class="classname">BAudioSubscriber</code> ("Nino ADC reader");
+  <code class="varname">dacSubscriber</code> = new <code class="classname">BAudioSubscriber</code> ("Nino DAC writer");
+
+  <code class="varname">adcSubscriber</code>-&gt;<code class="methodname">Subscribe</code> (<code class="constant">B_ADC_STREAM</code>,
+                            <code class="constant">B_SHARED_SUBSCRIBER_ID</code>,
+                            <code class="constant">TRUE</code>);
+  <code class="varname">dacSubscriber</code>-&gt;<code class="methodname">Subscribe</code> (<code class="constant">B_DAC_STREAM</code>,
+                            <code class="constant">B_SHARED_SUBSCRIBER_ID</code>,
+                            <code class="constant">TRUE</code>);
+
+  <code class="varname">adcSubscriber</code>-&gt;<code class="methodname">EnterStream</code> (<code class="constant">NULL</code>, <code class="constant">FALSE</code>,
+                              <code class="varname">this</code>, <code class="varname">adc_reader</code>,
+                              <code class="constant">NULL</code>, <code class="constant">TRUE</code>);
+  <code class="varname">dacSubscriber</code>-&gt;<code class="methodname">EnterStream</code> (<code class="constant">NULL</code>, <code class="constant">TRUE</code>,
+                              <code class="varname">this</code>, <code class="varname">dac_writer</code>,
+                              <code class="constant">NULL</code>, <code class="constant">TRUE</code>);
+}
+</pre><p>
+The Nino destructor must be careful to exit the stream, cleanly. It waits
+for <code class="varname">dacSubscriber</code> to exit before it deletes the semaphores, then it waits
+for <code class="varname">adcSubscriber</code> to exit before it deletes the subscribers.
+</p><pre class="programlisting cpp">
+<code class="classname">Nino</code>::<code class="methodname">~Nino</code>()
+{
+  <code class="varname">dacSubscriber</code>-&gt;<code class="methodname">ExitStream</code> (<code class="constant">TRUE</code>);
+  <code class="function">delete_sem</code> (<code class="varname">bufferReady</code>);
+  <code class="function">delete_sem</code> (<code class="varname">bufferUsed</code>);
+  <code class="varname">adcSubscriber</code>-&gt;<code class="methodname">ExitStream</code> (<code class="constant">TRUE</code>);
+
+  delete <code class="varname">adcSubscriber</code>;
+  delete <code class="varname">dacSubscriber</code>;
+}
+</pre><p>
+When testing a Nino, remember to make sure that the <code class="constant">B_ADC_IN</code> and
+<code class="constant">B_DAC_OUT</code> devices are enabled, and that <code class="constant">B_LOOPBACK</code> is disabled (See the
+documentation for <code class="classname">BAudioSubscriber</code> in "The Be Book").
+</p><p>
+During the lifetime of a Nino object the ADC input stream will be fed to
+the DAC output stream. This will make it easy to experiment with digital
+processing of any audio source.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-36"></a>Be Developer Talk: Robert Nasca, Sidney, Australia</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Nasca</span></span></div></div></div><p>
+I completed a Bachelor of Science (Information Systems) at the University
+of New South Wales in 1994. Since then I've moved into the banking and
+finance industry, working as an analyst and programmer. (It's not as much
+fun as software engineering, but the money is better.) Although I like
+the business environment—there are a number of fringe benefits—I
+hate the long hours. Mostly because this doesn't give me enough time to
+develop my <span class="trademark">BeOS</span>™ applications.
+</p><p>
+From my brief experience with the BeBox, it seems that the BeOS is
+significantly different from other operating systems I have used
+(including AmigaOS and UNIX), in that the OS does a lot more for you.
+This is something that you actually have to get used to. Normally—on
+other platforms—you spend half your time setting up your program
+environment (utility functions, code structures, and so on). With the
+BeOS, on the other hand, a lot of the setting up is done for you,
+allowing you to concentrate on what it is that you want your application
+to do, such as formatting documents, creating sounds, and other functions.
+</p><p>
+Of course nothing's perfect, and there are, in my opinion, some
+improvements to be made. For example, the interface is currently kinda
+ugly (IMHO), and I'd really like more control objects (such as a
+"BFuelGauge" object). Also, I'm a bit concerned by the fact that the OS
+is "inspired" by the Mac—I've found that the Mac takes a very
+simplistic view towards what functionality they need in the OS; I
+wouldn't want this attitude to influence the design decisions that Be
+makes.
+</p><p>
+But I can't argue much with the direction of the BeOS so far: It's new,
+it's not Wintel, it's fun, and it's targeted at technically minded
+people. The fact that I can have input into the design of BeOS, and that
+it is being influenced by people all over the Internet is exciting.
+</p><p>
+My short term plan is to develop a system monitor program. It looks a bit
+like a Browser window in "List View" mode, but instead of showing files,
+it displays teams, threads, semaphores, and other system resources. It's
+already working in basic form, but it needs some bells and whistles
+before it's made public—this way I can learn more about the OS in the
+process. My long term plan is to develop some Internet software, such as
+an irc, ftp, or news client.
+</p><p>
+The system monitor should be available within two months, the next "big"
+project should be in alpha or beta in less than six months.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-36"></a>Be Marketing Mutterings</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>
+Our demo port of the BeOS to the PowerMac was very well received at the
+Macworld show in Boston last week. In our booth, we showed the port
+running on an entry-level Power Computing PowerCenter 120, a 120 MHz 604
+uniprocessor PowerMac clone. In their booth, Power Computing had the BeOS
+running on a 200 MHz 604e uniprocessor machine. Both machines impressed
+us—and the many visitors to the booths—with their performance
+running the BeOS and with the stability and robustness of the port. Thus,
+the decision to finish the port and commercialize it was an easy one.
+We've had many questions from developers and users about BeOS on the
+PowerMac, and I'll try to answer some of them here. In many cases, we
+really haven't figured out the answers yet, so please bear with us as we
+explore the possibilities more and gather feedback from our many friends,
+partners, and customers.
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id494355"></a><a id="id494357"></a>Q:</td><td><p>
+When will the BeOS for PowerMac port be available?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We hope to ship a "shrinkwrapped" version in the first quarter of
+1997. Before then, we will ship one or two developer releases.
+</p></td></tr><tr class="question"><td><a id="id494371"></a><a id="id494374"></a>Q:</td><td><p>
+How much?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Honestly, we don't know yet. We have to figure out the math. But we
+expect the price to be very competitive with other operating systems!
+Developers in our developer program will receive the DR version(s) free
+or for a nominal handling charge.
+</p></td></tr><tr class="question"><td><a id="id494389"></a><a id="id494391"></a>Q:</td><td><p>
+What machines will you support?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+This is very dependent on the level of documentation and support that
+we receive from our friends at Power Computing, Apple, and other PowerMac
+clone vendors; we've been delighted with the support we've received so
+far. We'll be investigating as many Apple and PowerMac clone vendors'
+machines as possible in the coming weeks and compiling a list of those we
+think we'll be able to support. Initially, we're looking at 603 and 604
+family machines. We've had requests for 601 machines, and we'll be
+looking at that also.
+</p></td></tr><tr class="question"><td><a id="id494402"></a><a id="id494405"></a>Q:</td><td><p>
+How about PowerBooks or other Mac laptops?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+That would be great, and we're looking into it. We'd love to support
+PowerBooks or (yet-to-be) Mac-compatible laptops, but the challenges of
+power management and very custom hardware inherent in laptop designs
+makes this much more difficult than supporting desktops.
+</p></td></tr><tr class="question"><td><a id="id494420"></a><a id="id494423"></a>Q:</td><td><p>
+Any plans to support 680x0 Macs?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+No. There are no new Macs or Mac compatibles based on the 68K
+architecture, and existing machines' performance lags far behind that of
+PowerPC-based machines and even Intel- based products. We've chosen to
+use our limited resources on the higher performance PowerPC-based
+machines.
+</p></td></tr><tr class="question"><td><a id="id494439"></a><a id="id494441"></a>Q:</td><td><p>
+Will Apple, Power Computing, or the other PowerMac clone vendors offer
+or bundle the BeOS?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+That would be nice :-)
+</p></td></tr><tr class="question"><td><a id="id494454"></a><a id="id494456"></a>Q:</td><td><p>
+Will you port to the MP PowerMacs announced by Apple, Power Computing,
+and others?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Yes, we definitely plan to do this. No timescales yet, but we'd like
+to support them when they start to ship, around the beginning of next
+year. We still need to do a lot of technical investigations before we can
+be reasonably confident of pulling this off.
+</p></td></tr><tr class="question"><td><a id="id494473"></a><a id="id494475"></a>Q:</td><td><p>
+How does the performance of the BeOS on a PowerMac compare to its
+performance on a BeBox?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+This is hard to judge objectively until we develop and run some
+benchmarks. At first sight, it seems that the on- board video of the
+Power Computing machines helps "snappiness" a lot. The uniprocessor
+machines seem to saturate and degrade in performance more rapidly than
+the MP BeBoxes; for example, a BeBox gradually slows down as you load it
+up with multiple tasks, whereas a PowerMac "hits the wall" more suddenly.
+But, these are just subjective views right now and need to be tested and
+verified, so your mileage may vary.
+</p></td></tr><tr class="question"><td><a id="id494487"></a><a id="id494489"></a>Q:</td><td><p>
+Is the BeOS running on top of the MacOS? Or vice versa?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Neither. In the demo version we used at Macworld, you boot up the
+machine as normal running the MacOS. You then launch the BeOS, which
+completely replaces the MacOS and runs from its own disk. The "end user"
+version of the BeOS for PowerMac will probably offer a choice of which OS
+to boot at startup time, from a disk partitioned for the MacOS or BeOS.
+</p></td></tr><tr class="question"><td><a id="id494507"></a><a id="id494509"></a>Q:</td><td><p>
+What about accessing the MacOS file system from the BeOS? What about
+AppleTalk? What about using Mac onboard networking, video capture, and so
+on?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+All good questions. We'll be investigating all of them.
+</p></td></tr><tr class="question"><td><a id="id494524"></a><a id="id494526"></a>Q:</td><td><p>
+What level of compatibility is there between the BeBox and PowerMac
+versions of the BeOS?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Very high. Clearly, there's no <span class="trademark">GeekPort</span>™ on the PowerMac, nor are
+there standard MIDI ports, IR ports, or multiple serial ports. Joysticks
+are kind of tricky also. But, just about every application we had time to
+try out seemed to work fine on both platforms. We still need to finish
+the port, including a floppy driver, on-board networking, CD driver, and
+so on, but we expect application binaries that run on the BeBox to run on
+the PowerMac also, and vice versa.
+</p></td></tr><tr class="question"><td><a id="id494549"></a><a id="id494552"></a>Q:</td><td><p>
+How do I get more information?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+ALL new information will be posted to our web site (http://www.be.com)
+as it becomes available. We're not holding anything back! In fact, this
+article probably gives you the (correct) impression that we're working
+this out as we go along and learn more about the technical and business
+possibilities of the BeOS on PowerMac product.
+</p></td></tr><tr class="question"><td><a id="id494569"></a><a id="id494571"></a>Q:</td><td><p>
+How do you (Be) feel about the PowerMac demo at Macworld?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We had a blast. It was worth all the hard work by Bob Herold and other
+Be engineers to see the looks of delight on peoples' faces when they saw
+four QuickTime movies, audio, and 3D animation, all running
+simultaneously on a Mac...
+</p></td></tr></tbody></table></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-36"></a>Macworld Impressions</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last week's Macworld Expo in Boston reminded me of the same show in
+August 1985. At that time, Apple was in trouble: There had been turmoil
+in the executive suite, the company had announced a big quarterly loss
+and a layoff. The conventional wisdom was that Apple and the Mac were in
+big trouble. The show floor didn't reflect any of that insight then.
+Customers and developers were too busy doing business to inhale the
+noxious predictions.
+</p><p>
+History doesn't quite repeat itself, but eleven years later the Boston
+Macworld visitors and exhibitors were obviously oblivious of oracles of
+obliteration. One might argue that only the faithful came to the show.
+But that's always been the case, and they came in large numbers (50,000
+we're told) and they were spending money.
+</p><p>
+One of the key differences this year was the strong presence of clone
+makers, with Power Computing leading the pack. And not just in hardware
+performance, but also in marketing presence. I'm not just referring to
+their highly visible bungee-jumping crane, frequented by various members
+of our team, or to the video wall in their crowded booth. Power Computing
+machines were everywhere on the floor. The Apple Developer Greenhouse was
+populated with Power Computing boxes—but not the Apple pavilion.
+</p><p>
+Speaking of Power Computing, the port of the BeOS on a Power Computing
+system was well received, better than we expected. Because we had gone
+through the BeOS port from the AT&amp;T Hobbit processor to the PowerPC, we
+had proven our system to be portable. We even knew how portable it is --
+very. Meaning its design made the task much easier than, say, porting
+Windows 95. But that was internal knowledge.
+</p><p>
+Perhaps we made the classical mistake of assuming others knew what we
+knew. In our industry, so many lofty claims have been made that
+skepticism, polite or otherwise, has become the norm. Show me. And show
+we did. At the last minute, we got one the newest 225 MHz Power Computing
+machines, Bob Herold was able to make the required processor ID
+modification and, voila, the BeOS ran on the fastest Mac clone available.
+</p><p>
+Removing the hardware variable simplifies the evaluation of our OS.
+Before, one could look at our admittedly nonstandard multiprocessor
+hardware and wonder if the perceived high performance wasn't due to some
+undisclosed hardware advantage (other than the number of processors). On
+the assumption that it's dangerous to develop software on hardware faster
+than what customers will use, we deliberately picked the slowest member
+of the PPC family for our first BeBox system, thus forcing us to watch
+the efficiency of our code. This strategy worked for performance, but it
+didn't sufficiently clarify its main source. Now you can see the Mac OS
+and the BeOS on the same system. In one demonstration we prove both
+portability and performance.
+</p><p>
+Still, we have a lot to do before the port becomes a commercial product.
+First, we need to release it to Be developers for testing and comments.
+Second, some functions remain to be implemented, such as the floppy
+driver. Third, we need to evaluate which systems we can and should
+support. In particular, we're getting many requests to support 601- based
+machines (which is still being evaluated), and 68K Macs (which is
+extremely unlikely). Once we have a stable product, supporting a
+reasonable range of hardware, we can turn to the issue of distribution
+and pricing. Hopefully, we'll be ready for the next Macworld in January
+97 in San Francisco.
+</p><p>
+Many other questions remain, such as various forms of integration with
+the MacOS and the reintroduction of the hardware variable. I'll deal with
+them in future columns, starting next week.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-35.html">Issue 1-35, August 7, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-37.html">Issue 1-37, August 21, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-35.html" title="Issue 1-35, August 7, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-37.html" title="Issue 1-37, August 21, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

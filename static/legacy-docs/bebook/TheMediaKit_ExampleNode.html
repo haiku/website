@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Media Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheMediaKit_Overview.html" title="The Media Kit" /><link rel="prev" href="TheMediaKit_Overview_ReadingWriting.html" title="Reading and Writing Media Files" /><link rel="next" href="BBuffer_Overview.html" title="BBuffer" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheMediaKit_Overview_ReadingWriting.html" title="Reading and Writing Media Files"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheMediaKit_Overview.html" title="The Media Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="BBuffer_Overview.html" title="BBuffer"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Media Kit</div></div><div id="headerB">Prev: <a href="TheMediaKit_Overview_ReadingWriting.html">Reading and Writing Media Files</a>  Up: <a href="TheMediaKit_Overview.html">The Media Kit</a>  Next: <a href="BBuffer_Overview.html">BBuffer</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode"></a>A BMediaEventLooper Example</h2></div></div></div><p>Implementing a node using the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+class to handle the scheduling issues makes your job much easier. So
+much so, in fact, that Be recommends that you not try to bypass
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>.
+This section provides an example of creating a node using
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+to handle the control port and event queueing.</p><p>When you implement a node using
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>,
+you have to derive from multiple classes:
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>,
+of course, and
+<a class="link" href="BControllable.html" title="BControllable"><code class="classname">BControllable</code></a>
+if you want your node to be user-configurable. Then you need to also derive
+from <a class="link" href="BBufferConsumer.html" title="BBufferConsumer"><code class="classname">BBufferConsumer</code></a> and/or
+<a class="link" href="BBufferProducer.html" title="BBufferProducer"><code class="classname">BBufferProducer</code></a>,
+depending on whether you create or receive buffers. And if your node can provide a time source,
+you would also need to derive from
+<a class="link" href="BTimeSource.html" title="BTimeSource"><code class="classname">BTimeSource</code></a>.</p><p><a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+doesn't eliminate your obligation to implement the pure
+virtual functions in all the classes you derive from, and you may still
+have to implement some or all of the other virtual functions as well. All
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+gives you is automatic queueing of received messages, and
+automatic management of your control port. This still eliminates a lot of
+repetitive and uninteresting work, and makes your job a lot easier.</p><p>Let's look at an example node. This node derives from
+<a class="link" href="BBufferConsumer.html" title="BBufferConsumer"><code class="classname">BBufferConsumer</code></a>,
+<a class="link" href="BControllable.html" title="BControllable"><code class="classname">BControllable</code></a>, and
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>,
+and logs media events to a disk
+file. The node's latency, among other parameters, is user-configurable,
+so you can use this node to simulate different loads on the system.</p><p>This section only shows key portions of the sample node. If you'd like to
+play with the full source code, you can download it from the Be web site
+at ftp://ftp.be.com/pub/samples/media_kit/LoggingConsumer.zip.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode_ConstructorAndDestructor"></a>The Constructor and Destructor</h3></div></div></div><p>Let's start at the very beginning (a very good place to start). The
+constructor has to perform the initialization for all the superclasses:</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode_Constructor"></a>Constructor</h4></div></div></div><pre class="programlisting example cpp"><code class="classname">LoggingConsumer</code>::<code class="methodname">LoggingConsumer</code>(<span class="type">const entry_ref &amp;</span><code class="parameter">logFile</code>)
+   :<code class="classname">BMediaNode</code>("LoggingConsumer"),
+    <code class="classname">BBufferConsumer</code>(<code class="constant">B_MEDIA_UNKNOWN_TYPE</code>),
+    <code class="classname">BControllable</code>(),
+    <code class="classname">BMediaEventLooper</code>(),
+    <code class="varname">mLogRef</code>(<code class="varname">logFile</code>), <code class="varname">mWeb</code>(<code class="constant">NULL</code>),
+    <code class="varname">mLateBuffers</code>(0),
+    <code class="varname">mLatency</code>(50 * 1000),      <span class="comment">// default to 50 milliseconds</span>
+    <code class="varname">mSpinPercentage</code>(0.10),    <span class="comment">// default to spinning 10% of total latency</span>
+    <code class="varname">mPriority</code>(<code class="constant">B_REAL_TIME_PRIORITY</code>),
+    <code class="varname">mLastLatencyChange</code>(0),
+    <code class="varname">mLastSpinChange</code>(0),
+    <code class="varname">mLastPrioChange</code>(0)
+{
+   <code class="varname">mLogger</code> = new <code class="classname">LogWriter</code>(<code class="varname">logFile</code>);
+}</pre><p>The constructors for
+<a class="link" href="BMediaNode.html" title="BMediaNode"><code class="classname">BMediaNode</code></a>,
+<a class="link" href="BBufferConsumer.html" title="BBufferConsumer"><code class="classname">BBufferConsumer</code></a>,
+<a class="link" href="BControllable.html" title="BControllable"><code class="classname">BControllable</code></a>, and
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+are all called through to here, to perform the standard
+initialization for each of these superclasses. In addition, an assortment
+of local variables are initialized.</p><p>Finally, the thread that handles actually writing into the log file
+is started; this is done by the <code class="classname">LogWriter</code> class'
+constructor. This class will be used to access the log file. We won't get
+into any specifics of how the <code class="classname">LogWriter</code> class works.
+Suffice it to say that the <code class="classname">LogWriter</code> has some public
+variables that affect the messages it logs to the file, and a
+<code class="methodname">Log()</code> function that actually writes a new entry
+into the log file.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode_Destructor"></a>Destructor</h4></div></div></div><pre class="programlisting example cpp"><code class="classname">LoggingConsumer</code>::<code class="methodname">~LoggingConsumer</code>() {
+   <code class="classname">BMediaEventLooper</code>::<code class="methodname">Quit</code>();
+   <code class="methodname">SetParameterWeb</code>(<code class="constant">NULL</code>);
+   <code class="varname">mWeb</code> = <code class="constant">NULL</code>;
+   delete <code class="varname">mLogger</code>;
+}</pre><p>The destructor, shown above, begins by stopping the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>'s
+control loop. This is done by calling
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_Quit" title="Quit()"><code class="methodname">BMediaEventLooper::Quit()</code></a>.
+Next we delete the parameter web by calling
+<a class="link" href="BControllable.html#BControllable_SetParameterWeb" title="SetParameterWeb(), Web()"><code class="methodname">BControllable::SetParameterWeb()</code></a>;
+we set the parameter web to <code class="constant">NULL</code> instead of deleting it ourselves because
+this lets the node handle cleanup—the node deletes the web for us
+in this case. We then set our local pointer to the web to <code class="constant">NULL</code> so we know
+it's been deleted.</p><p>Once all that's been done, we delete the logging thread. This is done
+last to avoid possible race conditions that could arise if an event
+arrives that would trigger a write to the log. By waiting until the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+has been quit, we can avoid this potential problem.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode_BMediaNodeFunctions"></a>BMediaNode Functions</h3></div></div></div><p>We also need to implement some functions from the
+<a class="link" href="BMediaNode.html" title="BMediaNode"><code class="classname">BMediaNode</code></a>
+class. Other than
+<a class="link" href="BMediaNode.html#BMediaNode_AddOn" title="AddOn()"><code class="methodname">BMediaNode::AddOn()</code></a>,
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+provides default
+implementations for these functions. In many cases, you can just use the
+default implementations. We'll look at one custom implementation, so you
+can see how it's done.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode_AddOn"></a>AddOn()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">BMediaAddOn*</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">AddOn</code>(<span class="type">int32 *</span>) const {
+   return <code class="constant">NULL</code>;
+}</pre><p>The
+<a class="link" href="BMediaNode.html#BMediaNode_AddOn" title="AddOn()"><code class="methodname">BMediaNode::AddOn()</code></a>
+function's job is to return a pointer to the
+<a class="link" href="BMediaAddOn.html" title="BMediaAddOn"><code class="classname">BMediaAddOn</code></a>
+object that instantiated the node. In this case, we're
+contained within an application, so we return <code class="constant">NULL</code>. But if the node were
+created from a media node add-on, we'd return a pointer to that object
+here.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ExampleNode_OtherBMediaNodeFunctions"></a>Other BMediaNode Functions</h3></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">SetRunMode</code>(<span class="type">run_mode</span> <code class="parameter">mode</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">logMsg</code>.<code class="varname">runmode</code>.<code class="varname">mode</code> = <code class="parameter">mode</code>;
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SET_RUN_MODE</code>, <code class="varname">logMsg</code>);
+
+   <code class="classname">BMediaEventLooper</code>::<code class="methodname">SetRunMode</code>(<code class="parameter">mode</code>);
+}</pre><p>The <a class="link" href="BMediaNode.html#BMediaNode_SetRunMode"><code class="methodname">BMediaNode::SetRunMode()</code></a>
+function handles changing the run mode of the node. The
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+class handles this automatically, but you
+can augment the implementation if you need to.</p><p>In this case, as we do in all the other
+<a class="link" href="BMediaNode.html" title="BMediaNode"><code class="classname">BMediaNode</code></a>
+functions we implement, we simply log the call, then defer to
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>'s
+implementation.</p><p>We call
+<span class="code"><code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>()</span>
+to get the current time, which is inserted
+into the log along with a description of the type of event that occurred.</p><p>The other <a class="link" href="BMediaNode.html" title="BMediaNode"><code class="classname">BMediaNode</code></a>
+functions we implement work similarly, logging the
+request, then deferring to the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+implementation.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578324"></a>BControllable Functions</h3></div></div></div><p>The <a class="link" href="BControllable.html" title="BControllable"><code class="classname">BControllable</code></a>
+functions we implement allow our node to be
+user-configurable; these functions are called when someone needs to know
+the current value of one of the parameters, or when the value of a
+parameter needs to be changed.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578345"></a>GetParameterValue()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">GetParameterValue</code>(<span class="type">int32</span> <code class="parameter">id</code>,
+         <span class="type">bigtime_t*</span> <code class="parameter">last_change</code>, <span class="type">void*</span> <code class="parameter">value</code>, <span class="type">size_t*</span> <code class="parameter">ioSize</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">logMsg</code>.<code class="varname">param</code>.<code class="varname">id</code> = <code class="parameter">id</code>;
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_GET_PARAM_VALUE</code>, <code class="varname">logMsg</code>);
+
+   if (*<code class="parameter">ioSize</code> &lt; <code class="function">sizeof</code>(<span class="type">float</span>)) return <code class="constant">B_ERROR</code>;
+
+   switch (<code class="parameter">id</code>) {
+   case <code class="constant">LATENCY_PARAM</code>:
+      *<code class="parameter">last_change</code> = <code class="varname">mLastLatencyChange</code>;
+      *((<span class="type">float*</span>) <code class="parameter">value</code>) = <code class="varname">mLatency</code>/1000;  <span class="comment">// the BParameter reads milliseconds,
+                                          // not microseconds</span>
+      *<code class="parameter">ioSize</code> = <code class="function">sizeof</code>(<span class="type">float</span>);
+      break;
+
+   case <code class="constant">CPU_SPIN_PARAM</code>:
+      *<code class="parameter">last_change</code> = <code class="varname">mLastSpinChange</code>;
+      *((<span class="type">float*</span>) <code class="parameter">value</code>) = <code class="varname">mSpinPercentage</code>;
+      *<code class="parameter">ioSize</code> = <code class="function">sizeof</code>(<span class="type">float</span>);
+      break;
+
+   case <code class="constant">PRIORITY_PARAM</code>:
+      *<code class="parameter">last_change</code> = <code class="varname">mLastPrioChange</code>;
+      *((<span class="type">int32*</span>) <code class="parameter">value</code>) = <code class="varname">mPriority</code>;
+      *<code class="parameter">ioSize</code> = <code class="function">sizeof</code>(<span class="type">int32</span>);
+      break;
+
+   default:
+      return <code class="constant">B_ERROR</code>;
+   }
+
+   return <code class="constant">B_OK</code>;
+}</pre><p>The <a class="link" href="BControllable.html#BControllable_GetParameterValue" title="GetParameterValue(), SetParameterValue()"><code class="methodname">BControllable::GetParameterValue()</code></a>
+function is called to obtain the current value for one of the node's
+configurable parameters. The parameter is specified by an ID number in the
+<code class="parameter">id</code> argument. <code class="parameter">value</code> points to
+a memory buffer in which the value should be stored, and
+<code class="parameter">ioSize</code> indicates the size of the buffer. Our job is
+to store the time at which the indicated parameter last changed into
+<code class="parameter">last_change</code>, the new value into the buffer pointed
+at by <code class="parameter">value</code>, and the actual size of the returned
+value into <code class="parameter">ioSize</code>.</p><p>Our logging node begins by logging the request to the log file.</p><p>Then the real implementation begins by checking to be sure the space
+provided by the caller is big enough for the result. In this node, all
+values are four bytes, so this is easy to check, but in your node, you
+might have to check on a parameter-by-parameter basis.</p><p>Then, based on the <code class="parameter">id</code>, the result is filled out, based on values we've
+cached from the last change to the parameter values (these would be set
+when the web receives the appropriate messages indicating that the values
+have changed). We'll look at the functioning of the
+<a class="link" href="BParameterWeb.html" title="BParameterWeb"><code class="classname">BParameterWeb</code></a>
+shortly.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578661"></a>SetParameterValue()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">SetParameterValue</code>(<span class="type">int32</span> <code class="parameter">id</code>,
+         <span class="type">bigtime_t</span> <code class="parameter">performance_time</code>, <span class="type">const void*</span> <code class="parameter">value</code>, <span class="type">size_t</span> <code class="parameter">size</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">logMsg</code>.<code class="varname">param</code>.<code class="varname">id</code> = <code class="parameter">id</code>;
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SET_PARAM_VALUE</code>, <code class="varname">logMsg</code>);
+
+   <span class="comment">// if it's one of our parameters, enqueue a "set parameter" event for
+   // handling at the appropriate time</span>
+   switch (<code class="parameter">id</code>) {
+   case <code class="constant">LATENCY_PARAM</code>:
+   case <code class="constant">CPU_SPIN_PARAM</code>:
+   case <code class="constant">PRIORITY_PARAM</code>:
+      {
+         <span class="type">media_timed_event</span> <code class="varname">event</code>(<code class="parameter">performance_time</code>,
+               <code class="classname">BTimedEventQueue</code>::<code class="constant">B_PARAMETER</code>, (<span class="type">void*</span>) <code class="parameter">value</code>,
+               <code class="classname">BTimedEventQueue</code>::<code class="constant">B_NO_CLEANUP</code>, <code class="parameter">size</code>, <code class="parameter">id</code>, <code class="constant">NULL</code>);
+         <code class="methodname">EventQueue</code>()-&gt;<code class="methodname">AddEvent</code>(<code class="parameter">event</code>);
+      }
+      break;
+
+   default:      <span class="comment">// do nothing for other parameter IDs</span>
+      break;
+   }
+   return;
+}</pre><p><a class="link" href="BControllable.html#BControllable_SetParameterValue"><code class="methodname">BControllable::SetParameterValue()</code></a>
+is called when a request is made to
+change the value of a parameter. We begin, as usual, by logging the
+request.</p><p>The meat of this function is the switch statement, which enqueues a
+<a class="link" href="BTimedEventQueue.html#media_timed_event" title="media_timed_event"><span class="type">media_timed_event</span></a>
+representing the request. We instantiate a new
+<span class="type">media_timed_event</span> with the performance time at which the change is to
+take place, and all the other parameters needed when changing a
+parameter's value.</p><p>This is then inserted into the event queue by calling
+<a class="link" href="BTimedEventQueue.html#BTimedEventQueue_AddEvent" title="AddEvent()"><code class="methodname">BTimedEventQueue::AddEvent()</code></a>
+on the <a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>'s
+queue, which is returned by
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_EventQueue" title="EventQueue(), RealTimeQueue()"><code class="methodname">BMediaEventLooper::EventQueue()</code></a>.
+When the time specified by
+<code class="parameter">performance_time</code> arrives, this will be dequeued and sent along to
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_HandleEvent" title="HandleEvent()"><code class="methodname">BMediaEventLooper::HandleEvent()</code></a>
+automatically.</p><p>The event is given the type
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_PARAMETER</code>. This type is
+used for parameter change events.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578942"></a>BBufferConsumer Functions</h3></div></div></div><p>Next we come to the
+<a class="link" href="BBufferConsumer.html" title="BBufferConsumer"><code class="classname">BBufferConsumer</code></a>
+functions that we have to implement.
+These functions actually handle arriving buffers, and negotiations with
+producers.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578961"></a>HandleMessage()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">HandleMessage</code>(<span class="type">int32</span> <code class="parameter">message</code>, <span class="type">const void *</span><code class="parameter">data</code>,
+         <span class="type">size_t</span> <code class="parameter">size</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_HANDLE_MESSAGE</code>, <code class="varname">logMsg</code>);
+
+   return <code class="constant">B_ERROR</code>;
+}</pre><p><code class="methodname">HandleMessage()</code> should never be called if you're using a
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+(if it's called, a message was received that can't be
+handled at this inheritance level), so we log it and return an error.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id579065"></a>AcceptFormat()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">AcceptFormat</code>(<span class="type">const media_destination &amp;</span><code class="parameter">dest</code>,
+         <span class="type">media_format*</span> <code class="parameter">format</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_ACCEPT_FORMAT</code>, <code class="varname">logMsg</code>);
+
+   if (<code class="parameter">dest</code> != <code class="varname">mInput</code>.<code class="varname">destination</code>)
+       return <code class="constant">B_MEDIA_BAD_DESTINATION</code>;
+
+   return <code class="constant">B_OK</code>;
+}</pre><p><code class="methodname">AcceptFormat()</code> is called to confirm that a specified format is acceptable
+for a given destination. Your implementation needs to look at the format
+and make this decision, reporting an error if the format is unacceptable.</p><p>The example implementation logs the call, then checks to be sure the
+destination is in fact valid. In this example node, there's only one
+input allowed, so this is checked easily. If you have an array or linked
+list of inputs, you'll need to check them all. If the destination isn't
+recognized, return <code class="constant">B_MEDIA_BAD_DESTINATION</code>.</p><p>Return <code class="constant">B_OK</code> if the format is acceptable. In this case, all formats are
+acceptable.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id579191"></a>GetNextInput()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">GetNextInput</code>(<span class="type">int32*</span> <code class="parameter">cookie</code>,
+         <span class="type">media_input*</span> <code class="parameter">out_input</code>) {
+   if (0 == *<code class="parameter">cookie</code>) {
+      <span class="type">mInput</span>.<span class="type">format</span>.<span class="type">type</span> = <code class="constant">B_MEDIA_UNKNOWN_TYPE</code>;  <span class="comment">// accept any format</span>
+      *<code class="parameter">out_input</code> = <span class="type">mInput</span>;
+      *<code class="parameter">cookie</code> = 1;
+      return <code class="constant">B_OK</code>;
+   }
+   else return <code class="constant">B_BAD_INDEX</code>;
+}</pre><p>The <code class="methodname">GetNextInput()</code> function is used to iterate through all the inputs
+your node provides. You should fill <code class="parameter">out_input</code> with the a copy of the
+requested input's
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_input" title="media_input"><span class="type">media_input</span></a>
+structure. The cookie is used to specify
+which input is to be returned; the caller specifies a pointer to 0 the
+first time <code class="methodname">GetNextInput()</code> is called, and you can set this value
+appropriately to keep track of where you are scanning your list of inputs.</p><p>In this case, there's only one input available, so we return
+<code class="constant">B_BAD_INDEX</code> if
+<span class="code">*<code class="parameter">cookie</code></span> is nonzero (which indicates
+that the end of the list has been reached). Otherwise the
+<code class="parameter">out_input</code> is filled in, and the
+<code class="parameter">cookie</code> is changed to 1 to indicate that the first
+input has been scanned. <code class="constant">B_OK</code> is returned to indicate
+success.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id579334"></a>DisposeInputCookie()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">DisposeInputCookie</code>(<span class="type">int32</span> <span class="comment">/*cookie*/</span> ) {
+   <span class="comment">/* handle disposing of your cookie here, if necessary */</span>
+}</pre><p>If your cookie isn't a simple integer value, but is actually a pointer,
+you should dispose of it in your <code class="methodname">DisposeInputCookie()</code> implementation. In
+this case, we do nothing, since the cookie is an integer.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id579387"></a>BufferReceived()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">BufferReceived</code>(<span class="type">BBuffer*</span> <code class="parameter">buffer</code>) {
+   <span class="type">bigtime_t</span> <code class="varname">bufferStart</code> = <code class="parameter">buffer</code>-&gt;<code class="methodname">Header</code>()-&gt;<code class="varname">start_time</code>;
+   <span class="type">bigtime_t</span> <code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <span class="type">bigtime_t</span> <code class="varname">how_early</code> = <code class="varname">bufferStart</code>-<code class="methodname">EventLatency</code>()-<code class="methodname">SchedulingLatency</code>()-<code class="varname">now</code>;
+
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="varname">now</code>;
+   <code class="varname">logMsg</code>.<code class="varname">buffer_data</code>.<code class="varname">start_time</code> = <code class="varname">bufferStart</code>;
+   <code class="varname">logMsg</code>.<code class="varname">buffer_data</code>.<code class="varname">offset</code> = <code class="varname">how_early</code>;
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_BUFFER_RECEIVED</code>, <code class="varname">logMsg</code>);
+
+   if (<code class="constant">B_MEDIA_PARAMETERS</code> == <code class="parameter">buffer</code>-&gt;<code class="methodname">Header</code>()-&gt;<code class="varname">type</code>) {
+      <code class="methodname">ApplyParameterData</code>(<code class="parameter">buffer</code>-&gt;<code class="methodname">Data</code>(), <code class="parameter">buffer</code>-&gt;<code class="methodname">SizeUsed</code>());
+      <code class="parameter">buffer</code>-&gt;<code class="methodname">Recycle</code>();
+   }
+   else {
+      <span class="type">status_t</span> <code class="varname">err</code>;
+      <span class="type">media_timed_event</span> <code class="varname">event</code>(<code class="parameter">buffer</code>-&gt;<code class="methodname">Header</code>()-&gt;<code class="varname">start_time</code>,
+               <code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>,
+               <code class="parameter">buffer</code>, <code class="classname">BTimedEventQueue</code>::<code class="constant">B_RECYCLE_BUFFER</code>);
+      <code class="varname">err</code> = <code class="methodname">EventQueue</code>()-&gt;<code class="methodname">AddEvent</code>(<code class="varname">event</code>);
+
+      if (<code class="varname">err</code>) <code class="parameter">buffer</code>-&gt;<code class="methodname">Recycle</code>();
+   }
+}</pre><p><code class="methodname">BufferReceived()</code> is called when buffers arrive on an active connection.
+Our primary task is to enqueue them for processing at the appropriate
+time. We begin by logging the arrival of the buffer, including
+information about the time at which it arrived and how early it arrived.</p><p><code class="constant">B_MEDIA_PARAMETERS</code> type buffers have to be handled specially (each
+parameter change in the buffer has its own performance time listed), so
+we check the buffer's header to see if it's a <code class="constant">B_MEDIA_PARAMETERS</code> buffer.
+If it is, we call <code class="methodname">ApplyParameterData()</code> to apply the parameter changes,
+and the buffer is immediately recycled so it can be reused.</p><p>If it's any other type of buffer, a new
+<a class="link" href="BTimedEventQueue.html#media_timed_event" title="media_timed_event"><span class="type">media_timed_event</span></a>
+is created to reference the new buffer. The event is of type
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>,
+and the cleanup mode is
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_RECYCLE_BUFFER</code>
+so that the buffer will automatically
+be recycled after the event is processed. Then the new event is enqueued.</p><p>If an error occurred trying to enqueue the buffer, it's not in the queue,
+so we need to recycle it ourselves by calling
+<a class="link" href="BBuffer.html#BBuffer_Recycle" title="Recycle()"><code class="methodname">BBuffer::Recycle()</code></a>. If we
+didn't do this, we'd leak buffers, which is an embarrassing problem for
+which there's no known cure. So take proper precautions.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id579729"></a>ProducerDataStatus()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">ProducerDataStatus</code>(
+         <span class="type">const media_destination &amp;</span> <code class="parameter">for_whom</code>, <span class="type">int32</span> <code class="parameter">status</code>,
+         <span class="type">bigtime_t</span> <code class="parameter">at_performance_time</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">logMsg</code>.<code class="varname">data_status</code>.<code class="varname">status</code> = <code class="parameter">status</code>;
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_PRODUCER_DATA_STATUS</code>, <code class="varname">logMsg</code>);
+
+   if (<code class="parameter">for_whom</code> == <code class="varname">mInput</code>.<code class="varname">destination</code>) {
+      <span class="type">media_timed_event</span> <code class="varname">event</code>(<code class="parameter">at_performance_time</code>,
+            <code class="classname">BTimedEventQueue</code>::<code class="constant">B_DATA_STATUS</code>, &amp;<code class="varname">mInput</code>,
+            <code class="classname">BTimedEventQueue</code>::<code class="constant">B_NO_CLEANUP</code>, <code class="parameter">status</code>, 0, <code class="constant">NULL</code>);
+      <code class="methodname">EventQueue</code>()-&gt;<code class="methodname">AddEvent</code>(<code class="varname">event</code>);
+   }
+}</pre><p><code class="methodname">ProducerDataStatus()</code> is called when the upstream producer's status
+changes such that it will begin or stop sending buffers. This lets your
+node optimize its performance based on whether or not buffers are
+expected. After logging the call, the request is enqueued. Note that it's
+only queued if the specified destination, <code class="parameter">for_whom</code>, matches one of the
+node's actual inputs. If it doesn't, the request should be ignored.</p><p>The event is given the type
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_DATA_STATUS</code>, and no
+cleanup is required.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id579920"></a>GetLatencyFor()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">GetLatencyFor</code>(<span class="type">const media_destination &amp;</span><code class="parameter">for_whom</code>,
+         <span class="type">bigtime_t*</span> <code class="parameter">out_latency</code>, <span class="type">media_node_id*</span> <code class="parameter">out_timesource</code>) {
+   if (<code class="parameter">for_whom</code> != <code class="varname">mInput</code>.<code class="varname">destination</code>) return <code class="constant">B_MEDIA_BAD_DESTINATION</code>;
+
+   *<code class="parameter">out_latency</code> = <code class="varname">mLatency</code>;
+   *<code class="parameter">out_timesource</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">ID</code>();
+   return <code class="constant">B_OK</code>;
+}</pre><p><code class="methodname">GetLatencyFor()</code>'s job is to report the latency for a particular
+destination. Make sure the destination is a valid one by checking all
+your inputs to see if any of them have that destination; if none match,
+return <code class="constant">B_MEDIA_BAD_DESTINATION</code>.</p><p>Otherwise, you should add up the algorithmic and downstream latency (but
+not the processing and scheduling latencies) for the input, and store
+that value in <code class="parameter">out_latency</code>, and the node's
+time source in <code class="parameter">out_timesource</code>,
+before returning <code class="constant">B_OK</code>. In our example node, the latency is <code class="varname">mLatency</code>,
+which is a user-configurable parameter.</p><p>The reason you don't need to include processing and scheduling latency in
+the result here is this: processing latency is compensated for by
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+beginning processing buffers one buffer's worth ahead
+of time up the chain. Scheduling latency is compensated for in each node.</p><p>In this case, the node has no downstream latency (it's not a producer),
+so the only latency that counts is our internal latency, which is
+<code class="varname">mLatency</code>. This is a user-configurable option in this node.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580066"></a>Connected()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">Connected</code>(
+      <span class="type">const media_source&amp;</span> <code class="parameter">producer</code>,
+      <span class="type">const media_destination&amp;</span> <code class="parameter">where</code>,
+      <span class="type">const media_format&amp;</span> <code class="parameter">with_format</code>,
+      <span class="type">media_input*</span> <code class="parameter">out_input</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_CONNECTED</code>, <code class="varname">logMsg</code>);
+
+   if (<code class="parameter">where</code> != <code class="varname">mInput</code>.<code class="varname">destination</code>) return <code class="constant">B_MEDIA_BAD_DESTINATION</code>;
+
+   <span class="comment">// calculate my latency here, because it may depend on buffer sizes/durations, then</span>
+   <span class="comment">// tell the BMediaEventLooper how early we need to get the buffers</span>
+   <code class="methodname">SetEventLatency</code>(<code class="varname">mLatency</code>);
+
+   <span class="comment">// record useful information about the connection, and return success</span>
+   <code class="varname">mInput</code>.<code class="varname">source</code> = <code class="parameter">producer</code>;
+   *<code class="parameter">out_input</code> = <code class="varname">mInput</code>;
+   return <code class="constant">B_OK</code>;
+}</pre><p><a class="link" href="BBufferConsumer.html#BBufferConsumer_Connected" title="Connected()"><code class="methodname">BBufferConsumer::Connected()</code></a>
+is called when a connection between the
+specified producer, and your node's destination where is established. The
+connection is logged to the log file.</p><p>If the destination isn't valid, <code class="constant">B_MEDIA_BAD_DESTINATION</code> is returned.
+Otherwise, the connection's latency is computed and
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_SetEventLatency" title="SetEventLatency(), EventLatency()"><code class="methodname">BMediaEventLooper::SetEventLatency()</code></a>
+is called to tell the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+what the latency is. This is an important step, since the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+class handles scheduling, it needs to know the latency!</p><p>In this case, we don't do much in the way of computing the latency; we
+have a known user-configurable value, <code class="varname">mLatency</code>, but in a real-world node,
+you need to compute this as accurately as you reasonably can.</p><p>Finally, important information about the connection is recorded into the
+input (the
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_source" title="media_source"><span class="type">media_source</span></a>,
+<code class="parameter">producer</code>, for example), and we stuff a pointer
+to the input into <code class="parameter">out_input</code>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580302"></a>Disconnected()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">Disconnected</code>(
+         <span class="type">const media_source&amp;</span> <code class="parameter">producer</code>,
+         <span class="type">const media_destination&amp;</span> <code class="parameter">where</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_DISCONNECTED</code>, <code class="varname">logMsg</code>);
+
+   ::<code class="function">memset</code>(&amp;<code class="varname">mInput</code>, 0, <code class="function">sizeof</code>(<code class="varname">mInput</code>));
+}</pre><p><a class="link" href="BBufferConsumer.html#BBufferConsumer_Disconnected" title="Disconnected()"><code class="methodname">BBufferConsumer::Disconnected()</code></a>
+is called when a connection between the
+source producer and the destination where is terminated. We log the call
+to the log file, then perform whatever tasks are necessary on
+disconnecting the nodes.</p><p>In this case, we zero out the
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_input" title="media_input"><span class="type">media_input</span></a>
+record used by the connection.
+Your node may have other tasks to perform, depending on your
+implementation.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580421"></a>FormatChanged()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">FormatChanged</code>(
+         <span class="type">const media_source &amp;</span><code class="parameter">producer</code>,
+         <span class="type">const media_destination &amp;</span><code class="parameter">consumer</code>,
+         <span class="type">int32</span> <code class="parameter">change_tag</code>,
+         <span class="type">const media_format&amp;</span> <code class="parameter">format</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_FORMAT_CHANGED</code>, <code class="varname">logMsg</code>);
+
+   return B_OK;
+}</pre><p><a class="link" href="BBufferConsumer.html#BBufferConsumer_FormatChanged"><code class="methodname">BBufferConsumer::FormatChanged()</code></a>
+is called whenever the
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_format" title="media_format"><span class="type">media_format</span></a>
+used for buffers transmitted on the connection between the given producer and
+consumer changes. This is called in response to your node calling
+<a class="link" href="BBufferConsumer.html#BBufferConsumer_RequestFormatChange" title="RequestFormatChange(), FormatChanged()"><code class="methodname">BBufferConsumer::RequestFormatChange()</code></a>;
+once the requested change has been made, this is called to let you know
+that it happened. <code class="parameter">change_tag</code>
+matches the change tag specified returned by
+<code class="methodname">RequestFormatChange()</code>, and
+the format indicates the negotiated new
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_format" title="media_format"><span class="type">media_format</span></a>
+for the connection.</p><p>Once your <code class="methodname">FormatChanged()</code> function returns, future buffers will be in the
+new format, so you should prepare for the change at this point. In this
+case, we don't actually care about the contents of the received buffers,
+so we do nothing but log that the change occurred and return <code class="constant">B_OK</code>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580573"></a>SeekTagRequested()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">SeekTagRequested</code>(
+         <span class="type">const media_destination&amp;</span> <code class="parameter">destination</code>,
+         <span class="type">bigtime_t</span> <code class="parameter">in_target_time</code>,
+         <span class="type">uint32</span> <code class="parameter">in_flags</code>,
+         <span class="type">media_seek_tag*</span> <code class="parameter">out_seek_tag</code>,
+         <span class="type">bigtime_t*</span> <code class="parameter">out_tagged_time</code>,
+         <span class="type">uint32*</span> <code class="parameter">out_flags</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SEEK_TAG</code>, <code class="varname">logMsg</code>);
+
+   return <code class="constant">B_OK</code>;
+}</pre><p><a class="link" href="BBufferConsumer.html#BBufferConsumer_SeekTagRequested" title="SeekTagRequested()"><code class="methodname">BBufferConsumer::SeekTagRequested()</code></a>
+is called by the Media Server to
+obtain a seek tag corresponding to the specified
+<code class="parameter">target_time</code>. Your node
+needs to cache these tags which are embedded in buffers it receives so it
+can return them when this function is called.</p><p>In this example, we don't support seek tags, so the request is logged and
+<code class="constant">B_OK</code> is returned. For more information, see
+<a class="link" href="BBufferConsumer.html#BBufferConsumer_SeekTagRequested" title="SeekTagRequested()"><code class="methodname">BBufferConsumer::SeekTagRequested()</code></a>
+and "<a class="xref" href="BBufferProducer_Overview.html#BBufferProducer_Overview_SeekTags" title="Seek Tags">Seek Tags</a>".</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580726"></a>BMediaEventLooper Functions</h3></div></div></div><p>The node's core is the implementation of the various
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+virtual functions.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580745"></a>NodeRegistered()</h4></div></div></div><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">NodeRegistered</code>() {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_REGISTERED</code>, <code class="varname">logMsg</code>);
+
+   <code class="methodname">SetPriority</code>(<code class="varname">mPriority</code>);
+   <code class="methodname">Run</code>();
+
+   <code class="varname">mInput</code>.<code class="varname">destination</code>.<code class="varname">port</code> = <code class="methodname">ControlPort</code>();
+   <code class="varname">mInput</code>.<code class="varname">destination</code>.<code class="varname">id</code> = 0;
+   <code class="varname">mInput</code>.<code class="varname">node</code> = <code class="methodname">Node</code>();
+   ::<code class="function">strcpy</code>(<code class="varname">mInput</code>.<code class="varname">name</code>, "Logged input");
+
+   <code class="varname">mWeb</code> = <code class="function">build_parameter_web</code>();
+   <code class="methodname">SetParameterWeb</code>(<code class="varname">mWeb</code>);
+}</pre><p>Called when
+<a class="link" href="BMediaRoster.html#BMediaRoster_RegisterNode" title="RegisterNode(), UnregisterNode()"><code class="methodname">BMediaRoster::RegisterNode()</code></a>
+is called,
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_NodeRegistered" title="NodeRegistered()"><code class="methodname">BMediaEventLooper::NodeRegistered()</code></a>'s
+job is to set up the newly-registered node.</p><p>In this example, we begin by logging the call, then we set the thread's
+priority by calling
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_SetPriority" title="SetPriority(), Priority()"><code class="methodname">BMediaEventLooper::SetPriority()</code></a>,
+then we run the control thread by calling
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_Run" title="Run()"><code class="methodname">BMediaEventLooper::Run()</code></a>.
+This thread will process events and pass them to our
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_HandleEvent" title="HandleEvent()"><code class="methodname">BMediaEventLooper::HandleEvent()</code></a>
+function at the appropriate times.</p><p>Once that's done, we can initialize our inputs. In this case, we only
+have one, but your node might have multiple inputs. The input's
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_destination" title="media_destination"><span class="type">media_destination</span></a>'s
+port is set to
+<a class="link" href="BMediaNode.html#BMediaNode_ControlPort" title="ControlPort()"><code class="methodname">BMediaNode::ControlPort()</code></a>.
+This tells the Media Kit which port to send messages to in order to
+communicate with the input. The destination's ID is set to a node-defined
+value—0 in this case, but your node should use a different value
+for each input you support. And the input's node is set to the result of
+<a class="link" href="BMediaNode.html#BMediaNode_Node" title="Node()"><code class="methodname">Node()</code></a>.
+We also set the input's name. This name should be unique for
+every input.</p><p>Finally, the node's parameter web is constructed by calling
+<code class="function">build_parameter_web()</code>, and we call
+<a class="link" href="BControllable.html#BControllable_SetParameterWeb" title="SetParameterWeb(), Web()"><code class="methodname">BControllable::SetParameterWeb()</code></a>
+to establish the web.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id580982"></a>Start(), Stop(), Seek(), TimeWarp()</h4></div></div></div><p>These functions are called when the corresponding events occur. Usually
+you don't have to implement these, as your HandleEvent() implementation
+will receive an appropriate message when the time comes to handle them.
+In fact, the only reason to implement these at all is if you want to know
+when one of these events is inserted into the queue.</p><p>If you do choose to implement them, you should call through to the base
+function. Let's look at the implementation of <code class="methodname">Start()</code> as an example:</p><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">Start</code>(<span class="type">bigtime_t</span> <code class="parameter">performance_time</code>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_START</code>, <code class="varname">logMsg</code>);
+
+   <code class="classname">BMediaEventLooper</code>::<code class="methodname">Start</code>(<code class="parameter">performance_time</code>);
+}</pre><p>This code logs the request, then calls through to
+<a class="link" href="BMediaNode.html#BMediaNode_Start" title="Start()"><code class="methodname">BMediaNode::Start()</code></a>.
+This will enqueue the request. We'll see how
+this is handled in <code class="methodname">HandleEvent()</code> below.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id581101"></a>HandleEvent()</h4></div></div></div><p>This is the real meat of the node. <code class="methodname">HandleEvent()</code> is called whenever the
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+detects that it's time for a queued event to be
+processed. You should implement the function to handle these events as
+they're dequeued. The specifics of your implementation will vary
+depending on what your node does.</p><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">LoggingConsumer</code>::<code class="methodname">HandleEvent</code>(<span class="type">const media_timed_event *</span><code class="parameter">event</code>,
+         <span class="type">bigtime_t</span> <span class="comment">/* lateness */</span>, <span class="type">bool</span> <span class="comment">/* realTimeEvent */</span>) {
+   <span class="type">log_message</span> <code class="varname">logMsg</code>;
+   <code class="varname">logMsg</code>.<code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+   <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_HANDLE_EVENT</code>, <code class="varname">logMsg</code>);</pre><p>First the call is logged, as is the routine for our example. Next, as we
+see below, comes a long switch statement that checks for and handles the
+various event types our node supports.</p><pre class="programlisting example cpp">   switch (<code class="parameter">event</code>-&gt;<code class="varname">type</code>) {
+   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>:
+      {
+         <span class="type">BBuffer*</span> <code class="varname">buffer</code>=const_cast&lt;<span class="type">BBuffer*</span>&gt;((<span class="type">BBuffer*</span>) <code class="parameter">event</code>-&gt;<code class="varname">pointer</code>);
+         if (<code class="varname">buffer</code>) {
+            <span class="type">media_header*</span> <code class="varname">hdr</code> = <code class="varname">buffer</code>-&gt;<code class="methodname">Header</code>();
+            if (<code class="varname">hdr</code>-&gt;<code class="varname">destination</code> == <code class="varname">mInput</code>.<code class="varname">destination</code>.<code class="varname">id</code>) {
+               <span class="type">bigtime_t</span> <code class="varname">now</code> = <code class="methodname">TimeSource</code>()-&gt;<code class="methodname">Now</code>();
+               <span class="type">bigtime_t</span> <code class="varname">perf_time</code> = <code class="varname">hdr</code>-&gt;<code class="varname">start_time</code>;
+
+               <span class="type">bigtime_t</span> <code class="varname">how_early</code> = <code class="varname">perf_time</code> - <code class="varname">mLatency</code> - <code class="varname">now</code>;
+
+               <code class="varname">logMsg</code>.<code class="varname">buffer_data</code>.<code class="varname">start_time</code> = <code class="varname">perf_time</code>;
+               <code class="varname">logMsg</code>.<code class="varname">buffer_data</code>.<code class="varname">offset</code> = <code class="varname">how_early</code>;
+               <code class="varname">logMsg</code>.<code class="varname">buffer_data</code>.<code class="varname">mode</code> = <code class="methodname">RunMode</code>();
+               <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_BUFFER_HANDLED</code>, <code class="varname">logMsg</code>);
+
+               if ((<code class="methodname">RunMode</code>() != <code class="constant">B_OFFLINE</code>) &amp;&amp;   <span class="comment">// lateness doesn't matter in
+                                                         // offline mode...</span>
+
+                  (<code class="methodname">RunMode</code>() != <code class="constant">B_RECORDING</code>) &amp;&amp;  <span class="comment">// ...or in recording mode</span>
+
+                  (<code class="varname">how_early</code> &lt; 0)) {
+                  <code class="varname">mLateBuffers</code>++;
+                  <code class="methodname">NotifyLateProducer</code>(<code class="varname">mInput</code>.<code class="varname">source</code>, -<code class="varname">how_early</code>,
+<code class="varname">perf_time</code>);
+               }
+               else {
+                  <span class="comment">// replace this with appropriate code for your node</span>
+                  <span class="type">bigtime_t</span> <code class="varname">spin_start</code> = ::<code class="function">system_time</code>();
+                  <span class="type">bigtime_t</span> <code class="varname">spin_now</code> = <code class="varname">spin_start</code>;
+                  <span class="type">bigtime_t</span> <code class="varname">usecToSpin</code> = <span class="type">bigtime_t</span>(<code class="varname">mSpinPercentage</code> /
+100.0 * <code class="varname">mLatency</code>);
+                  while (<code class="varname">spin_now</code> - <code class="varname">spin_start</code> &lt; <code class="varname">usecToSpin</code>) {
+                     for (<span class="type">long</span> <code class="varname">k</code> = 0; <code class="varname">k</code> &lt; 1000000; <code class="varname">k</code>++) { <span class="comment">/* intentionally blank */</span> }
+                     <code class="varname">spin_now</code> = ::<code class="function">system_time</code>();
+                  }
+               }
+
+               if ((<code class="constant">B_OFFLINE</code> == <code class="methodname">RunMode</code>()) &amp;&amp; (<code class="constant">B_DATA_AVAILABLE</code> ==
+<code class="varname">mProducerDataStatus</code>)) {
+                  <span class="type">status_t</span> <code class="varname">err</code> = <code class="methodname">RequestAdditionalBuffer</code>(<code class="varname">mInput</code>.<code class="varname">source</code>,
+<code class="varname">buffer</code>);
+                  if (<code class="varname">err</code>) {
+                     <code class="varname">logMsg</code>.<code class="varname">error</code>.<code class="varname">error</code> = <code class="varname">err</code>;
+                     <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_ERROR</code>, <code class="varname">logMsg</code>);
+                  }
+               }
+            }
+            else {
+               <span class="comment">/* wrong destination! */</span>
+            }
+
+            <code class="varname">buffer</code>-&gt;<code class="methodname">Recycle</code>();
+         }
+      }
+      break;</pre><p>The first case is the
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code> event. This event
+is received when it's time to handle an incoming buffer.</p><p>The buffer is obtained by casting the event's <code class="varname">pointer</code> field into a
+<a class="link" href="BBuffer.html" title="BBuffer"><code class="classname">BBuffer</code></a> pointer. If it's
+<code class="constant">NULL</code>, nothing is done. Otherwise, the buffer's
+header is grabbed and stashed into <code class="varname">hdr</code>. If the destination is invalid, we
+do nothing (this should never happen, but better safe than sorry).</p><p>If the destination is good, it's time to begin processing the buffer. We
+compute how early the buffer arrived by subtracting the latency and the
+current performance time from the buffer's performance time.</p><p>Then the buffer's performance is logged (this step is of course specific
+to this particular example node).</p><p>If the buffer is late (<code class="varname">how_early</code> is negative) and we're in neither
+<code class="constant">B_OFFLINE</code> nor <code class="constant">B_RECORDING</code> mode, we ignore the buffer and notify the
+producer that the buffer was late by calling
+<a class="link" href="BBufferConsumer.html#BBufferConsumer_NotifyLateProducer" title="NotifyLateProducer()"><code class="methodname">BBufferConsumer::NotifyLateProducer()</code></a>.
+This lets the producer adjust its
+performance to attempt to avoid future buffers from arriving late. We
+allow tardiness in <code class="constant">B_OFFLINE</code> and <code class="constant">B_RECORDING</code>
+modes because lateness doesn't matter in these cases.</p><p>If the buffer is on time, we process the buffer. In this example, we just
+waste some processing time, rougly corresponding to our latency. In a
+real node, you'd replace this code with code that handles the buffer,
+whether by displaying it to the screen or playing it through speakers, or
+whatever might be appropriate.</p><p>If the node is in <code class="constant">B_OFFLINE</code> mode, and the cached producer data status is
+<code class="constant">B_DATA_AVAILABLE</code> (meaning the producer has more buffers to send us), we
+must call
+<a class="link" href="BBufferConsumer.html#BBufferConsumer_RequestAdditionalBuffer" title="RequestAdditionalBuffer()"><code class="methodname">BBufferConsumer::RequestAdditionalBuffer()</code></a>.
+to tell the producer we're ready for another buffer. If we fail to call this, performance will
+suffer greatly. If <code class="methodname">RequestAdditionalBuffer()</code> fails, we log the error.</p><p>Once processing of the buffer is done, we call
+<a class="link" href="BBuffer.html#BBuffer_Recycle" title="Recycle()"><code class="methodname">BBuffer::Recycle()</code></a>
+to make
+it available for future use.</p><p>The next possible event is the
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_PARAMETER</code>, which
+indicates a change to the parameters' values.</p><pre class="programlisting example cpp">   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_PARAMETER</code>:
+      {
+         <span class="type">size_t</span> <code class="varname">dataSize</code> = <span class="type">size_t</span>(<code class="parameter">event</code>-&gt;<code class="varname">data</code>);
+         <span class="type">int32</span> <code class="varname">param</code> = <span class="type">int32</span>(<code class="parameter">event</code>-&gt;<code class="varname">bigdata</code>);
+         <code class="varname">logMsg</code>.<code class="varname">param</code>.<code class="varname">id</code> = <code class="varname">param</code>;
+
+         if (<code class="varname">dataSize</code> &gt;= <code class="function">sizeof</code>(<span class="type">float</span>)) switch (<code class="varname">param</code>) {
+         case <code class="constant">LATENCY_PARAM</code>:
+            {
+               <span class="type">float</span> <code class="varname">value</code> = *((<span class="type">float*</span>) <code class="parameter">event</code>-&gt;<code class="varname">user_data</code>);
+               <code class="varname">mLatency</code> = <span class="type">bigtime_t</span>(<code class="varname">value</code>* 1000);
+               <code class="varname">mLastLatencyChange</code> = <code class="varname">logMsg</code>.<code class="varname">now</code>;
+
+               <code class="methodname">SetEventLatency</code>(<code class="varname">mLatency</code>);
+
+               <code class="methodname">SendLatencyChange</code>(<code class="varname">mInput</code>.<code class="varname">source</code>, <code class="varname">mInput</code>.<code class="varname">destination</code>,
+<code class="methodname">EventLatency</code>() + <code class="methodname">SchedulingLatency</code>());
+               <code class="methodname">BroadcastNewParameterValue</code>(<code class="varname">logMsg</code>.<code class="varname">now</code>, <code class="varname">param</code>, &amp;<code class="varname">value</code>,
+<code class="function">sizeof</code>(<code class="varname">value</code>));
+
+               <code class="varname">logMsg</code>.<code class="varname">param</code>.<code class="varname">value</code> = <code class="varname">value</code>;
+               <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SET_PARAM_HANDLED</code>, <code class="varname">logMsg</code>);
+            }
+            break;</pre><p>If the latency parameter is changed, we record the new latency in
+<code class="varname">mLatency</code>, and the time at which the change occurred in
+<code class="varname">mLastLatencyChange</code>, and we call
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_SetEventLatency" title="SetEventLatency(), EventLatency()"><code class="methodname">BMediaEventLooper::SetEventLatency()</code></a>
+to let the control thread know about the latency change.</p><p>In addition, the new latency is sent to the producer by calling
+<a class="link" href="BBufferConsumer.html#BBufferConsumer_SendLatencyChange" title="SendLatencyChange()"><code class="methodname">BBufferConsumer::SendLatencyChange()</code></a>.
+This lets the producer alter its behavior as appropriate to avoid running
+amok (or falling behind, depending on the new latency). And
+<a class="link" href="BControllable.html#BControllable_BroadcastNewParameterValue" title="BroadcastNewParameterValue()"><code class="methodname">BControllable::BroadcastNewParameterValue()</code></a>
+is called to share the change
+to the parameter's value with anyone that's watching for changes.</p><p>Finally, we log the change to disk.</p><pre class="programlisting example cpp">         case <code class="constant">CPU_SPIN_PARAM</code>:
+            {
+               <span class="type">float</span> <code class="varname">value</code> = *((<span class="type">float*</span>) <code class="parameter">event</code>-&gt;<code class="varname">user_data</code>);
+               <code class="varname">mSpinPercentage</code> = <code class="varname">value</code>;
+               <code class="varname">mLastSpinChange</code> = <code class="varname">logMsg</code>.<code class="varname">now</code>;
+               <code class="methodname">BroadcastNewParameterValue</code>(<code class="varname">logMsg</code>.<code class="varname">now</code>, <code class="varname">param</code>, &amp;<code class="varname">value</code>,
+<code class="function">sizeof</code>(<code class="varname">value</code>));
+               <code class="varname">logMsg</code>.<code class="varname">param</code>.<code class="varname">value</code> = <code class="varname">value</code>;
+               <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SET_PARAM_HANDLED</code>, <code class="varname">logMsg</code>);
+            }
+            break;</pre><p>Similarly, if the CPU spin parameter is changed, we record the new value
+and the time at which the change occurred, then broadcast the change to
+the world and log the change. Note that since this doesn't correspond to
+anything
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+cares about, we have no additional work to do.</p><pre class="programlisting example cpp">         case <code class="constant">PRIORITY_PARAM</code>:
+            {
+               <code class="varname">mPriority</code> = *((<span class="type">int32*</span>) <code class="parameter">event</code>-&gt;<code class="varname">user_data</code>);
+               <code class="methodname">SetPriority</code>(<code class="varname">mPriority</code>);
+
+               <code class="varname">mLastPrioChange</code> = <code class="varname">logMsg</code>.<code class="varname">now</code>;
+               <code class="methodname">BroadcastNewParameterValue</code>(<code class="varname">logMsg</code>.<code class="varname">now</code>, <code class="varname">param</code>, &amp;<code class="varname">mPriority</code>,
+<code class="function">sizeof</code>(<code class="varname">mPriority</code>));
+               <code class="varname">logMsg</code>.<code class="varname">param</code>.<code class="varname">value</code> = (<span class="type">float</span>) <code class="varname">mPriority</code>;
+               <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SET_PARAM_HANDLED</code>, <code class="varname">logMsg</code>);
+            }
+            break;</pre><p>When the priority parameter is changed, we call
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_SetPriority" title="SetPriority(), Priority()"><code class="methodname">BMediaEventLooper::SetPriority()</code></a>
+to tell the control thread about its new
+priority. You must never directly change the thread's priority, since the
+priority affects the functioning of the node, and there are other changes
+that have to be made based upon the change.</p><p>The new value is saved, along with the change time, and the value is
+broadcast and the log entry is recorded to disk.</p><pre class="programlisting example cpp">         default:
+            <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_INVALID_PARAM_HANDLED</code>, <code class="varname">logMsg</code>);
+            break;
+         }
+      }
+      break;</pre><p>Here we deal with the case where a nonexistent parameter was changed.
+This error condition is logged to disk. You should deal gracefully with
+this possibility, although it should never happen.</p><p>The next event type that needs to be handled is
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_START</code>,
+which is received when it's time to start processing buffers:</p><pre class="programlisting example cpp">   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_START</code>:
+      <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_START_HANDLED</code>, <code class="varname">logMsg</code>);
+      break;</pre><p>In this example node, we simply log the start request. Your node should
+insert whatever code is necessary to prepare to process buffers. If your
+node is a producer, you should start sending buffers at this point. Be
+sure to call
+<a class="link" href="BBufferProducer.html#BBufferProducer_SendDataStatus" title="SendDataStatus()"><code class="methodname">BBufferProducer::SendDataStatus()</code></a>
+to let the consumer know that you're sending buffers.</p><p>The next event type is
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_STOP</code>,
+which is received when it's time to stop processing buffers:</p><pre class="programlisting example cpp">   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_STOP</code>:
+      <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_STOP_HANDLED</code>, <code class="varname">logMsg</code>);
+      <code class="methodname">EventQueue</code>()-&gt;<code class="methodname">FlushEvents</code>(0, <code class="classname">BTimedEventQueue</code>::<code class="constant">B_ALWAYS</code>, <code class="constant">true</code>,
+            <code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>);
+      break;</pre><p>Stopping your node implies that any buffers you've received to date that
+haven't been processed yet should be ignored, so the event queue is
+flushed of al
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>
+events. If you have
+other tasks that need to be performend when your node is stopped, this is
+the place to handle them.</p><p>Note that if your node is a producer, you should call
+<a class="link" href="BBufferProducer.html#BBufferProducer_SendDataStatus" title="SendDataStatus()"><code class="methodname">BBufferProducer::SendDataStatus()</code></a>
+here to let the consumer know that no more buffers will be arriving.</p><p>The
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_SEEK</code>
+request is received when it's time to perform a seek operation on the
+node's media.</p><pre class="programlisting example cpp">   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_SEEK</code>:
+      <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_SEEK_HANDLED</code>, <code class="varname">logMsg</code>);
+      break;</pre><p>Handle the seek operation here. In this node, we just log the seek
+request.</p><p>The
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_WARP</code>
+request is received when it's time to perform a time warp operation on the node'.</p><pre class="programlisting example cpp">   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_WARP</code>:
+      <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_WARP_HANDLED</code>, <code class="varname">logMsg</code>);
+      break;</pre><p>In this example, we just log the request.</p><p>The
+<code class="classname">BTimedEventQueue</code>::<code class="constant">B_DATA_STATUS</code>
+event is received when the producer's
+<a class="link" href="BBufferProducer.html#BBufferProducer_SendDataStatus" title="SendDataStatus()"><code class="methodname">BBufferProducer::SendDataStatus()</code></a>
+function is called. Obviously you only
+need to handle this event if you're a consumer:</p><pre class="programlisting example cpp">   case <code class="classname">BTimedEventQueue</code>::<code class="constant">B_DATA_STATUS</code>:
+      <code class="varname">mProducerDataStatus</code> = <code class="parameter">event</code>-&gt;<code class="varname">data</code>;
+      <code class="varname">logMsg</code>.<code class="varname">data_status</code>.<code class="varname">status</code> = <code class="parameter">event</code>-&gt;<code class="varname">data</code>;
+      <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_DATA_STATUS_HANDLED</code>, <code class="varname">logMsg</code>);
+      break;</pre><p>In our node, we record the producer's current data status in the member
+variable <code class="varname">mProducerDataStatus</code>. We use this information to determine
+whether or not we're expecting buffers. Your node might wish to alter its
+priority or perform other optimizations if the producer stops sending
+buffers, or increase priority when buffers start arriving again. We also
+log the change.</p><pre class="programlisting example cpp">   default:
+      <code class="varname">logMsg</code>.<code class="varname">unknown</code>.<code class="varname">what</code> = <code class="parameter">event</code>-&gt;<code class="varname">type</code>;
+      <code class="varname">mLogger</code>-&gt;<code class="methodname">Log</code>(<code class="constant">LOG_HANDLE_UNKNOWN</code>, <code class="varname">logMsg</code>);
+      break;
+   }
+}</pre><p>Finally, we log any messages received that we don't understand. In
+general you can ignore messages your node isn't prepared to handle.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id582749"></a>Creating a Parameter Web</h3></div></div></div><p>A parameter web describes to the Media Kit the various user-configurable
+options that might interest them, and how they should appear in a user
+interface. This information is used by the media theme to render the
+interface that the user sees when configuring the node via the preference
+panel instantiated by calling
+<a class="link" href="BMediaRoster.html#BMediaRoster_StartControlPanel" title="StartControlPanel()"><code class="methodname">BBufferProducer::BMediaRoster::StartControlPanel()</code></a>.</p><p>Creating a
+<a class="link" href="BParameterWeb.html" title="BParameterWeb"><code class="classname">BParameterWeb</code></a>
+is simple. You begin by creating the
+<a class="link" href="BParameterGroup.html" title="BParameterGroup"><code class="classname">BParameterGroup</code></a>s
+that logically group related parameters, then you insert
+parameters into each group by calling the appropriate
+<a class="link" href="BParameterGroup.html" title="BParameterGroup"><code class="classname">BParameterGroup</code></a>
+functions for the various types of parameters that can be created.</p><p><a class="link" href="BParameterGroup.html#BParameterGroup_MakeNullParameter" title="MakeNullParameter()"><code class="methodname">BBufferProducer::BParameterGroup::MakeNullParameter()</code></a>
+can be used to create a label or
+other non-configurable control that might appear in the interface.</p><p><a class="link" href="BParameterGroup.html#BParameterGroup_MakeContinuousParameter" title="MakeContinuousParameter()"><code class="methodname">BBufferProducer::BParameterGroup::MakeContinuousParameter()</code></a>
+creates a parameter with a
+floating-point value, which is usually set using a slider control.</p><p><a class="link" href="BParameterGroup.html#BParameterGroup_MakeDiscreteParameter" title="MakeDiscreteParameter()"><code class="methodname">BParameterGroup::MakeDiscreteParameter()</code></a>
+creates a parameter with a set
+of discrete possible values. These are usually displayed as pop-up menus,
+although some themes might use radio buttons or lists.</p><pre class="programlisting example cpp"><span class="type">static BParameterWeb*</span> <code class="function">build_parameter_web</code>() {
+   <span class="type">BParameterWeb*</span> <code class="varname">web</code> = new <code class="classname">BParameterWeb</code>;
+
+   <span class="type">BParameterGroup*</span> <code class="varname">mainGroup</code> = <code class="varname">web</code>-&gt;<code class="methodname">MakeGroup</code>("LoggingConsumer
+      Parameters");
+
+   <span class="type">BParameterGroup*</span> <code class="varname">group</code> = <code class="varname">mainGroup</code>-&gt;<code class="methodname">MakeGroup</code>("Latency Control");
+
+   <span class="type">BParameter*</span> <code class="varname">nullParam</code> = <code class="varname">group</code>-&gt;<code class="methodname">MakeNullParameter</code>(<code class="constant">INPUT_NULL_PARAM</code>,
+      <code class="constant">B_MEDIA_NO_TYPE</code>, "Latency", <code class="constant">B_GENERIC</code>);
+
+   <span class="type">BParameter*</span> <code class="varname">latencyParam</code> =
+      <code class="varname">group</code>-&gt;<code class="methodname">MakeContinuousParameter</code>(<code class="constant">LATENCY_PARAM</code>, <code class="constant">B_MEDIA_NO_TYPE</code>, "",
+         <code class="constant">B_GAIN</code>, "msec", 5, 100, 5);
+
+   <code class="varname">nullParam</code>-&gt;<code class="methodname">AddOutput</code>(<code class="varname">latencyParam</code>);
+   <code class="varname">latencyParam</code>-&gt;<code class="methodname">AddInput</code>(<code class="varname">nullParam</code>);
+
+   <code class="varname">group</code> = <code class="varname">mainGroup</code>-&gt;<code class="methodname">MakeGroup</code>("CPU Percentage");
+   <code class="varname">nullParam</code> = <code class="varname">group</code>-&gt;<code class="methodname">MakeNullParameter</code>(<code class="constant">CPU_NULL_PARAM</code>, <code class="constant">B_MEDIA_NO_TYPE</code>,
+      "CPU Spin Percentage", <code class="constant">B_GENERIC</code>);
+
+   <span class="type">BContinuousParameter*</span> <code class="varname">cpuParam</code> =
+      <code class="varname">group</code>-&gt;<code class="methodname">MakeContinuousParameter</code>(<code class="constant">CPU_SPIN_PARAM</code>, <code class="constant">B_MEDIA_NO_TYPE</code>, "",
+         <code class="constant">B_GAIN</code>, "percent", 5, 80, 5);
+
+   <code class="varname">nullParam</code>-&gt;<code class="methodname">AddOutput</code>(<code class="varname">cpuParam</code>);
+   <code class="varname">cpuParam</code>-&gt;<code class="methodname">AddInput</code>(<code class="varname">nullParam</code>);
+
+   <code class="varname">group</code> = <code class="varname">mainGroup</code>-&gt;<code class="methodname">MakeGroup</code>("Priority");
+   <code class="varname">nullParam</code> = <code class="varname">group</code>-&gt;<code class="methodname">MakeNullParameter</code>(<code class="constant">PRIO_NULL_PARAM</code>, <code class="constant">B_MEDIA_NO_TYPE</code>,
+      "Thread Priority", <code class="constant">B_GENERIC</code>);
+
+   <span class="type">DiscreteParameter*</span> <code class="varname">prioParam</code> =
+      <code class="varname">group</code>-&gt;<code class="methodname">MakeDiscreteParameter</code>(<code class="constant">PRIORITY_PARAM</code>, <code class="constant">B_MEDIA_NO_TYPE</code>, "",
+         <code class="constant">B_GENERIC</code>);
+
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(5, "B_LOW_PRIORITY");
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(10, "B_NORMAL_PRIORITY");
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(15, "B_DISPLAY_PRIORITY");
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(20, "B_URGENT_DISPLAY_PRIORITY");
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(100, "B_REAL_TIME_DISPLAY_PRIORITY");
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(110, "B_URGENT_PRIORITY");
+   <code class="varname">prioParam</code>-&gt;<code class="methodname">AddItem</code>(120, "B_REAL_TIME_PRIORITY");
+
+   return <code class="varname">web</code>;
+}</pre><p>Notice the use of the
+<a class="link" href="BDiscreteParameter.html#BDiscreteParameter_AddItem" title="AddItem()"><code class="methodname">BDiscreteParameter::AddItem()</code></a>
+function to add the
+discrete values to the priority parameter. Each item has a value and a
+label that's displayed in the user interface. In this example, these
+correspond to the various thread priorities and their names.</p><p>The user interface provided by this node lets the user configure the
+behavior of the node, including the thread priority, how busy the CPU
+should be while a buffer is "processed," and the latency of buffer
+processing.</p><p>Obviously your node will have different parameters (and may have none, in
+which case you wouldn't even derive from
+<a class="link" href="BControllable.html" title="BControllable"><code class="classname">BControllable</code></a>,
+and wouldn't need a
+<a class="link" href="BParameterWeb.html" title="BParameterWeb"><code class="classname">BParameterWeb</code></a>
+at all).</p><p>This function is called from the
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_NodeRegistered" title="NodeRegistered()"><code class="methodname">BMediaEventLooper::NodeRegistered()</code></a>
+implementation above. NodeRegistered() then calls SetParameterWeb() to
+establish the web for use by StartControlPanel() and other functions that
+use the web.</p><p>This node's web, as interpreted by the default system theme in Release
+4.5, looks like this:</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id583237"></a>Producer-specific Issues</h3></div></div></div><p>There are obviously some additional virtual functions you need to
+implement if your node derives from
+<a class="link" href="BBufferProducer.html" title="BBufferProducer"><code class="classname">BBufferProducer</code></a>.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id583255"></a>Connect()</h4></div></div></div><p>Your
+<a class="link" href="BBufferProducer.html#BBufferProducer_Connect" title="Connect()"><code class="methodname">BBufferProducer::Connect()</code></a>
+implementation should call
+<a class="link" href="BMediaEventLooper.html#BMediaEventLooper_SetEventLatency" title="SetEventLatency(), EventLatency()"><code class="methodname">BMediaEventLooper::SetEventLatency()</code></a>
+to establish your total latency. This value, which is your internal latency
+plus the downstream latency, is used by
+<a class="link" href="BMediaEventLooper.html" title="BMediaEventLooper"><code class="classname">BMediaEventLooper</code></a>
+to determine when to pop events off the
+queue for you to process. By keeping this value up-to-date, you can
+improve performance. This code might resemble the following:</p><pre class="programlisting example cpp">   <span class="comment">/* calculate processing latency */</span>
+
+   <span class="type">bigtime_t</span> <code class="varname">latency</code> = <code class="function">calculate_buffer_latency</code>();
+   <code class="varname">latency</code> += <code class="function">estimate_max_scheduling_latency</code>();
+
+   <span class="comment">/* calculate downstream latency */</span>
+
+   <span class="type">bigtime_t</span> <code class="varname">downstream</code>;
+   <span class="type">media_node_id</span> <code class="varname">timesource</code>;
+   <code class="methodname">FindLatencyFor</code>(<code class="varname">output</code>.<code class="varname">destination</code>, &amp;<code class="varname">downstream</code>, &amp;<code class="varname">timesource</code>);
+
+   <span class="type">bigtime_t</span> <code class="varname">totalLatency</code> = <code class="varname">latency</code> + <code class="varname">downstream</code>;
+   <code class="methodname">SetEventLatency</code>(<code class="varname">totalLatency</code>);</pre></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id583392"></a>The Rest of the Story…</h3></div></div></div><p>The <code class="classname">LogWriter</code> class' implementation isn't critical to this example, and
+is cleverly ignored in the name of saving space. If you're curious, you
+can reference the complete sample code for the LoggingApplication, at
+ftp://ftp.be.com/pub/samples/media_kit/LoggingConsumer.zip.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheMediaKit_Overview_ReadingWriting.html">Reading and Writing Media Files</a>  Up: <a href="TheMediaKit_Overview.html">The Media Kit</a>  Next: <a href="BBuffer_Overview.html">BBuffer</a> </div><div id="footerB"><div id="footerBL"><a href="TheMediaKit_Overview_ReadingWriting.html" title="Reading and Writing Media Files"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheMediaKit_Overview.html" title="The Media Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="BBuffer_Overview.html" title="BBuffer"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

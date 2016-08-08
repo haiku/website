@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-44.html" title="Issue 4-44, November 3, 1999" /><link rel="next" href="Issue4-46.html" title="Issue 4-46, November 17, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-44.html" title="Issue 4-44, November 3, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-46.html" title="Issue 4-46, November 17, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-44.html">Issue 4-44, November 3, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-46.html">Issue 4-46, November 17, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-45"></a>Issue 4-45, November 10, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-45"></a>Be Engineering Insights: The Scheduler Is Your Friend</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Baptiste</span> <span class="surname">Queru</span></span></div></div></div><p>
+Buried deep at the very heart of BeOS is a silent agent that rules the
+traffic inside the computer: the scheduler. The scheduler's job is
+basically to choose which thread will now run, and this happens whenever
+some special events trigger. The scheduler is one of the components that
+enable preemptive multitasking.
+</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>
+The technique described in this article is an unconventional way of
+programming (in other words, a hack). While it is believed to be
+reasonably safe, it has a number of side effects. Using it might make the
+system behave oddly, and/or exhibit problems in programs that otherwise
+seemed to work.
+</p></div></div></div><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>
+This article only deals with the case of a single CPU system. The
+behaviour of a multi-CPU system is somewhat more complex and is beyond
+the scope of this article
+</p></div></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id829997"></a>When Is the Scheduler Invoked?</h3></div></div></div><p>
+There are different events that can cause the scheduler to trigger:
+</p><ul class="itemizedlist"><li><p>
+Blocking calls: any function that a thread can call to make its state
+switch from <code class="constant">B_THREAD_RUNNING</code> to one of <code class="constant">B_THREAD_SUSPENDED</code>,
+<code class="constant">B_THREAD_WAITING</code>, <code class="constant">B_THREAD_RECEIVING</code>
+and <code class="constant">B_THREAD_ASLEEP</code>. Those functions
+obviously include <code class="function">acquire_sem()</code>, <code class="function">receive_data()</code>,
+and <code class="function">snooze()</code>, as well
+as <code class="function">suspend_thread()</code> when a thread calls it with its own thread id.
+There are also many indirect cases that can cause a thread to block;
+those cases include kernel calls to <code class="function">wait_for_thread()</code>, <code class="function">read_port()</code> and
+<code class="function">write_port()</code>. Be aware too that the BeOS virtual memory subsystem is
+protected by semaphores, which means that almost any instruction can
+cause a thread to block (e.g., when handling a page fault, when
+checking parameters for a kernel call, when dealing with areas...)
+</p></li><li><p>
+Synchronous preemption: any function that causes a thread that was
+blocked to become ready again will also invoke the scheduler. Those
+functions include <code class="function">resume_thread()</code>, <code class="function">kill_thread()</code>,
+<code class="function">release_sem()</code>, <code class="function">delete_sem()</code>,
+<code class="function">send_data()</code>, the death of a thread, and lots of others. There
+are also many indirect cases that can cause a synchronous preemption,
+including calls to <code class="function">read_port()</code> and <code class="function">write_port()</code>, and any case where a
+thread exits the virtual memory subsystem.
+</p></li><li><p>
+Asynchronous preemption: whenever a piece of hardware requires some
+attention from a CPU, it triggers an interrupt which causes the CPU to
+suddenly jump to another piece of code (called an interrupt handler).
+I'm not going to get into the details of programming an interrupt
+handler, but it's important to know that every interrupt handler has a
+chance to invoke the scheduler. One special kind of interrupt is very
+important: the timer interrupt. The CPU can use it to be warned after a
+given amount of time has elapsed. When that happens, the interrupt
+handler for the timer invokes the scheduler (that's actually all it
+does). That's the way you create preemptive multitasking. The scheduler
+uses the timer to be warned when a snooze() (or any other blocking call
+that has a timeout) expires, and to make sure that it gets invoked on a
+regular basis. On BeOS R4.5.x, the scheduler is guaranteed to run at
+least once every 3 ms. This amount of time is called the scheduler
+quantum.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id830114"></a>How Does the Scheduler Choose Which Thread Is Going to Run?</h3></div></div></div><p>
+Each time the scheduler is invoked, it chooses which is the next thread
+that's going to run. The scheduler can (obviously) only pick a thread
+that's ready to run. The scheduler uses an algorithm to pick that thread,
+depending on the priorities of all the threads that are ready to run.
+That algorithm is quite simple (and mostly explained in the Be Book):
+</p><ul class="itemizedlist"><li><p>
+If a real-time thread (i.e., a thread with a priority greater than
+100) is ready to run, this thread is automatically scheduled. If there
+are several such threads, the one with the highest priority is
+scheduled.
+</p></li><li><p>
+If there is no real-time thread ready to run, the scheduler chooses a
+time-sharing thread (i.e., a thread with a priority between 1 and 99).
+The likeliness that such a thread be scheduled increases with a factor
+of two for such unit of priority.
+</p></li><li><p>
+The kernel keeps some special threads around, called idle threads,
+that are scheduled whenever no other thread is ready. Since those idle
+thread never block, the scheduler is guaranteed to always be able to
+schedule a thread.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id830162"></a>What About Full-Screen Games Running at 60 fps?</h3></div></div></div><p>
+First, why would someone ask this question? Let's look at the way a game
+typically works:
+</p><ul class="itemizedlist"><li><p>
+get input from the user
+</p></li><li><p>
+render a new image
+</p></li><li><p>
+wait until the vertical retrace and display the newly computed image
+</p></li><li><p>
+loop
+</p></li></ul><p>
+and it's usually quite tricky (if not impossible) to know anything that's
+going to happen in the future.
+</p><p>
+Let's imagine that the game is single-threaded, running on a single-CPU
+system, at priority 20, and never blocks. The duration of a frame is 16.6
+ms, which is approximately 5.5 scheduler quanta. Assuming nothing else
+happens, the system will (on average) reschedule five times in the middle
+of each frame. Let's now assume that another thread is running at
+priority 10, and that this thread never blocks either.
+</p><p>
+The difference between the priorities in 10, thus the "other" thread will
+be scheduled (on average) once every 1025 times, and will consume (on
+average) 0.1% of the CPU time. I see you think "Why do I care about
+0.1%?". You care about 0.1%, because the scheduler will not spread the
+0.1%s evenly across all the frames. This will occur (on average) once
+every 205 frames, which means that, once every 3 or 4 seconds, the game
+will only have 80% of the CPU power available. This sudden loss of 20% of
+the CPU power can be enough to make the game glitch.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id830218"></a>So, What's the Fix?</h3></div></div></div><p>
+Let's now imagine that we have the same game running at priority 20, and
+the annoying thread running at priority 10, but let's also imagine that
+the scheduler triggers every 100 us (microseconds). The scheduler will
+trigger on average 166 times per frame. The law of probabilities tell us
+that 85% of the time, the annoying thread never gets schedules during a
+frame. It gets scheduled once for 13.8% of the frames, twice for 1.1% of
+the frames, three times for 0.06% of the frames, and so on.
+</p><p>
+Overall, it means that the annoying thread will use 1/166 of the time in
+13.8% of the frames, 2/166 of the time in 1.1% of the frames, and so on,
+which creates a total of (on average) the same 0.1% as we had before. So
+what changed? Well, probabilities tell us that the annoying thread will
+take less than 2% of the CPU time in more than 99.998% of the frames.
+</p><p>
+Wow, that's great, so why doesn't BeOS automatically reschedule every 100
+us? Well, BeOS is optimized for multithreading, and rescheduling does not
+cost that much, but it doesn't come for free either. Rescheduling every
+100 us costs several percent of the CPU power on a PII-350.
+</p><p>
+So, what's the point of talking about something that doesn't exist? If we
+look at the way the scheduler works, there's a way to trigger it a lot
+more often. If a real-time thread does something like <code class="code">while (1) {
+snooze(100); }</code>, this thread will call snooze, which will invoke the
+scheduler, and the scheduler will schedule some other thread. After 100
+us the real-time thread will be ready again. This will invoke the
+scheduler, which will schedule our real-time thread, which will loop back
+into snooze, which will invoke the scheduler again, and so on...
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id830272"></a>What About Non-Interactive Animations Running at 60 fps?</h3></div></div></div><p>
+This case is very different. Since the animations are not interactive,
+the different frames can sometimes be buffered ahead so that the impact
+of losing 20% of the CPU time in a frame is not that important.
+Probabilities tell us that a program that uses 90% of the total CPU power
+and can buffer ahead 1/3 of its computation can resist two reschedules of
+another thread in two frames, which (on average) happens less than once
+every 10 minutes.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id830291"></a>What Priorities Should I Use for a Full-Screen App?</h3></div></div></div><p>
+Some people have been talking about using real-time priorities for tasks
+that require lots of CPU power. This is a very bad idea. One uses
+real-time priorities for tasks that do not use much (if any) CPU power,
+but that need to be rescheduled extremely quickly. A task that uses all
+available CPU power should not run at high priorities. You want the user
+to be able to switch to other applications and have those applications
+stay reasonably responsive.
+</p><p>
+Here's a rule of thumb: bumping the priority of a thread that already
+uses most of the CPU will not make it run much faster, but will make
+other tasks run much slower. The priority of a thread running a CPU-heavy
+task should be related to how long that thread is going to run:
+</p><ul class="itemizedlist"><li><p>
+If the thread is doing a task that the user is not going to wait for
+(e.g., something that might take several hours or several days), use
+the lowest possible priority (1).
+</p></li><li><p>
+If the thread is doing something that's still long, but short long
+enough so that the user might want to use the computer while waiting
+(e.g., something that lasts for a few minutes), use <code class="constant">B_LOW_PRIORITY</code> (or
+<code class="constant">B_NORMAL_PRIORITY</code> if the task doesn't take more than a minute).
+</p></li><li><p>
+If the thread is doing something related to direct user interaction
+through a regular user interface (e.g., if the thread redraws the
+preview of a filter in an image-procesing program while the user moves
+a slider), use <code class="constant">B_NORMAL_PRIORITY</code> if the task lasts more than a second,
+or <code class="constant">B_DISPLAY_PRIORITY</code> if the computation only takes a fraction of a
+second.
+</p></li><li><p>
+If the thread is doing some full-screen display, you can use <code class="constant">B_DISPLAY_PRIORITY</code>.
+<code class="constant">B_URGENT_DISPLAY_PRIORITY</code> should only be used for
+critical parts of a full-screen application (e.g., the game engine of
+an application might be running at <code class="constant">B_URGENT_DISPLAY_PRIORITY</code>, while the
+display threads should only run at <code class="constant">B_DISPLAY_PRIORITY</code>).
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id830388"></a>How Does All This Work in the Real World?</h3></div></div></div><p>
+Well, here are some results. I wrote three tiny programs. The first just
+looks at itself while it runs: it keeps track of how long it took it
+between two calls to system time(). The second is one of those annoying
+programs: it just spins in a loop without ever blocking. The third spawns
+a real-time thread that causes the scheduler to be invoked more often.
+</p><p>
+The test program (the first one) was run at priority 20, the annoying
+program ran at priority 10, ans the rescheduler (the third one) runs a
+<code class="code">snooze(125);</code> in a loop.
+</p><p>
+Here's a summary of the results: The left column counts how many times
+the test program was interrupted for more than 256 us. The right column
+shows the longest time the test program was interrupted. In all the
+cases, the test program took 256 million samples. The "bare-bones" system
+is a system with only the kernel and the app server. The "normal" system
+is a system where all the OS services are running, plus a dozen
+applications.
+</p><pre class="screen">
+bare-bones                          35            3060
+bare-bones, with annoying program  136            3219
+bare-bones, with annoying
+program and rescheduler            365             459
+normal                             702            4776
+normal, with annoying program     1139            6127
+normal, with annoying program
+and rescheduler                   2970             838
+</pre><p>
+Two conclusions can be drawn from those results:
+</p><ul class="itemizedlist"><li><p>
+Even on a bare-bones system, a thread with a high priority can be
+interrupted for several milliseconds. It is useless to try to turn down
+OS services hoping that it fixes the scheduling gaps, because it
+doesn't.
+</p></li><li><p>
+Even on a moderately loaded system, using a rescheduler can help to
+spread the CPU load more evenly between tasks, at the cost of a bigger
+overhead (which you cannot see on my reasult, but can definitely be
+measured).
+</p></li></ul></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-45"></a>Developers' Workshop: The Ying to the Server's Yang</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+In my last article for the newsletter, I presented a simple network
+server program that would respond to connections by spewing back the
+entire contents of a file, with a very simple header.
+</p><p>
+<a class="xref" href="Issue4-41.html#DevWorkshop4-41" title="Developers' Workshop: Serving It Up: Creating a Simple Server Application">Developers' Workshop: Serving It Up: Creating a Simple Server
+Application</a>
+</p><p>
+I received a few emails thanking me for this example, but a couple of
+them suggested that I should also show the other side of the coin: how
+about a client designed to access this server?
+</p><p>
+So this week we'll have a look at Requester, the counterpart to the
+Responder program created in my last article.
+</p><p>
+Before we begin, I should point out a trio of matching silly bugs in
+Responder:
+</p><pre class="programlisting cpp">
+<code class="varname">connect</code>-&gt;<code class="methodname">Send</code>(&amp;<code class="varname">buffer</code>, <code class="varname">count</code>);
+
+<span class="type">ssize_t</span> <code class="varname">size</code> = <code class="varname">file</code>.<code class="methodname">Read</code>(&amp;<code class="varname">buffer</code>, 65536);
+<code class="varname">connect</code>-&gt;<code class="methodname">Send</code>(&amp;<code class="varname">buffer</code>, <code class="varname">size</code>);
+</pre><p>
+On these three lines in the <code class="function">send_file()</code> function, the "&amp;" is unnecessary
+(and is in fact a major bug). The code worked, but was stomping loudly
+through memory. Just take those "&amp;" characters out and everything will be
+much better.
+</p><p>
+OK, on to the Requester program:
+</p><pre class="programlisting cpp">
+#include &lt;NetAddress.h&gt;
+#include &lt;NetEndpoint.h&gt;
+#include &lt;File.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;socket.h&gt;
+#include &lt;OS.h&gt;
+#include &lt;stdlib.h&gt;
+
+
+static <span class="type">status_t</span> <code class="function">request</code>(<span class="type">char *</span><code class="parameter">host</code>, <span class="type">char *</span><code class="parameter">filename</code>);
+
+<span class="type">int</span> main(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char *</span><code class="parameter">argv</code>[]) {
+    <span class="type">char *</span><code class="varname">filename</code>;
+    <span class="type">char *</span><code class="varname">host</code>;
+    <span class="type">status_t</span> <code class="varname">err</code>;
+
+    if (<code class="parameter">argc</code> != 3) {
+        <code class="function">printf</code>("usage: requester &lt;host&gt; &lt;filename&gt;\n");
+        return 1;
+    }
+
+    <code class="varname">host</code> = <code class="parameter">argv</code>[1];
+    <code class="varname">filename</code> = <code class="parameter">argv</code>[2];
+
+    <code class="varname">err</code> = <code class="varname">request</code>(<code class="varname">host</code>, <code class="varname">filename</code>);
+
+    if (<code class="varname">err</code> == <code class="constant">B_OK</code>) {
+        <code class="function">printf</code>("File received.\n");
+    } else {
+        <code class="function">printf</code>("An error occurred receiving the file.\n");
+    }
+
+    return 0;
+}
+</pre><p>
+The primary purpose to <code class="function">main()</code>, as in Responder, is to parse the command
+line and dispatch control. As a client, we won't bother to spawn any
+additional threads. We just grab the first argument as the hostname to
+connect to and the second as the filename with which we'll save the
+retrieved file. We then call <code class="function">request()</code> to actually handle the networking.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> request(<span class="type">char *</span><code class="parameter">host</code>, <span class="type">char *</span><code class="parameter">filename</code>) {
+    <code class="classname">BNetEndpoint</code> <code class="varname">server</code>;
+    <span class="type">status_t</span> <code class="varname">err</code>;
+    <span class="type">bool</span> <code class="varname">first_buffer</code> = <code class="constant">true</code>;
+    <span class="type">uint8</span> <code class="varname">buffer</code>[65536];
+    <span class="type">uint8 *</span><code class="varname">bufstart</code>;
+    <span class="type">int32</span> <code class="varname">count</code>;
+    <span class="type">char</span> <code class="varname">header</code>[32];
+    <span class="type">off_t</span> <code class="varname">filesize</code>;
+    <code class="classname">BFile</code> <code class="varname">file</code>;
+
+    if (<code class="varname">server</code>.<code class="methodname">InitCheck()</code> &lt; <code class="constant">B_OK</code>) {
+        return <code class="constant">B_ERROR</code>;
+    }
+</pre><p>
+As in Responder, we start by instantiating a <code class="classname">BNetEndpoint</code> and then we
+check to ensure that it's valid by calling <code class="methodname">InitCheck()</code>. If it's invalid,
+we return an error.
+</p><pre class="programlisting cpp">
+    <code class="varname">err</code> = <code class="varname">server</code>.<code class="methodname">Connect</code>(<code class="varname">host</code>, 4242); <span class="comment">// Connect to server</span>
+    if (err &lt; <code class="constant">B_OK</code>) {
+        goto bail;
+    }
+</pre><p>
+Then we connect to the host, whose name was specifed by the user on the
+command line. If this fails, we use the oft-debased but occasionally
+handy goto statement to bail out of the <code class="function">request()</code> function.
+</p><p>
+After this, the loop to receive the file begins, since immediately after
+we connect to the server, we'll begin receiving data. We use a while loop
+to continue to receive until there's no more data. Since there's a header
+that needs to be parsed, we special-case the first buffer using the first
+buffer flag. Once we've received the first buffer, we clear the flag so
+we won't look for the buffer anymore.
+</p><pre class="programlisting cpp">
+    while ((<code class="varname">count</code> = <code class="varname">server</code>.<code class="methodname">Receive</code>(<code class="varname">buffer</code>, 65536)) &gt; 0) {
+        if (<code class="varname">first_buffer</code>) {
+            <span class="type">int</span> <code class="varname">i</code>;
+
+            <code class="varname">first_buffer</code> = <code class="constant">false</code>;    <span class="comment">// Don't do this again</span>
+            for (<code class="varname">i</code>=0; <code class="varname">i</code>&lt;32; <code class="varname">i</code>++) {
+                if (<code class="varname">buffer</code>[<code class="varname">i</code>] != '\n') {
+                    <code class="varname">header</code>[<code class="varname">i</code>] = <code class="varname">buffer</code>[<code class="varname">i</code>];
+                }
+                else {
+                    <code class="varname">header</code>[<code class="varname">i</code>] = 0;
+                    break;
+                }
+            }
+            <span class="comment">// Got the header.  Parse it.</span>
+            if (!<code class="function">strcmp</code>(<code class="varname">header</code>, "ERROR")) {
+                <code class="varname">err</code> = <code class="constant">B_ERROR</code>;
+                goto bail;
+            }
+            <code class="varname">filesize</code> = atoll(<code class="varname">header</code>);
+            if (!<code class="varname">filesize</code>) {
+                <code class="varname">err</code> = <code class="constant">B_ERROR</code>;
+                goto bail;
+            }
+            <code class="varname">i</code>++;
+            <code class="varname">bufstart</code> = &amp;(<code class="varname">buffer</code>[<code class="varname">i</code>]);
+            <code class="varname">count</code> -= <code class="varname">i</code>;
+            <code class="varname">file</code>.<code class="methodname">SetTo</code>(<code class="parameter">filename</code>,
+            <code class="constant">B_CREATE_FILE</code>|<code class="constant">B_WRITE_ONLY</code>);
+            if ((<code class="varname">err</code> = <code class="varname">file</code>.<code class="methodname">InitCheck()</code>) &lt; <code class="constant">B_OK</code>) {
+                goto bail;
+            }
+        }
+        else {
+            <code class="varname">bufstart</code> = <code class="varname">buffer</code>;
+        }
+</pre><p>
+If the <code class="varname">first_buffer</code> flag is <code class="constant">true</code>, we begin by clearing it so we don't try
+to parse headers out of future blocks. Then we copy the header into the
+header string. Since the header is always a one-line string (either the
+file size in bytes or "ERROR" followed by a newline), this is easy to do.
+</p><p>
+Once the header has been grabbed, we check to see if it's "ERROR". If so,
+we return <code class="constant">B_ERROR</code> to the caller. Otherwise, we use <code class="function">atoll()</code> to get the
+file's size from the header. Then we set <code class="varname">bufstart</code>, our buffer pointer, to
+point past the header, and subtract the appropriate number of bytes from
+the buffer size in count.
+</p><p>
+Then the file is opened; if this fails, we return the appropriate error.
+</p><p>
+If the buffer isn't the first, we simply set the <code class="varname">bufstart</code> pointer to the
+beginning of the buffer, since we want to process all of it.
+</p><pre class="programlisting cpp">
+        <code class="varname">err</code> = <code class="varname">file</code>.<code class="methodname">Write</code>(<code class="varname">bufstart</code>, <code class="varname">count</code>);
+        if (err &lt; <code class="constant">B_OK</code>) {
+            goto bail;
+        }
+    }
+
+    <code class="varname">err</code> = <code class="constant">B_OK</code>;
+
+bail:
+    <code class="varname">server</code>.<code class="methodname">Close()</code>;
+    return <code class="varname">err</code>;
+}
+</pre><p>
+Then we write the buffer to the file, starting at offset <code class="varname">bufcount</code>, and
+writing <code class="varname">count</code> bytes. If an error occurs, we bail out. Otherwise we
+continue looping until <code class="methodname">Receive()</code> returns 0, meaning the connection has
+closed. We then close the <code class="classname">BNetEndpoint</code> and return.
+</p><p>
+When you build this code, don't forget to link against
+<code class="filename">libnetapi.so</code>.
+</p><p>
+This working client shares limitations with the Responder server—it
+sets the filename of the retrieved file to the name the user specifies on
+the command line (the server doesn't tell the client what to call the
+file), and file attributes aren't maintained. Only the file's data is
+transmitted. If you transmit an application, you'll have to chmod +x the
+file before you can run it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-45"></a>All Pros and No Cons? It's a Con...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+When an idea, a proposition, a cause is presented to me in terms that
+leave me no alternative but to be for it, because it's all pros and no
+cons, then I know I'm being conned. How can I be against freedom? How can
+I be against innovation? How can I be against freedom to innovate? So,
+when I hear Microsoft's carefully orchestrated refrain—all we ask is
+the freedom to innovate, we'll never renounce our freedom to innovate --
+being sung by top executives and paid consultants, I wonder. Do they
+really believe this? Or is it a calculated bet on what our emotional
+response to an appeal to higher principles will be?
+</p><p>
+Last Friday, November 5th, Judge Jackson gave his decoding of Microsoft's
+refrain. His finding of facts concludes that Microsoft is a monopoly. To
+quote his concluding paragraph:
+</p><div class="blockquote"><blockquote class="blockquote"><p>
+... Microsoft has demonstrated that it will use its
+prodigious market power and immense profits to harm any
+firm that insists on pursuing initiatives that could
+intensify competition against one of Microsoft's core
+products. Microsoft's past success in hurting such
+companies and stifling innovation deters investment in
+technologies and businesses that exhibit the potential
+to threaten Microsoft. The ultimate result is that some
+innovations that would truly benefit consumers never
+occur for the sole reason that they do not coincide with
+Microsoft's self-interest.
+</p></blockquote></div><p>
+The entire document is at &lt;http://usvms.gpo.gov/findfact.htm&gt;. It's long
+(412 paragraphs), but worth reading. It's written in plain English and
+takes pains to establish definitions for products and markets in order to
+create a structure for the findings.
+</p><p>
+The net effect of the finding is troubling. Even for someone as
+ambivalent (as in having truly mixed feelings) as yours truly towards
+Microsoft, my emotions range from surprise to sadness, laced with the
+expected irritation. Surprise, because I didn't expect the breadth and
+depth of abuse of power discussed by Judge Jackson's. From large
+companies such as IBM or Intel, to ISVs, service providers, and tiny
+start-ups such as ours, no one seems to escape Microsoft's vigilance.
+"Most harmful of all is the message that Microsoft's actions have
+conveyed to every enterprise with the potential to innovate in the
+computer industry", concludes the Judge.
+</p><p>
+My sadness at the language and conclusions of the finding comes from
+looking at the impenetrable wall of paranoia and misunderstanding. I'm
+reminded of a six-hour conversation I had with Bill Gates at a PC Forum
+conference early in 1988. He complained repeatedly that Apple didn't
+trust him, and nothing I said could help him see why his actions and
+words created fear and distrust.
+</p><p>
+A decade later, I've personally seen grown men fear for their company and
+themselves at the thought of incurring Bill's wrath and Microsoft's
+retaliation if they didn't "behave." DOJ officials spoke bitterly about
+PC makers' unwillingness to come forward to testify about Microsoft's
+business practices. Perhaps, but they would have done so at great
+potential cost. I'm in no position to blame them; I declined to testify
+because it might have interfered with other projects that were then
+pending at our company and also because testifying would have cost us
+hundreds of thousand of dollars in legal fees. We couldn't take those
+risks.
+</p><p>
+Still on the topic of the wall of misunderstanding, there is Microsoft's
+"what's mine is mine, what's yours is negotiable" attitude. Bill Neukom,
+the company's chief legal eagle, takes the position that "It's our song"
+when asked about the restrictions placed on Windows licensees. It's our
+song and we're free to dictate the way it'll be played on PCs. This is a
+strange metaphor. If I pay the royalties, I'm free to sing "Let it Be" in
+any key I want, preceded and followed by whatever act I fancy.
+</p><p>
+Returning to Microsoft's licensing, they used it as a club to prevent
+potentially errant PC makers from making BeOS visible to their customers.
+It "works" like this: You can use Microsoft's boot manager to load any
+number of OSes, as long as they're made by Microsoft. If you (the PC OEM,
+Windows licensee) use a non-Microsoft boot loader, you cannot use it to
+load Windows. If you do, you're in violation of the license and you could
+lose it—and your business.
+</p><p>
+That's how Microsoft prevented Hitachi from visibly offering Windows and
+BeOS at boot time. BeOS was loaded on the hard disk, but the customer
+didn't see the choice at boot time. You'd have to read complicated
+instructions to set up a dual-boot situation yourself. A neat legal trick
+that effectively prevents PC OEMs from offering a genuine dual-boot
+situation featuring both Windows and BeOS.
+</p><p>
+In that context, when I'm asked what Judge Jackson's ruling changes for
+us, I have to say that in the short-term, materially, not much.
+Psychologically, however, it's different. The ruling could open minds
+and, perhaps, doors. By shedding light on Microsoft's practices, the
+finding of fact might limit the company's ability to leverage its
+dominance of the PC market into the emerging Web appliance sector. As for
+specific remedies, they constitute a complicated, controversial topic.
+Fortunately, I found one well-written survey of this issue in this week's
+Time magazine (dated November 15th), shorter than Judge Jackson's
+document but balanced and complete nonetheless.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-44.html">Issue 4-44, November 3, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-46.html">Issue 4-46, November 17, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-44.html" title="Issue 4-44, November 3, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-46.html" title="Issue 4-46, November 17, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

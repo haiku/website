@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-41.html" title="Issue 1-41, September 18, 1996" /><link rel="next" href="Issue1-43.html" title="Issue 1-43, October 2, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-41.html" title="Issue 1-41, September 18, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-43.html" title="Issue 1-43, October 2, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-41.html">Issue 1-41, September 18, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-43.html">Issue 1-43, October 2, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-42"></a>Issue 1-42, September 25, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-42"></a>Be Engineering Insights: I Quit!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steve</span> <span class="surname">Horowitz</span></span></div></div></div><p>
+One of the most common questions developers ask us is "How do I get my
+threads to quit safely without using <code class="function">kill_thread()</code>?" There are many ways
+to do this, but the handiest method involves an acquire-with-timeout
+semaphore.
+</p><p>
+Consider this situation: You have two threads, a "master" and a "slave."
+The master thread spawns (and resumes) the slave, and is responsible for
+stopping it. The slave thread loops over a "critical section"; the only
+time the master can safely quit the slave thread is when the slave is
+outside the critical section.
+</p><p>
+The trick is for the master to detect when the slave is outside the
+critical section, at which point the master tells the slave to pop out of
+the loop. The slave, having departed the loop, can then perform any clean
+up it needs to do, and exit naturally (by reaching the end of its entry
+function). To do this, we create a semaphore to which both threads have
+access—for our example, we'll make it a global semaphore. Note that
+the semaphore is given an initial thread count of 1 (as expressed in the
+first argument to <code class="function">create_sem()</code>):
+</p><pre class="programlisting cpp">
+<span class="type">sem_id</span>  <code class="varname">sync_sem</code>;
+
+<code class="function">master_thread</code>()
+{
+   <code class="varname">sync_sem</code> = <code class="function">create_sem</code>(1, "synchronization vulture");
+   ...
+</pre><p>
+Next, the master spawns and resumes the slave thread:
+</p><pre class="programlisting cpp">
+<span class="type">thread_id</span> <code class="varname">slave_thread</code>;
+<code class="varname">slave_thread</code> = <code class="function">spawn_thread</code>(<code class="varname">slave_func</code>,
+     "HeyIAmBusy", <code class="constant">B_LOW_PRIORITY</code>, <code class="constant">NULL</code>);
+<code class="function">resume_thread</code>(<code class="varname">slave_thread</code>);
+</pre><p>
+The body of the slave thread's entry function (<code class="function">slave_func()</code>) looks
+something like this:
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="function">slave_thread</code>(<span class="type">void</span>*)
+{
+   <span class="comment">/* Keep looping as long as we can
+      acquire the semaphore. */</span>
+   while(<code class="function">acquire_sem_etc</code>(<code class="varname">sync_sem</code>, 1, <code class="constant">B_TIMEOUT</code>, 0.0) ==
+         <code class="constant">B_NO_ERROR</code>) {
+      <span class="comment">/* Put your critical section here. */</span>
+      ...
+
+      <span class="comment">/* Critical section done,
+         now release the semaphore. */</span>
+      <code class="function">release_sem</code>(<code class="varname">sync_sem</code>);
+   }
+
+   <span class="comment">/* We're outside the loop; clean up... */</span>
+   ...
+
+   <span class="comment">/* ... and exit naturally. */</span>
+   return(<code class="constant">B_NO_ERROR</code>);
+}
+</pre><p>
+Notice that the slave thread uses <code class="function">acquire_sem_etc()</code> with the <code class="constant">B_TIMEOUT</code>
+flag set and with a timeout value of 0.0. This means that the slave
+thread will keep looping as long as it can *immediately* acquire the
+semaphore. However, if the semaphore isn't available, the function
+*immediately* returns <code class="constant">B_WOULD_BLOCK</code>.
+</p><p>
+What happens when the master wants the slave to quit? The master thread
+can't blithely kill the slave (through <code class="function">kill_thread()</code>), because the slave
+might be in the middle of its critical section. Instead, all the master
+has to do is acquire the synchronization semaphore:
+</p><pre class="programlisting cpp">
+<code class="function">acquire_sem</code>(<code class="varname">sync_sem</code>);
+</pre><p>
+This acquisition will block until the slave calls <code class="function">release_sem()</code> after its
+current pass through the critical section. When the slave executes the
+<code class="function">acquire_sem_etc()</code> function (in the loop predicate), the function will
+immediately return <code class="constant">B_WOULD_BLOCK</code>, which will cause the slave to skip the
+loop, clean up, and safely exit.
+</p><p>
+If the master wants to make sure that the slave is dead before it
+continues, it should call <code class="function">wait_for_thread()</code> immediately after the
+<code class="function">acquire_sem()</code> call:
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="varname">return_val</code>;
+<code class="function">acquire_sem</code>(<code class="varname">sync_sem</code>);
+<code class="function">wait_for_thread</code>(<code class="varname">slave_thread</code>, &amp;<code class="varname">return_val</code>);
+</pre><p>
+Keep in mind that after all this, sync_sem's thread count is 0 (since
+it's been acquired by the master thread). Therefore, if you want to reuse
+the <code class="varname">sync_sem</code> semaphore, you'll have to release it first so the next
+acquisition will succeed.
+</p><p>
+Through a couple of modifications, you can use this technique so that the
+master thread can control any number of slave threads. You simply
+increase the semaphore's initial thread count (the first argument in the
+<code class="function">create_sem()</code> call) to the number of threads (<em class="replaceable"><code>N</code></em>) that need to be
+controlled, and then change the master's <code class="function">acquire_sem()</code> call to this:
+</p><pre class="programlisting cpp">
+<code class="function">acquire_sem_etc</code>(<code class="varname">sync_sem</code>, <code class="varname">N</code>, 0, 0);
+</pre><p>
+This use of <code class="function">acquire_sem_etc()</code> attempts to acquire the semaphore <code class="varname">N</code> times
+—in other words, once for each slave thread. Note that the call doesn't
+have a timeout (because the <code class="constant">B_TIMEOUT</code> flag isn't set): The call will
+block until all <code class="varname">N</code> acquisitions are affected. Thus, when the function
+returns, you're guaranteed that all the slave threads are outside their
+critical sections and are either standing on the other side of the Styx,
+or, at least, in the boat.
+</p><p>
+Hopefully this will help make your application design a little simpler
+when it comes to synchronizing multiple threads.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-42"></a>Be Developer Talk: subAtomic Software</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Delbert</span> <span class="surname">Murphy</span></span></div></div></div><p>
+Greetings, from the inside of my hardware to the inside of yours.
+</p><p>
+My name is Delbert Murphy. By day, I write Smalltalk and C++ for a huge
+company that is obsessed with profit targets. By night, I chase my dream:
+Writing commercial software for the BeBox, as I put the pieces together
+to form the subAtomic Software product line.
+</p><p>
+I've always thought in pictures and graphical patterns—I'm just an
+analog fellow in a digital world. I remember faces, not names. When I
+need the information operator, I dial: center-button, center-button,
+center-button, upper- left-button, upper-center-button,
+upper-left-button, upper- center-button (you may know it as 555-1212). I
+have a good deal of trouble using a rotary phone, because I've forgotten
+the circular shapes for everyone's phone numbers.
+</p><p>
+Imagine my delight when I first saw the Be web site. Here was a computer
+that I could (probably) afford, that had enough horsepower to do graphics
+justice—and still have some processor power left over to handle my
+other passion: Artificial intelligence. I recognized Be's real-time and
+embedded systems ancestry, the keys to getting the BeOS right.
+</p><p>
+The basis for the subAtomic Software product line is the fusion of
+graphics and artificial intelligence in real time. When you have a really
+tough problem to solve, do you draw a picture? When you design your BeBox
+application, do you draw an object model on paper? Perhaps a static
+object diagram first, and then object interaction diagrams to lay out
+different user scenarios? Sure you do.
+</p><p>
+What I am endeavoring to build is a workbench on which you graphically
+lay out your ideas and see how they fit together. And more. I want the
+workbench to suggest alternative arrangements of ideas, help you draw
+conclusions about the information you have so far, help you relate ideas
+in ways you hadn't considered. I envision a cross between a high-end CAD
+package for ideas and a Zen master. I call it the fusion <span class="trademark">ThoughtBench</span>™.
+</p><p>
+The fusion ThoughtBench that I will release this fall will only be the
+first step towards a lofty goal. I have started out simply: Getting the
+underlying object model right first, making sure to separate the ideas
+(which are longer-lived and probably more static) from the
+representations of the ideas (which can change according to your chosen
+perspective). The first release of the product will represent ideas and
+their relationships, will capture information about the ideas, and be
+able to produce documents—such as articles, resumes, presentations --
+from this information.
+</p><p>
+The next release will incorporate a new perspective: Object modeling and
+some rudimentary C++ code generation. Another release will incorporate
+another perspective: Axioms, theorems, and proofs—probably beginning
+with Euclidean geometry. A further perspective, in a further release:
+Letting you define a problem space (say, the stock market) and mapping
+functions (stock valuation algorithms), and a solution space
+(buy/sell/hold). The perspectives are only limited by our hardware and
+our imaginations (or is that hardware too?).
+</p><p>
+[Many musings on Being and Nothingness deleted by the author.]
+</p><p>
+I welcome suggestions, encouragement, or philosophical reflections at:
+drmurph@gnn.com
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-42"></a>Be Marketing Mutterings: The Joys And Perils Of Growth</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>
+There are many things I enjoy about working at a small start-up company
+like Be, some of them minor, some of them significant. I like the fact
+that the stapler that's left on top of the photocopier doesn't disappear
+and that whoever uses the last staple refills it. I like knowing
+everybody in the company. I like spending less than an hour a week in
+regular internal meetings. I like never having to attend facilitated
+offsite cross-functional interdivisional long- range ISO9000 task force
+planning paradigm shifting premeeting presentation planning preparation
+briefing meetings with a ropes course icebreaker.
+</p><p>
+And I like growth.
+</p><p>
+Growth is an inherent attribute of a successful start-up. Without growth,
+a company withers and dies. With growth, the things that you do change
+from day to day and there is a perceptible and quantifiable increase in
+the level of activity and excitement. Growth is fun, but it brings with
+it some challenges; the primary challenge is to keep up with the growth.
+</p><p>
+Be is growing fast right now, whether you measure it in number of
+application developers, number of BeBoxes sold, or number of column
+inches of press. We're enjoying the fruits of our labors, but are also
+concerned that we're not always keeping up with that growth. I want to
+share those concerns with you and tell you what we're doing to address
+them.
+</p><p>
+As we've mentioned before, application developers are our lifeblood.
+Their success is our success, and so we want to do everything possible to
+recruit developers to our exciting new platform and retain them with
+excellent support and excellent business opportunities on the platform.
+There are two areas where our growth has caused us to be less responsive
+than we'd like: Processing new developers into our developer program and
+responding to developer questions through our developer tech support
+group.
+</p><p>
+I apologize to anyone who's been kept waiting. We're addressing the issue
+by carefully hiring people to handle the increased workload. So far,
+we've hired three people into the developer support area, two of whom are
+now on board with a third joining next week. We're still interviewing
+candidates and will try to keep hiring in line with the growth of our
+developer program .
+</p><p>
+We do occasionally hear of e-mails to our developer support group or
+application forms to enter our developer program remaining unanswered for
+days or weeks. This is a bug; an e- mail to the developer support group
+should always be answered, or at least acknowledged, by the end of the
+following work day, and an application form to enroll in the developer
+program should always be acknowledged within four working days. If you
+don't hear back, please e-mail me (alex@be.com) and I'll investigate.
+We'd hate to lose a friend because an e-mail went astray or because
+someone hit the delete button by mistake.
+</p><p>
+On another topic, I've received quite a few calls and e- mails from
+people who've seen our announcement that we've shipped the DR8 version of
+the BeOS and who want it for their PowerMacs. Allow me to clarify: DR8
+currently runs only on the BeBox, and we've not yet released a version of
+the BeOS for the PowerMac. We expect to make an early version of the BeOS
+for PowerMac available to our developers later this year, with a more
+general release early next year. Stay tuned to this newsletter and our
+web site for more news.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-42"></a>The User's Perspective</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+In the early years, Hewlett-Packard was known solely for its measuring
+instruments. Life was easy. Engineers designed for engineers, for the guy
+at the next lab bench, the saying went. That practice couldn't even be
+called a philosophy, it was what HP did instinctively. Their first pocket
+calculator, the HP-35, was the result of the same libido. Bill Hewlett
+wanted an electronic slide rule that fit in his shirt pocket. It was an
+instant best-seller, a high-tech product right on its high-tech target.
+The story, perhaps apocryphal, is that the HP-80, the first financial
+pocket calculator, was designed because David Packard wanted to do
+sophisticated bond price calculations. It, too, was well received by its
+intended users. And the margins were so "nice" it was the single highest
+contributor to HP's profits for a while.
+</p><p>
+There are numerous reasons to be wary of such an approach. Many will find
+it self-centered. How dare you represent yourself as a typical user?
+Indeed. Many companies prefer market research and focus groups as a
+source of insights into the customer's needs and wants. This approach has
+its problems. It works best on derivative, incremental products, but it
+can be counter-productive when the audience is faced with unknown,
+previously unthinkable notions for which it did not have a pre-existing
+vocabulary.
+</p><p>
+In December 1982, ask the "man on the street" the personal computer he
+wants, he'll describe a better Apple /// (!?) or a faster, smaller,
+cheaper IBM PC. Show the same individual a Lisa in January 1983, the
+reaction will be:
+</p><p>
+"That's what I want!"
+</p><p>
+"But, but, that's not what you told me last month."
+</p><p>
+How could the customer think of mice, menus, windows, and bitmapped
+screens in December 1982? Focus groups can also be abused and lead to
+risk-adverse mediocrity. In his book "Making Movies" (highly
+recommended), Sydney Lumet has choice words for movie endings designed by
+the marketing departments of Hollywood studios—even if he honestly
+recognizes the system leaves little choice but to do those tests and to
+make those changes.
+</p><p>
+Thanks to the Internet and Altavista, I got in touch with Wiley, the
+creator of "Non Sequitur" cartoons. Through a dealer, Markomics
+(www.markomics.com), I bought the original of a Sunday "Non Sequitur"
+cartoon: Wiley drew Michelangelo on a scaffolding in the Sistine Chapel.
+On the ground, a bishop looks up from a scroll and states: "Personally, I
+think it looks OK, Michelangelo, but the focus group says it needs more
+mauve..."
+</p><p>
+In Be's case, when we started the company in late 1990, what would the
+focus group have said? Another OS, who needs it? Even today, where the
+opportunity for fresh system software on the PowerPC appears a little
+less difficult to assess, no less an authority than Dick Shaffer, of
+Technologic Partners, reflexively noted: "It would give Apple what it
+does not need: Another operating system that has no applications." Some
+of the statement is in error. Especially the "give" part. As for the
+applications, we'll soon meet our milestone of 1,000 BeBoxes in
+developers' hands.
+</p><p>
+So far, these developers have been our target users. Most of our efforts
+have gone into making the BeBox and the BeOS attractive for this
+audience. It's not too difficult for the Be engineers to understand the
+perspective of their early clients. As applications start to emerge, we
+also put ourselves in the user's shoes. Shichiro Irimajiri, once the head
+of Honda of America, and now back in the game, so to speak, as the head
+of Sega of America, used to worry Honda needed to shift its focus. "We
+used to build cars for ourselves, but we are getting old and if we don't
+watch it, we'll end up building Cadillacs and we'll miss the new
+customers." In our case, we're lucky the normal progression of our
+business takes us first to the early adopting lunatic fringe first. The
+shift in perspective will become harder when we approach the mainstream.
+We still have much to do and much to prove to reach that stage—and it
+will be a nice problem to have.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-42"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><p>
+A lot of mail this last week was about the DR8 upgrade; there were both
+commendations and... suggestions. Rather than summarize the various DR8
+threads individually, we'll simply thank you for your recognition of the
+DR8 improvements, and assure you that we're trying to fix the bugs that
+you've found and reported.
+</p><p>
+A gentle reminder: If you find a bug in DR8, please report it through the
+Bug Report form in the Developer section of the Be web site:
+http://www.be.com/developers/bugform.html
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499648"></a>WEEK 4</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499654"></a>Subject: How are we suppose to do this?</h4></div></div></div><p>
+More game designer talk. A couple of solutions to the graphics/physics
+clock rate problem were suggested and debated.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499667"></a>Subject: AES/EBU</h4></div></div></div><p>
+Although the Crystal codec that comes with the BeBox is good, some
+folks want (or need) professional audio gear. It was suggested that Be
+be encouraged to include a Digital Audio Interface (DAI). It was
+countered that that might be an overly expensive solution to a problem
+that only a few developers are really affected by.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499685"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499692"></a>Subject: PPP in DR8</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Help with PPPlease!<br />
+AKA: PPPuh-leeeze...
+</h5></div></div></div><p>
+Why doesn't PPP work in DR8?...
+</p><p>
+THE BE LINE: Brad Taylor of Be posted a message that described the
+difference between DR7 and DR8 PPP (and postulated advancements for
+DR9). He also gave instructions for setting up your modem connection to
+fit in the DR8 world. You can read a copy of this message on the Be web
+site: http://www.be.com/developers/PPPinDR8.html
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499721"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499727"></a>Subject: Application Architecture</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Application Template</h5></div></div></div><p>
+These two threads discussed the desirability of application framework
+classes/tools/paradigms/definitions for viewing documents (where you
+can have more than one view onto the same document, or where a document
+is actually a collection of "subdocuments"), scripting, plug-ins (what
+Be calls "add- ons"), and the like.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499748"></a>Subject: Another OpenFile panel scenario</h4></div></div></div><p>
+Why don't file panels display more intelligence? It was suggested that
+the Browser allow add-ons for the Open and Save panels.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id499761"></a>Subject: D'oh! Pulse</h4></div></div></div><p>
+A couple of questions:
+</p><div class="orderedlist"><ol><li><p>
+Why does pulse no longer show memory usage?
+</p></li><li><p>
+Is Stellar Pulse (in the Live3D application) a CPU monitor?
+</p></li></ol></div><p>
+Answers (as correctly offered by our readers):
+</p><div class="orderedlist"><ol><li><p>
+Because folks were often confused by the memory usage
+statistics.
+</p></li><li><p>
+No, it runs stellar data collected by Benoît Schillings, a 16th
+century Belgian astronomer.
+</p></li></ol></div></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-41.html">Issue 1-41, September 18, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-43.html">Issue 1-43, October 2, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-41.html" title="Issue 1-41, September 18, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-43.html" title="Issue 1-43, October 2, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

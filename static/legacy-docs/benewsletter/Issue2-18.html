@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-17.html" title="Issue 2-17, April 30, 1997" /><link rel="next" href="Issue2-19.html" title="Issue 2-19, May 14, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-17.html" title="Issue 2-17, April 30, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-19.html" title="Issue 2-19, May 14, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-17.html">Issue 2-17, April 30, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-19.html">Issue 2-19, May 14, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-18"></a>Issue 2-18, May 7, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-18"></a>Be Engineering Insights: An Obscure Pitfall of C++</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Mani</span> <span class="surname">Varadarajan</span></span></div></div></div><p>
+I've been at Be for close to a year now, and like some of you, my first
+exposure to C++ was when I started messing around on the BeOS. C++ is
+without question quite a confusing monstrosity of a language; sometimes I
+wonder what good ol' Bjarne and his friends in New Jersey were thinking
+when they included some of the more arcane aspects of the programming
+language discipline in C++. At any rate, it can't be repeated too often
+that programmers are well- advised to be very careful when using some of
+the more unusual features of the language. This is all the more true in a
+multithreaded environment, where what appears to be a safe way of doing
+things actually isn't.
+</p><p>
+Since I'm responsible for maintaining the core libraries for the BeOS,
+I've gone through quite a bit of C++ code over the past several months.
+Never has reading code been as daunting a task as when I had to pore
+through the implementation of the Standard Template Library that was at
+our disposal. It was even more daunting when I had to narrow down some
+obscure bugs. Based on this experience, I'd like to discourage a practice
+that seems somewhat common in the C++ community.
+</p><p>
+Rule: Don't declare member variables of classes static, if the member
+variable is of a nonfundamental type.
+</p><p>
+This lesson may be hard to understand to those who don't violate it, so
+let me present the following situation. Sometimes you need a flag or
+counter that is common to all instantiations for a particular class; for
+example, a flag to indicate that some common initialization for all
+objects of this class has occurred. Often this flag is also a
+nonfundamental type, because it has some sort of mutual exclusion built
+into it, or some such thing.
+</p><p>
+I've noticed that many programmers are tempted to declare these flags and
+counters as static, private members of the class, so that only one such
+object is instantiated for all instantiations of this class itself:
+</p><pre class="programlisting cpp">
+class <code class="classname">B</code> {
+public:
+  <code class="methodname">B</code>();
+  <code class="methodname">~B</code>();
+}
+
+class <code class="classname">A</code> {
+public:
+  <code class="methodname">A</code>();
+  <code class="methodname">~A</code>();
+...
+
+private:
+  static <code class="classname">B</code> <code class="varname">flag</code>;
+}
+
+static <code class="classname">A</code>::<code class="varname">flag</code> = 0;
+
+<code class="classname">A</code> <code class="varname">obj1</code>, <code class="varname">obj2</code>;
+
+<code class="classname">A</code>::<code class="methodname">A</code>()
+{
+  if (<code class="classname">A</code>::<code class="varname">flag</code> == 0) {
+    do blah;
+  }
+
+  <code class="classname">A</code>::<code class="varname">flag</code>++;
+
+  ...
+}
+</pre><p>
+Now this is a perfectly fine idea, except that it opens one up to all
+sorts of nasty race conditions.
+</p><p>
+What tends to happen is that <code class="code"><code class="classname">A</code>::<code class="varname">flag</code></code>
+will generally be used in the
+constructor for <code class="classname">A</code> itself; after all, the purpose of the flag is to let
+<code class="classname">A</code>'s constructor know whether it needs to do any other initialization.
+</p><p>
+However, notice the circular dependency—the constructor for <code class="classname">A</code> depends
+on <code class="classname">B</code>. However, the C++ standard doesn't define an order in which global
+objects are constructed. <code class="classname">A</code> therefore depends on an object that may not
+yet have been constructed—that is, <code class="classname">B</code>—and then all hell breaks
+loose. The value of the flag is unpredictable; it may or may not be
+correct at any given time. An identical problem occurs if there's a
+dependency between destructors.
+</p><p>
+This wouldn't occur if object <code class="classname">B</code> was of a fundamental type, such as <span class="type">int</span> or
+<span class="type">char</span>, since fundamental types aren't constructed in the canonical C++
+sense.
+</p><p>
+In this type of situation, it's likely that this flag is used in the
+constructor for the class of which it is a member. Recall that the flag
+was declared static, meaning that it's actually a global object in its
+own right.
+</p><p>
+The solution? Declare the object static and local to the constructor:
+</p><pre class="programlisting cpp">
+class <code class="classname">B</code> {
+public:
+  <code class="methodname">B</code>();
+  <code class="methodname">~B</code>();
+}
+
+class <code class="classname">A</code> {
+public:
+  <code class="methodname">A</code>();
+  <code class="methodname">~A</code>();
+...
+
+}
+
+<code class="classname">A</code> <code class="varname">obj1</code>, <code class="varname">obj2</code>;
+
+<code class="classname">A</code>::<code class="methodname">A</code>()
+{
+  static <code class="classname">B</code> <code class="varname">flag</code> = 0;
+
+  if (<code class="varname">flag</code> == 0) {
+    do blah;
+  }
+
+  <code class="varname">flag</code>++;
+
+  ...
+}
+</pre><p>
+Now everything's fine. And as a side benefit, the code's even easier to
+understand.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Support2-18"></a>In Pursuit of Support</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ed</span> <span class="surname">Romson</span></span></div></div></div><p>
+To start off, please allow me to introduce myself. I'm Ed Romson and I'm
+the new (three months) Director of Customer Support here at Be. My bio is
+on the Web site, so I'll forego any repetition of that except to say that
+I'm a recent escapee from Apple (after twelve and a half years) and have
+been the support business for about fifteen years.
+</p><p>
+I'd like to do two things in this short missive. First, I'd like to give
+you an update on those things that have been keeping us busy on the
+nonengineering side of the company. And second, I'd like guide you on the
+path to Support Enlightenment.
+</p><p>
+The status report first. With the Preview Release looming (no
+announcements in MY column), we're working to have all of the operational
+aspects of the business in place for that magic day when Mel yells "Ship
+it!!" To do this, we've worked through bidding processes for technical
+support (Net and phone), printing, disk duplication, order taking (Net
+and phone), and distribution. We've picked the vendors who will supply us
+with all of these aspects of Customer Support here in the US. We're also
+working with Jean Calmon and the Be Europe office to settle the details
+on that side of the pond. My commitment at the weekly Be Office Gathering
+has been "We'll be ready when you are." We're on track to do just that.
+</p><p>
+In future Be Newsletter articles and at the Developers Conference (have
+you updated your information yet?), we'll be sharing some thoughts with
+you about support and showing you how we've designed our support
+structure in a way that it can be extended to help developers address
+some of their customer service and support worries. Stay tuned.
+</p><p>
+Our support philosophy starts with providing as much information as
+possible to you via the Web and other electronic means. We'll make this
+information easy to find and, through the use of the latest technology,
+help developers and end users be self supporting. We've been
+investigating case-based reasoning and other tools and technologies to
+make a Web search quick, easy, and maybe even enjoyable. Watch our site
+as we evolve and give us feedback.
+</p><p>
+The place to start for support of any kind is the Be Web site,
+http://www.be.com. There you'll find a wealth of Frequently Asked
+Questions (FAQs), sample code, manuals, and updates. We have tutorials,
+we have code fragments, we have announcements, and we even have support
+documentation in Japanese!
+</p><p>
+If the information you require isn't there, you'll also find a BeAssisted
+form you can use to submit questions to any of the support e-mail
+addresses. If you hate Web forms, a generic e-mail to any of the support
+addresses will be welcomed. Please help us help you by giving us as much
+information about the problem as possible, including the configuration of
+your system, what you were doing, what happened, what you expected to
+have happen, why, and anything else about your configuration and problem
+that you think we should know.
+</p><p>
+Here is a list of the support addresses and their uses:
+</p><ul class="itemizedlist"><li><p>
+CustSupport@be.com - for questions regarding set up, installation,
+configuration, and compatibility of the BeOS, BeBox, or other technical
+questions that are not about programming or coding.
+</p></li><li><p>
+CustServices@be.com - for assistance obtaining any of our products or
+for questions about maintenance and warranty of a BeBox.
+</p></li><li><p>
+DevServices@be.com - available to developers with developer-specific,
+nontechnical issues including lost developer passwords, changing name
+or company information in the developer database, moving files in the
+BeWare section, and the like.
+</p></li></ul><p>
+If all of this Web searching and e-mail doesn't do the trick and you'd
+rather talk to a human, you can call us. We'll be available Monday
+through Friday, between 6am and 6pm (Pacific time) for people in the
+Western Hemisphere, and between 8am to 6pm GMT for those of you in the
+Eastern Hemisphere. Our Customer Technical Support numbers will be
+activated on June 15 in the US and July 15 in Europe. We'll publish them
+(you guessed it) on our Web site at http://www.be.com/support/index.html.
+</p><p>
+Several years ago, Mayor Koch of New York had a habit of walking up to
+people and asking, "How'm I doing?" Regardless of what you think of the
+ol' Mayor, he did get information about what was happening in the Big
+Apple. I'd like to do the same, electronically. I know you're not shy
+about sharing your thoughts (I read comp.sys.be.misc and BeDevTalk
+religiously), but how about sharing some thoughts on the state of Be
+technical support? What companies do think provide the best Web-based
+support? Are there things in the support arena we could be doing, bits
+and pieces we could provide, to make your life easier?
+</p><p>
+How're we doing? It's Romson@be.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-18"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+George Hoffman's back!<br />
+I won the Lottery, speaking of which...
+</p><p>
+Your heart is racing, you can't remember the last time you slept, ate,
+stood up, or blinked. Your knuckles are white, your hair is graying more
+by the second. Perspiration is sprinkled on your forehead. Your eyes feel
+like they've had sandpaper rubbed across them. Did you actually do that,
+or was it your imagination. Your heart is pounding, and you have a deep
+feeling of imminent success.
+</p><p>
+Does this scenario relate to:
+</p><div class="orderedlist"><ol><li>Stepping up to the altar</li><li>Taking final exams in your Freshman year</li><li>Preparing for your first date</li><li>Making your last-minute changes for DR9</li></ol></div><p>
+Software development is many things to many people. For me, it's always
+been a passion, never a job. Why would you do something you don't enjoy?
+And if you enjoy it, why not enjoy it thoroughly. As you read these
+words, you're in an environment that obviously has a computer. If you're
+lucky, you're on the beach or another outdoor setting, with a portable
+computer in your hands. If you're more normal, you're probably in a
+cubicle, office, or at your desk at home. No matter what your situation,
+you can only hope to experience the sheer and utter joy of reaching a
+much anticipated software release with your kidneys, heart, hair, and
+hands intact. At Be we try to under promise and over deliver. When a
+release has been as long in coming as DR9, it's often hard to meet
+expectations, no matter how well we set them. I've recently been porting
+a lot of code to DR9, as well as creating new apps. If you've ever done
+much porting work, you know that it can be both frustrating and
+rewarding. You probably ported something from the Mac OS, Windows, or
+UNIX to get to the BeOS in the first place. Moving from DR8 to the BeOS
+Preview Release (what we've been calling "DR9") won't be such a great
+transition, more of an evolution.
+</p><p>
+Over the past few months, many of the Be engineers have shared bits and
+pieces of the coming BeOS Preview Release in this newsletter. You'll soon
+see the fruits of their labors. And sample apps. As one engineer put it,
+there's no better documentation than sample code. We have some, and there
+will be more on the way as soon as the baby's out the door.
+</p><p>
+One thing to pay attention to with the BeOS release that comes at the
+Developers Conference is that it's a developer's pre-Preview Release --
+in fact, we're calling it the Advanced Access BeOS Preview Release. That
+is, at the Developers Conference we'll be giving out a release that won't
+have wide distribution beyond the developer community. You'll have a
+chance to port or write new code before the BeOS Preview Release goes out
+to the masses. In that respect you'll have an opportunity to actually
+have products available when the Preview Release shows up in the hands of
+the Power Computing and other customers who have been anxiously awaiting
+it, and your apps.
+</p><p>
+There are many changes in the Preview Release. As mentioned previously,
+there's much tighter C++ usage. Our use of the language is making for a
+much more stable and well-behaved system. There will be subtleties
+though. We'll try to point them out where they exist, and of course
+provide as many samples as possible.
+</p><p>
+Our Developers Conference is this weekend, but I managed to get sick last
+week, so I won't have that in the way. We even managed to give Yasmin a
+good birthday party, and take her on a 30-mile bike ride. Not bad for a
+two-year-old and a sick daddy.
+</p><p>
+Well, Dr. Nine is upon us. I think you'll enjoy it. See you at the
+conference.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-18"></a>Nerves</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+In normal times—if there is such thing for a start-up such as ours --
+we could be expected to be a little nervous before a Developers
+Conference. Add a major release, our most important so far, to the
+formula, and you have an event laying outside the usual scale. So we're
+more than a little agitated. We're presenting ourselves before a jury of
+our peers, software developers whose judgment will determine the fate of
+the BeOS, the future of our company. This sounds a little too stiff and,
+fortunately, the metaphor quickly breaks down. There aren't too many
+lawyers in the room, the dress code is better, and the jury isn't
+sequestered. But court metaphor or not, this is an important milestone in
+our relationship with application developers. We're going to be tested
+and compared.
+</p><p>
+The dust has settled on last year's discussions with Apple, so this time
+we're going to be evaluated on our "unconnected" merits. Inevitably,
+we're also going to be compared to Apple's upcoming Rhapsody. The
+situation will feature one (temporary) irony: Apple intends to distribute
+free OpenStep CDs running only on WinTel platforms at their developers
+conference, immediately following ours. There will be one more bias in
+the comparison: We'll be compared to the old OpenStep environment, not to
+the new composite Apple is developing, blending OpenStep and Mac
+features. Nonetheless, we expect the comparison to be useful in
+reaffirming our respective positions in the PowerPC family.
+</p><p>
+OpenStep developed a following in enterprise applications. We target
+new-media content developers. See Mark Gonzales' Media OS white paper,
+which will be unveiled on our Web site this weekend for the conference.
+Or refer to http://www.be.com/developers/whybedev/index.html, the
+"Designed for the Next Decade" paper describing our technical and
+business goals. I don't expect Apple executives to agree wholeheartedly
+with my characterization of the respective roles the two OSes can play,
+and I respect the fact that they must promote their emerging blend of
+OpenStep and Mac as having the broadest of appeals. As stated earlier,
+developers are the judges—followed by customers. And focusing more
+creative energy on the PowerPC benefits us all, just as robust Power Mac
+compatibles from Power Computing, Motorola, UMAX, and others bring new
+energy to the erstwhile hardware monopoly.
+</p><p>
+Back to the BeOS itself, we're more nervous than we've ever been. This
+release brings more change than in any prior release. As a result, we
+need the feedback of software developers more than ever. Even more
+important than bug reports, we need feedback on the design of the BeOS in
+order to transform our weakness, our small size, into a strength, the
+ability to react quickly to suggestion. As I wrote before, we're myopic.
+Someone taking a fresh look at our work can make the "tractor
+suggestion." Of course, there will be embarrassing bugs and humiliating
+oversights. Still, we're very proud of this release, and we—nervously
+—look forward to this opportunity to show our work to demanding critics.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-17.html">Issue 2-17, April 30, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-19.html">Issue 2-19, May 14, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-17.html" title="Issue 2-17, April 30, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-19.html" title="Issue 2-19, May 14, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

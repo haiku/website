@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Input Server</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheInputServer_Overview.html" title="The Input Server" /><link rel="prev" href="TheInputServer_Overview.html" title="The Input Server" /><link rel="next" href="BInputDevice_Overview.html" title="BInputDevice" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheInputServer_Overview.html" title="The Input Server"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheInputServer_Overview.html" title="The Input Server"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="BInputDevice_Overview.html" title="BInputDevice"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Input Server</div></div><div id="headerB">Prev: <a href="TheInputServer_Overview.html">The Input Server</a>  Up: <a href="TheInputServer_Overview.html">The Input Server</a>  Next: <a href="BInputDevice_Overview.html">BInputDevice</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction"></a>Introduction</h2></div></div></div><p>The Input Server is a system service that accepts user events (on the
+mouse and keyboard, typically) at one end, and dispatches them to the App
+Server at the other. In between, the Input Server runs the events through
+a series of filters that can inspect and modify them. The generation and
+filtering of events is performed by the add-ons that the Input Server
+loads; the Server itself just provides the plumbing. Event-generating
+add-ons (called input devices) typically correspond to one or more device
+drivers, although this isn't a requirement. An event-filtering add-on
+(input filter) processes the events that are fed to it; input filters
+aren't intended to correspond to hardware. A third type of Input Server
+add-on—an input method—is used to implement input method
+mechanisms, which convert keyboard events into character sets that can't
+be easily represented on a standard keyboard, such as Kanji.</p><p>Each of these add-on types (input devices, filters, and methods) is
+represented by a C++ class:
+<a class="link" href="BInputServerDevice.html" title="BInputServerDevice"><code class="classname">BInputServerDevice</code></a>,
+<a class="link" href="BInputServerFilter.html" title="BInputServerFilter"><code class="classname">BInputServerFilter</code></a>, and
+<a class="link" href="BInputServerMethod.html" title="BInputServerMethod"><code class="classname">BInputServerMethod</code></a>.
+For each add-on you want to create, you subclass the
+appropriate class and override its hook functions. An additional
+class—<a class="link" href="BInputDevice.html" title="BInputDevice"><code class="classname">BInputDevice</code></a>—lets
+a "normal" application send messages
+back through the Input Server to the input devices; a
+<a class="link" href="BInputDevice.html" title="BInputDevice"><code class="classname">BInputDevice</code></a> object
+can be useful if you're creating a preference app for a custom Input
+Server add-on, for example.</p><p>A map of the Input Server world looks like this:</p><div class="mediaobject"><img src="./images/TheInputServer/input_server_map.png" alt="Input Server Map" /></div><p>Note that the Input Server and its add-ons (and
+<a class="link" href="BInputDevice.html" title="BInputDevice"><code class="classname">BInputDevice</code></a>) all live in
+user space, so, in theory, there's nothing that a "normal" application
+can do that an Input Server add-on can't do. However, Input Server
+add-ons are loaded early in the boot process, before some system services
+(such as the Media and Network servers) have started. Attempting to use
+services from these servers before they've started is a good way to wedge
+the system.</p><p>The BeOS provides a few Input Server add-ons: It installs input devices
+that handle a variety of mice and keyboard drivers, and an input filter
+that the Screen Saver engine uses to detect user activity (on the mouse
+and keyboard). BeOS's only built-in input method is installed when you
+choose the Japanese language option during the installation process.</p><p>Currently, events that are generated by the BeOS joystick drivers do
+not go through the Input Server.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Drivers_Input_Devices"></a>Drivers and Input Devices</h3></div></div></div><p>As mentioned above, most input devices (i.e. input-generating add-ons)
+correspond to one or more device drivers. For example, the BeOS mouse
+input device manages all the mouse drivers that the OS provides.</p><p>It's important to keep in mind that an input device is not the same as
+the device driver(s) it manages—they're separate pieces of code
+that execute in separate address spaces: the drivers run in the kernel,
+the add-ons run in the Input Server. An input device can open() a driver,
+but it must not explicitly load the driver. In other words, the add-on
+shouldn't re-invent or subvert the kernel's driver-loading mechanism.</p><p>Similar to drivers, Input Server add-ons must be scrupulous about
+managing their memory and threads:</p><ul class="itemizedlist"><li><p>Memory that an add-on allocates must be freed when the add-on is
+unloaded, otherwise the add-on will leak.</p></li><li><p>The hook functions that are invoked on your add-on are executed in
+threads that must stay as "live" as possible. If your add-on does a lot
+of processing that can be performed asynchronously—for example,
+if it's an input device that's "watching" a piece of hardware—the
+add-on should spawn a thread.</p></li></ul><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Building"></a>Building</h4></div></div></div><p>Like all add-ons, Input Server add-ons are compiled as shared libraries.
+The add-ons must link against input_server, renamed (as a symbolic link)
+to <code class="filename">_APP_</code>. In other words, you set up a symbolic link like this:</p><pre class="screen">$ cd &lt;yourProjectDirectory&gt;
+$ ln -s /boot/beos/system/servers/input_server _APP_</pre><p>And then link against <code class="filename">_APP_</code>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Installing"></a>Installing</h4></div></div></div><p>The input server looks for add-ons in the
+<code class="filename">input_server</code> directory within
+<code class="constant">B_BEOS_ADDONS_DIRECTORY</code>, <code class="constant">B_COMMON_ADDONS_DIRECTORY</code>, and
+<code class="constant">B_USER_ADDONS_DIRECTORY</code>. Where you install your add-ons depends on what
+type of add-on it is:</p><ul class="itemizedlist"><li><p><code class="filename">input_server/devices</code> is for input devices</p></li><li><p><code class="filename">input_server/filters</code> is for input filters</p></li><li><p><code class="filename">input_server/methods</code> is for input methods</p></li><li><p>You can install your input devices in the latter two
+directories—i.e. those under <code class="constant">B_COMMON_ADDONS_DIRECTORY</code>, and
+<code class="constant">B_USER_ADDONS_DIRECTORY</code>.</p></li><li><p>The <code class="constant">B_BEOS_ADDONS_DIRECTORY</code> is reserved for add-ons that are supplied
+by the BeOS.</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Loading"></a>Loading</h4></div></div></div><p>The Input Server automatically loads (or attempts to load) all add-ons at
+boot time.</p><p>Currently, the Input Server doesn't dynamically load add-ons. This is a
+particular annoyance if you're developing and testing an add-on. To work
+around this lack, move your add-on into the appropriate directory, and
+then quit and restart the Input Server from a Terminal:</p><pre class="screen">/system/servers/input_server -q</pre><p>This will gracefully shutdown the Input Server and then re-launch it. The
+first thing the Server does when it comes back up is re-load the add-ons
+from its add-on directories.</p><p>Your mouse and keyboard (and other input devices) will go dead for a
+moment while this is happening. This is normal.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Input_Server_You"></a>Input Server and You</h3></div></div></div><p>The Input Server gives applications a chance to take advantage of useful
+features present in input devices more interesting than your typical
+101-key keyboard and 3-button mouse.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Mice_Tablets"></a>Mice and Tablets</h4></div></div></div><p>The Input Server extends the plain <code class="constant">B_MOUSE_MOVED</code> message (which triggers
+a <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>'s
+<a class="link" href="BView.html#BView_MouseMoved" title="MouseMoved()"><code class="methodname">MouseMoved()</code></a>
+function) beyond its ordinary existence to let
+things like tablets pass along extra information about a user's actions.
+For example, drawing tablets can track the user's movement with greater
+precision than a mouse, and can include drawing pressure and tilt
+information. Some also include an "eraser."</p><p>If an application can do something useful with this information (and
+let's face it; drawing applications that respond to pressure and tilt on
+a drawing pad are useful as well as being cool), it'll be present in the
+<code class="constant">B_MOUSE_MOVED</code> message:</p><pre class="programlisting example cpp"><span class="type">void</span> <code class="classname">MyView</code>::<code class="methodname">MouseMoved</code>(<span class="type">BPoint *</span><code class="parameter">where</code>,
+                         <span class="type">uint32</span> <code class="parameter">transit</code>, <span class="type">BMessage *</span><code class="parameter">drag_msg</code>)
+{
+   <span class="type">BMessage *</span><code class="varname">moved_msg</code> = <code class="methodname">Window</code>()-&gt;<code class="methodname">CurrentMessage</code>();
+   ...
+}</pre><p>The extra information that a "mouse" input device could add to the
+<code class="constant">B_MOUSE_MOVED</code> messages includes:</p><ul class="itemizedlist"><li><p>more precise position information</p></li><li><p>drawing pressure</p></li><li><p>pen tilt</p></li><li><p>"eraser" mode</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Precision_Position_Information"></a>Precision Position Information</h4></div></div></div><p>Tablets store the absolute position of the pointer with as much precision
+as they can in the <code class="varname">be:tablet_x</code> and
+<code class="varname">be:tablet_y</code> fields:</p><pre class="programlisting example cpp"><span class="type">float</span> <code class="varname">x</code>, <code class="varname">y</code>;
+<code class="varname">x</code> = <code class="varname">moved_msg</code>-&gt;<code class="methodname">FindFloat</code>( "be:tablet_x" );
+<code class="varname">y</code> = <code class="varname">moved_msg</code>-&gt;<code class="methodname">FindFloat</code>( "be:tablet_y" );</pre><p>These entries will be scaled to the range [0.0 to 1.0].</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Pressure"></a>Pressure</h4></div></div></div><p>Tablet pressure is stored as a float in the range [0.0 to 1.0] (minimum
+to maximum), present in the <code class="varname">be:tablet_pressure</code> field:</p><pre class="programlisting example cpp"><span class="type">float</span> <code class="varname">pressure</code>;
+<code class="varname">pressure</code> = <code class="varname">moved_msg</code>-&gt;<code class="methodname">FindFloat</code>( "be:tablet_pressure" );</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Tilt"></a>Tilt</h4></div></div></div><p>Pen tilt is expressed as a pair of <span class="type">float</span>s in the range [0.0 to 1.0],
+where (-1.0, -1.0) tilts to the left-top, (1.0, 1.0) tilts to the
+right-bottom, and (0.0, 0.0) is no tilt. These <span class="type">float</span>s are found in the
+<code class="varname">be:tablet_tilt_x</code> and <code class="varname">be:tablet_tilt_y</code> fields:</p><pre class="programlisting example cpp"><span class="type">float</span> <code class="varname">tilt_x</code>, <code class="varname">tilt_y</code>;
+<code class="varname">tilt_x</code> = <code class="varname">moved_msg</code>-&gt;<code class="methodname">FindFloat</code>( "be:tablet_tilt_x" );
+<code class="varname">tilt_y</code> = <code class="varname">moved_msg</code>-&gt;<code class="methodname">FindFloat</code>( "be:tablet_tilt_y" );</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Eraser_Mode"></a>Eraser Mode</h4></div></div></div><p>The pen's eraser mode is expressed as an <span class="type">int32</span>
+in the <code class="varname">be:tablet_eraser</code>
+field:</p><pre class="programlisting example cpp"><span class="type">int32</span> <code class="varname">erase_mode</code>;
+<code class="varname">erase_mode</code> = <code class="varname">moved_msg</code>-&gt;<code class="methodname">FindInt32</code>( "be:tablet_eraser" );</pre><p>A value of 1 means the pen is reversed (i.e. the eraser is on) and 0
+means the pen is behaving normally. Other eraser modes may be defined in
+the future.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Supporting_Input_Methods_In_Views"></a>Supporting Input Methods in Views</h3></div></div></div><p>When the user is entering text using an input method, such as the
+Japanese language input method that became an installation option in R4,
+there are two ways that applications can handle their input:</p><div class="orderedlist"><ol><li><p>in-line: the text entry interface object lets them enter text directly</p></li><li><p>bottom-line: the input method itself pops up a window to accept the
+user's input, and then passes <code class="constant">B_KEY_DOWN</code> messages simulating the
+characters to the application; the app doesn't have to do anything to
+support bottom-line input</p></li></ol></div><p>If your application's text-entry needs are met by the Interface Kit's
+<a class="link" href="BTextControl.html" title="BTextControl"><code class="classname">BTextControl</code></a> and
+<a class="link" href="BTextView.html" title="BTextView"><code class="classname">BTextView</code></a>
+objects, it'll automatically use the in-line
+mode, which gives the user a much better experience. If you're writing
+your own text widget, you'll have to do a little work to let the user
+input text directly.</p><p>Doing this is a very good idea; making your application behave well when
+dealing with foreign (to you) languages will improve your application's
+acceptance around the world.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheInputServer_Introduction_Messages_From_Input_Methods"></a>Messages from Input Methods</h4></div></div></div><p>When interacting with an input method, your view's
+<a class="link" href="BView.html#BView_MessageReceived" title="MessageReceived()"><code class="methodname">MessageReceived()</code></a>
+function will receive <code class="constant">B_INPUT_METHOD_EVENT</code> messages; inside is a
+<code class="varname">be:opcode</code> field (an <span class="type">int32</span> value) indicating
+the kind of event:</p><table class="variablelist constants"><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_INPUT_METHOD_STARTED</code></span></p></td><td><p>Tells your view that a new input transaction has
+begun. Inside the message is a
+<a class="link" href="BMessenger.html" title="BMessenger"><code class="classname">BMessenger</code></a>
+named <code class="varname">be:reply_to</code>; you should
+store this because it's your only way of talking to the input method
+while the transaction is going on.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_INPUT_METHOD_STOPPED</code></span></p></td><td><p>Lets you know the
+transaction is over; you should discard the <a class="link" href="BMessenger.html" title="BMessenger"><code class="classname">BMessenger</code></a> at this point
+because it's gone stale.</p></td></tr></tbody></table><p>In between the <code class="constant">B_INPUT_METHOD_STARTED</code> and
+<code class="constant">B_INPUT_METHOD_STOPPED</code>
+messages, you'll receive various <code class="constant">B_INPUT_METHOD_CHANGED</code> and
+<code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code> messages as the transaction proceeds.</p><p><code class="constant">B_INPUT_METHOD_CHANGED</code>
+does most of the work in an input transaction; its
+message contains the following important fields:</p><div class="informaltable"><table border="1"><colgroup><col /><col /><col /></colgroup><thead><tr><th>Entry</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code class="varname">be:string</code></td><td><code class="constant">B_STRING_TYPE</code></td><td>The text the user is currently entering; display
+it at the insertion point.
+<a class="link" href="BTextView.html" title="BTextView"><code class="classname">BTextView</code></a>
+also highlights the text in blue to
+show that it's part of a transitory transaction.</td></tr><tr><td><code class="varname">be:selection</code></td><td><code class="constant">B_INT32_TYPE</code></td><td>A pair of <code class="constant">B_INT32_TYPE</code> offsets into the
+<code class="varname">be:string</code> if any of the text <code class="varname">be:string</code>
+is currently selected by the user.
+<a class="link" href="BTextView.html" title="BTextView"><code class="classname">BTextView</code></a>
+highlights this selection in red instead of drawing it in blue.</td></tr><tr><td><code class="varname">be:clause_start</code></td><td><code class="constant">B_INT32_TYPE</code></td><td>Zero or more offsets into the <code class="varname">be:string</code> for
+handling languages (such as Japanese) that separate a sentence or phrase
+into numerous clauses. An equal number of <code class="varname">be:clause_start</code> and
+<code class="varname">be:clause_end</code> pairs delimit these clauses;
+<a class="link" href="BTextView.html" title="BTextView"><code class="classname">BTextView</code></a>
+separates the blue/red highlighting wherever there is a clause boundary.</td></tr><tr><td><code class="varname">be:clause_end</code></td><td><code class="constant">B_INT32_TYPE</code></td><td>Zero or more offsets into <code class="varname">be:string</code>; there
+will be as many <code class="varname">be:clause_end</code> entries as there
+are <code class="varname">be:clause_start</code>.</td></tr><tr><td><code class="varname">be:confirmed</code></td><td><code class="constant">B_BOOL_TYPE</code></td><td>True when the user has entered and "confirmed"
+the current string and wishes to end the transaction.
+<a class="link" href="BTextView.html" title="BTextView"><code class="classname">BTextView</code></a>
+unhighlights the blue/red text and waits for a <code class="constant">B_INPUT_METHOD_STOPPED</code> (to
+close the transaction) or another <code class="constant">B_INPUT_METHOD_CHANGED</code> (to start a new
+transaction immediately).</td></tr></tbody></table></div><p><code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code>
+is the input method's way of asking you for the on-screen location
+of each character in your representation of the
+<code class="varname">be:string</code>. This information
+can be used by the input method to pop up additional windows giving the
+user an opportunity to select characters from a list or anything else that
+makes sense. When you get a
+<code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code>, reply to the
+<code class="varname">be:reply_to</code> messenger (that you saved from the
+<code class="constant">B_INPUT_METHOD_STARTED</code> message) with a
+<code class="constant">B_INPUT_METHOD_EVENT</code> message, filling in the following
+fields:</p><div class="informaltable"><table border="1"><colgroup><col /><col /><col /></colgroup><thead><tr><th>Entry</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code class="varname">be:opcode</code></td><td><code class="constant">B_INT32_TYPE</code></td><td>Use <code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code> for the opcode.</td></tr><tr><td><code class="varname">be:location_reply</code></td><td><code class="constant">B_POINT_TYPE</code></td><td>The co-ordinates of each character (there
+should be one <code class="varname">be:location_reply</code> for every
+character in <code class="varname">be:string</code> in
+screen co-ordinates not view or window co-ordinates).</td></tr><tr><td><code class="varname">be:height_reply</code></td><td><code class="constant">B_FLOAT_TYPE</code></td><td>The height of each character in <code class="varname">be:string</code>.</td></tr></tbody></table></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id532349"></a>App and Input Events</h3></div></div></div><p>If you're writing an application and want to record or react to input
+events without writing an Input Server add-on (which, of course, requires
+an Input Server restart), you can:</p><div class="orderedlist"><ol><li><p>Create a window off-screen, at a co-ordinate like (-10.0, -10.0).</p></li><li><p>Add a view to the window at (0.0, 0.0).</p></li><li><p><a class="link" href="BWindow.html#BWindow_Show" title="Show(), Hide(), IsHidden(), Minimize(), IsMinimized()"><code class="methodname">Show()</code></a>
+and then
+<a class="link" href="BWindow.html#BWindow_Hide"><code class="methodname">Hide()</code></a>
+the window; this is necessary or the App
+Server won't send you any messages.</p></li><li><p>Move the hidden window to (0.0, 0.0).</p></li><li><p>Implement the window's
+<a class="link" href="BWindow.html#BWindow_DispatchMessage" title="DispatchMessage()"><code class="methodname">DispatchMessage()</code></a>
+function to handle
+<code class="constant">B_KEY_DOWN</code>, <code class="constant">B_MOUSE_UP</code>, or
+whatever other input events you're interested
+in observing.</p></li></ol></div><p>Modifying these messages won't affect any other applications in the
+system; by the time they reach your application, they've already passed
+through the Input Server.</p><p>You can see this trick in action in Doug Fulton's masterful Whistle
+application (found at ftp://ftp.be.com/pub/samples/midi_kit/Whistle.zip).</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheInputServer_Overview.html">The Input Server</a>  Up: <a href="TheInputServer_Overview.html">The Input Server</a>  Next: <a href="BInputDevice_Overview.html">BInputDevice</a> </div><div id="footerB"><div id="footerBL"><a href="TheInputServer_Overview.html" title="The Input Server"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheInputServer_Overview.html" title="The Input Server"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="BInputDevice_Overview.html" title="BInputDevice"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

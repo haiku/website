@@ -1,0 +1,1288 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-20.html" title="Issue 3-20, May 20, 1998" /><link rel="next" href="Issue3-22.html" title="Issue 3-22, June 3, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-20.html" title="Issue 3-20, May 20, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-22.html" title="Issue 3-22, June 3, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-20.html">Issue 3-20, May 20, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-22.html">Issue 3-22, June 3, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-21"></a>Issue 3-21, May 27, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-21"></a>Be Engineering Insights: Windows 95 Experience on BeOS—Or How to Hack
+on BeOS</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dmitriy</span> <span class="surname">Budko</span></span></div></div></div><p>
+I came to BeOS programming from the Byzantine world of Windows 95. I've
+spent numerous hours fitting together different pieces of old and new
+technologies: DOS drivers, 16- and 32-bit Windows
+<acronym class="acronym" title="Dynamic Link Library">DLL</acronym>s,
+<acronym class="acronym" title="Virtual Driver">VxDs</acronym>,
+<acronym class="acronym" title="Windows Driver Model">WDM</acronym>
+drivers, putting square pegs in round holes. Sometimes it was fun. But
+system and device driver programming on BeOS is so easy that sometimes I
+get bored, so I decided to use my BeOS experience and hack a
+non-conventional device driver. What does this driver do? It <span class="type">double</span>s
+graphics speed on your Pentium Pro or Pentium II!
+</p><p>
+How is this possible? Pentium Pro and Pentium II have internal registers
+to set up caching types for different regions of memory. Usually, frame
+buffer memory on a graphics board uses a default caching type which is
+uncacheable. So, for example, when the
+<acronym class="acronym" title="Central Processing Unit">CPU</acronym>
+copies a bitmap from
+<acronym class="acronym" title="Random Access Memory">RAM</acronym> to
+the frame buffer, each 4 bytes of data require a separate transaction on
+the <acronym class="acronym">PCI</acronym> bus. This is costly: actual data transfer gets only 20-40% of the
+bus time, and the <acronym class="acronym">PCI</acronym> does unproductive things with the remaining time:
+</p><pre class="screen">
+arbitration
+address phase
+4 bytes transfer
+idle
+
+arbitration (many PCI clocks)
+address phase (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+idle
+</pre><p>
+Etc...
+</p><p>
+The Pentium Pro and Pentium II processors can accumulate written bytes in
+internal write buffers if the memory type for the written addresses is
+set up to Write Combining (<acronym class="acronym">WC</acronym>) type. In this case the
+<acronym class="acronym">PCI</acronym> transfers 32 bytes per transaction:
+</p><pre class="screen">
+arbitration
+address phase
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+4 bytes transfer (1 PCI clock)
+idle
+</pre><p>
+Much faster!
+</p><p>
+In general such functionality has to be a part of the OS kernel rather
+than driver-based. And in BeOS R4 it *will* be integrated into the
+kernel. Meanwhile, implementing it without BeOS support is a difficult
+hack (the politically correct name for an unconventional technique).
+</p><p>
+Here are the main problems with hacking this driver:
+</p><ul class="itemizedlist"><li><p>
+The registers have to be synchronously set up on all CPUs in the
+system. All interrupts must be disabled. To do that you have to
+designate a thread per <acronym class="acronym">CPU</acronym>, which the BeOS does
+not support (i.e., <acronym class="acronym">CPU</acronym> affinity for threads).
+</p></li><li><p>
+Move operations to/from x86 control registers that control caching,
+paging, etc., are not supported by the Metrowerks inline assembler. In
+addition, code manually assembled in the data segment somehow has to
+get the correct (code segment not the data segment!) PR relocations.
+</p></li><li><p>
+Kernel threads do not have access to a user memory space.
+</p></li><li><p>
+General paranoia when you touch control and <acronym class="acronym">CPU</acronym> model-specific
+registers. Do not change reserved bits!
+</p></li></ul><p>
+So—how to resolve these challenges?
+</p><ul class="itemizedlist"><li><p>
+Spawn a real-time priority kernel thread per <acronym class="acronym">CPU</acronym>, then block and
+simultaneously release them. Use spinlocks to synchronize threads with
+interrupts disabled.
+</p></li><li><p>
+Use opcodes from x86 databooks. First load the address of the
+assembled code into a pointer, then use this pointer to call the code.
+This way the linker will generate correct
+<acronym class="acronym" title="Portable Executable">PE</acronym> relocations.
+</p></li><li><p>
+Use global to the driver data.
+</p></li><li><p>
+Be careful.
+</p></li></ul><p>
+Here is the heavily commented source code for this driver and the
+application to talk to it. All the more or less obscure elements are
+explained. The code lacks full error checking and recovery and has one
+gross violation of safe driver conduct (see if you can spot it).
+Nevertheless, it's pretty safe for the current Intel PCs and the BeOS
+Release 3.
+</p><p>
+For additional reference, see the "Intel Architecture Software
+Developer's Manual, Volume 3: System Programming Guide," Chapter 9.11 for
+details on Memory Type Range Registers:
+<a class="ulink" href="http://www.intel.com/design/pentiumii/manuals/243192.htm">http://www.intel.com/design/pentiumii/manuals/243192.htm</a>
+</p><pre class="programlisting c">
+<span class="comment">/********** mtrr_drv.h ****************/</span>
+#ifndef MTRR_DRV_H
+#define MTRR_DRV_H
+
+#include &lt;Drivers.h&gt;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum
+{
+  <code class="constant">UC_MEM</code> = 0,  <span class="comment">/* uncacheable    */</span>
+  <code class="constant">WC_MEM</code> = 1, <span class="comment">/* write combining  */</span>
+  <code class="constant">WT_MEM</code> = 4,  <span class="comment">/* write-through  */</span>
+  <code class="constant">WP_MEM</code> = 5, <span class="comment">/* write-protected  */</span>
+  <code class="constant">WB_MEM</code> = 6  <span class="comment">/* writeback    */</span>
+} <span class="type">MEM_TYPE</span>;
+
+typedef enum
+{
+  <code class="constant">RANGE_CLEAR</code>,
+  <code class="constant">RANGE_SET</code>
+} <span class="type">RANGE_ACTION</span>;
+
+typedef struct
+{
+  <span class="type">RANGE_ACTION</span>  action;  <span class="comment">/* clear/set */</span>
+  <span class="type">uint64</span>    <code class="varname">base</code>;
+  <span class="type">uint64</span>    <code class="varname">len</code>;
+  <span class="type">MEM_TYPE</span>  <code class="varname">mem_type</code>;
+} <span class="type">mtrr_drv_command_t</span>;
+<span class="comment">/* len has to be a power of 2 and base has to be aligned
+ on at least len boundary. The minimum len is 4 KByte. */</span>
+
+enum
+{
+  <code class="constant">MTTR_DRV_COMMAND</code> = <code class="constant">B_DEVICE_OP_CODES_END</code> + 1
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+
+<span class="comment">/*********** mtrr_drv.c *****************/</span>
+
+#include &lt;KernelExport.h&gt;
+#include &lt;Drivers.h&gt;
+#include &lt;Errors.h&gt;
+
+#include &lt;OS.h&gt;
+#include &lt;perfmon_kernel.h&gt;
+
+#include "mtrr_drv.h"
+
+
+<span class="type">int</span>    <code class="varname">n_cpus</code>;
+<span class="type">sem_id</span>  <code class="varname">mtrr_drv_lock_sem</code>;
+<span class="type">sem_id</span>  <code class="varname">main_sem</code>;  <span class="comment">/* acquired by the main thread,
+                      released by the work threads */</span>
+<span class="type">sem_id</span>  <code class="varname">work_sem</code>;  <span class="comment">/* acquired by the work threads,
+                      released by the main thread */</span>
+volatile <span class="type">long</span>  <code class="varname">work_begin_spinlock</code> = 0,
+               <code class="varname">work_end_spinlock</code> = 0;
+<span class="comment">/* for work threads synchronization with disabled interrupts */</span>
+volatile <span class="type">long</span>  <code class="varname">n_errors</code>;  <span class="comment">/* to count work threads errors */</span>
+
+<span class="type">mtrr_drv_command_t</span>  <code class="varname">kernel_mtrr_command</code>;
+
+<span class="type">int32</span> <code class="function">work_thread</code>(<span class="type">void*</span> <code class="parameter">mtrr_command</code>);
+
+static <span class="type">status_t</span>
+  <code class="function">set_memory_type</code>(<span class="type">mtrr_drv_command_t*</span> <code class="parameter">mtrr_command</code>);
+static <span class="type">status_t</span>
+  <code class="function">set_memory_range_type</code>(<span class="type">constmtrr_drv_command_t*</span> <code class="parameter">mtrr_command</code>);
+
+static <span class="type">status_t</span>
+  <code class="function">set_mtrr</code>(<span class="type">int64</span> <code class="parameter">base</code>, <span class="type">uint64</span> <code class="parameter">len</code>, <span class="type">MEM_TYPE</span> <code class="parameter">mem_type</code>,
+           <span class="type">uint64</span> <code class="parameter">mtrr0</code>, <span class="type">int</span> <code class="parameter">num_mtrrs</code>);
+static <span class="type">status_t</span>
+  <code class="function">clear_mtrr</code>(<span class="type">int64</span> <code class="parameter">base</code>, <span class="type">uint64</span> <code class="parameter">mtrr0</code>, <span class="type">int</span> <code class="parameter">num_mtrrs</code>);
+
+static <span class="type">status_t</span>
+<code class="function">lock_mtrr_drv</code>(<span class="type">void</span>)
+{
+  return <code class="function">acquire_sem</code>(<code class="varname">mtrr_drv_lock_sem</code>);
+}
+
+static <span class="type">status_t</span>
+<code class="function">unlock_mtrr_drv</code>(<span class="type">void</span>)
+{
+  return <code class="function">release_sem</code>(<code class="varname">mtrr_drv_lock_sem</code>);
+}
+
+
+<span class="comment">/*
+Only Pentium Pro and Pentium II have memory range type
+registers. Tell the kernel to load the driver only on a
+system with the right CPU. The driver is very conservative
+and does not do anything remotely dangerous, like read CPU
+model-specific registers in init_hardware(). A user has to
+explicitly load/open/read/ioctl this driver to touch the
+hardware.
+*/</span>
+
+<span class="type">status_t</span>
+<code class="function">init_hardware</code> (<span class="type">void</span>)
+{
+  <span class="type">system_info</span>  <code class="varname">sys_info</code>;
+
+  <code class="function">get_system_info</code>(&amp;<code class="varname">sys_info</code>);
+  switch (<code class="varname">sys_info</code>.<code class="varname">cpu_type</code>)
+  {
+  case <code class="constant">B_CPU_INTEL_PENTIUM_PRO</code>:
+  case <code class="constant">B_CPU_INTEL_PENTIUM_II_MODEL_3</code>:
+  case <code class="constant">B_CPU_INTEL_PENTIUM_II_MODEL_5</code>:
+    return <code class="constant">B_OK</code>;
+
+  default:
+    return <code class="constant">B_ERROR</code>;
+  }
+}
+
+
+<span class="type">status_t</span>
+<code class="function">init_driver</code> (<span class="type">void</span>)
+{
+  if((<code class="varname">mtrr_drv_lock_sem</code> =
+      <code class="function">create_sem</code>(1, "mtrr_drv_lock")) &lt; <code class="constant">B_OK</code>)
+    return <code class="constant">B_ERROR</code>;
+
+  return <code class="constant">B_OK</code>;
+}
+
+<span class="type">void</span>
+<code class="function">uninit_driver</code> (<span class="type">void</span>)
+{
+  <code class="function">delete_sem</code>(<code class="varname">mtrr_drv_lock_sem</code>);
+}
+
+static <span class="type">status_t</span>
+<code class="function">mtrr_drv_open</code> (<span class="type">const char *</span><code class="parameter">name</code>, <span class="type">uint32</span> <code class="parameter">flags</code>, <span class="type">void**</span> <code class="parameter">cookie</code>)
+{
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">mtrr_drv_read</code> (<span class="type">void*</span> <code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>, <span class="type">void *</span><code class="parameter">buf</code>,
+               <span class="type">size_t*</span> <code class="parameter">num_bytes</code>)
+{
+  *<code class="parameter">num_bytes</code> = 0;     <span class="comment">/* tell caller nothing was read */</span>
+  return <code class="constant">B_IO_ERROR</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">mtrr_drv_write</code> (<span class="type">void*</span> <code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>,
+                <span class="type">const void*</span> <code class="parameter">buffer</code>, <span class="type">size_t*</span> <code class="parameter">num_bytes</code>)
+{
+  *<code class="parameter">num_bytes</code> = 0;     <span class="comment">/* tell caller nothing was written */</span>
+  return <code class="constant">B_IO_ERROR</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">mtrr_drv_control</code> (<span class="type">void*</span> <code class="parameter">cookie</code>, <span class="type">uint32</span> <code class="parameter">ioctl</code>, <span class="type">void*</span> <code class="parameter">arg</code>,
+                  <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+  <span class="type">status_t</span>  <code class="varname">res</code>;
+
+  <code class="function">lock_mtrr_drv</code>();
+  switch(<code class="parameter">ioctl</code>)
+  {
+  case <code class="constant">MTTR_DRV_COMMAND</code>:
+    <code class="varname">res</code> = <code class="function">set_memory_type</code>((<span class="type">mtrr_drv_command_t*</span>) <code class="parameter">arg</code>);
+    break;
+
+  default:
+    <code class="varname">res</code>= <code class="constant">B_BAD_VALUE</code>;
+  }
+  <code class="function">unlock_mtrr_drv</code>();
+  return <code class="varname">res</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">mtrr_drv_close</code> (<span class="type">void*</span> <code class="parameter">cookie</code>)
+{
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">mtrr_drv_free</code> (<span class="type">void*</span> <code class="parameter">cookie</code>)
+{
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">const char *</span><code class="varname">mtrr_drv_name</code>[] = {
+  "cpu/mtrr",
+  NULL
+};
+
+<span class="type">device_hooks</span> <code class="varname">mtrr_drv_hooks</code> = {
+  <code class="function">mtrr_drv_open</code>,
+  <code class="function">mtrr_drv_close</code>,
+  <code class="function">mtrr_drv_free</code>,
+  <code class="function">mtrr_drv_control</code>,
+  <code class="function">mtrr_drv_read</code>,
+  <code class="function">mtrr_drv_write</code>
+};
+
+<span class="type">const char**</span>
+<code class="function">publish_devices</code>()
+{
+  return <code class="varname">mtrr_drv_name</code>;
+}
+
+<span class="type">device_hooks*</span>
+<code class="function">find_device</code>(const char* name)
+{
+  return &amp;<code class="varname">mtrr_drv_hooks</code>;
+}
+
+<span class="comment">/* Access to x86 control registers */</span>
+
+<span class="comment">/*
+Metrowerks inline assembler does not support
+move to/from x86 registers so assemble them manually.
+*/</span>
+<span class="type">uint8</span> <code class="varname">mov_cr0_eax__ret</code>[] =
+{
+   0x0F, 0x22, 0xC0,  <span class="comment">/* mov cr0, eax  */</span>
+   0xC3               <span class="comment">/* ret      */</span>
+};
+
+<span class="type">uint8</span> <code class="varname">mov_cr3_eax__ret</code>[] =
+{
+   0x0F, 0x22, 0xD8,  <span class="comment">/* mov cr3, eax  */</span>
+   0xC3               <span class="comment">/* ret      */</span>
+};
+
+<span class="type">uint8</span> <code class="varname">mov_eax_cr0__ret</code>[] =
+{
+   0x0F, 0x20, 0xC0,  <span class="comment">/* mov eax, cr0  */</span>
+   0xC3               <span class="comment">/* ret      */</span>
+};
+
+<span class="type">uint8</span> <code class="varname">mov_eax_cr3__ret</code>[] =
+{
+   0x0F, 0x20, 0xD8,  <span class="comment">/* mov eax, cr3  */</span>
+   0xC3               <span class="comment">/* ret      */</span>
+};
+
+static <span class="type">void</span>
+<code class="function">set_cr0</code>(<span class="type">uint32</span> <code class="parameter">val</code>)
+{
+  <span class="comment">/*
+  Generate the correct relocation record for code in
+  the data segment. Simple "call mov_cr0_eax__ret" will
+  be patched as if mov_cr0_eax__ret were in the code
+  segment.
+  */</span>
+  <span class="type">void*</span> <code class="varname">f_ptr</code> = <code class="varname">mov_cr0_eax__ret</code>;
+
+  asm
+  {
+    mov eax, <code class="parameter">val</code>
+    call <code class="varname">f_ptr</code>
+  }
+}
+
+static <span class="type">uint32</span>
+<code class="function">get_cr0</code>(<span class="type">void</span>)
+{
+  <span class="type">void*</span>  <code class="varname">f_ptr</code> = <code class="varname">mov_eax_cr0__ret</code>;
+  <span class="type">uint32</span>  <code class="varname">res</code> = 0;
+
+  asm
+  {
+    call <code class="varname">f_ptr</code>
+    mov  <code class="varname">res</code>, eax  <span class="comment">/* play it safe */</span>
+  }
+  return <code class="varname">res</code>;
+}
+
+static <span class="type">void</span>
+<code class="function">set_cr3</code>(<span class="type">uint32</span> <code class="parameter">val</code>)
+{
+  <span class="type">void*</span> <code class="varname">f_ptr</code> = <code class="varname">mov_cr0_eax__ret</code>;
+
+  asm
+  {
+    mov eax, <code class="parameter">val</code>
+    call <code class="varname">f_ptr</code>
+  }
+}
+
+static <span class="type">uint32</span>
+<code class="function">get_cr3</code>(<span class="type">void</span>)
+{
+  <span class="type">void*</span>  <code class="varname">f_ptr</code> = <code class="varname">mov_eax_cr0__ret</code>;
+  <span class="type">uint32</span>  <code class="varname">res</code> = 0;
+
+  asm
+  {
+    call <code class="varname">f_ptr</code>
+    mov  <code class="varname">res</code>, eax
+  }
+  return <code class="varname">res</code>;
+}
+
+static <span class="type">uint32</span>
+<code class="function">get_cpu_features</code>(<span class="type">void</span>)
+{
+  <span class="type">uint32</span>  <code class="varname">res</code> = 0;
+
+  asm
+  {
+    pusha
+    mov eax, 1
+    cpuid
+    mov <code class="varname">res</code>, edx
+    popa
+  }
+  return <code class="varname">res</code>;
+}
+
+<span class="comment">/* roundup the arg to the nearest 2 to the nth power */</span>
+static <span class="type">uint64</span>
+<code class="function">roundup</code>(<span class="type">uint64</span> <code class="parameter">val</code>)
+{
+  <span class="type">int</span> <code class="varname">i</code>;
+  <span class="type">uint64</span>  <code class="varname">roundup_val</code>;
+  <span class="type">uint64</span>  <code class="varname">tmp_val</code>;
+
+  for(<code class="varname">i</code>=0, <code class="varname">tmp_val</code> = <code class="varname">val</code> - 1; <code class="varname">tmp_val</code> != 0; <code class="varname">tmp_val</code> &gt;&gt;= 1, <code class="varname">i</code>++)
+
+    ;
+  <code class="varname">roundup_val</code> = 1 &lt;&lt; <code class="varname">i</code>;
+
+  return <code class="varname">roundup_val</code>;
+}
+
+static <span class="type">bool</span>
+<code class="function">is_aligned</code>(<span class="type">uint64</span> <code class="parameter">addr</code>, <span class="type">uint64</span> <code class="parameter">alignment</code>)
+{
+  do
+  {
+    <code class="parameter">alignment</code> &gt;&gt;= 1;
+    if(<code class="parameter">addr</code> &amp; <code class="parameter">alignment</code>)
+      return <code class="constant">FALSE</code>;
+  }
+  while(<code class="parameter">alignment</code> != 0);
+
+  return <code class="constant">TRUE</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">set_memory_type</code>(<span class="type">mtrr_drv_command_t*</span> <code class="parameter">mtrr_command</code>)
+{
+  <span class="type">system_info</span>      <code class="varname">sys_info</code>;
+  <span class="type">physical_entry</span>   <code class="varname">phys_mem_start</code>;
+  <span class="type">int</span>              <code class="varname">i</code>;
+
+  <span class="comment">/* <code class="function">dprintf</code>("%d %d %Lx %Lx\n", mtrr_command-&gt;action,
+     mtrr_command-&gt;mem_type,
+     mtrr_command-&gt;base, mtrr_command-&gt;len); */</span>
+
+  <span class="comment">/* do arguments checking and conditioning  */</span>
+  <span class="comment">/* allow only supported memory types       */</span>
+  switch(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">mem_type</code>)
+  {
+    case <code class="constant">UC_MEM</code> :  <span class="comment">/* uncachable       */</span>
+    case <code class="constant">WC_MEM</code> :  <span class="comment">/* write combining  */</span>
+    case <code class="constant">WT_MEM</code> :  <span class="comment">/* write-through    */</span>
+    case <code class="constant">WP_MEM</code> :  <span class="comment">/* write-protected  */</span>
+    case <code class="constant">WB_MEM</code> :  <span class="comment">/* writeback        */</span>
+      break;
+
+    default:
+      return <code class="constant">B_BAD_VALUE</code>;
+  }
+
+  <span class="comment">/*
+  len has to be a power of 2 and base has to be aligned
+  on at least len boundary. The minimum len is 4 KByte.
+  */</span>
+  if(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">action</code> == <code class="constant">RANGE_SET</code>)
+  {
+    <code class="parameter">mtrr_command</code>-&gt;<code class="varname">len</code> = <code class="function">roundup</code>(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">len</code>);
+    if(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">len</code> &lt; 4096)
+      return <code class="constant">B_BAD_VALUE</code>;
+  }
+
+  <span class="comment">/*
+   The driver gets virtual base address but mtrrs need
+   physical address. Convert virtual to physical. In error
+   case assume that physical address was passed.
+  */</span>
+  <code class="function">get_memory_map</code>((<span class="type">const void*</span>)<code class="parameter">mtrr_command</code>-&gt;<code class="varname">base</code>, 4096,
+                 &amp;<code class="varname">phys_mem_start</code>, 1);
+  if(<code class="varname">phys_mem_start</code>.<code class="varname">size</code> &gt;= 4096)
+    <span class="comment">/* this virtual address is mapped */</span>
+    <code class="parameter">mtrr_command</code>-&gt;<code class="varname">base</code> = (uint64)<code class="varname">phys_mem_start</code>.<code class="varname">address</code>;
+
+  if(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">action</code> == <code class="constant">RANGE_SET</code>)
+  {
+    if(!<code class="function">is_aligned</code>(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">base</code>, <code class="parameter">mtrr_command</code>-&gt;<code class="varname">len</code>))
+      return <code class="constant">B_BAD_VALUE</code>;
+  }
+
+  <code class="function">get_system_info</code>(&amp;<code class="varname">sys_info</code>);
+  <code class="varname">n_cpus</code> = <code class="varname">sys_info</code>.<code class="varname">cpu_count</code>;
+
+  <span class="comment">/* create a semaphore for the main thread to wait for
+     all work threads to start/finish */</span>
+  <code class="varname">main_sem</code> = <code class="function">create_sem</code>(0, "mtrr_drv_main");
+
+  <span class="comment">/* create a semaphore for work threads to wait to start
+     simultaneously */</span>
+  <code class="varname">work_sem</code> = <code class="function">create_sem</code>(0, "mtrr_drv_work");
+
+  <span class="comment">/*
+   copy data from the user space to the kernel space: kernel
+   threads do not have access to the user space.
+  */</span>
+  <code class="function">memcpy</code>(&amp;<code class="varname">kernel_mtrr_command</code>, <code class="parameter">mtrr_command</code>,
+         <code class="function">sizeof</code>(<code class="varname">kernel_mtrr_command</code>));
+
+  <span class="comment">/* spawn a kernel thread for each cpu in the system */</span>
+  for(<code class="varname">i</code>=0; <code class="varname">i</code>&lt; <code class="varname">n_cpus</code>; <code class="varname">i</code>++)
+  {
+    <span class="type">char</span> <code class="varname">thread_name</code>[] = "mtrr_x";
+
+    <code class="varname">thread_name</code>[5]=<code class="varname">i</code>+'0';
+    <code class="function">resume_thread</code>(<code class="function">spawn_kernel_thread</code>(<code class="function">work_thread</code>,
+      <code class="varname">thread_name</code>, <code class="constant">B_REAL_TIME_PRIORITY</code>,
+      (<span class="type">void*</span>)&amp;<code class="varname">kernel_mtrr_command</code>));
+  }
+
+  <span class="comment">/* reset the work threads error counter */</span>
+  <code class="varname">n_errors</code> = 0;
+
+  <span class="comment">/* wait for all work threads to start */</span>
+  <code class="function">acquire_sem_etc</code>(<code class="varname">main_sem</code>, <code class="varname">n_cpus</code>, 0, 0);
+
+  <span class="comment">/* release all work threads together. Big Bang!*/</span>
+  <code class="function">release_sem_etc</code>(<code class="varname">work_sem</code>, <code class="varname">n_cpus</code>, 0);
+  <span class="comment">/* All work threads are running on all CPUs in the system */</span>
+
+  <span class="comment">/* wait until all work threads have done the job */</span>
+  <code class="function">acquire_sem_etc</code>(<code class="varname">main_sem</code>, <code class="varname">n_cpus</code>, 0, 0);
+
+  <span class="comment">/* give some time to work threads to die */</span>
+  <code class="function">snooze</code>(10*1000);
+
+  <code class="function">dprintf</code>("n_errors = %d\n", <code class="varname">n_errors</code>);
+  <span class="comment">/* Done! */</span>
+
+  <span class="comment">/* do not leak semaphores */</span>
+  <code class="function">delete_sem</code>(<code class="varname">work_sem</code>);
+  <code class="function">delete_sem</code>(<code class="varname">main_sem</code>);
+
+  return (<code class="varname">n_errors</code> == 0) ? <code class="constant">B_OK</code> : <code class="constant">B_ERROR</code>;
+}
+
+
+<span class="type">int32</span>
+<code class="function">work_thread</code>(<span class="type">void*</span> <code class="parameter">arg</code>)
+{
+  <span class="type">cpu_status</span>  <code class="varname">ps</code>;
+  <span class="type">int32</span>       <code class="varname">res</code>;
+  <span class="type">constmtrr_drv_command_t*</span> <code class="varname">mtrr_command</code> =
+    (<span class="type">constmtrr_drv_command_t*</span>) <code class="parameter">arg</code>;
+
+  <span class="comment">/* tell the main thread that this thread started */</span>
+  <code class="function">release_sem</code>(<code class="varname">main_sem</code>);
+
+  <span class="comment">/* wait the beginning of the Big Bang */</span>
+  <code class="function">acquire_sem</code>(<code class="varname">work_sem</code>);
+
+  <span class="comment">/* Each work thread is running on its own CPU. Disable
+     scheduling and thus lock work threads on CPUs */</span>
+  <code class="varname">ps</code> = <code class="function">disable_interrupts</code>();
+  <span class="comment">/*
+   Yes! This thread owns the current CPU until
+   restore_interrupts() or any scheduling calls
+   (acquire/release_sem(), etc.). Start multiple-processor
+   MTTR change protocol. See Intel Architecture Software
+   Developer's Manual, Volume 3: System Programming Guide,
+   chapter 9.11.8 for details.
+   http://www.intel.com/design/pentiumii/manuals/243192.htm
+  */</span>
+
+  <span class="comment">/*
+  Busy wait for other CPUs/work threads to reach this point.
+  A thread can not call acquire_sem() or any potentially blocking calls
+  if interrupts are disabled.
+  */</span>
+
+  <span class="comment">/* tell other work threads: "I am here." */</span>
+  <code class="function">atomic_add</code>(&amp;<code class="varname">work_begin_spinlock</code>, 1);
+
+  <span class="comment">/* Busy wait. work_spinlock is volatile so the compiler
+     will not optimize out this loop */</span>
+  while(<code class="varname">work_begin_spinlock</code> != <code class="varname">n_cpus</code>)
+    ;
+
+  <span class="comment">/* Do the real work */</span>
+  <code class="varname">res</code> = <code class="function">set_memory_range_type</code>(<code class="varname">mtrr_command</code>);
+
+  <span class="comment">/* tell other work threads: "I am here." */</span>
+  <code class="function">atomic_add</code>(&amp;<code class="varname">work_end_spinlock</code>, 1);
+  <span class="comment">/* Busy wait. */</span>
+  while(<code class="varname">work_end_spinlock</code> != <code class="varname">n_cpus</code>)
+    ;
+
+  <span class="comment">/* return to the normal mode */</span>
+  <code class="function">restore_interrupts</code>(<code class="varname">ps</code>);
+
+  <span class="comment">/* update error counter */</span>
+  if(<code class="varname">res</code> != <code class="constant">B_OK</code>)
+    <code class="function">atomic_add</code>(&amp;<code class="varname">n_errors</code>, 1);
+
+  <span class="comment">/* Tell the main tread: "I am done!" */</span>
+  <code class="function">release_sem</code>(<code class="varname">main_sem</code>);
+
+  return <code class="varname">res</code>;
+}
+
+
+
+<span class="comment">/* ----------
+  set_mtrrs - scans the variable MTRRs to find already
+  programmed MTRR. If such MTTRs is not found, find the
+  first unused and program it to use mem_type for memory
+  with starting address base and length len. len has to be
+  a power of 2 and base has to be aligned on at least len
+  boundary. The minimum len is 4 KByte.
+
+  Returns B_OK if the MTRR is set or already has been set.
+  Returns B_ERROR if all MTRRs are in use
+----- */</span>
+
+static <span class="type">status_t</span>
+<code class="function">set_mtrr</code>(<span class="type">int64</span> <code class="parameter">base</code>, <span class="type">uint64</span> <code class="parameter">len</code>, <span class="type">MEM_TYPE</span> <code class="parameter">mem_type</code>,
+         <span class="type">uint64</span> <code class="parameter">mtrr0</code>, <span class="type">int</span> <code class="parameter">num_mtrrs</code>)
+{
+  <span class="type">uint64</span> <code class="varname">mask</code>;
+  <span class="type">uint64</span> <code class="varname">mtrr</code>;
+
+  <code class="varname">mask</code> = <code class="parameter">len</code> - 1;
+  <code class="varname">mask</code> = ~<code class="varname">mask</code>;
+  <code class="varname">mask</code> &amp;= 0x0000000FFFFFF000ULL;
+  <code class="varname">mask</code> |= (1 &lt;&lt; 11); <span class="comment">/* set enable bit */</span>
+
+  <code class="parameter">base</code> = (<code class="parameter">base</code> &amp; 0xFFFFFF000ULL) | <code class="parameter">mem_type</code>;
+
+  for(<code class="varname">mtrr</code> = <code class="parameter">mtrr0</code>; <code class="varname">mtrr</code> &lt; <code class="parameter">mtrr0</code> + <code class="parameter">num_mtrrs</code>*2; <code class="varname">mtrr</code> += 2)
+  {
+    if(<code class="function">read_msr</code>(<code class="varname">mtrr</code>) == <code class="parameter">base</code>)
+    {
+      if(<code class="function">read_msr</code>(<code class="varname">mtrr</code> + 1) == <code class="varname">mask</code>)
+        <span class="comment">/* BIOS already has set this memory range
+           with our type */</span>
+      {
+        return <code class="constant">B_OK</code>;
+      }
+      else  <span class="comment">/* BIOS setup is broken, reprogram this register */</span>
+      {
+        <code class="function">write_msr</code>(<code class="varname">mtrr</code>,  <code class="parameter">base</code>);
+        <code class="function">write_msr</code>(<code class="varname">mtrr</code>+1, <code class="varname">mask</code>);
+        return <code class="constant">B_OK</code>;
+      }
+    }
+  }
+
+  <span class="comment">/* find an unused MTRR */</span>
+  for(<code class="varname">mtrr</code> = <code class="parameter">mtrr0</code>; <code class="varname">mtrr</code> &lt; <code class="parameter">mtrr0</code> + <code class="parameter">num_mtrrs</code>*2; <code class="varname">mtrr</code> += 2)
+  {
+    if(!(<code class="function">read_msr</code>(<code class="varname">mtrr</code>+1) &amp; (1 &lt;&lt; 11) ))
+      <span class="comment">/* the register is disabled, we can use it! */</span>
+      break;
+  }
+  if(<code class="varname">mtrr</code> == (<code class="parameter">mtrr0</code> + <code class="parameter">num_mtrrs</code>*2))
+    <span class="comment">/* all regs are in use, we can't do anything */</span>
+    return <code class="constant">B_ERROR</code>;
+
+  <code class="function">write_msr</code>(<code class="varname">mtrr</code>,  <code class="parameter">base</code>);
+  <code class="function">write_msr</code>(<code class="varname">mtrr</code>+1, <code class="varname">mask</code>);
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">clear_mtrr</code>(<span class="type">int64</span> <code class="parameter">base</code>, <span class="type">uint64</span> <code class="parameter">mtrr0</code>, <span class="type">int</span> <code class="parameter">num_mtrrs</code>)
+{
+  <span class="type">uint64</span> <code class="varname">mtrr</code>;
+
+  <code class="parameter">base</code> = <code class="parameter">base</code> &amp; 0xFFFFFF000ULL;
+
+  for(<code class="varname">mtrr</code> = <code class="parameter">mtrr0</code>; <code class="varname">mtrr</code> &lt; <code class="parameter">mtrr0</code> + <code class="parameter">num_mtrrs</code>*2; <code class="varname">mtrr</code> += 2)
+  {
+    if((<code class="function">read_msr</code>(<code class="varname">mtrr</code>) &amp; 0xFFFFFF000ULL ) == base)
+    {
+      <code class="function">write_msr</code>(<code class="varname">mtrr</code>+1, 0); <span class="comment">/* clear enable bir */</span>
+      <code class="function">write_msr</code>(<code class="varname">mtrr</code>,  0); <span class="comment">/* clear base reg, just for
+                              completeness */</span>
+      return <code class="constant">B_OK</code>;
+    }
+  }
+
+  <span class="comment">/* Generally it is not an error: such range does not exist
+     so it is "disabled" */</span>
+  return <code class="constant">B_ERROR</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">set_memory_range_type</code>(<span class="type">constmtrr_drv_command_t*</span> <code class="parameter">mtrr_command</code>)
+{
+  <span class="type">uint32</span>  <code class="varname">cr0</code>, <code class="varname">cr0_old</code>;
+  <span class="type">uint64</span>  <code class="varname">default_mtrr_type</code>, <code class="varname">mtrr_cap</code>;
+  <span class="type">bool</span>    <code class="varname">wc_supported</code>;
+  <span class="type">int</span>     <code class="varname">num_mtrrs</code>;
+  <span class="type">status_t</span>  <code class="varname">res</code>;
+  <span class="type">int</span>     <code class="varname">i</code>;
+
+
+  if(!(<code class="function">get_cpu_features</code>() &amp; (1 &lt;&lt; 12) ) )
+    <span class="comment">/* MTRRs are not supported */</span>
+    return <code class="constant">B_ERROR</code>;
+
+  <span class="comment">/* Does the CPU support write combining memory ? */</span>
+  <code class="varname">mtrr_cap</code> = <code class="function">read_msr</code>(0xFE);
+  <code class="varname">wc_supported</code> = ((<code class="varname">mtrr_cap</code> &amp; (1 &lt;&lt; 10)) != 0 );
+
+  if((!<code class="varname">wc_supported</code>) &amp;&amp;
+     (<code class="parameter">mtrr_command</code>-&gt;<code class="varname">mem_type</code> == <code class="constant">WC_MEM</code>) &amp;&amp;
+     (<code class="parameter">mtrr_command</code>-&gt;<code class="varname">action</code> == <code class="constant">RANGE_SET</code>))
+    return <code class="constant">B_ERROR</code>;
+
+  <span class="comment">/* How many mtrrs does the CPU have? */</span>
+  <code class="varname">num_mtrrs</code> = <code class="varname">mtrr_cap</code> &amp; 0xFF;
+
+  <span class="comment">/* Get the default memory type and enable flags for fixed
+     and variable range mtrrs */</span>
+  <code class="varname">default_mtrr_type</code> = <code class="function">read_msr</code>(0x2FF);
+
+  <span class="comment">/* enter no-fill cache mode */</span>
+  <code class="varname">cr0</code> = <code class="varname">cr0_old</code> = get_cr0();
+  <code class="varname">cr0</code> |=   (1 &lt;&lt; 30);
+  <code class="varname">cr0</code> &amp;= ~(1 &lt;&lt; 29);
+  <code class="function">set_cr0</code>(<code class="varname">cr0</code>);
+
+  asm { wbinvd }  <span class="comment">/* flush and invalidate cache */</span>
+  <code class="function">set_cr3</code>(<code class="function">get_cr3</code>()); <span class="comment">/* flush TLBs */</span>
+
+  <code class="function">write_msr</code>(0x2FF, 0); <span class="comment">/* disable all MTRRs */</span>
+  <span class="comment">/* do actual mttr change */</span>
+  switch(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">action</code>)
+  {
+  case <code class="constant">RANGE_SET</code>:
+    <code class="varname">res</code> = <code class="function">set_mtrr</code>(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">base</code>, <code class="parameter">mtrr_command</code>-&gt;<code class="varname">len</code>,
+                   <code class="parameter">mtrr_command</code>-&gt;<code class="varname">mem_type</code>, 0x200, <code class="varname">num_mtrrs</code>);
+    break;
+
+  case <code class="constant">RANGE_CLEAR</code>:
+    clear_mtrr(<code class="parameter">mtrr_command</code>-&gt;<code class="varname">base</code>, 0x200, <code class="varname">num_mtrrs</code>);
+    <code class="varname">res</code> = <code class="constant">B_OK</code>;
+    break;
+  }
+
+  <code class="function">write_msr</code>(0x2FF, default_mtrr_type | (1 &lt;&lt; 11) );
+    <span class="comment">/* enable variable-range MTRRs*/</span>
+  asm { wbinvd }  <span class="comment">/* flush and invalidate cache */</span>
+  <code class="function">set_cr3</code>(<code class="function">get_cr3</code>()); <span class="comment">/* flush TLBs */</span>
+  <code class="function">set_cr0</code>(<code class="varname">cr0_old</code>);  <span class="comment">/* restore caching */</span>
+
+  return <code class="varname">res</code>;
+}
+
+<span class="comment">/******** fastvid.c **********/</span>
+#include &lt;OS.h&gt;
+#include &lt;PCI.h&gt;
+
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+
+#include &lt;unistd.h&gt; <span class="comment">/* ioctl() */</span>
+#include &lt;fcntl.h&gt; <span class="comment">/* open()/close() */</span>
+#include &lt;errno.h&gt;
+#include &lt;string.h&gt; <span class="comment">/* strerror() */</span>
+
+#include "mtrr_drv.h"
+
+<span class="type">void</span> <code class="function">print_usage</code>(<span class="type">void</span>)
+{
+  <code class="function">printf</code>("fastvid enables/disables write combining
+    for a graphic frame buffer.\n");
+  <code class="function">printf</code>("Usage:\n");
+  <code class="function">printf</code>("  fastvid set|clear\n");
+  <code class="function">printf</code>("  fastvid set mem_base mem_len mem_type\n");
+  <code class="function">printf</code>("  fastvid clear mem_base\n");
+  <code class="function">exit</code>(0);
+}
+
+<span class="type">void</span>
+<code class="function">find_frame_buffer</code>(<span class="type">mtrr_drv_command_t*</span> <code class="parameter">info</code>)
+{
+  <span class="type">int</span>       <code class="varname">i</code>;
+  <span class="type">pci_info</span>  <code class="varname">h</code>;
+  <span class="type">long</span>      <code class="varname">n</code>;
+
+  for (<code class="varname">n</code>=0; <code class="function">get_nth_pci_info</code>(<code class="varname">n</code>, &amp;<code class="varname">h</code>) == <code class="constant">B_OK</code>; <code class="varname">n</code>++)
+  {
+
+    if (<code class="varname">h</code>.<code class="varname">class_base</code> != <code class="varname">PCI_display</code> &amp;&amp;
+      !(<code class="varname">h</code>.<code class="varname">class_base</code> == <code class="varname">PCI_early</code> &amp;&amp;
+        <code class="varname">h</code>.<code class="varname">class_sub</code>  == <code class="varname">PCI_early_vga</code>) )
+        continue;
+
+    for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 6; <code class="varname">i</code>++)
+    {
+      if (<code class="varname">h</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_flags</code> [<code class="varname">i</code>] &amp; <code class="varname">PCI_address_space</code>)
+        continue;
+
+      if (<code class="varname">h</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_sizes</code>[<code class="varname">i</code>] &lt; (1024*1024) )
+        continue;
+
+      <code class="parameter">info</code>-&gt;<code class="varname">len</code> = <code class="varname">h</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_register_sizes</code>[<code class="varname">i</code>];
+      <code class="parameter">info</code>-&gt;<code class="varname">base</code> = <code class="varname">h</code>.<code class="varname">u</code>.<code class="varname">h0</code>.<code class="varname">base_registers</code>[<code class="varname">i</code>];
+
+      if(<code class="parameter">info</code>-&gt;<code class="varname">len</code> &gt; 8*1024*1024) <span class="comment">/* limit the size of the
+                                     guessed frame buffer */</span>
+         <code class="parameter">info</code>-&gt;<code class="varname">len</code> = 8*1024*1024;
+      return; <span class="comment">/* B_OK; */</span>
+    }
+  }
+  <code class="function">printf</code>("Can not find frame buffer\n");
+  <code class="function">exit</code>(2);
+  <span class="comment">/* info-&gt;len = info-&gt;base = 0; */</span>
+  <span class="comment">/*return B_ERROR;*/</span>
+}
+
+<span class="type">int</span> <code class="function">main</code>(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char*</span> <code class="parameter">argv</code>[])
+{
+  <span class="type">mtrr_drv_command_t</span>  <code class="varname">command</code>;
+  <span class="type">int</span>        <code class="varname">fd</code>;
+  <span class="type">status_t</span>   <code class="varname">ret</code>;
+
+  if(<code class="parameter">argc</code>&lt;2)
+    <code class="function">print_usage</code>();
+
+  if(<code class="function">strcmp</code>(<code class="parameter">argv</code>[1], "set") == 0)
+  {
+    <code class="varname">command</code>.<code class="varname">action</code> = <code class="constant">RANGE_SET</code>;
+
+    switch(<code class="parameter">argc</code>)
+    {
+    case 2:
+      <code class="function">find_frame_buffer</code>(&amp;<code class="varname">command</code>);
+      <code class="varname">command</code>.<code class="varname">mem_type</code> = <code class="constant">WC_MEM</code>;
+      break;
+
+    case 5:
+      <code class="varname">command</code>.<code class="varname">base</code> = strtoull(<code class="parameter">argv</code>[2], <code class="constant">NULL</code>, 0);
+      <code class="varname">command</code>.<code class="varname">len</code> = strtoull(<code class="parameter">argv</code>[3], <code class="constant">NULL</code>, 0);
+      <code class="varname">command</code>.<code class="varname">mem_type</code> = (<span class="type">MEM_TYPE</span>)strtoul(<code class="parameter">argv</code>[4], <code class="constant">NULL</code>, 0);
+      break;
+
+    default:
+      <code class="function">print_usage</code>();
+    }
+  }
+  else if(<code class="function">strcmp</code>(<code class="parameter">argv</code>[1], "clear") == 0)
+  {
+    <code class="varname">command</code>.<code class="varname">action</code> = <code class="constant">RANGE_CLEAR</code>;
+
+    switch(<code class="parameter">argc</code>)
+    {
+    case 2:
+      <code class="varname">command</code>.<code class="varname">action</code> = <code class="constant">RANGE_CLEAR</code>;
+      <code class="function">find_frame_buffer</code>(&amp;<code class="varname">command</code>);
+      break;
+
+    case 3:
+      <code class="varname">command</code>.<code class="varname">base</code> = <code class="function">strtoull</code>(<code class="parameter">argv</code>[2], NULL, 0);
+      break;
+
+    default:
+      <code class="function">print_usage</code>();
+    }
+  }
+  else
+  {
+    <code class="function">print_usage</code>();
+  }
+  <span class="comment">/* <code class="function">printf</code>("%d %d %Lx %Lx\n", <code class="varname">command</code>.<code class="varname">action</code>, <code class="varname">command</code>.<code class="varname">mem_type</code>,
+       <code class="varname">command</code>.<code class="varname">base</code>, <code class="varname">command</code>.<code class="varname">len</code>); */</span>
+
+  <code class="varname">errno</code> = 0;
+  <code class="varname">fd</code> = <code class="function">open</code>( "/dev/cpu/mtrr", <code class="constant">O_RDWR</code>);
+  if(<code class="varname">fd</code> == -1)
+  {
+    <code class="function">printf</code>("Can't open /dev/cpu/mtrr, errno=%d (%s)\n",
+           <code class="varname">errno</code>, strerror(<code class="varname">errno</code>));
+    <code class="function">exit</code>(1);
+  }
+
+  <code class="varname">ret</code> = <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="constant">MTTR_DRV_COMMAND</code>, &amp;<code class="varname">command</code>,
+              <code class="function">sizeof</code>(<code class="varname">command</code>));
+  if(<code class="varname">ret</code> == <code class="constant">B_OK</code>)
+  {
+    <code class="function">printf</code>("Success!\n");
+  }
+  else
+  {
+    <code class="function">printf</code>("Error: ioctl returned 0x%x, errno=%d (%s)\n",
+           <code class="varname">ret</code>, <code class="varname">errno</code>, <code class="function">strerror</code>(<code class="varname">errno</code>));
+    <code class="function">exit</code>(1);
+  }
+
+  return 0;
+}
+</pre><p>
+Good parameters for the fastvid app:
+</p><p>
+fastvid set (enable write-combining for the frame buffer) fastvid clear
+(disable write-combining for the frame buffer) fastvid set 0 RAM_size 0
+(disable caching for the whole <acronym class="acronym">RAM</acronym>)
+</p><p>
+The results: On my dual Pentium II 300 MHz 440FX system with <acronym class="acronym">PCI</acronym> Matrox
+Millenium 1, Life demo without write-combining gets 23 megacells/second,
+with write-combining 44 megacells/second. Life is a good app to
+demonstrate the effects of this driver, because it is both
+<acronym class="acronym">CPU</acronym> and <acronym class="acronym">PCI</acronym>
+bandwidth-limited. The results for your favorite app may vary.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Support3-21"></a>Why Are There User Docs?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Linda</span> <span class="surname">Ackerman</span></span></div></div></div><p>
+I'm glad you asked. Since informal surveys indicate that *maybe* only one
+out of four or five people ever looks at a user guide, and most of them
+do it for the satisfaction of finding typos, why have user docs?
+</p><p>
+In the case of the BeOS, there are user docs in anticipation of the day
+when there will be non-geek users. Geeks are assumed to know all there is
+to know about a user interface, and not to care anyway since anyone who
+doesn't work from the command line probably shares a place in the food
+chain next to krill.
+</p><p>
+Non-geeks, on the other hand, may welcome step-by-step explanations of
+how to configure network preferences—never a particularly intuitive
+process. Or how to make a prehistoric one-button mouse behave like a
+three-button mouse, and why you'd want to do that. And what is this thing
+called Tracker, and how does it work?
+</p><p>
+If you're coming to the BeOS from Mac or Windows, some operations,
+features, and settings will be familiar, but others will not. The Desktop
+has a certain quaint inevitability about it, which is either comforting
+or boring, depending on your point of view. The undeniable advantage,
+though, is that you don't need a map and compass (or even a user guide)
+to figure it out. You can jump right in, start opening windows, moving
+them around, and doing things in them.
+</p><p>
+But—what if you want to learn about some of the refinements—like
+how to navigate between windows from the window itself? What you need to
+know is in the BeOS User's Guide, in "Navigating in Tracker Windows
+http://www.be.com/documentation/user_docs/01_beos_basics.html
+</p><p>
+This section explains the hierarchical organization of folders and how to
+move between them, opening or closing parent or child folders as you go.
+I also like this feature because it shows me at a glance where a folder
+lives, without the extra MacStep of doing a Find.
+</p><p>
+Another feature the BeOS User's Guide can tell you a thing or two about
+is the Workspaces app. Here's what Scott Patterson, BeOS Demo God, says
+about Workspaces: "I can organize my work into different workspaces, with
+productivity applications in one (e-mail, telnet, web browser),
+specialized apps in another (video/audio editing, page layout), and
+alternative environments in a third (the awesome SheepShaver Macintosh
+environment, for example). I can also preview graphics more easily than
+on any other platform in the world. I can edit a graphic image in
+millions of colors and just by dragging it across to an 8-bit workspace,
+I know what it's going to look like across the Internet on a machine that
+only supports 256 colors."
+</p><p>
+Want to know more about setting up Workspaces? RTFM:
+</p><p>
+http://www.be.com/documentation/user_docs/05_beos_customize.html
+</p><p>
+and
+</p><p>
+http://www.be.com/documentation/user_docs/05_beos_customize.html
+</p><p>
+And then there are Replicants—a nifty concept in search of a raison
+d'etre. The BeOS User's Guide tells you what Replicants are and how to
+create them
+</p><p>
+http://www.be.com/documentation/user_docs/01_beos_basics.html
+</p><p>
+Even more important, once you have a clock or NetPositive Replicant
+sitting on your desktop, how do you get rid of it? The same section that
+tells you how to create a Replicant tells you how to delete it.
+</p><p>
+User guides are often frustrating because they don't tell you what you
+need to know. (Software is often frustrating because it doesn't let you
+do what you want, or makes you go around the block three times first --
+but that's another story.) We don't want to add to the global computer
+user frustration quotient by overlooking information you need to run the
+BeOS at a gallop, or by including it but in a form that's too opaque to
+understand.
+</p><p>
+If you read the BeOS User's Guide, and it lets you down, share your pain.
+We can always try to make it better the next time around:
+mailto:linda@be.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-21"></a>Developers' Workshop: Welcome to the Cow...Debugging Device Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Victor</span> <span class="surname">Tsou</span></span></div></div></div><p>
+On my way home last night, a figure stepped out of the shadows and
+rhythmically rapped into my ear:
+</p><p>
+Question: Why is it that every time my device driver runs, my system
+hangs? Fuuuunnnk daaaat!
+</p><p>
+Development behind the 2 GB iron curtain is often difficult, so the
+kernel provides several functions to help you track down bugs in your
+device driver or kernel add-on. You can follow along at home in the
+"Exported Kernel Functions" section of the "Device Drivers" chapter in
+the online Be Book.
+</p><p>
+The most primitive debugging function is <code class="function">d<code class="function">printf</code>()</code>, which squirts
+formatted text through the serial port, much like the <code class="function">SERIAL_PRINT()</code>
+macro of Support Kit fame. Unlike <code class="function">SERIAL_PRINT()</code>,
+<code class="function">d<code class="function">printf</code>()</code> is accessible
+from kernel space. As always, serial communication occurs through
+<code class="filename">/dev/serial1</code> on x86,
+<code class="filename">/dev/serial4</code> on the BeBox, and
+<code class="filename">/dev/modem</code> on the Mac
+with data parameters <code class="code">19200 N81</code>.
+</p><p>
+No doubt you've been meaning to dust off your VT52 anyway.
+</p><p>
+If nothing comes out of the serial port, serial output is probably
+disabled. There are a few ways of turning it on, including:
+</p><ul class="itemizedlist"><li><p>
+Holding down the <span class="keysym">delete</span> key on Macs or the <span class="keysym">F1</span> key on x86 or BeBox
+machines during bootup.
+</p></li><li><p>
+Calling <code class="code">set_d<code class="function">printf</code>_enabled(true)</code>, as detailed in the Be Book.
+</p></li></ul><p>
+Once you've established a serial debugging connection, you may find
+yourself a frequent guest of the kernel debugger. The kernel debugger is
+typically triggered by an exception in kernel space. You can also
+programmatically enter it with <code class="function">kernel_debugger()</code>.
+</p><p>
+The kernel debugger, for the most part, presents a read-only snapshot of
+the universe. This tool possesses limited poking abilities, but there is
+currently no way of modifying register values and breakpoints short of
+wading through stack frames and writing over code. Typing "help" will
+give you a list of the debugger's capabilities. Don't bother to
+<acronym class="acronym" title="Read The Friendly Manual">RTFM</acronym>;
+that's all the M that's available for now (this will be rectified in the
+future).
+</p><p>
+The debugger understands symbols found in <code class="filename">xMAP</code> files, which is helpful in
+deciphering stack traces. Every aspiring kernel driver writer should copy
+the kernel's <code class="filename">xMAP</code> from the installation CD to
+<code class="filename">/system</code>. The kernel can be
+instructed to load your driver's symbols with <code class="function">load_driver_symbols()</code>. This
+function searches for a specific <code class="filename">xMAP</code> in the
+<code class="filename">drivers</code>,
+<code class="filename">file_systems</code>,
+<code class="filename">pnp</code>,
+and <code class="filename">cam</code> subdirectories of the kernel add-ons directories.
+</p><p>
+In large functions, it's often difficult to identify the precise source
+line triggering the exception. Fortunately, the  -g 
+and   -machinecodelist 
+<code class="command">mwcc</code> options working in tandem can provide you with an enlightening
+interleaved assembly and source view of your code. Its contents will let
+you locate the crash in no time at all.
+</p><p>
+Look for kernel debugger improvements in R4, including breakpoints,
+tracing, and improved register shadowing (how many times have you wanted
+to do 'dis eip' or 'esp += 8'?). These commands and more will help ease
+the burden of locating bugs and can be used to avert impending crashes
+through judicious stack and pc manipulation.
+</p><p>
+In fine Hiroshi fashion, here are three insightful yet unrelated
+techniques for faster driver development:
+</p><ul class="itemizedlist"><li><p>
+<code class="function">ASSERT()</code>
+</p><p>
+Although there is no predefined <code class="function">ASSERT()</code> macro for kernel drivers,
+there's nothing to prevent you from selfishly cobbling one together for
+your personal use:
+</p><p>
+<code class="filename">assert.h</code>:
+</p><pre class="programlisting c">
+#ifndef DEBUG
+#define <code class="function">ASSERT</code>(<code class="parameter">c</code>) 0
+#else
+int <code class="function">_assert_</code>(char *,int,char *);
+#define <code class="function">ASSERT</code>(<code class="parameter">c</code>) (!(<code class="parameter">c</code>) ? <code class="function">_assert_</code>(__FILE__,__LINE__,#c) : 0)
+#endif
+</pre><p>
+<code class="filename">assert.c</code>:
+</p><pre class="programlisting c">
+#ifdef DEBUG
+
+<span class="type">int</span> _assert_(<span class="type">char *</span><code class="parameter">a</code>, <span class="type">int</span> <code class="parameter">b</code>, <span class="type">char *</span><code class="parameter">c</code>)
+{
+    <code class="function">dprintf</code>("tripped assertion in %s/%d (%s)\n", <code class="parameter">a</code>, <code class="parameter">b</code>, <code class="parameter">c</code>);
+    <code class="function">kernel_debugger</code>("tripped assertion");
+    return 0;
+}
+
+#endif
+</pre></li><li><p>
+<code class="function">ioctl()</code>
+</p><p>
+If the driver/add-on protocol includes an <code class="function">ioctl()</code> facility, use it as a
+runtime debugging aid. For example, ioctls may be defined to print out
+important data structures or verify data integrity. Here's a short
+program you can modify to issue human-readable <code class="function">ioctl()</code> commands to your
+driver.
+</p><pre class="programlisting c">
+#include &lt;fcntl.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+
+struct <span class="type">cmds</span> {
+    <span class="type">char *</span><code class="varname">string</code>;
+    <span class="type">int</span> <code class="varname">code</code>;
+} <code class="varname">commands</code>[] = {
+  <span class="comment">/* replace with your ioctls */</span>
+    { "dumpinfo", 10000 },
+    { "verifyintegrity", 10001 },
+    { "simulateerror", 10002 },
+    { "reset", 10003 },
+    { <code class="constant">NULL</code>, 0 }
+};
+
+static <span class="type">void</span> <code class="function">print_help</code>()
+{
+    <span class="type">int</span> <code class="varname">i</code>;
+    <code class="function">printf</code>("usage: ioctl command files...\n");
+    <code class="function">printf</code>("commands: %s", <code class="varname">commands</code>[0]);
+    for (<code class="varname">i</code>=1;<code class="varname">commands</code>[<code class="varname">i</code>].<code class="varname">string</code> != <code class="constant">NULL</code>;<code class="varname">i</code>++)
+        <code class="function">printf</code>(", %s", <code class="varname">commands</code>[<code class="varname">i</code>]);
+    <code class="function">printf</code>("\n");
+    <code class="function">exit</code>(-1);
+}
+
+<span class="type">int</span> <code class="function">main</code>(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>)
+{
+    <span class="type">int</span> <code class="varname">fd</code>, <code class="varname">i</code>, <code class="varname">code</code>;
+
+    if (<code class="parameter">argc</code> &lt; 3) <code class="function">print_help</code>();
+
+    for (<code class="varname">i</code>=0;<code class="varname">commands</code>[<code class="varname">i</code>].<code class="varname">string</code>;<code class="varname">i</code>++) {
+        if (!<code class="function">strcasecmp</code>(<code class="varname">commands</code>[<code class="varname">i</code>].<code class="varname">string</code>, <code class="parameter">argv</code>[1])) {
+            <code class="varname">code</code> = <code class="varname">commands</code>[<code class="varname">i</code>].<code class="varname">code</code>;
+            break;
+        }
+    }
+
+    if (<code class="varname">commands</code>[<code class="varname">i</code>].<code class="varname">string</code> == <code class="constant">NULL</code>) {
+        for (<code class="varname">i</code>=0;<code class="parameter">argv</code>[1][<code class="varname">i</code>];<code class="varname">i</code>++)
+            if ((<code class="parameter">argv</code>[1][<code class="varname">i</code>] &lt; '0') || (<code class="parameter">argv</code>[1][<code class="varname">i</code>] &gt; '9'))
+                break;
+        if (<code class="parameter">argv</code>[1][<code class="varname">i</code>])
+            <code class="function">print_help</code>();
+        <code class="varname">code</code> = <code class="function">atoi</code>(<code class="parameter">argv</code>[1]);
+    }
+
+    for (<code class="varname">i</code>=2;<code class="varname">i</code>&lt;<code class="parameter">argc</code>;<code class="varname">i</code>++) {
+        if ((<code class="varname">fd</code> = <code class="function">open</code>(<code class="parameter">argv</code>[<code class="varname">i</code>], <code class="constant">O_RWMASK</code>)) &lt; 0) {
+            <code class="function">printf</code>("error opening %s (%s)\n", <code class="parameter">argv</code>[<code class="varname">i</code>],
+                   <code class="function">strerror</code>(fd));
+            continue;
+        }
+        <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="varname">code</code>);
+        <code class="function">close</code>(<code class="varname">fd</code>);
+    }
+
+    return 0;
+}
+</pre></li><li><p>
+<code class="function">add_debugger_command()</code>
+</p><p>
+<code class="function">ioctl()</code> is nice and all, but you'll soon lust for some of that
+post-mortem loving. Fortunately, the kernel debugger allows you to hook
+in new commands with <code class="function">add_debugger_command()</code>. This function registers a
+callback with the kernel debugger that is called with <code class="function">main()</code>-style
+argc/argv arguments.
+</p><p>
+When writing a kernel debugger command, remember that it may be called
+while the kernel is in an unpredictable state. This means <code class="function">malloc()</code> and
+friends are off limits, as they may induce swapping. <code class="function">d<code class="function">printf</code>()</code> is also
+a no-no; use the stripped down equivalent <code class="function">k<code class="function">printf</code>()</code> instead.
+</p><p>
+Since added kernel debugger commands normally lie in the driver's
+memory space, the kernel debugger runs into problems involving
+accessing unallocated memory when the driver is unloaded. Drivers
+should therefore remove added commands with remove_debugger_command()
+(new for R3.1) when they are unloaded.
+</p><p>
+Want code?
+</p><pre class="programlisting c">
+<span class="type">int</span> <code class="function">do_echo</code>(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>)
+{
+  <span class="type">int</span> <code class="varname">i</code>;
+  if (<code class="parameter">argc</code> == 1) {
+    <code class="function">kprintf</code>("echo &lt;args&gt; - prints arguments\n");
+    return 0;
+  }
+  for (<code class="varname">i</code>=1;<code class="varname">i</code>&lt;<code class="parameter">argc</code>;<code class="varname">i</code>++)
+    <code class="function">kprintf</code>("%s\n", <code class="parameter">argv</code>[<code class="varname">i</code>]);
+  return 0;
+}
+
+<span class="type">status_t</span> <code class="function">init_driver</code>()
+{
+  <code class="function">add_debugger_command</code>("echo", do_echo,
+    "echo &lt;args&gt; - prints arguments);
+  ...
+}
+
+<span class="type">status_t</span> <code class="function">uninit_driver</code>()
+{
+  <code class="function">remove_debugger_command</code>("echo", do_echo);
+  ...
+}
+</pre></li></ul></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-21"></a>I Have An Idea for a PC Expo Demo...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+It may not be as good an idea as showing off the most succulent
+applications BeOS developers are feverishly debugging, or writing, or
+thinking of. Or haven't thought of yet but will think of, write, debug,
+and demo by the time the show opens three weeks from now. But it's an
+idea nonetheless: an online guided tour of the Be community. If we get
+a good net connection, it might even be feasible. Let us pray to the
+gods of Unions and New York City Prices.
+</p><p>
+Why, you ask, should we take time away from A/V wizardry to click
+through a stack of Web pages? Especially since anybody can use a
+browser, but only a Demo God can demonstrate real- time WYSIWYG and
+multiple video capture windows. But a browser, commodity that it is,
+regulated or not, is uniquely capable of demonstrating the reality of a
+global Be community, bringing Be news to the masses as it happens.
+</p><p>
+For a preview of BeOS-ville as a PC Expo demo, you could start from any
+of several jumping off points. One is the Believe Finder, at
+http://www.napanet.net/~xredbear/finder.htm, a lively, personal, and
+fairly encyclopedic site, in the original meaning of encompassing all
+knowledge available. You'll find everything from FAQs on hardware
+requirements, to driver information, to humor, to Japan and Europe, to
+the whats and the whys of the BeOS.
+</p><p>
+I like the site's opinionated tone and I appreciate the tremendous
+effort involved in grouping and presenting so much information in such
+a useful way. But what does it have to do with PC Expo? For a start,
+Believe Finder treats visitors to a nice demo that shows off the best
+of BeOS audio and video. Only a minority of PC Expo visitors will have
+seen the BeOS before, or even heard about it. Believe Finder offers
+clear evidence that they might have been missing something.
+</p><p>
+But, after the glow of the demo wears off, questions arise: Who are
+these geeks, how real are they? That's why I think a tour of
+Be-dedicated Web sites at PC Expo might be a persuasive way to
+establish the existence of an active, diverse Be community worldwide.
+</p><p>
+And what about our own Web site? At
+http://www.be.com/usergroups/wwwlinks.html, you'll find a less
+encyclopedic but no less useful list of user group sites. Our tone is a
+bit more neutral, for obvious reasons, but you'll be vectored to a
+similarly lively hive of Be-related sites, often the same ones as in
+the Believe Finder. If you haven't done so already, take a quick tour
+of some of these sites. You'll see why I'd like PC Expo visitors to get
+at least a glimpse of our small world via the Web.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-20.html">Issue 3-20, May 20, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-22.html">Issue 3-22, June 3, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-20.html" title="Issue 3-20, May 20, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-22.html" title="Issue 3-22, June 3, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

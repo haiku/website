@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-4.html" title="Issue 1-4, January 3, 1996" /><link rel="next" href="Issue1-6.html" title="Issue 1-6, January 17, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-4.html" title="Issue 1-4, January 3, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-6.html" title="Issue 1-6, January 17, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-4.html">Issue 1-4, January 3, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-6.html">Issue 1-6, January 17, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-5"></a>Issue 1-5, January 10, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-5"></a>Be Engineering Insights: From Power Up to the Browser: How the Be OS Starts Up</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Bob</span> <span class="surname">Herold</span></span></div></div></div><p>
+The Be OS is composed of a boot ROM, a kernel, several 'servers,' and a
+shared library that exports the Be API. If you issue a ps command in the
+Terminal window, you will see that many of these components have several
+threads. This article describes all these items, how they get started,
+and what they do.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471078"></a>The Boot ROM</h3></div></div></div><p>
+The flash memory device on the motherboard contains the boot ROM. It's
+partitioned into sections, including a small "nub" and a main part.
+</p><p>
+When you turn on the BeBox, CPU 0 starts running in the nub, while CPU 1
+is held in reset. The nub's job is to locate, size, test, and configure
+the memory, check the floppy drive for a special Boot ROM Upgrader disk,
+and then pass control to the main part of the boot ROM.
+</p><p>
+The main part of the boot ROM has the single-minded task of locating a
+kernel on one of the disks attached to the BeBox. It searches in a
+particular order: Floppy, removable disks (such as CD-ROM drives or
+removable hard disks), the disk specified by the boot preference (set by
+the Installer or the boot command), SCSI fixed disks (scanning from SCSI
+ID 0 to 6), and IDE disks (master first, then slave). If a kernel is
+found, it's loaded and run.
+</p><p>
+Before CPU 0 rummages around for a kernel, it releases CPU 1 from reset.
+CPU 1 quickly jumps from the nub to the main part, and displays the
+swirling Be logo. CPU 1 then idles until CPU 0 is in the kernel and ready
+to run with both CPUs going full bore.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471119"></a>The Kernel</h3></div></div></div><p>
+The kernel is started by CPU 0. It sets up all the basic necessities
+(semaphores, threads, teams, the scheduler, areas, ports, interrupts,
+inter-CPU communication, virtual memory, idle threads), and then lets CPU
+1 join the party. Either CPU can run any thread from the ready queue, so
+multiprocessing just happens naturally when the code is structured into
+separate threads.
+</p><p>
+The kernel starts up several internal housekeeping threads:
+</p><table class="variablelist"><tbody><tr><td><p><span class="term">idle threads 0 and 1:</span></p></td><td><p>
+Each CPU must always run something. The idle
+threads are simple spin loops, with a scheduling priority of zero. They
+never block, so they're always around when there's nothing else to do.
+</p></td></tr><tr><td><p><span class="term">psycho-killer:</span></p></td><td><p>
+Having a thread kill itself is tricky. It's much easier to
+hire out for the job. The psycho_killer thread assassinates threads that
+wish to die, and removes a team when the team's threads have all died.
+</p></td></tr><tr><td><p><span class="term">idle debug 0 and 1:</span></p></td><td><p>
+These are around in case something bad happens in the
+idle threads. They take over debugging chores from the idle threads, thus
+allowing the idle threads to continue loafing on the street corner.
+</p></td></tr><tr><td><p><span class="term">dprintf and dgets:</span></p></td><td><p>
+These are for kernel debugging. If you hold down the
+F1 key when you boot, all sorts of debugging spewage comes out of serial
+port 4 at 19.2 kilobaud. Should the kernel crash, a primitive debugger is
+available there. These two threads manage the debugging I/O to the serial
+port.
+</p></td></tr><tr><td><p><span class="term">floppy motor off:</span></p></td><td><p>
+A floppy drive takes half a second to spin up to speed.
+Rather than turning the motor off after each read or write, it's left
+running for a few seconds in case another access comes along. This thread
+turns the motor off after this grace period.
+</p></td></tr><tr><td><p><span class="term">disk cache:</span></p></td><td><p>
+The file system has a cache. This thread periodically writes
+dirty sectors from the cache to disk. Note that disk accesses greater
+than a certain size bypass the cache entirely.
+</p></td></tr></tbody></table><p>
+Once these niceties are set up, the kernel mounts all available disks and
+looks for a disk from which to boot the rest of the system. Disks are
+examined to see if they have a complete set of system software: the
+Browser, the Application Server, the Storage Server, the Zoo Keeper, a
+drivers directory, and the shared libraries
+<code class="filename">libbe.so</code> and <code class="filename">libpos.so</code>. If
+any of these files are on the floppy, they take priority over these files
+on other disks.
+</p><p>
+The kernel looks for system files on disks in the following order: The
+floppy disk, the volume where the kernel was found by the boot ROM, the
+disk specified by the boot preference, SCSI disks 0-6, IDE master, and
+IDE slave. The first disk with all the system files, minus any
+contributions from the floppy, becomes the "boot volume." If the boot
+volume is writable, it's also used as the volume where the virtual memory
+backing files are kept; otherwise, virtual memory is disabled.
+</p><p>
+Once the boot volume is identified, the Application Server, Storage
+Server, Zoo Keeper, and the Browser are started from the boot volume (or
+the floppy). Additionally, the kernel looks for a file called Bootscript,
+and starts up a shell to interpret it. The current Bootscript launches
+the ANSI Server, the Audio Server, the Debug Server, the Name Server, the
+Net Server and ftpd.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471279"></a>The Shared Library: libbe.so</h3></div></div></div><p>
+The <code class="filename">libbe.so</code> shared library exports the API described in The Be Book.
+Applications link with the shared library at compile time, and are bound
+to the shared library when they are loaded at runtime.
+</p><p>
+The shared library together with the various servers implement the API.
+The library uses the kernel's port mechanism and shared memory to
+communicate with the servers. API calls are converted into messages and
+sent though a port to a thread in the appropriate server. Servers usually
+allocate a single thread to manage each client, allowing for concurrent
+access to the functionality each server provides. The allocated thread
+receives the message, carries out the call, and often returns results to
+the client via another port.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471301"></a>The Shared Library: libpos.so</h3></div></div></div><p>
+<code class="filename">libpos.so</code> provides an emulation of some of the Posix API. This makes
+porting of UNIX-flavored software much more feasible. Many of the
+command-line tools available in the Terminal application use this library.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471319"></a>The Application Server</h3></div></div></div><p>
+The Application Server, in conjunction with the Application Kit and the
+Interface Kit, manages an application's user interface, graphical
+environment, and messaging infrastructure. All these are extensively
+documented in The Be Book.
+</p><p>
+The Application Server has a few permanent housekeeping threads, plus a
+separate thread for each client application and each client window. The
+housekeeping threads are:
+</p><table class="variablelist"><tbody><tr><td><p><span class="term">poller:</span></p></td><td><p>
+Collects keyboard and mouse information from the kernel, forwards
+it to the app_server thread, and displays the on-screen cursor
+</p></td></tr><tr><td><p><span class="term">app_server:</span></p></td><td><p>
+Handles set-up of new applications; dispatches keyboard and
+mouse events to the appropriate window thread, which sends them to the
+client
+</p></td></tr><tr><td><p><span class="term">picasso:</span></p></td><td><p>
+Receives notification from the kernel of various interesting
+events, such as a thread being destroyed
+</p></td></tr></tbody></table></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471387"></a>The Storage Server</h3></div></div></div><p>
+The Storage Server is the database engine. The Storage Server manages the
+index into the databases and performs the queries associated with each
+database.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471401"></a>The Zoo Keeper</h3></div></div></div><p>
+The functions described in "The Storage Kit" chapter in The Be Book are
+actually split between the Storage Server, the Zoo Keeper, and the
+libbe.so shared library. The Zoo Keeper, keeps track of volumes, ensuring
+that every volume has a database that describes the volume's file system
+hierarchy. The actual management of files and directories (<code class="classname">BFile</code>,
+<code class="classname">BDirectory</code>, <code class="classname">BVolume</code>) is split between the shared library and the Zoo
+Keeper. Both use the Storage Server to maintain the database view of the
+file system. Interestingly, the Zoo Keeper and Storage Server are also
+linked with the libbe.so shared library to gain access to each other, the
+kernel, and the Application Server.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471434"></a>The Browser</h3></div></div></div><p>
+The Browser is what you see when the machine has started up. Its powerful
+capabilities are sure to be the subject of a future newsletter article.
+Strictly speaking the Browser is an application like any other—it
+links with the shared library and uses the various servers and the kernel
+to go about its business. Obviously it's one of the more important
+applications shipped with the BeBox.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471452"></a>The ANSI Server</h3></div></div></div><p>
+The ANSI Server is an anachronism, which will soon go away. It provides
+ANSI-style terminal windows to clients, communicating through named pipes
+with the client. It has been replaced by a new TTY driver, which
+understands how to emulate an ANSI terminal. In earlier releases, the
+shell used the ANSI Server, but it has been converted to use the TTY
+driver. The Debug Server has not yet been converted, so we'll have the
+ANSI Server around for a little longer.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471470"></a>The Audio Server</h3></div></div></div><p>
+The Audio Server provides the functionality described in "The Media Kit"
+chapter of The Be Book. Streams, Stream Controllers, and the Subscription
+mechanism are all handled here.
+</p><p>
+Two housekeeping threads, DAC Feeder and ADC Feeder, keep sound buffers
+flowing smoothly to and from the sound driver (which manages the audio
+CODEC). Requests to play or record sounds instantiate a thread that
+manages the process.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471492"></a>The Debug Server</h3></div></div></div><p>
+The Debug Server implements the assembly-level debugger. When an
+application crashes or runs into a debugger() call, the kernel spawns a
+per-team debugging thread in the application's address space to manage
+communication with the Debug Server. The Debug Server, in turn, spawns a
+thread to put up a window for that team (currently using the ANSI Server)
+and to process debugging commands. The kernel provides hooks for
+installing a different debugger on a per-team basis. Our friends at
+Metrowerks are creating a source-level debugger using this facility.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471504"></a>The Net Server</h3></div></div></div><p>
+The Net Server implements the TCP/IP protocols needed to communicate with
+other devices over an Ethernet or PPP connection.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471517"></a>The Name Server</h3></div></div></div><p>
+The Name Server assists the Net Server in managing various system
+resources, such as ports and semaphores.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471529"></a>ftpd</h3></div></div></div><p>
+ftpd is the ftp 'daemon.' It runs in the background, silently providing
+ftp access to the BeBox.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id471542"></a>Summary</h3></div></div></div><p>
+The Be OS is divided up into many different components. Hopefully this
+article has shed some light on how they are started up, and what they do.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-5"></a>MacWorld? What Are We Thinking?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This is a Macintosh trade show. You're not selling Macs, you're not a Mac
+OS licensee, the BeBox isn't even a
+<acronym class="acronym" title="Common Hardware Reference Platform">CHRP</acronym> platform, and in any case, with
+your "geek" positioning, you're definitely not addressing the needs of
+mainstream Mac users. So, what are you doing here?
+</p><p>
+Good question. A few months ago, I would have agreed we had no business
+going to MacWorld. And today, I agree with all the facts stated above.
+But they're not relevant to our decision to exhibit in San Francisco.
+Here's why, with the hope it will shed some light on our marketing
+strategy. No, we're not selling Macs and we're not a Mac OS licensee
+although,at some point, we considered it. Early in 1995, friends at Apple
+advised us to wait for a new hardware reference platform. Eventually,
+Copland would run on that platform and all compliant hardware would run
+the new Mac OS. No need to be a licensee, just buy the OS off the shelf
+and you can run Mac applications.
+</p><p>
+Indeed, the <acronym class="acronym">CHRP</acronym> platform was announced at Comdex, with a partial release
+of technical data. Specs for the ISA system and a few other details are
+expected soon and, given the updated Copland schedule, Apple announced it
+will make a 7.5.x version for <acronym class="acronym">CHRP</acronym>, with the first machines to appear in
+late 1996 or the first half of 1997, depending on the source. As the <acronym class="acronym">CHRP</acronym>
+specs are finalized and parts vendors start supplying chip sets, making a
+<acronym class="acronym">CHRP</acronym> compliant multiprocessor BeBox with its rich, geeky I/O becomes an
+attractive proposition. As the current BeBox is based on the ancestor of
+<acronym class="acronym">CHRP</acronym>, PREP, it's logical for Be to make <acronym class="acronym">CHRP</acronym> an important part of its
+product strategy. Today's PC clones are still built around a core of
+PC/AT design. Compliance to these specs has allowed PC buyers to benefit
+from a number of operating systems: DOS, Windows and Windows NT, of
+course, but also a number of UNIX variants, NEXTSTEP, Linux, OS/2, and I
+must forget a few. The <acronym class="acronym">CHRP</acronym> partners hope to see a like diversity of
+system software on the PowerPC side. We'll be happy to help and benefit
+as the new platform gains momentum. But this is for the 1997 horizon.
+</p><p>
+What about MacWorld in January 1996, geeks, and mainstream Mac users?
+Representing MacWorld as only attended by bourgeois mainstream users is
+quite a stretch. Yes, we see more suits than T-shirts today than ten
+years ago, but there's always a strong contingent of aggressive,
+knowledgeable users, exhibitors, and software developers. They're not
+always found around the bigger, jazzier, and more expensive booths, and
+that's fine with us. They're our audience—they come to MacWorld in
+sufficient numbers to more than justify our presence. Three months ago,
+at the Agenda conference, we showed the BeBox to an audience of
+professional cynics—or cynical pros. We were surprised by the
+exceptionally warm reception. This continued as our Web site opened. We
+now have more than 900 requests for development systems from all over the
+world, and the new comp.sys.be newsgroup is lively. As a result of a
+higher than expected level of interest, of "pull," we decided to go
+beyond the "Demo Days" at Be in Menlo Park. Three months after Agenda,
+MacWorld happened to be a nicely timed and geographically positioned
+venue.
+</p><p>
+For the more committed, you decide the sense, we'll host our first
+software developer conference, our first "GeekFest," right after MacWorld
+on Saturday, January 13, in South San Francisco Convention Center.
+</p><p>
+Back to our MacWorld booth: We'll make sure mainstream users aren't
+misled. We'll prominently display a surgeon general's warning: Unfit for
+consumption by normal humans. We'll focus on software development tools,
+the new version of CodeWarrior by Metrowerks, prototypes and works in
+progress from early Be developers, and BeBox demonstrations every 20
+minutes. This is our first public appearance. Come by if you can. You'll
+get your free We Be Geeks pocket protector.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-5"></a>Be Marketing Questions and Answers</h2></div></div></div><p>
+Here are a few answers to a number of the most common questions you've
+been asking about Be. We'll keep you informed regularly about Be
+marketing, sales, pricing, and the like.You can also check out our web
+site at: http://www.be.com.
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id471972"></a><a id="id471974"></a>Q:</td><td><p>
+When is the BeBox going to be on sale?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Be plans to make the BeBox available to the general public in the
+first quarter of 1996. This means that you will be able to purchase a
+BeBox (configured with peripherals or not) from Be or from one of its
+resellers or VARs, with the native Be CodeWarrior development environment
+bundled. During 1996, we expect most purchasers to be programming
+hobbyists and professionals who are developing software for their own
+use, or for eventual sale to other BeBox owners.
+</p></td></tr><tr class="question"><td><a id="id471993"></a><a id="id471996"></a>Q:</td><td><p>
+What will it cost?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Be has not set its final pricing for the initial BeBox configurations,
+partly because we expect component prices to continue to change (read
+"fall") prior to our release date. We've announced that we expect the
+pricing to be about $1,600 for a bare-bones (non configured) system, and
+estimate that a configured system will be in the $2,500 range. We'll
+announce firm prices as the release date approaches.
+</p></td></tr><tr class="question"><td><a id="id472013"></a><a id="id472016"></a>Q:</td><td><p>
+Where can I buy a BeBox?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Initially, we expect that you will be able to purchase the BeBox from
+three sources. First will be through our resellers and VARs. Second will
+be directly from Be, via the Internet. In this case, your order will be
+sent to one of several partner companies, depending on the configuration
+you order. Last, we expect the BeBox to be made available through
+organizations such as universities. More details will be available as we
+approach our initial ship date.
+</p></td></tr><tr class="question"><td><a id="id472034"></a><a id="id472037"></a>Q:</td><td><p>
+What are Be's plans for distribution outside the U.S.?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Be does plan to distribute outside the U.S. In fact we already have a
+developer program up and running in Europe and have established corporate
+offices in Paris, France, for developer services and marketing
+activities. European developers can contact our Paris offices directly
+at: devbe@beeurope.worldnet.net.
+</p><p>
+Be plans to initially release the BeBox in the U.S. and France. After the
+initial release we plan to expand distribution to other European, Asian,
+and Pacific countries as quickly as we can. Our main gating item will be
+identifying distribution and other partners in the various countries and
+regions. We invite interested parties to send us questions and
+information to either marketing@be.com or devbe@beeurope.worldnet.net.
+</p><p>
+To set expectations correctly, the Be OS will initially be released in
+English. We expect to release other versions of the Be OS in other
+Roman-character languages as quickly as possible. We will post
+information about these releases to the Be web site after the initial
+English release. Be is committed to developing the Be OS in multibyte
+language forms, but we haven't announced our plans yet.
+</p></td></tr></tbody></table></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-4.html">Issue 1-4, January 3, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-6.html">Issue 1-6, January 17, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-4.html" title="Issue 1-4, January 3, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-6.html" title="Issue 1-6, January 17, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

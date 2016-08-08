@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Kernel Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheKernelKit_Overview.html" title="The Kernel Kit" /><link rel="prev" href="TheKernelKit_Areas_Overview.html" title="Areas" /><link rel="next" href="TheMailKit_Overview.html" title="The Mail Kit" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheKernelKit_Areas_Overview.html" title="Areas"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TheMailKit_Overview.html" title="The Mail Kit"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Kernel Kit</div></div><div id="headerB">Prev: <a href="TheKernelKit_Areas_Overview.html">Areas</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheMailKit_Overview.html">The Mail Kit</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheKernelKit_Images_Overview"></a>Images</h2></div></div></div><p>An image is compiled code. There are three types of image:</p><dl class="variablelist"><dt><span class="term">An app image</span></dt><dd><p>Is an application. Every application has a single app
+image.</p></dd><dt><span class="term">A library image</span></dt><dd><p>Is a dynamically linked library (a "shared library").
+Most applications link against the system libraries
+(<code class="filename">libroot.so</code>,
+<code class="filename">libbe.so</code>, and so on) that Be provides.</p></dd><dt><span class="term">An add-on image</span></dt><dd><p>Is an image that you load into your application as
+it's running. Symbols from the add-on image are linked and references
+are resolved when the image is loaded. An add-on image provides a sort
+of "heightened dynamic linking" beyond that of a DLL.</p></dd></dl><p>The following sections explain how to load and run an app image, how to
+create a shared library, and how to create and load an add-on image.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_LoadingAnAppImage"></a>Loading an App Image</h3></div></div></div><p>Loading an app image is like running a "sub-program." The image that you
+load is launched in much the same way as had you double-clicked it in the
+Tracker, or launched it from the command line. It runs in its own
+team—it doesn't share the address space of the application from
+which it was launched—and, generally, leads its own life.</p><p>Any application can be loaded as an app image; you don't need to issue
+special compile instructions or otherwise manipulate the binary. The one
+requirement of an app image is that it must have a <code class="function">main()</code> function.</p><p>To load an app image, you call the
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>
+function:</p><pre class="programlisting example c"><span class="type">thread_id</span> <code class="function">load_image</code>(<span class="type">int32</span> <code class="parameter">argc</code>,
+    <span class="type">const char **</span><code class="parameter">argv</code>,
+    <span class="type">const char **</span><code class="parameter">env</code>)</pre><p>The function's first two arguments identify the app image (file) that you
+want to launch—we'll return to this in a moment. Having located the
+file, the function creates a new team, spawns a main thread in that team,
+and returns the thread_id of the thread to you. The thread isn't running:
+To make it run you pass the <span class="type">thread_id</span> to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#resume_thread" title="resume_thread()"><code class="function">resume_thread()</code></a> or
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>
+(as explained in
+"<a class="xref" href="TheKernelKit_ThreadsAndTeams_Overview.html" title="Threads And Teams">Threads And Teams</a>").</p><p>The <code class="parameter">argc</code>/<code class="parameter">argv</code>
+argument pair is copied and forwarded to the new thread's
+<code class="function">main()</code> function:</p><ul class="itemizedlist"><li><p>The first string in the <code class="parameter">argv</code> array must be the name of the image file
+that you want to launch;
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>
+uses this string to find the
+file. You then install any other arguments you want in the array, and
+terminate the array with a <code class="constant">NULL</code> entry. <code class="parameter">argc</code> is set to the number of
+entries in the <code class="parameter">argv</code> array (not counting the terminating <code class="constant">NULL</code>). It's the
+caller's responsibility to free the <code class="parameter">argv</code> array after
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>
+returns (remember—the array is copied before it's passed to the
+new thread).</p></li><li><p><code class="parameter">envp</code> is an array of environment variables that are also passed to
+<code class="function">main()</code>. Typically, you use the global environ pointer (which you must
+declare as an <span class="code">extern</span>—see the example, below). You can, of course,
+create your own environment variable array: As with the <code class="parameter">argv</code> array, the
+<code class="parameter">envp</code> array should be terminated with a <code class="constant">NULL</code> entry, and you must free
+the array when
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>
+returns (that is, if you allocated it yourself—don't try to free environ).</p></li></ul><p>The following example demonstrates a typical use of
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>. First,
+we include the appropriate files and declare the necessary variables:</p><pre class="programlisting example c">#include &lt;image.h&gt; <span class="comment">/* load_executable() */</span>
+#include &lt;OS.h&gt; <span class="comment">/* wait_for_thread() */</span>
+#include &lt;stdlib.h&gt; <span class="comment">/* malloc() */</span>
+
+<span class="type">char **</span><code class="varname">arg_v</code>; <span class="comment">/* choose a name that doesn't collide with argv */</span>
+<span class="type">int32</span> <code class="varname">arg_c</code>; <span class="comment">/* same here vis a vis argc */</span>
+<span class="type">thread_id</span> <code class="varname">exec_thread</code>;
+<span class="type">int32</span> <code class="varname">return_value</code>;</pre><p>Install, in the <code class="varname">arg_v</code> array, the "command line" arguments. Let's pretend
+we're launching a program found in
+<code class="filename">/boot/home/apps/adder</code> that takes two
+integers, adds them together, and returns the result as <code class="function">main()</code>'s exit
+code. Thus, there are three arguments: The name of the program, and the
+values of the two addends converted to strings. Since there are three
+arguments, we allocate <code class="varname">arg_v</code> to hold four pointers (to accommodate the
+final <code class="constant">NULL</code>). Then we allocate and copy the arguments.</p><pre class="programlisting example c"><code class="varname">arg_c</code> = 3;
+<code class="varname">arg_v</code> = (<span class="type">char **</span>)<code class="function">malloc</code>(sizeof(<span class="type">char *</span>) * (<code class="varname">arg_c</code> + 1));
+
+<code class="varname">arg_v</code>[0] = <code class="function">strdup</code>("/boot/home/apps/adder");
+<code class="varname">arg_v</code>[1] = <code class="function">strdup</code>("5");
+<code class="varname">arg_v</code>[2] = <code class="function">strdup</code>("3");
+<code class="varname">arg_v</code>[3] = <code class="constant">NULL</code>;</pre><p>Now that everything is properly set up, we call
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>. After the
+function returns, it's safe to free the allocated <code class="varname">arg_v</code> array:</p><pre class="programlisting example c"><code class="varname">exec_thread</code> = <code class="function">load_image</code>(<code class="varname">arg_c</code>, <code class="varname">arg_v</code>, <code class="varname">environ</code>);
+
+while (--<code class="varname">arg_c</code> &gt;= 0)
+   <code class="function">free</code>(<code class="varname">arg_v</code>[<code class="varname">arg_c</code>]);
+
+<code class="function">free</code>(<code class="varname">arg_v</code>);</pre><p>At this point, <code class="varname">exec_thread</code> is suspended (the natural state of a
+newly-spawned thread). In order to retrieve its return value, we use
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>
+to tell the thread to run:</p><pre class="programlisting example c"><code class="function">wait_for_thread</code>(<code class="varname">exec_thread</code>, &amp;<code class="varname">return_value</code>);</pre><p>After
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>
+returns, the value of <code class="varname">return_value</code> should be 8
+(i.e. 5 + 3).</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_CreatingASharedLibrary"></a>Creating a Shared Library</h3></div></div></div><p>The primary documentation for creating a shared library is provided by
+MetroWerks in their CodeWarrior manual. Beyond the information that you
+find there, you should be aware of the following amendments and caveats:</p><ul class="itemizedlist"><li><p>You mustn't export your library's symbols through the <code class="option">-export</code> all
+linker flag. Instead, use the <span class="code">__declspec()</span> directive to export each
+symbol. The macro is described below. If you're compiling for the PPC,
+you must also export #pragma symbols; to do this from the BeIDE, go to
+the Linker/PEF portion of the Settings window and set "Export Symbols"
+to "Use #pragma".</p></li><li><p>The loader looks for libraries by following the <code class="envar">LIBRARY_PATH</code>
+environment variable. The default library path looks like this:</p><pre class="screen">$ echo $LIBRARY_PATH
+%A/lib:/boot/home/config/lib:/boot/beos/system/lib</pre><p>where "%A" means the directory that contains the app that the user is
+lauching.</p></li></ul><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_ExportingAndImportingSymbols"></a>Exporting and Importing Symbols</h4></div></div></div><p>If you're developing a shared library you should explicitly export every
+global symbol in your library by using the <span class="code">__declspec()</span> macro. To export
+a symbol, you declare it thus…</p><pre class="programlisting example c">__declspec(dllexport) type name</pre><p>…where <span class="code">__declspec(dllexport)</span> is literal, and type and name declare the
+symbol. Some examples:</p><pre class="programlisting example c">__declspec(dllexport) <span class="type">char *</span><code class="varname">some_name</code>;
+__declspec(dllexport) <span class="type">void</span> <code class="function">some_func</code>() {...}
+class __declspec(dllexport) <code class="classname">MyView</code> {...}</pre><p>To import these symbols, an app that wants to use your library must
+"reverse" the declaration by replacing dllexport with dllimport:</p><pre class="programlisting example c">__declspec(dllimport) <span class="type">char *</span><code class="varname">some_name</code>;
+__declspec(dllimport) <span class="type">void</span> <code class="function">some_func</code>();
+class __declspec(dllimport) <code class="classname">MyView</code>;</pre><p>The trouble with this system is that it implies two sets of headers, one
+for exporting (for building your library) and another for importing (that
+the library client would use). The Be libraries use macros, defined in
+<code class="filename">BeBuild.h</code>,
+that throw the import/export switch so the header files can
+be unified. For example, here's the macro for libbe:</p><pre class="programlisting example c">#if _BUILDING_be
+#define _IMPEXP_BE   __declspec(dllexport)
+#else
+#define _IMPEXP_BE __declspec(dllimport)
+#endif</pre><p>When libbe is being built, a private compiler directive defines
+<span class="code">_BUILDING_be</span> to be non-zero, and <span class="code">_IMPEXP_BE</span> exports symbols. When a
+developer includes <code class="filename">BeBuild.h</code>,
+the <span class="code">_BUILDING_be</span> variable is set to zero,
+so <span class="code">_IMPEXP_BE</span> is set to import symbols.</p><p>You may want to emulate this system by defining macros for your own
+libraries. This implies that you have to define a compiler switch
+(analogous to <span class="code">_BUILDING_be</span>) yourself. Set the switch to non-zero when
+you're building your library, and then set it to zero when you publish
+your headers for use by library clients.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_CreatingAndUsingAnAddOnImage"></a>Creating and Using an Add-on Image</h3></div></div></div><p>An add-on image is indistinguishable from a shared library image.
+Creating an add-on is exactly like creating a shared library, a topic
+that we breezed through above, but with a couple of minor tweaks:</p><ul class="itemizedlist"><li><p>The loader looks for add-ons by following the paths in the <code class="envar">ADDON_PATH</code>
+environment variable. The default <code class="envar">ADDON_PATH</code> looks like this:</p><pre class="screen">$ echo $ADDON_PATH
+%A/add-ons:/boot/home/config/add-ons:/boot/beos/system/add-ons</pre></li><li><p>You have to export your add-on symbols, and you also must extern "C"
+them. This ensures that the symbol names won't be mangled by the
+compiler.</p></li></ul><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_ExportingAddOnSymbols"></a>Exporting Add-on Symbols</h4></div></div></div><p>To export your add-on's symbols, declare them thus:</p><pre class="programlisting example c">extern "C" __declspec(dllexport) <span class="type">void</span> <code class="function">some_func</code>();
+extern "C" __declspec(dllexport) <span class="type">int32</span> <code class="varname">some_global_data</code>;</pre><p>To extern a C++ class takes more work. You can't extern the class
+directly; typically what you do is create (and extern) a C function that
+covers the class constructor:</p><pre class="programlisting example c">extern "C" __declspec(dllexport) <span class="type">MyClass *</span><code class="function">instantiate_my_class</code>();</pre><p><code class="function">instantiate_my_class()</code> is implemented to
+call the <code class="classname">MyClass</code> constructor:</p><pre class="programlisting example cpp"><code class="classname">MyClass</code> *<code class="function">instantiate_my_class</code>()
+{
+    return new <code class="classname">MyClass</code>();
+}</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_LoadingAnAddOnImage"></a>Loading an Add-on Image</h4></div></div></div><p>To load an add-on into your application, you call the
+<a class="link" href="TheKernelKit_Images.html#load_add_on" title="load_add_on(), unload_add_on()"><code class="function">load_add_on()</code></a>
+function. The function takes a pathname (absolute or relative to the
+current working directory) to the add-on file, and returns an <span class="type">image_id</span>
+number that uniquely identifies the image across the entire system.</p><p>For example, let's say you've created an add-on image that's stored in
+the file <code class="filename">/boot/home/add-ons/adder</code>. The code that loads the add-on would
+look like this:</p><pre class="programlisting example c"><span class="comment">/* For brevity, we won't check errors. */</span>
+<span class="type">image_id</span> <code class="varname">addon_image</code>;
+
+<span class="comment">/* Load the add-on. */</span>
+<code class="varname">addon_image</code> = <code class="function">load_add_on</code>("/boot/home/add-ons/adder");</pre><p>Unlike loading an executable, loading an add-on doesn't create a separate
+team, nor does it spawn another thread. The whole point of loading an
+add-on is to bring the image into your application's address space so you
+can call the functions and fiddle with the variables that the add-on
+defines.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Images_Symbols"></a>Symbols</h4></div></div></div><p>After you've loaded an add-on into your application, you'll want to
+examine the symbols (variables and functions) that it has brought with
+it. To get information about a symbol, you call the
+<a class="link" href="TheKernelKit_Images.html#get_image_symbol" title="get_image_symbol(), get_nth_image_symbol()"><code class="function">get_image_symbol()</code></a>
+function:</p><pre class="programlisting example c"><span class="type">status_t</span> <code class="function">get_image_symbol</code>(<span class="type">image_id</span> <code class="parameter">image</code>,
+         <span class="type">char *</span><code class="parameter">symbol_name</code>,
+         <span class="type">int32</span> <code class="parameter">symbol_type</code>,
+         <span class="type">void **</span><code class="parameter">location</code>)</pre><p>The function's first three arguments identify the symbol that you want to
+get:</p><ul class="itemizedlist"><li><p>The first argument is the <span class="type">image_id</span> of the add-on that owns the symbol.</p></li><li><p>The second argument is the symbol's name. This assumes, of course,
+that you know the name, and that the add-on has declared the name as
+extern. In general, using an add-on implies just this sort of
+cooperation.</p></li><li><p>The third argument is a constant that gives the symbol's symbol type.
+There are three types, as given below. If the executable format doesn't
+distinguish between text and data symbols, then you can use any of
+these three types—they'll all be the same. If the format does
+distinguish between text and data, then you can either ask for the
+specific type, or you can ask for <code class="constant">B_SYMBOL_TYPE_ANY</code>.</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><code class="constant">B_SYMBOL_TYPE_DATA</code></td><td>Global data (variables)</td></tr><tr><td><code class="constant">B_SYMBOL_TYPE_TEXT</code></td><td>Functions</td></tr><tr><td><code class="constant">B_SYMBOL_TYPE_ANY</code></td><td>The symbol lives anywhere</td></tr></tbody></table></div></li></ul><p>The function returns, by reference in its final argument, a pointer to
+the symbol's address. For example, let's say the adder add-on code looks
+like this:</p><pre class="programlisting example c">extern "C" <span class="type">int32</span> <code class="varname">a1</code> = 0;
+extern "C" <span class="type">int32</span> <code class="varname">a2</code> = 0;
+extern "C" <span class="type">int32</span> <code class="function">adder</code>(<span class="type">void</span>);
+
+<span class="type">int32</span> <code class="function">adder</code>(<span class="type">void</span>)
+{
+   return (<code class="varname">a1</code> + <code class="varname">a2</code>);
+}</pre><p>To examine the variables (<code class="varname">a1</code> and <code class="varname">a2</code>),
+you would call
+<a class="link" href="TheKernelKit_Images.html#get_image_symbol" title="get_image_symbol(), get_nth_image_symbol()"><code class="function">get_image_symbol()</code></a>
+thus:</p><pre class="programlisting example c"><span class="type">int32 *</span><code class="varname">var_a1</code>, <span class="type">*</span><code class="varname">var_a2</code>;
+
+<code class="function">get_image_symbol</code>(<code class="varname">addon_image</code>, "a1", <code class="constant">B_SYMBOL_TYPE_DATA</code>, &amp;<code class="varname">var_a1</code>);
+<code class="function">get_image_symbol</code>(<code class="varname">addon_image</code>, "a2", <code class="constant">B_SYMBOL_TYPE_DATA</code>, &amp;<code class="varname">var_a2</code>);</pre><p>Here we get the symbol for the <code class="function">adder()</code> function:</p><pre class="programlisting example c"><span class="type">int32</span> (*<code class="varname">func_add</code>)();
+<code class="function">get_image_symbol</code>(<code class="varname">addon_image</code>, "adder", <code class="constant">B_SYMBOL_TYPE_TEXT</code>,
+                 &amp;<code class="varname">func_add</code>);</pre><p>Now that we've retrieved all the symbols, we can set the values of the
+two addends and call the function:</p><pre class="programlisting example c">*<code class="varname">var_a1</code> = 5;
+*<code class="varname">var_a2</code> = 3;
+<span class="type">int32</span> <code class="varname">return_value</code> = (*<code class="varname">func_add</code>)();</pre></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheKernelKit_Areas_Overview.html">Areas</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheMailKit_Overview.html">The Mail Kit</a> </div><div id="footerB"><div id="footerBL"><a href="TheKernelKit_Areas_Overview.html" title="Areas"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TheMailKit_Overview.html" title="The Mail Kit"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

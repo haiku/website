@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-30.html" title="Issue 2-30, July 30, 1997" /><link rel="next" href="Issue2-32.html" title="Issue 2-32, August 13, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-30.html" title="Issue 2-30, July 30, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-32.html" title="Issue 2-32, August 13, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-30.html">Issue 2-30, July 30, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-32.html">Issue 2-32, August 13, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-31"></a>Issue 2-31, August 6, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-31"></a>Be Engineering Insights: So You Wanna Play With a Frame Buffer</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+I've spent way too much time over the last four years reading and writing
+frame buffer memory. Admitting that I have this problem is, for me,
+cleansing. Almost spiritual. Let me share my enlightenment. And if you're
+doing rendering using the Game Kit, or working with off screen bitmaps,
+you might even find my confessions interesting.
+</p><p>
+The first thing that you realize when you use a fast machine (like my
+beloved 225 MHz PowerPC) is that PCI is a pain. This thing is so slow
+compared to the speed of the CPU that thinking a little bit about the way
+you will access memory can have some nice paybacks.
+</p><p>
+For the next few examples, let's assume that the frame buffer is in
+24-bit mode and has a width of 800 pixels.
+</p><p>
+The easiest way to draw a square 128 pixels wide is:
+</p><pre class="programlisting c">
+#define  <code class="constant">BUFFER_BASE</code>  0x14000020
+#define  <code class="constant">ROWBYTE</code>    (800*4)
+
+<span class="type">void</span>  <code class="function">test1</code>()
+{
+  <span class="type">ulong  *</span><code class="varname">p</code>;
+  <span class="type">ulong</span>  <code class="varname">my_color</code>;
+  <span class="type">int</span>    <code class="varname">x</code>;
+  <span class="type">int</span>    <code class="varname">y</code>;
+
+  <code class="varname">my_color</code> = 0x00ff0000;    <span class="comment">// a nice red color.</span>
+
+  for (<code class="varname">y</code> = 0; <code class="varname">y</code> &lt; 128; <code class="varname">y</code>++) {
+    <code class="varname">p</code> = (<span class="type">ulong*</span>)(<code class="constant">BUFFER_BASE</code> + (<code class="varname">y</code> * <code class="constant">ROWBYTE</code>));
+    for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; 128; <code class="varname">x</code>++) {
+      *<code class="varname">p</code>++ = <code class="varname">my_color</code>;
+    }
+  }
+}
+</pre><p>
+On my machine with a Twin Turbo video card, this piece of code runs in
+3550 usecs. This is a bandwidth of about 18 MB/sec. If we run the same
+test using conventional memory, the code now runs in only 730 usecs --
+about 5 times faster!! Excuse me, I have to get the phone.
+</p><p>
+I'm back. Moral #1: When you have a LOT of rendering to do, it's faster
+to render in an off screen bitmap and then blit the final result to the
+screen. This is even more apparent if you try to READ stuff out of the
+buffer. If we change the previous code into
+</p><pre class="programlisting c">
+for (<code class="varname">y</code> = 0; <code class="varname">y</code> &lt; 128; <code class="varname">y</code>++) {
+  <code class="varname">p</code> = (<span class="type">ulong*</span>)(<code class="constant">BUFFER_BASE</code> + (<code class="varname">y</code> * <code class="constant">ROWBYTE</code>));
+  for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; 128; <code class="varname">x</code>++) {
+    *<code class="varname">p</code>++ ^= 0xffffffff;
+  }
+}
+</pre><p>
+The execution time now goes up to a hugely 15100 microseconds, 4.5 times
+slower than the previous write only case. Say it not, reading the
+contents of a PCI frame buffer is a bad idea! In real memory, it takes
+only 800 microseconds. As you can see, the off screen method is the clear
+winner.
+</p><p>
+Back to the simple writing case. It turns out that writing doubles into
+the frame buffer helps the performance of the PCI transaction:
+</p><pre class="programlisting c">
+<span class="type">void</span>  <code class="function">test1</code>()
+{
+  <span class="type">double  *</span><code class="varname">p</code>;
+  <span class="type">double</span>  <code class="varname">temp_double</code>;
+  <span class="type">ulong</span>  <code class="varname">my_color</code>;
+  <span class="type">int</span>    <code class="varname">x</code>;
+  <span class="type">int</span>    <code class="varname">y</code>;
+
+   <code class="varname">my_color</code> = 0x00ff0000;    <span class="comment">// a nice green color.</span>
+
+  *((<span class="type">ulong*</span>)&amp;<code class="varname">temp_double</code>) = <code class="varname">my_color</code>;
+  *(1 + (<span class="type">ulong*</span>)&amp;<code class="varname">temp_double</code>) = <code class="varname">my_color</code>;
+
+  for (<code class="varname">y</code> = 0; <code class="varname">y</code> &lt; 128; <code class="varname">y</code>++) {
+    <code class="varname">p</code> = (<span class="type">double*</span>)(<code class="constant">BUFFER_BASE</code> + (<code class="varname">y</code> * <code class="constant">ROWBYTE</code>));
+    for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; 128/2; <code class="varname">x</code>++) {
+      *<code class="varname">p</code>++ = <code class="varname">temp_double</code>;
+    }
+  }
+}
+</pre><p>
+This one runs in 1970 usec—about 50% better than the one using 32 bits
+transfer!
+</p><p>
+If we unroll the loop...
+</p><pre class="programlisting c">
+for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; 128/8; <code class="varname">x</code>++) {
+  *<code class="varname">p</code>++ = <code class="varname">temp_double</code>;
+  *<code class="varname">p</code>++ = <code class="varname">temp_double</code>;
+  *<code class="varname">p</code>++ = <code class="varname">temp_double</code>;
+  *<code class="varname">p</code>++ = <code class="varname">temp_double</code>;
+}
+</pre><p>
+...we don't actually gain anything. This runs in exactly the same time as
+the non-unrolled version. This is because any overhead between the write
+instructions is hidden by the time taken to do the write. If you do some
+computation between writes, you may find that it is free. For example:
+</p><pre class="programlisting c">
+for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; 128/2; <code class="varname">x</code>++) {
+  *<code class="varname">p</code>++ = <code class="varname">temp_double</code>;
+  <code class="varname">my_color</code> += (<code class="varname">x</code>&lt;&lt;24) | (<code class="varname">x</code> &lt;&lt; 8) ^ <code class="varname">x</code>;
+  *((<span class="type">ulong*</span>)&amp;<code class="varname">temp_double</code>) = <code class="varname">my_color</code>;
+  <code class="varname">my_color</code> += (<code class="varname">x</code>&lt;&lt;24) | (<code class="varname">x</code> &lt;&lt; 8) | <code class="varname">x</code>;
+  *(1 + (<span class="type">ulong*</span>)&amp;<code class="varname">temp_double</code>) = <code class="varname">my_color</code>;
+}
+</pre><p>
+It looks busy. It is busy. But this thing still runs in EXACTLY the same
+time—so much for optimization! (By the way, this random piece of code
+looks very nice if you run it a few thousand times, try it!)
+</p><p>
+Note that although the double write only needs to be aligned on a 4-byte
+boundary, you should stick with 8-byte alignment. 4-byte alignment
+carries an 80% performance penalty.
+</p><p>
+A few nice tricks
+</p><p>
+When doing graphic-intensive operations in 32-bit mode, you may find some
+of these functions useful. They're a collection of tricks to speed up
+common blending operations. Have fun decoding them!
+</p><p>
+The first one blends two RGB values...
+</p><p>
+The trivial implementation would be :
+</p><pre class="programlisting c">
+<span class="type">ulong</span> <code class="function">calc_blend</code>(<span class="type">ulong</span> <code class="parameter">color1</code>, <span class="type">ulong</span> <code class="parameter">color2</code>)
+{
+  <span class="type">ulong</span>  <code class="varname">result</code>;
+
+  <code class="varname">result</code> = ((1 + ((<code class="parameter">color1</code> &gt;&gt; 24) &amp; 0xff) + ((<code class="parameter">color2</code> &gt;&gt; 24)
+             &amp; 0xff)) &gt;&gt; 1) &lt;&lt; 24;
+  <code class="varname">result</code> |= ((1 + ((<code class="parameter">color1</code> &gt;&gt; 16) &amp; 0xff) + ((<code class="parameter">color2</code> &gt;&gt; 16)
+             &amp; 0xff)) &gt;&gt; 1) &lt;&lt; 16;
+  <code class="varname">result</code> |= ((1 + ((<code class="parameter">color1</code> &gt;&gt; 8) &amp; 0xff) + ((<code class="parameter">color2</code> &gt;&gt; 8)
+             &amp; 0xff)) &gt;&gt; 1) &lt;&lt; 8;
+  <code class="varname">result</code> |= ((1 + ((<code class="parameter">color1</code>   ) &amp; 0xff) + ((<code class="parameter">color2</code>   )
+             &amp; 0xff)) &gt;&gt; 1);
+
+  return <code class="varname">result</code>;
+}
+</pre><p>
+The fast version is:
+</p><pre class="programlisting c">
+<span class="type">ulong</span> <code class="function">calc_blend</code>(<span class="type">ulong</span> <code class="parameter">color1</code>, <span class="type">ulong</span> <code class="parameter">color2</code>)
+{
+  return ((<code class="parameter">color1</code> &amp; 0xFEFEFEFE)&gt;&gt;1)+
+         ((<code class="parameter">color2</code> &amp; 0xFEFEFEFE)&gt;&gt;1)+
+          (<code class="parameter">color1</code> &amp; <code class="parameter">color2</code> &amp; 0x01010101L));
+}
+</pre><p>
+A fast color addition with clipping to 0xff:
+</p><pre class="programlisting c">
+<span class="type">ulong</span> <code class="function">calc_add</code>(<span class="type">ulong</span> <code class="parameter">c1</code>, <span class="type">ulong</span> <code class="parameter">c2</code>)
+{
+  return ((((((<code class="parameter">c1</code>^<code class="parameter">c2</code>)&gt;&gt;1)^((<code class="parameter">c1</code>&gt;&gt;1)+
+              (<code class="parameter">c2</code>&gt;&gt;1))) &amp; 0x80808080L)&gt;&gt;7)*0xFF)|(<code class="parameter">c1</code>+<code class="parameter">c2</code>);
+}
+</pre><p>
+Now subtraction:
+</p><pre class="programlisting c">
+<span class="type">ulong</span> <code class="function">calc_sub</code>(<span class="type">ulong</span> <code class="parameter">c1</code>, <span class="type">ulong</span> <code class="parameter">c2</code>)
+{
+  <code class="parameter">c2</code> ^= 0xFFFFFFFFL;
+  return ((((((<code class="parameter">c1</code>^<code class="parameter">c2</code>)&gt;&gt;1)^((<code class="parameter">c1</code>&gt;&gt;1)+(<code class="parameter">c2</code>&gt;&gt;1))) &amp;
+               0x80808080L)&gt;&gt;7)*0xFF) &amp; (<code class="parameter">c1</code>+<code class="parameter">c2</code>+1);
+}
+</pre><p>
+By the way, thanks to Pierre for some of these tricks!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-31"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+You know how you read magazine articles that start, "By the time you read
+this..."
+</p><p>
+Well, it's Thursday before our developer's conference and I'm sitting
+here making up things that will sound OK by the time you read this next
+week. How about starting with things we do know.
+</p><p>
+We now have accelerated 3D support for OpenGL®!! How the heck? Well,
+start with the Diamond Monster3D board, add the current 2.4 glide library
+support from 3Dfx, and mash on the freely available Mesa OpenGL®
+implementation, and there you have it. I'm telling you, you have done 3D
+until you've done 3D with a nice cheap hardware accelerator.
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/glide.zip
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/mesafx.zip
+</p><p>
+This will work with any of the 3Dfx Voodoo based graphics cards, not
+Voodoo Rush at the moment. Go buy one of these cards (~$200), plug it
+into your Mac, and have at it. If you are at the developer's conference,
+you'll see this in action, if not, you'll just have to wait.
+</p><p>
+Speaking of the conference, what else will you see? Well, since you won't
+see this until next week anyway, you'll see a whole bunch of other nifty
+graphics stuff, as well as a glimpse of what I fondly call WetTV. Not to
+dwell on my favorite Bt848 subject, but I'm programming and I can't
+stop!! Have you ever watched television where channel changes have movie
+transitions? You will need a towel to run this application because after
+you do, you will find that you have peed your pants with excitement. Bold
+statements? Yes of course, this stuff is kicking and you won't see it on
+XYZ operating systems because those programmers simply aren't as
+motivated. They're too busy poo pooing how little chance we have of
+succeeding.
+</p><p>
+My brother has this favorite little statement, "We're going to go eat
+from the big dog's bowl while he's not looking."
+</p><p>
+So here we are. Some software available. Some interesting hardware
+support, including a new processor, and hungry agile programmers who are
+willing to take advantage of superior technology. Thanks for all your
+support.
+</p><p>
+So what kind of support do you get from us? Let me tell you a story. We
+were at the local sandwich shop waiting for our food. Geoff had just come
+from the local hardware store where he had bought some stain or some
+such. He was trying to balance the can on his head, but lacking enough
+hair, it didn't stay too well and ended up on the floor. Boy that stuff
+spreads fast!! He and one of the other customers quickly mopped it up
+while Brian and I quickly got our food and distanced ourselves from the
+scene. To redeem himself, he did the 3Dfx support.
+</p><p>
+That's the kind of tech support personnel we have around here! A little
+fool hardy, but we can program up a storm when the need arises. I hope
+you all benefit from the fruits of our labors.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-31"></a>BeOS on Intel Hardware</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Six months ago, we exited the hardware business. We loved our BeBox very
+much, but we love to create opportunities for BeOS developers even more.
+Our software running on Power Mac compatibles was warmly received. As a
+result, BeOS developers could see a much broader installed base than the
+one provided by BeBoxen. Apple, Power Computing, Motorola and Umax were
+very helpful in making this possible.
+</p><p>
+Once it became clear we were in the business of adding value to popular
+hardware, the next logical step didn't require much thought. We claimed
+and proved the portability of our OS; porting it to Intel Architecture
+systems made sense. At a time when our engineering resources were
+stretched by our work on the major improvements in the Preview Release,
+Intel helped us to get started by providing engineers who, for a while,
+came to work in our cramped cubicles. Their contribution to this
+important project is gratefully acknowledged: We wouldn't be this far
+along without their excellent work.
+</p><p>
+Now, such a move raises many new questions. I'll answer a few today,
+leaving the rest to other columns—or BeWeek columnists.
+</p><p>
+First, does this put us more squarely in competition with Microsoft? In
+other words, are we even crazier than previously perceived?
+</p><p>
+Crazy, perhaps, but not suicidal. Actually, as one of our co-founders,
+Steve Sakoman, remarks, one must be crazy to do something original, as
+opposed to derivative. But not all craziness is productive. What do we
+have to gain by competing more directly with Microsoft?
+</p><p>
+Let's start by noting that, more and more, when you write a line of C++,
+or Java code, you could be competing with Microsoft, whose strategy could
+be summarized by one word: Everything.
+</p><p>
+But universality has its drawbacks. Windows 95 is an excellent general
+purpose desktop OS. Windows NT is a holy terror in the enterprise market.
+Are we going to be flattened by these two steamrollers? For us, the idea
+is to exist to the left or right of them, not in their path. Put another
+way, our focus is the digital media content creation space.
+</p><p>
+The situation opposes a dedicated tool, the BeOS, versus respected
+general purpose platforms. Some developers and users will prefer the
+benefits of specialization, others will pick the general purpose
+platform. Historically, this leads to 75-25%, or 80-20% situations.
+</p><p>
+Let's continue by noting many advanced PC users already run more than one
+OS. Popular software tools called boot managers provide for such
+coexistence: Windows NT offers its own, there is the extremely successful
+System Commander and Lilo, a very nice Linux utility. We're proud of our
+work, we see incredible potential in our OS, but the logical consequence
+of specialization is coexistence with general purpose products, as
+opposed to attempting to displace them with a (yet) unproven OS such as
+ours.
+</p><p>
+Second, does this mean we are abandoning the PowerPC? Again, no. Why
+should we do this at the very moment our OS could run on most personal
+computers? As we have said in the past, we are processor agnostic.
+</p><p>
+Agnostic, and hopeful. Comparing the performance between Intel-based PCs
+and PowerPC systems, we see unrealized potential in the PowerPC space. In
+the Intel market, competitive forces have honed many parts of the system,
+chip sets, bus, memory, disks, graphic accelerators...
+</p><p>
+As a result, with roughly equivalent Pentium and PowerPC processors,
+system performance tends to be superior on the Intel Architecture side.
+It's not always pretty, but advances such as USB and FireWire are about
+to remove many scars from the past—and it is fast and inexpensive. A
+system based on an Intel dual Pentium Pro motherboard, with high-speed
+SCSI storage, Ethernet, sound, nice video, etc., can be had for about
+$2,500, monitor included.
+</p><p>
+On the other hand, until recently, the Mac market has been deprived from
+the competitive forces which make hardware subsystems more efficient and
+less expensive. This is where we see an opportunity for the PowerPC.
+There is a chance the much awaited CHRP will finally become a reality. If
+it does, an active Mac clone industry will finally actualize the "power"
+in PowerPC.
+</p><p>
+I wrote above we were processor agnostic and hopeful. We aren't blind
+either. Apple is still struggling with its licensing dilemma. As everyone
+else, I've read the New York Times story reporting Apple Board's
+statement to clone makers they were, in essence, no longer wanted. I hope
+the NYT was misinformed but I'm struggling with the knowledge John
+Markoff, the reporter, is well connected and very careful.
+</p><p>
+We'll see. In the mean time, we have to take care of our business, which
+is to expand opportunities for BeOS developers. That's what we are doing
+with the Intel Architecture version.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-30.html">Issue 2-30, July 30, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-32.html">Issue 2-32, August 13, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-30.html" title="Issue 2-30, July 30, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-32.html" title="Issue 2-32, August 13, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

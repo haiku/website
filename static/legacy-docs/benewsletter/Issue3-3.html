@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-2.html" title="Issue 3-2, January 14, 1998" /><link rel="next" href="Issue3-4.html" title="Issue 3-4, January 28, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-2.html" title="Issue 3-2, January 14, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-4.html" title="Issue 3-4, January 28, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-2.html">Issue 3-2, January 14, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-4.html">Issue 3-4, January 28, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-3"></a>Issue 3-3, January 21, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-3"></a>Be Engineering Insights: Sniffing the Wires</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Igor</span> <span class="surname">Eydelnant</span></span></div></div></div><p>
+For network administration or low-level development it's useful to be
+able to monitor and interpret the network traffic at the physical level
+with a network monitor/analyzer. These tools are expensive, however, and
+they pose security concerns and moral dilemmas that need to be resolved.
+</p><p>
+For network development, though, it can also be helpful to watch the
+traffic as it passes through the layers of the protocol stack. Every
+layer strips the corresponding envelope from a received packet on its way
+up. The reverse process of adding headers and/or trailers takes place
+when a packet is sent out. Examples of protocol stacks are TCP/IP,
+AppleTalk, and IPX.
+</p><p>
+A protocol is simply a set of rules. Protocols are present wherever there
+is a need to communicate: language, auto traffic rules, human behavior...
+Not to mention networks and computers. If protocol is broken,
+communication is #@$#@$%@!
+</p><p>
+Technically, today's sample is a protocol driver, but instead of passing
+packets up, it unconditionally rejects each of them after spitting it out
+to a file. "Reject" in protocolese means: "I'm not consuming this packet,
+it's meant for some other protocol stack."
+</p><p>
+Here's what Netdump's output looks like:
+</p><pre class="screen">
+...
+Frame# 2, Length=60, deltaTime= 1288.5380, Protocol=ARP, PID=0x0806
+Dst=[ff:ff:ff:ff:ff:ff], Src=[00:c0:f0:22:c0:81], Entire frame follows
+    ff ff ff ff ff ff 00 c0 f0 22 c0 81 08 06 00 01
+    08 00 06 04 00 01 00 c0 f0 22 c0 81 cf 71 d7 de
+    00 00 00 00 00 00 cf 71 d7 dd 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00 00 00 00 00
+
+Frame# 3, Length=98, deltaTime=    0.4600, Protocol=IP, PID=0x0800
+Dst=[00:60:08:a2:33:0f], Src=[00:c0:f0:22:c0:81], Entire frame follows
+    00 60 08 a2 33 0f 00 c0 f0 22 c0 81 08 00 45 00
+...
+</pre><p>
+The complete code is available by anonymous ftp at:
+ftp://ftp.be.com/pub/samples/network_kit/obsolete/netdump.zip
+</p><p>
+Here is a self-explanatory code excerpt.
+</p><pre class="programlisting cpp">
+#include &lt;NetDevice.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;time.h&gt;
+#include &lt;OS.h&gt;
+#include &lt;byteorder.h&gt;
+#include "netdump.h"
+
+static <span class="type">FILE *</span><code class="varname">f</code>;
+static <span class="type">short</span> <code class="varname">just_started</code>;
+
+<span class="type">void</span>
+<code class="classname">NetdumpController</code>::<code class="methodname">AddDevice</code>(
+                            <span class="type"><code class="classname">BNetDevice</code> *</span><code class="parameter">dev</code>,
+                            <span class="type">const char *</span><code class="parameter">name</code>
+                            )
+{
+    if (<code class="parameter">dev</code>-&gt;<code class="methodname">Type</code>() != <code class="constant">B_ETHER_NET_DEVICE</code>)
+        return;
+
+    <code class="varname">f</code> = <code class="function">fopen</code>(DUMPTO, "w+");
+    if (!<code class="varname">f</code>) return;
+
+    <code class="varname">just_started</code> = <code class="constant">true</code>;
+    <code class="function">register_packet_handler</code>(<code class="varname">this</code>, <code class="parameter">dev</code>, <code class="constant">NETDUMP_PRIO</code>);
+}
+
+<span class="type">bool</span>
+<code class="classname">NetdumpController</code>::<code class="methodname">PacketReceived</code>(
+                                 <span class="type"><code class="classname">BNetPacket</code> *</span><code class="parameter">pkt</code>,
+                                 <span class="type"><code class="classname">BNetDevice</code> *</span><code class="parameter">dev</code>
+                                 )
+{
+    static <span class="type">double</span> <code class="varname">time0</code>;
+    static <span class="type">ulong</span> <code class="varname">pktn</code>;
+    <span class="type">ushort</span> <code class="varname">pkt_size</code>, <code class="varname">i</code>;
+    <span class="type">uchar</span> <code class="varname">mac_addr</code>[<code class="constant">MAC_ADDR_LEN</code>];
+    <span class="type">char</span> <code class="varname">protostr</code>[12];
+    <span class="type">ushort</span> <code class="varname">protoid</code>;
+
+    if (<code class="varname">just_started</code>) {
+        <code class="varname">just_started</code> = <code class="constant">false</code>;
+        <code class="varname">pktn</code> = 0;
+        <code class="varname">time0</code> = <code class="function">system_time</code>();
+    }
+
+    if (<code class="varname">pktn</code>++ == <code class="constant">MAX_PKT_N</code>) { <span class="comment">//There! Now close and cleanup</span>
+        <code class="function">unregister_packet_handler</code>(<code class="varname">this</code>, <code class="parameter">dev</code>);
+        <code class="function">fclose</code>(<code class="varname">f</code>);
+        <span class="comment">// From now on, only counter will get incremented.</span>
+        <span class="comment">// No output</span>
+    }
+    if (<code class="varname">pktn</code> &gt;= <code class="constant">MAX_PKT_N</code>)      <span class="comment">// are we "there" yet?</span>
+        return <code class="constant">false</code>;
+    <span class="comment">// else...</span>
+
+    <code class="varname">pkt_size</code> = <code class="parameter">pkt</code>-&gt;<code class="methodname">Size</code>();
+
+    <code class="function">fprintf</code>(<code class="varname">f</code>, "Frame# %u, Length=%d, ", <code class="varname">pktn</code>, <code class="varname">pkt_size</code>);
+    <code class="function">fprintf</code>(<code class="varname">f</code>, "deltaTime=%10.4f, ",
+            (<code class="function">system_time</code>() - <code class="varname">time0</code>) / 1000);
+
+    <span class="comment">// PID/len</span>
+    <code class="parameter">pkt</code>-&gt;<code class="methodname">Read</code>(<code class="constant">ETHDR_PROTOID_OFS</code>, (<span class="type">char *</span>)&amp;<code class="varname">protoid</code>,
+      <code class="function">sizeof</code>(<code class="varname">protoid</code>));
+    <code class="varname">protoid</code> =
+      <code class="function">B_BENDIAN_TO_HOST_INT16</code>(<code class="varname">protoid</code>); <span class="comment">// net is big-endian</span>
+    <span class="comment">// interpret it</span>
+    if (<code class="varname">protoid</code> &gt; <code class="constant">MAX_ETH_LEN</code>) {
+        switch (<code class="varname">protoid</code>) {
+        case <code class="constant">PROTOID_IP</code>:
+            <code class="function">strcpy</code>(<code class="varname">protostr</code>, "IP");
+            break;
+        case <code class="constant">PROTOID_ARP</code>:
+            <code class="function">strcpy</code>(<code class="varname">protostr</code>, "ARP");
+            break;
+        case <code class="constant">PROTOID_RARP</code>:
+            <code class="function">strcpy</code>(<code class="varname">protostr</code>, "RARP");
+            break;
+        case <code class="constant">PROTOID_APLTK</code>:
+            <code class="function">strcpy</code>(<code class="varname">protostr</code>, "AppleTalk");
+            break;
+        default:
+            <code class="function">strcpy</code>(<code class="varname">protostr</code>, "#Unknown#");
+            break;
+        }
+        <code class="function">fprintf</code>(<code class="varname">f</code>, "Protocol=%s, ", <code class="varname">protostr</code>);
+    } <span class="comment">// else //This is IEEE 802.3 len. See RFC 894, 1042...</span>
+
+    <span class="comment">// frame destination...</span>
+    <code class="function">fprintf</code>(<code class="varname">f</code>, "PID=0x%04x\nDst=[", <code class="varname">protoid</code>);
+    <code class="parameter">pkt</code>-&gt;<code class="methodname">Read</code>(0, (<span class="type">char *</span>) &amp;<code class="varname">mac_addr</code>, <code class="constant">MAC_ADDR_LEN</code>);
+    for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="constant">MAC_ADDR_LEN</code>; <code class="varname">i</code>++)
+        <code class="function">fprintf</code>(<code class="varname">f</code>, "%02x%s", (<span class="type">uchar</span>) <code class="varname">mac_addr</code>[<code class="varname">i</code>],
+            (<code class="varname">i</code> == <code class="constant">MAC_ADDR_LEN</code> -1) ? "], " : ":");
+
+    <span class="comment">// ...and source</span>
+    <code class="function">fprintf</code>(<code class="varname">f</code>, "Src=[");
+    <code class="parameter">pkt</code>-&gt;<code class="methodname">Read</code>(<code class="constant">MAC_ADDR_LEN</code>, (<span class="type">char *</span>) &amp;<code class="varname">mac_addr</code>,
+              <code class="constant">MAC_ADDR_LEN</code>);
+    for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="constant">MAC_ADDR_LEN</code>; <code class="varname">i</code>++)
+        <code class="function">fprintf</code>(<code class="varname">f</code>, "%02x%s", (<span class="type">uchar</span>) <code class="varname">mac_addr</code>[<code class="varname">i</code>],
+            (<code class="varname">i</code> == <code class="constant">MAC_ADDR_LEN</code> -1) ? "], " : ":");
+
+    <code class="function">fprintf</code>(<code class="varname">f</code>, "Entire frame follows");
+    for (<code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="varname">pkt_size</code>; <code class="varname">i</code>++) {
+        <code class="function">fprintf</code>(<code class="varname">f</code>, "%s%02x", (<code class="varname">i</code> % 0x10) == 0 ? "\n\t" : " ",
+            (<span class="type">uchar</span>) (<code class="parameter">pkt</code>-&gt;<code class="methodname">Data</code>())[<code class="varname">i</code>]);
+    }
+    <code class="function">fprintf</code>(<code class="varname">f</code>, "\n"); fflush(f);
+    <code class="varname">time0</code> = <code class="function">system_time</code>();   <span class="comment">// there's always next time()</span>
+    return <code class="constant">false</code>;        <span class="comment">// let others enjoy this frame, too</span>
+}
+
+#pragma export on
+extern "C" <span class="type"><code class="classname">BNetProtocol</code> *</span>
+<code class="function">open_protocol</code>(
+              <span class="type">const char *</span><code class="parameter">device</code>
+              )
+{
+    <span class="type"><code class="classname">NetdumpController</code> *</span><code class="varname">dev</code>;
+
+    <code class="varname">dev</code> = new <code class="classname">NetdumpController</code>();
+    return (<code class="varname">dev</code>);
+}
+#pragma export reset
+</pre><p>
+Thanks to the <code class="classname">BNetDevice</code> and <code class="classname">BNetPacket</code>
+classes, most of the job is
+already done for us. A "normal" protocol would do a more useful job in
+<code class="methodname">PacketReceived()</code>, which could include checksumming, filtering,
+interpreting headers/trailers, assembling a packet out of fragments, and
+finally delivering it.
+</p><p>
+Netdump is not a tcpdump port but rather a simple debug utility. A quick
+look at a serious network monitor is enough to reveal the shortcomings in
+this sample. Needless to say, all of its features were carefully selected
+and organically grown for today's presentation.
+</p><p>
+Current limitations and areas for improvement:
+</p><div class="orderedlist"><ol><li><p>
+Almost no frame parsing is spoken here.
+</p></li><li><p>
+Network media is limited to Ethernet only.
+</p></li><li><p>
+Only direct and broadcast packets are being captured because the
+promiscuous mode was not activated on the interface. If you're
+planning to enable this feature, please be aware that not all network
+card drivers in PR2 support switching to promiscuous mode. This will
+be fixed in the near future.
+</p></li><li><p>
+Only the received packets are being captured, not the sent ones.
+</p></li><li><p>
+No statistics or characteristics are present. This would include
+readable addresses, various counters, resource utilization, etc.
+</p></li><li><p>
+Not much in the way of error-checking in the code.
+</p></li><li><p>
+Finally, no UI whatsoever.
+</p></li></ol></div><p>
+To install Netdump, follow these steps:
+</p><div class="orderedlist"><ol><li><p>
+Copy the binary to the add-ons path, usually:
+</p><p>
+<code class="filename">file:///boot/beos/system/addons/net_server/</code>
+</p></li><li><p>
+Back up the file <code class="filename">~/config/settings/network</code>. Make sure you have the
+following line in it:
+</p><pre class="screen">
+PROTOCOLS = "netdump"
+</pre><p>
+Other protocols may be present inside the quotes, too.
+</p></li><li><p>
+Press "Restart Network" button.
+</p></li></ol></div><p>
+Currently netdump captures only the first <code class="constant">MAX_PKT_N</code> packets, so it's safe
+to leave it working overnight on a crowded subnet. To stop sniffing
+earlier, just remove the "netdump" string from the PROTOCOLS line (undo
+your changes) and restart the network.
+</p><p>
+Thanks to Bradley Taylor for his help and to my kids for lending me their
+computer over the holidays.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-3-2"></a>Be Engineering Insights: Newsletter Article Version 4.1.2b6</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ron</span> <span class="surname">Theis</span></span></div></div></div><p>
+Recently, I found myself working once again as team commander for a
+fighting force attempting to save the world. This time, I was with the
+Global Defense Initiative, and I was trying to stop the evil Brotherhood
+of Nod from taking over the planet. I was part way through my mission and
+was feeling pretty confident after taking out two of the three gun
+turrets marked for destruction, when suddenly, my old foe "Sorry, System
+Error. Unimplemented Trap" reared his ugly head. Blast it, I was so
+close! Now the Brotherhood would conquer the world while I was hitting
+"Restart"!
+</p><p>
+After some investigating, I found that my Mac demo of "Command &amp; Conquer"
+was crashing because of the extension DrawSprocketLib (thank you
+MacsBug). I went to the Apple web site to find out more, since, after
+all, it was an Apple-supplied extension which was giving me the trouble.
+</p><p>
+In half an hour of searching, I found references to versions 1.0.6 and
+1.0.8, but nothing about 1.1 or the latest version. I found source code
+for integrating 1.0.6 into an application (yippee), but nothing about
+downloading the latest version of DrawSprocketLib. Eventually, I
+reinstalled the demo and it installed a beta version of DrawSprocketLib
+1.1; somehow the older version hadn't been replaced during my earlier
+install.
+</p><p>
+So I was thinking (as I often do) that it would be great if I could check
+the versions of my applications without having to search for each one
+individually. I have at least a hundred applications on my hard drive,
+and I don't want to visit a separate web site to check the version status
+of each one. I want to scan my hard drive and check with a central
+repository of information to see if I've got the latest versions of
+everything.
+</p><p>
+But in order to do that, gosh, I'd need an up-to-date archive of
+application information. The archive would need to encompass absolutely
+every application available on a platform and be maintained by the
+application developers themselves. Like BeWare.
+</p><p>
+So I wrote a little application called VersionCheck which does exactly
+that. It searches through a hard drive, finds all the applications, and
+checks with the Be web site for the latest versions. The original DR8
+version of VersionCheck was clunky and slow, but the most recent PR2
+version is clunky and fast. It returns information about the latest
+available versions of your installed applications, and provides FTP and
+HTTP links for folks to download an updater or read more about the latest
+version.
+</p><p>
+VersionCheck is not as smooth as Software Valet, which allows your
+computer to check for the latest versions of your installed packages and
+upgrade them while you sleep. But if you're interested in testing out a
+raw, proof-of-concept application, contact me at and I'll send you a
+copy. It's not perfect, and it will expose applications on your drive
+that don't have their version resource information set correctly. How
+well it works also depends on whether the application developer has kept
+their BeWare entry up-to-date.
+</p><p>
+I'll post VersionCheck to BeWare within the next week or two, so if you'd
+rather not bother with rawness, please don't. I'm basically interested in
+seeing whether something like this would get used—unless I'm the only
+person who has this problem....
+</p><p>
+A sister application to VersionCheck, of course, is one that checks
+BeWare for newly available applications. When I want to know what games
+have been released in the last two months, I don't want to scour several
+gaming web sites for tidbits. I just want a list that shows up in a
+window, with links to download or find out more information. This sister
+app is on the drawing board, but again, maybe I'm alone on this one...
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id657538"></a>Always With The Questions</h3></div></div></div><p>
+And now, a standard feature of my articles—a few of the recent
+questions I've been asked regarding the BeOS at trade shows and via:
+webmaster@be.com
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id657553"></a><a id="id657555"></a>Q:</td><td><p>
+Can I have a beta copy of BeOS for Intel? I've got a
+1400 MHz whoozitz 8000 and a truckload of RAM and this
+crankin' video card and...
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+This is easily the number one question
+webmaster@be.com receives.
+We realize there's a great deal of pent-up demand for BeOS for
+Intel, and that people will visit our web site just to scrounge
+for BeOS for Intel information (our web site access logs bear
+this out; BeOS for Intel documents are grabbed the most).
+</p><p>
+But seriously, like the FAQs say, we aren't in need of
+additional beta testers at this point. Really. You are,
+however, encouraged to sign up for more information on
+the BeOS for Intel Info sign-up form, at
+http://www.be.com/users/intel_info.html, and you'll get
+the absolute latest BeOS for Intel information as it
+becomes available.
+</p></td></tr><tr class="question"><td><a id="id657583"></a><a id="id657585"></a>Q:</td><td><p>
+Can I get real work done using the BeOS?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Yes indeed. The entire Be engineering staff runs the
+BeOS exclusively, performing all of their day-to-day work
+in the BeOS. No kidding. Give it a try, I'll bet you can
+do it too.
+</p></td></tr><tr class="question"><td><a id="id657600"></a><a id="id657602"></a>Q:</td><td><p>
+So, Ron, what's your pick for "Sleeper BeOS
+Application of the Month? "
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Glad you asked! It's called "Content." Content is a
+programmer's reference to The Be Book,
+presenting a hierarchical listing of chapters and classes available.
+With a <span class="type">double</span>-click, it takes you to the correct document
+in The Be Book via NetPositive. It isn't perfect yet, but
+with a little fine-tuning and improved NetPositive
+support for anchors, it can be really useful...
+</p></td></tr></tbody></table></div><p>
+That's it from the web side of things. For folks who haven't seen the new
+BeWare subcategory layouts or the excellent Developer Library on the site
+yet, do check them out. As always, your comments, especially on the
+revamped sections, are welcome at webmaster@be.com.
+</p><p>
+[This article was written using Pe on the BeOS. Try it, you'll like it.]
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-3"></a>Developers' Workshop: Daddy, Where Does Sound Come From?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+Way back in mid-November (<a class="link" href="">Issue 2-#45</a> of the Be Newsletter, to be exact), I
+wrote an article called "Sounds That Go Bump In the Night," which
+described in fairly excruciating detail how to create a sound mixing
+function that handles multiple sound formats.
+</p><p>
+This brings up the obvious follow-up question: where does sound come
+from? How does sound get from a file on disk into the audio stream?
+</p><p>
+Don't be embarrassed. Lots of programmers ask this question at some point
+in their lives.
+</p><p>
+The Media Kit provides the <code class="classname">BSoundFile</code> class, which provides an incredibly
+easy mechanism for reading sounds from disk. This week, we'll create a
+simple class to play back sound files from disk.
+</p><p>
+The <code class="classname">SoundPlayer</code> class discussed here is only capable of playing 16-bit
+audio. You should be able to easily change this code to use the
+<code class="methodname">MixStandardFrames()</code> function described in
+<a class="link" href="">Issue 2-#45</a> of the Be Newsletter
+to support both 8 and 16-bit sound. I didn't want to take all the
+adventure out of sound programming.
+</p><p>
+As always, let's start by looking at the class <code class="classname">SoundPlayer</code>, so we can
+figure out in advance what we'll be working on.
+</p><pre class="programlisting cpp">
+class <code class="classname">SoundPlayer</code> {
+  public:
+    <span class="type">status_t</span>  <code class="methodname">SetSoundFile</code>(<span class="type">entry_ref *</span><code class="parameter">ref</code>);
+    <span class="type">void</span>      <code class="methodname">Play</code>(<span class="type">void</span>);
+    <span class="type">void</span>      <code class="methodname">Stop</code>(<span class="type">void</span>);
+
+  private:
+    static <span class="type">bool</span> <code class="methodname">_play_back</code>(<span class="type">void *</span><code class="parameter">userData</code>,
+                           <span class="type">char *</span><code class="parameter">buffer</code>,
+                           <span class="type">size_t</span> <code class="parameter">count</code>,
+                           <span class="type">void *</span><code class="parameter">header</code>);
+    <span class="type">bool</span> <code class="methodname">Playback</code>(<span class="type">char *</span><code class="parameter">buffer</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+    <code class="classname">BDACStream</code>   <code class="varname">stream</code>;
+    <code class="classname">BSubscriber</code>  <code class="varname">subscriber</code>;
+    <code class="classname">BSoundFile</code>   <code class="varname">soundFile</code>;
+    <span class="type">char</span>         <code class="varname">transfer_buf</code>[<code class="constant">B_PAGE_SIZE</code>];
+
+    };
+</pre><p>
+The public API for the <code class="classname">SoundPlayer</code> class consists of three functions:
+<code class="methodname">SetSoundFile()</code> is used to specify the sound
+file to be played. <code class="methodname">Play()</code>
+begins playback of the sound file, and <code class="methodname">Stop()</code> halts playback.
+</p><p>
+There are two private functions: <code class="methodname">_play_back()</code> is the stream function
+we'll be using with the DAC stream, and <code class="methodname">Playback()</code> is called by
+<code class="methodname">_play_back()</code> to do the real work of mixing the sound data into the
+stream. I'll get into this in more detail when I describe the functions
+themselves.
+</p><p>
+The class also includes a <code class="classname">BDACStream</code>
+object, a <code class="classname">BSubscriber</code>, and a
+<code class="classname">BSoundFile</code>, as well as a buffer
+(<code class="varname">transfer_buf</code>) we'll be using for loading
+the sound data from disk.
+</p><p>
+Let's start by having a look at the <code class="methodname">SetSoundFile()</code> function. It accepts a
+single parameter—an <span class="type">entry_ref</span> specifying the sound file to play.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">SoundPlayer</code>::<code class="methodname">SetSoundFile</code>(<span class="type">entry_ref *</span><code class="parameter">ref</code>) {
+  <span class="type">status_t</span>  <code class="varname">err</code>;
+  <code class="varname">err</code> = <code class="varname">soundFile</code>.<code class="methodname">SetTo</code>(<code class="parameter">ref</code>, <code class="constant">B_READ_ONLY</code>);
+</pre><p>
+The function starts by setting the <code class="classname">BSoundFile</code>,
+<code class="varname">soundFile</code>, to the
+specified <span class="type">entry_ref</span>, and marks the <code class="classname">BSoundFile</code>
+as read-only. An additional
+function performed by the <code class="classname">BSoundFile</code> class's
+<code class="methodname">SetTo()</code> function is that it
+examines the file and determines what format the sound data is in. Once
+we've called <code class="methodname">SetTo()</code>, we can use the
+various functions of the <code class="classname">BSoundFile</code>
+class to determine the format of the sound data our <code class="varname">soundFile</code> object
+represents.
+</p><pre class="programlisting cpp">
+  if (<code class="varname">err</code> == <code class="constant">B_OK</code>) {
+    if (<code class="varname">soundFile</code>.<code class="methodname">SampleSize</code>() != 2) {
+      <code class="varname">err</code> = <code class="constant">B_ERROR</code>;    <span class="comment">// Reject file if not 16-bit</span>
+    }
+</pre><p>
+If the <code class="methodname">SetTo()</code> is successful, we then check to be sure the file contains
+16-bit audio, since our sample mixer is only capable of mixing 16-bit
+sound. This is done by calling <code class="varname">soundFile</code>.<code class="methodname">SampleSize()</code>, which returns the
+size of each sound sample in bytes. If the sample size isn't two bytes,
+we return <code class="constant">B_ERROR</code>.
+</p><pre class="programlisting cpp">
+    else {
+      <code class="varname">err</code> = <code class="varname">subscriber</code>.<code class="methodname">Subscribe</code>(&amp;<code class="varname">stream</code>);
+      if (<code class="varname">err</code> == <code class="constant">B_OK</code>) {
+        <code class="varname">stream</code>.<code class="methodname">SetSamplingRate</code>(<code class="varname">soundFile</code>.<code class="methodname">SamplingRate</code>());
+        <code class="varname">stream</code>.<code class="methodname">SetStreamBuffers</code>(<code class="constant">B_PAGE_SIZE</code>, 8);
+      }
+    }
+  }
+  return <code class="varname">err</code>;
+}
+</pre><p>
+If the sound is 16-bit, we ask our subscriber to subscribe to the
+<code class="classname">BDACStream</code> called stream. If that returns
+<code class="constant">B_OK</code>, meaning that no error
+occurred, we set the <code class="classname">BDACStream</code>'s sampling rate to match that of
+<code class="varname">soundFile</code>, and set the stream buffers for the stream to be the same size
+as our class's transfer buffer by calling <code class="methodname">SetStreamBuffers()</code>. Now we turn
+our attention to the incredibly simple <code class="methodname">Play()</code>
+function. All the <code class="methodname">Play()</code>
+function does is enter the subscriber into the stream by calling our
+subscriber's <code class="methodname">EnterStream()</code> function. As a refresher, the parameters to
+<code class="methodname">EnterStream()</code> are:
+</p><ul class="itemizedlist"><li><p>
+<code class="parameter">neighbor</code>  <code class="constant">NULL</code>
+</p><p>
+Since the next parameter (<code class="parameter">before</code>)
+is <code class="constant">false</code>, the subscriber
+will be put at the end of the stream.
+</p></li><li><p>
+<code class="parameter">before</code> <code class="constant">false</code>
+</p><p>
+The subscriber will go at the end of the stream.
+</p></li><li><p>
+<code class="parameter">userData</code> <code class="varname">this</code>
+</p><p>
+We pass a reference to the <code class="classname">SoundPlayer</code> object to the
+stream function. This will make it very easy to manage the
+stream and the sound file.
+</p></li><li><p>
+<code class="parameter">streamFunction</code> <code class="methodname">_play_back()</code>
+</p></li><li><p>
+<code class="parameter">completionFunction</code>  <code class="constant">NULL</code>
+</p></li><li><p>
+<code class="parameter">background</code> <code class="constant">true</code>
+</p><p>
+The sound will play in the background.
+</p></li></ul><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">SoundPlayer</code>::<code class="methodname">Play</code>(<span class="type">void</span>) {
+    <code class="varname">subscriber</code>.<code class="methodname">EnterStream</code>(<code class="constant">NULL</code>, <code class="constant">false</code>, <code class="varname">this</code>, <code class="methodname">_play_back</code>,
+                           <code class="constant">NULL</code>, <code class="constant">true</code>);
+}
+</pre><p>
+And the <code class="methodname">Stop()</code> function, shown below, stops playback by removing the
+subscriber from the stream and then unsubscribing it from the stream.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">SoundPlayer</code>::<code class="methodname">Stop</code>(<span class="type">void</span>) {
+  <code class="varname">subscriber</code>.<code class="methodname">ExitStream</code>(<code class="constant">false</code>);  <span class="comment">// Leave the stream</span>
+  <code class="varname">subscriber</code>.<code class="methodname">Unsubscribe</code>();      <span class="comment">// And unsubscribe from it</span>
+}
+</pre><p>
+The stream function, <code class="methodname">_play_back()</code> simply
+calls through to the <code class="methodname">Playback()</code>
+function, where the real work of playing the sound is done.
+</p><pre class="programlisting cpp">
+<span class="type">bool</span> <code class="classname">SoundPlayer</code>::<code class="methodname">_play_back</code>(<span class="type">void *</span><code class="parameter">userData</code>, <span class="type">char *</span><code class="parameter">buffer</code>,
+                             <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">void *</span><code class="parameter">header</code>) {
+  return (((<span class="type"><code class="classname">SoundPlayer</code> *</span>) <code class="parameter">userData</code>)-&gt;<code class="methodname">Playback</code>(<code class="parameter">buffer</code>, <code class="parameter">count</code>));
+}
+</pre><p>
+Now let's look at the real heart of the <code class="classname">SoundPlayer</code>
+class. The <code class="methodname">Playback()</code>
+function is responsible for reading frames of audio data from the sound
+file and mixing them into the DAC stream for playback. It accepts two
+parameters: <code class="parameter">buffer</code>, which is a pointer to the sound buffer that the sound
+file data should be mixed into, and <code class="parameter">count</code>, which is the size of the
+buffer in bytes.
+</p><pre class="programlisting cpp">
+<span class="type">bool</span> <code class="classname">SoundPlayer</code>::<code class="methodname">Playback</code>(<span class="type">char *</span><code class="parameter">buffer</code>, <span class="type">size_t</span> <code class="parameter">count</code>) {
+  <span class="type">int32</span>  <code class="varname">frameCount</code>;    <span class="comment">// Number of frames to mix</span>
+  <span class="type">int32</span>  <code class="varname">framesRead</code>;    <span class="comment">// Number of frames read from disk</span>
+  <span class="type">int32</span>  <code class="varname">channelCount</code>;  <span class="comment">// Number of channels in sound</span>
+  <span class="type">int32</span>  <code class="varname">counter</code>;       <span class="comment">// Loop counter for mixing</span>
+  <span class="type">int16  *</span><code class="varname">soundData</code>;    <span class="comment">// Pointer to the sample to mix</span>
+  <span class="type">int16  *</span><code class="varname">tbuf</code>;         <span class="comment">// Short pointer to transfer buffer</span>
+ <span class="type">int32</span>  <code class="varname">sample</code>;   <span class="comment">// Temporary value of sample while mixing</span>
+</pre><p>
+We begin by establishing a 16-bit pointer to the DAC stream buffer passed
+into the <code class="methodname">Playback()</code> function, and a local 16-bit pointer to the
+<code class="varname">transfer_buf</code> that's defined in the <code class="classname">SoundPlayer</code> class.
+</p><pre class="programlisting cpp">
+  <code class="varname">soundData</code> = (<span class="type">int16 *</span>) <code class="varname">buffer</code>;
+  <code class="varname">tbuf</code> = (<span class="type">int16 *</span>) <code class="varname">transfer_buf</code>;
+</pre><p>
+Then we compute the number of frames that we need to read from disk to
+fill the buffer, and cache locally the number of channels in the sound
+(whether it's stereo or mono):
+</p><pre class="programlisting cpp">
+  <code class="varname">frameCount</code> = <code class="varname">count</code>/4;
+  <code class="varname">channelCount</code> = <code class="varname">soundFile</code>.<code class="methodname">CountChannels</code>();
+</pre><p>
+Then we read in the appropriate number of frames, to fill the
+<code class="varname">transfer_buf</code> buffer. If we read zero frames, or a negative result is
+returned (which indicates an error occurred), we return <code class="constant">false</code>, which
+indicates that the sound has finished playing and that we want to be
+automatically removed from the stream.
+</p><pre class="programlisting cpp">
+  <code class="varname">framesRead</code> =
+    <code class="varname">soundFile</code>.<code class="methodname">ReadFrames</code>(<code class="varname">transfer_buf</code>, <code class="varname">frameCount</code>);
+  if (<code class="varname">framesRead</code> &lt;= 0) {
+    return <code class="constant">false</code>;      <span class="comment">// Either error or done with file</span>
+  }
+</pre><p>
+Once we've loaded the next few frames of sound from disk, it's time to
+mix the sound into the buffer. This should look familiar if you read
+"Sounds That Go Bump In the Night," but, briefly, here's how it works:
+For each frame of audio, we add the sample already in the DAC buffer to
+the sample in the transfer buffer. If the sound we're playing is stereo
+(if channelCount is 2) we do the same thing again to cover the right
+channel, otherwise we just increment the soundData pointer to leave the
+DAC stream's right channel alone.
+</p><p>
+Note that we handle clipping; if the sum of the two samples is outside
+the range -32768...32768, we clip it to the appropriate value.
+</p><pre class="programlisting cpp">
+  <code class="varname">counter</code> = 0;
+  do {
+    <code class="varname">sample</code> = *<code class="varname">soundData</code> + *<code class="varname">tbuf</code>++; <span class="comment">//Add the old and the new</span>
+    if (<code class="varname">sample</code> &gt; 32767) {         <span class="comment">// Is the result too high?</span>
+      <code class="varname">sample</code> = 32767;
+    }
+    else if (<code class="varname">sample</code> &lt; -32768) {   <span class="comment">// How about too low?</span>
+      <code class="varname">sample</code> = -32768;
+    }
+    *<code class="varname">soundData</code>++ = <code class="varname">sample</code>;    <span class="comment">// Now save the clipped value</span>
+    if (<code class="varname">channelCount</code> == 2) {  <span class="comment">// If there's another channel,</span>
+      <code class="varname">sample</code> = *<code class="varname">soundData</code> + *<code class="varname">tbuf</code>++; <span class="comment">//do same thing again</span>
+      if (<code class="varname">sample</code> &gt; 32767) {
+        <code class="varname">sample</code> = 32767;
+      }
+      else if (<code class="varname">sample</code> &lt; -32768) {
+        <code class="varname">sample</code> = 32768;
+      }
+      *<code class="varname">soundData</code>++ = <code class="varname">sample</code>;
+    }
+    else {
+      <code class="varname">soundData</code>++; <span class="comment">// Just skip the right channel</span>
+    }
+  } while (++<code class="varname">counter</code> &lt; <code class="varname">framesRead</code>);
+</pre><p>
+Finally, if the number of frames read from disk is less than the number
+of frames we could have put in the DAC buffer, we return <code class="constant">false</code>, since
+that means we've played the entire sound. Otherwise, we return <code class="constant">true</code>, so
+our subscriber will remain in the stream.
+</p><pre class="programlisting cpp">
+  if (<code class="varname">framesRead</code> &lt; <code class="varname">frameCount</code>) {
+    return <code class="constant">false</code>;
+  }
+  return <code class="constant">true</code>;
+}
+</pre><p>
+To play a sound, just use the following code:
+</p><pre class="programlisting cpp">
+  <code class="classname">SoundPlayer</code> <code class="varname">player</code>;
+  <code class="varname">player</code>.<code class="methodname">SetSoundFile</code>(<code class="varname">sound_file_ref</code>);
+  <code class="varname">player</code>.<code class="methodname">Play</code>();
+</pre><p>
+If you want to stop the sound:
+</p><pre class="programlisting cpp">
+  <code class="varname">player</code>.<code class="methodname">Stop</code>();
+</pre><p>
+This is a pretty basic sound file player. You can beef it up without too
+much effort, and I just happen to have a couple of suggestions for things
+you might try doing:
+</p><ul class="itemizedlist"><li><p>
+Use a larger transfer buffer. Reading in 4K or so at a time is bad
+for performance. Use a nice, big transfer buffer of, say, 128K or 256K
+at least, and copy chunks of that buffer into the DAC stream buffer.
+</p></li><li><p>
+Use <code class="methodname">MixStandardFrames()</code> or equivalent code to add support for 8-bit
+sound formats.
+</p></li></ul></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-3"></a>The March 19-20 Be Developer Conference</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Allow me to add a few words to what my associates have already said
+regarding the upcoming Developer Conference. This one is a turning point
+in the life of the company and its developers, as it will mark our first
+real step into the Intel space, moving from demos to CDs, with all the
+attendant expectations and nervousness.
+</p><p>
+As discussed earlier, the players, the competition, the hardware
+technology, the buying habits are different from what we've seen on the
+PowerPC, not merely bigger. As a result, the March '98 Be DC will focus
+on both product and market strategy for the new Intel version of the
+BeOS. If past conferences are any indication, we know we can look forward
+to articulate, energetic discussions of technical as well as business
+issues.
+</p><p>
+There is more good news. We still are a very small company with little
+staff; so, instead of platoons of product managers, PR flacks, middle
+managers and other acetate-flingers and PowerPoint users, you'll be able
+to interact directly with the Be team, including the engineers who
+designed and wrote the BeOS—and use it every day in advancing the
+platform. Since this release is not just a port of the previous release,
+but has many important new features of its own, direct contact with the
+engineers is essential. For their part, the engineers are always nervous
+before the conference, but are happy after meeting with people who are
+building a product and a business using their work.
+</p><p>
+Still on the good news, you'll see existing, shipping, revenue-making
+BeOS applications, as well as works-in-progress from your colleagues and
+competitors. Of course, we'll try to put a special emphasis on work
+showing off the best examples of real-time WYSIWYG benefits, on features,
+speed, rendering, and acquisition performance not available on other
+platforms.
+</p><p>
+On that last topic, we'll re-state our position <span class="foreignphrase"><em class="foreignphrase">vis-à-vis</em></span> Windows. In
+contrast to an example we don't want to follow—OS/2, a better DOS than
+DOS, a better Windows than Windows—we offer Linux and happy
+coexistence with Windows, as a complement or supplement, rather than an
+improbable replacement.
+</p><p>
+We'll need to clarify the differences, technical and otherwise, between
+the BeOS and the various versions of Linux, the latest one looking very
+good, what we can learn, what we'll do differently—but that's for
+another column.
+</p><p>
+You're welcome to attend, even if you're not a registered developer. This
+is an opportunity for us to make our case, and for you to make a decision.
+</p><p>
+But there is some bad news. Seating is limited and, if informal polling
+is worth anything, the Intel version will increase participation. So,
+please take a minute and register on our site. As a consideration for
+your effort, we'll give you a $20 early registration discount.
+</p><p>
+I look forward to seeing you March 19-20 in Santa Clara.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-2.html">Issue 3-2, January 14, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-4.html">Issue 3-4, January 28, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-2.html" title="Issue 3-2, January 14, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-4.html" title="Issue 3-4, January 28, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

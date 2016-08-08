@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-10.html" title="Issue 3-10, March 11, 1998" /><link rel="next" href="Issue3-12.html" title="Issue 3-12, March 25, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-10.html" title="Issue 3-10, March 11, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-12.html" title="Issue 3-12, March 25, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-10.html">Issue 3-10, March 11, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-12.html">Issue 3-12, March 25, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-11"></a>Issue 3-11, March 18, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-11"></a>Be Engineering Insights: New Windows of Opportunity (Part I: The New
+Window Manager)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+From time to time, you have to say goodbye to an old friend. It's usually
+pretty sad... And this particular guy had been around way before I
+started at be. He was a part of the Be spirit. I speak, of course, of the
+poor Frozen Window, born of a crashed app, the one that never gets to
+redraw, yet never leaves the screen. I'll miss having to drag the poor
+fellow over out of the way, and then watching the system become sluggish
+as updates slow down, as if the app server was crying over the death of
+one of its children, suffering in silence, still alive but without joy.
+</p><p>
+I can't count the number of times I ran into this bug—still, nobody
+ever pushed to get it fixed. Did our developers restrain themselves from
+righteous indignation out of geeky consideration for the suffering of the
+unlucky window? As if the poor bastard had a right to proclaim the
+unfairness of its fate to the whole world...
+</p><p>
+In any case, the other day, I was pissed off one more time, so I started
+tracking down the bug without pity, found the problem and fixed it. Good
+bye my little sluggish dying window, probably never going to see you
+again...
+</p><p>
+A complete app server rewrite is, and will remain, a myth, but a lot has
+happened recently, nevertheless: the font cache (PR2), the picture
+mechanism (Release 3), the rendering package (including 15/16 bpp, bezier
+and sub-pixel precision, Release 3), the window manager and its
+extensions (Release 3), and a lot more is on schedule for future
+releases. So I would like to dedicate this article to present the new
+window manager architecture and API, to help you use them at their best.
+Then you'll endure a second article next week giving more details about
+direct frame buffer access in a window (to do live video DMA for
+example), using the new <code class="classname">BDirectWindow</code> class of the Game Kit.
+</p><p>
+Opening <code class="filename">Window.h</code>,
+you will notice that a couple things have changed (but,
+note, all the old official API is still supported). First thing, there is
+a new <code class="classname">BWindow</code> constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">BWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>,
+    <span class="type">const char *</span><code class="parameter">title</code>,
+    <span class="type">window_look</span> <code class="parameter">look</code>,
+    <span class="type">window_feel</span> <code class="parameter">feel</code>,
+    <span class="type">uint32</span> <code class="parameter">flags</code>,
+    <span class="type">uint32</span> <code class="parameter">workspace</code> = <code class="constant">B_CURRENT_WORKSPACE</code>);
+</pre><p>
+This is essentially the same as the old constructor, except that the
+window_type parameter has been split into 2 orthogonal concepts. The
+"window look"...
+</p><pre class="programlisting cpp">
+enum <span class="type">window_look</span> {
+  <code class="constant">B_BORDERED_WINDOW_LOOK</code> = 20,
+  <code class="constant">B_TITLED_WINDOW_LOOK</code>   =  1,
+  <code class="constant">B_DOCUMENT_WINDOW_LOOK</code> = 11,
+  <code class="constant">B_MODAL_WINDOW_LOOK</code>    =  3,
+  <code class="constant">B_FLOATING_WINDOW_LOOK</code> =  7
+};
+</pre><p>
+...describes the way the window will look on screen—this is what other
+OS's call the "window definition" (wdef). And the "window feel"...
+</p><pre class="programlisting cpp">
+enum <span class="type">window_feel</span> {
+  <code class="constant">B_NORMAL_WINDOW_FEEL</code>          = 0,
+  <code class="constant">B_MODAL_SUBSET_WINDOW_FEEL</code>    = 2,
+  <code class="constant">B_MODAL_APP_WINDOW_FEEL</code>       = 1,
+  <code class="constant">B_MODAL_ALL_WINDOW_FEEL</code>       = 3,
+  <code class="constant">B_FLOATING_SUBSET_WINDOW_FEEL</code> = 5,
+  <code class="constant">B_FLOATING_APP_WINDOW_FEEL</code>    = 4,
+  <code class="constant">B_FLOATING_ALL_WINDOW_FEEL</code>    = 6
+};
+</pre><p>
+...describes the way the window will behave. The old window_type API,
+which tied these two concepts together, is now automatically translated,
+following those rules:
+</p><pre class="screen">
+<code class="constant">B_TITLED_WINDOW</code>   = <code class="constant">B_TITLED_WINDOW_LOOK</code> + <code class="constant">B_NORMAL_WINDOW_FEEL</code>
+<code class="constant">B_MODAL_WINDOW</code>    = <code class="constant">B_MODAL_WINDOW_LOOK</code>  + <code class="constant">B_MODAL_APP_WINDOW_FEEL</code>
+<code class="constant">B_DOCUMENT_WINDOW</code> = <code class="constant">B_DOCUMENT_WINDOW_LOOK</code> + <code class="constant">B_NORMAL_WINDOW_FEEL</code>
+<code class="constant">B_BORDERED_WINDOW</code> = <code class="constant">B_BORDERED_WINDOW_LOOK</code> + <code class="constant">B_NORMAL_WINDOW_FEEL</code>
+</pre><p>
+A new <span class="type">window_type</span> was added to describe a "standard" <span class="type">float</span>ing window :
+</p><pre class="screen">
+<code class="constant">B_FLOATING_WINDOW</code> = <code class="constant">B_FLOATING_WINDOW_LOOK</code> + <code class="constant">B_FLOATING_APP_WINDOW_FEEL</code>
+</pre><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id673105"></a>The Window Looks Examined</h3></div></div></div><p>
+You're already familiar with most of the <span class="type">window_look</span>s:
+</p><p>
+<code class="constant">B_BORDERED_WINDOW_LOOK</code>: Thin (one-pixel wide) dark line around the
+window; no title bar. It's used for menus.
+</p><p>
+<code class="constant">B_TITLED_WINDOW_LOOK</code>: Thick border; title bar (the infamous yellow tab)
+with buttons.
+</p><p>
+<code class="constant">B_DOCUMENT_WINDOW_LOOK</code>: Thick border; title bar with buttons; a special
+area in the right bottom corner area for resizing that's designed to fit
+between two scrollbars. It looks like the titled window, but with a
+corner with 10 dots arranged in a triangle.
+</p><p>
+<code class="constant">B_MODAL_WINDOW_LOOK</code>: Thick border; no title bar. These are used for alert
+panels.
+</p><p>
+<code class="constant">B_FLOATING_WINDOW_LOOK</code>: Thinner border; small title bar and buttons. It
+looks like a titled window, but on a smaller scale.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id673168"></a>The Window Feels Examined</h3></div></div></div><p>
+There are far more changes in the <span class="type">window_feel</span> area. Before, there were
+really only two (normal and modal). Now there are seven; there's the
+standard...
+</p><p>
+<code class="constant">B_NORMAL_WINDOW_FEEL</code>: Standard, stand-alone window behavior.
+</p><p>
+...and then there are three modal and three <span class="type">float</span>ing feels. The modals
+are:
+</p><p>
+<code class="constant">B_MODAL_SUBSET_WINDOW_FEEL</code>: A modal window that blocks all windows in its
+"subset." (You define a window's subset through the <code class="classname">BWindow</code>'s
+<code class="methodname">AddToSubset()</code> and
+<code class="methodname">RemoveFromSubset()</code> functions.)
+</p><p>
+<code class="constant">B_MODAL_APP_WINDOW_FEEL</code>: A modal window that blocks all windows in its
+own subset AND all non- modal windows in its own team (this should
+account for the application's document windows). This is used as the
+equivalent of the old <code class="constant">B_MODAL_WINDOW_TYPE</code>. To support this compatibility,
+every time you create a new <code class="constant">B_MODAL_APP_WINDOW_FEEL</code> window, all existing
+"app modal" windows in that team are added to the subset of the new
+window.
+</p><p>
+<code class="constant">B_MODAL_ALL_WINDOW_FEEL</code>: A modal window that blocks all other windows,
+except for other system-wide feels (<code class="constant">B_MODAL_ALL_WINDOW_FEEL</code> and
+<code class="constant">B_FLOATING_ALL_WINDOW_FEEL</code>). This feel should be used only for
+system-wide announcements, not for normal applications.
+</p><p>
+All three modal feels share these rules:
+</p><ul class="itemizedlist"><li><p>
+Every time you try to activate a window that's blocked by a modal,
+the modal is activated and comes to the front, instead. You can move a
+blocked window, but that's the only interaction allowed with them until
+the modal is closed.
+</p></li><li><p>
+A modal is displayed in the workspace where it's needed. For example,
+if a modal blocks an entire team, then it will appear in every
+workspace where a window of that team is displayed.
+</p></li><li><p>
+Modal windows don't show up in the Workspaces application.
+</p></li></ul><p>
+Here are the "<span class="type">float</span>ing feels":
+</p><p>
+<code class="constant">B_FLOATING_SUBSET_WINDOW_FEEL</code>: Floats above all windows in its own subset.
+</p><p>
+<code class="constant">B_FLOATING_APP_WINDOW_FEEL</code>: Floats above all non-modal, non-<span class="type">float</span>ing
+windows in its team (it *doesn't* <span class="type">float</span> above windows in its own subset).
+</p><p>
+<code class="constant">B_FLOATING_ALL_WINDOW_FEEL</code>: Floats above all other windows, except other
+<code class="constant">B_FLOATING_ALL_WINDOW_FEEL</code>. This feel is typically used for input methods.
+</p><p>
+Floating window rules:
+</p><ul class="itemizedlist"><li><p>
+A <span class="type">float</span>ing window appears only when its "master" (a window that it's
+supposed to <span class="type">float</span> in front of) is frontmost. If the master isn't
+frontmost, the <span class="type">float</span>ing window is hidden.
+</p></li><li><p>
+A <span class="type">float</span>ing window follows its master between workspaces.
+</p></li><li><p>
+Like modal windows, <span class="type">float</span>ing windows don't appear in the Workspaces
+application.
+</p></li><li><p>
+A <span class="type">float</span>ing window's master continues to look active while you're
+using (mousing or typing in) the <span class="type">float</span>ing window itself.
+</p></li></ul><p>
+The split into look and feel should help us make windows more
+configurable.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id673402"></a>The Window Flags Examined</h3></div></div></div><p>
+Another change that you don't want to miss are these additions to the
+window flags list:
+</p><p>
+<code class="constant">B_AVOID_FRONT</code>: This flag tells the window manager to never "promote" the
+window to active status when the current one disappears. You use this
+flag for "background" windows. For example, if you activate a window
+using <span class="application">Deskbar</span> and then close that window, you
+probably don't want <span class="application">Deskbar</span>
+to become active (which, in the old days, it would have due of its "next
+most recent" status). In Release 3, <span class="application">Deskbar</span>
+(and <span class="application">Workspaces</span>) set this
+flag and so avoid being promoted to activity in just such situations.
+(Note that you can still *explicitly activate* a window that's "avoiding
+front," it just won't happen through promotion.)
+</p><p>
+<code class="constant">B_AVOID_FOCUS</code>: This is used by windows (primarily <span class="type">float</span>ing windows) that
+don't need keyboard input (i.e. that don't contain a "focus view"). By
+avoiding focus, a <span class="type">float</span>ing window doesn't force you to re-click on the
+master window after you've dismissed the <span class="type">float</span>er.
+</p><p>
+<code class="constant">B_OUTLINE_RESIZE</code>: Live resizing looks nice, but it generates a lot of
+redrawing. If your interface looks bad and feels sluggish because of live
+resizing, then <code class="constant">B_OUTLINE_RESIZE</code> can really help. It's not recommended,
+but it's there if you need it.
+</p><p>
+<code class="constant">B_NOT_ANCHORED_ON_ACTIVATE</code>: When you activate a window that's in another
+workspace (by using <span class="application">Deskbar</span> or the
+<span class="application">Tracker</span>, for example), the window
+manager will, by default, switch to that workspace. But that's not always
+what you want. This flag tells the window manager to move the window into
+the current workspace, thus avoiding the annoying "workspace shuffle."
+</p><p>
+<code class="constant">B_NO_WORKSPACE_ACTIVATION</code>: This flag lets the window be activated in
+another workspace without switching to that workspace. This flag was
+designed to satisfy apps that spread a number of windows over various
+workspaces when they start up. Tracker, for example, uses this flag.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id673515"></a>New Dynamic and Convenient Window API</h3></div></div></div><p>
+These new looks, feels, and flags wouldn't be very useful if they were
+only settable at construction time. The good news is that now all window
+flags and attributes are settable on the fly:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span>     <code class="methodname">SetType</code>(<span class="type">window_type</span> <code class="parameter">type</code>);
+<span class="type">window_type</span>  <code class="methodname">Type</code>() const;
+
+<span class="type">status_t</span>     <code class="methodname">SetLook</code>(<span class="type">window_look</span> <code class="parameter">look</code>);
+<span class="type">window_look</span>  <code class="methodname">Look</code>() const;
+
+<span class="type">status_t</span>     <code class="methodname">SetFeel</code>(<span class="type">window_feel</span> <code class="parameter">feel</code>);
+<span class="type">window_feel</span>  <code class="methodname">Feel</code>() const;
+
+<span class="type">status_t</span>     <code class="methodname">SetFlags</code>(<span class="type">uint32</span>);
+<span class="type">uint32</span>       <code class="methodname">Flags</code>() const;
+</pre><p>
+For example, <span class="application">Tracker</span> set the
+<code class="constant">B_NO_WORKSPACE_ACTIVATION</code> flag when it lays
+out its windows at boot time, and then unsets the flag and sets
+<code class="constant">B_NOT_ANCHORED_ON_ACTIVATE</code> to allow windows to come to you when
+beckoned...
+</p><p>
+Also for your convenience, a couple functions were added:
+</p><pre class="programlisting cpp">
+<span class="type">bool</span>      <code class="methodname">IsModal</code>() const;
+<span class="type">bool</span>      <code class="methodname">IsFloating</code>() const;
+<span class="type">void</span>      <code class="methodname">Sync</code>();
+<span class="type">status_t</span>  <code class="methodname">SendBehind</code>(<span class="type">const<code class="classname">BWindow</code> *</span><code class="parameter">window</code>);
+</pre><p>
+<code class="methodname">Sync()</code> ensures that all asynchronous window operations have completed.
+It's useful after calls such as <code class="methodname">Hide()</code>
+and <code class="methodname">Show()</code>.
+</p><p>
+(This function is a replacement for <code class="methodname">ShowSync()</code>, although the
+compatibility isn't complete.) <code class="methodname">SendBehind()</code> is a nicety that was added to
+give you a little more control on window ordering. The current window
+will be moved "just behind" the one you specify. Also, in the same
+spirit, we implemented a nifty "second button title bar click" that will
+send the window as far back as possible. This allows you to easily
+uncover other windows, in one click, and without having to close the
+window in front of them.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id673724"></a>Window Content Area Alignment</h3></div></div></div><p>
+New API was added to control the alignment of the window content rect.
+It's typically useful for people wanting to do DMA on screen through
+<code class="classname">BDirectWindow</code>s (as described in next week's article), but it can also be
+helpful in some other cases.
+</p><pre class="programlisting cpp">
+enum <span class="type">window_alignment</span> {
+  <code class="constant">B_BYTE_ALIGNMENT</code>     = 0,
+  <code class="constant">B_PIXEL_ALIGNMENT</code>    = 1
+};
+
+<span class="type">status_t</span> <code class="methodname">SetWindowAlignment</code>(<span class="type">window_alignment</span> <code class="parameter">mode</code>,
+                <span class="type">int32</span> <code class="parameter">x</code>,
+                <span class="type">int32</span> <code class="parameter">xOffset</code> = 0,
+                <span class="type">int32</span> <code class="parameter">width</code> = 0,
+                <span class="type">int32</span> <code class="parameter">widthOffset</code> = 0,
+                <span class="type">int32</span> <code class="parameter">y</code> = 0,
+                <span class="type">int32</span> <code class="parameter">yOffset</code> = 0,
+                <span class="type">int32</span> <code class="parameter">height</code> = 0,
+                <span class="type">int32</span> <code class="parameter">heightOffset</code> = 0);
+
+<span class="type">status_t</span> <code class="methodname">GetWindowAlignment</code>(<span class="type">window_alignment *</span><code class="parameter">mode</code> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><span class="type">x</span> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><span class="type">xOffset</span> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><code class="parameter">width</code> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><code class="parameter">widthOffset</code> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><code class="parameter">y</code> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><code class="parameter">yOffset</code> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><code class="parameter">height</code> = <code class="constant">NULL</code>,
+                <span class="type">int32 *</span><code class="parameter">heightOffset</code> = <code class="constant">NULL</code>) const;
+</pre><p>
+In <code class="constant">B_PIXEL_ALIGNMENT</code> mode, window moving and resizing will snap to
+independent "pixel grids." For example, you can tell a window to move in
+5 pixel increments, and resize in 7 pixel increments at the same time:
+</p><pre class="programlisting cpp">
+<code class="methodname">SetWindowAlignment</code>(<code class="constant">B_PIXEL_ALIGNMENT</code>,
+                    5, 0, <span class="comment">// x origin increment</span>
+                    7, 0, <span class="comment">// width increment</span>
+                    5, 0, <span class="comment">// y origin increment</span>
+                    7, 0);  <span class="comment">// height increment</span>
+</pre><p>
+You can "elongate" either grid; here we tell a window to move in 5 pixel
+increments horizontally, 6 pixels vertically, and to resize in 7 pixel
+increments horizontally and 8 pixels vertically:
+</p><pre class="programlisting cpp">
+<code class="methodname">SetWindowAlignment</code>(<code class="constant">B_PIXEL_ALIGNMENT</code>,
+                    5, 0, <span class="comment">// x origin increment</span>
+                    7, 0, <span class="comment">// width increment</span>
+                    6, 0, <span class="comment">// y origin increment</span>
+                    8, 0);  <span class="comment">// height increment</span>
+</pre><p>
+(The intervening parameters let you offset the grids with respect to the
+screen origin.) The <code class="constant">B_BYTE_ALIGNMENT</code> aligns the window's content area
+within the frame buffer. It's effective on the x origin and the width
+only. The dimensions of the grid that byte alignment yields in pixels
+depends on the frame buffer's depth. For example, with a setting of...
+</p><pre class="programlisting cpp">
+<code class="methodname">SetWindowAlignment</code>(<code class="constant">B_BYTE_ALIGNMENT</code>,
+                    4, 0,   <span class="comment">// x origin increment</span>
+                    0, 0);  <span class="comment">// width increment</span>
+</pre><p>
+...the window's origin would snap to every 4 pixels in 8 bpp, every 2 in
+16 bpp, and every pixel in 32 bpp. It's very useful to be able to align a
+<code class="classname">BDirectWindow</code> that's doing <acronym class="acronym">DMA</acronym>
+or direct access. When <code class="constant">B_BYTE_ALIGNMENT</code> is
+set, the vertical origin and the height can still be aligned, but they
+will be controlled by <code class="constant">B_PIXEL_ALIGNMENT</code> mode, as byte alignment doesn't
+make any sense on the vertical axis.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id674098"></a>Focus Follows Cindy</h3></div></div></div><p>
+As any good rewrite should do, we came up with a cleaner and stronger
+architecture than before, so we tried to use it to perfect the
+implementation of focus follows mouse. This time, the result seemed good
+enough to become a public option, so you will notice a new checkbox in
+the Mouse preference panel. The main principles are:
+</p><ul class="itemizedlist"><li><p>
+Having the focus means being the main receiver for keyboard events.
+(The yellow title bar indicates the focused window.)
+</p></li><li><p>
+If the window pointed at by the mouse accepts focus and isn't blocked
+by any modal window, then it will get the focus. Focus is updated in
+real time after any window changes or cursor moves.
+</p></li><li><p>
+If the window is a <span class="type">float</span>ing window that doesn't accept focus, then
+the focus goes to its frontmost master window, if any is currently
+visible. If there are no visible master, focus stays where it was
+before.
+</p></li><li><p>
+Sending focus to a non-front window will *not* display that window's
+<span class="type">float</span>ers. This was done to avoid excessive window flashing while
+dragging the mouse across the screen.
+</p></li><li><p>
+You can move a background window without bringing it to the front by
+dragging its title bar or border.
+</p></li></ul><p>
+But even better than reading this article, just try to play with it and
+you'll get it. It's hard at first, but probably more efficient than the
+old way once you get used to it. In any case, it's just an option...
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id674170"></a>Under the Windows</h3></div></div></div><p>
+Now, for those of you who are interested in more details about how the
+new window manager really works, here are the sourc-- (Oops sorry :-)
+here are a few details:
+</p><p>
+Windows are sorted into 9 layers of visibility; a window in a higher
+layer is displayed in front of a window in a lower layer (e.g., a layer 5
+window is display in front of a layer 4 window):
+</p><ul class="itemizedlist"><li><p>
+layer 0 - hidden windows (including Workspaces visibility).
+</p></li><li><p>
+layer 1 - minimized windows.
+</p></li><li><p>
+layer 2 - background window (the desktop of the Tracker).
+</p></li><li><p>
+layer 3 - "normal" document windows (i.e., windows that aren't in any
+other category).
+</p></li><li><p>
+layer 4 - <span class="type">float</span>ing windows attached to the current frontmost window.
+</p></li><li><p>
+layer 5 - modal windows blocking the current frontmost window.
+</p></li><li><p>
+layer 6 - system-wide modal windows.
+</p></li><li><p>
+layer 7 - system-wide <span class="type">float</span>ing windows.
+</p></li><li><p>
+layer 8 - full-screen windows (from the Game Kit).
+</p></li></ul><p>
+Some rules:
+</p><ul class="itemizedlist"><li><p>
+The first 2 layers are not drawn for now (that could change for layer
+1 in the future).
+</p></li><li><p>
+If a group of windows switches from one layer to another layer in the
+same transaction (workspace switch for example), the windows stay in
+the same order relative to each other.
+</p></li><li><p>
+A window that's demoted from a higher layer to a lower layer is added
+to the front of the lower layer.
+</p></li><li><p>
+A window that's promoted to a higher layer is added to the back of
+that layer, except...
+</p></li><li><p>
+A window that's being activated is sent to the very front of the
+layer.
+</p></li><li><p>
+Only one window can be in layer 8 at any time.
+</p></li></ul><p>
+To select focus and window activation, windows respect the following
+rules, in order of priority:
+</p><ul class="itemizedlist"><li><p>
+the ordering rules given above are always enforced first
+</p></li><li><p>
+a window in layer 8 always gets the focus and is the only active
+window.
+</p></li><li><p>
+A window in layer 0 or 1 is never a potential focus nor is it ever
+active
+</p></li><li><p>
+a visible <span class="type">float</span>ing window is always active.
+</p></li><li><p>
+A window that refuses focus is never a potential focus.
+</p></li><li><p>
+User interaction (using focus_follows_mouse or not) will select new
+windows as potential focus. If the chosen window is a non system- wide
+<span class="type">float</span>ing window and doesn't accept focus, then its frontmost master
+window is selected as a potential focus.
+</p></li><li><p>
+Programmatic API calls like Show() will bring a window to front,
+making it a potential focus. Other API may affect the process in their
+own way.
+</p></li><li><p>
+A workspace change cancels the last focus owner.
+</p></li><li><p>
+If the last focus owner has not been canceled by a workspace change,
+it's automatically a potential focus.
+</p></li><li><p>
+If the frontmost potential focus is a system-wide modal, then it's
+the focus and the only active window.
+</p></li><li><p>
+If the frontmost potential focus is a <span class="type">float</span>ing window, then it's the
+focus. Also, its frontmost master window is active.
+</p></li><li><p>
+If the frontmost potential focus is blocked by a modal, then the
+topmost modal blocking that window is the focus and the only active
+window.
+</p></li><li><p>
+If the frontmost potential focus is not blocked by a modal, then its
+the focus and the only active window.
+</p></li><li><p>
+If there is no potential focus, then the frontmost window that is not
+a system-wide <span class="type">float</span>er and doesn't dislike becoming front is brought to
+front and set as a potential focus, and all rules are applied again.
+</p></li><li><p>
+If there is no potential focus, then the frontmost window is brought
+to front and set as a potential focus, and all rules are applied again.
+</p></li><li><p>
+There is no focus, nor any active window.
+</p></li></ul><p>
+Hmmm, I probably forgot a couple details, but mainly that's it.
+</p><p>
+Finally, the last advantage, but not the least, of the new window manager
+architecture is that now all changes of state that are triggered by a
+single external stimulus (user interaction or programmatic API call) is
+processed in one atomic transaction. That was the key feature that
+allowed an efficient implementation of <code class="classname">BDirectWindow</code>. But that's next
+week's story...
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-11-2"></a>Be Engineering Insights: More of My Favorite Things</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michael</span> <span class="surname">Alderete</span></span></div></div></div><p>
+http://www.be.com/aboutbe/benewsletter/Issue95.html#Insight2, I described
+a few of my favorite things in the BeOS Preview Release 2. By a great
+stroke of luck, my latest article deadline coincides almost perfectly
+with the current BeOS release, Release 3, saving me the agony of finding
+a new topic to write about.
+</p><p>
+My favorite thing in Release 3 is <code class="classname">BDirectWindow</code>. In a nutshell, it's an
+extension to the Game Kit that allows extremely processor-efficient
+direct access to the graphics card frame buffer. It makes video and
+animation—full screen or in a window—smoother, without soaking up
+all your processor's power. Streaming video from a digitizing card or
+from a hard drive is very smooth and efficient; I predict that all of the
+BeOS' &amp;tractor&amp; applications will use <code class="classname">BDirectWindow</code>.
+</p><p>
+Pierre Raynaud-Richard will describe it in greater detail in next week's
+Newsletter, so I'll leave it by saying that if you're coming to the BeDC,
+you'll see <code class="classname">BDirectWindow</code>'s advantages demonstrated in the Media Kit
+Overview and in Pierre's presentation on <code class="classname">BDirectWindow</code>. Be sure you see
+one or both!
+</p><p>
+A number of <span class="application">Tracker</span> improvements tickle my fancy. Probably the coolest is
+what happens when you right-click on a Query. In the context menu, you
+can &amp;open&amp; the query in the submenu, just as you can by right-clicking on
+a folder. What's new is that the Query is live—it executes before
+displaying the menu.
+</p><p>
+I'm sure you can think of a few clever tricks for this. Here's one of
+mine (and I'm going to cheat, and reuse it in this week's Tip of the
+Week):
+</p><div class="orderedlist"><ol><li><p>
+Create a new Query, by searching for Bookmark by Attribute; size is
+0.
+</p><p>
+You want to search on this specific criterion, because it will find
+all your NetPositive bookmarks very quickly. You could search for all
+Bookmarks by searching for Name is * (wildcard), but that goes much
+more slowly.
+</p></li><li><p>
+Find the Query you just created in your
+<code class="filename">/home/queries</code> directory.
+Rename it something like &amp;Bookmarks&amp;. Move it to your desktop, or any
+place that's convenient.
+</p></li><li><p>
+Now all your favorite web sites are just a right-click away. Just
+right-click on the Query on your desktop, select the URL, and away you
+go!
+</p></li></ol></div><p>
+The <span class="guimenuitem">Open With</span> menu is pretty nice, too. This new feature lets you open
+your documents with any application which is capable of opening the
+file's type, not just the default application that opens when you
+<span class="type">double</span>-click the file. I use this most when editing and testing HTML
+documents, going back and forth between Eddie (a cool text editor) and
+<span class="application">NetPositive</span>.
+</p><p>
+It's not strictly a <span class="application">Tracker</span> improvement, but I love the new status area
+in the <span class="application">Deskbar</span>. You know how the mail_daemon adds the mailbox icon to the
+status area at the bottom of the Deskbar? Well, now any application can
+add a Replicant to that area, providing it's small enough and there's
+room left (the status area is not resizable, so there's limited real
+estate—we'll probably fix this in R4).
+</p><p>
+<acronym class="acronym" title="Point to Point Protocol">PPP</acronym> status
+is a natural, and we've got a very-mini-<span class="application">Pulse</span>, uh, thingie
+here, too. I'll bet it'll be a matter of weeks before there are dozens of
+choices of what to add to this area. Get there fast!
+</p><p>
+Two of our Internet applications got big improvements. <span class="application">NetPositive</span> now
+does frames, has a bunch of bugs fixed, is faster at some things, and
+opens Bookmark files from the <span class="application">Tracker</span>
+correctly. <span class="application">PoorMan</span> got a totally
+new interface, one that I think is a great improvement. It's now a very
+usable personal web server. Maybe we should rename it!
+</p><p>
+Of course, the biggest thing in Release 3 is support for Intel hardware.
+It was a huge amount of work, but the result is that the BeOS now runs on
+the two most popular computer platforms on the planet.
+</p><p>
+One of the things that gets me really jazzed about running on Intel
+hardware is the cost of the systems. We've put together some example
+systems, known affectionately as &amp;Ming Specials,&amp; that can give you an
+idea of the hardware values available today. You can check out all three
+Ming Specials on our web site at:
+http://www.be.com/support/guides/ming-specials.html
+</p><p>
+Here's the system that really rouses my enthusiasm, because it represents
+600 MHz of screaming silicon for just over $2,500. You can't get that
+anywhere except on a PC, and you can't take advantage of both processors
+with any other operating system like you can with the BeOS:
+</p><pre class="screen">
+Ming Special #3—$2,539
+
+  Tyan S-1692DL Dual Pentium II motherboard
+  Dual Intel Pentium II 300 MHz CPU
+  128 MB SDRAM memory
+  Western Digital 6.4 GB Ultra IDE hard drive
+  Toshiba 32x CD-ROM drive
+  Sony 1.44 floppy disk drive
+  Matrox Millennium II 4 MB video card
+  Keytronic 104 PS/2 keyboard
+  Logitec 3-button Combo Mouseman
+  ATX Mid-tower case w/ 230 W power supply
+</pre><p>
+What's most exciting to me is that just four months ago this system cost
+$3,154 (and had a smaller hard drive). That's a price drop of $615, over
+$150 a month! Is it any wonder this is one of my favorite things?
+</p><p>
+Release 3 will be shipping soon, and when you get your hands on it, be
+sure to tell us what *your* favorite things are.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-11"></a>Developers' Workshop: How To Get Tracker to See Your Attributes</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id674730"></a><a id="id674733"></a>Q:</td><td><p>
+I've got my own database files that contain a hogshead of custom
+attributes. I indexed the attributes before adding them to the files
+(just like the good book told me to do), and I have my own app that
+creates new attributed files, modifies the attributes as needed, and
+deletes old files. The thing it doesn't do—and that I don't want to
+have to write—is simply *display* the attributes. I want Tracker to
+recognize and display my attributes in its windows, like it does for
+e-mail. How do I do this?—Jean-Phillipe Toussaud de Renard Sousa
+Flaxhandle, Louisiana
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Tres bon interrogation, garcon. But before we give you an answer,
+let's make sure that you're up on the latest Be Book-as-disinformation
+news (regarding attributes and queries):
+</p></td></tr></tbody></table></div><p>
+The (pre-Release 3) Be Book erroneously reported that ONLY indexed
+attributes can be queried. The truth is that a query must include at
+least ONE indexed attribute, but it can search for any number of other,
+unindexed attributes. Of course, the unindexed search won't be as fast as
+the indexed search, but the indexed search is performed first, which
+should, in many cases, sufficiently narrow the domain for the unindexed
+search. What this means for you, M. de Renard Sousa, is that you might
+want to reconsider the "hogshead of custom attributes" that you currently
+have indexed. You might want to unindex the attributes that you don't
+ever use in a query (or that you rarely use).
+</p><p>
+Also, note that if the length of the value of an indexed attribute
+exceeds 255 bytes, it will fall out of the index. The value itself won't
+be lost (the attribute will retain the prolix value), but the index will
+no longer "see" that attribute. This little fact was also neglected in
+the Be Book, and has since been corrected (thanks to an astute BeDevTalk
+participant).
+</p><p>
+But back to the original question. What Jean-Phillipe wants to do is
+safe, easy, and uncontroversial, even in states with a stricter
+definition of acceptable leisure activity than Louisiana. Here's the full
+story on "How To Get Tracker to See Your Attributes":
+</p><div class="orderedlist"><ol><li><p>
+Create some attributes. (Jean-Phillipe has already done this, but
+we're starting from scratch.) To "create" an attribute, you simply
+write it to a file through <code class="classname">BNode</code>'s
+<code class="methodname">WriteAttr()</code> function; you can get
+the details from the Be Book, but here's a wee example:
+</p><pre class="programlisting cpp">
+<code class="varname">aFile</code>.<code class="methodname">WriteAttr</code>("SOUSA:Name", <code class="constant">B_STRING_TYPE</code>, 0, "Bub", 4);
+</pre><p>
+Note that we write the <code class="constant">NULL</code> terminator by declaring the data length to
+be <code class="function">strlen()</code>+1. Tracker depends on this <code class="constant">NULL</code> termination.
+</p></li><li><p>
+Create a <acronym class="acronym">MIME</acronym> type for your files and install it in the system-wide
+<acronym class="acronym">MIME</acronym> type database. You do this through <code class="classname">BMimeType</code>'s
+<code class="methodname">Install()</code>
+function. You may want to check to see if it's already installed
+before installing it:
+</p><pre class="programlisting cpp">
+<code class="classname">BMimeType</code> <code class="varname">mime</code>("text/x-Sousa");
+if (!<code class="varname">mime</code>.<code class="methodname">IsInstalled</code>())
+  <code class="varname">mime</code>.<code class="methodname">Install</code>();
+</pre></li><li><p>
+Assign the file type to the files you create. You do this through
+<code class="classname">BNodeInfo</code>'s <code class="methodname">SetType()</code> function:
+</p><pre class="programlisting cpp">
+<code class="classname">BNodeInfo</code> <code class="varname">ni</code>(&amp;<code class="varname">aFile</code>);
+<code class="varname">ni</code>.<code class="methodname">SetType</code>("text/x-Sousa");
+</pre></li><li><p>
+Now here's the part that you really want to know about: The <acronym class="acronym">MIME</acronym>
+info that <span class="application">Tracker</span> looks for when compiling column candidates.
+Unfortunately, the names of the <acronym class="acronym">MIME</acronym> info fields aren't currently
+published (when we do publish them, we'll undoubtedly provide handy
+constants and all that) so what I'm about to disclose is a BIG SECRET.
+If you agree to change your code to the published names when that day
+comes, you can continue reading. If you can't hold yourself to this
+little promise, then go over there for awhile; I'll let you know when
+you can rejoin us.
+</p></li></ol></div><p>
+Here's what Tracker looks for (or some of it, anyway):
+</p><ul class="itemizedlist"><li><p>
+"attr:name"<br />
+The name of some attribute.
+</p></li><li><p>
+"attr:public_name"<br />
+The name you want Tracker to call this attribute.
+</p></li><li><p>
+"attr:type"<br />
+The type (<code class="constant">B_INT32_TYPE</code>,
+<code class="constant">B_STRING_TYPE</code>, etc.) of the attribute data.
+</p></li><li><p>
+"attr:viewable"<br />
+A <span class="type">bool</span> that you set to <code class="constant">true</code> if you want
+<span class="application">Tracker</span> to display the
+attribute.
+</p></li><li><p>
+"attr:editable"<br />
+A <span class="type">bool</span> that you set to <code class="constant">true</code> if
+you want users to be able to edit the attribute.
+</p></li><li><p>
+"attr:width"<br />
+An <span class="type">int32</span> that gives the width of a default column, in units of
+something. Probably pixels.
+</p></li><li><p>
+"attr:alignment"<br />
+A code (<code class="constant">B_ALIGN_LEFT</code>, <code class="constant">...RIGHT</code>,
+or <code class="constant">...CENTER</code>) that declares how the
+values are aligned in the <span class="application">Tracker</span> column.
+</p></li></ul><p>
+You bundle this information into a <code class="classname">BMessage</code>, and tack the message onto a
+<acronym class="acronym">MIME</acronym> type through <code class="classname">BMimeType</code>'s
+<code class="methodname">SetAttrInfo()</code> function.
+</p><p>
+For example, let's say our Jean-Phillipe wants Tracker to exhibit—and
+allow editing of—the "SOUSA:Name" values of his "text/x-Sousa" files,
+but he wants the (attribute) column to be named "Sousa Name". He would do
+something like this:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">msg</code>;
+<code class="varname">msg</code>.<code class="methodname">AddString</code>("attr:name", "SOUSA:Name");
+<code class="varname">msg</code>.<code class="methodname">AddString</code>("attr:public_name", "Sousa Name");
+<code class="varname">msg</code>.<code class="methodname">AddInt32</code>("attr:type", <code class="constant">B_STRING_TYPE</code>);
+<code class="varname">msg</code>.<code class="methodname">AddBool</code>("attr:viewable", <code class="constant">true</code>);
+<code class="varname">msg</code>.<code class="methodname">AddBool</code>("attr:editable", <code class="constant">true</code>);
+<code class="varname">msg</code>.<code class="methodname">AddInt32</code>("attr:width", 50);
+<code class="varname">msg</code>.<code class="methodname">AddInt32</code>("attr:alignment", <code class="constant">B_ALIGN_LEFT</code>);
+
+<span class="comment">/* 'mime' is the BMimeType from above */</span>
+<code class="varname">mime</code>.<code class="methodname">SetAttrInfo</code>(&amp;<code class="varname">msg</code>);
+</pre><p>
+The message fields correspond to a particular attribute purely by index
+into the message. In other words, the 0'th "attr:public_name" field
+corresponds to the 0'th "attr:name" field (and so on for the other
+fields). If you want to add Tracker-recognized parameters for a second
+attribute, you add a second set of "attr:*" values AFTER you've added the
+first set. (Admittedly, this isn't a very flexible interface, but this is
+all under-the-counter stuff anyway, so stop griping.)
+</p><p>
+That's it. Note that...
+</p><ul class="itemizedlist"><li><p>
+We didn't mention indexing. That's because none of this depends on
+indexing: You can ask Tracker to display ANY attribute, indexed or not.
+</p></li><li><p>
+The order of these operations isn't important. You can do them in the
+reverse order and it will come to the same thing.
+</p></li></ul><p>
+The rest of you can come back now.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-11"></a>More News from Murphy</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last week I recounted some of our teething pains with the Intel Release 3
+release of the BeOS, the product we'll discuss at great length starting
+Thursday at our Be DC developer's conference in Santa Clara. This week, I
+know a little bit more about one of the problems we encountered, and even
+have some good news, courtesy of Garrett Gruener, the courageous Be, Inc.
+director who watched the BeOS installation vaporize data on his spouse's
+hard disk. Fortunately, the data was not really destroyed, only
+transmogrified into FAT 32 files, and thereby made incomprehensible to a
+version of Windows only fluent in the DOS FAT 16 standard.
+</p><p>
+We know now the metamorphosis is easily reversed: you just tell the
+partitioning utility to do it. In fact, if you use the aptly named Deluxe
+version of System Commander, it tells you about the FAT 16 vs. FAT 32
+problem and indicates the right procedure. In my opinion, System
+Commander is the best boot manager in the business. The Deluxe version
+comes with a good set of partitioning tools offering a one-stop complete
+solution for the hardy multiple OS explorer. Not surprisingly, Frank van
+Gilluwe, one of the founders of V Communications, System Commander's
+publisher, is also the author of "The Undocumented PC," a highly
+recommended book for the fearless experimenters just mentioned.
+</p><p>
+There is more good news. In discussing the problems BeOS users might face
+or fear when repartitioning their hard disk and installing the BeOS,
+Garrett Gruener reminded me of a simple, executive-proof solution: one of
+his companies, @Backup http://www.atbackup.com, makes a business of
+backing up your data over the net, with a modem or a LAN connection.
+Imagine your system automatically backed up every night. Effortless,
+therefore effective.
+</p><p>
+On the BIOS front, the news isn't so good. We've discovered that the most
+recent versions (ending in PO5, 06, and 07) of the BIOS on the Intel
+Atlanta LX440 motherboard cause the installation problem I experienced
+last week. If you have one of these motherboards, please check the BIOS
+version before installing the BeOS. There are two ways to do this: you
+can catch it during the boot process as it scrolls by; or you can enter
+the set-up routine by pressing F2 early in the boot sequence, which
+displays the BIOS revision string on the set-up utility's main screen.
+</p><p>
+Why didn't we discover the problem earlier? Because it didn't exist on
+the motherboards we acquired a while ago for development and test
+purposes. It only showed up on one of our latest purchases, which
+happened to be for my use as the Intel Release 3 all-purpose guinea pig.
+</p><p>
+BIOS problems are a way of life in the Intel-based PC world. Intel's
+excellent web site,
+</p><p>
+<a class="ulink" href="http://support.intel.com/support/motherboards/desktop/">http://support.intel.com/support/motherboards/desktop/</a>
+</p><p>
+provides support information on their motherboards and the conundrums
+they may pose. In particular,
+</p><p>
+<a class="ulink" href="http://developer.intel.com/design/motherbd/al/al_bios.htm">http://developer.intel.com/design/motherbd/al/al_bios.htm</a>
+</p><p>
+gives details on the latest LX440 BIOS and a procedure for updating the
+flash memory on your motherboard.
+</p><p>
+BIOS blues are not a new occurrence. In 1995, I bought an Atlantis
+motherboard, installed Windows 95, and promptly encountered two problems.
+First, the system insisted I had two mice, a serial mouse and a PS/2
+mouse. Second, detecting what it diplomatically referred to as "legacy
+sound hardware," it always insisted on several attempts each time I
+reinstalled Windows 95 (a frequent occurrence in my early days of
+exploring this product).
+</p><p>
+I learned that deleting one of the two mice made the system unstable, but
+I got used to the idiosyncrasies. Later, I saw the BIOS update
+information on the Intel site and, despite trepidation built on my proven
+ability to find the wrong way to do something, I nevertheless succumbed
+to the attraction of a manly undertaking sure to grow more hair on my
+chest.
+</p><p>
+I downloaded the new BIOS, printed the instructions _before_ attempting
+the update (I'm not that virile), made a boot floppy, copied the update
+program on it, rebooted, followed instructions, rebooted and noted the
+new BIOS revision string, reintroduced my old settings (don't forget to
+write them down prior to the transplant), and my system looked intact.
+</p><p>
+Actually, it had healed: the phantom mouse had disappeared and the sound
+hardware detection problem never manifested itself again. Flush with
+success, I tried the same operation on a dual-processor Pentium Pro
+system at the office. This procedure was a little more daunting when the
+first reboot failed to restart the system, though another reset did the
+trick. Unfortunately, that BIOS update didn't cure the instabilities
+presented by my installation of NT 4.0. Sometimes it's the BIOS,
+sometimes it's the system. And, of course, sometimes it's neither, or
+both.
+</p><p>
+Back to Release 3 on Atlanta LX440 motherboards: please check the BIOS
+revision and call or e-mail if you have one of the later P05, 06, or 07
+revisions. We'll post more info on our web site this week. We have a fix
+-- I'm writing on it, so to speak—and we want to make sure it is
+well-tested and reasonably simple and safe to apply.
+</p><p>
+As my personal experiences testify, these problems are fairly prevalent
+in the fast-evolving context of the PC architecture and its many
+independent implementations. This early BIOS problem is a useful reminder
+to be en garde for the negative consequences of well-meaning upgrades,
+and of the need to work as closely as possible with BIOS companies such
+as Phoenix and AMI.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-10.html">Issue 3-10, March 11, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-12.html">Issue 3-12, March 25, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-10.html" title="Issue 3-10, March 11, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-12.html" title="Issue 3-12, March 25, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

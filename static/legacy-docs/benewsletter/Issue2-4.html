@@ -1,0 +1,790 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-3.html" title="Issue 2-3, January 22, 1997" /><link rel="next" href="Issue2-5.html" title="Issue 2-5, February 5, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-3.html" title="Issue 2-3, January 22, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-5.html" title="Issue 2-5, February 5, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-3.html">Issue 2-3, January 22, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-5.html">Issue 2-5, February 5, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-4"></a>Issue 2-4, January 29, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-4"></a>Be Engineering Insights: Fastmath and fastmem are in a boat. Libmoto
+falls into the water... Who's left?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+By now most of you have an idea of the main points of the huge DR9
+feature list. But I'll not write about the new file system, the new
+Tracker, or any of the other big subjects. Today, I want to add my 5
+cents to a topic that's a tenured member of the list of release features:
+Improving performance.
+</p><p>
+One of the performance-enhancing tonics that, until now, had to be
+applied as an "extra" was libmoto. Available from Motorola, libmoto is an
+extremely optimized library of memory, math, and string functions,
+written in PowerPC assembly language. In DR9 we'll integrate libmoto into
+the standard package, at which point everybody should be able to use it.
+</p><p>
+Libmoto is good—but is it really as fast as possible? Does it give you
+precisely what you need? Is it overkill, particularly with regard to
+floating-point precision? In short, can we do better?
+</p><p>
+At Be, these questions posed themselves as we worked on two specific
+problems: Basic 3D calculations for the 3D Kit and the compatibility
+between our drivers and the set of memory functions (<code class="function">memset()</code>, <code class="function">memcpy()</code>,
+and so on). The result: New "fastmath" and "fastmem" libraries.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545336"></a>Fastmath</h3></div></div></div><p>
+The idea behind fastmath is that many programs don't need the high
+precision and full-range definition provided by standard math libraries
+such as libmoto.
+</p><p>
+Controlling precision in a general way is a difficult problem. At the
+high end, you have people doing scientific calculations: For them, the
+utmost precision is necessary. They know that even a tiny round-off error
+propagated through a system can render a calculation meaningless. To
+avoid excluding such scientists, math packages are all defined in double
+precision and go to great lengths to maintain accuracy.
+</p><p>
+On the other hand, if you're processing audio samples or performing 3D
+computation for image rendering, you don't require scientific precision.
+An error of, for example, less than 1 in 10,000 will be lost in the noise
+of the pixelization process. And an error of less than 1 in 100,000 means
+nothing to a 16-bit audio sample. In many cases, programmers could easily
+use math functions with an error of 1/1,000,000 (within the range [ -1 ;
++1 ]). It's clear that double-precision, floating-point calculations are
+unnecessary for such operations.
+</p><p>
+If you find yourself in this bargain basement—where, for example, a
+sine or square root that's accurate to within +/- .000001 is good enough
+—then you should use the fastmath library. Therein you'll find the
+following math functions (the "&gt;" mark designates the "most optimized"
+function(s) within a group):
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545371"></a>Cosine and Sine</h4></div></div></div><pre class="screen">
+&gt; <span class="type">float</span> <code class="function">b_cos_90</code>(<span class="type">float</span> <code class="parameter">radians</code>)
+  <span class="type">float</span> <code class="function">b_cos</code>(<span class="type">float</span> <code class="parameter">radians</code>)
+  <span class="type">float</span> <code class="function">b_sin</code>(<span class="type">float</span> <code class="parameter">radians</code>),
+  <span class="type">void</span> <code class="function">b_get_cos_sin</code>(<span class="type">float</span> <code class="parameter">radians</code>, <span class="type">float *</span><code class="parameter">cosine</code>, <span class="type">float *</span><code class="parameter">sine</code>)
+</pre><p>
+<code class="function">b_cos_90()</code> is the fastest trig function: It achieves much of its speed
+by restricting the input range to [ 0.0 ; PI/2 ]. In other words, it's
+only defined for angles up to 90 degrees. Using the symmetries of the
+cosine curve, you can translate the returned value for any angle, or
+you can use one of the other functions, which are based on <code class="function">b_cos_90()</code>
+but don't carry the input range restriction.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545471"></a>Tangent and Arctangent</h4></div></div></div><pre class="screen">
+&gt; <span class="type">float</span> <code class="function">b_tan_45</code>(<span class="type">float</span> <code class="parameter">radians</code>)
+  <span class="type">float</span> <code class="function">b_tan</code>(<span class="type">float</span> <code class="parameter">radians</code>)
+&gt; <span class="type">float</span> <code class="function">b_atan_1</code>(<span class="type">float</span> <code class="parameter">value</code>)
+  <span class="type">float</span> <code class="function">b_atan</code>(<span class="type">float</span> <code class="parameter">value</code>)
+</pre><p>
+<code class="function">b_tan_45()</code> is defined for angles in the range [ 0.0 ; PI/4 ].
+</p><p>
+Actually, you *can* go further—as far as PI/2—but the relative
+error becomes quite significant as you approach this limit.
+</p><p>
+<code class="function">b_tan()</code> doesn't restrict the sign of the input, but it doesn't fix the
+growing error problem—its effective range is [ -PI/4 ; PI/4 ].
+</p><p>
+Analogously, <code class="function">b_atan_1()</code> and <code class="function">b_atan()</code>
+retrieve arctangents for the range
+[ 0.0 ; 1.0 ] and for unbounded values, respectively.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545578"></a>Square Root and Inverse Square Root</h4></div></div></div><pre class="screen">
+&gt; <span class="type">float</span> <code class="function">b_sqrt</code>(<span class="type">float</span> <code class="parameter">value</code>)
+&gt; <span class="type">float</span> <code class="function">b_sqrt_inv</code>(<span class="type">float</span> <code class="parameter">value</code>)
+</pre><p>
+The square root functions are defined for any value &gt; 0.0.
+</p></div><p>
+I've listed some benchmarks and error approximations for these functions
+at the end of this article.
+</p><p>
+One big advantage of the fastmath library is that all functions are short
+C-code functions, and so can easily be inlined for even better
+performance.
+</p><p>
+If you're interested in getting a preview version of fastmath (the header
+file only; this includes the code for the inline functions), or if you
+want to help us extend our support or optimize our code even more,
+contact pierre@be.com.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545645"></a>Fastmem</h3></div></div></div><p>
+The motivating force behind fastmem is the existence of the "data cache
+block" (DCB) instruction set provided by the PowerPC architecture. The
+DCB instructions give you greater control over the data cache, so you can
+optimize the way the cache is loaded and fetched. In particular, these
+instructions let you preload data and fetch a cache line without reading
+it first.
+</p><p>
+But to use this advanced control, you need to work with cacheable memory.
+Unfortunately, not all memory can be stuffed into the data cache; for
+example, you can't take the frame buffer of a graphic card and load it
+into the cache. The standard memory functions (<code class="function">memcpy()</code>, <code class="function">memmove()</code>, and
+<code class="function">memset()</code>) use the DCB instructions, thus they can't be used for
+noncacheable memory.
+</p><p>
+The fastmem functions provide "cache-specific" memory operations. Within
+the library you'll find that the standard functions work as usual (they
+copy, move, and initialize memory), but they *only* work for cacheable
+memory.
+</p><p>
+The "nonstandard" fastmem functions work on noncacheable memory:
+</p><p>
+<code class="function">memcpy_nc2c()</code> copies data from noncacheable to cacheable memory
+</p><p>
+<code class="function">memcpy_c2nc()</code> copies from cacheable to noncacheable
+</p><p>
+<code class="function">memcpy_nc2nc()</code> copies from noncacheable to noncacheable
+</p><p>
+<code class="function">memmove_nc()</code> copies between interleaved buffers in noncacheable memory
+</p><p>
+<code class="function">memset_nc()</code> initializes a buffer in noncacheable memory
+</p><p>
+One restriction of fastmem is that you *must* choose the proper function;
+the standard <code class="function">memset()</code> call, for example, won't work on noncacheable
+memory. (Actually, the functions <code class="function">memcpy_nc2nc()</code>, <code class="function">memmove_nc()</code>, and
+<code class="function">memset_nc()</code> will always do the right thing, even if the targeted area is
+in cacheable memory—but they will be quite a bit slower than the
+analogous <code class="function">memcpy()</code>, <code class="function">memmove()</code>, or <code class="function">memset()</code> call.)
+</p><p>
+This might sound a bit complicated—how do you know if your memory is
+cacheable? In general, only drivers need to access noncacheable memory;
+"normal" applications only manipulate cacheable memory. (In the BeOS, an
+exception to this is applications that use the Game Kit to access the
+screen.) If you don't know if you're using noncacheable memory, then
+you're not.
+</p><p>
+With regard to the characteristics of the memory buffers themselves:
+</p><ul class="itemizedlist"><li><p>
+Buffer sizes. Although the overhead for copying small buffers should
+be reasonable, you may want to copy small buffers (up to 64 bytes) by
+hand.
+</p></li><li><p>
+Alignment. The fastmem functions can handle any alignment of data,
+but you should try to get your buffers aligned to 8-byte or, at the
+least, 4-byte boundaries.
+</p></li></ul><p>
+The fastmem implementations are designed for speed, but we could probably
+squeeze a few more cycles out of them if we really needed to,
+particularly for nonaligned buffers.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545809"></a>Fastmath Benchmarks</h3></div></div></div><p>
+The following tests were performed on the five main functions only. The
+input set was a random suite of 10,000,000 samples within the functions'
+defined ranges.
+</p><p>
+[Note: You may want to use a fixed-width font to view the table in this
+section.]
+</p><p>
+We ran the tests on four different machines using four different
+processors:
+</p><pre class="screen">
+Machine          CPU    Speed
+BeBox(TM) 66     603     66 MHz
+BeBox 133        603e   133 MHz
+PowerCenter 120  604    120 MHz
+PowerTower 225   604e   225 MHz
+
+Legends:
+
+L = libmoto
+F = fastmath
+I = inlined fastmath
+</pre><p>
+The score x.xxx is a measure of the operations per microsecond
+</p><pre class="screen">
+       BeBox 66      BeBox 133     Power 120    Power 225
+
+b_cos_90 VS cos:
+  L:    0.668         1.188         2.036         3.939
+  F:    2.219         3.721         5.398        10.161
+  I:    3.613         5.371         6.612        12.331
+
+b_sqrt VS sqrt:
+  L:    0.490         0.873         1.324         2.518
+  F:    1.130         2.243         2.192         4.178
+  I:    1.262         2.481         2.349         4.516
+
+b_sqrt_inv VS (1.0/sqrt):
+  L:    0.384         0.689         0.952         1.807
+  F:    1.129         2.239         2.184         4.188
+  I:    1.263         2.487         2.345         4.502
+
+b_atan_1 VS atan:
+  L:    0.542         0.972         1.890         3.652
+  F:    1.686         2.936         3.244         6.173
+  I:    2.002         3.273         3.601         6.858
+
+b_tan_45 VS tan:
+  L:    0.278         0.528         0.659         1.250
+  F:    1.008         1.811         2.351         4.481
+  I:    1.150         1.936         2.532         4.864
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545849"></a>Fastmath Errors</h3></div></div></div><p>
+Here are reasonable estimates (not the theoretical values) of the
+maximum, average, and average absolute errors for the 5 "most-optimized"
+fastmath functions, within their usable ranges.
+</p><p>
+Notes:
+</p><ul class="itemizedlist"><li><p>
+e-6 stands for 0.000001
+</p></li><li><p>
+"error in absolute value" means the error is relative to a restricted
+range that's peculiar to the function; for example, for cosine the
+range is [ -1.0 ; 1.0 ]. Any <code class="function">be_cos()</code> call will return a result that's
+within 0.000000536 of the "real" answer.
+</p></li><li><p>
+"error in relative value" means the error is relative to the result
+of the computation. Consider the call
+</p><pre class="programlisting">
+<code class="function">b_sqrt</code>(1e12) <span class="comment">// square root of 1000 billion</span>
+</pre><p>
+The real answer is, of course, 1,000,000. But the result will be in the
+range
+</p><pre class="screen">
+[ 999,998.314 ; 1,000,001.686 ]
+</pre><p>
+Now consider this call:
+</p><pre class="programlisting">
+<code class="function">b_sqrt</code>(1e-12) <span class="comment">// square root of 1/1000 billion</span>
+</pre><p>
+The answer is .000001, and the result will be in the range
+</p><pre class="screen">
+[ 0.000000999998314 ; 0.000001000001686 ]
+</pre><pre class="screen">
+b_cos_90 (error in absolute value):
+- maximum:           0.536 e-6
+- average:           0.046 e-6
+- average absolute:  0.125 e-6
+
+b_sqrt (error in relative value):
+- maximum:           1.686 e-6
+- average:          -0.160 e-6
+- average absolute:  0.184 e-6
+
+b_sqrt_inv (error in relative value):
+- maximum:           1.686 e-6
+- average:           0.160 e-6
+- average absolute:  0.183 e-6
+
+b_atan_1 (error in absolute value):
+- maximum:           0.656 e-6
+- average:           0.030 e-6
+- average absolute:  0.123 e-6
+
+b_tan_45 (error in absolute value):
+- maximum:           1.013 e-6
+- average:           0.052 e-6
+- average absolute:  0.159 e-6
+</pre></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id545948"></a>Fastmem Benchmarks</h3></div></div></div><p>
+We compared the fastmem functions to our old code as well as to the
+latest version of libmoto (where possible; libmoto doesn't handle writing
+into noncacheable memory).
+</p><p>
+The tests played by these rules:
+</p><ul class="itemizedlist"><li><p>
+We set up a 4 MB cacheable area and a 512 KB noncacheable area as the
+source and/or destination.
+</p></li><li><p>
+The tests were run on buffers ranging in size from 8 bytes up to 256
+KB.
+</p></li><li><p>
+We tested aligned and unaligned buffers. For aligned buffers, we
+stuck to 8-byte alignments, but we used all four such alignments within
+32 bytes (keep in mind that a cache line is 32 bytes long).
+</p></li><li><p>
+So that we wouldn't be affected by a warm cache, we trashed both L1
+and L2 after each test.
+</p></li><li><p>
+We also tested a mix of <code class="function">memmove()</code> offsets, from -(buffer_size-1) to
++(buffer_size-1). Each size was tested for a total of 10 MB, in
+standard operating conditions (restart from scratch and then run only
+the test program).
+</p></li></ul><p>
+The machines and their characteristics:
+</p><pre class="screen">
+Machine          CPU   Speed    Bus     Graphic Card
+BeBox 66         603   66 MHz   33 MHz  fast PCI
+BeBox 133        603e  133 MHz  33 MHz  standard PCI
+PowerCenter 120  604   120 MHz  40 MHz  on-board
+PowerTower 225   604e  225 MHz  50 MHz  fast PCI
+</pre><p>
+The numbers presented come from the average for buffers between 2 KB and
+128 KB, removing the best and the worst measure. Everything is mixed with
+a noise of +/-1 percent.
+</p><pre class="screen">
+Legends:
+
+O = old library
+L = libmoto
+F = fastmem
+</pre><p>
+The score aa.a (uu.u) is the bandwidth in MB/second for: aligned case
+(unaligned case).
+</p><pre class="screen">
+      BeBox 66      BeBox 133     Power 120     Power 225
+
+memcpy:
+  O: 15.3 (10.0)   17.6 (15.8)   19.8 (14.8)   27.6 (21.3)
+  L: 16.2 (13.6)   20.5 (17.7)   31.6 (25.9)   37.2 (35.0)
+  F: 20.8 (17.3)   27.0 (25.6)   30.5 (29.3)   37.1 (36.7)
+
+memcpy_nc2c:
+  O:  5.8 ( 0.9)    4.4 ( 0.9)   16.8 ( 3.5)    8.0 ( 1.2)
+  L:  3.5 ( 1.9)    3.8 ( 1.9)   13.6 ( 8.7)    5.0 ( 2.9)
+  F:  6.3 ( 5.2)    4.7 ( 4.5)   27.5 (19.3)   11.1 ( 8.7)
+
+memcpy_c2nc:
+  O: 16.1 ( 3.0)   19.1 ( 3.4)   25.1 ( 5.3)   29.6 ( 4.3)
+  F: 17.1 (15.9)   19.1 (18.3)   25.1 (23.8)   29.7 (29.4)
+
+memcpy_nc2nc:
+  O:  5.7 ( 0.7)    3.9 ( 0.7)   15.5 ( 1.9)    7.6 ( 1.0)
+  F:  5.9 ( 4.8)    4.2 ( 3.8)   16.8 (13.5)    8.5 ( 7.7)
+
+memmove:
+  O: 18.7 (17.5)   20.7 (20.7)   29.6 (29.3)   37.8 (36.5)
+  L: 17.7 (15.0)   22.4 (20.6)   31.4 (29.3)   38.2 (37.5)
+  F: 21.7 (17.8)   27.4 (26.6)   32.3 (31.9)   40.1 (39.5)
+
+memmove_nc:
+  O:  3.0 ( 2.9)    2.8 ( 2.8)    8.7 ( 8.7)    4.2 ( 4.2)
+  F:  5.8 ( 4.8)    4.3 ( 3.8)   19.4 (14.6)    8.5 ( 7.5)
+
+memset:
+  O: 21.3 (21.2)   25.0 (24.7)   32.1 (32.1)   41.1 (41.1)
+  L: 35.6 (35.3)   39.4 (39.3)   75.9 (75.7)   86.3 (86.2)
+  F: 35.7 (35.4)   39.4 (39.2)   76.2 (75.8)   86.5 (86.1)
+
+memset_nc:
+  O:  6.5 ( 6.5)    7.0 ( 6.9)   11.8 (11.8)    8.7 ( 8.7)
+  F: 25.8 (25.6)   25.1 (25.1)   47.3 (47.2)   30.4 (30.2)
+</pre><p>
+Comments:
+</p><ul class="itemizedlist"><li><p>
+libmoto has been optimized especially for the 604 and 604e; fastmem
+isn't dedicated to a particular CPU. We compromised to get good
+performance on every processor. Perhaps later we'll have
+processor-specific libraries: With 604-dedicated code, we'll be able to
+get the same performance as libmoto for the <code class="function">memcpy()</code> on the PowerCenter
+120 (the only case where libmoto really outperforms the new library).
+</p></li><li><p>
+The test for <code class="function">memmove()</code> used interlaced buffers only, while <code class="function">memcpy()</code>
+used noninterlaced buffers. Because of this, <code class="function">memmove()</code> always appears
+to be faster than <code class="function">memcpy()</code>.
+</p></li></ul><p>
+For all remarks, contact: pierre@be.com
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-4"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+So I was sitting around trying to think of an appropriate irrelevancy to
+satisfy George's funny bone this week, and I came up with the following.
+</p><p>
+My wife and I are pretty cheap, I guess. We bought a book to show us how
+to make things like silly putty so we wouldn't have to go out to the
+store and buy silly putty. The commercial version of silly putty is a
+nice, evenly textured smooshable plaything that provides countless hours
+of fun for the little ones.
+</p><p>
+The home-brew variety consists of flour, salt, and tartar sauce of all
+things. Who would think that such a strange mix of ordinary ingredients
+could provide so many countless hours of fun for the tots.
+</p><p>
+Putting together an operating system is much like putting together silly
+putty. You have a bunch of boring ingredients like device drivers,
+interface kits, memory management, and schedulers, but properly combined,
+they can create a product that's loads of fun.
+</p><p>
+The BeOS is like silly putty to me. I'm telling you, it makes me giddy
+with excitement just seeing the amount of work that developers are
+putting into their applications. It is a sure indication that they love
+what they're doing and probably laughing while they're doing it.
+</p><p>
+Now that quite a few new developers have received the MacTech CD and made
+it through the installation filter, we receive mail every day to the
+effect of: "Now that I've tried the BeOS, going back to the Mac OS seems
+silly."
+</p><p>
+More than a couple of developers I know are moving to California from
+parts unknown so that they can be closer to the action. I like to imagine
+it's because they want to be closer to the person who provides them with
+interesting stories and code samples, but I think not.
+</p><p>
+One developer I know was invited to show their wares before 5
+broadcasters, that is, people who own broadcast stations. They were
+sufficiently impressed that the developer was invited to a certain ranch
+of a space-faring family.
+</p><p>
+I also see that our ftp site is continually chock full of new entries and
+updates to old ones. One of the more amusing and powerful ones I think is
+myBrowser. This is a browser a la NEXTSTEP and it works quite well. It
+even does some nifty things that our Browser doesn't. Additionally
+there's a new Python 1.4 port for those in the know, and we've put out
+our latest version of NetPositive. There's even great progress on a
+native X server of all things!
+</p><p>
+Well, that's a mouthful for any platform, and even more so for this
+particular one, considering we haven't hit our 1.0 release yet. Speaking
+of which. Before getting to 1.0, we have to go through the DR9
+transition. Our general plan from a Developer Services perspective is to
+get ourselves boned up on the new stuff and have plenty of samples and
+porting guides in place such that a developer's transition will go as
+quickly and smoothly as possible.
+</p><p>
+For this release, we still won't be able to do much of a prerelease
+before the general release goes out, so you won't be able to compile your
+apps before DR9 hits the streets. But I'm wondering if it would be
+beneficial to port a couple of the apps ourselves before DR9 goes out so
+there's at least something to play with in the first couple of weeks,
+before everyone in the world recompiles.
+</p><p>
+At this point I'm really just taking a poll, but if you would like to
+have us recompile your app for DR9 before DR9 shows up, send me a message
+and we'll see how much interest there is. Besides, our new Developer
+Services staff needs some way of coming up to speed, don't they?
+</p><p>
+Well, after much code wrangling last week, the 3dmov and Bt848 binaries
+made it out the door. They seem to have made quite a splash with the
+general community and have plenty of people taunting their friends with
+"Can your OS do this!" So to continue, we have two pieces to release this
+week. One is a new Storage Server that Benoit put together to solve a
+startup indexing problem, it can be found at:
+</p><p>
+ftp://ftp.be.com/pub/dr8_update/storage.tgz
+</p><p>
+The other is the source to the CDPlayer application:
+</p><p>
+ftp://ftp.be.com/pub/Samples/cdplayer.tgz
+</p><p>
+The source for the CDPlayer will show you how your application can
+interact with the CD-ROM drive to play music. It will not allow you to
+create a driver to support any new CD-ROM devices, that driver is
+compiled into the kernel. But it will show you how to control the CD for
+your own purposes.
+</p><p>
+Additionally, Geoff Woodcock has produced the first fruit of his Be
+labors. There is a new tutorial on-line for the January application. For
+those who don't know, this little application is like a HelloWorld for
+graphics applications on the BeOS. Geoff was a bit concerned that all he
+has done in the three weeks since he joined Be was staff the Macworld
+booth, help customers, and write a tutorial. I'd say he's doing all right
+so far.
+</p><p>
+Well, enough rambling. I can't wait for the arrival of DR9 so that I can
+start pounding my drum again telling people to port because there are so
+many neat new things to play with.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing2-4"></a>Be Marketing Mutterings: Goals, Goals, Goals</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>
+In what passes for my career, I've worked for tiny companies and
+intergalactic companies; it's been interesting to examine the
+similarities and differences between them. Something that all companies
+share is a planning process, albeit with varying degrees of effort. At
+one company I worked at, I had the honor of being the VP in charge of
+planning one year; the process took three months and involved a full-time
+team of around 20 people. Come to think of it, maybe it was a punishment
+rather than an honor. The outcome of the planning process was, of course,
+a plan, resplendent in its three-ring binder and sets of goals for
+everyone in the company. At the lofty VP level, the combination of
+corporate, business unit, functional, geographic, and personal goals
+created a list of around 150 things to do that year, ranging from
+gargantuan tasks on the order of "Conquer Asia and dominate the market
+there" to smaller, although truly horrendous tasks like "Attend group
+sensitivity training (3 days, off-site, ropes course included)." One
+fervent planner published books entitled "Goals, Goals, Goals" listing
+individuals' goal lists. This wasn't a joke. And of course the last three
+months of the year were spent collating, justifying, and groveling, to
+ensure credit for as many of the 150 or so goals as possible, in order to
+receive A Very Large Check.
+</p><p>
+We don't do planning this way at Be.
+</p><p>
+Given that much of planning is numerology and internal discussions are
+typically increasers of entropy, we don't waste a whole lot of time on
+microanalysis. Rather, we try to listen to what our customers (currently
+mostly developers) say and to react accordingly. Also, as a small company
+with limited resources, we have to stay very focused: There are many more
+things that we could do than we have the ability to do.
+</p><p>
+So, what's our plan for 1997?
+</p><p>
+We have three goals, and they're known to, and shared by, everyone in the
+company. The first two goals are:
+</p><div class="orderedlist"><ol><li><p>
+Deliver the first "user-ready" version of the BeOS
+</p></li><li><p>
+Get the BeOS into the hands of as many potential users as possible
+</p></li><li><p>
+However, the real meat, and what the first two goals are designed to
+support, is:
+</p><p>
+Encourage and help the development of BeOS applications
+</p></li></ol></div><p>
+Sure, there are numeric goals associated with these and, of course, we
+have budgets to live within. But those three goals are what we're
+focusing on this year.
+</p><p>
+There are two virtuous circles embodied in these three goals: One is that
+a great BeOS product enables great applications, which in turn provide
+the impetus to improve the BeOS. The other is that great applications
+result in more seats for the BeOS, which creates even greater momentum
+for more applications. We're very aware that virtuous circles can oh so
+easily become death spirals, and we know that our job is far from done.
+</p><p>
+What are the implications of our goals for our customers, particularly
+for our developers?
+</p><p>
+First, we'll be rolling out the Preview Edition of the BeOS in a few
+short months. This will be the first generally available public release
+of the product and will pave the way for the first "user-ready" release
+later this year. Vague dates, eh? Yes, but we try hard to underpromise
+and overdeliver and, when we don't know the exact answer, not to make one
+up.
+</p><p>
+Second, we'll be making it really easy and painless for people to get
+their hands on the BeOS Preview Edition. As you may know, Power Computing
+will be bundling this release with most of their machines; that's one of
+the very easiest ways to get the BeOS. We'll try to make it almost as
+easy for buyers and existing owners of other Power Macs.
+</p><p>
+Third, we're continuing to beef up our developer services (aka developer
+support) and evangelism teams, whose mission in life is to help
+developers get their apps shipped.
+</p><p>
+1997 is a very important year for us and our developers. In 1996, thanks
+to the kindness of the media and the enthusiasm of our many supporters,
+we made a lot of people aware of our existence and what we're trying to
+do. We also saw the first BeOS apps emerge, and that was a very exciting
+set of events. In 1997, we're relying on that continued support to get us
+to the point where users begin to do real work on the BeOS, running some
+of the existing and forthcoming applications. We'll definitely do our
+best to play our part, and we're all pretty excited about what can happen
+this year.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-4"></a>Why Do We Pay Attention to Japan?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Why do we pay attention to Japan?
+</p><p>
+Coincidence or not, I was asked this question several times in the past
+few days. As we make preparations for Tokyo Macworld, I'll use this
+opportunity to offer our perspective on Be's involvement with Japan.
+</p><p>
+There are many aspects to it. Let's start with customers. Go to the Laox
+Computer store in the Akihabara (all things electronic) district of
+Tokyo. There's a magazine section on the ground floor. At 5 pm,
+high-school and college students are standing four deep at the racks,
+reading the US and Japanese computer magazines. There's a large, active
+techno- nerd, geek, propeller-head population in Japan, just as in the US
+and Europe. And contrary to a persistent legend, there's an appetite for
+US hardware and software products in Japan. The Macintosh sells well, the
+Amiga still has a following, PC makers such as Compaq enjoy very good
+business there and, of course, Bill Gates receives the immense, somewhat
+fearful respect accorded to quasi-divine creatures.
+</p><p>
+The BeBox and the BeOS have been granted an initial warm reception, many
+magazine articles have been published, web sites are dedicated to our
+products, and Fumihiko Shibata, noted magazine editor, just published the
+first BeBox Guide Book in Japanese (ISBN 4- 89369-490-1).
+</p><p>
+We're very happy, and we're concerned. Many Western companies have
+floundered because they took the Japanese customer for granted, failing
+to pay the local custom, the local ways of doing business, the respect
+that generates a trusting relationship necessary for any business to grow
+beyond the novelty stage. Beyond the early adopters who read enough
+English and accept the US version of a product, a great deal of detailed
+work is required for us to offer a product fit for broader consumption in
+Japan. And we need to find the right partnerships that would guarantee
+the Japanese customer the continuity, the level of service, the overall
+comfort they are entitled to.
+</p><p>
+With 400,000 to 500,000 PowerPC machines sold yearly in Japan, the market
+more than justifies the extra effort. But there's more than market size.
+It seems that Japanese customers are, on the average, more interested in
+multimedia applications than are customers in other Western markets,
+where personal computers are predominantly office automation machines.
+Our product, focused on creative digital media applications, fits nicely
+with the multimedia bias in the Japanese market. And where do the new DV
+cameras or the DVD units come from?
+</p><p>
+This leads me to developers. There has been a tendency to stereotype
+Japan as less individualistic than, say, Silicon Valley and therefore
+less creative. Large bureaucratic keiretsus leave no room for
+entrepreneurs. Add a different writing system and the sum is: No Japanese
+PC software developer success stories. As for the lack of creativity,
+this is absurd. Look at the arts. Same for the lack of entrepreneurs.
+Small businesses flourish everywhere, their styles are different.
+Actually, less and less so. To the more worldly Japanese software
+entrepreneurs we offer a "born on the Web" distribution model yielding
+instant access to the rest of the world. And when we have a properly
+localized and supported product, our platform will play well to the
+natural trends of the Japanese market. Speaking of success stories, we'd
+love to be part of one relating how a programmer in Kobe sells his
+digital video editor to BeOS users worldwide.
+</p><p>
+We can't help it, we like Japan. We would immensely enjoy doing a decent
+job in this very different, very attractive market. This might not be the
+most rational of motives, but liking one's customers can't hurt.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-4"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><p>
+CORRECTION: In last week's BeDevTalk summary, Marco Nelissen's name was
+given as "Marc". We apologize to Mr. Nelissen for the mistake.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546518"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546525"></a>Subject: Thoughts on Fragile Base Class problem.</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: The FBC<br />
+AKA: FBC problem<br />
+AKA: Be's FBC hack won't work<br />
+[and others...]
+</h5></div></div></div><p>
+Here we pat Be's fragile base class solution (reserved functions and
+library versioning) on the head and cuff it about the ears. The pro and
+con philosophies go something like this (con first):
+</p><ul class="itemizedlist"><li><p>
+Some folks think that since a real solution will be needed
+someday anyway, it's better to suffer the pain of the adoption now
+(and everyone admits that the pain will be substantial) rather than
+after the first commercial release of the OS.
+</p></li><li><p>
+Proponents of Be's "hack" solution point out that the problem may
+be more theoretical than practical: A theoretically pure and elegant
+FBC solution provides more backward compatibility than anyone needs;
+better to have a lightweight, if homely, solution (intramajor release
+compatibility) since advances in feature set alone will necessitate a
+rewrite every couple of years.
+</p></li></ul><p>
+There's also a middle position: It would be nice to have an elegant FBC
+solution, but there's no such thing for C++. You can have the language
+or you can have robust base classes, you can't have both. This argument
+spawned COM/SOM/Objective-C comparisons.
+</p><p>
+Some technical questions and observations:
+</p><ul class="itemizedlist"><li><p>
+Would the reserved functions look like this: virtual void
+*SpareFunc(void *arg1, void *arg2 ..., void *argN); ?
+</p><p>
+Others wrote in to offer that only the function name entry in the
+vtable is important, so the arguments would be eliminated, reducing
+the declaration to: virtual void *SpareFunc();
+</p></li><li><p>
+Dave Haynie pointed out that library versioning has inherent
+problems: In addition to requiring that you keep many Release N.x
+libraries around, you could end up with different versions of the OS
+shouldering each other out of RAM.
+</p></li><li><p>
+Jens Alfke upped the ante by opining that versioning only works
+for "monolithic" apps; if an app loads an add-on, the app and the
+add-on need to have been linked against the same library. Jon Watte
+adjusted this notion: A version 1.5 app (for example) should be able
+to load any 1.x add-on (in other words, the minor version numbers
+needn't match).
+</p></li><li><p>
+It was mentioned (and forehead-slappingly agreed) that in order
+for the reserved (virtual) function scheme to work, every subclass
+must implement all the reserved functions of its ancestors (whether
+they actually do anything or not).
+</p></li></ul></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546633"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546639"></a>Subject: GUI (in)consistency</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Applications without windows<br />
+AKA: Let's move out the main menu f<br />
+AKA: Application start-up and take-down time
+</h5></div></div></div><p>
+Various opinions about matters GUI: Menus, menu bars, the dock,
+(potentially) windowless apps, and so on. Some specific topics:
+</p><ul class="itemizedlist"><li><p>
+Should ALL of an app's menu items appear in the same place --
+that is, either in a menu bar *or* in the main menu (or both)?
+</p></li><li><p>
+Where should an app's main menu be displayed? According to many,
+the top of the dock isn't intuitive.
+</p></li><li><p>
+Should closing an app's last window kill the app?
+</p></li><li><p>
+Window miniaturization should show an icon, not a title bar.
+</p></li><li><p>
+Let the user decide where the dock will be displayed (left or
+right side of the screen).
+</p></li><li><p>
+Please, Be, give us window-management conventions (cycling,
+tiling, backgrounding, foregrounding, and so on).
+</p></li><li><p>
+Should a new window always grab focus? Even if you're still
+typing in the old window?
+</p></li></ul><p>
+Many opinions and a LOT of traffic. The need for UI guidelines is
+clear, and the hope that the guidelines will be adhered to (once
+they're published) was voiced explicitly (by Mike Coleman, in
+particular) and could also be felt in the many arguments that
+hypothesized the naive user's experience.
+</p><p>
+THE BE LINE: General user interface guidelines for Be applications were
+published in an article in Issue 51 of The Be Newsletter. That article
+is the introduction to the Be User Interface Guidelines chapter of the
+DR9 edition of The Be Book, which is being written now.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546726"></a>Subject: Tracker</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Tracker suggestion<br />
+AKA: A Better name for Tracker?<br />
+AKA: Be Newsletter Issue # 57, January 22, 1997
+</h5></div></div></div><p>
+A number of folks wrote in to comment on Steve Horowitz' column (in
+Issue 57) about Tracker, the DR9-generation browser. Among the
+suggestions:
+</p><ul class="itemizedlist"><li><p>
+Allow MIME mapping based on arbitrary attributes (not just
+filename extension), particularly for nonnative systems. For example,
+HFS could use a type/creator -&gt; MIME mapper.
+</p></li><li><p>
+Integrate HTML support.
+</p></li><li><p>
+Allow multiple handlers per file; for example, you may want an
+HTML file's primary handler to be NetPositive, and its secondary
+handler (through Command-click, perhaps) to be an editor.
+</p></li><li><p>
+Provide a means for add-ons to announce the types that they can
+handle.
+</p></li><li><p>
+"Live icons" should be semitransparent.
+</p></li><li><p>
+A lot of name suggestions, too many to list here.
+</p></li></ul><p>
+THE BE LINE: There was some confusion over the phrase "live icon
+dragging." It means (as several contributors correctly surmised) that
+when you drag an icon, you'll see the icon picture being dragged, not
+just the outline of the icon's frame. It doesn't refer to animation
+running in an icon. We apologize for the muddle.
+</p><p>
+Regarding add-ons being able to announce the types they can handle:
+This will be done, although not necessarily in DR9.
+</p><p>
+We appreciate the name suggestions, but for now we'll stick with
+"Tractor"... uh, excuse me, "Tracker."
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546811"></a>Subject: /boot/system/ voes</h4></div></div></div><p>
+This thread, which took off from the FBC discussion, branched into
+system folder talk: Where should it be, what should be in it, should
+there be more than one (one for Be, another for third parties, a third
+for the user, and so on).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546826"></a>Subject: BView updates flickering?</h4></div></div></div><p>
+A new listener wondered why BView blanks to white before redrawing.
+Many folks wrote in with suggestions: Use a transparent background
+color, draw to an off-screen buffer first. The best result can be
+gotten from this bit of advice: Don't Invalidate() the view; instead,
+call Draw() directly.
+</p><p>
+A smarter double-buffering scheme was requested.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546847"></a>Subject: NetPositive &amp; Datatypes</h4></div></div></div><p>
+Listeners yearn for the ability to script URL requests. For example, it
+would be nice to be able to send NetPositive a message telling it to
+open a requested URL.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546862"></a>Subject: Soft reboot after crash</h4></div></div></div><p>
+An idea (paraphrased from Daniel Lakeland):
+</p><p>
+Why not have a key stroke combination that kills the Application Server
+(and client programs). You would then drop into a terminal from which
+you could "hack and slash away at the currently running programs."
+</p><p>
+The point, here, is to more gracefully bring down a crashing machine.
+The initial idea spurred other suggestions:
+</p><ul class="itemizedlist"><li><p>
+Ctrl-Alt-Del should shut down, not just reboot.
+</p></li><li><p>
+Tracker and the Application Server should relaunch after a crash.
+</p></li></ul></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id546902"></a>Subject: Be public FTP archive on OS CD</h4></div></div></div><p>
+A feature request for Be: How about copying the contributed code from
+the ftp site onto the DR9 CD? It would have to be recompiled, and some
+of it probably wouldn't work in DR9, but is that so bad? How about a
+commercially released version of the site—would anyone pay for a CD
+of ftp contributions?
+</p><p>
+It was pointed out that such a CD is already available, from Adamation
+(see www.adamation.com for information).
+</p><p>
+THE BE LINE: Sorry, but Be probably won't burn the ftp site onto the
+CD. As William Adams put it: "Yes, it would be good to [distribute] the
+sources, but I don't think it would make us look very good to release a
+bunch of stuff that doesn't work with our brand spanking new release."
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-3.html">Issue 2-3, January 22, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-5.html">Issue 2-5, February 5, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-3.html" title="Issue 2-3, January 22, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-5.html" title="Issue 2-5, February 5, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

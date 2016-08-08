@@ -1,0 +1,725 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-36.html" title="Issue 3-36, September 9, 1998" /><link rel="next" href="Issue3-38.html" title="Issue 3-38, September 23, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-36.html" title="Issue 3-36, September 9, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-38.html" title="Issue 3-38, September 23, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-36.html">Issue 3-36, September 9, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-38.html">Issue 3-38, September 23, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-37"></a>Issue 3-37, September 16, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-37"></a>Be Engineering Insights: Doing More Work Than You Should</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>
+Recently I've been working on the disk cache code in the BeOS and I
+thought that my travails in trying to optimize it would make a good
+Newsletter article.
+</p><p>
+The BeOS disk cache was written about a year and a half ago. I was in a
+bit of a hurry because I was also trying to complete the file system at
+the same time. The cache code works and meets the needs of the file
+system but the implementation left something to be desired. I decided
+that for BeOS Release 4, rewriting a big chunk of it to clean it up and
+take advantage of the new scatter-gather primitives would be a good
+thing, and should even improve performance.
+</p><p>
+First some background. The BeOS disk cache is a two-part data structure.
+There is a hash table indexed by device and block number as well as an
+LRU (least-recently-used)-ordered doubly linked list that keeps track of
+all the disk blocks in the cache. The hash table is used to quickly look
+up a block to see if it's in the cache. The linked list is ordered by how
+recently the blocks have been used. Most recently used blocks are at the
+head of the list and older blocks at the tail. The linked list decides
+who to kick out of the cache when the cache is full and needs to be
+flushed. This is a pretty standard design for a disk cache. The problem
+wasn't the overall design but rather the implementation.
+</p><p>
+Because there were no scatter-gather primitives when the cache was
+originally written, the cache has to use a temporary block of memory to
+copy cache blocks into before writing them to disk. The idea was that if
+many consecutive disk blocks are being flushed, it made more sense to do
+one single write than many individual disk writes. Had the cache done
+individual disk writes for consecutive disk blocks it would have avoided
+the <code class="function">memcpy()</code> to the temporary buffer but it would have also performed
+poorly. This is where scatter-gather seemed to offer a great advantage:
+the cache could do a single large I/O even though all the cache blocks
+weren't contiguous in memory.
+</p><p>
+The same problem occurs when the cache tries to do read-ahead (but it's
+worse). On read-ahead the lack of scatter-gather primitives means that
+the cache first has to read the data into a temporary buffer, copy it to
+the appropriate cache blocks, and then finally copy it to the user
+buffer. These extra <code class="function">memcpy()</code>'s seemed grossly inefficient and always were
+a source of disappointment to me. It seemed that the cache performance
+would improve significantly if I could eliminate the <code class="function">memcpy()</code>'s.
+</p><p>
+In addition, I looked at the huge LRU list of all disk blocks and felt
+certain I could improve the cache performance if I separated all the disk
+blocks into individual lists depending on their state (clean, dirty, or
+locked in the cache). This way it seemed that deciding which blocks to
+flush would require traversing through fewer blocks, which would
+definitely be more efficient.
+</p><p>
+With these general principles in mind I set about rewriting the disk
+cache. After mucking about with the code and a bit of debugging (in a
+user level test program) I emerged with a clean, shiny new cache. Blocks
+were separated into clean, dirty, and locked lists, there were no extra
+memcpy's and the code seemed a shining example of good software
+engineering.
+</p><p>
+Then I put it the code into the kernel to see how my changes affected
+real-world performance.
+</p><p>
+After a little more debugging (whoops) it was ready for testing. I was
+very eager to see the results.
+</p><p>
+I ran the tests and...(drumroll please)...it was slower.
+</p><p>
+I cringed. How could this be? I have these nicely organized lists, I'm
+not doing any extra <code class="function">memcpy()</code>'s, and the code is so much cleaner! How
+could it be slower?
+</p><p>
+I started to look for explanations. Perhaps because I was using
+scatter-gather I/O now, the extra calls to <code class="function">lock_memory()</code> and
+<code class="function">get_memory_map()</code> in the disk drivers were eroding my performance
+(remember the cardinal rule of software engineering: if it doesn't work
+or is slow, it's someone else's fault). I took a trip down to Brian
+Swetland's office (our resident SCSI god) to discuss the bad news with
+him. He instrumented the SCSI driver to measure the cost of the
+VM-related calls and disappointment struck again: there was indeed extra
+overhead associated with <code class="function">lock_memory()</code>
+and <code class="function">get_memory_map()</code> calls, but it
+was insignificant compared with the cost of the I/O.
+</p><p>
+Brian also implemented another performance monitoring tool that showed
+the size and amount of time used by each I/O through the SCSI driver.
+Looking at the output surprised me and provided the first clue about what
+was causing the problem. The list of blocks being written by the file
+system was poorly organized—many writes were happening to individual
+disk blocks. This surprised me because I had spent a good deal of time
+looking at traces of the cache before its first release to make sure that
+it would be a good citizen and flush data as contiguously as possible.
+Obviously, this was no longer happening.
+</p><p>
+I went back and used my test program (which is just BFS running as a user
+program) and looked at the I/O traces again. Clearly, they were not
+optimal. Then it dawned on me what was happening: in my effort to clean
+up the cache I broke the original single list of blocks into three
+separate lists.
+</p><p>
+Originally, when deciding who to kick out of the cache, the code to
+select victims would step through all the blocks loaded, which inevitably
+meant good-sized runs of contiguous disk blocks could be found (because
+read-ahead always reads in contiguous chunks of disk). With the list of
+blocks separated into three lists, the code that tries to pick victims to
+flush only scans the dirty list, so it would not be as likely to find
+contiguous runs of disk blocks.
+</p><p>
+To understand what happened, consider the following example. First, the
+file system asks to read a single block in, say, block 1000. The cache in
+turn performs read-ahead and reads in 32 extra blocks (1000 through
+1031). Now let's say that the file system allocates and modifies three
+blocks, 1001, 1010, and 1025 (assume the other blocks were already
+allocated). When the file system is done with those three blocks and they
+are eventually flushed, the new cache code will have to do three separate
+I/O's to flush blocks 1001, 1010, and 1025, because they are the only
+blocks on the dirty list. The old cache code would instead do a single
+write of all blocks from 1001 through 1025 because it would find all the
+blocks on its single list of blocks and even though most of the blocks
+were clean, doing a single write is much faster than doing three
+individual writes.
+</p><p>
+After I realized this, the solution was simple: I merged the clean and
+dirty lists into a "normal" list and re-ran my tests. As expected, the
+performance numbers were back to normal and sometimes a bit faster.
+</p><p>
+I still wasn't satisfied though. Why was there no speed boost now that
+the spiffy new cache code was using scatter-gather and avoiding as many
+as three <code class="function">memcpy()</code>'s per I/O? The answer is simple: the cost of the I/O's
+so far outweighed the cost of the <code class="function">memcpy()</code>'s that eliminating them made
+no difference in performance. Although the absolute performance numbers
+did not increase, by eliminating the <code class="function">memcpy()</code>'s the cache is now much
+friendlier to the rest of the system and isn't using memory bandwidth
+(and CPU time) that could be better spent doing something else. So while
+the performance numbers may not have changed, the cache is still "better."
+</p><p>
+The title of this article, "Doing More Work Than You Should," applies in
+two ways. First, writing more data to disk in one transaction is doing
+more work but is faster than writing less data in separate transactions.
+Second, even though the old cache was doing a lot more work than it
+should have with all its extra <code class="function">memcpy()</code>'s, there was no noticeable
+performance difference in the speed of file system benchmarks since that
+extra work was lost in the noise when compared to the cost of the disk
+I/O.
+</p><p>
+There are two main things you can learn from this. First, if your
+application uses an on-disk data structure, think about the layout of the
+structure on disk. If there are lots of small pieces that require seeking
+around (such as a B+tree), it can be slower to access compared to having
+a larger, more contiguous data structure. For example, I just wrote a
+test program which reads 1024 random 1k chunks from a 1 megabyte file and
+another program which reads 20 megabytes contiguously (1k at a time). The
+random reads of 1 megabyte took 9.5 seconds versus 3.5 seconds for the
+contiguous read of 20 megabytes (and reading the 20 meg file 64k at a
+time is even faster). Depending on how you access an on-disk data
+structure and how big it is, it may make sense to use the brute-force
+approach and just store everything linearly and read through it each time.
+</p><p>
+The second lesson is an old one that I know but didn't think about when
+expecting a performance gain from my cache rewrite. You have to know the
+relative costs of the operations your program does if you want to
+optimize it. You can spend a lot of time optimizing a particular part of
+your program but if it only accounts for 1% of the total time, no matter
+how much you optimize it you won't improve the overall performance of
+your program. In my case, eliminating the <code class="function">memcpy()</code>'s didn't affect the
+performance of the cache because they were a small amount of time
+relative to the time it took to do the disk I/O.
+</p><p>
+The flip side is that in the case of disk I/O, it may pay to copy your
+data around to make it contiguous before writing it to disk, since the
+cost of doing the <code class="function">memcpy()</code> is small compared to the cost of the I/O.
+</p><p>
+I hope this article will help people better understand where and what the
+costs are when doing disk I/O. Knowing how to structure your I/O can have
+a significant impact on the I/O performance of your app.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-37-2"></a>Be Engineering Insights: Code Maintenance for the Millennium
+and a DBUG Update</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Fred</span> <span class="surname">Fish</span></span></div></div></div><p>
+As programmers, we all generally strive to write code which is as bug
+free as possible and is easily maintainable. Because we completely
+understand the code we write (or at least we should), we sometimes fail
+to appreciate how hard it may be for future code maintainers to reach
+even a basic level of understanding of the overall structure of a large
+application and the flow of control that takes place when it runs. One
+thing we can do to improve the ongoing maintenance process is to build
+some "internal instrumentation" into the application from the start.
+</p><p>
+Internal instrumentation is already a familiar concept to most
+programmers, since it is usually the first debugging technique learned.
+Typically, "print statements" are inserted in the source code at
+interesting points, the code is recompiled and executed, and the
+resulting output is examined in an attempt to determine where the problem
+is. An example of this would be something like:
+</p><pre class="programlisting c">
+#include &lt;stdio.h&gt;
+<code class="function">main</code> (<code class="parameter">argc</code>, <code class="parameter">argv</code>)
+<span class="type">int</span> <code class="parameter">argc</code>;
+<span class="type">char *</span><code class="parameter">argv</code>[];
+{
+  <code class="function">printf</code> ("<code class="parameter">argv</code>[0] = %d\n", <code class="parameter">argv</code>[0]);
+  <span class="comment">/*
+  * Rest of program
+  */</span>
+  <code class="function">printf</code> ("== done ==\n");
+}
+</pre><p>
+Eventually, and usually after at least several iterations, the problem
+will be found and corrected. At this point, the newly inserted print
+statements must be dealt with. One obvious solution is to simply delete
+them all. Beginners usually do this a few times until they have to repeat
+the entire process every time a new bug pops up. The second most obvious
+solution is to somehow disable the output, either through the source code
+comment facility, creation of a debug variable to be switched on or off,
+or by using the C preprocessor. Below is an example of all three
+techniques:
+</p><pre class="programlisting c">
+#include &lt;stdio.h&gt;
+
+<span class="type">int</span> <code class="varname">debug</code> = 0;
+
+<code class="function">main</code> (<code class="parameter">argc</code>, <code class="parameter">argv</code>)
+<span class="type">int</span> <code class="parameter">argc</code>;
+<span class="type">char *</span><code class="parameter">argv</code>[];
+{
+  <span class="comment">/* <code class="function">printf</code> ("argv = %x\n", <code class="parameter">argv</code>) */</span>
+  if (<code class="varname">debug</code>) <code class="function">printf</code> ("argv[0] = %d\n", <code class="parameter">argv</code>[0]);
+  <span class="comment">/*
+  * Rest of program
+  */</span>
+#ifdef DEBUG
+  <code class="function">printf</code> ("== done ==\n");
+#endif
+}
+</pre><p>
+Each technique has its advantages and disadvantages with respect to
+dynamic versus static activation, source code overhead, recompilation
+requirements, ease of use, program readability, etc. Overuse of the
+preprocessor solution leads to problems with source code readability and
+maintainability when multiple <code class="code">#ifdef</code> symbols are to be defined or
+undefined based on specific types of debug desired.
+</p><p>
+My solution to this problem is a package I wrote in 1984 and subsequently
+released into the public domain when I saw how useful it was to myself
+and others. This package, known as "DBUG," hasn't changed much in the
+last 10 years or so, though there have been a few variants of it <span class="type">float</span>ing
+around on the Internet recently.
+</p><p>
+Motivated by a desire to see it support multithreaded applications, and
+by a very real need to find a problem that was preventing the latest
+version of Bash from working on BeOS as a boot shell, I recently modified
+the DBUG runtime to link into the BeOS kernel and instrument some
+portions of the kernel so I could better understand what was happening
+inside the kernel at boot time and fix the problem with bash. Since the
+BeOS kernel itself is multithreaded, I had to make substantial changes to
+the DBUG code that got linked into the kernel. Encouraged by that
+success, I retrofitted the changes into the mainline DBUG sources and the
+new package is now available for use by BeOS application writers, with a
+few caveats, but more on that later.
+</p><p>
+Let's take a quick look at how we instrument code with the DBUG package.
+Consider a simple-minded factorial program which is implemented
+recursively to better demonstrate some of the DBUG package features.
+There are two source files, <code class="filename">main.c</code> and <code class="filename">factorial.c</code>:
+</p><pre class="programlisting c">
+<span class="comment">/* ============== main.c ============== */</span>
+
+#include &lt;stdio.h&gt;
+#include "dbug.h"
+
+<span class="type">int</span>
+<code class="function">main</code> (<code class="parameter">argc</code>, <code class="parameter">argv</code>)
+<span class="type">int</span> <code class="parameter">argc</code>;
+<span class="type">char *</span><code class="parameter">argv</code>[];
+{
+  register <span class="type">int</span> <code class="varname">result</code>, <code class="varname">ix</code>;
+  extern <span class="type">int</span> <code class="function">factorial</code> (), <code class="function">atoi</code> ();
+
+  <code class="function">DBUG_ENTER</code> ("main");
+  <code class="function">DBUG_PROCESS</code> (<code class="parameter">argv</code>[0]);
+  <code class="function">DBUG_PUSH_ENV</code> ("DBUG");
+  for (<code class="varname">ix</code> = 1; <code class="varname">ix</code> &lt; <code class="parameter">argc</code> &amp;&amp; <code class="parameter">argv</code>[<code class="varname">ix</code>][0] == '-'; <code class="varname">ix</code>++) {
+    switch (<code class="parameter">argv</code>[<code class="varname">ix</code>][1]) {
+      case '#':
+       <code class="function">DBUG_PUSH</code> (&amp;(<code class="parameter">argv</code>[<code class="varname">ix</code>][2]));
+       break;
+    }
+  }
+  for (; <code class="varname">ix</code> &lt; <code class="parameter">argc</code>; <code class="varname">ix</code>++) {
+    <code class="function">DBUG_PRINT</code> ("args", ("argv[%d] = %s", <code class="varname">ix</code>, <code class="parameter">argv</code>[ix]));
+    <code class="varname">result</code> = <code class="function">factorial</code> (<code class="function">atoi</code> (<code class="parameter">argv</code>[ix]));
+    <code class="function">printf</code> ("%d\n", <code class="varname">result</code>);
+    <code class="function">fflush</code> (<code class="varname">stdout</code>);
+  }
+  <code class="function">DBUG_RETURN</code> (0);
+}
+
+<span class="comment">/* ============== factorial.c ============== */</span>
+
+#include &lt;stdio.h&gt;
+#include "dbug.h"
+
+<span class="type">int</span> factorial (<code class="parameter">value</code>)
+register <span class="type">int</span> <code class="parameter">value</code>;
+{
+  <code class="function">DBUG_ENTER</code> ("factorial");
+  <code class="function">DBUG_PRINT</code> ("find", ("find %d factorial", <code class="parameter">value</code>));
+  if (<code class="parameter">value</code> &gt; 1) {
+    <code class="parameter">value</code> *= <code class="function">factorial</code> (value - 1);
+  }
+  <code class="function">DBUG_PRINT</code> ("result", ("result is %d", <code class="parameter">value</code>));
+  <code class="function">DBUG_RETURN</code> (<code class="parameter">value</code>);
+}
+</pre><p>
+On BeOS, we might create the "factorial" application by running the
+following, where "$" is our shell prompt:
+</p><pre class="screen">
+$ mwcc -c -DDBUG main.c
+$ mwcc -c -DDBUG factorial.c
+$ mwcc -o factorial main.o factorial.o -ldbug
+</pre><p>
+This assumes that we have put <code class="filename">dbug.h</code> someplace where the compiler will
+find it, and also put the runtime library (<code class="filename">libdbug.a</code>) where it will be
+found by the linker. If we then run factorial we get something like the
+following output:
+</p><pre class="screen">
+$ factorial 1 2 3 4 5
+1
+2
+6
+24
+120
+</pre><p>
+To enable various features of the internal instrumentation provided by
+the DBUG package, we have several ways of telling the DBUG runtime what
+sort of information we want to see as the application executes. From the
+command line, the easiest way to do this is to pass it various flags via
+the "-#" option. As an example, to enable function tracing, we would use
+the "t" option:
+</p><pre class="screen">
+$ factorial -#t 2 3
+| &gt;factorial
+| | &gt;factorial
+| | &lt;factorial
+| &lt;factorial
+2
+| &gt;factorial
+| | &gt;factorial
+| | | &gt;factorial
+| | | &lt;factorial
+| | &lt;factorial
+| &lt;factorial
+6
+</pre><p>
+Note that entering a function produces a line with "&gt;funcname", leaving
+it produces "&lt;funcname", and the nesting level is shown graphically. We
+can turn on additional output by using the "d" option, which in it's most
+primitive form produces something like:
+</p><pre class="screen">
+$ factorial -#d 2 3
+main: args: argv[2] = 2
+factorial: find: find 2 factorial
+factorial: find: find 1 factorial
+factorial: result: result is 1
+factorial: result: result is 2
+2
+main: args: argv[3] = 3
+factorial: find: find 3 factorial
+factorial: find: find 2 factorial
+factorial: find: find 1 factorial
+factorial: result: result is 1
+factorial: result: result is 2
+factorial: result: result is 6
+6
+</pre><p>
+Of course, we can use multiple options at the same time, including some
+additional ones that do things like print file names, line numbers of the
+corresponding source code for particular instrumentation output, etc. As
+one last example with our factorial program, before we move on to other
+things, consider:
+</p><pre class="screen">
+$ factorial -#d:t:F:L 6
+      main.c:  23: | args: argv[2] = 6
+ factorial.c:   7: | &gt;factorial
+ factorial.c:   8: | | find: find 6 factorial
+ factorial.c:   7: | | &gt;factorial
+ factorial.c:   8: | | | find: find 5 factorial
+ factorial.c:   7: | | | &gt;factorial
+ factorial.c:   8: | | | | find: find 4 factorial
+ factorial.c:   7: | | | | &gt;factorial
+ factorial.c:   8: | | | | | find: find 3 factorial
+ factorial.c:   7: | | | | | &gt;factorial
+ factorial.c:   8: | | | | | | find: find 2 factorial
+ factorial.c:   7: | | | | | | &gt;factorial
+ factorial.c:   8: | | | | | | | find: find 1 factorial
+ factorial.c:  12: | | | | | | | result: result is 1
+ factorial.c:  13: | | | | | | &lt;factorial
+ factorial.c:  12: | | | | | | result: result is 2
+ factorial.c:  13: | | | | | &lt;factorial
+ factorial.c:  12: | | | | | result: result is 6
+ factorial.c:  13: | | | | &lt;factorial
+ factorial.c:  12: | | | | result: result is 24
+ factorial.c:  13: | | | &lt;factorial
+ factorial.c:  12: | | | result: result is 120
+ factorial.c:  13: | | &lt;factorial
+ factorial.c:  12: | | result: result is 720
+ factorial.c:  13: | &lt;factorial
+720
+      main.c:  28: &lt;main
+</pre><p>
+While testing the new multithreaded support, I added the ability for the
+DBUG runtime to emit its output to the serial port, and added a handful
+of DBUG_* macros to the BeBounce demo program. Starting this modified
+BeBounce now produces the following output at the serial port:
+</p><pre class="screen">
+main.cpp:   80: | &gt;TBounceApp::TBounceApp
+main.cpp:   97: | | count: found 1 apps with our signature
+main.cpp:  106: | | ball: we are first instance and ball is in our court
+main.cpp:  288: | | &gt;TWindow::TWindow
+main.cpp:  303: | | | ball: our window has the ball, so add it
+main.cpp:  376: | | | &gt;TWindow::AddBall
+main.cpp:  382: | | | | ball: adding a new ball
+main.cpp:  648: | | | | &gt;Tball::TBall
+main.cpp:  659: | | | | | ball: fSleep 0, fPercentRemaining 0.000000
+main.cpp:  664: | | | | &lt;Tball::TBall
+main.cpp:  797: | | | | &gt;TBall::SetGap
+main.cpp:  798: | | | | | ball: start -1.000000, end -1.000000
+main.cpp:  803: | | | | &lt;TBall::SetGap
+main.cpp:  386: | | | &lt;TWindow::AddBall
+main.cpp:  585: | | | &gt;TWindow::DrawOffScreen
+main.cpp:  672: | | | | &gt;TBall::Draw
+main.cpp:  681: | | | | &lt;TBall::Draw
+main.cpp:  612: | | | &lt;TWindow::DrawOffScreen
+main.cpp:  330: | | &lt;TWindow::TWindow
+main.cpp:  138: | &lt;TBounceApp::TBounceApp
+main.cpp:   60: | run: start new bebounce running
+
+...
+</pre><p>
+If you've been debugging your apps on x86 BeOS with plain old <code class="function">printf</code>s,
+you may want to consider using the DBUG package to include
+instrumentation that will be invaluable to future maintainers as well as
+making your current debugging task much easier. Sometime in the next
+couple of weeks I'll nail down the last couple annoying bugs that make
+the multitasking support less useful than it could be, and put a new
+version of DBUG into BeWare, along with an example program like BeBounce.
+Until then, you can play with the alpha version available at:
+</p><p>
+&lt;ftp://ftp.ninemoons.com:pub/geekgadgets/be/i586/alpha/dbug.tgz&gt;
+</p><p>
+Feel free to offer suggestions for ways to improve this package,
+particularly the multithreaded support: fnf@be.com
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-37"></a>Developers Workshop: Called Himself a King</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id738749"></a><a id="id738751"></a>Q:</td><td><p>
+I noticed that the second volume of the Be Book (Advanced Topics) has
+finally arrived on the shelves of the local tree-killers. I'd love to
+assimilate the wisdom therein, but I'm opposed to the ecoterrorism that's
+waged by the mongers of pulp and ink. Moreover, I'm cheap and don't want
+to spring for the $39.95. Can you tell me everything that's in the book
+so I don't have to buy it?
+</p><p>
+-- Dunvallo Molmutius, Trinovant, Britain
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We share your concern, Mr. Molmutius, and we think you'll be happy to
+hear that "Advanced Topics" is only printed on paper made from free-range
+trees. As for scooping the press, this column doesn't permit the
+reprinting of an entire 500 page book, but we can take a quick look at
+the Midi Kit.
+</p></td></tr></tbody></table></div><p>
+Because the edge of the table is always closer than it appears in the
+mirror, the Midi Kit documentation has gotten short shrift the last
+couple of releases. Although a number of MIDI-related columns have been
+published here in the last year or so, some of the finer details (such as
+bugs) have gone undocumented, and one of the Kit's most amusing classes
+(BSamples) hasn't even been mentioned. For the full story, you'll have to
+head over to O'Reilly (http://www.oreilly.com/catalog/beadv/), or wait
+for the on-line version to appear on the Be website. In the meantime I
+will give you some highlights from the synthesis section of the Midi Kit
+chapter.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id738782"></a>BSynth</h3></div></div></div><p>
+The BeOS includes a 16-channel General MIDI software synthesizer designed
+by HeadSpace Inc. (http://www.headspace.com/). In addition to realizing
+MIDI data, the synthesizer can also play back audio sample data. The
+synthesizer is represented by the <code class="classname">BSynth</code> class.
+</p><p>
+Any application that wants to use the synthesizer must include a <code class="classname">BSynth</code>
+object; however, most applications won't need to create the object
+directly: The <code class="classname">BMidiSynth</code>, <code class="classname">BMidiSynthFile</code>,
+and <code class="classname">BSamples</code> classes create a
+<code class="classname">BSynth</code> object for you. You can only have one
+<code class="classname">BSynth</code> object in your app;
+it's represented by the global <code class="varname">be_synth</code> object.
+</p><p>
+The synthesizer can generate as many as 32 voices simultaneously, where a
+voice is a MIDI note or a stream of audio data (a <code class="classname">BSamples</code> object). By
+default the <code class="classname">BSynth</code> allocates 28 voices for MIDI and 4 for samples; you
+can change this allotment through <code class="methodname">BSynth::SetVoiceLimits()</code>.
+</p><p>
+<code class="classname">BSynth</code> doesn't have any API for actually playing MIDI data. To play MIDI
+data, you need an instance of <code class="classname">BMidiSynth</code> or
+<code class="classname">BMidiSynthFile</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id738870"></a>BMidiSynth</h3></div></div></div><p>
+If you want to send MIDI data to the synthesizer, you have to create an
+instance of <code class="classname">BMidiSynth</code>. <code class="classname">BMidiSynth</code>
+derives from <code class="classname">BMidi</code>, so you can play
+notes on it directly by calling <code class="methodname">NoteOn()</code>,
+<code class="methodname">NoteOff()</code>, etc.
+</p><p>
+<code class="classname">BMidiSynth</code> doesn't spray MIDI messages, so it doesn't do any good to
+connect other <code class="classname">BMidi</code> objects to its output. In other words, don't do this:
+</p><pre class="programlisting cpp">
+<span class="comment">/* --- DON'T DO THIS ---  It's meaningless. */</span>
+<code class="varname">midiSynth</code>.<code class="methodname">Connect</code>(<code class="varname">someOtherMidiObject</code>);
+</pre><p>
+Before using your <code class="classname">BMidiSynth</code>, you have to
+call <code class="methodname">EnableInput()</code>. The
+function enables the object's input and tells the synthesizer whether it
+should load the "synth file" (this is the file that contains the
+synthesizer's instrument definitions). If you tell <code class="methodname">EnableInput()</code> not to
+load the file, you'll have to load the instruments that you want yourself.
+</p><p>
+On a slow machine, loading the entire file can take a very long time, so
+you may want to load the instruments yourself as they're needed. For
+example, here we load a single instrument, then play a note. We also have
+to send a <code class="methodname">ProgramChange()</code> message to tell
+the <code class="classname">BMidiSynth</code> object to use
+our loaded instruments on the proper channels:
+</p><pre class="programlisting cpp">
+<span class="comment">/* Enable input, but don't load the synth file. */</span>
+<code class="varname">midiSynth</code>.<code class="methodname">EnableInput</code>(<code class="constant">true</code>, <code class="constant">false</code>);
+
+<span class="comment">/* Load an instrument. */</span>
+<code class="varname">midiSynth</code>.<code class="methodname">LoadInstrument</code>(<code class="constant">B_TINKLE_BELL</code>);
+
+<span class="comment">/* Associate the instrument with a MIDI channel. */</span>
+<code class="varname">midiSynth</code>.<code class="methodname">ProgramChange</code>(1, <code class="constant">B_TINKLE_BELL</code>);
+
+<span class="comment">/* Play. */</span>
+<code class="varname">midiSynth</code>.<code class="methodname">NoteOn</code>(1, 84, 100);
+<code class="function">snooze</code>(1000000);
+<code class="varname">midiSynth</code>.<code class="methodname">NoteOff</code>(1, 84, 100);
+</pre><p>
+To use the MIDI Channel 10 percussion instruments, you must load all
+instruments:
+</p><pre class="programlisting cpp">
+<span class="comment">/* I want percussion, therefore... */</span>
+<code class="varname">midiSynth</code>.<code class="methodname">EnableInput</code>(<code class="constant">true</code>, <code class="constant">true</code>);
+</pre><p>
+NOTE: <code class="classname">BMidiSynth</code>'s <code class="methodname">MuteChannel()</code>,
+<code class="methodname">GetMuteMap()</code>, <code class="methodname">SoloChannel()</code>, and
+<code class="methodname">GetSoloMap()</code> functions are broken. Don't use them.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id739117"></a>BMidiSynthFile</h3></div></div></div><p>
+If you want to realize the contents of a MIDI file, you have to use an
+instance of <code class="classname">BMidiSynthFile</code> (<code class="classname">BMidiSynthFile</code>
+derives from <code class="classname">BMidiSynth</code>).
+*Don't* try to play a MIDI file by connecting a <code class="classname">BMidiStore</code> to a
+<code class="classname">BMidiSynth</code>.
+</p><p>
+You should create a different <code class="classname">BMidiSynthFile</code> object for each MIDI file
+that you want to mix together. Although its possible for a single
+<code class="classname">BMidiSynthFile</code> to load and play more than one file at a time, you
+shouldn't rely on this feature.
+</p><p>
+You don't have to call <code class="methodname">EnableInput()</code> when
+you use a <code class="classname">BMidiSynthFile</code>; the
+function that loads the MIDI file (<code class="methodname">LoadFile()</code>) calls it for you, loading
+just those instruments that are called for by the file.
+</p><p>
+<code class="classname">BMidiSynthFile</code> is different from other
+<code class="classname">BMidi</code> objects in that it doesn't
+have a run loop. The lack of a run loop shouldn't affect the way you
+write your code, but you should be aware that the thread isn't there so
+you won't go looking for it.
+</p><p>
+Furthermore, <code class="classname">BMidiSynthFile</code> doesn't implement the <code class="methodname">Run()</code> function.
+Starting and stopping the object's performance (activities that are
+normally handled in the <code class="methodname">Run()</code> function) are handled by the synthesizer in
+its own synthesis thread. If you create a <code class="classname">BMidiSynthFile</code> subclass, don't
+try to resurrect the <code class="methodname">Run()</code> function—leave it as a no-op.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id739222"></a>BSamples</h3></div></div></div><p>
+The <code class="classname">BSamples</code> class lets you add a stream of audio samples into the MIDI
+mix. When you create a <code class="classname">BSamples</code> object, it automatically
+creates a <code class="classname">BSynth</code>
+object and puts it in "samples only" mode. Unfortunately, this mode is
+broken. The easiest way around this bug is to construct a <code class="classname">BMidiSynth</code>/
+<code class="classname">BMidiSynthFile</code> object (either before or after you create
+your <code class="classname">BSamples</code> --
+it doesn't matter which). If you don't need the extra object, you can
+immediately destroy it; the fix is effected by the object's construction.
+</p><p>
+The object's brain is in its <code class="methodname">Start()</code> function:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="methodname">Start</code>( <span class="type">void *</span><code class="parameter">samples</code>,
+            <span class="type">int32</span>  <code class="parameter">frameCount</code>,
+            <span class="type">int16</span>  <code class="parameter">sampleSize</code>,
+            <span class="type">int16</span>  <code class="parameter">channelCount</code>,
+            <span class="type">double</span> <code class="parameter">samplingRate</code>,
+            <span class="type">int32</span>  <code class="parameter">loopStart</code>,
+            <span class="type">int32</span>  <code class="parameter">loopEnd</code>,
+            <span class="type">double</span> <code class="parameter">volume</code>,
+            <span class="type">double</span> <code class="parameter">stereoPan</code>,
+            <span class="type">int32</span>  <code class="parameter">hookArg</code>,
+            <span class="type">sample_loop_hook</span> <code class="parameter">loopHook</code>,
+            <span class="type">sample_exit_hook</span> <code class="parameter">exitHook</code>  )
+</pre><ul class="itemizedlist"><li><p>
+<code class="parameter">samples</code> is a pointer to the audio data itself. The data is assumed to
+be little-endian linear.
+</p></li><li><p>
+<code class="parameter">frameCount</code> is the number of frames of audio data.
+</p></li><li><p>
+<code class="parameter">sampleSize</code> is the size of a single sample, in bytes (1 or 2).
+</p></li><li><p>
+<code class="parameter">channelCount</code> is the number of channels of data (1 or 2).
+</p></li><li><p>
+<code class="parameter">samplingRate</code> is the rate at which you want to the data played back,
+expressed as frames-per-second. The range of valid values is [0, ~65
+kHz]. You can change the object's sampling rate on the fly through
+<code class="methodname">SetSamplingRate()</code> (fool your friends).
+</p></li><li><p>
+<code class="parameter">loopStart</code> and <code class="parameter">loopEnd</code>
+specify the first and last frames that are in
+the "loop section." The loop section can be any valid section of frames
+within the sound data (i.e. [0, frameCount - 1] inclusive). Everything
+up to the beginning of the loop section is the attack section;
+everything after the loop section is the release section.
+</p><p>
+When the sound is played, the attack section is heard, then the loop
+section is repeated until the object is told to <code class="methodname">Stop()</code>, or until the
+<code class="parameter">loopHook</code> function (defined below) returns
+<code class="constant">false</code>, at which point the
+release section is played. If you don't want the sound to loop, set the
+loop arguments to 0.
+</p><p>
+Currently, the release section is automatically faded out over a brief
+period of time. If your release section is designed to do a slow fade
+(for example) you probably won't hear it.
+</p></li><li><p>
+<code class="parameter">volume</code> is an amplitude scalar.
+</p></li><li><p>
+<code class="parameter">stereoPan</code> locates the sound stereophonically, where -1.0 is hard
+left, 0.0 is center, and 1.0 is hard right. Notice that if this is a
+stereo sound, a stereoPan value of (say) -1.0 completely attenuates the
+right channel—it doesn't move the right channel into the left
+channel.
+</p></li><li><p>
+<code class="parameter">hookArg</code> is an arbitrary value that's passed to
+the <code class="parameter">loopHook</code> and
+<code class="parameter">exitHook</code> functions.
+</p></li><li><p>
+<code class="parameter">loopHook</code> is a hook function that's called each time the loop section
+is about to repeat. If the function returns <code class="constant">true</code>, the loop is, indeed,
+repeated. If it returns <code class="constant">false</code>, the release section is played and the
+sound stops. If you don't supply a <code class="parameter">loopHook</code>, the loop is automatically
+repeated (unless the loop is set to 0).
+</p></li><li><p>
+<code class="parameter">exitHook</code> is called when the sound is all done playing, regardless of
+how it stopped (whether through <code class="methodname">Stop()</code>, a
+<code class="parameter">loopHook</code> return of <code class="constant">false</code>, or
+because the <code class="classname">BSamples</code> object was deleted).
+</p></li></ul><p>
+When you tell a <code class="classname">BSamples</code> to <code class="methodname">Start()</code>,
+it starts playing immediately. You
+can stop it through the <code class="methodname">Stop()</code> function, and you can pause and resume it
+through <code class="methodname">Resume()</code> and <code class="methodname">Pause()</code> --
+respectively (really!). Until further
+notice, the <code class="methodname">Pause()</code> and <code class="methodname">Resume()</code>
+functions are backwards: To pause a
+sound, call <code class="methodname">Resume()</code>. To resume it, call
+<code class="methodname">Pause()</code>. Sorry about that.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-37"></a>The Internet Coming of Age?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+It's nice when the venerable older media sagely proclaim that the
+Internet is now official just because a salacious opus, hidden behind a
+legal fig leaf, spread itself around the world like a case of CTD --
+cyber-transmitted disease.
+</p><p>
+The event or, rather, the reaction to it, tends to prove the old rule
+that carnality is what brings new media into the mainstream. Centuries
+ago, the mail was denounced for facilitating illicit romances. We can buy
+reprints of more recent art nouveau images promoting the newly invented
+telephone. I recall one, split diagonally in two; on one side is a dark,
+sensitive, long-eyelashed male murmuring sweet nothings to the female in
+period drag gracing the other half...
+</p><p>
+We remember how the VCR got started, with "educational" videos. The
+Minitel was a home information terminal offered free to French consumers
+by the state telecommunication monopoly in the late seventies, in turn
+for renouncing printed phone books. France Telecom had an incredible deal
+for you: if you built a Minitel server, it would bill the user on your
+behalf for the time spent online, say investigating the merits of
+Michelin tires, and only keep 20% to 25% of the gross. The Minitel
+followed the usual route to mainstream popularity and, as a result,
+France Telecom was accused of being the largest smut peddler in the
+Western world.
+</p><p>
+Now the French government has been unseated as the top state smut monger.
+Since last Friday, our own federal government has become the uncontested
+world leader in peddling online smut. But does that constitute a coming
+of age for the Internet? Let's be serious. I thought the way the network
+infrastructure resisted the latest stock market downs and ups was a much
+better cause for celebration. Last year, a "false" market correction
+caused highly visible disruptions, this year the Net e-trading doomsday
+stories were nowhere to be heard.
+</p><p>
+Does this resilience show that our new printing press has achieved
+respectable standing in the community? Probably. It's imperfect, but we
+can rely on it for serious activities such as tracking packages, street
+directions, research, buying groceries, books, stocks, games, downloading
+music...
+</p><p>
+Speaking of downloading, and if we have to use human development
+metaphors, the record shows that the Net spent a couple of decades
+gestating in government and university research labs. It was born for us
+with the browser as the Web, and it demonstrated fairly robust qualities
+a good two or three years before Ken Starr's measly 244 KB zip file
+arrived. Downloading the multimegabyte Navigator and Explorer archives is
+a far manlier challenge.
+</p><p>
+Now we've clear-cut the original IP protocols and the telephone
+infrastructure—along with the arrival of the licentious Starr report a
+sure sign of the maturity of the medium. The next two stages of Internet
+development ought to take us much further, to using the Net without
+thinking, just as we expect to find and use telephones everywhere. One of
+these stages might be the advent of real Internet appliances. The other
+might be real, pervasive high-speed access, not undelivered promises.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-36.html">Issue 3-36, September 9, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-38.html">Issue 3-38, September 23, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-36.html" title="Issue 3-36, September 9, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-38.html" title="Issue 3-38, September 23, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

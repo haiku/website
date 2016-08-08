@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Midi Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheMidiKit_Overview.html" title="The Midi Kit" /><link rel="prev" href="BMidiPort_Overview.html" title="BMidiPort" /><link rel="next" href="BMidiSynth_Overview.html" title="BMidiSynth" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="BMidiPort_Overview.html" title="BMidiPort"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheMidiKit_Overview.html" title="The Midi Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="BMidiSynth_Overview.html" title="BMidiSynth"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Midi Kit</div></div><div id="headerB">Prev: <a href="BMidiPort_Overview.html">BMidiPort</a>  Up: <a href="TheMidiKit_Overview.html">The Midi Kit</a>  Next: <a href="BMidiSynth_Overview.html">BMidiSynth</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview"></a>BMidiStore</h2></div></div></div><a id="id594849" class="indexterm"></a><p>The <a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+class defines a MIDI recording and playback mechanism. The
+MIDI messages that a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+object receives (at its input) are stored
+as events in an event list, allowing a captured performance to be played
+back later. The object can also read and write—or import and
+export—standard MIDI files.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview_Recording"></a>Recording</h3></div></div></div><p>The ability to record a MIDI performance is vested in
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>'s
+MIDI hook functions (NoteOn(), NoteOff(), etc.). When a MIDI hook is invoked,
+the function fabricates a discrete event based on the data it has
+received in its arguments, and adds the event to its event list. You
+don't need to tell a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+to start recording; it can record from
+the moment it's constructed.</p><p>For example, to record a performance from an external MIDI keyboard, you
+connect a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+to a
+<a class="link" href="BMidiPort.html" title="BMidiPort"><code class="classname">BMidiPort</code></a>
+object and then tell the
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+to start:</p><pre class="programlisting example cpp"><span class="comment">/* Record a keyboard performance. */</span>
+<code class="classname">BMidiStore</code> <code class="varname">MyStore</code>;
+<code class="classname">BMidiPort</code> <code class="varname">MyPort</code>;
+
+<code class="varname">MyPort</code>.<code class="methodname">Open</code>(...);
+<code class="varname">MyPort</code>.<code class="methodname">Connect</code>(<code class="varname">MyStore</code>);
+<code class="varname">MyPort</code>.<code class="methodname">Start</code>();
+<span class="comment">/* Start playing... */</span></pre><p>At the end of the performance, you tell the
+<a class="link" href="BMidiPort.html" title="BMidiPort"><code class="classname">BMidiPort</code></a>
+to stop:</p><pre class="programlisting example cpp"><code class="varname">MyPort</code>.<code class="methodname">Stop()</code>;</pre><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview_Timestamps"></a>Timestamps</h4></div></div></div><p>Events are added to a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>'s
+event list immediately upon arrival.
+Each event is given a timestamp as it arrives; the value of the timestamp
+is the value of the time argument that was passed to the MIDI hook
+function by the "upstream" object's spray function. There's no guarantee
+that the time arguments of successive MIDI events will be in
+chronological order. To ensure that the events are properly ordered, you
+should call
+<a class="link" href="BMidiStore.html#BMidiStore_SortEvents"><code class="methodname">SortEvents()</code></a>
+before you read from the list (note that writing to a
+MIDI file automatically sorts the list).</p><p><a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>'s
+input functions don't call
+<a class="link" href="BMidi.html#BMidi_SnoozeUntil" title="SnoozeUntil()"><code class="methodname">SnoozeUntil()</code></a>: A
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+writes to its event list as soon as it gets a new message, it doesn't
+wait until the time indicated by the time argument.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview_ErasingAndEditingARecording"></a>Erasing and Editing a Recording</h4></div></div></div><p>You can't. If you make a mistake while you're recording (for example) and
+want to try again, you can simulate emptying the object by disconnecting
+the input to the
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>,
+destroying the object, making a new one, and re-connecting. For example:</p><p>Editing the events in the event list is less than impossible (were such a
+state possible). You can't do it, and you can't simulate it, at least not
+with the default implementation of
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>.
+If you want to edit MIDI data, you have to provide your own
+<a class="link" href="BMidi.html" title="BMidi"><code class="classname">BMidi</code></a>-derived
+class.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview_Playback"></a>Playback</h3></div></div></div><p>To "play" a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>'s
+list of events, you call the object's
+<a class="link" href="BMidi.html#BMidi_Start" title="Start()"><code class="methodname">Start()</code></a>
+function. As described in the
+<a class="link" href="BMidi.html" title="BMidi"><code class="classname">BMidi</code></a>
+class specification,
+<a class="link" href="BMidi.html#BMidi_Start" title="Start()"><code class="methodname">Start()</code></a> invokes
+<a class="link" href="BMidi.html#BMidi_Run" title="Run()"><code class="methodname">Run()</code></a>.
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>'s
+<a class="link" href="BMidi.html#BMidi_Run" title="Run()"><code class="methodname">Run()</code></a>
+reads events in the order that they appear in
+the event list, and sprays the appropriate messages to the connected
+objects. You can interrupt a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+playback by calling
+<a class="link" href="BMidi.html#BMidi_Stop" title="Stop()"><code class="methodname">Stop()</code></a>;
+uninterrupted, the object will stop by itself after it has sprayed the
+last event in the list.</p><p>The events' timestamps are used as the time arguments in the spray
+functions that are called from within
+<a class="link" href="BMidi.html#BMidi_Run" title="Run()"><code class="methodname">Run()</code></a>.
+But with a twist: The time
+argument that's passed in the first spray call (for a given performance)
+is always <code class="constant">B_NOW</code>; subsequent time arguments are re-computed to maintain
+the correct timing in relation to the first event. In other words, when
+you tell a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+to start playing, the first event is performed
+immediately regardless of the actual value of its timestamp.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview_SettingTheCurrentEvent"></a>Setting the Current Event</h4></div></div></div><p>You can tell the
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+to begin playing from somewhere in the middle of the list by calling
+<a class="link" href="BMidiStore.html#BMidiStore_SetCurrentEvent" title="SetCurrentEvent(), CurrentEvent()"><code class="methodname">SetCurrentEvent()</code></a>
+before starting the playback.
+The function takes an index into the list.</p><p>If you want to start playing from a particular time offset into the event
+list, you first have to figure out which event lies at that time. To do
+this, you ask for the event that occurs at or after the time offset (in
+milliseconds) through the
+<a class="link" href="BMidiStore.html#BMidiStore_EventAtDelta"><code class="methodname">EventAtDelta()</code></a>
+function. The value that's
+returned by this function is suitable as the argument to
+<a class="link" href="BMidiStore.html#BMidiStore_SetCurrentEvent" title="SetCurrentEvent(), CurrentEvent()"><code class="methodname">SetCurrentEvent()</code></a>.</p><p>Keep in mind that
+<a class="link" href="BMidiStore.html#BMidiStore_EventAtDelta"><code class="methodname">EventAtDelta()</code></a>
+returns the index of the first event at
+or after the desired offset. If you need to know the actual offset of the
+winning event, you can pass its index to
+<a class="link" href="BMidiStore.html#BMidiStore_DeltaOfEvent"><code class="methodname">DeltaOfEvent()</code></a>:</p><pre class="programlisting example cpp"><span class="type">long</span> <code class="varname">firstEvent</code> = <code class="classname">MyStore</code>-&gt;<code class="methodname">EventAtDelta</code>(3000);
+<span class="type">long</span> <code class="varname">actualDelta</code> = <code class="classname">MyStore</code>-&gt;<code class="methodname">DeltaOfEvent</code>(firstEvent);</pre></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BMidiStore_Overview_ReadingAndWritingMIDIFiles"></a>Reading and Writing MIDI Files</h3></div></div></div><p>You add events to a BMidiStore's event list by reading, or importing, a
+Standard MIDI File through the
+<a class="link" href="BMidiStore.html#BMidiStore_Import"><code class="methodname">Import()</code></a>
+function. You can import any number of files into the same
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+object. After you import a file, the event list is automatically sorted.</p><p>One thing you shouldn't do is import a MIDI file into a
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>
+that contains events that were previously recorded from a
+<a class="link" href="BMidiPort.html" title="BMidiPort"><code class="classname">BMidiPort</code></a>
+(in an attempt to mix the file and the recording). Nor does the reverse work:
+You can't import a file and then record from a
+<a class="link" href="BMidiPort.html" title="BMidiPort"><code class="classname">BMidiPort</code></a>.
+The file's timestamps are incompatible with those that are generated for events that
+are received from the
+<a class="link" href="BMidiPort.html" title="BMidiPort"><code class="classname">BMidiPort</code></a>;
+the result certainly won't be satisfactory.</p><p>To write the event list as a MIDI file, you call
+<a class="link" href="BMidiStore.html" title="BMidiStore"><code class="classname">BMidiStore</code></a>'s
+<a class="link" href="BMidiStore.html#BMidiStore_Export" title="Export(), Import()"><code class="methodname">Export()</code></a>
+function:</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="BMidiPort_Overview.html">BMidiPort</a>  Up: <a href="TheMidiKit_Overview.html">The Midi Kit</a>  Next: <a href="BMidiSynth_Overview.html">BMidiSynth</a> </div><div id="footerB"><div id="footerBL"><a href="BMidiPort_Overview.html" title="BMidiPort"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheMidiKit_Overview.html" title="The Midi Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="BMidiSynth_Overview.html" title="BMidiSynth"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

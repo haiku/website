@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-38.html" title="Issue 3-38, September 23, 1998" /><link rel="next" href="Issue3-40.html" title="Issue 3-40, October 7, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-38.html" title="Issue 3-38, September 23, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-40.html" title="Issue 3-40, October 7, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-38.html">Issue 3-38, September 23, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-40.html">Issue 3-40, October 7, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-39"></a>Issue 3-39, September 30, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-39"></a>Be Engineering Insights: Using the New MALLOC_DEBUG</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Scott</span> <span class="surname">Barta</span></span></div></div></div><p>
+Like many BeOS developers, I experience daily frustration at the lack of
+debugging tools on the BeOS. Unlike most developers, though, I'm in a
+position to do more than just rant (which still occasionally happens), so
+I've done some work on <code class="envar">MALLOC_DEBUG</code> to try to help developers fix some of
+the types of memory problems I've seen during <span class="application">NetPositive</span> development.
+</p><p>
+This code will be built into BeOS R4, but you can use it now if you
+download the R3.1 debugging libroot from
+ftp://ftp.be.com/pub/experimental/tools/libroot_debug.zip.
+</p><p>
+That archive also contains a more detailed description of <code class="envar">MALLOC_DEBUG</code>
+and how to use it; you should look it up if you'd like to take full
+advantage of <code class="envar">MALLOC_DEBUG</code>.
+</p><p>
+If you want a primer on the original <code class="envar">MALLOC_DEBUG</code> mechanism, see
+Dominic's article <a class="xref" href="Issue2-29.html#Engineering2-29" title="Be Engineering Insights: The Woes of Memory Allocation">Be Engineering Insights: The Woes of Memory Allocation</a>.
+To summarize, <code class="envar">MALLOC_DEBUG</code> works by hooking into the C library's <code class="function">malloc()</code>
+and <code class="function">free()</code> calls to catch some common memory violations: reading from
+uninitialized blocks, reading blocks after they've been freed, freeing
+blocks twice, or writing off the boundary of a block. Provided that you
+don't override new and delete and do your own suballocation, <code class="envar">MALLOC_DEBUG</code>
+works for both malloc-allocated blocks and C++ class instances.
+</p><p>
+<code class="envar">MALLOC_DEBUG</code> trashes the block with garbage after it's been initialized,
+to make sure your program doesn't depend on the block being in a certain
+initial state. It trashes it again when it's freed so you don't depend on
+the data still being there afterward. It trashes the block with
+odd-numbered values so your application faults immediately if you try to
+dereference a pointer within the block. It adds padding before and after
+the block and checks the padding when the block is freed to make sure you
+haven't written off the end of the block.
+</p><p>
+You turn on <code class="envar">MALLOC_DEBUG</code> by setting some environment variables before
+starting your program. If your application doesn't do anything illegal
+with memory, <code class="envar">MALLOC_DEBUG</code> won't adversely affect your program's
+operation, other than to slow it down slightly and use a bit more memory
+to store its extra information.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741092"></a>What's New</h3></div></div></div><p>
+The best new feature is that <code class="envar">MALLOC_DEBUG</code> now records in every block the
+last seven levels of the call stack where the block allocation took
+place. When the old <code class="envar">MALLOC_DEBUG</code> detected an error, it just told you the
+error type and gave you the block's address. If the block's identity
+wasn't obvious from its content, it was difficult to figure out what the
+problem was. Now, you can find out how the block was allocated and
+immediately see what it is.
+</p><p>
+If your program trips up <code class="envar">MALLOC_DEBUG</code>, it prints out the call stack in
+the debugger message shown when the debugger is invoked. (This
+information is no longer printed to stdout but appears in the debugger
+instead.) The call stack consists of seven return addresses; convert them
+into symbolic names using the wh command in the debugger.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741130"></a>Debugging Levels</h3></div></div></div><p>
+The new <code class="envar">MALLOC_DEBUG</code> mechanism adds levels of debugging instead of the
+previous simple on/off switch. The debugging level sets how strict you
+want it to be and how much runtime overhead you're willing to incur. You
+can assign a debugging level from 1 to 10 through the <code class="envar">MALLOC_DEBUG</code>
+environment variable. This is the same environment variable you used
+before to turn on the old <code class="envar">MALLOC_DEBUG</code>; if you set <code class="code">MALLOC_DEBUG=true</code> as
+you did before, it defines the debugging level to its lowest value, 1,
+which gives you equivalent functionality.
+</p><p>
+Right now, only three levels of debugging are defined: 1, 5, and 10,
+leaving room to add future features. Level 1 is equivalent to the old
+<code class="envar">MALLOC_DEBUG</code> mechanism: it fills the block with garbage upon allocation
+and after it is freed, and checks to see if the block is freed twice, or
+its boundaries are violated.
+</p><p>
+Level 5 does all the Level 1 checks, and adds an extra step to do a
+better job of catching blocks after they're freed: when you call <code class="function">free()</code>
+on a block, the block is trashed and placed on a "purgatory" list instead
+of being returned immediately to the heap. The block stays on this list
+until enough other blocks are freed; then it's pushed off of the list and
+recycled. It does this to catch cases where your program writes to or
+reads from a block after it has been freed.
+</p><p>
+As an example, let's say there's a bug in your program where you have an
+instance of a class. You maintain an old pointer to it and write to it
+after it's been deleted (which is easy to do in heavily threaded
+applications with poorly managed object lifetimes). Sometimes, the memory
+the instance used to occupy is free memory, and your error will likely go
+undetected. Sometimes, though, the memory has been recycled and is now
+occupied by another instance of the same class, or a different class. An
+illegal memory write now affects data in a different data structure. An
+illegal memory read reads data from a different class instance. With no
+means of detecting errors like these, you'll probably spend a lot of time
+looking in the wrong place for the problem.
+</p><p>
+However, if the freed block is trashed, placed on a purgatory list, and
+stays there awhile, it gives your program ample opportunity to try to
+read from the block (and see trashed data) or write to it. After some
+time, hopefully after all the dangling pointers have gone away, the block
+falls off the list, where it is checked to make sure you haven't written
+to it, and then it is recycled.
+</p><p>
+You can set the size of the purgatory list through the
+<code class="envar">MALLOC_DEBUG_FREE_LIST_SIZE</code> environment variable (the default is 1000
+blocks). The value is block based, not byte based; if you have a high
+turnover rate of large blocks, this chews up memory pretty fast. Adjust
+the value up or down to determine the amount of time blocks spend in
+purgatory and to tune memory usage during debugging.
+</p><p>
+Normally, <code class="envar">MALLOC_DEBUG</code> only performs its checks when blocks are
+allocated, realloced, freed or when they drop off the purgatory list and
+are recycled. This means that <code class="envar">MALLOC_DEBUG</code> usually only catches a memory
+violation a long time after it has occurred; in fact, if your program
+never frees a block, it will never be checked at all.
+</p><p>
+You can prevent this by turning the debugging level all the way up to 10.
+At the highest level, <code class="envar">MALLOC_DEBUG</code> performs all the checks of lower
+levels. It also periodically checks every currently allocated block and
+every purgatory block to make sure that nothing illegal has happened. The
+<code class="envar">MALLOC_DEBUG_CHECK_FREQUENCY</code> environment variable determines how often
+this full check occurs; by default, it takes place every 1000 calls to
+<code class="function">malloc()</code>/<code class="function">realloc()</code>/<code class="function">free()</code>
+(Individual blocks are still always checked
+when freed or recycled, as they were before, regardless of this setting.)
+</p><p>
+As you can imagine, this can be a pretty time-consuming operation; with
+the period at 1000, the impact on performance is small, but the latency
+between an illegal operation and its detection is fairly large. If you're
+having trouble tracking down where a problem happens, you can crank this
+value down to something smaller, even all the way down to 1, which
+performs a heap consistency check *every* time, but is excruciatingly
+slow. When <code class="envar">MALLOC_DEBUG</code> does detect the error, keep in mind that the
+memory call where the error is detected may still be some distance away
+(and possibly in a different thread) from the bug that actually caused
+the problem; all you can hope to do is minimize the distance.
+</p><p>
+One problem to be aware of is that the new <code class="envar">MALLOC_DEBUG</code> exposes a bug in
+the Interface Kit of R3.x. You'll get a "Block written to after being
+freed" exception on a BView that has BScrollBars targeting it when you
+delete the window that contains the view. This will be fixed in R4, but
+until then, you can work around it by removing the scroll bars from the
+window and deleting them before deleting the targeted BView.
+</p></div><p>
+That's all I have time for, because The Man is beckoning me to crawl back
+in my cage and fix some bugs, so I can't tell you about the values
+<code class="envar">MALLOC_DEBUG</code> trashes blocks with or other interesting technical details.
+Look in the debugging libroot archive for more information. I hope that
+<code class="envar">MALLOC_DEBUG</code> helps you find some bugs. If you have ideas about how we
+could make it better, let us know.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-39-2"></a>Be Engineering Insights: Changes in the <span class="trademark">OpenGL</span>® World</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jason</span> <span class="surname">Sams</span></span></div></div></div><p>
+Ready for another article about 3D on the BeOS? The BeOS Release 4 OpenGL
+implementation has been heavily modified from the previous R3.1 version.
+We've added support for single-buffer rendering, reduced memory usage,
+and fixed some bugs.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741362"></a>Single Buffering</h3></div></div></div><p>
+Single buffering is perhaps the greatest improvement for R4. OpenGL now
+uses the <code class="classname">BDirectWindow</code> protocol to provide single buffering. It still
+works with regular <code class="classname">BWindow</code>s, but at a substantial performance penalty. To
+provide this functionality, two new member functions have been added to
+<code class="classname">BGLView</code>:
+</p><pre class="programlisting cpp">
+<code class="classname">BGLView</code>::<code class="methodname">DirectConnected</code>( <span class="type">direct_buffer_info *</span><code class="parameter">info</code> );
+<code class="classname">BGLView</code>::<code class="methodname">EnableDirectMode</code>( <span class="type">bool</span> <code class="parameter">enabled</code> );
+</pre><p>
+<code class="methodname">DirectConnected()</code> must be called from
+the <code class="classname">BDirectWindow</code> hook function with
+the same name. This keeps the <code class="classname">BGLView</code> in sync with the current direct
+window information. It's as simple as adding the following function to
+your code:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">myDirectWindow</code>::<code class="methodname">DirectConnected</code>( <span class="type">direct_buffer_info *</span><code class="parameter">info</code> )
+{
+  if( <code class="varname">m_glview</code> )
+    <code class="varname">m_glview</code>-&gt;<code class="methodname">DirectConnected</code>( <code class="parameter">info</code> );
+}
+</pre><p>
+<code class="methodname">EnableDirectMode()</code> is present to allow your application to enable and
+disable direct window drawing without having to modify the
+<span class="type">direct_buffer_info</span> information. By default, direct mode is disabled.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741494"></a>Performance</h3></div></div></div><p>
+Much effort is placed on having an OpenGL implementation that performs
+well. Two factors limit OpenGL performance. The first is the geometry
+processing (triangle) rate. This is the rate at which incoming vertex
+data can be processed and sent to the triangle, line, or point drawing
+hardware or software. The performance of this portion is generally
+independent of the size of the primitives sent to OpenGL. It is primarily
+dependent on the number of these primitives and other factors such as per
+vertex calculations like lighting or texture coordinate generation.
+</p><p>
+The second factor is the fill rate—the number of pixels that can be
+drawn in a given period of time, usually a second. This depends almost
+entirely on the state of the GL pixel pipeline. For software rendering,
+disabling most of the pipeline and rendering only flat, shaded triangles
+generally gives the best performance. Smooth shading, texturing, fogging,
+depth testing, stenciling, blending, and alpha testing each reduce
+performance somewhat.
+</p><p>
+Most of the R4 effort has gone into geometry processing optimizations.
+The processing speed should be greatly increased from R3. The greatest
+improvement is in the specular lighting code; specular lights should now
+have much less impact on performance. Another big gain is in quick
+clipping of primitives that are completely off screen.
+</p><p>
+We utilized some advantages of Intel processors and didn't ignore the
+drawing code either. We now have a shiny new
+<acronym class="acronym" title="Multi-Media eXtensions">MMX</acronym> filler and some
+PII-specific depth testing code. For those with other processors, don't
+worry—OpenGL detects your CPU and uses the right code. Those who've
+used our prior OpenGL implementations may be wondering why most of the
+effort went into the geometry portion and not the primitive rendering
+code that takes most of the processor time. That can be summed up in one
+word:
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741544"></a>Hardware</h3></div></div></div><p>
+While hardware support is not in R4, it's still on schedule for R5. Our
+implementation of OpenGL now has the hooks to support hardware
+acceleration. Continued incremental improvements to the software engine
+will never approach the performance provided by even a $50 3D-video card.
+All the geometry improvements will become much more visible once hardware
+acceleration is available. Can you say 200+ fps for GLTeapot?
+</p><p>
+What can you expect once hardware acceleration is available? Some
+existing OpenGL functions that were good for performance will suddenly
+become very bad:
+</p><pre class="programlisting cpp">
+<code class="classname">BGLView</code>::<code class="methodname">CopyPixelsOut</code>
+<code class="classname">BGLView</code>::<code class="methodname">CopyPixelsIn</code>
+</pre><p>
+These functions will not be the ideal way to move data into or out of a
+<code class="classname">BGLView</code>. A better solution is to use
+<code class="function">glReadPixels</code> and <code class="function">glWritePixels</code>
+that can be pipelined by the accelerator. The
+<code class="function">CopyPixelsOut</code> function forces a pipeline flush.
+<code class="function">CopyPixelsIn</code> may not force the flush but must push and
+pop the entire pixel state to get the correct behavior. Because your
+application knows the current GL state you can save and restore only the
+needed portion of the state and call <code class="function">glWritePixels</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741621"></a>BGLView::EmbeddedView</h3></div></div></div><p>
+This function will always return <code class="constant">NULL</code> starting with R4. All drawing in a
+<code class="classname">BGLView</code> should be done with GL commands. Mixing AppServer and GL is
+extremely bad for the performance of both. This function is mostly used
+for displaying text in a <code class="classname">BGLView</code>. Below is an example of displaying text
+using only GL commands.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id741648"></a>Text in GL</h3></div></div></div><p>
+One way to draw text in OpenGL is to create the font as a texture and
+then draw it using standard GL quads. The example below uses GL to draw
+the letter B. It uses the app_server to create the font and GL to draw it.
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="classname">ObjectView</code>::<code class="methodname">round</code>( <span class="type">int</span> <code class="parameter">in</code> )
+{
+  <span class="type">int</span> <code class="varname">tempCount</code> = 0;
+  while( <code class="parameter">in</code> &gt; 7 )
+  {
+    <code class="parameter">in</code> &gt;&gt;= 1;
+    <code class="varname">tempCount</code> ++;
+  }
+  return <code class="parameter">in</code> &lt;&lt; <code class="varname">tempCount</code>;
+}
+
+<span class="type">void</span> <code class="classname">ObjectView</code>::<code class="methodname">makeFontMipmap</code>( <span class="type">int</span> <code class="parameter">maxSize</code>, <span class="type">char</span> <code class="parameter">c</code> )
+{
+  <span class="comment">/* Get a fixed font */</span>
+  <code class="classname">BFont</code> <code class="varname">font</code>( <code class="varname">be_fixed_font</code> );
+
+  <span class="type">int</span> <code class="varname">size</code> = <code class="varname">maxSize</code>;
+  <span class="type">int</span> <code class="varname">level</code> = 0;
+  <span class="type">float</span> <code class="varname">fontSize</code> = <code class="varname">maxSize</code>;
+  <span class="type">font_height</span> <code class="varname">fh</code>;
+
+  <span class="comment">/* Calculate the largest font which will fit */</span>
+  <span class="comment">/* into the specified size                   */</span>
+  do
+  {
+    <code class="varname">fontSize</code> /= 1.05;
+    <code class="varname">font</code>.<code class="methodname">SetSize</code>( <code class="varname">fontSize</code> );
+    <code class="varname">font</code>.<code class="methodname">GetHeight</code>( &amp;<code class="varname">fh</code> );
+  } while ( <code class="varname">fh</code>.<code class="varname">leading</code> &gt;= <code class="varname">size</code> );
+
+  <span class="type">float</span> <code class="varname">x</code> = <code class="varname">size</code> / <code class="varname">4</code>;
+  <span class="comment">/* Round Y to ensure all but the last 3 mipmaps land on */</span>
+  <span class="comment">/* integer values                                       */</span>
+  <span class="type">float</span> <code class="varname">y</code> = <code class="function">round</code>( <code class="varname">size</code> - (<code class="varname">fh</code>.<code class="varname">descent</code> + <code class="varname">fh</code>.<code class="varname">leading</code> * 0.05) );
+
+  <span class="comment">/* Reduce the size of the font until its fits the new */</span>
+  <span class="comment">/* location */</span>
+  do
+  {
+    <code class="varname">fontSize</code> /= 1.05;
+    <code class="varname">font</code>.<code class="varname">SetSize</code>( <code class="varname">fontSize</code> );
+    <code class="varname">font</code>.<code class="methodname">GetHeight</code>( &amp;<code class="varname">fh</code> );
+  } while ( <code class="varname">y</code> &lt; <code class="varname">fh</code>.<code class="varname">ascent</code> );
+
+  <span class="comment">/* Create each mipmap for the font */</span>
+  while( <code class="varname">size</code> &gt;= 1 )
+  {
+    <code class="varname">font</code>.<code class="methodname">SetSize</code>( <code class="varname">fontSize</code> );
+    <code class="methodname">makeFontLevel</code>( <code class="varname">size</code>, <code class="varname">level</code>, &amp;<code class="varname">font</code>, <code class="varname">x</code>, <code class="varname">y</code>, <code class="varname">c</code> );
+    <code class="varname">size</code> /= 2;
+    <code class="varname">level</code> ++;
+    <code class="varname">x</code> /= 2.0;
+    <code class="varname">y</code> /= 2.0;
+    <code class="varname">fontSize</code> /= 2;
+  }
+
+}
+
+<span class="type">void</span> <code class="classname">ObjectView</code>::<code class="methodname">makeFontLevel</code>( <span class="type">int</span> <code class="parameter">size</code>, <span class="type">int</span> <code class="parameter">level</code>,
+  <span class="type"><code class="classname">BFont</code> *</span><code class="parameter">font</code>, <span class="type">float</span> <code class="parameter">x</code>, <span class="type">float</span> <code class="parameter">y</code>, <span class="type">char</span> <code class="parameter">c</code> )
+{
+  <span class="comment">/* Create a bounding rect for the bitmap */</span>
+  <code class="classname">BRect</code> <code class="varname">boundingRect</code>( 0, 0, <code class="parameter">size</code>-1, <code class="parameter">size</code>-1 );
+  <span class="type">GLubyte *</span><code class="varname">bits</code>;
+
+  <span class="comment">/* Create a gray scale bitmap to hold the font */</span>
+  <code class="classname">BBitmap</code> <code class="varname">bitmap</code>( <code class="varname">boundingRect</code>, <code class="constant">B_CMAP8</code>, <code class="constant">true</code>, <code class="constant">false</code> );
+
+  <span class="comment">/* Create an embedded view */</span>
+  <code class="classname">BView</code> <code class="varname">view</code>( <code class="varname">boundingRect</code>, "Font view", <code class="constant">B_FOLLOW_NONE</code>, 0);
+
+  <code class="varname">bitmap</code>.<code class="methodname">Lock</code>();
+  <code class="varname">bitmap</code>.<code class="methodname">AddChild</code>( &amp;<code class="varname">view</code> );
+
+  <span class="comment">/* Set the background to bright white */</span>
+  <span class="comment">/* Could be done with app server call */</span>
+  <code class="varname">bits</code> = (<span class="type">GLubyte *</span>)<code class="varname">bitmap</code>.<code class="methodname">Bits</code>();
+  for( <span class="type">int</span> <code class="varname">ct</code>=0; <code class="varname">ct</code>&lt;<code class="parameter">size</code>*<code class="parameter">size</code>; <code class="varname">ct</code>++ )
+    <code class="varname">bits</code>[<code class="varname">ct</code>] = 255;
+
+  <span class="comment">/* Draw the character into the bitmap at the specified */</span>
+  <span class="comment">/* location                                            */</span>
+  <code class="varname">view</code>.<code class="methodname">SetFont</code>( <code class="varname">font</code> );
+  <code class="varname">view</code>.<code class="methodname">DrawChar</code>( <code class="parameter">c</code>, <code class="classname">BPoint</code>( <code class="parameter">x</code>, <code class="parameter">y</code> ) );
+  <code class="varname">view</code>.<code class="methodname">Sync</code>();
+
+  <span class="comment">/* Invert the bitmap to make an intensity map where the */</span>
+  <span class="comment">/* text is intense and the background is not. */</span>
+  for( <span class="type">int</span> <code class="varname">ct</code>=0; <code class="varname">ct</code>&lt;<code class="parameter">size</code>*<code class="parameter">size</code>; <code class="varname">ct</code>++ )
+    <code class="varname">bits</code>[<code class="varname">ct</code>] = 255 - <code class="varname">bits</code>[<code class="varname">ct</code>];
+
+  <span class="comment">/* Load the intensity map into GL */</span>
+  <code class="function">glTexImage2D</code>( <code class="constant">GL_TEXTURE_2D</code>, <code class="parameter">level</code>, <code class="constant">GL_INTENSITY4</code>, <code class="parameter">size</code>,
+    <code class="parameter">size</code>, 0, <code class="constant">GL_LUMINANCE</code>, <code class="constant">GL_UNSIGNED_BYTE</code>, <code class="varname">bitmap</code>.<code class="methodname">Bits</code>() );
+
+  <span class="comment">/* Clean up */</span>
+  <code class="varname">bitmap</code>.<code class="methodname">RemoveChild</code>( &amp;<code class="varname">view</code> );
+  <code class="varname">bitmap</code>.<code class="methodname">Unlock</code>();
+}
+
+<span class="type">void</span> <code class="classname">ObjectView</code>::<code class="methodname">DrawFrame</code>(<span class="type">bool</span> <code class="parameter">noPause</code>)
+{
+  if( <code class="varname">initCount</code> &lt; 1 )
+    return;
+  <code class="methodname">LockGL</code>();
+
+  <span class="comment">/* Enable texturing */</span>
+  <code class="function">glEnable</code>( <code class="constant">GL_TEXTURE_2D</code> );
+
+  <span class="comment">/* Set texturing to clamp to prevent repeating the   */</span>
+  <span class="comment">/* texture if invalid texture coordinates were given */</span>
+  <code class="function">glTexParameteri</code>( <code class="constant">GL_TEXTURE_2D</code>, <code class="constant">GL_TEXTURE_WRAP_S</code>,
+    <code class="constant">GL_CLAMP</code> );
+  <code class="function">glTexParameteri</code>( <code class="constant">GL_TEXTURE_2D</code>, <code class="constant">GL_TEXTURE_WRAP_T</code>,
+    <code class="constant">GL_CLAMP</code> );
+
+  <span class="comment">/* Set filters. This configures for trilinear filtering */</span>
+  <code class="function">glTexParameteri</code>( <code class="constant">GL_TEXTURE_2D</code>, <code class="constant">GL_TEXTURE_MAG_FILTER</code>,
+    <code class="constant">GL_LINEAR</code> );
+  <code class="function">glTexParameteri</code>( <code class="constant">GL_TEXTURE_2D</code>, <code class="constant">GL_TEXTURE_MIN_FILTER</code>,
+    <code class="constant">GL_LINEAR_MIPMAP_LINEAR</code> );
+
+  <span class="comment">/* Colored text is created with GL_MODULATE.           */</span>
+  <span class="comment">/* The intensity map determines the brightness and the */</span>
+  <span class="comment">/* vertexes specify the color                          */</span>
+  <code class="function">glTexEnvi</code>( <code class="constant">GL_TEXTURE_ENV</code>, <code class="constant">GL_TEXTURE_ENV_MODE</code>,
+    <code class="constant">GL_MODULATE</code> );
+
+  <span class="comment">/* Make the character texture */</span>
+  <code class="methodname">makeFontMipmap</code>( 128, 'B' );
+
+  <span class="comment">/* Draw the texture */</span>
+  <code class="function">glBegin</code>( <code class="constant">GL_QUADS</code> );
+
+  <code class="function">glColor3f</code>( 1.0, 0.0, 0.0 );
+  <code class="function">glTexCoord2f</code>( 0.0, 0.0 );
+  <code class="function">glVertex2f</code>( -1.0, 1.0 );
+
+  <code class="function">glColor3f</code>( 1.0, 0.5, 0.0 );
+  <code class="function">glTexCoord2f</code>( 1.0, 0.0 );
+  <code class="function">glVertex2f</code>( 1.0, 1.0 );
+
+  <code class="function">glColor3f</code>( 0.0, 0.0, 1.0 );
+  <code class="function">glTexCoord2f</code>( 1.0, 1.0 );
+  <code class="function">glVertex2f</code>( 1.0, -1.0 );
+
+  <code class="function">glColor3f</code>( 0.0, 0.5, 1.0 );
+  <code class="function">glTexCoord2f</code>( 0.0, 1.0 );
+  <code class="function">glVertex2f</code>( -1.0, -1.0 );
+  <code class="function">glEnd</code>();
+
+  <code class="methodname">UnlockGL</code>();
+};
+</pre><p>
+This could be improved by creating the fonts in advance and binding them
+to texture objects using <code class="function">glBindTexture</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id742649"></a>Conclusion</h3></div></div></div><p>
+Much has already changed in the OpenGL
+world and much remains to be done.
+We are now very close to tremendous performance gains through hardware
+acceleration and BeOS Release 4 has paved the way.
+
+Thanks, and let's create those great looking 3D apps.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-39"></a>Developers Workshop: Fal Parsi</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id742700"></a><a id="id742702"></a>Q:</td><td><p>
+"Now that DR12 (excuse me, R4) is more than a twinkle in Eddie's eye, can
+I ask about new features without cramming my interlocutant down the Bocca
+de la Verita?"
+</p><p>
+-- Amfortas, Monsalvat, Spain
+</p></td></tr></tbody></table></div><p>
+Good of you to write, Mr. Amfortas (where'd you find Shroud of Turin
+stationery?). To answer your only question first (without actually
+answering it), here you go:
+</p><ul class="itemizedlist"><li><p>
+Between the dum and dee of finding a handler's looper and locking the
+fellow, there lies a race. Consider the mayhem were the handler is
+removed from the looper between the two calls. Rare? You bet, but the
+best bugs are just so. Solve the problem with <code class="classname">BHandler</code>'s
+new <code class="methodname">LockLooper()</code>
+function. In a single call the looper is cornered and quartered. So,
+where you now have this (to examplicate the commonest):
+</p><pre class="programlisting cpp">
+<code class="varname">window</code> = <code class="varname">view</code>-&gt;<code class="methodname">Window</code>();
+if (<code class="varname">window</code>-&gt;<code class="methodname">Lock</code>()) {
+  ...
+  <code class="varname">window</code>-&gt;<code class="methodname">Unlock</code>();
+}
+</pre><p>
+...you will, in R4, type thus:
+</p><pre class="programlisting cpp">
+if (<code class="varname">view</code>-&gt;<code class="methodname">LockLooper</code>()) {
+  ...
+  <code class="varname">view</code>-&gt;<code class="methodname">UnlockLooper</code>();
+}
+</pre></li><li><p>
+Are you jealously interested in the other apps that the user is
+sneaking about with when you're not looking? To get this information, in
+R3, you had to pester the roster like a five-year-old in the back seat on
+his way to grandma's. Now, roster will pester you: <code class="classname">BRoster</code>'s
+<code class="methodname">StartWatching()</code> and <code class="methodname">StopWatching()</code>
+functions will let you register for
+notifications of application launchings, activations, and deaths. All
+just gossip, in my book.
+</p></li><li><p>
+As <code class="methodname">Pulse()</code> is the apian genua, the
+new <code class="classname">BMessageRunner</code> is a feline
+huzzah. Mr. Message Runner sends a message, and then sends it again some
+moments later, and again and again and again, automatically,
+continuously, obsessively.
+</p></li><li><p>
+You like <code class="classname">BFile</code>, but you miss being able to
+<code class="function">close()</code> when you're done.
+The lack of a proper goodbye feels as caddish as leaving a twenty on the
+table and lying about calling, you blackguard. Now we give you your
+cupcake, and yet another, so you can eat one and have the remainder. Look
+for <code class="methodname">BNode::Dup()</code>, the call with the po-po-posixy name. It duplicates the
+node's file descriptor so you can have your way with it and properly
+<code class="function">close()</code> it when you're done. It doesn't
+actually affect the <code class="classname">BNode</code>'s
+descriptor, so you may still feel a bit roguish, but at least you can go
+through the motions.
+</p></li><li><p>
+<code class="classname">BResources</code>, the Flying Dutchman of the Storage Kit, has shifted its
+sails once again. What started out as a happy-go-lucky structure that
+could tack into nearly any file was trimmed to make way for attributes a
+few releases back. In R4 we'll trim again: You can use a <code class="classname">BResources</code>
+object to *read* an application's resources, but you mustn't *write* the
+data. Writing resources (signatures, icons, etc.) is the job of
+professionals, such as FileTypes, IconThingummy (what *do* we call it
+these days?), and the new xres tool (which I'm not going to talk about).
+</p></li><li><p>
+How many times has mounting a volume evoked that feeling of presque vu?
+Turn that "almost" into a certainty by examining the volume's new
+"be:volume_id" attribute. 64 bits is better than fingerprints and costs
+less than DNA.
+</p></li><li><p>
+The <code class="classname">BGLView</code> class, your interface to
+OpenGL, has learned the
+<code class="classname">BDirectWindow</code>
+secret handshake. Also,
+OpenGL
+no longer speaks pig latin when asked to
+back-cull. It's a z-axis world; live in it.
+</p></li></ul><p>
+That should help. By the way, wasn't Kundry an intern?
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-39"></a>Beta Season</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+It's almost here. We'll soon begin rounds of beta testing for the
+upcoming Release 4 of the BeOS. And that seems like a good opportunity to
+state our position or intentions on the topic of release classifications.
+</p><p>
+First, an explanation of the terms. It used to be that "alpha" meant
+something that occasionally worked and represented what you wanted the
+product to do. "Beta" meant "feature complete," including undocumented
+features—a.k.a. bugs.
+</p><p>
+Cynics say that rounds of beta testing are used to progressively
+approximate a commercial product, one that the customer will pay for and
+not return in bankrupting numbers. As with any language artifacts,
+"alpha" and "beta" have lost some of their categorical meanings as
+they've evolved. Beta testing is now an opportunity to add and delete
+features as the product moves toward commercial completion. Some features
+prove too problematic to fix in reasonable time. Others that seemed like
+a good idea might be rejected by real users. Missing functions in an
+earlier beta are now feasible or clamored for.
+</p><p>
+With the Web, and the Software Valet client in the BeOS, we have ideal
+tools for a more fluid beta testing process. I mentioned "real users" and
+the clamor for certain features. In an ideal world, we have a perfect QA
+organization with testing programs that probe every tendril in our
+software and take it where no human would dare tread. The more mundane
+reality is that QA engineers are too sophisticated and know too much,
+including unconscious knowledge. As a result, they, or their programs,
+don't tread where normal human beings naturally go. How did you do that,
+and why? I don't know, replies the customer, already annoyed.
+</p><p>
+I know about this. Because of an apparently innate ability to misuse
+software and washer-dryers, I'm used to being on the receiving end of
+such questions. For example, on a certain legacy operating system, the
+number of bytes remaining on disk is displayed in a window title. I once
+"managed" to replace the comma separator in the number with a J. My hard
+disk was promptly confiscated. I promise we won't do this at Be. We
+might, though, just beg to borrow your system to make sure we can
+reproduce a problem we were unable to create unaided.
+</p><p>
+Regarding the clamor for features, we're a little nervous. Hopefully, the
+BeOS Release 4 will show that we've been listening to assertive software
+developers and users. On the other hand, with a much larger feature set,
+we're likely to get even more vigorous feedback—some of which will
+feed the next round of fixes or improvements.
+</p><p>
+We like this, especially when we don't like it. The pain means the
+critics have touched something important that we'd better attend to.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-38.html">Issue 3-38, September 23, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-40.html">Issue 3-40, October 7, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-38.html" title="Issue 3-38, September 23, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-40.html" title="Issue 3-40, October 7, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

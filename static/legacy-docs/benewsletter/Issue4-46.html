@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-45.html" title="Issue 4-45, November 10, 1999" /><link rel="next" href="Issue4-47.html" title="Issue 4-47, November 24, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-45.html" title="Issue 4-45, November 10, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-47.html" title="Issue 4-47, November 24, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-45.html">Issue 4-45, November 10, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-47.html">Issue 4-47, November 24, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-46"></a>Issue 4-46, November 17, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-46"></a>Be Engineering Insights: The Hidden Cost of Things</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>
+"Be creates software platforms that enable rich media and web experiences
+on personal computers and Internet appliances."
+</p><p>
+You've probably seen statements similar to this many times during the
+last few months. In engineering terms, the last two words—"Internet
+appliances"—imply a new and significant constraint: memory footprint.
+This is because many Internet appliances have no hard disk. Rather, they
+have only a small, compact flash, usually with an IDE interface, and only
+a limited amount of memory. Typically, this means 16-32MB of main memory,
+and 8-16MB of storage space, at least for devices trying to be much more
+than a cellular phone, text-based Web browser. As you can imagine, swap
+space isn't even an option with devices such as these.
+</p><p>
+One consequence is that, more than ever, you need to be careful about
+memory usage. Unfortunately, this is often difficult to measure, since
+things can be shared by multiple teams or hidden by VM or heap
+fragmentation. Also, there are two types of memory allocation: visible
+and hidden. Visible memory allocation stores user data (like the buffer
+of a Bitmap, the messages of a MessageQueue, the points of a Polygon, and
+so on). Hidden memory allocation is used by BeOS objects and components
+themselves, so you don't really know what's there. And that's what this
+article is about—measuring the memory footprint of empty objects, or
+how much does it cost to set up a mechanism even before sending any data
+through it...
+</p><p>
+But enough talk, here are the numbers (tested under R4.5):
+</p><pre class="screen">
+&lt;less than 16 bytes range&gt;
+1 or 2 byte(s) per 1K for areas:
+VM maps each 4KB page using a 4 byte value. For very large areas, a
+second word may also be allocated for virtual page info (some are
+preallocated at boot time).
+
+&lt;16 to 32 bytes range&gt;
+creating a <code class="classname">BMessenger</code>
+creating an empty <code class="classname">BPolygon</code>
+
+&lt;32 to 64 bytes range&gt;
+creating a port
+creating a semaphore with short names (&lt;= 15 chars)
+creating a <code class="classname">BMessageFilter</code> filtering a single command code
+creating a <code class="classname">BFont</code>
+
+&lt;64 to 128 bytes range&gt; creating a semaphore with long names (&lt;= 31
+chars): as a general comment, long names are not free (no miracles here)
+creating a <code class="classname">BHandler</code>
+creating an empty <code class="classname">BPicture</code>
+creating an empty <code class="classname">BMessageQueue</code>
+creating an empty <code class="classname">BShape</code>
+creating a <code class="classname">BLocker</code>: please notice it's a bit more expensive than a
+semaphore. Not a big issue if you don't use a lot of them...
+creating an empty <code class="classname">BMessage</code>
+
+&lt;128 to 256 bytes range&gt;
+~150 bytes: creating an empty <code class="classname">BRegion</code>
+
+&lt;256 to 512 bytes range&gt;
+~350 bytes: creating a bitmap (not accepting view), not counting the
+buffer itself
+~375 bytes: creating an area (not including the 4 bytes per 4K page
+previously discussed)
+
+&lt;1KB to 2KB range&gt;
+~1600 bytes: creating a view
+~1750 bytes: creating a view and setting a font context. As you can see,
+the font context on the server side is optional and gets added lazily.
+
+&lt;16KB and more...&gt;
+~16 1/4 K: spawning a thread. At this point, the main hit is the kernel
+stack (16K of locked memory).
+~20 1/4 K: spawning and resuming a thread. At this point, the thread
+starts to use another 4K page for the user stack.
+~20 3/4 K: creating and running a <code class="classname">BLooper</code>. That's essentially the cost of
+having a thread waiting to dispatch messages.
+~32 K: creating a bitmap accepting view, not counting the buffer itself.
+Most of it is used by the thread on the server side handling the drawing
+commands. That's also the reason why you can't have too many bitmap
+accepting views (the app_server team runs out of thread).
+~34 K: creating a window, without running the looper. This only creates
+one of the two threads required by a fully functional window.
+~37 K: creating a TCP socket. This includes a server side thread and some
+buffers.
+~56 K: creating a window and running the looper by hand (you don't need
+to do that usually). In this case, we effectively created both threads
+(client and server sides). The rest (around 15K) is used by the client
+and server side structs.
+~70 K: creating a window, and showing it (outside the display area). As
+you see, the memory footprint of the window jumps again one more time. At
+this point the window is ready to go, but nothing is drawn on the screen
+yet...
+~79 K: creating a new team (doing nothing, linking against none of the
+shared libraries except libroot). It's essentially:
+~32K for the MMU tables
+~20K for the thread
+~16K for loader structures
+~8K for team
+
+~214 K: creating a new team with a <code class="classname">BApplication</code> object, but doing nothing
+else but initialization. As expected, the <code class="classname">BApplication</code> is a fairly
+respectable beast. Not very surprising, as it includes a couple of
+threads, needs a relocated copy of parts of libbe, and provides many
+services.
+</pre><p>
+Remember, these numbers don't include whatever memory will be used by the
+objects once you start using them (and that can be a lot, depending on
+what you do).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-46-2"></a>Be Engineering Insights: Building Interdependent Shared Libraries</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Ferguson</span></span></div></div></div><p>
+If you've ever ported a large UNIX application to BeOS you may have run
+into the problem of building shared library versions of a set of
+interdependent static libraries. One way to do this is to build a
+shareable file for each library that contains only the exported symbols
+of that library. The symbol files can be used to link the other shared
+libraries in the set.
+</p><p>
+Here is a bash script that automates the process. It takes a list of <code class="filename">.a</code>
+files and builds a corresponding <code class="filename">.so</code> file for each one. The only thing
+missing from this listing is the <code class="function">extract_symbols</code> function, which is
+described later.
+</p><pre class="programlisting sh">
+TMP_DIR=/tmp/so-builder.$$
+GCC_ARGS=-nostart
+ARCHIVES=
+SYMBOLS=
+
+
+while [ $# != 0 ]
+do
+  case "$1" in
+    -*) GCC_ARGS="$GCC_ARGS $1";;
+    /*.a) ARCHIVES="$ARCHIVES $1";;
+    *.a) ARCHIVES="$ARCHIVES 'pwd'/$1";;
+    *) GCC_ARGS="$GCC_ARGS $1";;
+  esac
+  shift
+  done
+
+
+rm -rf $TMP_DIR
+mkdir $TMP_DIR
+pushd $TMP_DIR
+
+
+for arch in $ARCHIVES; do
+  tail=${arch##*/}
+  base=${tail%.a}
+  extract_symbols $arch &gt;$base.s
+  soname="-Xlinker -soname=$base.so"
+  echo gcc -nostdlib $soname -o $base.syms $base.s
+  gcc -nostdlib $soname -o $base.syms $base.s
+  SYMBOLS="$SYMBOLS $base.syms"
+done
+
+
+for arch in $ARCHIVES; do
+  ar x $arch
+  echo gcc $GCC_ARGS -o ${arch%.a}.so *.o $SYMBOLS
+  gcc $GCC_ARGS -o ${arch%.a}.so *.o $SYMBOLS
+  rm -f *.o
+done
+
+
+popd
+rm -rf $TMP_DIR
+</pre><p>
+The <code class="code">while</code> loop scans the shell arguments, putting an absolute path to
+each <code class="filename">.a</code> file in <code class="envar">$ARCHIVES</code>. The rest of the arguments are passed to the
+gcc command which builds the <code class="filename">.so</code> files.
+</p><p>
+In a temporary directory, the first <code class="code">for</code> loop builds a symbol file for
+each archive by compiling the result of the <code class="function">extract_symbols</code> function. The
+  -soname  argument to the linker provides the name of
+the <code class="filename">.so</code> file in which the symbols will ultimately be found.
+</p><p>
+The second <code class="code">for</code> loop relinks each archive into a shared library using
+the symbol files just created.
+</p><p>
+The <code class="function">extract_symbols</code> function takes an archive and creates an assembler
+file which contains only symbols. One way to do that is to use a <span class="application">sed</span>
+script on the output of <span class="application">nm</span>:
+</p><pre class="programlisting sh">
+extract_symbols () {
+  nm $1 | sed -n '
+    s/^[0-9a-f]* T \(..*\)/\
+      .text\
+      .globl \1\
+      \1:/p
+    s/^[0-9a-f]* D \(..*\)/\
+      .data\
+      .globl \1\
+      .size \1,4\
+      \1:/p
+    s/^[0-9a-f]* C \(..*\)/\
+      .comm \1,4,4/p'
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-46"></a>Developers' Workshop: Of Pointers, Constructors, and Conversions</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+In this week's installment I intend to put a certain small function in
+the Be API to rest. Although it was created with the best of intentions,
+there are several subtle problems with its use, so we're deprecating it.
+By describing these problems in detail, I hope to illustrate some of the
+pitfalls of C++ syntax that may be haunting your code.
+</p><p>
+Our victim for solemn interment today is <code class="classname">BMessage</code>::<code class="methodname">BMessage</code>(<code class="classname">BMessage</code>*).
+</p><p>
+Now, ever since the good old days, this function has lurked in the shadow
+of its more hygienic partner, the standard <code class="classname">BMessage</code> copy constructor:
+<code class="classname">BMessage</code>::<code class="methodname">BMessage</code>(const <code class="classname">BMessage</code>&amp;).
+Recall that the copy constructor is called in either of the following two cases:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">a</code>;
+<code class="classname">BMessage</code> <code class="varname">b</code>(<code class="varname">a</code>);     <span class="comment">// copy constructor specified explicitly</span>
+<code class="classname">BMessage</code> <code class="varname">c</code> = <code class="varname">a</code>;    <span class="comment">// also calls the copy constructor,</span>
+                   <span class="comment">// NOT operator=() !</span>
+</pre><p>
+This works, looks nice, and is the C++ Approved Way of Doing Things. So
+why have a redundant variant that takes a <span class="type"><code class="classname">BMessage</code>*</span>
+instead of a <span class="type">const <code class="classname">BMessage</code>&amp;</span>?
+In a word, sloth. Consider the following code that uses the
+copy constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">MyHandler</code>::<code class="methodname">MessageReceived</code>(<code class="classname">BMessage</code>* <code class="parameter">msg</code>)
+{
+     <code class="classname">BMessage</code> <code class="varname">tmpMsg</code>(*<code class="parameter">msg</code>);
+     <span class="comment">// do something with tmpMsg</span>
+}
+</pre><p>
+With <code class="methodname">BMessage</code>(<code class="classname">BMessage</code>*) we could get away with this:
+</p><pre class="programlisting cpp">
+<code class="classname">MyHandler</code>::<code class="methodname">MessageReceived</code>(<code class="classname">BMessage</code>* <code class="parameter">msg</code>)
+{
+     <code class="classname">BMessage</code> <code class="varname">tmpMsg</code>(<code class="parameter">msg</code>);
+     <span class="comment">// do something with tmpMsg</span>
+}
+</pre><p>
+As you can see, by using the <code class="methodname">BMessage</code>(<code class="classname">BMessage</code>*) constructor, instead of
+the widely acclaimed copy constructor, we get one really minimal gain --
+we save an asterisk. (Note that dereferencing the pointer here and taking
+a reference does not incur a performance penalty, as the compiler can
+easily optimize it.) Nevertheless, since much of the Be API centers
+around passing pointers to <code class="classname">BMessage</code>s around, it seems the most natural
+way to express the copying of one message to another. So, its use is
+pandemic in both our code and—I suspect—in many of your apps as
+well.
+</p><p>
+Now, where are the subtle problems I spoke of? First, there is the
+question of constness. Since copying a <code class="classname">BMessage</code> does not alter the
+<code class="classname">BMessage</code>, we should be able to pass a
+<span class="type">const <code class="classname">BMessage</code>*</span> into the
+constructor. Sadly, though, we overlooked this in the initial
+implementation of the <code class="classname">BMessage</code> API, and we can't fix it because of
+backwards compatibility issues. So if you have a <span class="type">const</span> <code class="classname">BMessage</code>, you have
+to work around this bug in the API by casting away the constness of your
+<code class="classname">BMessage</code>:
+</p><pre class="programlisting cpp">
+<span class="type">const <code class="classname">BMessage</code>*</span> <code class="varname">a</code>;
+<code class="classname">BMessage</code> <code class="varname">b</code>(const_cast&lt;<code class="classname">BMessage</code>*&gt;(a));
+</pre><p>
+The C++-style cast I've used here looks ugly for a reason: a <code class="code">const_cast</code>
+is a potentially dangerous operation, and should not be invoked
+carelessly. Because you're bypassing the compiler's enforcement of
+constness, you have to blindly trust our claim that the <code class="classname">BMessage</code>
+constructor doesn't modify the original message. Because the regular
+<code class="classname">BMessage</code> copy constructor handles const correctly, it's much easier to
+use in this case.
+</p><p>
+Secondly, there are a couple of cases where a subtle error in your code
+will result in an unwanted side effect which is difficult to debug.
+First, there is the following code:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">msg</code> = new <code class="classname">BMessage</code>;
+</pre><p>
+In this case, I forgot to type an asterisk, and would hope that the
+compiler would catch the error. But not only does this code compile, it
+seems to run fine!
+</p><p>
+Why does this compile? It compiles because initialization invokes the
+copy constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">msg</code>(new <code class="classname">BMessage</code>);
+</pre><p>
+There are two undesirable results of this code:
+</p><div class="orderedlist"><ol><li><p>
+There is a redundant copy of data from the message on the heap
+to <code class="varname">msg</code>.
+</p></li><li><p>
+The pointer to the message you just created goes out of scope
+when the constructor exits, meaning that you've just leaked memory.
+</p></li></ol></div><p>
+If this wasn't bad enough, things get even worse. There is also the
+possibility of unwanted implicit conversions.
+</p><p>
+As a quick review of implicit conversions, recall that a constructor with
+a single argument defines an implicit conversion from the argument type
+to the class type. For example, you can define a conversion from a <span class="type">double</span>
+to a complex number in the following manner:
+</p><pre class="programlisting cpp">
+struct <code class="classname">Complex</code> {
+     <code class="methodname">Complex</code>(<span class="type">double</span> <code class="parameter">aReal</code>) : <span class="type">real</span>(<code class="parameter">aReal</code>), <span class="type">imag</span>(0.0) {}
+     <span class="type">double</span> <code class="varname">real</code>;
+     <span class="type">double</span> <code class="varname">imag</code>;
+};
+</pre><p>
+Then, you can write the following:
+</p><pre class="programlisting cpp">
+<span class="type">double</span> mag(<span class="type">Complex</span> <code class="parameter">c</code>)
+{
+     return sqrt(<code class="parameter">c</code>.<code class="varname">real</code>*<code class="parameter">c</code>.<code class="varname">real</code> + <code class="parameter">c</code>.<code class="varname">imag</code>*<code class="parameter">c</code>.<code class="varname">imag</code>);
+}
+
+<span class="type">double</span> <code class="varname">a</code>;
+<span class="type">double</span> <code class="varname">aMag</code> = mag(<code class="varname">a</code>);
+</pre><p>
+because the <span class="type">double</span> will automatically be converted into a <code class="classname">Complex</code> object
+for you.
+</p><p>
+Let's say we have the following function which takes a reference to
+<code class="classname">BMessage</code> and modifies the message:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="methodname">FillMessage</code>(<code class="classname">BMessage</code>&amp; <code class="parameter">msg</code>)
+{
+     <code class="varname">msg</code>.<code class="methodname">AddString</code>("password", "metatron");
+}
+</pre><p>
+But when we use this function, we forget that it takes
+a reference, and we pass it a pointer instead:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code>* <code class="varname">myMsg</code> = new <code class="classname">BMessage</code>;
+<code class="methodname">FillMessage</code>(<code class="varname">myMsg</code>);
+</pre><p>
+Again, this is probably a simple typo in your code, and you'd want this
+code to refuse to compile. But before the compiler rejects this code, it
+will look for some way to turn your <span class="type"><code class="classname">BMessage</code>*</span>
+into a <code class="classname">BMessage</code>&amp;. It can't
+do this directly, but it can turn a <span class="type"><code class="classname">BMessage</code>*</span>
+into a <code class="classname">BMessage</code>, and then
+it can create a reference to a <code class="classname">BMessage</code> from this resulting object. This
+would be the same as writing:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code>* <code class="varname">myMsg</code> = new <code class="classname">BMessage</code>;
+<code class="methodname">FillMessage</code>(<code class="classname">BMessage</code>(<code class="varname">myMsg</code>));
+</pre><p>
+So, the code will compile and run with nary a complaint. The subtle and
+dangerous problem with this conversion, as the latter piece of code
+illustrates, is that you are creating a reference to a temporarily
+constructed <code class="classname">BMessage</code>, NOT the original message itself. <code class="methodname">FillMessage</code> ends
+up modifying a temporary <code class="classname">BMessage</code> that gets thrown away, and the original
+message is left untouched. This is almost certainly not what you want!
+</p><p>
+Both this problem and the memory leak could be solved by declaring the
+constructor to be <code class="code">explicit</code>. With the proper constness declared, this
+would look something like:
+</p><pre class="programlisting cpp">
+class <code class="classname">BMessage</code> {
+public:
+     explicit <code class="methodname">BMessage</code>(const <code class="classname">BMessage</code>*);
+     ...
+};
+</pre><p>
+This prevents the constructor from being used in implicit conversions and
+initialization—you have to call the constructor explicitly. However,
+between these issues, the <code class="code">const</code> issue, and redundancy, we chose to
+deprecate this constructor instead.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-46"></a>With a Name Like Be...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We're bound to run into questions, some teasing, and the odd bit of
+trouble. One question I'm often asked is how the name came to Be. (I
+forgot to mention feeble puns in the preceding list.) When Steve Sakoman
+and I started the company, I wanted to call it UT, as in the music note
+the Latin conjunction... and as in United Technoids. Steve was his usual
+diplomatic self, not voicing such thoughts as "here we go again."
+Instead, he offered to investigate other options by looking through the
+dictionary with his kids over the weekend.
+</p><p>
+The following Monday, I called Steve from the road. How did it go? We
+stopped at "be," he said. The letter "b," I asked? No, "to be," he
+replied. And that was it. We looked for conflicting names and, to our
+surprise, found none we thought might be troublesome. I fired up MacDraw
+II and typed the two letters of the logo in 72-pt. Times Roman. The
+spacing between the "B" and the "e" looked awful. However, by typing each
+letter as a separate object and using the left cursor key, I was able to
+arrange the letters just so, and we had our first logo.
+</p><p>
+As for name conflicts, we'd been a little too sanguine. One company,
+Better Education, used its initials publicly. We visited them and reached
+an amicable arrangement. We'd chosen Be Labs for our legal name, because
+it sounded good to us. Bell Labs agreed that it sounded good; in fact,
+they thought it sounded too close to their former, prestigious name. We
+deferred, particularly since we didn't want a misunderstanding at a time
+when we were working with AT&amp;T's Hobbit microprocessor. So Be
+Incorporated became our legal name and we kept Be for our logo and
+"common" name.
+</p><p>
+Naturally, we want to protect the value of our name, of our brand. This
+is a lot easier with a name like Exxon or Hewlett-Packard than with a
+word as common as "Be." If you call your windows replacement business
+Better Windows, chances are the Redmond company will leave you alone. But
+if you start a Windows management software company, or, worse, a Windows
+management utility business, calling it Better Windows could get you into
+trouble. Apple, for example, has had no end of trouble dealing with the
+use of "Mac" in the names of products, services, magazines, newsletters,
+stores...
+</p><p>
+Popularity is not a bad problem to have though, and on a smaller scale,
+we see good news in the occasional problematic use of our name. (Osborne
+has no such trouble.) Recently, we came to an amiable arrangement with
+BeComputing. The name was obviously meant to indicate support of the Be
+platform, but there was a problem with the perception it could create.
+BeDepot is part of Be, Inc., but what about BeComputing? In fact, it's
+not affiliated with us.
+</p><p>
+Fortunately, Eric Schlissel, the CEO of BeComputing, understood our
+concern. That is, confusion, in one way or another, lowers the value of
+the brand. This, in turn, hurts everyone associated with the platform --
+probably what sages mean when they speak of "brand equity." BeComputing
+will rename itself Geek Teknologies. We appreciate their understanding of
+our efforts as well as their support of the Be platform.
+</p><p>
+And now, off to Comdex.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-45.html">Issue 4-45, November 10, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-47.html">Issue 4-47, November 24, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-45.html" title="Issue 4-45, November 10, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-47.html" title="Issue 4-47, November 24, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

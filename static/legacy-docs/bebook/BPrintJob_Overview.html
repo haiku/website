@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Interface Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheInterfaceKit_Overview.html" title="The Interface Kit" /><link rel="prev" href="BPopUpMenu_Overview.html" title="BPopUpMenu" /><link rel="next" href="BRadioButton_Overview.html" title="BRadioButton" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="BPopUpMenu_Overview.html" title="BPopUpMenu"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheInterfaceKit_Overview.html" title="The Interface Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="BRadioButton_Overview.html" title="BRadioButton"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Interface Kit</div></div><div id="headerB">Prev: <a href="BPopUpMenu_Overview.html">BPopUpMenu</a>  Up: <a href="TheInterfaceKit_Overview.html">The Interface Kit</a>  Next: <a href="BRadioButton_Overview.html">BRadioButton</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview"></a>BPrintJob</h2></div></div></div><a id="id553075" class="indexterm"></a><p>
+A <a class="link" href="BPrintJob.html" title="BPrintJob"><code class="classname">BPrintJob</code></a>
+object runs a printing session. It negotiates everything
+after the user's initial request to print—from engaging the Print
+Server to calling upon <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>s
+to draw and spooling the results to the
+printer. It also handles a secondary and somewhat separate matter related
+to printing—configuring the page layout.
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_SettingUpThePageLayout"></a>Setting Up the Page Layout</h3></div></div></div><p>
+Users typically don't decide how a document fits on a page—the
+size of the paper, the width of the margins, the orientation of the
+image, and so on—each time they print. These decisions are usually
+made when setting up the document, perhaps from a <span class="guimenuitem">Page Layout</span> menu item,
+rather than <span class="guimenuitem">Print</span>.
+</p><p>
+To set up the page parameters for a document, an application should
+create a <a class="link" href="BPrintJob.html" title="BPrintJob"><code class="classname">BPrintJob</code></a>
+object, assign it a name, and call
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigPage" title="ConfigPage(), ConfigJob()"><code class="methodname">ConfigPage()</code></a>:
+</p><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">MyDocumentManager</code>::<code class="methodname">SetUpPage</code>()
+{
+   <code class="classname">BPrintJob</code> <code class="varname">job</code>("document");
+   return <code class="varname">job</code>.<code class="methodname">ConfigPage</code>();
+}</pre><p>
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigPage" title="ConfigPage(), ConfigJob()"><code class="methodname">ConfigPage()</code></a>
+has the Print Server interact with the user to set up the
+page configuration. Configuration settings are stored in a
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+object that will be handed to the server when the document is printed.
+The <a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+is important to the server, but the application doesn't need
+to look at it directly; functions are provided to access the useful data
+it contains. However, you may want to get the object and store it with
+the document so that the configuration can be reused whenever the
+document is printed—and so that the user's previous choices can be
+the default settings when
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigPage" title="ConfigPage(), ConfigJob()"><code class="methodname">ConfigPage()</code></a>
+is called again. This is good
+behavior for an application to follow, and is highly recommended.
+</p><p>
+<a class="link" href="BPrintJob.html#BPrintJob_Settings"><code class="methodname">Settings()</code></a>
+returns the page configuration the user set up;
+<a class="link" href="BPrintJob.html#BPrintJob_SetSettings" title="SetSettings(), Settings(), IsSettingsMessageValid()"><code class="methodname">SetSettings()</code></a>
+initializes the configuration that's presented to the user. For example:
+</p><pre class="programlisting example cpp"><span class="type">BMessage *</span>setup;
+. . .
+<span class="type">status_t</span> <code class="classname">MyDocumentManager</code>::<code class="methodname">SetUpPage</code>() {
+   <span class="type">status_t</span> <code class="varname">result</code>;
+   <code class="classname">BPrintJob</code> <code class="varname">job</code>("document's name");
+
+   if (<code class="varname">setup</code>) {
+      <code class="varname">job</code>.<code class="methodname">SetSettings</code>(new <code class="classname">BMessage</code>(*<code class="varname">setup</code>));
+   }
+
+   <code class="varname">result</code> = <code class="varname">job</code>.<code class="methodname">ConfigPage</code>();
+
+   if (<code class="varname">result</code> == <code class="constant">B_OK</code>) {
+      <code class="varname">setup</code> = <code class="varname">job</code>.<code class="methodname">Settings</code>();
+
+      <span class="comment">/* record the settings for your own use */</span>
+      <code class="varname">paper_rect</code> = <code class="varname">job</code>.<code class="methodname">PaperRect</code>();
+      <code class="varname">printable_rect</code> = <code class="varname">job</code>.<code class="methodname">PrintableRect</code>();
+   }
+
+   return <code class="varname">result</code>;
+}</pre><p>
+In this example, the setup
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+presumably is flattened and saved
+with the document whenever the document is saved, and unflattened
+whenever the document is open and the page settings are needed.
+</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_Printing"></a>Printing</h3></div></div></div><p>
+To print a document, an application must go through several ordered steps:
+</p><ul class="itemizedlist"><li><p>
+Engaging the Print Server and setting parameters for the job.
+</p></li><li><p>
+Setting up a spool file to hold image data.
+</p></li><li><p>
+Asking <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>s to draw each page.
+</p></li><li><p>
+After each page is drawn, putting the data for the page in the spool
+file.
+</p></li><li><p>
+Committing the spool file to the Print Server.
+</p></li></ul><p>
+A <a class="link" href="BPrintJob.html" title="BPrintJob"><code class="classname">BPrintJob</code></a>
+object has member functions that assist with each step.
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_SettingUpAPrintJob"></a>Setting Up a Print Job</h4></div></div></div><p>
+A print job begins when the user requests the application to print
+something. In response, the application should create a
+<a class="link" href="BPrintJob.html" title="BPrintJob"><code class="classname">BPrintJob</code></a> object,
+assign the job a name, and call
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigJob"><code class="methodname">ConfigJob()</code></a>
+to initialize the printing environment. For example:
+</p><pre class="programlisting example cpp"><span class="type">BMessage *</span><code class="varname">setup</code>;
+. . .
+<span class="type">status_t</span> <code class="classname">MyDocumentManager</code>::<code class="methodname">Print</code>()
+{
+   <code class="classname">BPrintJob</code> <code class="varname">job</code>("document");
+   <span class="type">status_t</span> <code class="varname">err</code>;
+
+   if ( <code class="varname">setup</code> )
+      <code class="varname">job</code>.<code class="methodname">SetSettings</code>(new <code class="classname">BMessage</code>(*<code class="varname">setup</code>));
+   if ( (<code class="varname">err</code> = <code class="varname">job</code>.<code class="methodname">ConfigJob</code>()) == <code class="constant">B_OK</code> ) {
+      delete <code class="varname">setup</code>;
+      <code class="varname">setup</code> = <code class="varname">job</code>.<code class="methodname">Settings</code>();
+   }
+   . . .
+}</pre><p>
+So far, this looks much like the code for configuring the page presented
+in the previous
+"<a class="link" href="BPrintJob_Overview.html#BPrintJob_Overview_SettingUpThePageLayout" title="Setting Up the Page Layout">Setting Up the Page Layout</a>"
+section. The idea is the same.
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigJob"><code class="methodname">ConfigJob()</code></a>
+gets the Print Server ready for a new printing session
+and has it interact with the user to set up the parameters for the
+job—which pages, how many copies, and so on. It uses the same settings
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>
+to record the user's choices as
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigPage" title="ConfigPage(), ConfigJob()"><code class="methodname">ConfigPage()</code></a> did,
+though it records information that's more immediate to the particular
+printing session.
+</p><p>
+Again, you may want to store the user's choices with the document so that
+they can be used to set the initial configuration for the job when the
+document is next printed. By calling
+<a class="link" href="BPrintJob.html#BPrintJob_Settings"><code class="methodname">Settings()</code></a>,
+you can get the job configuration the user set up;
+<a class="link" href="BPrintJob.html#BPrintJob_SetSettings" title="SetSettings(), Settings(), IsSettingsMessageValid()"><code class="methodname">SetSettings()</code></a>
+initializes the configuration that's presented to the user.
+</p><p>
+Information about the page layout will be required while printing. If
+that information isn't available in the
+<a class="link" href="BPrintJob.html#BPrintJob_Settings"><code class="methodname">Settings()</code></a>
+<a class="link" href="BMessage.html" title="BMessage"><code class="classname">BMessage</code></a>,
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigJob"><code class="methodname">ConfigJob()</code></a>
+will begin, in essence, by calling
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigPage" title="ConfigPage(), ConfigJob()"><code class="methodname">ConfigPage()</code></a>
+so that the server can ask the user to supply it.
+</p><p>
+To discover which pages the user wants to print, you can call the
+<a class="link" href="BPrintJob.html#BPrintJob_FirstPage" title="FirstPage(), LastPage()"><code class="methodname">FirstPage()</code></a> and
+<a class="link" href="BPrintJob.html#BPrintJob_LastPage"><code class="methodname">LastPage()</code></a>
+functions after
+<a class="link" href="BPrintJob.html#BPrintJob_ConfigJob"><code class="methodname">ConfigJob()</code></a>
+returns:
+</p><pre class="programlisting example cpp"><span class="type">int32</span> <code class="varname">pageCount</code> = <code class="varname">job</code>.<code class="methodname">LastPage</code>() - <code class="varname">job</code>.<code class="methodname">FirstPage</code>() + 1;</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_TheSpoolFile"></a>The Spool File</h4></div></div></div><p>
+The next step after configuring the job is to call
+<a class="link" href="BPrintJob.html#BPrintJob_BeginJob" title="BeginJob()"><code class="methodname">BeginJob()</code></a>
+to set up a spool file and begin the production of pages. After all the pages are
+produced,
+<a class="link" href="BPrintJob.html#BPrintJob_CommitJob" title="CommitJob()"><code class="methodname">CommitJob()</code></a>
+is called to commit them to the printer.
+</p><pre class="programlisting example cpp"><code class="varname">job</code>.<code class="methodname">BeginJob</code>();
+<span class="comment">/* draw pages here*/</span>
+<code class="varname">job</code>.<code class="methodname">CommitJob</code>();</pre><p>
+<a class="link" href="BPrintJob.html#BPrintJob_BeginJob" title="BeginJob()"><code class="methodname">BeginJob()</code></a> and
+<a class="link" href="BPrintJob.html#BPrintJob_CommitJob" title="CommitJob()"><code class="methodname">CommitJob()</code></a>
+bracket all the drawing that's done during the job.
+</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_Cancellation"></a>Cancellation</h4></div></div></div><p>
+A number of things can happen to derail a print job after it has
+started—most significantly, the user can cancel it at any time. To
+be sure that the job hasn't been canceled or something else hasn't
+happened to defeat it, you can call
+<a class="link" href="BPrintJob.html#BPrintJob_CanContinue" title="CanContinue()"><code class="methodname">CanContinue()</code></a>
+at critical junctures in your code. This function will tell you whether it's sensible to
+continue with the job. In the following example, a while loop is used to
+loop through all the pages in the document, or until
+<a class="link" href="BPrintJob.html#BPrintJob_CanContinue" title="CanContinue()"><code class="methodname">CanContinue()</code></a>
+returns false, indicating that the job has been canceled:
+</p><pre class="programlisting example cpp"><code class="varname">job</code>.<code class="methodname">BeginJob</code>();
+while (<code class="varname">job</code>.<code class="methodname">CanContinue</code>() &amp;&amp; <code class="varname">page</code> &lt;= <code class="varname">pageCount</code>) {
+   <span class="comment">/* draw each page here*/</span>
+   <code class="varname">page</code>++;
+}
+<code class="varname">job</code>.<code class="methodname">CommitJob</code>();</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_DrawingOnThePage"></a>Drawing on the Page</h4></div></div></div><p>
+A page is produced by asking one or more
+<a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>s
+to draw within a rectangle that can be mapped to a sheet of paper (excluding the margins
+at the edge of the paper).
+<a class="link" href="BPrintJob.html#BPrintJob_DrawView" title="DrawView() , SpoolPage()"><code class="methodname">DrawView()</code></a>
+requests one <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a> to draw some
+portion of its data and specifies where the data should appear on the
+page. You can call
+<a class="link" href="BPrintJob.html#BPrintJob_DrawView" title="DrawView() , SpoolPage()"><code class="methodname">DrawView()</code></a>
+any number of times for a single page to
+ask any number of <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>s
+to contribute to the page. After all views have drawn,
+<a class="link" href="BPrintJob.html#BPrintJob_SpoolPage"><code class="methodname">SpoolPage()</code></a>
+spools the data to the file that will eventually be committed to the printer.
+<a class="link" href="BPrintJob.html#BPrintJob_SpoolPage"><code class="methodname">SpoolPage()</code></a>
+is called just once for each page. For example:
+</p><pre class="programlisting example cpp">for (<span class="type">int</span> <code class="varname">i</code> = <code class="varname">job</code>.<code class="methodname">FirstPage</code>();
+<code class="varname">job</code>.<code class="methodname">CanContinue</code>() &amp;&amp; <code class="varname">i</code> &lt;= <code class="varname">job</code>.<code class="methodname">LastPage</code>();
+<code class="varname">i</code>++) {
+   . . .
+   <code class="varname">job</code>.<code class="methodname">DrawView</code>(<code class="varname">someView</code>, <code class="varname">viewRect</code>, <code class="varname">pointOnPage</code>);
+   <code class="varname">job</code>.<code class="methodname">DrawView</code>(<code class="varname">anotherView</code>, <code class="varname">anotherRect</code>, <code class="varname">differentPoint</code>);
+   . . .
+   <code class="varname">job</code>.<code class="methodname">SpoolPage</code>();
+}</pre><p>
+<a class="link" href="BPrintJob.html#BPrintJob_DrawView" title="DrawView() , SpoolPage()"><code class="methodname">DrawView()</code></a>
+calls the <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>'s
+<a class="link" href="BView.html#BView_Draw" title="Draw()"><code class="methodname">Draw()</code></a> function. That function must be
+prepared to draw either for the screen or on the printed page. It can
+test the destination of its output by calling the
+<a class="link" href="BView.html#BView_Draw" title="Draw()"><code class="methodname">Draw()</code></a>
+<a class="link" href="BView.html#BView_IsPrinting" title="IsPrinting()"><code class="methodname">IsPrinting()</code></a>
+function.
+</p><div class="admonition note"><div class="title">Note</div><div class="graphic"><img class="icon" alt="Note" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>Don't use the
+<a class="link" href="BView.html#BView_Bounds" title="Bounds()"><code class="methodname">BView::Bounds()</code></a>
+function to determine the area to render. Instead, use the update rectangle passed to the
+<a class="link" href="BView.html#BView_Draw" title="Draw()"><code class="methodname">BView::Draw()</code></a> function.</p></div></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_A_Complete_Printing_Function"></a>A Complete Printing Function</h4></div></div></div><p>
+This function puts together all the above code snippets and handles the
+printing of a document (minus the actual drawing and visual status
+information presented to the user as printing goes on).
+</p><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">MyDocumentManager</code>::<code class="methodname">Print</code>() {
+   <span class="type">status_t</span> <code class="varname">result</code> = <code class="constant">B_OK</code>;
+   <code class="classname">BPrintJob</code> <code class="varname">job</code>("document's name");
+
+   <span class="comment">// If we have no setup message, we should call ConfigPage()</span>
+   <span class="comment">// You must use the same instance of the BPrintJob object</span>
+   <span class="comment">// (you can't call the previous "PageSetup()" function, since it</span>
+   <span class="comment">// creates its own BPrintJob object).</span>
+
+   if (!<code class="varname">setup</code>) {
+      <code class="varname">result</code> = <code class="varname">job</code>.<code class="methodname">ConfigPage</code>();
+      if (<code class="varname">result</code> == <code class="constant">B_OK</code>) {
+         <span class="comment">// Get the user Settings</span>
+         <code class="varname">setup</code> = <code class="varname">job</code>.<code class="methodname">Settings</code>();
+
+         <span class="comment">// Use the new settings for your internal use</span>
+         <code class="varname">paper_rect</code> = <code class="varname">job</code>.<code class="methodname">PaperRect</code>();
+         <code class="varname">printable_rect</code> = <code class="varname">job</code>.<code class="methodname">PrintableRect</code>();
+      }
+   }
+
+   if (<code class="varname">result</code> == <code class="constant">B_OK</code>) {
+      <span class="comment">// Setup the driver with user settings</span>
+      <code class="varname">job</code>.<code class="methodname">SetSettings</code>(<code class="varname">setup</code>);
+
+      <code class="varname">result</code> = <code class="varname">job</code>.<code class="methodname">ConfigJob</code>();
+      if (<code class="varname">result</code> == <code class="constant">B_OK</code>) {
+         <span class="comment">// WARNING: here, setup CANNOT be NULL.</span>
+         if (<code class="varname">setup</code> == <code class="constant">NULL</code>) {
+            <span class="comment">// something's wrong, handle the error and bail out</span>
+         }
+         delete <code class="varname">setup</code>;
+
+         <span class="comment">// Get the user Settings</span>
+         <code class="varname">setup</code> = <code class="varname">job</code>.<code class="methodname">Settings</code>();
+
+         <span class="comment">// Use the new settings for your internal use</span>
+         <span class="comment">// They may have changed since the last time you read it</span>
+         <code class="varname">paper_rect</code> = <code class="varname">job</code>.<code class="methodname">PaperRect</code>();
+         <code class="varname">printable_rect</code> = <code class="varname">job</code>.<code class="methodname">PrintableRect</code>();
+
+         <span class="comment">// Now you have to calculate the number of pages</span>
+         <span class="comment">// (note: page are zero-based)</span>
+         <span class="type">int32</span> <code class="varname">firstPage</code> = <code class="varname">job</code>.<code class="methodname">FirstPage</code>();
+         <span class="type">int32</span> <code class="varname">lastPage</code> = <code class="varname">job</code>.<code class="methodname">LastPage</code>();
+
+         <span class="comment">// Verify the range is correct</span>
+         <span class="comment">// 0 ... LONG_MAX -&gt; Print all the document</span>
+         <span class="comment">// n ... LONG_MAX -&gt; Print from page n to the end</span>
+         <span class="comment">// n ... m -&gt; Print from page n to page m</span>
+
+         if (<code class="varname">lastPage</code> &gt; <code class="varname">your_document_last_page</code>)
+            <code class="varname">last_page</code> = <code class="varname">your_document_last_page</code>;
+
+         <span class="type">int32</span> <code class="varname">nbPages</code> = <code class="varname">lastPage</code> - <code class="varname">firstPage</code> + 1;
+
+         <span class="comment">// Verify the range is correct</span>
+         if (<code class="varname">nbPages</code> &lt;= 0)
+            return <code class="constant">B_ERROR</code>;
+
+         <span class="comment">// Now you can print the page</span>
+         <code class="varname">job</code>.<code class="methodname">BeginJob</code>();
+
+         <span class="comment">// Print all pages</span>
+         <span class="type">bool</span> <code class="varname">can_continue</code> = <code class="varname">job</code>.<code class="methodname">CanContinue</code>();
+
+         for (<span class="type">int</span> <code class="varname">i</code>=<code class="varname">firstPage</code> ; <code class="varname">can_continue</code> &amp;&amp; <code class="varname">i</code>&lt;=<code class="varname">lastPage</code> ; <code class="varname">i</code>++) {
+            <span class="comment">// Draw all the needed views</span>
+            <code class="varname">job</code>.<code class="methodname">DrawView</code>(<code class="varname">someView</code>, <code class="varname">viewRect</code>, <code class="varname">pointOnPage</code>);
+            <code class="varname">job</code>.<code class="methodname">DrawView</code>(<code class="varname">anotherView</code>, <code class="varname">anotherRect</code>, <code class="varname">differentPoint</code>);
+
+            <span class="comment">// If the document have a lot of pages, you can update
+               a BStatusBar, here</span>
+            <span class="comment">// or else what you want...</span>
+            <code class="function">update_status_bar</code>(<code class="varname">i</code>-<code class="varname">firstPage</code>, <code class="varname">nbPages</code>);
+
+            <span class="comment">// Spool the page</span>
+            <code class="varname">job</code>.<code class="methodname">SpoolPage</code>();
+
+            <span class="comment">// Cancel the job if needed.</span>
+            <span class="comment">// You can for exemple verify if the user pressed the</span>
+            <span class="comment">// ESC key or (SHIFT + '.')...</span>
+            if (<code class="varname">user_has_canceled</code>)
+            {
+               <span class="comment">// tell the print_server to cancel the printjob</span>
+               <code class="varname">job</code>.<code class="methodname">CancelJob</code>();
+               <code class="varname">can_continue</code> = <code class="constant">false</code>;
+               break;
+            }
+
+            <span class="comment">// Verify that there was no error (disk full for example)</span>
+            <code class="varname">can_continue</code> = <code class="varname">job</code>.<code class="methodname">CanContinue</code>();
+         }
+
+         <span class="comment">// Now, you just have to commit the job!</span>
+         if (<code class="varname">can_continue</code>)
+            <code class="varname">job</code>.<code class="methodname">CommitJob</code>();
+         else
+            <code class="varname">result</code> = <code class="constant">B_ERROR</code>;
+      }
+   }
+
+   return <code class="varname">result</code>;
+}</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BPrintJob_Overview_DrawingCoordinates"></a>Drawing Coordinates</h4></div></div></div><p>
+When a <a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>
+draws for the printer, it draws within the printable
+rectangle of a page—a rectangle that matches the size of a sheet of
+paper minus the unprinted margin around the paper's edge. The
+<a class="link" href="BPrintJob.html#BPrintJob_PaperRect" title="PaperRect() , PrintableRect()"><code class="methodname">PaperRect()</code></a>
+function returns a rectangle that measures a sheet of paper and
+<a class="link" href="BPrintJob.html#BPrintJob_PrintableRect"><code class="methodname">PrintableRect()</code></a>
+returns the printable rectangle, as illustrated in this
+diagram.
+</p><div class="mediaobject"><img src="./images/TheInterfaceKit/printjob1.png" alt="Paper And Print Rectangles" /></div><p>
+Both rectangles are stated in a coordinate system that has its origin at
+the left top corner of the page. Thus, the left and top sides of the
+rectangle returned by
+<a class="link" href="BPrintJob.html#BPrintJob_PaperRect" title="PaperRect() , PrintableRect()"><code class="methodname">PaperRect()</code></a>
+are always 0.0.
+<a class="link" href="BPrintJob.html#BPrintJob_PrintableRect"><code class="methodname">PrintableRect()</code></a> locates
+the printable rectangle on the paper rectangle. However,
+<a class="link" href="BPrintJob.html#BPrintJob_DrawView" title="DrawView() , SpoolPage()"><code class="methodname">DrawView()</code></a>
+assumes coordinates that are local to the printable rectangle—that
+is, an origin at the left top corner of the printable rectangle rather
+than the paper rectangle.
+</p><p>
+The diagram below shows the left top coordinates of the printable rectangle as
+<a class="link" href="BPrintJob.html#BPrintJob_PrintableRect"><code class="methodname">PrintableRect()</code></a>
+would report them and as
+<a class="link" href="BPrintJob.html#BPrintJob_DrawView" title="DrawView() , SpoolPage()"><code class="methodname">DrawView()</code></a>
+would assume them, given a half-inch margin.
+</p><div class="mediaobject"><img src="./images/TheInterfaceKit/printjob2.png" alt="Views In Page Layout With Margin" /></div><p>
+<a class="link" href="BView.html#BView_Draw" title="Draw()"><code class="methodname">Draw()</code></a>
+always draws in the
+<a class="link" href="BView.html" title="BView"><code class="classname">BView</code></a>'s
+own coordinate system. Those
+coordinates are mapped to locations in the printable rectangle as
+specified by the arguments passed to
+<a class="link" href="BPrintJob.html#BPrintJob_DrawView" title="DrawView() , SpoolPage()"><code class="methodname">DrawView()</code></a>.
+</p><p>
+See also:
+<a class="link" href="BView.html#BView_IsPrinting" title="IsPrinting()"><code class="methodname">BView::IsPrinting()</code></a>
+</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="BPopUpMenu_Overview.html">BPopUpMenu</a>  Up: <a href="TheInterfaceKit_Overview.html">The Interface Kit</a>  Next: <a href="BRadioButton_Overview.html">BRadioButton</a> </div><div id="footerB"><div id="footerBL"><a href="BPopUpMenu_Overview.html" title="BPopUpMenu"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheInterfaceKit_Overview.html" title="The Interface Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="BRadioButton_Overview.html" title="BRadioButton"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

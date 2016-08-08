@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Mail Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheMailKit_Overview.html" title="The Mail Kit" /><link rel="prev" href="TheMailKit_Overview.html" title="The Mail Kit" /><link rel="next" href="TheMailDaemon_Overview.html" title="The Mail Daemon" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheMailKit_Overview.html" title="The Mail Kit"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheMailKit_Overview.html" title="The Mail Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TheMailDaemon_Overview.html" title="The Mail Daemon"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Mail Kit</div></div><div id="headerB">Prev: <a href="TheMailKit_Overview.html">The Mail Kit</a>  Up: <a href="TheMailKit_Overview.html">The Mail Kit</a>  Next: <a href="TheMailDaemon_Overview.html">The Mail Daemon</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMailKit_Overview_Introduction"></a>Introduction</h2></div></div></div><p>The Mail Kit provides Internet e-mail messaging services. These services
+include:</p><ul class="itemizedlist"><li><p>Configuration of the user's mail accounts.</p></li><li><p>Sending messages using the Simple Mail Transfer Protocol (SMTP).</p></li><li><p>Receiving messages via the Post Office Protocol (POP).</p></li><li><p>Automatic, timed sending and receiving of messages.</p></li><li><p>Encoding and decoding base-64 encoded data.</p></li></ul><p>An assortment of global C functions are provided by the Mail Kit to
+configure the mail daemon and process base-64 data. See
+"<a class="link" href="TheMailDaemon_Overview.html" title="The Mail Daemon">The Mail Daemon</a>"
+for information on how to use these functions.</p><p>Outgoing mail messages are constructed and sent using the
+<a class="link" href="BMailMessage.html" title="BMailMessage"><code class="classname">BMailMessage</code></a>
+class.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMailKit_MailMessageFiles"></a>Mail Message Files</h3></div></div></div><p>Every mail message is stored in an individual file with attached
+attributes that describe the message in detail; you can query the file
+system to obtain information about the sender, subject, and receiver of
+the message, among other things. See
+"<a class="xref" href="TheMailKit_Overview_Introduction.html#TheMailKit_QueryingMailMessages" title="Querying Mail Messages">Querying Mail Messages</a>" below for
+more detailed information and an example program.</p><p>Every message the user writes is saved in a file until it's sent by the
+mail daemon (and may or may not be deleted after being sent). Likewise,
+messages that the mail daemon has retrieved are also stored in files on a
+local disk.</p><p>The process of sending a mail message works something like this:</p><ul class="itemizedlist"><li><p>The user writes a new mail message and chooses the mail writing
+program's "Send" option.</p></li><li><p>The mail writing program creates a
+<a class="link" href="BMailMessage.html" title="BMailMessage"><code class="classname">BMailMessage</code></a> object and configures
+it based on the user's inputs by setting the "To," "Subject," and other
+header fields appropriately, and by storing the message content into
+the <a class="link" href="BMailMessage.html" title="BMailMessage"><code class="classname">BMailMessage</code></a>.</p></li><li><p>The program then calls the
+<a class="link" href="BMailMessage.html" title="BMailMessage"><code class="classname">BMailMessage</code></a>
+object's <a class="link" href="BMailMessage.html#BMailMessage_Send" title="Send()"><code class="methodname">Send()</code></a> function to
+tell the mail daemon to send the message.</p></li><li><p>The mail daemon creates a disk file that contains the message. The
+message content is stored in the file itself, and attributes are
+created to contain the "To," "Subject," and other relevant header
+fields. See
+"<a class="xref" href="TheMailKit_Overview_Introduction.html#TheMailKit_QueryingMailMessages" title="Querying Mail Messages">Querying Mail Messages</a>"
+for more information. The
+message's status attribute is set to "New".</p></li><li><p>The next time the mail daemon's
+<a class="link" href="TheMailDaemon_Functions.html#check_for_mail" title="check_for_mail()"><code class="function">check_for_mail()</code></a> function is called
+(either automatically or explicitly), the daemon sends the message via
+SMTP, then changes the message's status attribute to "Sent". This is
+done for all mail messages whose status is "Pending".</p></li></ul><p>After sending outgoing messages, the mail daemon will also check to see
+if any incoming mail is waiting to be retrieved. If there is, it proceeds
+something like this:</p><ul class="itemizedlist"><li><p>The mail daemon fetches the first message from the mail server via
+POP.</p></li><li><p>The daemon creates a new mail message file, and the message is
+written into the file. The file contains the Internet headers, message
+content, and all enclosures (if any).</p></li><li><p>The mail daemon scans the message and adds attributes to the message
+file for each of the header fields, as well as a couple of extra
+attributes. These are described in detail in
+"<a class="xref" href="TheMailKit_Overview_Introduction.html#TheMailKit_QueryingMailMessages" title="Querying Mail Messages">Querying Mail Messages</a>"
+below.</p></li><li><p>The daemon continues reading mail messages from the mail server until
+there aren't any left.</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMailKit_QueryingMailMessages"></a>Querying Mail Messages</h3></div></div></div><p>The Mail Kit takes full advantage of the BeOS attribute and query system.
+Each message received is parsed by the mail daemon and important
+information about it is converted into a defined collection of attributes
+attached to the file. This makes it extremely easy to create applications
+that search for messages meeting specific parameters. In an example to
+follow shortly, we'll create a program that lists all unread messages.</p><p>Once the mail daemon has received a message and saved it to disk, any
+application can query the file system to locate messages that meet
+certain parameters, then read the attributes and message content to
+present information about that message to the user.</p><p>The following attributes are provided by the Mail Kit:</p><div class="informaltable"><table border="1"><colgroup><col /><col /><col /></colgroup><thead><tr><th>Constant</th><th>Attribute Name</th><th>Description</th></tr></thead><tbody><tr><td><code class="constant">B_MAIL_ATTR_NAME</code></td><td>MAIL:name</td><td>Name of the mail file.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_STATUS</code></td><td>MAIL:status</td><td>
+<p>Is a string that identifies the status of the message.
+Possible values are:</p>
+
+<div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>String</th><th>Description</th></tr></thead><tbody><tr><td>"Error"</td><td>An error occurred trying to send the message.</td></tr><tr><td>"New"</td><td>The message has not been read yet.</td></tr><tr><td>"Pending"</td><td>The message has not been sent yet.</td></tr><tr><td>"Read"</td><td>The message has been read.</td></tr><tr><td>"Sent"</td><td>The message has been sent.</td></tr></tbody></table></div>
+</td></tr><tr><td><code class="constant">B_MAIL_ATTR_PRIOIRITY</code></td><td>MAIL:priority</td><td>"Priority" field value.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_TO</code></td><td>MAIL:to</td><td>The primary recipient's e-mail address;
+contained within the "To" header of the message.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_CC</code></td><td>MAIL:cc</td><td>The addresses to whom the message is carbon copied;
+contained within the "Cc" header of the message.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_FROM</code></td><td>MAIL:from</td><td>The sender's e-mail address;
+contained within the "From" header of the message.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_SUBJECT</code></td><td>MAIL:subject</td><td>String containing the subject of the message;
+contained within the "Subject" header of the message.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_REPLY</code></td><td>MAIL:reply</td><td>The sender's reply-to address;
+contained within the "Reply-to" header of the message.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_WHEN</code></td><td>MAIL:when</td><td>BeOS time field (<code class="constant">B_TIME_TYPE</code>) when the message was sent;
+contained within the "When" header of the message.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_FLAGS</code></td><td>MAIL:flags</td><td>32-bit integer (<span class="type">int32</span>) flags which can be any combination
+of the following values:
+
+<div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><code class="constant">B_MAIL_PENDING</code></td><td>Message is waiting to be sent.</td></tr><tr><td><code class="constant">B_MAIL_SENT</code></td><td>Message has been sent.</td></tr><tr><td><code class="constant">B_MAIL_SAVE</code></td><td>Mail will be saved after being sent.</td></tr></tbody></table></div>
+</td></tr><tr><td><code class="constant">B_MAIL_ATTR_RECIPIENTS</code></td><td>MAIL:recipients</td><td>List of all recipients of the message (primary, cc, and bcc), but is
+only valid for outgoing messages (this attribute doesn't exist on incoming
+messages).</td></tr><tr><td><code class="constant">B_MAIL_ATTR_MIME</code></td><td>MAIL:mime</td><td>A string that defines the version number of the
+<acronym class="acronym">MIME</acronym> specification used to transmit any enclosures
+attached to the file. This attribute is only present if the file has one or
+more enclosures.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_HEADER</code></td><td>MAIL:header_length</td><td>An <span class="type">int32</span> value containing the length of the message
+header.</td></tr><tr><td><code class="constant">B_MAIL_ATTR_CONTENT</code></td><td>MAIL:content_length</td><td>An <span class="type">int32</span> value containing the length of the message
+content.</td></tr></tbody></table></div><p>The following attributes are indexed:</p><ul class="itemizedlist"><li><p><code class="constant">B_MAIL_ATTR_NAME</code></p></li><li><p><code class="constant">B_MAIL_ATTR_STATUS</code></p></li><li><p><code class="constant">B_MAIL_ATTR_PRIORITY</code></p></li><li><p><code class="constant">B_MAIL_ATTR_TO</code></p></li><li><p><code class="constant">B_MAIL_ATTR_CC</code></p></li><li><p><code class="constant">B_MAIL_ATTR_FROM</code></p></li><li><p><code class="constant">B_MAIL_ATTR_SUBJECT</code></p></li><li><p><code class="constant">B_MAIL_ATTR_REPLY</code></p></li><li><p><code class="constant">B_MAIL_ATTR_WHEN</code></p></li><li><p><code class="constant">B_MAIL_ATTR_FLAGS</code></p></li></ul><p>The headers, the contents of the messag,e and the enclosures (in base-64
+encoded form) can all be found in the file itself and can be read using a
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>
+object. See "<a class="xref" href="TheStorageKit.html" title="The Storage Kit">The Storage Kit</a>"
+in the for further information on reading files.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMailKit_QueriesAndMailMessages"></a>Queries and Mail Messages</h4></div></div></div><p>Now that you know what attributes are available on mail message files,
+and which attributes are indexed, you can consider all the clever things
+you can use them for. Let's look at an example program that, from a
+Terminal window, lets you see a list of the unread mail you have.</p><pre class="programlisting example cpp"><span class="type">void</span> <code class="function">main</code>(<span class="type">void</span>)
+{
+   <code class="classname">BQuery</code> <code class="varname">query</code>;
+   <code class="classname">BNode</code> <code class="varname">node</code>;
+   <code class="classname">BVolume</code> <code class="varname">vol</code>;
+   <code class="classname">BVolumeRoster</code> <code class="varname">vroster</code>;
+   <span class="type">entry_ref</span> <code class="varname">ref</code>;
+   <span class="type">char</span> <code class="varname">buf</code>[256];
+   <span class="type">int32</span> <code class="varname">message_count</code> = 0;
+
+   <code class="varname">vroster</code>.<code class="methodname">GetBootVolume</code>(&amp;<code class="varname">vol</code>);
+   <code class="varname">query</code>.<code class="methodname">SetVolume</code>(&amp;<code class="varname">vol</code>);</pre><p>The program begins by establishing needed variables, then using a
+<a class="link" href="BVolumeRoster.html" title="BVolumeRoster"><code class="classname">BVolumeRoster</code></a>
+to set the query's search volume to the boot disk. This is
+covered in more detail in the Storage Kit chapter.</p><pre class="programlisting example cpp">   if (<code class="varname">query</code>.<code class="methodname">SetPredicate</code>("MAIL:status = New") != <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Error: can't set query predicate.n");
+      return;
+   }</pre><p>Then the query is configured to search for new mail. New messages can be
+identified by the <code class="constant">B_MAIL_ATTR_STATUS</code> attribute (called "MAIL:status")
+having a string value of "New". If an error occurs, the program prints an
+error end returns.</p><pre class="programlisting example cpp">   if (<code class="varname">query</code>.<code class="methodname">Fetch</code>() != <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Error: new mail query failed.n");
+      return;
+   }</pre><p>The query is told to fetch. Again, if this fails, an error message is
+displayed and the program returns.</p><pre class="programlisting example cpp">   while (<code class="varname">query</code>.<code class="methodname">GetNextRef</code>(&amp;<code class="varname">ref</code>) == <code class="constant">B_OK</code>) {
+      <code class="varname">message_count</code>++;      <span class="comment">// Increment message counter</span></pre><p>The loop scanning through the fetched new messages begins by incrementing
+the counter of new messages received.</p><pre class="programlisting example cpp">      if (<code class="varname">node</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">ref</code>) != <code class="constant">B_OK</code>) {
+         <code class="function">printf</code>("Error: error scanning new messages.n");
+         return;
+      }</pre><p>Then a <a class="link" href="BNode.html" title="BNode"><code class="classname">BNode</code></a>
+is set to reference the message file. If this fails, the
+program displays an error message and quits.</p><pre class="programlisting example cpp">      <code class="varname">buf</code>[0] = '0';      <span class="comment">// If error, use empty string</span>
+      <code class="varname">node</code>.<code class="methodname">ReadAttr</code>(<code class="constant">B_MAIL_ATTR_FROM</code>, <code class="constant">B_STRING_TYPE</code>, 0,
+                    <code class="varname">buf</code>, 255);
+      <code class="varname">buf</code>[20] = '0';      // Truncate to 20 characters
+      <code class="function">printf</code>("%3d From: %-20s", <code class="varname">message_count</code>, <code class="varname">buf</code>);</pre><p>The buffer we're using the receive the attribute values is initialized to
+an empty string, then we call
+<a class="link" href="BNode.html" title="BNode"><code class="classname">BNode</code></a>'s
+<a class="link" href="BNode.html#BNode_ReadAttr" title="ReadAttr(), WriteAttr(), RemoveAttr()"><code class="methodname">ReadAttr()</code></a> function to read the
+<code class="constant">B_MAIL_ATTR_FROM</code> attribute into the buffer. We then truncate the read
+string to 20 characters for display purposes (to make it fit into the
+table we're outputting) and print the message number and sender
+information.</p><pre class="programlisting example cpp">      <code class="varname">buf</code>[0] = '0';      <span class="comment">// If error, use empty string</span>
+      <code class="varname">node</code>.<code class="methodname">ReadAttr</code>(<code class="constant">B_MAIL_ATTR_SUBJECT</code>, <code class="constant">B_STRING_TYPE</code>, 0, <code class="varname">buf</code>, 255);
+      <code class="varname">buf</code>[40] = '0';      // Truncate to 40 characters
+      <code class="function">printf</code>(" Sub: %sn", <code class="varname">buf</code>);
+   }</pre><p>The buffer is reset to an empty string and the <code class="constant">B_MAIL_ATTR_SUBJECT</code>
+attribute is read into it. This string is truncated to 40 characters,
+then printed.</p><p>This loop continues until no more new messages are found; this is
+detected when
+<a class="link" href="BQuery.html#BQuery_GetNextRef"><code class="methodname">GetNextRef()</code></a>
+returns an error.</p><pre class="programlisting example cpp">   if (<code class="varname">message_count</code>) {
+      <code class="function">printf</code>("%d new messages.n", <code class="varname">message_count</code>);
+   }
+   else {
+      <code class="function">printf</code>("No new messages.n");
+   }
+}</pre><p>Finally, the number of new messages is printed. If there aren't any
+messages, we very politely print "No new messages." rather than "0 new
+messages," for a little added panache.</p><p>This simple example demonstrates how you can use the attributes provided
+by the Mail Kit to create mail message reading applications. The message
+body and attachments are stored within the file itself, and can be read
+using the functions described in the
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a> section in
+<a class="xref" href="TheStorageKit.html" title="The Storage Kit">The Storage Kit</a> chapter</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMailKit_TheEmailFileType"></a>The E-mail File Type</h3></div></div></div><p>The mail daemon ensures, when it's first launched at system boot time,
+that the BeOS File Type database includes an entry for e-mail files.
+E-mail files have the MIME string "text/x-email", which is represented by
+the constant <code class="constant">B_MAIL_TYPE</code>.</p><p>The E-mail entry in the File Type database includes a list of the
+attributes on which you can search. You can look up this information
+using the <a class="link" href="BMimeType.html" title="BMimeType"><code class="classname">BMimeType</code></a>
+class's
+<a class="link" href="BMimeType.html#BMimeType_GetAttrInfo" title="GetAttrInfo(), SetAttrInfo()"><code class="methodname">GetAttrInfo()</code></a> function:</p><pre class="programlisting example cpp"><code class="classname">BMimeType</code> <code class="varname">mime</code>;
+<code class="classname">BMessage</code> <code class="varname">message</code>;
+
+<code class="varname">mime</code>.<code class="methodname">SetTo</code>(<code class="constant">B_MAIL_TYPE</code>);
+<code class="varname">mime</code>.<code class="methodname">GetAttrInfo</code>(&amp;<code class="varname">message</code>);</pre><p>After running this code, the message contains the description of the
+attributes available on e-mail files. The message has three useful arrays
+of items:</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Message Item</th><th>Description</th></tr></thead><tbody><tr><td><code class="varname">attr:public_name</code></td><td>The user-readable name of the attribute.</td></tr><tr><td><code class="varname">attr:name</code></td><td>The attribute name used for
+<a class="link" href="BNode.html" title="BNode"><code class="classname">BNode</code></a> and
+<code class="function">fs_attr_*</code> calls.</td></tr><tr><td><code class="varname">attr:type</code></td><td>The type of data the attribute contains.</td></tr></tbody></table></div><p>You can examine the items in each of these arrays in the message to get
+useful information about the attributes you can reference on the e-mail
+files. For example:</p><pre class="programlisting example cpp"><code class="function">printf</code>("Public name: %sn", <code class="methodname">FindString</code>("attr:public_name", 1));
+<code class="function">printf</code>("Name: %sn", <code class="methodname">FindString</code>("attr:name", 1));</pre><p>This code will print the public name and the attribute name of the second
+attribute registered in the File Type database entry for e-mail files. In
+the current implementation of the Mail Kit, this would print:</p><pre class="screen">Public name: Subject
+Name: MAIL:subject</pre><p>The number of (and order of) attributes in the database entry might
+change in the future—and that's where the File Type database comes
+in handy. If, a year from now, Be adds more attributes to e-mail files,
+your File Type database-savvy application won't have to be updated to
+support them.</p><p>At this time, the File Type database has attribute information records
+for each of the following attributes:</p><ul class="itemizedlist"><li><p><code class="constant">B_MAIL_ATTR_NAME</code></p></li><li><p><code class="constant">B_MAIL_ATTR_STATUS</code></p></li><li><p><code class="constant">B_MAIL_ATTR_PRIORITY</code></p></li><li><p><code class="constant">B_MAIL_ATTR_TO</code></p></li><li><p><code class="constant">B_MAIL_ATTR_FROM</code></p></li><li><p><code class="constant">B_MAIL_ATTR_SUBJECT</code></p></li><li><p><code class="constant">B_MAIL_ATTR_REPLY</code></p></li><li><p><code class="constant">B_MAIL_ATTR_WHEN</code></p></li></ul><p>You can obtain information on these attributes, their formats, and their
+user-readable names by looping through the arrays in the message until
+the <code class="methodname">BMessage:Find…()</code> function returns
+<code class="constant">NULL</code> or <code class="constant">B_BAD_INDEX</code>.</p><p>For more information on the <code class="classname">BMimeType</code> class
+and the File Type database, see
+<a class="link" href="BMimeType.html" title="BMimeType"><code class="classname">BMimeType</code></a>
+in <a class="xref" href="TheStorageKit.html" title="The Storage Kit">The Storage Kit</a>.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheMailKit_Overview.html">The Mail Kit</a>  Up: <a href="TheMailKit_Overview.html">The Mail Kit</a>  Next: <a href="TheMailDaemon_Overview.html">The Mail Daemon</a> </div><div id="footerB"><div id="footerBL"><a href="TheMailKit_Overview.html" title="The Mail Kit"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheMailKit_Overview.html" title="The Mail Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TheMailDaemon_Overview.html" title="The Mail Daemon"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

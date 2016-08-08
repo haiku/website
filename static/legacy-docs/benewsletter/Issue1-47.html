@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-46.html" title="Issue 1-46, October 23, 1996" /><link rel="next" href="Issue1-48.html" title="Issue 1-48, November 6, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-46.html" title="Issue 1-46, October 23, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-48.html" title="Issue 1-48, November 6, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-46.html">Issue 1-46, October 23, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-48.html">Issue 1-48, November 6, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-47"></a>Issue 1-47, October 30, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-47"></a>Be Engineering Insights: Filtering Out the Noise</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Peter</span> <span class="surname">Potrebic</span></span></div></div></div><p>
+One of the new features in DR8 is message filtering, which is based on
+the <code class="classname">BMessageFilter</code> class. This class, along with associated functions in
+<code class="classname">BLooper</code> and <code class="classname">BHandler</code>,
+gives developers a powerful tool for filtering
+messages. Prior to DR8, the BeOS allowed you to filter only a few
+system-defined messages, such as <code class="constant">B_MOUSE_DOWN</code> and <code class="constant">B_KEY_DOWN</code>. This
+old-style filtering was part of the <code class="classname">BWindow</code> class (see the sections on
+<code class="classname">BWindow</code>::<code class="methodname">FilterMouseDown</code>, <code class="methodname">FilterKeyDown</code>,
+and so on in The Be Book). The
+new filtering system is much improved.
+</p><p>
+It's worth noting that the old style of filtering still exists in DR8,
+but it's on the chopping block, and one day soon it will be gone. So
+now's the time to learn about the new filtering mechanism and to update
+your code.
+</p><p>
+<code class="classname">BMessageFilter</code> provides two styles of filtering. The first is based on a
+built-in hook function, which you can override in your subclass:
+</p><pre class="programlisting cpp">
+virtual <span class="type">filter_result</span>
+  <code class="classname">BMessageFilter</code>::<code class="methodname">Filter</code>(<code class="classname">BMessage</code> *<code class="parameter">msg</code>, <code class="classname">BHandler</code> **<code class="parameter">target</code>)
+</pre><p>
+The <code class="methodname">Filter()</code> function is then called for any message that matches the
+"filter" criteria. The target parameter indicates which handler is
+destined to receive the message. By passing a pointer to a pointer,
+you're allowed to alter the target. The hook function returns a
+filter_result that is either <code class="constant">B_SKIP_MESSAGE</code> or <code class="constant">B_DISPATCH_MESSAGE</code>. The
+latter tells the system to continue processing the message, while the
+former says to stop, the message should be discarded.
+</p><p>
+<code class="classname">BMessageFilter</code> also supports a function pointer interface, removing the
+need for subclassing (this ought to make some of you out there happy).
+With this style you can define a filter function like so:
+</p><pre class="programlisting cpp">
+<span class="type">filter_result</span>
+  <code class="function">my_filter_func</code>(<code class="classname">BMessage</code> *<code class="parameter">msg</code>, <code class="classname">BHandler</code> **<code class="parameter">target</code>,
+      <code class="classname">BLooper</code> *<code class="parameter">looper</code>)
+</pre><p>
+You can then pass a pointer to this function to the <code class="classname">BMessageFilter</code>
+constructor:
+</p><pre class="programlisting cpp">
+new <code class="classname">BMessageFilter</code>(... &lt;other arguments&gt; ...,
+     <code class="parameter">my_filter_func</code>)
+</pre><p>
+What's with "&lt;other arguments&gt;" you might ask? Let me explain. The
+<code class="classname">BMessageFilter</code> class is designed to filter messages using various
+criteria, specified using these &lt;other arguments&gt;. Are you interested in
+a filtering a particular kind of message, for example, the <code class="constant">B_MOUSE_DOWN</code>
+message, or are you interested in any message sent by a particular party,
+for example, any third party? Maybe you're interested in some
+combination? <code class="classname">BMessageFilter</code>s give you all this power and more.
+</p><p>
+There are three distinct characteristics of a message that can be used to
+define the filter criteria:
+</p><ul class="itemizedlist"><li><p>
+"How" How did the message arrive. Was it dropped by a user or
+programatically delivered using <code class="methodname">PostMessage</code> or
+<code class="methodname">SendMessage</code>. The options
+are <code class="constant">B_ANY_DELIVERY</code>, <code class="constant">B_DROPPED_DELIVERY</code>,
+or <code class="constant">B_PROGRAMMED_DELIVERY</code>.
+</p></li><li><p>
+"Who" Who originated the message. Was it the app itself or was it
+some other application. The options are <code class="constant">B_ANY_SOURCE</code>,
+<code class="constant">B_LOCAL_SOURCE</code>, or <code class="constant">B_REMOTE_SOURCE</code>.
+</p></li><li><p>
+"What" What type of message is it. This is the "what" field of a
+<code class="classname">BMessage</code> and can be any value.
+</p></li></ul><p>
+Now the "&lt;other arguments&gt;" will make sense:
+</p><pre class="programlisting cpp">
+new <code class="classname">BMessageFilter</code>(<span class="type">message_delivery</span> <code class="parameter">how</code>,
+                   <span class="type">message_source</span>   <code class="parameter">who</code>,
+                   <span class="type">ulong</span>            <code class="parameter">what</code>)
+</pre><p>
+These three criteria can be combined in arbitrary ways. Here are several
+examples:
+</p><ul class="itemizedlist"><li><p>
+You want to filter a particular message, say B_KEY_DOWN, but you're
+not interested in how the message was delivered or who sent the
+message. Here's the filter to want:
+</p><pre class="programlisting cpp">
+new <code class="classname">TMyMessageFilter</code>(<code class="constant">B_ANY_DELIVERY</code>, <code class="constant">B_ANY_SOURCE</code>,
+     <code class="constant">B_KEY_DOWN</code>)
+</pre><p>
+This example is basically mimics the old-style <code class="classname">BWindow</code>::<code class="methodname">FilterKeyDown</code>()
+function.
+</p></li><li><p>
+You want to filter any dropped message that came from another
+application, and instead of subclassing and overriding the <code class="methodname">Filter()</code>
+function, you've decided to write your own filter function:
+</p><pre class="programlisting cpp">
+new <code class="classname">BMessageFilter</code>(<code class="constant">B_DROPPED_DELIVERY</code>, <code class="constant">B_REMOTE_SOURCE</code>,
+    <code class="varname">my_filter</code>)
+</pre><p>
+By not specifying a particular "what" field, all dropped messages will
+be filtered, regardless of the "what" field.
+</p></li><li><p>
+You're really nosy and want to peak at every stinking message. Here's
+what you would do:
+</p><pre class="programlisting cpp">
+new <code class="classname">TNosyMessageFilter</code>(<code class="constant">B_ANY_DELIVERY</code>, <code class="constant">B_ANY_SOURCE</code>)
+</pre></li></ul><p>
+Now that you know how to create filters, you need to know how to attach
+them to loopers and handlers in order to actually do anything. You've got
+a couple of options here. You can filter messages targeted for a specific
+handler, for example, a specific view in a window. Or you can filter all
+messages that go through a particular looper, for example, all messages
+being dispatched by a window. You chose between these alternative by
+adding the filter to the appropriate object:
+</p><pre class="programlisting cpp">
+<code class="classname">BLooper</code>::<code class="methodname">AddCommonFilter</code>(<code class="classname">BMessageFilter</code> *<code class="parameter">filter</code>)
+</pre><p>
+or
+</p><pre class="programlisting cpp">
+<code class="classname">BHandler</code>::<code class="methodname">AddFilter</code>(<code class="classname">BMessageFilter</code> *<code class="parameter">filter</code>)
+</pre><p>
+Filters added to a handler only apply to that handler, while filters
+added to a looper using <code class="methodname">AddCommonFilter</code> apply to all messages dispatched
+by that looper.
+</p><p>
+That's about all there is to filtering. Until next time, happy filtering.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News1-47"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+I'll admit it. I didn't have enough time to spend on this week's article.
+I was off in Seattle giving demos and writing articles for magazines. So
+those of you who are very astute will notice that I'm treading water this
+week and only offering what amounts to a lot of filler. But I want to
+stay in your face and on your mind lest you forget how nifty and neat the
+BeOS is to program and use.
+</p><p>
+First of all, although I've been very busy, I still have a coding sample.
+</p><p>
+ftp://ftp.be.com/pub/Samples/Multipede.tgz
+</p><p>
+Multipede is a very minimalist port of the xcentipede game. This is an
+arcade classic. The primary feature of this little app is that it
+demonstrates how to use the following:
+</p><ul class="itemizedlist"><li>
+GameStick from previous newsletter
+</li><li>
+Messaging
+</li><li>
+BWindowScreen
+</li><li>
+Graphics stuff
+</li></ul><p>
+Of particular interest might be the ATicker class. This is a simple
+thread-based ticker, which can generate a Tick() at any given interval,
+or rate, using any units of time. It's used by the GameStick object to
+periodically poll the joystick position.
+</p><p>
+You may also find the AThread object (oskernel.h) useful as a simple
+encapsulation of the thread functions of the BeOS. This is very useful in
+many different areas when you may not feel comfortable with the standard
+'C' interface to threads the OS provides.
+</p><p>
+The original X-based code was all in one file. It was compact and pretty
+straightforward. The Multipede release consists of many files, it's more
+modular, and, I believe, easily understood. I tried to create a sample
+that was first, a native implementation of the BeOS, and second, easy to
+understand and useful for subclassing. So there you have it.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id504369"></a>From Your Bench</h3></div></div></div><p>
+Title: BetMap<br />
+Location: ftp.be.com/pub/contrib/gfx/editors/BetMap.tgz<br />
+Author: CHAUT Pierre-Emmanuel (pierre@ina.fr)
+</p><p>
+This is a funky paint program that shows great spirit. The general
+concept is that everything is a plug in. You drag and drop tools from
+browser windows to make them active; then you use them. The interface is
+not what you typically expect of a paint program, and some have commented
+that it is harder to use. But the author has made what I would classify
+as a valiant effort in producing an architecture that makes extreme use
+of components. It's in the same vein as the AudioElements program
+mentioned earlier.
+</p><p>
+Whether you like the interface this program uses or not, every developer
+could stand to win by adopting such an open extension to their
+application by way of add-on support.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id504396"></a>Good News</h3></div></div></div><p>
+Well the good news is we'll be releasing some more of the code to the
+applications found in the /apps folder. The bad news is, some of the apps
+don't have what we would call 'pretty' code. These apps will take some
+time to release. We want to release them in a little bit better form than
+as raw, uncommented shovel ware, but the tutorials will take some time.
+The general criteria for release will be:
+</p><ul class="itemizedlist"><li>
+Is the code commented and readable.
+</li><li>
+Does the code demonstrate sound coding style for the BeOS
+</li></ul><p>
+On the early release list will be:
+</p><ul class="itemizedlist"><li>
+Clock
+</li><li>
+Edit
+</li><li>
+FontDemo
+</li><li>
+Kaleidoscope
+</li><li>
+Mandelbrot
+</li><li>
+ImageViewer
+</li><li>
+PlaySound
+</li><li>
+PoorMan
+</li><li>
+Pulse
+</li></ul><p>
+Later arrivals will be:
+</p><ul class="itemizedlist"><li>
+CDPlayer
+</li><li>
+Edit
+</li><li>
+IconWorld
+</li><li>
+MiniPlayer
+</li><li>
+MineSweeper
+</li></ul><p>
+All the others were not fit for human consumption, or are so out of date
+that they are not relevant, or have a license agreement that prevents
+source from being released.
+</p><p>
+I would like to get them up on the ftp site as quickly as possible before
+they become irrelevant in the face of the DR9 release, at which time they
+will be updated and released again, or a new crop of more tintillating
+examples will be developed.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id504509"></a>Last Word</h3></div></div></div><p>
+So there you have it. No pontification or cheerleading this week. Just
+some code samples and promises of more code samples.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-47"></a>Be Developer Talk: AppSketcher Available Now for Free!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Verstaen</span></span></div></div></div><p>
+While the AppModeler development toolkit never came out with DR8 as
+announced, AppSketcher replaces it now. A few more weeks were needed to
+make it solid and robust, ready to increase Be developers' productivity.
+Many Be developers have been helping us to enhance AppSketcher, with
+relevant comments in the comp.sys.be newsgroup and the BeDevTalk mailing
+list. Beta testers were also very helpful in our efforts to design an
+object development tool that provides benefits to the whole Be developer
+community.
+</p><p>
+Why and What Is AppSketcher?
+</p><p>
+Although Be Interface Kit is very easy to use and to program with, most
+of us prefer to concentrate on the development of specific parts of our
+applications, rather than spending time generating a coherent user
+interface.
+</p><p>
+As you will discover, AppSketcher is more or less a nutshell: All it
+knows is that a world can be described with windows, views, controls, and
+menus. But no particular object is loaded the first time you launch
+AppSketcher, so the first step is to parse the header files corresponding
+to the kits provided by our favorite Be engineers. Then AppSketcher knows
+more: It can manipulate objects from the Interface Kit and even create
+applications. You can now design your interface graphically, connect
+control objects to your functions, even test your user interface. What
+comes next depends only on you: If the objects provided by Be fulfill
+your needs, you don't need to read more. But if you want to implement
+your own objects, with their own look and feel, or if you want to set
+some parameters for objects directly in AppSketcher, then you will have
+to teach it about your own classes. As part of this process, you will
+modify AppSketcher and increase the range of its features. Our job is
+done now, and we're waiting for you to take care of our child and to help
+him become a grown-up.
+</p><p>
+What Can You Expect from AppSketcher?
+</p><p>
+AppSketcher offers:
+</p><ul class="itemizedlist"><li><p>
+A graphical interface design tool, which can be used interactively
+</p></li><li><p>
+The capability to add C++ objects, either as interface elements or
+simply as objects that applications create
+</p></li><li><p>
+A way to connect interface items (controls) with the member functions
+of the objects that have been added
+</p></li><li><p>
+A process for initializing object members with the pointer to other
+application components
+</p></li><li><p>
+A tool you can use throughout a project's lifetime
+</p></li></ul><p>
+All you have to do now is connected to the Be web site, download
+AppSketcher, and read its documentation. (AppSketcher will be available
+in the Developer area of the Be web site this week. Watch the What's New
+page for the announcement.)
+</p><p>
+We'd like to thank Be, Inc., whose BeOS has made the one- year-old
+AppSketcher application possible. All of us at Lorienne [Now BeatWare]
+were very pleased to work with talented Be team.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-47"></a>A Pretty Embrace</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Once again, we're treated to a great show. Fortunately, there's also
+substance behind the verbal pyrotechnics and the demos. I'm referring to
+the most recent Network Computer announcements—of course. And I'm
+betting we'll all benefit in the end from the sometimes raucous conflict
+between the advocates of the NC and the defenders of the PC.
+</p><p>
+But let's start with the basics. Ostensibly, the NC is a way to fight the
+ever-increasing cost of ownership of a PC. A number of studies by the
+Gartner Group or Forrester Research agree corporations spend around
+$10,000 per year, per PC. The culprit is the growing disorder and fat
+afflicting hardware and software configurations.
+</p><p>
+For years, Sun has claimed the newtwork _is_ the computer, and they built
+a nice business on that claim. They also transmogrified their set-top box
+language, OAK, into Java, a way to design and deliver
+platform-independent applications. Et voila, all the ingredients for NC.
+Just a processor, memory, and network connection and you have a machine
+that's both less expensive to purchase and to own. Less expensive to
+purchase because you get rid of unnecessary organs, such as the floppy,
+the hard disk, or a bus. Less expensive to own because all the data and
+programs are centrally (and thus more safely and economically) managed.
+When you need it, you invoke the Java word processor from the server.
+When you're done, it disappears without cluttering your system. Clean
+computing.
+</p><p>
+We know, of course, life is never that simple. Nagging questions arose
+immediately. Such as the need for some caching device. A hard disk,
+perhaps. But then, what's the difference with a PC? The fact Microsoft
+doesn't control the architecture? Unfortunately, the argument degenerated
+into an anti-Microsoft one, confusing what the NC does for the customer
+with what it does against Microsoft.
+</p><p>
+In the early days of the NC battle of words, Bill Gates openly derided
+the concept, pointing to the weak difference in hardware costs between a
+PC and an NC. But the issue of cost of ownership did not go away,
+especially with the sometimes painful transition from Windows 3.1 to
+Windows 95 and Windows NT. Larry Ellison and Scott McNealy are powerful
+ideologues and very successful businessmen. Their advocacy of the NC
+carries weight, and Java gained traction, now assured of becoming a
+mainstream language.
+</p><p>
+So what did Bill Gates do? Last week, at the Agenda Conference in
+Phoenix, Arizona, Larry Ellison had an off day. His pitch for the NC
+wasn't as calm and statesmanlike as we were used to expect from him. Bill
+Gates, on the contrary, decided to embrace the key NC concepts and, by
+pure coincidence, the official announcement came yesterday, right on the
+eve of Sun's official NC intro. There are some good ideas there, some
+real problems, said Bill. We'll have a simplified PC architecture
+supported by Compaq, Hewlett- Packard, Dell, and other noted players. It
+will be less expensive to purchase and to own because we'll offer the
+capability to centrally manage data and application software.
+</p><p>
+Critics say it's a mere retooling of the SIPC, the Simple Interactive PC
+architecture previewed in February. It doesn't matter. What counts is
+what will be delivered, by whom, and when. In the end, we're likely to
+get in the healthy habit of delivering and updating software
+automatically over the network, the Internet or the intranet, thus making
+users and software developers happier. Plus it will make a couple of
+companies, such as Marimba, who've already thought of that business,
+richer.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-46.html">Issue 1-46, October 23, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-48.html">Issue 1-48, November 6, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-46.html" title="Issue 1-46, October 23, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-48.html" title="Issue 1-48, November 6, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-50.html" title="Issue 1-50, November 20, 1996" /><link rel="next" href="Issue1-52.html" title="Issue 1-52, December 4, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-50.html" title="Issue 1-50, November 20, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-52.html" title="Issue 1-52, December 4, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-50.html">Issue 1-50, November 20, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-52.html">Issue 1-52, December 4, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-51"></a>Issue 1-51, November 27, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-51"></a>Be Engineering Insights: So You Want to Write a File System? Architecture</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>Earlier this year, we decided to overhaul the file system and database.
+Our overriding goals were to merge the file system and database at a low
+level, improve file access performance—and to do this without losing
+any features. In particular, the database query system had to be just as
+flexible and "live" as it is now. There were other issues that we wanted
+to address as well: Support for external file systems, partitioning,
+better parallelism in file system operations, journaling, and so on.
+</p><p>In this article, I'm going to talk about the design of the file system
+structures proper; I'll leave the discussion of how to access the
+structures to Cyril Meurillon, the French half of Be's International File
+System team. Look for his article in next week's Newsletter.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508568"></a>Hierarchy or Not?</h3></div></div></div><p>To begin with, we had to decide what overall structure the file system
+would take: Do we stick with a traditional, hierarchical, name-based
+organization, or do we burn our bridges and attempt an attributed,
+database-style flat file system?
+</p><p>Although I favor hierarchical organization, I like to think that this
+bias is not without reason or experience: As a graduate CS student, I
+spent a great deal of time (and wrote a thesis) attempting to prove the
+concept of an attributed, flat file system in which every file access is
+expressed as a query. It's an attractive abstraction that, for example,
+provides a great deal of flexibility for grouping files. Although
+implementing this architecture wasn't a cake walk, trying to come up with
+a reasonable interface for the user was a minor nightmare. The biggest
+problem (for you, the file system user) is that in a flat, query-based
+system, you not only must specify what you want to see, you often must
+specify much or all of what you *don't* want to see; your choices are
+*too* open. In the end, I found that the familiar "restriction" of the
+traditional hierarchy—a limited number of "choices" (files and
+directories) within a single domain (names)—was a powerful tool in
+itself and one that we often take for granted.
+</p><p>The architecture of the new Be file system is a "best of both worlds"
+solution: The basic organization is hierarchical, but individual files
+can contain "attributes":
+</p><ul class="itemizedlist"><li><p>Because it's hierarchical, the user should have no trouble navigating
+the file system, whether from a command line or through the Browser.
+</p></li><li><p>The inclusion of attributes within files means that the system can
+also be accessed through queries.
+</p></li></ul><p>The hierarchy needs no explanation. Attributes are described below.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508615"></a>Attributes</h3></div></div></div><p>Any file can have a collection of "extra information"—such as
+comments, information about where the file came from, keywords extracted
+from a document, and so on. These bits of information are called the
+file's "attributes." Each attribute is represented as a name/value pair,
+where the name acts as a key to the value. For example,
+</p><pre class="screen">
+"Priority=Urgent"
+</pre><p>is a an attribute whose name is "Priority" and whose value is "Urgent".
+</p><p>The name of an attribute is always a (short) text string. The value can
+be data of any type and any length.
+</p><p>If an attribute's value is a string, integer, or floating- point value --
+in other words, if the value can be easily compared—you can ask that
+it be indexed. Values that can't be indexed are stored as raw byte
+streams on disk. We chose B+Trees as our indexing method for two
+principal reasons:
+</p><ul class="itemizedlist"><li><p>B+Trees offer good performance with large numbers of items.
+</p></li><li><p>The structure is well known and fairly well understood.
+</p></li></ul><p>In addition to indexing, we also use B+Trees to store the contents of
+directories (a directory can actually be thought of as a type of index).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508675"></a>File Details</h3></div></div></div><p>Each file is represented by a single "header block"; this is a disk block
+that contains information such as the time the file was created, when it
+was last modified, who owns it, and so on. Most importantly, the header
+can tell you the "primary data stream" of the file (this is the data
+that, in practice, we think of as being the file itself), and contains
+pointers to the file's attributes.
+</p><p>The default header information easily fits in a single disk block; the
+leftover block space is used to store "small" attributes directly.
+Typically, the most common attributes are stored in the header, so with
+one disk read (i.e., one look at the header itself) you get a bunch of
+useful information. The data for "indirect" attributes—attributes that
+spill out of the header block—become files themselves. In fact, the
+list of attributes associated with a single file is represented as a
+separate directory.
+</p><p>Header blocks are created dynamically—you don't have to specify up
+front how many files your disk can hold. Thus, you don't waste disk space
+on as-yet-unused headers. The downside to this approach is that the
+header blocks tend to be scattered around the disk, so access to a
+logically contiguous group of files (the files in a directory, for
+example) could send the disk into a searching frenzy. In practice,
+however, this doesn't really seem to be much of a problem.
+</p><p>A file's data is mapped to actual disk blocks ("data blocks") through a
+"data stream" structure. The structure contains a list of "block runs";
+each block run specifies a starting block number and the number of blocks
+that are in the run (up to 65,535 blocks per run).
+</p><p>The blocks in a single run are always contiguous. However, the separate
+runs that make up a file aren't (if two runs happen to be contiguous, the
+file system will melt them into a single run). Since file-seeking sanity
+pleads for as much contiguity as possible, we pre-allocate some number of
+blocks automatically when a new run is asked for. This protects against
+file fragmentation when you perform a series of small writes (a single
+large write will be inherently contiguous). The size of the
+pre-allocation depends on the size of the file that you're writing to:
+The bigger the current size of the file, the greater the allocation.
+</p><p>The size of a single disk block is settable; the minimum size is 512
+bytes, the maximum is 8k. You have to declare the size of your disk
+blocks when you initialize your disk.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508726"></a>Journaling</h3></div></div></div><p>An important new feature of the file system is "journaling." Journaling
+is a technique for preserving the integrity of on-disk data structures.
+The basic idea is that the disk blocks that are involved in a disk
+modification (file creation, deletion, write, and so on) are written to
+the disk's "journal" *before* they're actually written to their final
+resting places on the disk. This ensures that your disk's structures will
+be consistent even if you crash during a disk access:
+</p><ul class="itemizedlist"><li><p>If you crash before the journal entry is written for a given
+operation then the operation will appear to have never happened.
+</p></li><li><p>If you crash while data blocks are being written (that is, after the
+journal blocks have been written), the system will "replay" the journal
+entry when you reboot, and the aborted transactions will complete
+normally.
+</p></li><li><p>If you were to crash after the data blocks were flushed, but before
+the journal entry was removed, the disk blocks would simply be
+re-written.
+</p></li></ul><p>Journaling ensures integrity, but it can't guarantee that the file system
+will always be 100% up to date. That is, because disk blocks get buffered
+in memory, a crash may prevent some of them from making it to the
+journal. Thus, when you reboot you won't see the transactions that died
+in the cache. So, for example, that would mean that you might not see the
+last file that was created before a power failure—but your hard disk
+wouldn't be corrupted.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508782"></a>Testing the New System</h3></div></div></div><p>We're working day and night (really) to make the file system robust and
+fast. Hopefully, it will weather all the abuse that it's surely going to
+be subjected to. Our testing methodology includes running stress programs
+that create and delete many files, checking data integrity, and we have
+plans for our intern George to thrash the file system thoroughly with
+respect to multiprocessor access to the file system. We have already
+survived some 24-hour stress tests that created and deleted many hundreds
+of thousands of files and we plan on beating on the system until we'd
+trust it even with our own most treasured code and love letters.
+</p><p>And that brings to a close this 80,000 foot overview of the new Be file
+system.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-51-2"></a>Be Engineering Insights: Be User Interface Basics</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Roy</span> <span class="surname">West</span></span></div></div></div><p>The Be development environment is designed to make it easy and fun for
+you to create powerful, innovative applications. Similarly, the
+soon-to-appear Be user interface guidelines will be designed to help you
+create applications that your customers will find easy and fun to
+explore, learn, and use.
+</p><p>The BeOS doesn't try to reinvent the graphical user interface. Instead,
+it builds on the successful interfaces developed on a variety of
+platforms over the past dozen years. What's new in the BeOS is a
+lightweight, multitasking environment that's not beholden to bad UI
+design entrenched in legacy UI schemes.
+</p><p>You should aim to create applications that users find obvious, so they
+can discover and quickly come to appreciate the power (and value) of your
+application's features. Users shouldn't need to read all (or even any) of
+an application's documentation to guess how to perform most of the things
+it can do for them—even if they don't understand what the application
+is doing at first! Even if many of your application's features are
+sophisticated and require detailed explanation, you can design them in a
+way that will help users catch on quickly if you organize them in menus
+and panels, so users have some categories and topics to look up in the
+documentation as a head start.
+</p><p>This article introduces you to the basic principles of the Be UI
+guidelines. Look for details and examples in a forthcoming edition of The
+Be Book.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508859"></a>Be Obvious</h3></div></div></div><p>All of an application's features should be visible as menu items or as
+buttons or other controls in windows or panels. Avoid implementing
+features that require users to hold down keys on the keyboard, use the
+secondary or tertiary mouse buttons, or type commands they have to
+remember: These techniques are great for shortcuts and they may become
+the preferred techniques for users experienced with an application, but
+you should allow users to perform each action in a more obvious way first.
+</p><p>Don't hide your application's features or users won't find them. Most
+users refer to documentation when they have a question. If users don't
+stumble on a feature, they won't think to look up the details in the
+documentation, no matter how clearly written it is.
+</p><p>Make every context clear: For example, it should be obvious what
+application every panel belongs to and what users can or should do in it.
+If a panel asks for information, make it clear what application is asking
+and what part of that application is affected.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508894"></a>Be Graphical</h3></div></div></div><p>Users find and remember features best if they perform them by directly
+manipulating objects on the screen—selecting tools, dragging objects
+to move or alter their attributes, and so on, rather then by selecting an
+object and then finding a command to perform a function. For example,
+it's easier and more natural-feeling for a user to rotate an object by
+dragging a handle, than by selecting the object and choosing a Rotate
+command or* entering settings in a panel.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508913"></a>Be Consistent</h3></div></div></div><p>Use similar UI for similar features, from application to application, and
+within an application. Users will often guess how to do something new if
+the UI looks and works like other UI they already know.
+</p><p>When inventing new UI, try to build on existing UI rather than invent
+from whole cloth: This gives users a leg up. And never create UI that
+behaves opposite to other well- known UI—that's an easy way to create
+a feature that users will trip on every time.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508935"></a>Be Responsive</h3></div></div></div><p>Make it obvious to users that what they're trying to do is working—or
+not working. Users are often unsure whether they're doing something
+right, or whether they've done it at all. Help them by providing feedback
+for each user action.
+</p><p>If a task will take more than a moment, open a status panel that shows
+the progress of the action. Put the user in control by providing the
+panel with a Cancel (and maybe a Pause) button. Users don't know how long
+a new activity will take, and often think actions that take longer than
+expected simply haven't started at all.
+</p><p>When users manipulate graphical controls, tools, and so on, show them
+that their actions are having an effect. If different parts of your
+application's UI react differently when clicked, dragged, or pressed,
+change the shape of the cursor or provide some other visual clue to
+inform users that something different will happen. For example, when a
+user selects an on-screen object, highlight it. It's also helpful to
+change the shape of the cursor when it's over editable text or when a
+modal tool is selected.
+</p><p>Provide feedback throughout the steps of dragging and dropping: Show that
+the object is selected for dragging, consider changing the cursor to
+provide a clue as to what action the drag-and-drop will perform, and
+highlight or in some other way indicate that the target of the
+drag-and-drop will receive the object when the mouse button is released.
+</p><p>When a user changes a setting, apply the new value immediately if
+possible. A second-best approach is to apply a setting when the user
+clicks a Set or Apply button. Avoid forcing users to restart an
+application to make a new setting take effect.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508980"></a>Be Cooperative</h3></div></div></div><p>Users become confident in an application (and thus learn it more quickly)
+if they know they're in control—that is, if it performs only actions
+that a user initiates. Resist the temptation to help out users by
+changing information or the state of controls behind their backs. It's
+good to try to learn from a user's habits and remember preferred settings
+in panels, arrangements of windows, and other state they've set in the
+past, but don't "improve on" what the user has done if the reason isn't
+obvious and the improvement wouldn't be expected.
+</p><p>Maintain the state users set in windows even when they switch to other
+windows or applications. For example, if text is selected in a panel,
+don't unselect it when a user makes another window active; be sure the
+highlighting is restored when the panel is made active again.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508999"></a>Be Multitasking</h3></div></div></div><p>The BeOS makes it easy for many applications to work simultaneously, and
+for each application to perform many tasks at once. Structure your
+application so that when activities in one area will take a while or must
+pause to request information from the user, activities in other areas of
+the application and in other applications continue uninterrupted.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509016"></a>Be Forgiving</h3></div></div></div><p>Users make mistakes, but they shouldn't be punished for them. Try to
+alert users if their action risks losing data, and try to make it easy
+for them to undo actions they might regret.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509030"></a>Be Innovative</h3></div></div></div><p>The BeOS is a new world, with plenty of room to invent new ways of
+working and playing. Feel free to violate these UI guidelines if you have
+new ideas, but violate them for a deliberate and clear purpose. Users may
+come to love your new way to copy text, but if your new technique is only
+subtly or arbitrarily different than what they're used to in other
+applications, they'll simply be annoyed. Innovate boldly!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News1-51"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>Riding 111 miles on a bike is no easy task. At least that's what my wife
+tells me. But it can be done. She just completed El Tour de Tuscon, a
+bicycling event for which she trained over the past 4 months. The
+training was long, hard and tiresome. She had to down a lot of PowerBars
+and Goo, and in the end, it was over in 10 hours 3 minutes. During this
+whole time, my daughter and I were the cheering section. All we could do
+is offer support and encourage her to completion.
+</p><p>Working with a new platform, particularly the BeOS, is nothing like
+training for a 111-mile bike ride—except for those who actually go out
+and give demos around the country and the world. And that's what our
+intrepid marketing people have been doing. Last week found Be marketers
+at Comdex, and on the East coast. From what I remember of my Comdex
+experience of the past, it can be much like running a marathon for 4
+days. The Be folks were there spreading their enthusiasm for the platform
+and no doubt showing their glee for being able to work at such a fun
+place as Be, Inc.
+</p><p>Why do people participate in such endeavors? Because of the excitement of
+finishing, the challenge of running the race, the rush you get when you
+near the finish. All this and probably more. Can a computing platform
+provide such excitement? I think so.
+</p><p>One of our third-party developers has been spending sleepless days for
+the past few weeks working on what they think will be a very good video
+editing suite. When I stared into the tired programmer's sleepy eyes,
+looking for the fire that drove him on, the spark came through as he said
+in a groggy voice "This is fun; it's a lot more fun than anything I've
+done recently." And then he staggered to his car, and hopefully made it
+home.
+</p><p>Here at Be we express our excitement and enthusiasm for the platform by
+performing feats of daring do. We constantly generate what we think is
+useful code, and strive to complete that next big thing, and several
+small meaningful things along the way. Hopefully our excitement is
+showing through as we complete yet another desirable feature, or announce
+yet another supported PowerPC platform. And in the end, there are the
+sample apps.
+</p><p>I've programmed on many systems over the past 15 years or so. One of the
+interesting ones was NeXTSTEP. As a first programming task I wrote a
+talking clock program. You could set an alarm to go off either
+periodically at a set interval or at a fixed time. This is great for
+reminding you to stand up every 15 minutes when you're programming so you
+don't cramp up.
+</p><p>To perform this feat, I recorded my wife saying the numbers from 1 to 10,
+and all the 10's, and a few of the higher multiples of 10 (hundred,
+thousand,...). Then we recorded things like "the time is", "o'clock", and
+all the days of the week, and then at last all the months of the year. We
+then matched the gain on all the sounds, and smoothed them out enough so
+that they could be run together and actually sound like a phrase with
+minimal clipping, popping or hissing.
+</p><p>The end result is that we have this nice library of sounds in my wife's
+voice. So what to do with such a valuable resource? Why make a code
+sample of course! You can find it at:
+</p><p>ftp://ftp.be.com/pub/Samples/sndutil.tgz
+</p><p>When it comes right down to it, if you want to play with sound in the
+BeOS, you have to get down and learn about BAudioSubscriber and the use
+of streams. It's really not a big deal, and neither are the two programs
+included in this package—"playsound" and "sndplay." playsound is a
+simple utility that allows you to play a single sound file. You can set
+parameters such as the frame rate, number of channels, and so forth.
+</p><p>Or you can just let the system take a crack at it. The other utility is
+sndplay. You can pass it multiple files on the command line, and it will
+string them together into a phrase. There are 3 sound files included from
+the Anita Sound Resource talking clock package. These files are uLaw
+encoded sounds, as is typical for UNIX platforms. So you will find a
+uLaw-to-linear conversion algorithm in the package.
+</p><p>These code samples are meant to be very simple to understand and give the
+novice sound programmer a leg up. If you haven't already gotten fully
+immersed into sound on the BeOS, then here is your chance. We can explore
+more detailed and interesting aspects of the sound system in the future,
+including how MIDI fits in, and what you can and can't do in a bucket
+brigade.
+</p><p>So there you have it, a long story to get to a short sample. MacWorld is
+coming, and we're training hard. If you're a developer you should be
+working very hard to prepare your wares for this Marathon of an event. If
+you are a spectator, then prepare yourself for what will surely be an
+exciting and fun filled show.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-51"></a>Thanks to Power Computing</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>Today was the formal announcement of our relationship with Power
+Computing. Detailed information is available on our Web site. The
+fundamentals of the partnership are simple: The BeOS adds value to
+Power's hardware and it opens the door to multi-processor applications.
+Power Computing opens a fast growing installed base to the BeOS and
+developers writing code for the platform. Furthermore, Power Computing
+customers typically are heat-seekers, leading-edge users, as opposed to
+those staying with the main brand. This is a natural fit with our own
+positioning. As an emerging company, we focus on developers and customers
+who appreciate the bandwidth, agility, and stability required in digital
+content creation and serving applications.
+</p><p>Steve Kahng, Power Computing's CEO, was gracious in acknowledging his
+initial reservations. Dealing with "yet another OS" wasn't his idea of
+fun in the midst of a fast ramp-up following the market's reaction to
+Power's entry into the Macintosh hardware market. We are thankful to his
+organization, to developers and customers for making him a strong
+supporter of this alliance.
+</p><p>It started right after Apple's Worldwide Developer Conference in May. The
+Friday preceding the conference, we found a voice-mail message informing
+us we couldn't display the BeBox in the exhibition area we had reserved
+and paid for months before "because we were not a Macintosh developer."
+The misunderstanding was quickly and graciously cleared up, but one
+engineer had already suggested we port our software to a PowerMac, thus
+making us a true if not yet tried Mac developer. We approached both Power
+Computing and Apple with a proposal. Power jumped at the opportunity;
+Apple joined in later. Executives and engineers supported our effort.
+</p><p>We showed up at MacWorld with the BeOS running on our hardware and on
+Power's. As people saw the Mac OS and the BeOS running on the same
+hardware, it became easier to understand what we brought to the Mac
+market. All this, at least the part between Power and Be, happened on a
+handshake. The executives and the engineers knew each other, this was an
+obvious good idea, let's do it, we'll feed the lawyers later. The
+reaction at MacWorld was very positive, we spent a little money on
+members of the learned profession, and here we are. Life can be simple
+sometimes.
+</p><p>While much remains to be done, this is an auspicious beginning. We expect
+the relationship to flourish as Power sales continue to develop and as
+our young operating system is tested in the marketplace.
+</p><p>Now, you might ask, what about the bigger PowerMac hardware manufacturer?
+Will they follow Power Computing's example and, seeing we add value to
+their hardware, bundle our little BeOS CD with most of their machines? I
+don't know, and that's not for me to say. But I'm sure we can work out an
+inexpensive and uncomplicated arrangement.
+</p><p>Seriously now, our thanks to the like-minded and like-goaled people at
+Power Computing. They understand famished start- ups: they sent us pizza
+today.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-51"></a>BeDevTalk Summary</h2></div></div></div><p>BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509301"></a>WEEK 4</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509307"></a>Subject: Scripting examples</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Scripting Architecture<br />
+AKA: Scripting Wars
+</h5></div></div></div><p>This week:
+</p><ul class="itemizedlist"><li><p>How smart should a scripting language be? Are things like
+polymorphism and inheritance appropriate?
+</p></li><li><p>Should a script be able to "drive" an application's interface, or
+should it be just be a means for commanding application A to ask
+application B to perform an operation over some data.
+</p></li><li><p>When you create a script of a user's actions, do you record (and
+playback) actual events, or simply their results?
+</p></li><li><p>If an application wants to generate a script, what language
+should it use?
+</p></li></ul></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509357"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509363"></a>Subject: Killing threads</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Killing A Thread or Team</h5></div></div></div><p>Discussion of the proper way to kill threads (don't use <code class="function">kill_thread()</code>
+if you can avoid it). This led to the observation that a <code class="methodname">Lock()</code> blocked
+thread must be <code class="function">kill_thread()</code>'d because there's
+no <code class="classname">BLocker</code> timeout API.
+</p><p>THE BE LINE: You ask for it, you get it: DR9 will include a
+<code class="methodname">LockWithTimeout()</code> call in the
+<code class="classname">BLocker</code> and <code class="classname">BLooper</code> classes.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509413"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509419"></a>Subject: Active window != Frontmost window</h4></div></div></div><p>Should the active window always be the frontmost window? Many folks
+think not. In addition to taking votes, the thread discussed different
+methods for sending windows to the back, bringing them to the front,
+setting the focus (should it follow the mouse a la X?), and so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509435"></a>Subject: Better thread control</h4></div></div></div><p>Is threading an app in the BeOS harder than it needs to be? A number of
+complaints and feature requests were offered, but one in particular,
+how to simulate Amiga "signals", stimulated the most discussion. Is it
+credible to use <code class="function">release_sem_etc()</code> (with a count) to unblock all the
+threads that are waiting for a particular semaphore? An alternative
+(<code class="function">suspend_thread()</code>/<code class="function">resume_thread()</code>) was suggested as a better way to
+toggle a thread's activity.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509464"></a>Subject: Threadsafeness of STL</h4></div></div></div><p>The re-entrancy of the standard templates library (coming in DR9) was
+discussed. Jon Watte of Metrowerks wrote in to assure our listeners
+that the library IS thread safe.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509478"></a>Subject: BeOS turning into a memory-hungry pig?</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: DR9 And VMM</h5></div></div></div><p>Does the BeOS bite off more VM than it needs? Some folks have noticed
+that the swap file seems to swell to a rather hefty weight quite
+quickly and then stay there, never shrinking. Is this necessary? or is
+the file wasting space?
+</p><p>THE BE LINE: Indeed, the swap file gets too big too fast. In DR9, you
+should see some improvement.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509503"></a>Subject: BWindow's constructor</h4></div></div></div><p>This thread began as a discussion of methods for constructing an
+instance of a <code class="classname">BWindow</code> subclass that wants to fully define itself (i.e.,
+it doesn't want to pass arguments to the <code class="classname">BWindow</code> constructor). This
+lead to an announcement that Be will provide object archiving in DR9.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509526"></a>Subject: Hmmm.. Soft Modem?</h4></div></div></div><p>The thread started out by musing on the feasibility of a software modem
+that uses the analog audio IO as its communication path. This led to
+reminiscences of DSP modems promised and fulfilled, as well as thoughts
+on alternative (or purposefully mismatched) signal paths; for example,
+would it be possible to broadcast software as an FM RF signal which
+could be recorded and then "played"? (The claim is that this has been
+done.)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509544"></a>Subject: Various ideas, wishes, complaints and suggestions</h4></div></div></div><p>The subject says it all. Most of the suggestions begged for greater
+preference-style control—of windows, sliders, text tabs, and so on.
+Also, there was a minor debate on the proper way to store and display
+timestamps (the consensus: store them as GMT, and then offset them to
+the local time zone for display).
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-50.html">Issue 1-50, November 20, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-52.html">Issue 1-52, December 4, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-50.html" title="Issue 1-50, November 20, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-52.html" title="Issue 1-52, December 4, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-47.html" title="Issue 3-47, November 25, 1998" /><link rel="next" href="Issue3-49.html" title="Issue 3-49, December 9, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-47.html" title="Issue 3-47, November 25, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-49.html" title="Issue 3-49, December 9, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-47.html">Issue 3-47, November 25, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-49.html">Issue 3-49, December 9, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-48"></a>Issue 3-48, December 2, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-48"></a>Be Engineering Insights: R4 Drag-and-Drop</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jon</span> <span class="surname">Watte</span></span></div></div></div><p>
+One of the nice things we added in R4 was a more flexible drag-and-drop
+protocol. Many developers have already peeked inside the <code class="classname">BMessage</code> being
+dragged when you grab a clipping from <span class="application">ShowImage</span> in an effort to try and
+figure out how it works. Because it actually involves more than one
+message, and we would like all programs on BeOS to do the right thing,
+I'm going to document the current protocol.
+</p><p>
+First, the code! You can find it at:
+</p><p>
+ftp://ftp.be.com/pub/samples/interface_kit/dragme.zip
+</p><p>
+The application is simple. Start it, and it shows a window with a little
+image in it. You can click on the image to drag it around on your screen.
+If you drag it into a Tracker window, the <span class="application">Tracker</span> creates a clipping file
+that the application saves the image into. If you drag the image to the
+Trash can, the application closes the window, the only way it knows how
+to remove the image. While not the best example of intuitive user
+interface design, it serves the purpose of illustrating drag-and-drop
+pretty well.
+</p><p>
+The basic idea behind the new drag-and-drop protocol (DnD for short) is
+that the initiator of the drag doesn't have to produce the data in all
+formats it can possibly generate just to start dragging. Instead, it puts
+into the message a list of the formats it knows how to generate using the
+data being dragged. In this case, the <code class="classname">DragView</code> inside
+the <code class="classname">DragMe</code> window
+is the initiator.
+</p><p>
+The recipient of the drag message, in this case the <span class="application">Tracker</span>, can then
+look through the message for data formats it likes and send a reply to
+the message back to the initiator asking for one of these formats.
+Currently, the <span class="application">Tracker</span> uses the first format added to the list of
+formats, unless you hold down the <span class="keysym">Control</span> key. In that case it gives you
+a list of possible formats, or the option to cancel the drag altogether.
+Note that DragMe provides only one format of data, while <span class="application">ShowImage</span>
+provides all formats available through the Translation Kit.
+</p><p>
+Once the target (in this case the <span class="application">Tracker</span>) chooses a format and sends a
+message back to the initiator, the initiator extracts all the data it
+needs from its internal data storage, and puts it either in a new message
+sent back to the target, or in a newly created file specified by the
+target. If the data is sent back to the target in a <code class="classname">BMessage</code>, this
+message is called the "data message," as opposed to the "dragged message"
+which was the first message, or the "reply" sent from the target to the
+initiator. That the target creates the file has to do with needing to
+preserve the drop point as the icon location in the <span class="application">Tracker</span> window, which
+is better kept internal to the target than exposed in the <acronym class="acronym">API</acronym>.
+</p><p>
+The nitty-gritty of setting up the drag is found inside
+<code class="classname">DragView</code>::<code class="methodname">MouseDown()</code>.
+After figuring out whether we actually clicked in
+the bitmap and want to drag it, we add the types of data we can provide
+to the message, along with the actions we accept. The <acronym class="acronym">MIME</acronym> type we use to
+export data comes from the first Translator we find that can save bitmap
+images, found and remembered in the constructor of the <code class="classname">DragView</code> class.
+</p><p>
+The <acronym class="acronym">MIME</acronym> string of data types you know how to provide should be added to
+the drag message in the attribute named "be:types". The magic type
+<code class="constant">B_FILE_MIME_TYPE</code> means that we can create "a file"
+in addition to <acronym class="acronym">MIME</acronym> data
+within a data message. It's OK to not add any other types at all, if all
+you know how to do is to save files. That makes direct data exchange
+between your application and other applications impossible without using
+temporary files, though, so you typically want to do both.
+</p><p>
+If you use the <code class="constant">B_FILE_MIME_TYPE</code> type, you
+should also add the <acronym class="acronym">MIME</acronym> types
+of files you know how to create (which may be different from the types
+you know how to put in data messages) into the attribute "be:filetypes".
+</p><p>
+DragView uses a copy of the content <code class="classname">BBitmap</code> as the drag indicator. That
+works fine because the bitmap is small. If the bitmap is larger, you
+should consider just dragging an outline <code class="classname">BRect</code>. You'll note that we use
+the new form of <code class="classname">DragMessage</code> found in R4, which allows you to specify a
+drawing mode for the dragging; we use <code class="constant">B_OP_ALPHA</code> because we prepare the
+dragging <code class="classname">BBitmap</code> specifically with alpha in mind. We also specify the
+window (rather than the view) as the reply destination for the dragged
+message.
+</p><p>
+The actions we know about are <code class="constant">B_COPY_TARGET</code>
+and <code class="constant">B_TRASH_TARGET</code>. The
+former has the target send a request for data as reply; the latter does
+not require you to send the data anywhere, but instead indicates that the
+target wants you to remove the data being dragged (typically because the
+user dragged to the Trash). Possible actions are added to the
+<code class="varname">be:actions</code> attribute of the drag message.
+</p><p>
+The <code class="varname">be:clip_name</code> attribute is optional, and gives a hint to the
+destination for what the file name might be if it wants to create a
+clipping file. The target is free to ignore this hint and create a
+clipping file with any name it wants.
+</p><p>
+In <code class="classname">DragWindow</code>::<code class="methodname">MessageReceived()</code>, we receive the
+reply from the target and dispatch on the action found in the
+<code class="varname">what</code> code. For <code class="constant">B_TRASH_TARGET</code>, we
+close the window (with a confirmation dialog for good measure). For
+<code class="constant">B_COPY_TARGET</code>, we figure out whether to write data to
+a file (<code class="constant">B_FILE_MIME_TYPE</code>) or to the message directly.
+In both cases we use the Translation Kit to translate from a
+<code class="classname">BBitmapStream</code> to the data type found in the
+<code class="classname">DragView</code> constructor. We do this because it's
+convenient, but the Translation Kit is entirely optional—it's not at all
+required to implement the underlying dragging protocol.
+</p><p>
+So what do you have to do to be at the receiving end of this protocol? Not
+much, really. You receive <code class="constant">B_SIMPLE_DATA</code> messages just
+like messages that have real data in them. If the
+<code class="constant">B_SIMPLE_DATA</code> message doesn't have a data type you
+understand in it, you can look for <code class="varname">be:types</code> to see if
+the initiator can provide data of some type you understand. If so, you send
+a reply back to the initiator (using <code class="methodname">SendReply()</code>)
+with the type you want in <code class="varname">be:types</code> (and file type in
+<code class="varname">be:filetypes</code> if you want a
+<code class="constant">B_FILE_MIME_TYPE</code>) and the <code class="varname">what</code> code
+set to the action you want (typically <code class="constant">B_COPY_TARGET</code>).
+In reply to this message, you'll receive a B MIME DATA message with the
+data in it, or, if you requested a file, the initiator will save the data
+to disk and then send a message back to you. <code class="classname">DragMe</code>,
+in this case, uses the default message error mechanism, so you should
+probably not fail on error messages received in reply to file save
+requests.
+</p><p>
+That's it. Now don't drag your feet; go and implement drag-and-drop in
+your application today!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-48-2"></a>Be Engineering Insights: The Configuration Manager, Part I</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Victor</span> <span class="surname">Tsou</span></span></div></div></div><p>
+The configuration manager, first introduced in BeOS Release 3, has been
+rewritten for Release 4. It is primarily used for supporting ISA
+Plug-and-Play devices, although its services will also be enlisted to
+help integrate PCMCIA. The
+<acronym class="acronym" title="Header Of The Day">HOTD</acronym>
+is <code class="filename">drivers/config_manager.h</code>. Stare at
+it, then continue reading.
+</p><p>
+The configuration manager provides five classes of services:
+</p><div class="orderedlist"><ol><li><p>
+Initializing and uninitializing.
+</p></li><li><p>
+Enumerating and reporting information about devices.
+</p></li><li><p>
+Reporting the current configuration for devices.
+</p></li><li><p>
+Interpreting configuration information.
+</p></li><li><p>
+Reporting possible configurations for devices.
+</p></li></ol></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id761999"></a>1. Initializing and uninitializing.</h3></div></div></div><p>
+The configuration manager is implemented as a module, a construct
+introduced in R4 that is accessible only from kernel space. A module
+exposes itself to drivers via a structure of function pointers in a bid
+to be a better ioctl than ioctl. Modules are loaded as needed and
+unloaded when no longer used. To initialize the configuration manager,
+simply load the module in the usual fashion:
+</p><p>
+config manager for driver <code class="code"><span class="type">module_info*</span> module</code>;
+</p><pre class="programlisting c">
+if (<code class="function">get_module</code>(<code class="constant">B_CONFIG_MANAGER_FOR_DRIVER_MODULE_NAME</code>,
+    (<span class="type">module_info **</span>)&amp;<code class="varname">module</code>) &lt; 0)
+  return <code class="constant">B_ERROR</code>;
+</pre><p>
+Conversely, to uninitialize:
+</p><pre class="programlisting c">
+<code class="function">put_module</code>(<code class="constant">B_CONFIG_MANAGER_FOR_DRIVER_MODULE_NAME</code>);
+</pre><p>
+Out of respect for reference counting, your driver should maintain a
+one-to-one correspondence between calls to get module and calls to put
+module.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id762076"></a>2. Enumerating and reporting information about devices.</h3></div></div></div><p>
+Once the configuration manager has been loaded, your device driver will
+feel compelled to scan for devices it knows about. The function
+</p><pre class="programlisting c">
+<span class="type">status_t</span> (*<code class="varname">get_next_device_info</code>)(
+    <span class="type">bus_type</span> <code class="varname">bus</code>,
+    <span class="type">uint64 *</span><code class="varname">cookie</code>,
+    struct <span class="type">device_info *</span><code class="varname">info</code>,
+    <span class="type">uint32</span> <code class="varname">info_size</code>);
+</pre><p>
+iterates through the devices on the specified bus, placing info size
+bytes of information about each device in a device info structure. For
+example, the following loop runs through the ISA devices:
+</p><pre class="programlisting c">
+<span class="comment">/* cookie = 0 signals start of enumeration */</span>
+<span class="type">uint64</span> <code class="varname">cookie</code> = 0;
+struct <span class="type">device_info</span> <code class="varname">info</code>;
+
+while (<code class="varname">module</code>-&gt;<code class="function">get_next_device_info</code>(
+    <code class="constant">B_ISA_BUS</code>, &amp;<code class="varname">cookie</code>, &amp;<code class="varname">info</code>,
+    <code class="function">sizeof</code>(struct <span class="type">device_info</span>)) == <code class="constant">B_OK</code>) {
+  ...
+}
+</pre><p>
+For completeness, the device info declaration:
+</p><pre class="programlisting c">
+struct <span class="type">device_info</span> {
+  <span class="comment">/* Size in bytes of bus-independent and
+   * bus-dependent data for this device */</span>
+  <span class="type">uint32</span>    <code class="varname">size</code>;
+
+  <span class="comment">/* Offset, relative to the start of the structure,
+   * to the bus-dependent data for the device */</span>
+  <span class="type">uint32</span>    <code class="varname">bus_dependent_info_offset</code>;
+
+  <span class="comment">/* B_ISA_BUS or B_PCI_BUS */</span>
+  <span class="type">bus_type</span>  <code class="varname">bus</code>;
+
+  <span class="comment">/* Device code, a la PCI */</span>
+  <span class="type">device_type</span>  <code class="varname">devtype</code>;
+
+  <span class="comment">/* "Normally unique and persistent" id for the
+   * device */</span>
+  <span class="type">uint32</span>    <code class="varname">id</code>[4];
+
+  <span class="comment">/* Device-independent flags */</span>
+  <span class="type">uint32</span>    <code class="varname">flags</code>;
+
+  <span class="comment">/* If config status is B_OK, the device is working
+   * properly. Otherwise, the device is disabled and
+   * should be ignored by device drivers */</span>
+  <span class="type">status_t</span>    <code class="varname">config_status</code>;
+};
+</pre><p>
+The configuration manager will report up to <code class="varname">size</code> bytes of information
+about the device. This includes both bus-independent data, as described
+by the <span class="type">device_info</span> structure, and bus-dependent data, which appear
+beginning at offset <code class="varname">bus_dependent_info_offset</code> in the returned buffer.
+Since you can't know how large the device information buffer should be
+until after you've read it, the configuration manager provides an
+additional function to load the device info for a specific device:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> (*<code class="varname">get_device_info_for</code>)(
+    <span class="type">uint64</span> <code class="varname">device</code>,
+    struct <span class="type">device_info *</span><code class="varname">info</code>,
+    <span class="type">uint32</span> <code class="varname">len</code>);
+</pre><p>
+The revised loop now looks like this (with error checks stripped out):
+</p><pre class="programlisting c">
+while (<code class="varname">module</code>-&gt;get_next_device_info(<code class="constant">B_ISA_BUS</code>, &amp;<code class="varname">cookie</code>,
+    &amp;<code class="varname">info</code>, <code class="function">sizeof</code>(<span class="type">device_info</span>)) == <code class="constant">B_OK</code>) {
+  struct <span class="type">device_info *</span><code class="varname">dinfo</code>;
+  struct <span class="type">isa_info *</span><code class="varname">iinfo</code>;
+
+  <span class="comment">/* only worry about configured devices */</span>
+  if (<code class="varname">config_status</code> != <code class="constant">B_OK</code>) continue;
+
+  <code class="varname">dinfo</code> = malloc(<code class="parameter">info</code>.<code class="varname">size</code>);
+  <span class="type">module</span>-&gt;<code class="function">get_device_info_for</code>(
+      <code class="varname">cookie</code>, &amp;<code class="varname">dinfo</code>, <code class="parameter">info</code>.<code class="varname">size</code>);
+  <code class="varname">iinfo</code> = (struct <span class="type">isa_info *</span>)((<span class="type">char *</span>)<code class="varname">dinfo</code> +
+      <code class="parameter">info</code>.<code class="varname">bus_dependent_info_offset</code>);
+  ...
+  <code class="function">free</code>(<code class="varname">dinfo</code>);
+}
+</pre><p>
+ISA bus-dependent information is stored as <span class="type">isa_info</span>, defined in
+<code class="filename">drivers/isapnp.h</code>,
+and PCI-specific data are stored as pci_info, defined
+in <code class="filename">drivers/PCI.h</code>.
+A driver typically peeks at the bus-dependent
+information to determine whether it can control a particular device.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id762517"></a>3. Reporting the current configuration for devices.</h3></div></div></div><p>
+Once a driver has identified a known device, it must fetch the device's
+configuration. This is done via a pair of functions:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> (*<code class="varname">get_size_of_current_configuration_for</code>)(
+    <span class="type">uint64</span> <code class="parameter">device</code>);
+
+<span class="type">status_t</span> (*<code class="varname">get_current_configuration_for</code>)(
+    <span class="type">uint64</span> <code class="parameter">device</code>,
+    struct <span class="type">device_configuration *</span><code class="parameter">config</code>,
+    <span class="type">uint32</span> len);
+</pre><p>
+These functions are usually called this way:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> <code class="varname">result</code>;
+struct <span class="type">device_configuration *</span><code class="varname">config</code>;
+
+<code class="varname">result</code> = <code class="varname">module</code>-&gt;<code class="function">get_size_of_current_configuration_for</code>(<code class="varname">cookie</code>);
+if (<code class="varname">result</code> &lt; 0) return <code class="constant">B_ERROR</code>;
+<code class="varname">config</code> = malloc(<code class="varname">result</code>);
+if (!<code class="varname">config</code>) return <code class="constant">B_ERROR</code>;
+if (<code class="varname">module</code>-&gt;<code class="function">get_current_configuration_for</code>(
+    <code class="varname">cookie</code>, <code class="varname">config</code>, <code class="varname">result</code>) &lt; <code class="constant">B_OK</code>) {
+  <code class="function">free</code>(<code class="varname">config</code>);
+  return <code class="constant">B_ERROR</code>;
+}
+...
+<code class="function">free</code>(<code class="varname">config</code>);
+</pre><p>
+The device configuration is an array of resource descriptors representing
+the resources (<acronym class="acronym" title="Interrupt ReQuest">IRQ</acronym>s,
+<acronym class="acronym" title="Direct Memory Access">DMA</acronym>s, I/O ports, and
+memory) assigned to the device. Resource descriptors come in two flavors.
+<acronym class="acronym">IRQ</acronym>s and <acronym class="acronym">DMA</acronym>s are described as masks,
+while I/O ports and memory are described as ranges. Masks are bitfields,
+with the <span class="emphasis"><em>n</em></span>th bit representing the
+<span class="emphasis"><em>n</em></span>th <acronym class="acronym">IRQ</acronym> or <acronym class="acronym">DMA</acronym>.
+Exactly one of the bits will be set in each mask. Ranges are described by
+two values, the minbase and the len, with the range running from minbase to
+minbase + len - 1, inclusive.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id762727"></a>4. Interpreting configuration information.</h3></div></div></div><p>
+The following routines help drivers wade through device configurations:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> (*<code class="varname">count_resource_descriptors_of_type</code>)(
+    const struct <span class="type">device_configuration *</span><code class="parameter">config</code>,
+    <span class="type">resource_type</span> <code class="parameter">type</code>);
+
+<span class="type">status_t</span> (*<code class="varname">get_nth_resource_descriptor_of_type</code>)(
+    const struct <span class="type">device_configuration *</span><code class="parameter">config</code>,
+    <span class="type">uint32</span> <code class="parameter">n</code>,
+    <span class="type">resource_type</span> <code class="parameter">type</code>,
+    <span class="type">resource_descriptor *</span><code class="parameter">descriptor</code>,
+    <span class="type">uint32</span> <code class="parameter">descriptor_size</code>);
+</pre><p>
+These function precisely as their names and prototypes suggest.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id762816"></a>5. Reporting possible configurations for devices.</h3></div></div></div><p>
+The configuration manager selects configurations for devices based on
+sets of possible configurations reported by each device. Drivers
+typically won't ever need to access these configurations; they're
+provided for the benefit of device management utilities such as the new
+Devices preference application.
+</p><pre class="programlisting c">
+<span class="type">status_t</span> (*<code class="varname">get_size_of_possible_configurations_for</code>)(
+    <span class="type">uint64</span> <code class="parameter">device</code>);
+
+<span class="type">status_t</span> (*<code class="varname">get_possible_configurations_for</code>)(
+    <span class="type">uint64</span> <code class="parameter">device</code>,
+    struct <span class="type">possible_device_configurations *</span><code class="parameter">possible</code>,
+    <span class="type">uint32</span> <code class="parameter">len</code>);
+</pre><p>
+<span class="type">possible_device_configurations</span> is an array of <span class="type">device_configuration</span>
+structures, with each element representing a set of possible
+configurations. Since the size of a <span class="type">device_configuration</span> is variable, you
+can't access individual device configurations by directly indexing the
+array. Instead, you have to walk the structure manually:
+</p><pre class="programlisting c">
+#define <code class="function">NEXT_POSSIBLE</code>(<code class="parameter">c</code>) \
+  (<code class="parameter">c</code>) = (struct <span class="type">device_configuration *</span>) \
+    ((<span class="type">uchar *</span>)(<code class="parameter">c</code>) + \
+    <code class="function">sizeof</code>(struct <span class="type">device_configuration</span>) + \
+    (<code class="parameter">c</code>)-&gt;<code class="varname">num_resources</code> * \
+    <code class="function">sizeof</code>(<span class="type">resource_descriptor</span>))
+
+struct <span class="type">device_configuration *</span><code class="varname">config</code> =
+    <code class="varname">possible</code>-&gt;<code class="varname">possible</code> + 0;
+
+for (<code class="varname">i</code>=0;<code class="varname">i</code>&lt;<code class="varname">possible</code>-&gt;<code class="varname">num_possible</code>;<code class="varname">i</code>++)
+{
+  ...
+  <code class="function">NEXT_POSSIBLE</code>(<code class="varname">config</code>);
+}
+</pre><p>
+Descriptors for possible configurations differ slightly from their
+current configuration counterparts since they represent a set of possible
+choices rather than a single selection. Masks may have multiple bits set,
+with each bit representing a possible <acronym class="acronym">IRQ</acronym> or
+<acronym class="acronym">DMA</acronym> setting. Ranges are
+described by a minbase, a maxbase, a basealign, and a len, describing a
+range starting between minbase and maxbase, in increments of basealign,
+and having length len.
+</p><p>
+Most <acronym class="acronym">API</acronym>s make more sense when you see them in action, so next time we'll
+develop an application demonstrating the use of the configuration manager.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-48"></a>Developers' Workshop: Back to Basics</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+In this article I'm going to reinvestigate some of the basic building
+blocks of the BeOS. We'll look at what I'll call the AppKit model:
+<code class="classname">BMessage</code>s, <code class="classname">BLooper</code>s,
+<code class="classname">BHandler</code>s, and <code class="classname">BMessenger</code>s.
+</p><p>
+The <code class="classname">BMessage</code> is fundamentally a data container,
+commonly used to hold both instructions and data to be acted upon.
+<code class="classname">BHandler</code>s are objects that perform an action when
+<code class="classname">BMessage</code>s are delivered to them; they handle the
+incoming message. <code class="classname">BLooper</code>s are threaded
+<code class="classname">BHandler</code>s that run a message loop, waiting for
+incoming <code class="classname">BMessage</code>s and dispatching them to the
+appropriate <code class="classname">BHandler</code>s.
+<code class="classname">BMessenger</code>s are system wide tokens that represent a
+given <code class="classname">BLooper</code>-<code class="classname">BHandler</code> pair,
+delivering messages to (and replies from) the specified
+<code class="classname">BHandler</code>.
+</p><p>
+The most visible examples of <code class="classname">BLooper</code>s and
+<code class="classname">BHandler</code>s are BApplications,
+<code class="classname">BWindow</code>s, and <code class="classname">BView</code>s.
+These lie at the heart of the BeOS APIs, and are
+common to most BeOS applications. Many developers, however, seem to use
+the AppKit model only in their interface areas, where it is pretty much
+required. Since the AppKit model has other valid uses, I'm going to offer
+some design ideas that may persuade developers to take advantage of its
+versatility.
+</p><p>
+First though, a list of the AppKit model's advantages and disadvantages
+to keep in mind while reviewing my designs.
+</p><p>
+Advantages:
+</p><ul class="itemizedlist"><li><p>
+Uses a common, familiar system where a great deal of organizational
+work is handled by the BeOS. This includes a well-defined communication
+system, automatic threading of your app, and built-in object management
+through the <code class="classname">BLooper</code> <code class="methodname">AddHandler()</code>
+and <code class="methodname">RemoveHandler()</code> functions.
+</p></li><li><p>
+The public class interface is easily extendable by extending the
+messaging protocol used. The functions to handle the new messages are
+usually private functions, and can be extended as necessary.
+</p></li><li><p>
+The interface can be exposed to interapplication systems by
+publishing the messaging protocol. This allows other apps doing
+complementary work to interact with your application easily.
+</p></li><li><p>
+The system interface is eligible for scripting, since the AppKit
+model is the basis of the BeOS scripting mechanism.
+</p></li></ul><p>
+Disadvantages:
+</p><ul class="itemizedlist"><li><p>
+A <code class="classname">BLooper</code> thread's main responsibility of is to run
+the message loop, not some other tasks. To have threads work on other tasks
+requires using Kernel Kit threads. The <code class="classname">BLooper</code>
+threading model is therefore not always appropriate to the task at hand.
+However, combining the two models can work well (i.e., a
+<code class="classname">BLooper</code> with extra, special-purpose threads for
+other tasks).
+</p></li><li><p>
+<code class="classname">BHandler</code>s can belong to only one
+<code class="classname">BLooper</code>, effectively serializing access to each
+handler. This can be problematic in a system where the
+<code class="classname">BHandler</code> would (ideally) be accessible by multiple
+threads. Some designs can work around the limitation by creating a new
+<code class="classname">BHandler</code> subclass for each
+<code class="classname">BLooper</code>, but this works only when the
+<code class="classname">BHandler</code>s themselves do not encapsulate data that
+needs to be instantiated only once.
+</p></li><li><p>
+Adding information to <code class="classname">BMessage</code>s requires copying
+that data. This can introduce significant overhead if large amounts of
+information need to be transmitted, or if the data needs to be looked at
+many times over the course of an operation. Introducing other methods of
+data sharing (like putting a reference to a shared memory area or a pointer
+to data into the <code class="classname">BMessage</code>) can reduce the size and
+complexity of the messages. Note that this might lead to some undesirable
+consequences, as the recipient of the <code class="classname">BMessage</code> no
+longer has to go through the messaging mechanism to access the data.
+</p></li></ul><p>
+Keeping these advantages and disadvantages in mind, here are two design
+schemes that use the AppKit model: the Handler as Data Object and Handler
+as Operation.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id763301"></a>Handler as Data Object</h3></div></div></div><p>
+In this scheme, the <code class="classname">BHandler</code> contains both the data to be acted upon and
+the knowledge of how modifications are to be performed. The data is
+encapsulated in a self-modifying object. <code class="classname">BMessage</code>s serve as instructions
+for what actions to perform. The <code class="classname">BLooper</code> serves as the initial interface
+to the various objects, but would usually pass back <code class="classname">BMessenger</code>s for the
+appropriate data objects, so the outside processes can deal with them
+directly.
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id763332"></a>Example: Transaction Server</h4></div></div></div><p>
+Here, the data object can be independently acted upon by multiple
+threads/applications while in a guaranteed consistent state. <code class="classname">BMessage</code>s
+instruct the server to create, delete, or modify objects. Change
+notifications can be sent back to all interested processes. Furthermore,
+the transactions can be recorded so that a previous state could be
+reinstated by rewinding the transaction stack.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id763355"></a>Handler as Operation</h3></div></div></div><p>
+In this scheme, each <code class="classname">BHandler</code> represents an operation that can be
+performed on some data. The <code class="classname">BMessage</code> carries the data to modify and
+instructions about which operations to carry out. The <code class="classname">BLooper</code> serves as a
+common interface to the operations, investigating the instructions and
+passing the data to the operations in the correct order, then sending the
+modified data back to its origin.
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id763382"></a>Example: Data Filters</h4></div></div></div><p>
+Use <code class="classname">BHandler</code>s to represent add-on filters to manipulate data. Have each
+add-on create an entry function that returns a <code class="classname">BHandler</code> that performs the
+appropriate filter. Then simply pass the data to each filter as
+appropriate. This could be parallelized by calling the entry function for
+a new <code class="classname">BHandler</code> for each thread that needs a copy of the filter, at the
+expense of more memory.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id763410"></a>Example: State Machine</h4></div></div></div><p>
+A <code class="classname">BLooper</code> represents a state machine, with
+<code class="classname">BHandler</code>s representing each
+state. The looper passes the appropriate instructions off to each state,
+which responds to them and asks the <code class="classname">BLooper</code> to change state when
+appropriate. In this example, the <code class="classname">BLooper</code>s might contain the data to act
+upon, rather than a <code class="classname">BMessage</code>, but the view from the
+<code class="classname">BHandler</code> is the same.
+</p></div></div><p>
+You can find some simple example code for these two schemes at:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/application_kit/AppKitModel.zip&gt;
+</p><p>
+Both schemes perform the same work, transforming strings to uppercase,
+lowercase, or mixed case (with every word capitalized.) They implement
+the code to modify the strings the same way, using the <code class="classname">BString</code> class
+functions: <code class="methodname">ToUpper()</code>,
+<code class="methodname">ToLower()</code>, and <code class="methodname">CapitalizeEachWord()</code>.
+They also act on the
+same two strings. The only difference between the two examples is the
+schemes used to organize the code (and correspondingly, the printed
+output).
+</p><p>
+This structure is obviously overkill for simple string modification, but
+the schemes become more useful as the complexity of the data and
+operations increases. Strings are just an easy way to demonstrate the
+various designs. The Notes file in each folder explains how the project
+is put together. Also, note that both applications are useful only when
+run from the command line, as all feedback is through <code class="function">printf()</code> calls.
+</p><p>
+I hope these designs can be helpful in your programs, or at least will
+start you thinking more about the overall design of your application.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-48"></a>Our Take on AOL's Acquisition of Netscape</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+A week ago, when the rumors of AOL's acquisition of Netscape were
+confirmed, I didn't think it had much immediate impact on our company.
+Others differed. I received several e-mail messages asking what our
+position was. Correspondents were of the opinion that every move against
+Microsoft implicitly favors us, and thought the reference to an "AOL
+appliance" indicated an opportunity for a BeOS-powered Web appliance.
+And, last Friday, I found this in the San Jose Mercury News:
+</p><p>
+&lt;http://www.mercurycenter.com/premium/business/docs/loveqa27.htm&gt;
+</p><p>
+Selected quotations from the full story:
+</p><p>
+One leading critic of this acquisition is Jamie Love, an antitrust
+economist and director of the Ralph Nader-affiliated Consumer Project on
+Technology in Washington, D.C. His group was among those that
+successfully lobbied for the government to change WorldCom Inc.'s plans
+to acquire MCI Communications Corp., the long-distance phone company,
+earlier this year.
+</p><p>
+Now, Love wants to block the AOL-Netscape agreement because he believes
+it eliminates Netscape, a significant Microsoft rival, and gives two
+companies—AOL and Microsoft—too much power to impose their own
+company-controlled software on the Internet.
+</p><p>
+Love discussed his concerns with Mercury News staff in the following
+edited answers to questions posed by e-mail.
+</p><p>
+[...]
+</p><p>
+Q: So what changes might you seek in the AOL-Netscape deal?
+</p><p>
+A: There are several areas where the AOL-Netscape merger concerns us.
+Will AOL and Microsoft exert so much power in e-commerce that they can
+extort revenues from firms that they feature for their customers? Will
+they undermine non-affiliated technologies for new multimedia services?
+Will AOL strike a deal with Microsoft to drop support for applications
+that run on Linux (a version of the Unix operating system that is freely
+available on the Internet) or other operating systems? Maybe AOL could
+(be compelled to) agree to support AOL and Netscape on Linux or BeOS (an
+operating system made by Be, Inc.) and promote greater choices for PC
+operating systems.
+</p><p>
+This is healthy publicity, and probably even friendlier in intent than
+the plug we got from Bill Gates at Microsoft's shareholders meeting
+almost three weeks ago. But we shouldn't let only others speak on our
+behalf, however eloquent and motivated.
+</p><p>
+First, I heard and read suggestions that since the AOL/Netscape deal was
+against Microsoft then there must be something in it for us. The logic is
+understandable: Microsoft abuses its dominant position, so let's do
+anything we can to diminish their power. This is flawed logic, however. A
+benevolent regime doesn't automatically follow a toppled tyrant, as
+history and contemporary events demonstrate painfully enough.
+</p><p>
+In our view, being against Microsoft isn't good or bad in itself. What is
+good is more choice—real choice—not, for example, the kind we used
+to have with only two cellular service providers in town, GTE and
+Cellular One. Economists established long ago that oligopolies aren't
+really an improvement over monopolies. With this in mind, let's hope the
+AOL/Netscape deal really does create more choice, not the kind of
+diversity that results only in more people like us, not more people like
+them.
+</p><p>
+(For another very good piece on the topic, see Denise Caruso's November
+30th column in the New York Times:
+</p><p>
+&lt;http://www.nytimes.com/library/tech/98/11/biztech/articles/30digi.html&gt;).
+</p><p>
+Personally, I imagine Microsoft thinks there must be a god and she likes
+Bill. Try selling this script in Hollywood: right in the middle of the
+"trial of the century," two of the cyber-tyrant's alleged victims merge
+to form an Internet powerhouse that subverts, if not entirely kills off,
+the DOJ's argument. The studio would banish you to North Korea on a
+mission to teach market economics.
+</p><p>
+Just ten days ago, Microsoft's PR machine was straining against the bad
+impressions generated by Bill Gates' video deposition. Now they're
+working full time on the new message: We told you so, Microsoft is a
+company constantly under competitive threat.
+</p><p>
+As for Web appliances, yes, the concept is gaining momentum and the BeOS
+could make a contribution at the intersection of two requirements, rich
+multimedia user experience, the NC with charm, and a small core enabling
+fast, inexpensive devices. That would create more choice. Unless
+Microsoft, never asleep at the wheel, embraces and extends it—as
+always. I hear they already have a name for it. PortalPC. Has a nice ring
+to it.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-47.html">Issue 3-47, November 25, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-49.html">Issue 3-49, December 9, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-47.html" title="Issue 3-47, November 25, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-49.html" title="Issue 3-49, December 9, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

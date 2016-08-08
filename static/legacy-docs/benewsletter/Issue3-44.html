@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-43.html" title="Issue 3-43, October 27, 1998" /><link rel="next" href="Issue3-45.html" title="Issue 3-45, November 11, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-43.html" title="Issue 3-43, October 27, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-45.html" title="Issue 3-45, November 11, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-43.html">Issue 3-43, October 27, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-45.html">Issue 3-45, November 11, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-44"></a>Issue 3-44, November 4, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-44"></a>Be Engineering Insights: Removable Media</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Arve</span> <span class="surname">Hjønnevåg</span></span></div></div></div><p>
+You may remember that BeOS Release 3 wasn't up to handling removable
+media in a flexible way. The <acronym class="acronym">SCSI</acronym> and <acronym class="acronym">IDE</acronym> drivers would fail to open if
+there was no media in a drive. This caused applications like <span class="application">DriveSetup</span>
+and <span class="application">Tracker</span> to open and close devices to check whether the media in the
+drives had changed. There are several disadvantages to doing this:
+</p><ul class="itemizedlist"><li><p>
+The driver may be reloaded each time you check for media
+</p></li><li><p>
+You can't get information about drives with no media
+</p></li><li><p>
+You can't operate devices with no media
+</p></li><li><p>
+The driver decides if you should wait on a busy drive
+</p></li></ul><p>
+Let's look more closely at these problems. First, since BeOS unloads
+drivers that are not in use, using open/close to detect media presence
+often causes the driver to be reloaded. If the driver doesn't publish
+other devices that are in use, keeping the driver loaded, the device can
+never be opened when there is no media. The result is that every time you
+check for media the driver has to be loaded and initialized, then open is
+called, open fails, and the driver is unloaded. Since the <acronym class="acronym">IDE</acronym> and <acronym class="acronym">SCSI</acronym>
+drivers are built into the kernel, this is only a problem in Release 3 if
+you use third party drivers.
+</p><p>
+The second problem is more serious. That is, you can't get any
+information about a device. This means that an application like <span class="application">CDPlayer</span>
+in Release 3 uses special devices that store information about all <acronym class="acronym">IDE</acronym>
+and <acronym class="acronym">SCSI</acronym> devices. It then uses this information to tell which devices are
+CD-ROM drives. So, for example, if you want to add a driver for a sound
+card CD-ROM interface, <span class="application">CDPlayer</span> would not find your device. A less
+serious problem is that you can't see the icon for a device unless there
+is media in the drive.
+</p><p>
+Third, you can't operate devices with no media. This means that you can
+only eject media, you can't open an empty tray or close the tray of a
+CD-ROM drive.
+</p><p>
+Finally, the driver decides if you should wait on a busy drive. This
+means that either the open fails or it blocks until the drive is ready.
+The application may want to make that decision, so it can inform the user
+that the drive is busy, instead of just blocking.
+</p><p>
+R4 solves these problems by adding an <code class="function">ioctl</code>,
+<code class="constant">B_GET_MEDIA_STATUS</code>, to get
+the media status. Open will succeed even if there is no media in the
+drive, and the driver will accept commands that do not require the media
+to be present. The following code shows how this ioctl can be used.
+</p><pre class="programlisting c">
+<span class="type">status_t</span> <code class="varname">media_status</code>;
+if(<code class="function">ioctl</code>(<code class="varname">devfd</code>, <code class="constant">B_GET_MEDIA_STATUS</code>,
+     &amp;<code class="varname">media_status</code>, <code class="function">sizeof</code>(<span class="type">status_t</span>)) &lt; 0)
+{
+  // old driver, abort
+}
+
+switch(<code class="varname">media_status</code>) {
+  case <code class="constant">B_NO_ERROR</code>:
+    <span class="comment">// drive ready with media</span>
+    <span class="comment">// enable all controls</span>
+    break;
+  case <code class="constant">B_DEV_NO_MEDIA</code>:
+    <span class="comment">// no media in drive</span>
+    <span class="comment">// disable controls that need media</span>
+    <span class="comment">// delete information about media</span>
+    <span class="comment">// load eject still works</span>
+    break;
+  case <code class="constant">B_DEV_NOT_READY</code>:
+    <span class="comment">// drive not ready.</span>
+    <span class="comment">// disable controls, keep media information</span>
+    break;
+  case <code class="constant">B_DEV_MEDIA_CHANGED</code>:
+    <span class="comment">// media in drive has changed</span>
+    <span class="comment">// delete old and collect new information about media</span>
+    break;
+  case <code class="constant">B_DEV_MEDIA_CHANGE_REQUESTED</code>:
+    <span class="comment">// user pressed eject button on drive</span>
+    break;
+#if R5
+  case <code class="constant">B_DEV_DOOR_OPEN</code>;
+    <span class="comment">// eject/load button loads</span>
+    <span class="comment">// handle ad B_DEV_NO_MEDIA;</span>
+    break;
+#endif
+  default:
+    <span class="comment">// unknown state</span>
+    break;
+}
+</pre><p>
+R4 adds another <code class="function">ioctl</code>, <code class="constant">B_LOAD_MEDIA</code>,
+that tries to load media into the
+drive. Most CD-ROM drives use a tray to load CDs; for these drives
+<code class="constant">B_LOAD_MEDIA</code> closes the tray if it is open. R4 does not define a separate
+status for a drive with the door/tray open. If you want a combined
+load/eject button, you need to know if the door is open or not. If you
+need to do this, you can contact me about how to use the raw <acronym class="acronym">SCSI</acronym>/<acronym class="acronym">ATAPI</acronym>
+command interface, or you can wait for R5.
+</p><p>
+An important result of open succeeding with no media in the drive is that
+you can now iterate through devices in
+<code class="filename">/dev/disk</code> to find drives of a
+specific type. This is very useful for <span class="application">CDPlayer</span>-type applications that
+want to find all CD-ROM drives in the system. Note that CD-ROM changers
+normally publish a separate device for each slot. In other words, make
+sure you allow the user to easily switch between the devices you find.
+</p><p>
+The following code shows how to find CD-ROM devices:
+</p><pre class="programlisting c">
+<span class="type">void</span> <code class="function">search_dir</code>(<span class="type">const char *</span><code class="parameter">dirname</code>)
+{
+  <code class="classname">BDirectory</code> <code class="varname">dir</code>;
+  <code class="varname">dir</code>.<code class="methodname">SetTo</code>(<code class="parameter">dirname</code>);
+  if(<code class="varname">dir</code>.<code class="methodname">InitCheck</code>() != <code class="constant">B_NO_ERROR</code>) {
+    return;
+  }
+
+  <code class="varname">dir</code>.<code class="methodname">Rewind</code>();
+  <code class="classname">BEntry</code> <code class="varname">entry</code>;
+
+  while(<code class="varname">dir</code>.<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">entry</code>) &gt;= 0) {
+    <code class="classname">BPath</code> <code class="varname">path</code>;
+    <span class="type">const char *</span><code class="varname">name</code>;
+    <span class="type">entry_ref</span> <code class="varname">e</code>;
+
+    if(<code class="varname">entry</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>) != <code class="constant">B_NO_ERROR</code>)
+      continue;
+    <code class="varname">name</code> = <code class="varname">path</code>.<code class="methodname">Path</code>();
+
+    if(<code class="varname">entry</code>.<code class="methodname">GetRef</code>(&amp;<code class="varname">e</code>) != <code class="constant">B_NO_ERROR</code>)
+      continue;
+
+    if(<code class="varname">entry</code>.<code class="methodname">IsDirectory</code>()) {
+      if(strcmp(<code class="varname">e</code>.<code class="varname">name</code>, "floppy") == 0)
+        continue; <span class="comment">// ignore floppy (it is not silent)</span>
+      <code class="function">search_dir</code>(<code class="varname">name</code>);
+    }
+    else {
+      <span class="type">int</span> <code class="varname">devfd</code>;
+      <span class="type">device_geometry</span> <code class="varname">g</code>;
+
+      if(strcmp(<code class="varname">e</code>.<code class="varname">name</code>, "raw") != 0)
+        continue; <span class="comment">// ignore partitions</span>
+
+      <code class="varname">devfd</code> = open(<code class="varname">name</code>, <code class="constant">O_RDONLY</code>);
+      if(<code class="varname">devfd</code> &lt; 0)
+        continue;
+
+      if(<code class="function">ioctl</code>(<code class="varname">devfd</code>, <code class="constant">B_GET_GEOMETRY</code>, &amp;<code class="varname">g</code>, sizeof(<code class="varname">g</code>)) &lt; 0)
+        continue;
+
+      if(<code class="varname">g</code>.<code class="varname">device_type</code> == <code class="constant">B_CD</code>)
+        <code class="function">printf</code>("found CD-ROM drive, %s\n", <code class="varname">name</code>);
+    }
+  }
+}
+
+<span class="type">void</span> <code class="function">find_cdroms</code>()
+{
+  <code class="function">search_dir</code>("/dev/disk");
+}
+</pre><p>
+A final note if you are writing a disk driver that supports removable
+media. To ensure that media changes aren't ignored, the change has to be
+reported to all open file descriptors. When the driver detects that the
+media has changed, it should set a flag for each file descriptor that the
+media has changed. This flag should only be cleared by a
+<code class="constant">B_GET_MEDIA_STATUS</code> <code class="function">ioctl</code>
+on the corresponding file descriptor. This is
+important, as it forces the caller to deal with the change. If the driver
+doesn't behave this way it's possible for an application to read a buffer
+from one disk, modify it, and write it back to another disk by accident.
+</p><p>
+For R4 only the <acronym class="acronym">IDE</acronym> drivers implement
+<code class="constant">B_DEV_MEDIA_CHANGED</code>, so be careful
+with other drives, just as you were in Release 3.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-44-2"></a>Be Engineering Insights: Watching Stuff</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+I've been preoccupied lately with the R4 Beta Test, so it came as a
+surprise that I had two articles due this week, one for the Newsletter
+and one for the Developer Letter. I tried to get one of my DTS minions to
+pinch hit, but nothing doing. Being a manager is not all it's cracked up
+to be.
+</p><p>
+So here's an article and sample code to introduce a couple of new
+features of R4. The code runs only under R4, but you'll be getting that
+soon enough.
+</p><p>
+The code can be found at:
+</p><p>
+ftp://ftp.be.com/pub/samples/application_kit/Watcher.zip
+</p><p>
+Watcher is a very simple application. It keeps a current display of two
+sets of items: the currently running applications (with the active
+application in red), and a list of mounted and previously mounted
+volumes, the latter in blue.
+</p><p>
+Both of these tasks could be performed in R3, but with difficulty. To
+keep track of the apps, you had to poll the be_roster to get the list of
+running applications, and then check to see which one was active. You had
+to poll fairly constantly to keep the list up to date. On the volume
+side, a simple call to <code class="classname">BVolumeRoster</code>::<code class="methodname">StartWatching()</code> would inform you
+about mounting and unmounting volumes, but determining if a newly mounted
+volume and a previously mounted volume with the same name were identical
+was difficult at best.
+</p><p>
+New features in R4 make these trivial to implement, which is what I've
+done in Watcher.
+</p><p>
+Watching applications is straightforward. The <code class="classname">BRoster</code> class now has
+<code class="methodname">StartWatching()</code> and <code class="methodname">StopWatching()</code> functions, letting you specify a
+<code class="classname">BMessenger</code> to receive notifications about launching, quitting, and
+activating applications. The messages sent in response to these requests
+contain the application signature, the <span class="type">team_id</span>, the main <span class="type">thread_id</span>, the
+launch flags, and the <span class="type">entry_ref</span> for the application's binary. This
+concise information allows Watcher to display the application names and
+teams, and keep the list applications launched, quit, and newly activated
+up to date.
+</p><p>
+Keeping track of unique volumes is also much easier in R4. A new
+"be:volume_id" attribute is tagged onto the root folder of volumes. This
+<span class="type">uint64</span> provides an identifier that persists between mountings of the
+volume and boots of the BeOS. Now applications that need to uniquely
+identify volumes (like back-up utilities or databases) have an easier
+time. Watcher keeps track of all the persistent volumes mounted on the
+machine, and displays the <span class="type">volume_id</span>, <span class="type">device id</span>, and name of each. When a
+volume is unmounted, Watcher marks it in blue. When it is mounted again,
+Watcher looks to see if it can find a match for the <span class="type">volume_id</span>, updating
+the device number and name of each volume appropriately.
+</p><p>
+That's pretty much it for Watcher. If you want to take a bit more
+advantage of its capabilities, you could expand it to watch
+<acronym class="acronym" title="Multi-purpose Internet Mail Extensions">MIME</acronym> type
+information as well through the new <code class="classname">BMimeType</code>
+<code class="methodname">StartWatching()</code> and
+<code class="methodname">StopWatching()</code> functions. These inform a
+<code class="classname">BMessenger</code> of changes made to
+existing <acronym class="acronym">MIME</acronym> types, but don't inform it when <acronym class="acronym">MIME</acronym> types are added or
+deleted. Also, Watcher makes limited use of the new <code class="classname">BString</code> class for
+(you guessed it) string manipulation.
+</p><p>
+Look for these and other interesting features when R4 is released.
+</p><p>
+And now back to beta testing...
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-44"></a>Testing and Tracking</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Johnson</span></span></div></div></div><p>
+This article is written for engineering-oriented software developers who
+have a product to sell but have minimal marketing experience to guide
+them in the business side of the venture. The article introduces the
+concepts behind basic marketing research and offers practical examples of
+methods for conducting and analyzing simple tests. References to some
+more extensive web-based marketing research information are included at
+the end.
+</p><p>
+Anyone with surplus "thrill genes" might want to avoid this article. I'm
+going to spoil the fun and show you how to reduce the element of surprise
+when making business decisions.
+</p><p>
+I know, I know—what fun is it without the risk? Do you really want to
+give up the rush you get from making a big bet and waiting to discover
+that a strategy works or doesn't? Do you need to experience the extreme
+lows of utter failure to fuel your creative spurts?
+</p><p>
+I'm going to write about testing, measuring, and analyzing the collected
+data (marketing research). In later articles I'll talk about
+incorporating this data into the process of planning, projecting, and
+budgeting. This will ultimately lead to talking about developing a
+comprehensive business plan (groan). If you're not careful I might even
+turn you into a dreaded bean counter.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id754362"></a>Statement</h3></div></div></div><p>
+I'll start with a statement: You can test your marketing messages, ads,
+prices, offers, and other marketing efforts. You can measure the results
+of these tests, compare them with the results of other marketing efforts,
+and use the collected data to make decisions, forecasts, and predictions.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id754378"></a>Testing and Measurement</h3></div></div></div><p>
+The best way to get into this is to use a simple, practical example.
+Suppose you're wondering about the best way to make an effective demo
+version of your product. Do you want to have a limited-time,
+full-featured version that does everything but expires after a certain
+number of days, or do you want a version that limits what the user can do
+with your product? There are arguments for and against both approaches.
+For example, if you provide a full-featured version, are you unknowingly
+telling your users that your product can be used for free, even though
+the demo version has an expiration date? If you provide a limited
+version, will potential customers get a poor idea of the program's
+capabilities?
+</p><p>
+To decide what to do CONDUCT A TEST AND ANALYZE THE RESULTS! (I want to
+encourage you to answer EVERY question by saying, "Test it.")
+</p><p>
+Here's an example of a hypothetical test. Create both versions of the
+product and make them available to potential customers in a controlled
+manner, then track the results of the test. Perhaps you could make your
+demos available from web sites that will attract similar demographics. Or
+perhaps you could place a web ad that directs people to a special web
+page you've set up where you can switch the offering on every hour or day
+or so. These are examples of methods of collecting data about the
+behavior of potential customers in response to your offering.
+</p><p>
+It's important to keep track of all the data that comes from your test.
+Track how many people visit the web page. If you are using this method to
+track responses remember not to use the "hit count" because that reflects
+each file downloaded, including graphics, which can greatly inflate the
+count. Instead, track the separate IP addresses of your visitors. If
+you're using an ISP for you web page, many ISPs provide this information.
+Or you can use a counter that displays the number of visitors. Along with
+the number of visitors, be sure to track how many people download the
+different versions of the demo.
+</p><p>
+There are a lot of things you can also track that might not seem obvious
+but can yield useful information. Perhaps you can track what time of day
+people visit your web page. Perhaps from this you can surmise whether
+you're getting a lot of visitors from Europe or Germany based on the time
+of the hits. A more advanced web host (like Webcom) can even track where
+on the web people came from to get to your page. (It is said among direct
+marketing types that those direct mail record and CD clubs even test the
+different response forms with different colors of paper, and whether an
+initial offer of 4 records for a penny brings in a higher response than
+charging a dime—as well as whether these different factors influence
+how many initial members later default on their memberships!)
+</p><p>
+In addition to tracking this data you should set up a form and take the
+name and e-mail of everyone who downloads any version of the demo. This
+will help keep track of what these individuals do later.
+</p><p>
+Control of the test is very important. You need to be sure of what you're
+measuring. If data is sneaking in or out the back door you could wind up
+with inaccurate information. You aren't sure that you're getting accurate
+data if you don't have a way to be sure that what you believe to be the
+sample size is accurate. You also need to anticipate other factors that
+might affect your measurement of response.
+</p><p>
+Having purchased Gobe Productive for this purpose, you should set up a
+spreadsheet to track and compare the information you're collecting. If
+you analyze the data collected from this part of this imaginary test
+you'll learn:
+</p><div class="orderedlist"><ol><li><p>
+How many people download the product demo after viewing the web
+page. (You can try different approaches and see how many more people
+become interested enough to download. This will also help you craft
+your overall marketing message.)
+</p></li><li><p>
+If you placed an ad you've learned how many people visit the web
+page after seeing it. (You can try different ads or different offers
+and MEASURE the difference they make.)
+</p></li><li><p>
+If you specify that the demo version is "function-limited" or
+"time-limited" you'll learn whether more people prefer to download one
+over the other.
+</p></li></ol></div><p>
+Let's continue this hypothetical test and find out whether and how the
+different demos affect purchases. To do this, you need to track how many
+of the people who downloaded the demo later purchase your product. I can
+think of a number of ways to accomplish this. One is to match the name of
+the person with a later BeDepot sales report or other sale of the
+product. Another might be to give them a discount in a way that you can
+track whether they use the discount. Maybe you could offer this in a
+ReadMe that comes with the demo with a "tracking number" or something
+that lets you know it came from the demo. If you have more sophisticated
+capabilities from your web provider and some resources to set this up you
+can automate this kind of tracking and matching the user up to a later
+purchase.
+</p><p>
+After you match those who have downloaded the demo with those who later
+purchase the product you have some more valuable data:
+</p><div class="orderedlist"><ol><li><p>
+The percentage of people who download the full time-limited version
+and later purchase the product.
+</p></li><li><p>
+The percentage of people who download the feature-limited version
+and later purchase the product.
+</p></li><li><p>
+If you tracked earlier data well or expanded your test you also
+learn how different ads, marketing messages, etc., later increase
+purchases.
+</p></li><li><p>
+With more sophisticated tracking over a longer time you can even
+learn the long-term purchasing behavior of these customers. For
+example, do people who start with a full-featured demo later purchase
+more upgrades?
+</p></li></ol></div><p>
+Is there an increase in purchases by people for whom you can't account?
+In other words, did making the demo available increase sales among people
+other than those you could track—friends sending the demo around,
+people who saw the web page and didn't download the demo but still
+purchased it, or just a general effect from the exposure? If you find
+this happens consistently you can include it as a factor in determining
+revenue projections and planning.
+</p><p>
+Think about the implications of this simple test. You KNOW how many
+people who get your demo later purchase your product. I don't have to
+tell you the value of this kind of information. You can calculate the
+cost and return of distributing demos. In a later article I'll go into
+detail on this subject. It's relatively easy to learn this kind of
+valuable information, and since you CAN test these things it follows that
+you SHOULD.
+</p><p>
+Knowing the value of this information, let's put it to some practical
+use. Let's say you have to decide whether to press a CD with your demo
+version and decide how to distribute it. You have some information now
+that will help make this decision. You've probably decided which is the
+better demo—full-featured and time-limited or feature-limited. You've
+collected and analyzed some data about the effectiveness of your
+marketing message. You have some info about response to web ads. You also
+know the percentage of people who purchase your product after trying your
+demo.
+</p><p>
+Let's make another decision based on this information. Should you spend a
+ton of money to put an ad on Yahoo! to promote your product and
+distribute demos? Assuming that the demographic you'll reach with this ad
+is similar to the one you reached with the earlier ad you can estimate
+the results—within limits (see below).
+</p><p>
+To extend these basics a little further, should you try mailing the demo
+CD directly to people? You can use the data you've collected, as long as
+you recognize that there's a difference between responding to a web ad
+and receiving an unsolicited demo CD. (Later, of course, we'll TEST it.)
+Let's say it costs you a dollar to make a CD and a dollar to mail it. So
+your hypothetical distribution cost is $2/CD. Now let's pretend that from
+earlier tests you've learned that 3% of the people who get the demo later
+purchase the product. That means that you'll get 3 sales for every $200
+that you spend on these CDs with this distribution method. All of this
+looks like a perfect reason to purchase a spreadsheet program like
+BeatWare's Sum-It.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id754536"></a>Results of This Test</h3></div></div></div><p>
+After cranking all of this hypothetical data through your spreadsheet
+you'll find that if you get more than $66 of revenue from each unit you
+sell, this method is worth looking into. Actually sending bulk mail costs
+considerably less than a dollar and pressing CDs in quantity costs less,
+too. Remember to account for this in your spreadsheets. Additionally,
+increasing exposure will bring additional sales. So from this use of the
+data collected in our tests above you now know that it is worthwhile to
+design a test of direct mail.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id754547"></a>Limits</h3></div></div></div><p>
+Keep in mind that you should always be testing and analyzing all the data
+you receive. Every ad should be considered as a test, even if it was
+placed as a the result of a previous test. Always test small and then
+increase the scope of the test based on the results of earlier tests. In
+direct mail a general rule of thumb is to never mail to more than 10
+times your test. So if you test by mailing to 1,000 people, don't mail to
+more than 10,000 people based on the results of that test. And then the
+10,000 mailing becomes a test from which you decide whether to mail to
+100,000, and so on.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id754558"></a>Conclusion</h3></div></div></div><p>
+These are scientific methods, and as I said at the beginning, this
+article is written for engineers who find themselves in business. After
+you're familiar with using scientific methods to get answers to business
+problems you'll develop an almost software-debugging-like approach.
+Testing, tracking, and developing spreadsheets to address business
+problems can be approached in a manner similar to developing software
+solutions to engineering problems.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id754577"></a>For More Information</h3></div></div></div><p>
+This has been a simple introduction to the basics of marketing research.
+Now that you've gotten a taste of it, perhaps you'll want to learn more.
+Below is some web-based info I've discovered in the last few days from
+surfing around on the subject of "marketing research."
+</p><p>
+<a class="ulink" href="http://www.marketingtools.com/publications/mt/index.htm">http://www.marketingtools.com/publications/mt/index.htm</a><br />
+Marketing Tools looks like a good source of info, with lots of online
+info in their past-issue archives. Most months have a "Marketing
+Research" article, like this one:
+</p><p>
+<a class="ulink" href="http://www.marketingtools.com/publications/mt/98_mt/9805_mt/mt980518.htm">http://www.marketingtools.com/publications/mt/98_mt/9805_mt/mt980518.htm</a><br />
+"How Big Is Big Enough? When It Comes To Sampling, Size Matters" by Tom
+McGoldrick, David Hyatt, and Lori Laflin.
+</p><p>
+<a class="ulink" href="http://www.mmasters.com/mmmr1.html">http://www.mmasters.com/mmmr1.html</a><br />
+"Market Knowledge: Your Key To Profits" by David Kosoglow was a good
+article I found.
+</p><p>
+<a class="ulink" href="http://www.quirks.com/">http://www.quirks.com/</a><br />
+Quirks Marketing Research Review, another online source of info.
+</p><p>
+<a class="ulink" href="http://www2000.ogsm.vanderbilt.edu/eli/eli.cgi">http://www2000.ogsm.vanderbilt.edu/eli/eli.cgi</a><br />
+Links 2000, lots of good marketing research links, but be forewarned that
+they are more academic oriented.
+</p><p>
+<a class="ulink" href="http://www.demographics.com/">http://www.demographics.com/</a><br />
+I found good links to marketing research resources at this site
+</p><p>
+<a class="ulink" href="http://www2.targetonline.com/tm/tmcover.html">http://www2.targetonline.com/tm/tmcover.html</a><br />
+Target Marketing Magazine, a direct marketing magazine. It's online.
+</p><p>
+<a class="ulink" href="http://www.netb2b.com/">http://www.netb2b.com/</a><br />
+Netmarketing is an online magazine oriented toward web advertising with a
+knowledge base and an online forum.
+</p><p>
+<a class="ulink" href="http://gmarketing.com/">http://gmarketing.com/</a><br />
+This is an online guerrilla marketing webzine.
+</p><p>
+<a class="ulink" href="http://www.webcmo.com/">http://www.webcmo.com/</a><br />
+Says it is "a site dedicated to web marketing research".
+</p><p>
+<a class="ulink" href="http://www.wilsonweb.com/rfwilson/webmarket/theory.htm">http://www.wilsonweb.com/rfwilson/webmarket/theory.htm</a><br />
+Web Marketing Information Center—Academic Approaches to Web Marketing
+Research and Theory. This is dry and academic, but some of you might like
+it anyway.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-44"></a>Standards</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+As one Apple wag used to say, the good thing about standards is that
+there are so many to choose from. That was said about ten years ago by
+Larry Tesler, known for his dry wit and his early work on the Lisa. Ten
+years later, we have even more standards, more confusion and, as a
+result, more difficulty establishing new standards.
+</p><p>
+Take <acronym class="acronym" title="High Definition TeleVision">HDTV</acronym> and Digital TV,
+for instance. Last weekend, the local and
+national press, namely The New York Times, The San Francisco Chronicle,
+and The San Jose Mercury News
+(<a class="ulink" href="http://www.nytimes.com/library/tech/98/10/biztech/articles/26hdtv.html">http://www.nytimes.com/library/tech/98/10/biztech/articles/26hdtv.html</a>,
+<a class="ulink" href="http://eXaminer.com/981101/1101goodman.shtml">http://eXaminer.com/981101/1101goodman.shtml</a>, and
+<a class="ulink" href="http://www.mercurycenter.com/premium/unmarked/wire/89273l.htm">http://www.mercurycenter.com/premium/unmarked/wire/89273l.htm</a>) all
+wrote skeptical articles about the beginning of <acronym class="acronym">HDTV</acronym> broadcasting. The
+skepticism is largely warranted by a long list of obstacles that <acronym class="acronym">HDTV</acronym>
+must overcome before it becomes a reality. The sets are too expensive,
+the broadcasts are too few, the new equipment to produce <acronym class="acronym">HDTV</acronym> content is
+more expensive, and, in any event, consumers don't care and wouldn't know
+the difference.
+</p><p>
+In many respects, it's chicken and egg situation, a vicious circle: no
+viewers, no broadcasts. The situation is made worse by the carriers,
+cable and satellite systems. The federal government has some power to
+dictate the use of the ordinary broadcast spectrum—hence the few hours
+of <acronym class="acronym">HDTV</acronym> broadcast in the major markets (see the map in the <acronym class="acronym">NYT</acronym> story) --
+but the cable industry feels no real pressure to make costly updates to
+infrastructure and cancel a few home shopping channels in order to free
+bandwidth for <acronym class="acronym">HDTV</acronym>.
+</p><p>
+Furthermore, consumers don't know what <acronym class="acronym">HDTV</acronym> is. They don't know the
+difference between <acronym class="acronym">HDTV</acronym> and <acronym class="acronym">DTV</acronym> and Digital Television. They don't
+realize that broadcasters and cable operators would rather have several
+digital channels than one <acronym class="acronym">HDTV</acronym> program. And, speaking of digital
+channels, because of cable and satellite systems, more and more TV today
+is "digital," even if the viewer doesn't realize it. Yet this isn't what
+the industry means by digital <acronym class="acronym">TV</acronym>, which, in turn is different from <acronym class="acronym">HDTV</acronym>.
+This confusion does not make the consumer feel smarter and safer, the
+necessary preconditions to separating him or her from a sizeable sum of
+money.
+</p><p>
+In general at Be, we love to see a little transition confusion in the
+marketplace; it creates an easier situation for us to carve new terrain,
+if we move fast enough and place the right bets. On the other hand,
+confusion paralysis doesn't help us. A reasonably clear DTV/HDTV picture,
+if you pardon the expression, would help the industry invest in content
+creation tools, and we would love to be of service in this domain.
+</p><p>
+Closer to us, there is a more modest standard called FireWire, IEEE-1394,
+or <acronym class="acronym">i.LINK</acronym>, as Sony calls it for their <acronym class="acronym">DV</acronym> cameras. This one, after about
+ten years in development, now seems ready to take off. Compaq offers it
+on selected Presario models and Sony on the GX version of their sexy new
+505 laptop. This is promising, and, as soon as <acronym class="acronym">DV</acronym> cameras cost less than
+the PC in charge of editing the DV tapes, we'll finally reach desktop
+video heaven—a nice opportunity for us to please a large number of
+users.
+</p><p>
+DV cameras really create a new standard of quality and usability well
+within the financial reach of the consumer. Better pictures, smaller
+cameras, easier connection to a computer. That shouldn't confuse
+consumers too much and my friends the marketing haruspices assure me 1999
+will be the year of <acronym class="acronym">DV</acronym> and, as a result, the year of FireWire.
+</p><p>
+The Presario model I saw at Costco the other day bore witness to the
+advent of another nice standard:
+<acronym class="acronym" title="Universal Serial Bus">USB</acronym>. This computer offers three
+connectors up front (NOT in the back), <acronym class="acronym">USB</acronym>,
+<acronym class="acronym">USB</acronym>, FireWire—or digital
+photo camera, scanner and <acronym class="acronym">DV</acronym> camera—the perfect system for our
+customer and our product.
+</p><p>
+<acronym class="acronym">USB</acronym> also took a long time to happen (though only half as long as
+FireWire) and finally delivers much nicer low- to medium-speed peripheral
+connectivity. No more fighting for serial ports or risking sanity by
+adding ports to your PC. To borrow language from corporate America,
+FireWire and <acronym class="acronym">USB</acronym> lower the cost of owning a media manipulation system.
+</p><p>
+The only piece of bad news—temporary we hope—is the accumulation of
+all these standards in a PC. Serial and parallel connectors, as well as
+<acronym class="acronym">USB</acronym> and FireWire, <acronym class="acronym">IDE</acronym> and
+<acronym class="acronym">SCSI</acronym>, must coexist on some motherboards, just
+as <acronym class="acronym">PCI</acronym> and <acronym class="acronym">ISA</acronym> do. This standard medley adds cost and complexity to
+today's PCs, but that's an infinitely better situation than the vicious
+circle that's likely to paralyze the progress of a new TV standard, a
+problem sadly without apparent solution.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-43.html">Issue 3-43, October 27, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-45.html">Issue 3-45, November 11, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-43.html" title="Issue 3-43, October 27, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-45.html" title="Issue 3-45, November 11, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,746 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-14.html" title="Issue 3-14, April 8, 1998" /><link rel="next" href="Issue3-16.html" title="Issue 3-16, April 22, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-14.html" title="Issue 3-14, April 8, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-16.html" title="Issue 3-16, April 22, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-14.html">Issue 3-14, April 8, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-16.html">Issue 3-16, April 22, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-15"></a>Issue 3-15, April 15, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-15"></a>Be Engineering Insights: Booting Variations For PC And LILO</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+While all computer users know how to boot their machine, very few know
+what is happening under the hood. Depending on your operating system, you
+may see your machine reboot a dozen times a day, so often that some
+companies regard this period of time as valuable commercial property. For
+such systems, it may help to observe the congressional hearings before
+altering the appearance or function of your boot sequence.
+</p><p>
+BeOS users, however, should find this article sufficient. It explains
+booting in general, how the BeOS boot sequence works on the PC, how it
+can be customized for your machine, and demonstrates some common
+configurations.
+</p><p>
+As a starting point, I have chosen March 3, 1982. This is the date on the
+following file:
+</p><pre class="programlisting asm">
+HIGHMEM  = 010000
+
+    clr  r0
+1:  mov  (r0)+, HIGHMEM-2(r0)
+    cmp  r0, $end
+    blo  1b
+
+    add  $HIGHMEM, pc
+
+    mov  $0172526, r0
+    clr  (r0)
+    mov  $-01000, -(r0)
+    mov  $060003, -(r0)
+1:  tstb (r0)
+    bpl  1b
+    clr  pc
+end:
+</pre><p>
+I wrote this bootstrap for the PDP-11. After entering the 18 machine
+words (in octal) using the front panel, 512 bytes would be loaded from
+9-track tape, followed by Coherent, a UNIX-like operating system.
+</p><p>
+16 years later, nothing has really changed. Bootstrap code copies itself
+to a safe location, jumps there, and loads a larger bootstrap from some
+device. This is repeated until the operating system itself is loaded. In
+the modern world of code bloat, bootstraps are still written with an old
+skill: wringing the most work from the smallest program.
+</p><p>
+On the PC, the ROM-based BIOS acts as the first bootstrap, saves us the
+trouble of entering it by hand. After that, various boot stages are
+available. This article is most interested in <acronym class="acronym">LILO</acronym>, written by Werner
+Almesberger. This package, and the <acronym class="acronym">BIOS</acronym> itself, are essential to booting
+BeOS.
+</p><p>
+The following cases have been selected both to illustrate the workings of
+the boot process, and to provide practical setups for immediate use. I
+have tested each case personally.
+</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>
+<span class="bold"><strong>THESE EXPERIMENTS MAY RENDER YOUR DISK UNBOOTABLE.</strong></span>
+</p></div></div></div><p>
+Before a change to your boot procedure, be sure it matches your disk
+partitioning and OS placement. Having a boot floppy for each OS is good
+protection, backups are better, and a scratch machine is best.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id681925"></a>Case 1: BIOS -&gt; LILO -&gt; zbeos -&gt; kernel</h3></div></div></div><p>
+This is a schematic representation of the simplest boot sequence, and the
+one used by Release 3 BeOS. In detail, here are the stages:
+</p><div class="orderedlist"><ol><li><p>
+The <acronym class="acronym">BIOS</acronym>. The code is stored in nonvolatile <acronym class="acronym">RAM</acronym>, and is able to
+operate the basic peripherals of a PC. It loads the master boot record
+(<acronym class="acronym">MBR</acronym>): this is sector 0 of the first hard drive (ignoring floppies for
+now). If supported by your <acronym class="acronym">BIOS</acronym>, this can be a <acronym class="acronym">SCSI</acronym> drive.
+</p></li><li><p>
+The first stage <acronym class="acronym">LILO</acronym> bootstrap. This is the content of the <acronym class="acronym">MBR</acronym>. It
+employs the disk-reading services of the <acronym class="acronym">BIOS</acronym>.
+</p></li><li><p>
+The second stage <acronym class="acronym">LILO</acronym> bootstrap. This is located within a Be file
+system. This stage is large enough to offer many features, like a boot
+menu, and can load large files. It, too, uses the <acronym class="acronym">BIOS</acronym> to read disks.
+</p></li><li><p>
+<code class="filename">/system/zbeos</code>. This stage prints the "Starting the BeOS boot
+sequence" message, does general initialization for the BeOS kernel. It
+can operate many more devices than the <acronym class="acronym">BIOS</acronym>, display a fancy boot
+menu, and knows about the various Be-supported file systems. Life is
+pretty cozy at this point. It finishes by loading the BeOS kernel.
+</p></li></ol></div><p>
+Stages (1) and (4) know where to find the next stage on the disk. How do
+the <acronym class="acronym">LILO</acronym> stages, (2) and (3), know where to go? The answer is a utility
+in the <acronym class="acronym">LILO</acronym> package called, confusingly, "lilo". To paraphrase Monty
+Python, it's spelled <code class="filename">/bin/lilo</code>, but it's pronounced "map installer." The
+map installer analyses each file needed during the boot process, which
+can be located on any of your Be file systems. The analysis yields the
+<acronym class="acronym">BIOS</acronym> drive number and absolute sector for every sector of the file, and
+stores them as a big list in a "map file." The map file itself, as <acronym class="acronym">BIOS</acronym>
+drive number and starting sector, is stashed in the first stage <acronym class="acronym">LILO</acronym>
+bootstrap.
+</p><p>
+The major side-effect of this approach is the need to run the map
+installer whenever a file used in the boot process is moved. This
+includes moving a partition and changes to drive parameters in the <acronym class="acronym">BIOS</acronym>
+configuration. The good news is the <acronym class="acronym">LILO</acronym> bootstrap code needs no
+knowledge of the file system. Any type of file system supported by BeOS
+can host the program and map files.
+</p><p>
+The map installer is called from the shell command line, and operates
+according to instructions from a configuration file. Here is
+<code class="filename">/etc/lilo/lilo.conf</code> for Case 1:
+</p><pre class="screen">
+boot = /dev/disk/ide/0/master/raw
+  install = /etc/lilo/boot.b
+  linear
+  ignore-table
+
+  image = /system/zbeos
+</pre><p>
+Here is the command to install the map:
+</p><pre class="screen">
+lilo -C /etc/lilo/lilo.conf
+</pre><p>
+The name <code class="filename">/dev/disk/ide/0/master/raw</code> is BeOS
+parlance for the master <acronym class="acronym">IDE</acronym>
+drive on the first interface. The "raw" device will ignore any partitions
+and target the <acronym class="acronym">MBR</acronym>. The "linear" and "ignore-table" options are required
+at this time: the occasional "Invalid partition table" message can be
+ignored.
+</p><p>
+When run for the first time, "lilo" squirrels away a copy of the original
+<acronym class="acronym">MBR</acronym> in <code class="filename">/var/lilo/boot.0300</code>. This can be restored using the following
+shell command:
+</p><pre class="screen">
+cp /var/lilo/boot.0300 /dev/disk/ide/0/master/raw
+</pre><p>
+Here is the list of files used by <acronym class="acronym">LILO</acronym>:
+</p><pre class="screen">
+/etc/lilo/lilo.conf
+/etc/lilo/boot.b *
+/etc/lilo/chain.b *
+/var/lilo/map *
+/var/lilo/boot.0300
+/system/zbeos (and equivalent) *
+</pre><p>
+If files marked by (*) are moved, remember to run the map installer
+again. If you don't, you'll hear about it.
+</p><p>
+So much for Case 1.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682157"></a>Case 2: BIOS -&gt; LILO -&gt; win95</h3></div></div></div><p>
+In Case 1, <acronym class="acronym">LILO</acronym> was used as a program loader, proceeding without delay
+from <acronym class="acronym">BIOS</acronym> to BeOS. However, <acronym class="acronym">LILO</acronym> can also serve as a boot manager,
+permitting you to select which OS to boot. As usual, you must prepare the
+configuration file, and run the map installer.
+</p><p>
+Here is <code class="filename">lilo.conf</code> for Case 2:
+</p><pre class="screen">
+boot = /dev/disk/ide/0/master/raw
+install = /etc/lilo/boot.b
+delay = 50
+linear
+ignore-table
+
+image = /system/zbeos
+  label = beos
+
+other = /dev/disk/ide/0/master/0_0
+  loader = /etc/lilo/chain.b
+  label = w95
+</pre><p>
+I assume Windows 95 is on the first partition (<code class="filename">0_0</code>). The "label" option
+allows you to assign a word to each OS (try to control yourselves). The
+"delay" option gives you time to hit the <span class="keysym">Shift</span> key, which starts the
+menu. Otherwise, <acronym class="acronym">LILO</acronym> will make a wise decision on your behalf.
+</p><p>
+If <code class="filename">0_0</code> is not found during map install,
+invoke <span class="application">DriveSetup</span>. Then try to
+mount the DOS partition. This should cause <code class="filename">0_0</code> to appear.
+</p><p>
+The "image" designation causes the entire program file to be loaded, and
+is compatible with <code class="filename">zbeos</code>, Linux kernels like <code class="filename">vmlinuz</code>, and certain
+stand alone programs (see Case 5). The "other" designation causes just
+one sector to be loaded, namely the partition boot sector. This is sector
+0 of the specified partition, and it customarily contains an OS-specific
+bootstrap. Think of it as a per-partition <acronym class="acronym">MBR</acronym>. If you're still awake, I'm
+sure you see distinct possibilities here.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682255"></a>Case 3: BIOS -&gt; LILO -&gt; LILO' -&gt; linux</h3></div></div></div><p>
+<acronym class="acronym">LILO</acronym> comes from the Linux world, so we would expect the following to work:
+</p><pre class="screen">
+boot = /dev/disk/ide/0/master/raw
+install = /etc/lilo/boot.b
+delay = 50
+linear
+ignore-table
+
+image = /system/zbeos
+  label = beos
+other = /dev/disk/ide/0/master/0_0
+  loader = /etc/lilo/chain.b
+  label = linux
+</pre><p>
+Or maybe not. Did your Linux administrator arrange to have a partition
+boot block for your Linux system? If not, this <code class="filename">lilo.conf</code> has made Linux
+unbootable. Tsk.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682288"></a>Case 4: BIOS -&gt; LILO -&gt; linux image</h3></div></div></div><p>
+If Case 3 leaves you dazed and confused, it probably means <acronym class="acronym">LILO</acronym> on the
+Linux side is running the <acronym class="acronym">MBR</acronym>. However,
+we are running the <acronym class="acronym">MBR</acronym>. There can
+be only one.
+</p><p>
+Rather than lop off each others heads, let BeOS run the <acronym class="acronym">MBR</acronym>, copy the
+Linux kernel to our file system and add it to our list of bootable images:
+</p><pre class="screen">
+boot = /dev/disk/ide/0/master/raw
+install = /etc/lilo/boot.b
+delay = 50
+linear
+ignore-table
+
+image = /system/zbeos
+  label = beos
+image = /system/vmlinuz
+  label = linux
+  root = /dev/disk/ide/0/master/0_0
+  read-only
+</pre><p>
+I will not explain Linux options, except "root".
+<code class="filename">/dev/disk/ide/0/master/0_0</code> is the equivalent of
+<code class="filename">/dev/hda1</code> on Linux: the
+mapping should be obvious. Otherwise, use the Linux major/minor notation,
+e.g. 0x0301. You can even specify SCSI drives, so <code class="filename">/dev/sda1</code> is
+expressible as 0x0801.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682349"></a>Case 5: BIOS -&gt; LILO -&gt; memtest86</h3></div></div></div><p>
+<span class="application">Memtest86</span> is a cute stand alone program by Chris Brady which performs
+extended memory testing. It is available from the usual places.
+</p><pre class="screen">
+boot = /dev/disk/ide/0/master/raw
+install = /etc/lilo/boot.b
+delay = 50
+linear
+ignore-table
+
+image = /system/zbeos
+  label = beos
+image = /system/memtest86
+</pre><p>
+When "label" is omitted, <acronym class="acronym">LILO</acronym> creates something sensible.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682380"></a>Case 6: BIOS -&gt; Partition Magic -&gt; LILO -&gt; zbeos -&gt; kernel</h3></div></div></div><p>
+We must now face the problem illuminated by Case 4: sometimes we cannot
+control the <acronym class="acronym">MBR</acronym>. For those of you with commercial boot managers, like
+<span class="application">Partition Magic</span> or <span class="application">System Commander</span>,
+the <acronym class="acronym">MBR</acronym> is in their control.
+</p><p>
+<acronym class="acronym">LILO</acronym>'s role, once again, is lowly program loader. The first stage LILO
+bootstrap, evicted from the <acronym class="acronym">MBR</acronym>, must reside in a partition boot sector.
+The partition is determined automatically from the
+<code class="filename">/boot</code> file system.
+</p><pre class="screen">
+install = /etc/lilo/boot.b
+linear
+ignore-table
+
+image = /system/zbeos
+</pre><p>
+You may override the assumed partition using the "boot" option, but make
+sure it belongs to BeOS. Otherwise, you create a spectacle.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682440"></a>Case 7: BIOS -&gt; LILO -&gt; LILO -&gt; zbeos -&gt; kernel</h3></div></div></div><p>
+If you are too stingy for a commercial boot manager, and want to take the
+ideologically pure path, you are ready for a graduate course in <acronym class="acronym">LILO</acronym>.
+</p><p>
+The plan is to use <acronym class="acronym">LILO</acronym> as a boot manager,
+meaning it runs the <acronym class="acronym">MBR</acronym>. A
+configuration file must be prepared and the map installer run.
+</p><p>
+We also use <acronym class="acronym">LILO</acronym> as a program loader at the partition level. This calls
+for a different configuration file and map installation.
+</p><p>
+By separating these functions, we do not lose face like Linux in Case 3.
+The revolving door of upper management in the <acronym class="acronym">MBR</acronym> suite has no effect on
+BeOS booting.
+</p><p>
+Here is "lilo.conf.partition":
+</p><pre class="screen">
+boot = /dev/disk/ide/1/master/0_0
+map = /var/lilo/map.partition
+install = /etc/lilo/boot.b
+linear
+ignore-table
+
+disk = /dev/disk/ide/1/master/raw
+  bios = 0x81
+image = /system/zbeos
+  label = beos
+</pre><p>
+Here is "lilo.conf.mbr":
+</p><pre class="screen">
+boot = /dev/disk/ide/0/master/raw
+map = /var/lilo/map.mbr
+install = /etc/lilo/boot.b
+delay = 50
+linear
+ignore-table
+
+other = /dev/disk/ide/1/master/0_0
+  loader = /etc/lilo/chain.b
+  label = lilo2
+</pre><p>
+Here are the commands to install the maps. Note the order:
+</p><pre class="screen">
+lilo -C /etc/lilo/lilo.conf.partition
+lilo -C /etc/lilo/lilo.conf.mbr
+</pre><p>
+The scenario has been enlivened by placing the Be file system on the
+second IDE interface. A bug in BeOS <acronym class="acronym">LILO</acronym> will surface if your machine has
+this configuration, and a CD-ROM drive as slave on the first interface
+(<code class="filename">/dev/disk/ide/0/slave/...</code>). The bug relates
+to the <acronym class="acronym">BIOS</acronym> drive numbering
+scheme. Fortunately, the "disk" and "bios" options allow you to specify
+the <acronym class="acronym">BIOS</acronym> drive number explicitly: 0x80 is the first hard drive, 0x81 the
+second, and so on.
+</p><p>
+On a modern <acronym class="acronym">BIOS</acronym>, <acronym class="acronym">SCSI</acronym> hard drives are part of the numbering system. If
+your <acronym class="acronym">SCSI</acronym> drive is the designated boot device, then it will be 0x80, and
+the other drives follow. CDROM drives are not numbered.
+</p><p>
+Needless to say, problems with <acronym class="acronym">BIOS</acronym> drive numbering will be fixed.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682573"></a>Case 8: BIOS -&gt; zbeos -&gt; kernel</h3></div></div></div><p>
+This last example makes no use of <acronym class="acronym">LILO</acronym>, but comes in handy if earlier
+<acronym class="acronym">LILO</acronym> experiments go horribly wrong.
+</p><pre class="screen">
+cp /system/zbeos /dev/disk/floppy/raw
+</pre><p>
+This shell command creates a bootable floppy...you can climb down from
+the window now.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682602"></a>Miscellany</h3></div></div></div><p>
+For some, a penny saved is a penny earned: partitioning is unnecessary
+and wasteful. You can create a Be file system across the bare disk with a
+shell command like this:
+</p><pre class="screen">
+mkbfs /dev/disk/ide/0/master/raw
+</pre><p>
+The <acronym class="acronym">MBR</acronym> exists, the partition boot sector doesn't. Implications are left
+as an exercise for the reader. Reader? Hello?
+</p><p>
+URL References:
+</p><p>
+ftp://sunsite.unc.edu/pub/Linux/system/boot/lilo/
+ftp://sunsite.unc.edu/pub/Linux/system/hardware/memtest86-1.4.tar.gz
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-15-2"></a>Be Engineering Insights: Bugs and You</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steven</span> <span class="surname">Black</span></span></div></div></div><p>
+Greetings, I'm a new face in Newsletter articles. I'm Steven with a "v."
+(Not to be confused with Steve Sakoman or Stephen Beaulieu.)
+</p><p>
+I'm part of the long dark arm of Quality Assurance here at Be. We find
+bugs. We reproduce bugs. We investigate some of the bugs you submit. We
+don't fix them or assign priorities.
+</p><p>
+Given my rich experience with all sort of bugs, that's what I'll be
+talking about in today's article.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682691"></a>Welcome to Release 3 and Writing Better Bug Reports</h3></div></div></div><p>
+While we do our best to hunt down bugs and clear them up, there are bound
+to be a few that escaped in our latest release. You can help out in the
+bug wars in a variety of ways. The first and foremost is by writing a
+good bug report.
+</p><p>
+Whether you're a registered developer who submits bugs via the special
+bug submission page on our web site, or you're a regular user who wants
+to see an annoying bug you found get squashed, your bug is important. To
+give your bug the best possible chance of being fixed, here are some
+guidelines to keep in mind when you submit a bug report.
+</p><div class="orderedlist"><ol><li><p>
+Make sure your bug is reproducible. Try it again on your hardware.
+Try it on someone else's hardware if you can. If you think it's
+related to a specific piece of hardware try to swap it out to verify,
+assuming that it was a hardware fault.
+</p><p>
+Make sure the bug is reproducible when you've rebooted cleanly. (This
+would clarify that the death of the app_server when you used Telnet
+was actually caused by a third-party Foobar program that failed
+inelegantly in another Workspace, and it started gobbling up
+resources, which started a slow spiral of death, which happened to
+culminate when you ran Telnet that day, rather than just being a
+Telnet bug.)
+</p></li><li><p>
+If the bug is reproducible, remember to include your hardware and
+software configuration information, including what version of BeOS you
+are running, and what other applications need to be running to
+reproduce it. Keep it simple, try to make the bug reproduce in as few
+steps as possible.
+</p></li><li><p>
+Write the bug report in painfully clear and concise steps.
+Elaborate on everything and anything you think might help us reproduce
+your problem. Doug Wright spoke about this Newsletter Issue 101,
+Developer Workshop: Bring Your Own Bugs:
+</p><p>
+www.be.com/aboutbe/benewsletter/Issue101.html#Workshop
+</p></li><li><p>
+If you're getting a debug terminal, or you have serial debugging
+output enabled, you'll want to install your xMAP files. They're on the
+CDs in optional/xmaps. They'll also be on your hard disk if you
+installed the optional items, though they will still need to be
+installed.
+</p><p>
+The <code class="filename">kernel_*.xMAP</code> file goes in
+<code class="filename">/system</code>, and the other
+<code class="filename">xMAP</code> files go in
+<code class="filename">/system/lib</code>. You'll need
+to reboot to make use of them. They're also
+useful in your own debugging, so they're good to install anyway.
+They're included on Release 3 for both PPC and Intel, and were on the
+PR2 CD. They're different for every release, so keep that in mind.
+They need to match the libraries, applications, and kernels you have
+available. If the <code class="filename">xMAP</code> file isn't current, delete it—it's less
+confusing than having an old one.
+</p><p>
+How do you tell if an <code class="filename">xMAP</code> file is not current? Because of the way
+things are built and the fact that we do not date-stamp the world,
+<code class="filename">xMAP</code> files have slightly different times than the output file (shared
+libraries, applications, the kernel, etc.). Typically, the date-stamp
+of the <code class="filename">xMAP</code> files will be after the output file, though this might not
+always be the case. If you take them from the BeOS CD you installed
+from, they will be valid.
+</p></li><li><p>
+If you're getting a debug terminal we could also happily use the
+output of the "sc" command. These are useful to us, regardless of
+whether <code class="filename">xMAP</code>s were installed. (It's just
+easier for us if the <code class="filename">xMAP</code>s
+were installed, 'tis all.)
+</p></li><li><p>
+If you're getting dropped in to the kernel debugger (which I'll
+talk about shortly) we'll want the output of more commands. First,
+we'll want "sc", then "regs", and finish off with a nice "ps". This
+could get long, and most of the time we need only one if you've proven
+to yourself that it's a reproducible bug.
+</p></li><li><p>
+To be sure you haven't overlooked anything, after you've typed in
+the bug, but before you've submitted it, reread it and add more
+information so that it's Reproducible, Clear, and Concise, and Has All
+the Proper Information.
+</p></li></ol></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682860"></a>Welcome to Kernel Debugging Land!</h3></div></div></div><p>
+On rare occasions something leaks out about serial debugging. Serial
+debugging output is a low-level diagnostic/debugging tool used by the
+kernel engineers. It has all sorts of commands, all listed with the total
+available documentation on them, "help".
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682874"></a>Requirements for serial debugging:</h4></div></div></div><ul class="itemizedlist"><li><p>
+A BeOS machine to debug.
+</p></li><li><p>
+A machine capable of receiving serial communication at the
+appropriate settings.
+</p></li><li><p>
+Software that can communicate to serial ports at the appropriate
+settings, typically anything that could be used to connect to dial up
+<acronym class="acronym">BBS</acronym>es and shell accounts (not necessary for dumb terminals). Connect
+works great if your serial output is going to another BeOS machine.
+</p></li><li><p>
+One of the following: a Mac serial cable, a null-modem cable, or
+serial cable with a null-modem adapter.
+</p></li><li><p>
+A strange bug or stranger interest which requires you to see the
+serial debug output.
+</p></li></ul></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682922"></a>Serial Port Settings:</h4></div></div></div><p>
+On BeBoxes serial debugging goes out the serial4 port. On PPC machines
+serial debugging goes out the modem port. On Intel serial debugging goes
+out serial1.
+</p><ul class="itemizedlist"><li><p>
+19200 baud
+</p></li><li><p>
+8 bits
+</p></li><li><p>
+No parity
+</p></li><li><p>
+1 Stop bit
+</p></li><li><p>
+No flow control
+</p></li></ul></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id682964"></a>How to turn on serial output at boot time:</h4></div></div></div><ul class="itemizedlist"><li><p>
+Make sure the machine that's going to receive serial debug output is
+turned on and has the appropriate software running.
+</p></li><li><p>
+Make sure your cables are connected.
+</p></li><li><p>
+Start up the BeOS machine you need to test.
+</p></li><li><p>
+Depending on the receiving hardware, do one of the following:
+</p><ul class="itemizedlist"><li><p>
+On BeBoxes press the F1 key and hold it, just after the BeOS logo
+starts to swirl.
+</p></li><li><p>
+On PPCs press the "delete" key and hold it, just after the BeOS
+logo starts to swirl. (Please note: This is the "delete" key that's
+labeled "backspace" on PC-style keyboards.)
+</p></li><li><p>
+On Intel press the F1 key and hold it after you first see the
+boot-loader message.
+</p></li></ul></li><li><p>
+If you did it right, you should start seeing debug output, before you
+get the BeOS boot menu.
+</p></li><li><p>
+If you got the boot menu and no output, you either pressed the key too
+late, or (more likely) you don't have your cable or comm settings quite
+right.
+</p></li><li><p>
+If you didn't get the boot menu at all, you probably pressed the key
+too early. (You might also have a rare keyboard which doesn't send the
+key back as expected under this circumstance.) You could try breaking
+into the kernel debugger, but I recommend rebooting and trying again,
+as it's much easier to check your settings when you have serial
+debugging on and are in the boot menu.
+</p></li><li><p>
+To check to see that you are connected properly, Select "Rescan" from
+the menu. If you are currently connected properly, you should start
+receiving a stream of messages.
+</p></li><li><p>
+Select your boot volume and continue as normal.
+</p></li></ul></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id683063"></a>Dropping into the kernel debugger</h3></div></div></div><p>
+Provided that you have the appropriate cables already installed,
+(preferably verified that they are functioning properly), you can drop
+into the kernel debugger at any time.
+</p><p>
+Why drop in to the kernel debugger? A number of reasons, actually,
+including the following:
+</p><ul class="itemizedlist"><li><p>
+You want serial debug output, but you forgot to start it at boot time.
+</p></li><li><p>
+Your machine is hung, has died, or otherwise has ceased functioning,
+and you want to see what programs were running so you know who to blame.
+</p></li><li><p>
+You suspect your app_server has died, and have no way to Telnet in
+and verify. (This might be the case if your display wasn't updating, or
+had gone whacko, though it was still doing hard drive accesses.)
+</p></li><li><p>
+The serial debug output says something bad happened, and you want to
+gather some more information to send in your bug report.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id683114"></a>How to drop in to the kernel debugger</h3></div></div></div><p>
+On BeBoxes press the right-most button on the front of the case. On Power
+Macs press <span class="keysym">Command</span>+<span class="keysym">Power On</span>.
+On Intel machines press
+<span class="keysym">Alt</span>+<span class="keysym">SysReq</span> (also
+known as <span class="keysym">Alt</span>+<span class="keysym">PrintScreen</span>,
+this may change in the future).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id683153"></a>What can you do in kernel debugging land?</h3></div></div></div><ul class="itemizedlist"><li><p>
+ps - shows a process listing
+</p></li><li><p>
+run - just shows the currently running processes
+</p></li><li><p>
+regs - shows what the registers contain
+</p></li><li><p>
+sc - does a stack crawl on the current process.
+</p></li><li><p>
+c - continue executing/leave kernel debugging land
+</p></li><li><p>
+help - the documentation for kernel debugging land
+</p></li></ul><p>
+Please note: Most, if not all, of the shell commands are designed for use
+by kernel engineers. The commands above are all you'll ever need to use,
+unless explicitly told otherwise by someone at Be.
+</p><p>
+Some of the available commands can make your machine lock up, lose data,
+and otherwise cause problems, so experiment at your own risk.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id683211"></a>What we at Be want to see from your serial debug output</h3></div></div></div><p>
+Typically, we only want the interesting bits of output. If something's
+repeated 10,000 times we might want to see one line of what it says, but
+we don't want to see all 10,000 repeated lines of it.
+</p><p>
+We are interested in all conditions that cause the machine to lock up,
+entirely or partially.
+</p><p>
+For degrading conditions or high debug-output conditions, we are
+interested in the point at which the output turns from good-normal debug
+output to the error output.
+</p><p>
+If the output starts streaming quickly and you know the machine is dying,
+break into the debugger as soon as possible. This allows you to show us
+the boundary between the good/bad debug output. (Please note, however,
+that it's normal to get a lot of output while booting, or while
+rescanning the device buses.)
+</p><p>
+Most of the time, giving us the last five lines of the debug output, the
+output of "sc", and a reproducible test case provides enough output that
+we'll be able to know what the problem is, (if you want to be extra safe
+or if the bug is hard to reproduce, include the output of "reg" and
+"sc"), and often tells us where the problem is and possibly even how to
+fix it.
+</p><p>
+The better the test case, (remember: reproducible, simple, clear, and
+concise), the less you need to worry about the serial debugging output,
+and the easier it is for us to track down the bugs and fix them.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-15"></a>Developers' Workshop: Square Peg, Round Hole</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Victor</span> <span class="surname">Tsou</span></span></div></div></div><p>
+This week we have the pleasure of fielding a slew of questions regarding
+<code class="classname">BBitmap</code>. These questions come to us courtesy of a little known
+development house, B&amp;B Technologies, down in Highland, Texas. Lead
+developer Ms. Lolita grouses:
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id683310"></a><a id="id683312"></a>Q:</td><td><p>
+Setting pixels in the bitmap is sloooooowwww. How can you guys call
+yourselves the Media OS? Here's our function for the B_CMAP8 case:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">set_pixel8</code>(<span class="type"><code class="classname">BBitmap</code> *</span><code class="parameter">bitmap</code>, <span class="type">int</span> <code class="parameter">x</code>, <span class="type">int</span> <code class="parameter">y</code>, <span class="type">uchar8</span> <code class="parameter">color</code>)
+{
+  <code class="parameter">bitmap</code>-&gt;<code class="methodname">SetBits</code>(&amp;<code class="parameter">color</code>, 1,
+    <code class="parameter">y</code>*<code class="parameter">bitmap</code>-&gt;<code class="methodname">BytesPerRow</code>()+<code class="parameter">x</code>, <code class="constant">B_CMAP8</code>);
+}
+</pre></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="methodname">SetBits()</code> is a tool intended for importing rather than manipulating
+images. You were understandably bamboozled by its somewhat misleading
+name. Setting the color of a pixel is best accomplished with a cocktail
+composed of a healthy medley of <code class="methodname">Bits()</code> and
+<code class="methodname">BytesPerRow()</code> (mmm...tastier than nachos):
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">set_pixel8</code>(<span class="type"><code class="classname">BBitmap</code> *</span><code class="parameter">bitmap</code>, <span class="type">int</span> <code class="parameter">x</code>, <span class="type">int</span> <code class="parameter">y</code>, <span class="type">uint8</span> <code class="parameter">color</code>)
+{
+  *((<span class="type">uint8 *</span>)<code class="parameter">bitmap</code>-&gt;<code class="methodname">Bits</code>() +
+    <code class="parameter">y</code>*<code class="parameter">bitmap</code>-&gt;<code class="methodname">BytesPerRow</code>() + <code class="parameter">x</code>) = <code class="parameter">color</code>;
+}
+</pre><p>
+In other words, think of a <code class="classname">BBitmap</code> as nothing more than a pixel buffer.
+Nothing requires you to draw pixels one at a time; you'll probably find
+it more convenient and more efficient to work directly with the pointer.
+For example, setting the buffer to white requires nothing more than:
+</p><pre class="programlisting cpp">
+<code class="function">memset</code>(<code class="parameter">bitmap</code>-&gt;<code class="methodname">Bits</code>(), 0, <code class="parameter">bitmap</code>-&gt;<code class="methodname">BitsLength</code>());
+</pre><p>
+Of course, you must always be aware of the color space of the BBitmap
+when directly altering its contents. <code class="methodname">SetBits()</code> may prove itself useful by
+allowing you to normalize the color space to one understood by your
+rendering methods.
+</p><p>
+The other engineer on the project, the lovely Ms. Tanqueray, upon
+observing this interchange, gracefully retorts:
+</p></td></tr><tr class="question"><td><a id="id683543"></a><a id="id683545"></a>Q:</td><td><p>
+You mean I have to draw everything myself as I did in the days of
+yore? What a crock! You should all be fired!
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+If you're drawing polygons or ellipses or any other primitive found in
+<code class="classname">BView</code>, you always have the option of attaching a
+<code class="classname">BView</code> to the <code class="classname">BBitmap</code> and
+using our preexisting rendering methods. And, of course, you can always
+manhandle the bits directly even if a <code class="classname">BView</code> has been attached to the
+<code class="classname">BBitmap</code>.
+</p><p>
+After some experimentation, Ms. Tanqueray returns with further BBitmap
+comments:
+</p></td></tr><tr class="question"><td><a id="id683586"></a><a id="id683588"></a>Q:</td><td><p>
+<code class="methodname">SetBits()</code> is broken. This code is supposed to
+convert a <code class="constant">B_RGB32</code> bitmap
+into a <code class="constant">B_CMAP8</code>, but all I get is a garbled Technicolor mess!
+</p><pre class="programlisting cpp">
+<code class="classname">BBitmap</code> <code class="varname">source32</code>(<code class="varname">bounds</code>, <code class="constant">B_RGB32</code>);
+<code class="classname">BBitmap</code> <code class="varname">dest8</code>(<code class="varname">bounds</code>, <code class="constant">B_CMAP8</code>);
+
+<code class="varname">dest8</code>-&gt;<code class="methodname">SetBits</code>(<code class="varname">source32</code>-&gt;<code class="methodname">Bits</code>(),
+  <code class="varname">source32</code>-&gt;<code class="methodname">BitsLength</code>()/4, 0, <code class="constant">B_RGB32</code>);
+</pre><p>
+Would you boys kindly explain what's going on?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Surprisingly, the Be Book provides insight into this problem:
+</p><p>
+"If the color space mode is <code class="constant">B_RGB32</code>, the data should be triplets of three
+8-bit components—red, green, and blue, in that order—without an
+alpha component. Although stored as 32-bit quantities with the components
+in BGRA order, the input data is only 24 bits in RGB order."
+</p><p>
+In other words, <code class="constant">B_RGB32</code> indicates data in
+<code class="constant">B_RGB24</code> order. As a further
+caution (some might call this a caveat or something), notice how the Be
+Book craftily avoids any mention of 15-bit, 16-bit, and big-endian color
+spaces. This is our subtle way of covering up <code class="methodname">SetBits()</code>'s inability to
+interpret these spaces as sources or as destinations. Conversions
+involving these spaces will have to be performed by hand just as in the
+days of yore.
+</p></td></tr></tbody></table></div><p>
+To summarize:
+</p><div class="orderedlist"><ol><li><p>
+In most respects, a <code class="classname">BBitmap</code> is nothing more than a buffer of pixel
+data. Setting individual pixels is best performed with the pointer to
+the buffer returned by <code class="methodname">Bits()</code>. All you DOS people, think segment
+0xA000.
+</p></li><li><p>
+Drawing into a <code class="classname">BBitmap</code> may be facilitated by
+attaching a <code class="classname">BView</code>,
+which in no way hampers your ability to directly manipulate the buffer
+by hand.
+</p></li><li><p>
+Importing data from an existing source can be handled by <code class="methodname">SetBits()</code>,
+but this function is, unfortunately, not as handy as it might seem at
+first, due to constraints on the allowable color spaces.
+</p></li></ol></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-15"></a>The Logic of Linux</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last week, Netscape made more noise with its endorsement of Linux than it
+did by posting Navigator source code on the specially created
+www.mozilla.org site. The official media (The New York Times and others)
+took notice. They praised the creator, Linus Torvalds, and Linux users
+who have made Linux into a successful grassroots Unix, with an installed
+base running into the millions worldwide. Five million is the most
+commonly used number, but this is difficult to judge, given the product's
+freeware roots.
+</p><p>
+Listening to the radio as I drove around the UCSD campus in the rain this
+past week-end, I noticed that NPR gave prominent play to the event and to
+the open source software movement. It is nice to see Linux taken
+seriously by the mainstream media. Perhaps this signals the arrival of
+Linux on the establishment radar. Seen in this light, if Netscape were to
+use Linux as their OS platform for enterprise applications, its newfound
+acceptance would be validated.
+</p><p>
+Besides its considerable technical virtues, Linux makes much cultural
+sense for Netscape. The Internet culture is rooted in Unix and in
+libertarian sharing of software. What better fit for the "liberated"
+Navigator than an equally unshackled version of Unix? One observer
+contends the Net runs on free software: sendmail, bind, apache and perl,
+now we have Linux and Navigator.
+</p><p>
+In one respect, this results in a re-federation of a very diverse set of
+people and code around the two related goals of proliferating free
+software and fighting Microsoft's dominance. Salon has an interesting
+piece on the topic at www.salonmagazine.com/21st/?st.ne.fd.mnaw. In it,
+Eric S. Raymond, coauthor of The New Hacker's Dictionary, makes an
+important distinction between "free" and "open"; while one may not always
+agree with his perspective, it makes for useful and entertaining reading.
+</p><p>
+[On a closely related issue, eagle-eyed developers have questioned our
+adherence to the Open Software pact in relevant parts of our recent
+release such as the bootloader. Specifically, if we use or modify public
+domain code, are we putting that source code back into the public domain
+as we are obligated to do? We're investigating this as I write this and
+will take whatever corrective action is necessary.]
+</p><p>
+Back to Netscape, endorsing Linux would complete the manoeuvre started
+with opening Navigator sources in response to Microsoft's bundling a free
+browser with Windows. The move accentuates the polarization of the
+software world. On the right, Microsoft, its proprietary products and its
+well-publicized business practices, on the left, open software constantly
+improved by the myriad supporting and sharing programmers.
+</p><p>
+But, for Netscape, Linux could offer advantages beyond the technical,
+cultural or political. Consider Netscape's predicament in the enterprise
+space where Windows NT has been making rather successful inroads.
+Whenever Netscape succeeds with a product running on Windows NT, there is
+the risk Microsoft will "climb up their tail pipe," so to speak, by
+bundling a "free" competitor with the OS as they did with the browser.
+With Linux, there's nothing of that nature to fear—no one will try and
+use their control of the OS platform to diminish the prospects of a
+successful Netscape application.
+</p><p>
+Is this idle speculation? Perhaps, but note the accent in recent public
+pronouncements on "open" standards. A little less obvious is the
+de-emphasis on the "official" Java, because of platform control issues,
+again. On the Mozilla site, at www.mozilla.org/blue-sky/jvm.html, there
+is a clear appeal: "It's critical that Mozilla embed a robust, fast, free
+JVM as quickly as possible. There is no robust, fast, free JVM."
+</p><p>
+We'd like that too.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-14.html">Issue 3-14, April 8, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-16.html">Issue 3-16, April 22, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-14.html" title="Issue 3-14, April 8, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-16.html" title="Issue 3-16, April 22, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

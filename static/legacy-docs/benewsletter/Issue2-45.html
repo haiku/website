@@ -1,0 +1,811 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-44.html" title="Issue 2-44, November 5, 1997" /><link rel="next" href="Issue2-46.html" title="Issue 2-46, November 19, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-44.html" title="Issue 2-44, November 5, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-46.html" title="Issue 2-46, November 19, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-44.html">Issue 2-44, November 5, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-46.html">Issue 2-46, November 19, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-45"></a>Issue 2-45, November 12, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-45"></a>Be Engineering Insights: YABSA—Yet Another Byte-swapping Article</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Bradley</span> <span class="surname">Taylor</span></span></div></div></div><p>
+I really didn't want to write another byte-swapping article. But I had
+to. You see, every night I wake up from a recurring nightmare that some
+poor BeOS user will be unable to interoperate their BeOS app between
+Intel and PowerPC machines. I toss and turn, gripped with worry and
+unable to fall back asleep. Then I think of the public flogging the
+guilty application writer will get for this terrible deed, and I drift
+back into a pleasant slumber.
+</p><p>
+The truth is that PR2 has some new byte-swapping macros to prepare you
+for our Release 3 Intel release and I wanted to tell you about them.
+Judicious use of these macros *now* will mean that in most cases your
+application will recompile and interoperate when Release 3 rolls around
+later.
+</p><p>
+The new stuff in PR2 is contained in the file
+<code class="filename">byteorder.h</code>. The macros can
+be summarized as follows:
+</p><pre class="screen">
+<code class="function">B_LENDIAN_TO_HOST_XXX</code>()
+  convert from little-endian to host format
+
+<code class="function">B_BENDIAN_TO_HOST_XXX</code>()
+  convert from big-endian to host format
+
+<code class="function">B_HOST_TO_LENDIAN_XXX</code>()
+  convert from host to little-endian format
+
+<code class="function">B_HOST_TO_BENDIAN_XXX</code>()
+  convert from host to big-endian format
+</pre><p>
+Where <code class="literal">XXX</code> equals one of the following types:
+<code class="code">INT16</code>, <code class="code">INT32</code>, <code class="code">INT64</code>, <code class="code">FLOAT</code>
+or <code class="code">DOUBLE</code>. These macros swap in the case where the host format doesn't
+match the desired format (big or little endian), but are no-ops in the
+case where the host format matches the desired format.
+</p><p>
+Additionally, <code class="filename">byteorder.h</code>
+contains two identifiers that will tell you the
+host endianness:
+</p><pre class="screen">
+<code class="constant">B_HOST_IS_LENDIAN</code>
+  1 on Intel, 0 on PowerPC
+
+<code class="constant">B_HOST_IS_BENDIAN</code>
+  0 on Intel, 1 on PowerPC
+</pre><p>
+Here is a simple example demonstrating usage of these new macros. If you
+read something from a device register (typically little-endian), you
+might write some code like this to read the data out into a useful form:
+</p><pre class="programlisting cpp">
+<code class="varname">count</code> = <code class="function">B_LENDIAN_TO_HOST_INT32</code>(<code class="varname">device_registers</code>-&gt;<code class="varname">count</code>)
+</pre><p>
+On Intel, this macro does nothing, but on PowerPC it will swap the data
+for you. It's much easier to read code like this than code that contains
+a lot of <code class="code">#ifdef</code>s to deal with byte-order issues. <code class="code">#ifdef</code>s are generally
+frowned upon, and you should be ashamed of yourself if you use them.
+</p><p>
+The following sample program further demonstrates the usage of these new
+macros:
+</p><pre class="programlisting cpp">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;byteorder.h&gt;
+
+<span class="comment">/*
+ * Simple employee record
+ */</span>
+typedef struct {
+  <span class="type">char</span> <code class="varname">first_name</code>[16];  <span class="comment">/* First name */</span>
+  <span class="type">char</span> <code class="varname">last_name</code>[16];   <span class="comment">/* Last name */</span>
+  <span class="type">float</span> <code class="varname">salary</code>;         <span class="comment">/* Salary */</span>
+  <span class="type">int16</span> <code class="varname">number</code>;         <span class="comment">/* Employee number */</span>
+  <span class="type">char</span> <code class="varname">lendian</code>;  <span class="comment">/* Is record in little-endian format? */</span>
+  <span class="type">char</span> <code class="varname">padding</code>;  <span class="comment">/* Padding, to float boundary (4-bytes) */</span>
+} <span class="type">employee_t</span>;
+
+<span class="comment">/*
+ * Convert an employee record to host format
+ */</span>
+static <span class="type">void</span>
+<code class="function">convert_to_host_format</code>(<span class="type">employee_t *</span><code class="parameter">emp</code>)
+{
+  if (<code class="parameter">emp</code>-&gt;<code class="varname">lendian</code>) {
+    <span class="comment">/*
+     * Little-endian to host conversion
+     */</span>
+    <code class="parameter">emp</code>-&gt;<code class="varname">number</code> = <code class="function">B_LENDIAN_TO_HOST_INT16</code>(<code class="parameter">emp</code>-&gt;<code class="varname">number</code>);
+    <code class="parameter">emp</code>-&gt;<code class="varname">salary</code> = <code class="function">B_LENDIAN_TO_HOST_FLOAT</code>(<code class="parameter">emp</code>-&gt;<code class="varname">salary</code>);
+  } else {
+    <span class="comment">/*
+     * Big-endian to host conversion
+     */</span>
+    <code class="parameter">emp</code>-&gt;<code class="varname">number</code> = <code class="function">B_BENDIAN_TO_HOST_INT16</code>(<code class="parameter">emp</code>-&gt;<code class="varname">number</code>);
+    <code class="parameter">emp</code>-&gt;<code class="varname">salary</code> = <code class="function">B_BENDIAN_TO_HOST_FLOAT</code>(<code class="parameter">emp</code>-&gt;<code class="varname">salary</code>);
+  }
+}
+
+<code class="function">main</code>(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>)
+{
+  <span class="type">employee_t</span> <code class="varname">emp</code>;
+
+  switch (<code class="parameter">argc</code>) {
+  case 1:
+    <span class="comment">/*
+     * Read an employee record from standard input
+     * and print it
+     */</span>
+    if (<code class="function">fread</code>(&amp;<code class="varname">emp</code>, 1, sizeof(<code class="varname">emp</code>), <code class="varname">stdin</code>) != sizeof(<code class="varname">emp</code>)) {
+      <code class="function">fprintf</code>(<code class="varname">stderr</code>, "Error reading employee record\n");
+      <code class="function">exit</code>(1);
+    }
+
+    <code class="function">convert_to_host_format</code>(&amp;<code class="varname">emp</code>);
+
+    <code class="function">printf</code>("Name: %s %s, #%d, $%8.2f\n",
+        <code class="varname">emp</code>.<code class="varname">first_name</code>,
+        <code class="varname">emp</code>.<code class="varname">last_name</code>,
+        <code class="varname">emp</code>.<code class="varname">number</code>,
+        <code class="varname">emp</code>.<code class="varname">salary</code>);
+    break;
+
+  case 5:
+    <span class="comment">/*
+     * Use the command-line arguments to create an
+     * employee record
+     * and write it to standard output.
+     */</span>
+    <code class="function">memset</code>(&amp;<code class="varname">emp</code>, 0, <code class="function">sizeof</code>(<code class="varname">emp</code>));
+    <code class="function">strcpy</code>(<code class="varname">emp</code>.<code class="varname">first_name</code>, <code class="parameter">argv</code>[1]);
+    <code class="function">strcpy</code>(<code class="varname">emp</code>.<code class="varname">last_name</code>, <code class="parameter">argv</code>[2]);
+    <code class="varname">emp</code>.<code class="varname">number</code> = <code class="function">atoi</code>(<code class="parameter">argv</code>[3]);
+    <code class="varname">emp</code>.<code class="varname">salary</code> = <code class="function">atof</code>(<code class="parameter">argv</code>[4]);
+
+    <span class="comment">/*
+     * Note endian-ness for reading later
+     */</span>
+    <code class="varname">emp</code>.<code class="varname">lendian</code> = <code class="constant">B_HOST_IS_LENDIAN</code>;
+
+    if (<code class="function">fwrite</code>(&amp;<code class="varname">emp</code>, 1, <code class="function">sizeof</code>(<code class="varname">emp)</code>, <code class="varname">stdout</code>) != <code class="function">sizeof</code>(<code class="varname">emp</code>))
+    {
+      <code class="function">fprintf</code>(<code class="varname">stderr</code>, "Error writing employee record\n");
+      <code class="function">exit</code>(1);
+    }
+    break;
+  default:
+    <code class="function">fprintf</code>(<code class="varname">stderr</code>, "incorrect number of arguments\n");
+    <code class="function">exit</code>(1);
+  }
+  exit(0);
+}
+</pre><p>
+This program reads and writes employee records. The records can be
+written on Intel and read by PowerPC or vice-versa. The program is
+written in a style I prefer, which is to never swap when writing data, as
+long as there is an extra field to indicate the endianness of the data
+when written. Then when reading, you swap the data only if necessary. The
+advantages of this style are the following:
+</p><div class="orderedlist"><ol><li><p>
+You don't swap when exchanging data between like-minded machines,
+like Intel to Intel or PowerPC to PowerPC. This is the common case,
+after all.
+</p></li><li><p>
+The code is easier to understand, because there is only swapping
+code for one direction (reading). The write case looks pretty much
+like it would if you didn't have to worry about these things (but
+unfortunately, you do).
+</p></li></ol></div><p>
+Sometimes you don't have the liberty to define your own data format
+because you are dealing with some standard format, such as JPEG or device
+registers. The macros will still be helpful to you in this case, and I
+recommend using them.
+</p><p>
+These macros won't solve all of your interoperability problems. You still
+need to worry about alignment issues. The employee record in this sample
+program was carefully laid out to be interoperable using natural
+alignment techniques. Natural alignment is the subject of a previous
+Newsletter article...
+</p><p>
+<a class="xref" href="Issue2-9.html#Engineering2-9" title="Be Engineering Insights: Will Your DATA Look Like ATAD?">Be Engineering Insights: Will Your DATA Look Like ATAD?</a>
+</p><p>
+...and won't be discussed further here.
+</p><p>
+So, that's all I have to say. There is now plenty of information
+available to you on how to prepare for Intel. If you design your PR2
+application right, it is possible to just recompile it for Release
+3/Intel and have it interoperate with PowerPC. If you can do this, pour
+yourself a drink and enjoy it. You deserve it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing2-45"></a>How to Make a Million Dollars Developing for the BeOS (No Kidding)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Johnson</span></span></div></div></div><p>
+In the short time I've been at Be I've been getting in touch with as many
+of our developers as I can. I hear a lot of developers say, "I don't want
+to risk doing apps for the BeOS until there are lots of apps out for it."
+</p><p>
+To address this I have here a somewhat edited version of an e-mail
+exchange I had with a developer. (I rewrote it to make me look good.)
+Reading this just might make you a million dollars.
+</p><p>
+ME: Hi, I'm Dave Johnson, new Developer Evangelist at Be, Inc. I'm going
+through the database becoming familiar with all the developers, etc.
+</p><p>
+DEVELOPER: Dave, as much as I love the BeOS, I have to hold off
+developing for it until we see Premiere, Photoshop, or After Effects
+running on it. Until there are big-name applications I don't think you'll
+have the customer base to support my product.
+</p><p>
+ME: You already know the BeOS is a powerful tool that enables you to
+write applications with significantly superior performance—RIGHT NOW
+-- so you CAN solve specific problems for specific customers. The fact is
+that there are customers out there who want that performance because it
+will save them time and money. So for them the argument about whether
+there are "enough applications" is irrelevant. Service bureaus, video
+editors, graphic design houses don't CARE if Quicken is on the BeOS yet!
+They care if you can help them save or make money.
+</p><p>
+Developers who worry about the size of the existing customer base believe
+that you write a generic application and just sort of put it out there
+and wait for customers to come to you. In fact this is already happening.
+We're doing everything we can to get the BeOS into the hands of lots and
+lots of computer users. But there's also another way to look at this
+situation.
+</p><p>
+DEVELOPER: What's that? If you're telling me not to worry about your
+existing customer base, how are you proposing I can make money now?
+</p><p>
+ME: By solving specific problems for specific customers—that's how
+people get rich. If you solve one problem in a compelling way for
+customers they'll pay you for doing it. Developers who write products
+that solve specific problems will do well. The BeOS exists, developers
+understand what it's good at, and you're going to see very good products
+with vastly superior performance running on it. So why don't YOU do one?
+Why don't YOU get there first and establish your specific area of problem
+solving? How often do opportunities like that come up?
+</p><p>
+DEVELOPER: I don't do one, because I really don't want to reinvent the
+wheel.
+</p><p>
+ME: DUDE! Reinventing the wheel on a multi-threaded symmetric
+multiprocessing OS means that you'll have something to show that blows
+the customers away! You'll either make a mint selling to those customers,
+or Adobe will BUY IT from you when they decide it's time to be on the
+BeOS. You want to be there first.
+</p><p>
+DEVELOPER: Well. . .
+</p><p>
+ME: Name one other OS that gives you superior performance on the same
+hardware. Be is going to do well because it is a compelling solution.
+Developers know that as soon as they see and use the BeOS. And YOU will
+win by writing applications that take advantage of the BeOS's performance
+to solve problems for customers.
+</p><p>
+DEVELOPER: Yes, the BeOS is a compelling solution, and yes, the geeks get
+it. But it does no good if the geeks aren't _allowed_ to develop for it.
+Adobe isn't going to port until they know that Be's "viable,"
+financially. I think you guys are doing a great job, and the BeOS is
+coming right along. PR2 is great! The real truth is that you guys have
+absolutely no competition. You blow NT out of the water, and make the Mac
+OS look like a hack.
+</p><p>
+BUT I still think your main goal should be getting as many apps, and the
+sexiest apps on board. Get Adobe to sign on. No one wants to spend money
+on a set of apps that are all 1.0 versions, from tiny three-person
+startup companies!
+</p><p>
+ME: Leading edge developers think that entering an arena where there is
+limited competition is a GREAT idea! They see it as a huge opportunity.
+How often do you get opportunities like this?
+</p><p>
+DEVELOPER: But why would a customer buy my product—even one tailored
+to solve a specific problem—to run on an OS that he isn't already
+using?
+</p><p>
+ME: Because applications running on the BeOS demonstrate significant
+performance improvements that translate into MONEY for the customer.
+Visit some of those customers and learn their needs. Take a
+multiprocessor computer with you and show a finished app that uses
+threaded multiprocessing and does one thing for them in a third of the
+time it takes them now. Just ONE thing. You can do that with the BeOS.
+Think about all those service bureaus, all the Kinkos, graphic designers,
+photo processors, video editors, musicians, you name it...
+</p><p>
+Time is money, and speeding things up saves money for those businesses.
+Lots of businesses are performing some task on a computer that operates
+inefficiently. Apps running on the BeOS will outperform apps running on
+Mac or Windows or NT. Period.
+</p><p>
+DEVELOPER: Gosh. I'm glad I listened to you. I AM going to go out and
+develop a BeOS application and make a million dollars!
+</p><p>
+SUMMARY: Hey you developers, listen up, it's opportunity knocking! What
+I'm suggesting is that you locate key target business segments and find
+out specifically where in their business the benefits of BeOS will make
+them money. Find out where they are bogged down by slow programs, which
+programs, etc... Then YOU develop a product that takes advantage of the
+BeOS to solve that performance problem. Customers will PAY YOU to do
+that! The developers that write those applications for those customers
+are going to make a lot of money.
+</p><p>
+Go out there and DO IT.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop2-45"></a>Developers' Workshop: Sounds That Go Bump In the Night</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+"Developers' Workshop" is a new weekly feature that provides answers to
+our developers' questions. Each week, a Be technical support or
+documentation professional will choose a question (or two) sent in by an
+actual developer and provide an answer.
+</p><p>
+We've created a new section on our website. Please send us your
+Newsletter topic suggestions by visiting the website at:
+http://www.be.com/developers/suggestion_box.html.
+</p><p>
+So I'm sitting here at my desk, minding my own business and writing
+lovely new documentation for the Media Kit, when all of a sudden the
+powers that be decide to have the new guy start writing articles for the
+Newsletter. After momentarily thinking that was a pretty good joke, I
+realize they're actually serious.
+</p><p>
+As this slowly sinks in, I'm staring at my screen, where pages and pages
+of sample code and half-written Media Kit documentation are mocking me.
+Slowly it dawns on me that I can impress everyone with my speedy article
+writing by ripping out a piece of one of these sample programs I've been
+working on and writing an article about it.
+</p><p>
+After perusing my source code, I realize that what I have in my hands is
+nothing less than the answer to the age-old question: "How do I take an
+arbitrarily formatted sound and stuff it into that 16-bit stereo sound
+stream?"
+</p><p>
+What I'll present here is a C function that can mix any sound format into
+a stream buffer. Ideally, you'll take this code and convert it into a
+member function in your sound output class.
+</p><p>
+The BeOS audio streams (both input and output) are 16-bit stereo. Once
+you've subscribed to the output stream (by creating a <code class="classname">BDACStream</code> object
+and subscribing to it with a <code class="classname">BSubscriber</code>), you can enter the stream and
+start receiving buffers of audio data that you can alter to your heart's
+content.
+</p><p>
+This is great when the sound you want to play is in 16-bit stereo form.
+But things get ugly when it's 8-bit mono or some other format. Then you
+have to manually fix things like sample size and endianness, and mix the
+sound into the stream, preferably without destroying whatever sound is
+already in the buffers you receive.
+</p><p>
+Since you always know what format the output stream is going to be, you
+can make your life easier by defining a structure I call standard_frame,
+which defines the format of a single frame of audio data in 16-bit stereo
+format:
+</p><pre class="programlisting cpp">
+struct <span class="type">standard_frame</span> {
+  <span class="type">int16</span>  <code class="varname">left</code>;    <span class="comment">// Left channel's sample</span>
+  <span class="type">int16</span>  <code class="varname">right</code>;    <span class="comment">// Right channel's sample</span>
+};
+typedef struct <span class="type">standard_frame</span> <code class="varname">standard_frame</code>;
+</pre><p>
+Now you can create the <code class="methodname">MixStandardFrames()</code> function. It accepts a lot of
+parameters. When you add this function to your audio output class, you
+can probably eliminate a lot of these parameters by referencing member
+variables of your class instead.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">MixStandardFrames</code>(<span class="type">char *</span><code class="parameter">soundData</code>, <span class="type">int32</span> <code class="parameter">index</code>,
+  <span class="type">int32</span> <code class="parameter">count</code>, <span class="type">standard_frame *</span><code class="parameter">out</code>, <span class="type">int32</span> <code class="parameter">fileFormat</code>,
+  <span class="type">int32</span> <code class="parameter">byteOrder</code>, <span class="type">int32</span> <code class="parameter">sampleSize</code>, <span class="type">int32</span> <code class="parameter">channelCount</code>) {
+</pre><p>
+<code class="parameter">soundData</code> is a pointer to a buffer containing the sound data to mix into
+the output buffer. To make your life really easy, it takes a pointer to
+the beginning of the complete sound. The <code class="parameter">index</code> parameter is the frame
+number of the sound to start playing at. So if you want to play starting
+at the 5,000th frame of the sound, you'd pass a pointer to the 0th frame
+in <code class="parameter">soundData</code> and the number 5,000 for index.
+</p><p>
+The <code class="parameter">count</code> parameter is the number of frames
+you want to mix, and <code class="parameter">out</code> is a
+pointer to a 16-bit stereo sound buffer into which those frames will be
+mixed. The remaining parameters specify the file format (<code class="constant">B_WAVE_FILE</code>,
+<code class="constant">B_AIFF_FILE</code>, etc), byte order (<code class="constant">B_BIG_ENDIAN</code>
+or <code class="constant">B_LITTLE_ENDIAN</code>), sample
+size (1 or 2 bytes), and channel count (1 or 2 channels, for mono and
+stereo). These parameters allow <code class="methodname">MixStandardFrames</code> to interpret the
+incoming data correctly.
+</p><p>
+<code class="methodname">MixStandardFrames</code> has lots of local variables.
+The <code class="varname">shortIn</code>, <code class="varname">byteIn</code>, and
+<code class="varname">ubyteIn</code> pointers will be used for type-casted pointers to the sound data.
+The other parameters are used, as you'll see later, by the code that does
+the actual mixing of the sound data.
+</p><pre class="programlisting cpp">
+register <span class="type">short *</span><code class="varname">shortIn</code>;    <span class="comment">// Used for 16-bit samples</span>
+register <span class="type">char *</span><code class="varname">byteIn</code>;      <span class="comment">// For 8-bit signed samples</span>
+register <span class="type">uchar *</span><code class="varname">ubyteIn</code>;    <span class="comment">// For 8-bit unsigned samples</span>
+register <span class="type">int32</span> <code class="varname">sample0</code>, <code class="varname">sample1</code>; <span class="comment">// Mixed left and right samples</span>
+register <span class="type">int32</span> <code class="varname">temp0</code>, <code class="varname">temp1</code>;  <span class="comment">// Used in clipping computation</span>
+register <span class="type">int32</span> <code class="varname">stereo</code>;        <span class="comment">// Stereo or not?</span>
+register <span class="type">int32</span> <code class="varname">frame</code>;    <span class="comment">// The frame offset being processed</span>
+</pre><p>
+The first thing to do is verify that the input pointers aren't null. That
+would be a bad thing, and as good programmers we fear bad things, so
+check for that straight off.
+</p><pre class="programlisting cpp">
+if (!<code class="parameter">soundData</code> || !<code class="parameter">out</code>) {
+  return <code class="constant">B_ERROR</code>;
+}
+</pre><p>
+Then set the stereo variable to 1 if the sound you're playing is in
+stereo format, or 0 if the sound is mono. This will be used as a
+multiplier as you make your way through the input sound data.
+</p><pre class="programlisting cpp">
+if (<code class="parameter">channelCount</code> == 1) {
+  <code class="varname">stereo</code> = 0;
+}
+else {
+  <code class="varname">stereo</code> = 1;
+}
+</pre><p>
+Now it's time to prepare for the real work. Set up byte, unsigned byte,
+and short pointers to the first frame of the sound data to be played.
+When you actually start processing the data, you'll use the pointer
+appropriate to the type of input data you have. The pointer is cast to
+the appropriate type and you add the offset to the specified first frame.
+</p><p>
+The offset is either <code class="parameter">index</code> or <code class="parameter">index</code>*2,
+depending on whether or not the
+sound is stereo or not. So you multiply index by <code class="varname">stereo</code>+1, which will
+either be <code class="parameter">index</code>*1 or <code class="parameter">index</code>*2.
+The result is a pointer to the first frame
+to be processed.
+</p><p>
+Then you initialize the <code class="varname">frame</code> counter to zero.
+</p><pre class="programlisting cpp">
+<code class="varname">byteIn</code> = ((<span class="type">char *</span>) <code class="parameter">soundData</code>)+(<code class="parameter">index</code>*(<code class="varname">stereo</code>+1));
+<code class="varname">ubyteIn</code> = ((<span class="type">uchar *</span>) <code class="parameter">soundData</code>)+(<code class="parameter">index</code>*(<code class="varname">stereo</code>+1));
+<code class="varname">shortIn</code> = ((<span class="type">short *</span>) <code class="parameter">soundData</code>)+(<code class="parameter">index</code>*(<code class="varname">stereo</code>+1));
+
+<code class="varname">frame</code> = 0;      <span class="comment">// Start at the very beginning</span>
+                <span class="comment">// (a very good place to start)</span>
+</pre><p>
+Now it's time to process the actual sound. Start by dealing with 8-bit
+sounds, which have a sample size of one byte. Loop through each frame,
+from 0 to <code class="varname">count</code>, using the <code class="varname">frame</code> variable as a counter.
+</p><pre class="programlisting cpp">
+if (<code class="parameter">sampleSize</code> == 1) {
+  while (<code class="varname">frame</code> &lt; <code class="parameter">count</code>) {
+    if (<code class="varname">fileFormat</code> == <code class="constant">B_WAVE_FILE</code>) {
+      <code class="varname">sample0</code> = <code class="parameter">out</code>-&gt;<code class="varname">left</code> + (<span class="type">int32</span>) (<span class="type">int8</span>)
+        (*<code class="varname">ubyteIn</code> - 128) &lt;&lt; 8;
+      <code class="varname">ubyteIn</code> += <code class="varname">stereo</code>;
+      <code class="varname">sample1</code> = <code class="parameter">out</code>-&gt;<code class="varname">right</code> + (<span class="type">int32</span>) (<span class="type">int8</span>)
+        (*<code class="varname">ubyteIn</code> - 128) &lt;&lt; 8;
+      <code class="varname">ubyteIn</code>++;
+    }
+    else {
+      <code class="varname">sample0</code> = <code class="parameter">out</code>-&gt;<code class="varname">left</code> + (<span class="type">int32</span>) (<span class="type">int8</span>) (*<code class="varname">byteIn</code>) &lt;&lt; 8;
+      <code class="varname">byteIn</code> += <code class="varname">stereo</code>;
+      <code class="varname">sample1</code> = <code class="parameter">out</code>-&gt;<code class="varname">right</code> + (<span class="type">int32</span>) (<span class="type">int8</span>) (*<code class="varname">byteIn</code>) &lt;&lt; 8;
+      <code class="varname">byteIn</code>++;
+    }
+</pre><p>
+The above code computes one frame of mixed sound data. Note that 8-bit
+WAVE files get special treatment. That's because 8-bit WAVE format
+samples are unsigned, rather than signed. So you have to convert the data
+into signed format by subtracting 128 from the samples.
+</p><p>
+<code class="varname">sample0</code> is the left channel's sample. Grab the next sample from the
+buffer containing the sound you're playing (pointed to by either <code class="varname">ubyteIn</code>
+or <code class="varname">byteIn</code>), shift it left eight bits to convert it into a 16-bit number,
+and add it to <code class="parameter">out</code>-&gt;<code class="varname">left</code>, which is the existing sample in the output
+buffer.
+</p><p>
+Now add the value of the <code class="varname">stereo</code> flag to the input pointer. This will only
+increment the input pointer if the sound is in stereo format (remember
+that <code class="varname">stereo</code> is 0 for mono and 1 for stereo). That way, when you read the
+right channel, if the sound is stereo, you'll get the right channel's
+sample, but if the sound is mono, the left channel will be duplicated
+into the right.
+</p><p>
+Process the right channel's sample, <code class="varname">sample1</code>, the same way.
+</p><p>
+Now you have to deal with possible clipping problems. Clipping occurs
+when the value of the mixed samples is outside the range that can be
+represented by a 16-bit number. This is why you mix the sounds in 32-bit
+variables: You can detect overflow and compensate for it.
+</p><p>
+First, add $8000 to the left and right samples we've mixed, then mask off
+the low word. This value, stored in <code class="varname">temp0</code>
+for the left channel and <code class="varname">temp1</code>
+for the right, is non-zero if the sample overflowed.
+</p><p>
+Now store the sample into the output buffer. If <code class="varname">temp0</code> (for the left
+channel) or <code class="varname">temp1</code> (for the right channel) is non-zero, replace the output
+sample with $7FFF if the sample is positive (this is the maximum possible
+sample value) or $8000 if the sample is negative (this is the minimum
+possible sample value). This clips the sample to the range of valid
+16-bit integers without accidentally wrapping around and sounding
+*really* strange.
+</p><p>
+Finally, increment the <code class="varname">out</code> pointer to point to the next frame of audio in
+the output buffer, and increment <code class="varname">frame</code>, which is the number of frames
+you've processed so far, and continue looping until the desired number of
+frames have been mixed into the output buffer.
+</p><pre class="programlisting cpp">
+    <code class="varname">temp0</code> = (<code class="varname">sample0</code> + 0x8000) &amp; 0xFFFF0000;
+    <code class="varname">temp1</code> = (<code class="varname">sample1</code> + 0x8000) &amp; 0xFFFF0000;
+    <code class="parameter">out</code>-&gt;<code class="varname">left</code> = <code class="varname">sample0</code>;
+    if (<code class="varname">temp0</code>) {
+      <code class="parameter">out</code>-&gt;<code class="varname">left</code> = (<code class="varname">sample0</code> &gt; 0 ? 0x7FFF : 0x8000);
+    }
+    <code class="parameter">out</code>-&gt;<code class="varname">right</code> = <code class="varname">sample1</code>;
+    if (<code class="varname">temp1</code>) {
+      <code class="parameter">out</code>-&gt;<code class="varname">right</code> = (<code class="varname">sample1</code> &gt; 0 ? 0x7FFF : 0x8000);
+    }
+    <code class="parameter">out</code>++;      <span class="comment">// Next slot in the output buffer</span>
+    <code class="varname">frame</code>++;    <span class="comment">// Next frame of input</span>
+  }
+}
+</pre><p>
+16-bit input data is handled almost exactly the same way, with two
+significant differences: WAVE files don't need special consideration, and
+you have to deal with both big-endian and little-endian input.
+</p><p>
+Since BeOS is natively big-endian, you have to use the <code class="function">read_16_swap()</code>
+function to read little-endian data. This function returns, byte-swapped,
+the 16-bit value located at a given address. The input data is pointed to
+here by shortIn, which represents the 16-bit input data. Otherwise, this
+code is exactly the same as the 8-bit code above.
+</p><pre class="programlisting cpp">
+else {
+  while (<code class="varname">frame</code> &lt; <code class="varname">count</code>) {
+    if (<code class="parameter">byteOrder</code> == <code class="constant">B_LITTLE_ENDIAN</code>) {
+      <code class="varname">sample0</code> = <code class="parameter">out</code>-&gt;<code class="varname">left</code> + (<span class="type">int32</span>) <code class="function">read_16_swap</code>(<code class="varname">shortIn</code>);
+      <code class="varname">shortIn</code> += <code class="varname">stereo</code>;
+      <code class="varname">sample1</code> = <code class="parameter">out</code>-&gt;<code class="varname">right</code> + (<span class="type">int32</span>) <code class="function">read_16_swap</code>(<code class="varname">shortIn</code>);
+      <code class="varname">shortIn</code>++;
+    }
+    else {
+      <code class="varname">sample0</code> = <code class="parameter">out</code>-&gt;<code class="varname">left</code> + (<span class="type">int32</span>) *<code class="varname">shortIn</code>;
+      <code class="varname">shortIn</code> += <code class="varname">stereo</code>;
+      <code class="varname">sample1</code> = <code class="parameter">out</code>-&gt;<code class="varname">right</code> + (<span class="type">int32</span>) *<code class="varname">shortIn</code>;
+      <code class="varname">shortIn</code>++;
+    }
+
+    <code class="varname">temp0</code> = (<code class="varname">sample0</code> + 0x8000) &amp; 0xFFFF0000;
+    <code class="varname">temp1</code> = (<code class="varname">sample1</code> + 0x8000) &amp; 0xFFFF0000;
+    <code class="parameter">out</code>-&gt;<code class="varname">left</code> = <code class="varname">sample0</code>;
+    if (<code class="varname">temp0</code>) {
+      <code class="parameter">out</code>-&gt;<code class="varname">left</code> = (<code class="varname">sample0</code> &gt; 0 ? 0x7FFF : 0x8000);
+    }
+    <code class="parameter">out</code>-&gt;<code class="varname">right</code> = <code class="varname">sample1</code>;
+    if (<code class="varname">temp1</code>) {
+      <code class="parameter">out</code>-&gt;<code class="varname">right</code> = (<code class="varname">sample1</code> &gt; 0 ? 0x7FFF: 0x8000);
+    }
+    <code class="parameter">out</code>++;    <span class="comment">// Next slot in the output buffer</span>
+    <code class="varname">frame</code>++;    <span class="comment">// Next frame of input</span>
+  }
+}
+</pre><p>
+Finally, return <code class="constant">B_OK</code> to indicate that, as far as this code can tell,
+nothing went too terribly wrong while mixing the sound data:
+</p><pre class="programlisting cpp">
+  return <code class="constant">B_OK</code>;
+}
+</pre><p>
+This code can be called easily from your stream function to mix any kind
+of sound data into the output stream. The following sample hook function
+assumes the existence of certain variables. Normally you'll have these
+within the class containing the hook function, but space doesn't permit
+me to show the entire class. These variables are:
+</p><p>
+<code class="varname">playFrameNumber</code>: Specifies the frame number of the first frame of audio
+data to play.
+</p><p>
+<code class="varname">soundLength</code>: Specifies the length, in frames, of the sound being played.
+</p><p>
+<code class="varname">soundData</code>: Pointer to the sound data to play.
+</p><p>
+<code class="varname">fileFormat</code>, <code class="varname">byteOrder</code>,
+<code class="varname">sampleSize</code>, and <code class="varname">channelCount</code> specify the file
+format, byte ordering, sample size, and number of channels in the sound.
+These are passed straight through to <code class="methodname">MixStandardFrame()</code>.
+</p><pre class="programlisting cpp">
+static <span class="type">bool</span> OutStreamHook(<span class="type">void *</span><code class="parameter">userData</code>, <span class="type">char *</span><code class="parameter">buffer</code>,
+  <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">void *</span><code class="parameter">header</code>) {
+  <span class="type">int32</span> <code class="parameter">frameCount</code>;
+
+  <span class="comment">// If the sound is done playing, exit the stream</span>
+
+  if (<code class="varname">playFrameNumber</code> &gt;= <code class="varname">soundLength</code>) {
+    return <code class="constant">false</code>;
+  }
+
+  <span class="comment">// Compute the number of frames to copy</span>
+
+  <code class="varname">frameCount</code> = <code class="parameter">count</code>/4;    <span class="comment">// Compute buffer size in frames</span>
+  if ((<code class="varname">soundLength</code>-<code class="varname">playFrameNumber</code>) &lt; <code class="varname">frameCount</code>) {
+    <code class="varname">frameCount</code> = <code class="varname">soundLength</code>-<code class="varname">playFrameNumber</code>;
+    if (!<code class="varname">frameCount</code>) {
+      return <code class="constant">false</code>;       <span class="comment">// No more data!</span>
+    }
+  }
+
+  <span class="comment">// Mix ourselves into the buffer.</span>
+
+  <code class="methodname">MixStandardFrames</code>(<code class="varname">soundData</code>, <code class="varname">playFrameNumber</code>, <code class="varname">frameCount</code>,
+     (<span class="type">standard_frame *</span>) <code class="varname">buffer</code>, <code class="varname">fileFormat</code>, <code class="varname">byteOrder</code>,
+     <code class="varname">sampleSize</code>, <code class="varname">channelCount</code>);
+  <code class="varname">playFrameNumber</code> += <code class="varname">frameCount</code>;
+  return <code class="constant">true</code>;
+}
+</pre><p>
+This hook function starts by looking to see if the sound has finished
+playing (the frame to be played is greater than or equal to the number of
+frames in the sound); if so, it returns <code class="constant">false</code>, which tells the
+<code class="classname">BSubscriber</code> to remove us from the stream.
+</p><p>
+Now compute the number of frames to copy into the buffer, by dividing the
+size of the file in bytes by four and storing that result in <code class="varname">frameCount</code>.
+Each frame of 16-bit stereo sound is four bytes long.
+</p><p>
+If the number of frames left to play in the sound (<code class="varname">soundLength</code> -
+<code class="varname">playFrameNumber</code>) is less than the number of frames in the buffer, change
+<code class="varname">frameCount</code> to that value. This can happen when you are approaching the
+end of the sound, and there are fewer frames of sound left to play than
+there are in the buffer you've received.
+</p><p>
+Once that's all done, call <code class="methodname">MixStandardFrames()</code> to mix the sound into the
+buffer, then add <code class="function">frameCount</code> to <code class="function">playFrameNumber</code>
+to keep track of the next
+frame to be played. Finally, return <code class="constant">true</code>, which
+tells the <code class="classname">BSubscriber</code>
+that you're not done playing yet.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-45"></a>BeOS on the Web</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Perhaps this isn't the best of weeks to discuss e-commerce, right in the
+wake of an ambitious announcement from one of our noble and worthy
+elders, but we just made the BeOS available for Web download (visit
+http://www.be.com/products/beos_download/.
+</p><p>
+From one angle, this isn't news, we said we'd do it, we're doing it, a
+little late, we're just doing our job and, in any case, doesn't everyone
+promote and deliver their software on the Web? True. But, from another
+angle, our latest move raises a few questions. The hardest one stems from
+the "free trial" status of our product. If we start on that slope, some
+critics say, how are we going to make money, how are we going to wean
+users from the "free BeOS habit"?
+</p><p>
+Here is our perspective: The world isn't waiting for us, we've got to
+earn the trust and the commitment of developers and customers. The BeOS
+is an unproven platform within a context where one company, Microsoft, is
+enormously successful, and other operating systems have slowed down, in
+the best of cases, or failed. Of course, in order to make our case, we
+can write columns, go to industry conferences and give speeches, or go to
+trade shows and run demonstrations. This is good, necessary perhaps, but
+not sufficient.
+</p><p>
+Clearly positioning the product is good, comparing the benefits of a
+specialized Media OS versus the comforts and limits of a general-purpose
+platform is commendable marketing hygiene. Opposing IBM's strategy with
+OS/2 (better DOS than DOS, better Windows than Windows) to our goal of
+coexisting with Windows is a useful disclaimer.
+</p><p>
+But, in the end, the most potent marketing weapon in our business still
+is word-of-mouth. If users and developers say good things about the BeOS
+and our company, its business practices and its people, this is much more
+credible than any commercial. If, on the contrary, our product is
+perceived as poorly designed, our staff as unresponsive, no amount of
+advertising will correct the problem.
+</p><p>
+This is well and good, but it doesn't quite address the "freebie habit"
+problem. Why don't we charge for PR2 downloads? After all, it's nice,
+stable and usable, right?
+</p><p>
+Right now, our view is we need to develop the installed base of BeOS
+users more than we need the revenue. We'd rather make this investment as
+soon as possible, learn what users like and dislike and maximize the
+installed based BeOS developers can count on.
+</p><p>
+And, as we plan to enter the Intel space, we want to gather as much
+momentum and experience as possible, while keeping in mind that this new
+field isn't the PowerPC market, only bigger. Mac developers have
+discovered that fact when they moved to Windows. The context, the
+competition, the belief systems, the purchasing habits are all different.
+Which puts us in the slightly paradoxical situation of wanting to gain
+experience quickly while realizing that the knowledge gained must be
+applied selectively.
+</p><p>
+Back to the main issue, our current plan is to let the trial version,
+free, and the paid for product coexist. Many companies do that today, and
+rather successfully. You can use Eudora Lite or pay for Eudora Pro, your
+choice. You can use QuickView, or pay for the QuickView Plus version,
+both very nice products. And there are many, many more such examples.
+</p><p>
+These companies obviously want to make it easy for the prospective paying
+customer to make up his or her mind, and they have faith in the
+statistical outcome of the trial. Qualcomm, for instance, knows some
+people will keep using the "free" Eudora Lite instead of forking the $50
+or so required for the Pro version. But, as long as the "Lite" users are
+happy, they contribute to the positive buzz about Eudora. This, I hasten
+to say, doesn't mean to represent our detailed calculus of possibilities
+for the free vs. paid for versions of the BeOS, these examples merely
+intend to show it can work and that users are willing to move from free
+to "commercial."
+</p><p>
+We'll keep in mind that history repeats itself in mysterious way as we
+happily add bandwidth for the demand created by the Web availability of
+our product—and as we are chasing freshly discovered bugs.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-45"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id602088"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id602094"></a>Subject: Workspace dragging</h4></div></div></div><p>
+The drag-a-window-between-workspaces feature was a new found source of
+amusement for one of our listeners. Although initially offered as an
+off-topic thread, others joined in to offer window management
+suggestions:
+</p><ul class="itemizedlist"><li><p>
+Hot-key window delivery: Bucky bit-click on a window to send it
+to some other workspace.
+</p></li><li><p>
+Workspace scrolling.
+</p></li><li><p>
+Multiple graphics card support, with separate workspaces running
+on each.
+</p></li><li><p>
+Spatial arrangement of workspaces to support multi-headed setups.
+</p></li><li><p>
+Smarter desktop layout when switching from a big to a small
+workspace.
+</p></li></ul><p>
+The spatial arrangement/multi-headed question generated the most
+debate: Should individual workspaces be views into a single universal
+workspace area? Should each monitor have its own list of workspaces
+that it can switch to, exclusive of all other monitors? And so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id602149"></a>Subject: Web Browser</h4></div></div></div><p>
+Jerome Chan is curious:
+</p><p>
+“<span class="quote">How hard is it to write a web browser? I mean, if the Linux people can
+write an entire OS why can't we write a web browser ourselves?</span>”
+</p><p>
+Craig Longman suggests looking at the HTML spec to get an idea of the
+task's complexity. And then move on to Java, and JavaScript, and CSS...
+Pierre-Emmanuel Chaut pointed out that many of the elements of a good
+browser are already available (through Kftp, rRaster, Felix, and so
+on). It's (ahem) simply a matter of putting the pieces together.
+Various members of the BeDevTalk community offered their services for a
+international group effort.
+</p><p>
+The thread then veered into a discussion of XML ("Extensible Markup
+Language") vs HTML. Is XML the Web language of the future?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id602188"></a>Subject: VirtualMemory Swap on Alternate Drive</h4></div></div></div><p>
+Swap file questions:
+</p><ul class="itemizedlist"><li><p>
+How about providing a "remote" swap file feature, in which the
+swap file is on a different drive?
+</p></li><li><p>
+How about a swap file on a separate partition?
+</p></li><li><p>
+the kernel handle multiple swap files?
+</p></li></ul><p>
+The swap-file-across-a-wire idea was generally accepted as an obviously
+beneficial improvement. But does it make sense to dedicate a partition
+as a swap file? Jake Hamby points out that the BeOS is quite efficient
+when handling VM I/O, so assigning a partition might not gain anything.
+Osma Ahvenlampi offered this: If you can physically place the partition
+on the outer cylinders, you can take advantage of the cylinders'
+naturally heightened speed.
+</p><p>
+THE BE LINE: (From Dominic Giampaolo) Although the kernel can handle
+"remote" swap files, there's currently no way to tell it to do so.
+We'll consider it, but it's not likely to happen in the next release.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id602239"></a>Subject: Opera</h4></div></div></div><p>
+John Tegen sent a well-reasoned description of the necessity of and
+requirements for an intelligent open system. But where to go from here,
+wherever "here" is?
+</p><p>
+Somehow, the thread immediately skidded into a discussion of the
+"Project Magic" Opera browser. A number of listeners have pledged their
+money to this port; others question the wisdom of buying a product
+before it exists.
+</p><p>
+More interestingly (and generally), the notion of "nativeness" was
+scrutinized. Is moving code from one platform to another and stitching
+up the loose ends enough to deem the result "native"? Many folks don't
+think so. A native app should take advantage of an OS's features, which
+implies a significant amount of rewriting. In the case of the BeOS,
+according to Jon Watte, a primary feature that should be taken
+advantage of is the multi-threaded environment:
+</p><p>
+“<span class="quote">There is no shame in having written code that does not port cleanly to
+the BeOS, because you couldn't know that we would come along and
+suddenly do everything so much better. However, what we do is make sure
+that there is glory in writing code that DOES work in a multi-threaded
+environment.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id602283"></a>Subject: Compile with which headers? And the subscription model</h4></div></div></div><p>
+Which headers should an app developer use when compiling? Are older
+headers (where PR1 is oldest) better because of the larger customer
+base? Or, given the subscription model, will all/most users be
+automatically "on the bus"?
+</p><p>
+Relatedly, it was suggested that the compiler should note the version
+of the OS that an app is compiled under. If the app is launched on a
+newer version, a "renew your OS subscription" Alert could pop up.
+</p><p>
+THE BE LINE: You should compile against the headers of the oldest OS
+version that you want to run on. This means, of course, that you can't
+take advantage of newer features.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-44.html">Issue 2-44, November 5, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-46.html">Issue 2-46, November 19, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-44.html" title="Issue 2-44, November 5, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-46.html" title="Issue 2-46, November 19, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

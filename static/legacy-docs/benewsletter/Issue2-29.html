@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-28.html" title="Issue 2-28, July 16, 1997" /><link rel="next" href="Issue2-30.html" title="Issue 2-30, July 30, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-28.html" title="Issue 2-28, July 16, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-30.html" title="Issue 2-30, July 30, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-28.html">Issue 2-28, July 16, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-30.html">Issue 2-30, July 30, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-29"></a>Issue 2-29, July 23, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-29"></a>Be Engineering Insights: The Woes of Memory Allocation</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>
+If I had a dime for every time I've fixed a bug caused by memory
+corruption, I'd be a rich man. Memory corruption bugs come in many forms,
+sizes and shapes, and sometimes they even come disguised. I've seen
+blatant memory corruption bugs and some so subtle that it takes weeks to
+track them down. Fixing these kinds of bugs wears you down, makes you
+curse like a sailor and is known by the state of California to cause
+heart trouble among otherwise healthy young programmers.
+</p><p>
+Good tools enable you to track down memory corruption bugs more easily.
+Under the BeOS, enabling the first line of defense against memory
+corruption errors is as simple as typing the following line in the shell:
+</p><pre class="screen">
+export <code class="envar">MALLOC_DEBUG</code>=1
+</pre><p>
+Then run your application from that Terminal window. You can also enable
+this feature in the Metrowerks debugger by choosing "Launch with <code class="function">malloc()</code>
+debugging" in the BeOS PPC panel of the debugger preferences dialog.
+</p><p>
+If your code is clean, running with <code class="envar">MALLOC_DEBUG</code> will do nothing.
+However, if you accidentally reuse free memory, overwrite the end of a
+piece of allocated memory, free something twice, or scribble before the
+beginning of a block, the debugger will pop up with an assertion
+informing you of what happened. Further, when <code class="envar">MALLOC_DEBUG</code> is on, all
+newly allocated memory will contain garbage values and when you free a
+piece of memory it is again filled with (different) garbage data. This
+level of protection catches the most common memory corruption problems
+and the associated stack crawl will almost invariably lead you to the
+culprit code.
+</p><p>
+I believe that every single BeOS application should endure some amount of
+testing under the effects of <code class="envar">MALLOC_DEBUG</code>. This will prevent you from
+shipping bugs that are easy to fix and will make for more robust
+applications. If an app crashes with <code class="envar">MALLOC_DEBUG</code> turned on the app needs
+fixing.
+</p><p>
+And let me preempt the usual objections here: If your app crashes with
+<code class="envar">MALLOC_DEBUG</code> on, it is not because of a bug in the malloc debugging code.
+Given that I wrote the malloc debugging code (and that it is rather
+simple code) I will stake my reputation on the fact that it is bug free
+and offer a reward if anyone finds a bug in it (reward details yet to be
+determined). We've used <code class="envar">MALLOC_DEBUG</code> a fair bit internally at Be and it
+has caught numerous bugs.
+</p><p>
+Some memory corruption bugs slip right through the safety net of
+<code class="envar">MALLOC_DEBUG</code> and cause problems. These bugs require more sophisticated
+techniques to catch. For example, suppose an app allocates 64 bytes of
+memory, uses it, and then frees it but accidentally keeps a pointer to
+the block around. If at some later point the app again allocates 64 bytes
+of memory, begins to use it and then the pointer from the first
+allocation is also used (in the context of the first allocation), the use
+of the pointer in the context of the first allocation will corrupt the
+data of the second memory allocation. And because the second allocation
+happened, there is nothing that the <code class="envar">MALLOC_DEBUG</code> code can do to catch the
+problem.
+</p><p>
+This style of bug is particularly difficult to track down because
+frequently the second memory allocation will be for the same type of
+object and the misuse of the first pointer usually over-writes the memory
+with similar values. Lest you think this example contrived, this exact
+bug arose while working on the BeOS disk buffer cache management routines.
+</p><p>
+The solution that will catch this problem is sometimes known as a
+"purgatory list." The basic concept is that when an app calls <code class="function">free()</code>, the
+memory is filled with garbage but <code class="function">free()</code> is not really called. Instead of
+being <code class="function">free()</code>-ed, the memory is added to a "purgatory list" where it is
+held until some time in the future when <code class="function">free()</code> is really called. Holding
+the memory in "purgatory" prevents the above problem because if the first
+pointer were reused, the memory would still be in the purgatory list and
+would likely cause a crash since it would contain garbage.
+</p><p>
+Implementing a purgatory list isn't particularly difficult but there are
+a few issues to be aware of. The first problem is of course how do you
+get your routine to be called on every <code class="function">free()</code>. I normally add <code class="code">#define</code>
+macros that redefine <code class="function">malloc</code>, <code class="function">free</code>,
+<code class="function">realloc</code>, <code class="function">calloc</code>, and <code class="function">strdup</code> to call
+suitably renamed routines which you implement and use to call through to
+the real versions of <code class="function">malloc</code>, <code class="function">free</code>, etc.
+</p><p>
+If the <code class="code">#define</code> macros are put in a commonly included header file for your
+project then all your code will call your new routines. These new
+routines must manage a list of allocated memory blocks and decide when to
+call <code class="function">free()</code> for real. The most common solution is to have a circular
+buffer of allocated memory blocks and to only call <code class="function">free()</code> for the oldest
+items in the circular buffer. Of course because this list is shared
+between multiple threads it must be semaphore (or even better, benaphore)
+protected.
+</p><p>
+The size of the circular buffer affects how long items stay on the list,
+which affects how much memory your program uses as well as whether or not
+an item will still be in "purgatory" when the bug happens. You must weigh
+the added memory usage against the likelihood that the bug will not show
+up. If you have a purgatory list of 128 items it's fairly likely to catch
+most bugs. Of course knowing details of the particular instance of the
+bug may allow you to only track allocations within a certain size range.
+In the degenerate case you can of course choose to never really call
+<code class="function">free()</code>, just to see what effect it has on your program.
+</p><p>
+Although it would be convenient, <code class="envar">MALLOC_DEBUG</code> does not currently
+implement a purgatory list. There were several reasons for this, most
+importantly that a purgatory list requires a fair bit of internal state
+that I did not feel was appropriate to add to the standard C library.
+Plus, the added overhead becomes even more noticeable for most programs,
+which may not need it. It is still possible to add, however, and if there
+is enough clamor, it will likely happen (although enabling it would
+require setting <code class="envar">MALLOC_DEBUG</code> to a specific value).
+</p><p>
+Barring even more sophisticated techniques which require rewriting object
+code to maintain information about every memory reference (i.e. Purify),
+these techniques can help you catch a good number of memory corruption
+bugs. Using <code class="envar">MALLOC_DEBUG</code> can help you catch most of the common memory
+corruption bugs that people make. Sometimes however you have to pull out
+the big guns and implement a purgatory list to catch the more difficult
+bugs.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-29"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+When I was in high school I ran track. I was a distance man, not one of
+those wimpy sprinter types who can only run for 100 meters and then have
+to stop. Running long distance takes a lot of stamina, perseverance,
+concentration, and of course strength.
+</p><p>
+Running a one mile or a two mile race is a very funny thing. You kind of
+start out slow and in a pack with the rest of the runners. As the laps
+wear on, you stratify and end up smaller packs, the winners and the
+non-winners. Our coach would sit at the last turn of the last lap, 200
+meters from the finish, and when we came by he would shout "Kick it
+in!!". That was our signal to dig down into our reserves of energy and
+"kick" like mad for that last 100 meters to win the race...most of the
+time at least.
+</p><p>
+That's how I feel whilst programming as a new developer's conference
+approaches. You're busy creating demo code, answering questions, doing
+tutorials, and when you think you can't stay up until 4:00am one more
+time, that voice in your ear yells "Kick it in!!".
+</p><p>
+When I bought my first BeBox way back when, I had a dream of supporting
+some killer 3D libraries to do some nifty live 3D animation for
+presentations. I got the source for the 3Dfx glide library way back then
+and got it working in DR5/6/7.
+</p><p>
+Then I joined Be and got real busy. Along comes Geoff Woodcock who is
+like a puppy who knows how to program saying, "I want to do a driver, I
+want to do a driver!!" Well, being DTS it stands to reason that we should
+be able to do at least one of everything our system supports, so I kicked
+the disk over to him. He tore out what little hair he had left and...now
+we have the 3Dfx glide library running in the Preview Release!
+</p><p>
+For those of you that don't know, 3Dfx is one of those companies that
+manufactures 3D accelerator chips for the PC market. They are
+particularly interesting because they also supply chips to many arcade
+game consoles. They have arguably one of the best chip sets out there
+today for the consumer marketplace. And now this chip set is supported by
+the BeOS:
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/glide.zip
+</p><p>
+What can you do with it? The glide library itself is pretty raw. It does
+the initialization and setup of the board, and very basic drawing
+primitives. You are responsible for manipulating your geometries and the
+like, just like with OpenGL®. Speaking of which, now that we have this
+accelerator, can we have accelerated OpenGL®...?
+</p><p>
+Another thing that got me all hot and bothered about my BeBox was the
+infrared ports. I had visions of being able to control various home
+devices, and my various BeBox operations from a remote control. Well, due
+to certain events around here, I ended up doing some software to support
+a IR device that attaches to the serial port:
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/cs8130.zip
+</p><p>
+This is a program that allows you to manipulate the Crystal Semiconductor
+CS8130 IR chip. Like the BeBox, this thing can read and play back
+infrared signals. You could also, by the way, use it for IRDA as well for
+data transfers, but that's another story. The included software makes it
+pretty easy to train the device to recognize any remote, and then to
+subsequently wait for commands to come in and do something with them.
+Pretty neat stuff.
+</p><p>
+When the beloved BeBox was laid to rest, we lost MIDI, infrared, and the
+Geek Port. But now we've regained MIDI, infrared and maybe soon we'll get
+ADB/IO with the help of BeeHive (http://www.bzzzzzz.com/). Who knows,
+stranger things have happened, and our aforementioned puppy's hankering
+to do an ADB tutorial.
+</p><p>
+The Boston Be developers conference is just around the corner, and more
+importantly the great BeOS Masters' Awards computer give away is looming
+large. So in the words of Steve Boaz, KICK IT IN!!!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-29"></a>Newsletter Article Revision</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+In an earlier version of this newsletter I mentioned our pending
+financing, primarily to keep all of you informed about our activities. A
+few of you misconstrued my message and kindly offered to invest. Our
+financing is being conducted strictly in accordance with federal and
+state securities laws and is available only to accredited investors
+carefully selected by our financial advisors. We are neither soliciting
+nor able to accommodate investment offers from any of you. Thank you very
+much for your support.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-28.html">Issue 2-28, July 16, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-30.html">Issue 2-30, July 30, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-28.html" title="Issue 2-28, July 16, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-30.html" title="Issue 2-30, July 30, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

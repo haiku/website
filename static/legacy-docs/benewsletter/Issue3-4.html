@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-3.html" title="Issue 3-3, January 21, 1998" /><link rel="next" href="Issue3-5.html" title="Issue 3-5, February 4, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-3.html" title="Issue 3-3, January 21, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-5.html" title="Issue 3-5, February 4, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-3.html">Issue 3-3, January 21, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-5.html">Issue 3-5, February 4, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-4"></a>Issue 3-4, January 28, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-4"></a>Be Engineering Insights: On Horses' Bones, or the Need for Glue</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Mani</span> <span class="surname">Varadarajan</span></span></div></div></div><p>
+Some days, I wish I were a user interface or graphics guy. Not that life
+as a kernel engineer at Be is uninteresting; far from it. But the kernel,
+sitting behind the scenes, isn't as sexy as something users interact with
+on a daily basis, or something that onlookers drool over during
+demonstrations. It's the fancy, colorful demos of Pierre and Benoit, the
+whizziness of the Tracker and interface widgets that get the "ooh, ahh",
+"come on baby" attention.
+</p><p>
+But the feelings of jealousy don't last long. My brief forays into
+non-command line applications have been satisfying to a point, but the
+incessant attention to aesthetics leaves me exhausted. In the end, I'm
+more than happy to get back to working on the nuts and bolts of the
+system.
+</p><p>
+Well, more than just nuts and bolts. There's also some "glue" that's
+fundamental to the BeOS system. Many of you may have noticed the
+existence of a "glue" library living in
+<code class="filename">/boot/develop/lib</code> on your system.
+This glue library (either
+<code class="filename">libglue.a</code>,
+<code class="filename">glue.a</code>,
+<code class="filename">libglue-noinit.a</code>,
+depending on which version of the BeOS you have) is independently linked
+into every application or library on the system.
+</p><p>
+So, what's in this glue code? Essentially, it contains routines used
+during the startup and tear down of each loadable segment of an address
+space.
+</p><p>
+Let's visualize a typical address space:
+</p><pre class="screen">
+HIGH +---------------------------------+
+     |           libn.so               | Other libraries
+     +---------------------------------+
+     |              .                  |
+     |              .                  |
+     |              .                  |
+     |                                 |
+     +---------------------------------+
+     |           libbe.so              | Be kits
+     +---------------------------------+
+     |                                 |
+     |          libroot.so             | C library, core
+     |                                 | functionality
+     +---------------------------------+
+     |                                 |
+     |          application            |
+     |                                 |
+ LOW +---------------------------------+
+</pre><p>
+Each element or box of this address space is known as a "container,"
+since it is self-contained. The containers of this address space are
+loaded and initialized in some order at startup. Since each container has
+its own data, etc., each container needs its own "glue" that contains an
+initialization routine (and termination routine, during address space
+tear down or unloading).
+</p><p>
+For applications and libraries written purely in C, there really isn't
+much initialization necessary; the glue code for applications just
+contains the official starting routine of the application
+(<code class="code">__start</code>), sets
+up some basic data structures, and then jumps to <code class="function">main()</code>.
+</p><p>
+For C++ applications and class libraries, however, the situation is more
+complex. There may be static C++ objects which need construction at
+startup and destruction at tear down, before the application starts. In
+addition, each container needs to register itself as a possible place
+where C++ exceptions can occur. Both of these must obviously be
+per-container, and therefore live in the glue library.
+</p><p>
+At startup, then, the sequence carried out by the glue code for each
+container is as follows:
+</p><pre class="screen">
+STARTUP/LOADING
+
+  if application container
+     set up basic data structures and hooks
+  register exception tables
+  construct C++ objects, if any
+  jump to main()
+
+TEAR DOWN/UNLOADING
+
+  destroy C++ objects, if any
+  unregister exception tables
+</pre><p>
+This may not deliver the visual excitement of a three-dimensional book
+with real pages that contain movies and images, but what the heck --
+Pierre's better at that stuff anyway.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-4"></a>Developers' Workshop: Time Lapse</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Wright</span></span></div></div></div><p>
+You just noticed it's 4 AM, even though there's a clock right there in
+the corner of the screen. Last time you looked it was something like 1
+AM, but you're not really sure. It doesn't seem like four. You're not
+really tired. In fact, you're just starting to feel that second wind
+coming on. It's finally working now, but you're not finished. Just one
+more little tweak and a build shouldn't take more than five minutes,
+right? Yeah, right! ;-)
+</p><p>
+And now a word from our sponsor:
+</p><p>
+With the Intel release looming, and with our desire to provide ever
+increasing levels of support to our developers, we're looking for a few
+good women and men to come to work with us in Developer Technical Support.
+</p><p>
+Here's what you should bring:
+</p><ul class="itemizedlist"><li><p>
+A solid background in C, C++, and class-based application frameworks.
+</p></li><li><p>
+Knowledge of the BeOS (code samples make your interview go very
+smoothly).
+</p></li><li><p>
+Knowledge of the Metrowerks CodeWarrior programming environment.
+</p></li><li><p>
+A desire to help people while learning all the ins and outs of the
+hottest OS around.
+</p></li><li><p>
+The ability to communicate your thoughts in writing and by speaking
+to small and medium-sized audiences.
+</p></li></ul><p>
+Here's what you'll be doing:
+</p><ul class="itemizedlist"><li><p>
+Providing direct support, via e-mail and phone, to the sharpest
+developers around.
+</p></li><li><p>
+Assisting/teaching developers how to bring their code into the BeOS
+environment and how to optimize it.
+</p></li><li><p>
+Writing sample code and tutorials to explain interesting bits of the
+BeOS to a broad audience (like the next section of this article).
+</p></li><li><p>
+Digging deep to investigate bugs in the latest release.
+</p></li><li><p>
+Working directly with some of the best (and most unusual) engineers
+anywhere.
+</p></li></ul><p>
+If you're interested in joining up with the company that is leading the
+computer industry into the next century, e-mail an
+<acronym class="acronym" title="Amersican Standard Code for Intercom and Interchange">ASCII</acronym>
+copy of your
+cover letter, resume, your e-mail and postal addresses, and both day and
+evening phone numbers, in the body of an e-mail to jobs@be.com. Put
+"Developer Technical Support Engineer" in the subject line of your
+message.
+</p><p>
+And now back to our regularly scheduled program.
+</p><p>
+This week my so-late-yer-an-early bird sermon is about timing. Just
+because you have no concept of time doesn't mean your app doesn't need
+to. That's why our engineers are hard at work on the next Media Kit.
+Things like video, audio, and
+<acronym class="acronym" title="Musical Instrument Digital Interface">MIDI</acronym>
+need to be synchronizable with each other. The code this
+<acronym class="acronym" title="Uniform Resource Locator">URL</acronym>
+leads to should whet your appetite for some
+seriously geeky timing work:
+</p><p>
+ftp://ftp.be.com/pub/samples/media_kit/obsolete/timecodeticker.zip
+</p><p>
+The first thing you need in order to do synchronization is something that
+gives you regularly timed ticks. How often do you need these ticks? Well,
+if you'd like to do full motion video it'll be around 30 times a second.
+That's every 33,333 microseconds. Fortunately the BeOS has timing
+resolution down to the microsecond, so you don't have to round off those
+extra 333. That doesn't mean it's always accurate to the microsecond, but
+you can always tell how far off you are. ;-)
+</p><p>
+Most of the time, you can be sure to be "woken-up" within 2000
+microseconds of the time you wanted. That's less than 7% of one frame.
+More often than not, it's more like 2 or 3%, and we're working hard on
+improving that accuracy!
+</p><p>
+The <code class="classname">ticker</code> class compensates for the inaccuracy that exists from sample
+to sample, a.k.a. jitter, so that it doesn't compound into drift over
+time. It's derived from William Adams' nice <code class="classname">Thread</code> class (available from
+BeWare in the bebits package ):
+</p><p>
+ftp://ftp.be.com/pub/contrib/libraries/bebits980105.zip
+</p><p>
+The <code class="classname">ticker</code> class outputs ticks. Each tick has information about the
+number it is in a series, the time it was generated, the period of its
+generation and sometimes, a timecode. There is also a <code class="classname">timecode</code> class.
+This is a stripped down version of one that Steve Sakoman has put
+together that includes every standard frame rate including the hard to
+come by Brazilian PAL rates (unless of course you're in Brazil ;-) He's
+not quite done with it, though, so I yanked out the part that does plain
+old 30 frames per second and put that in the sample, so you could have a
+taste. Yum.
+</p><p>
+Where do these ticks go when the <code class="classname">ticker</code> ticks?
+The <code class="classname">ticker</code> maintains a
+list of ports that is managed by a couple of obvious enough functions:
+<code class="methodname">Connect()</code> and <code class="methodname">Disconnect()</code>.
+When it comes time to tick, the <code class="classname">ticker</code> sends
+a <code class="constant">TICK_MSG</code> along with a tick object to all connected ports.
+</p><p>
+On the other end of the port is another object derived from William's
+thread, the <code class="classname">Chaser</code>. A chaser can be passed a function that it calls each
+time it receives a tick. In that function, you can play audio, MIDI
+video, whatever. To keep this sample uncluttered, I just display the
+current frame count in the app's window. No, it's NOT very exciting
+(unless it's four in the morning, and you wrote it), but it does
+demonstrate the concept. ;-)
+</p><p>
+As an exercise for the reader, try yanking out the <code class="classname">TCIn</code> class and the
+chaser class and sticking them in another app. Then send a message from
+the chaser app to the ticker app with the <span class="type">port_id</span> of the chaser. We use
+<span class="type">port_id</span>s so we can have chasers in different apps all listening to the
+same ticker. Next time I'll show you how multiple apps can be
+synchronized properly, and maybe I'll even make some noise. Woohoo!
+</p><p>
+See you early!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-4"></a>The Dawning of the Age of BeOS for Intel</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Johnson</span></span></div></div></div><p>
+Recently a Micro Center super store opened in Silicon Valley. It's huge
+and sells literally everything. There are computers for maybe $10,
+keyboards, motherboards, mice, furniture, books, software, magazines,
+mousepads, green and white printer paper with perforated edges, you name
+it...huge.
+</p><p>
+I was in this huge store looking around for a certain game I had been
+commanded to buy for a certain 12-year-old and I got to thinking.
+(Uh-oh.) I've noticed that if you go to any computer or bookstore you see
+so many computer books and magazines. Aisles. Shelves. Windows. Unix.
+Linux.
+</p><p>
+But...there's no BeOS section yet. No BeOS software, no BeOS books (there
+aren't many yet). The BeOS has been seen as a sort of Mac add-on, but
+it's about to become a name in its own right, in that vast Intel world.
+</p><p>
+Am I getting through? Yes, it's about to hit the fan. BeOS for Intel will
+be available very soon, and the world of Be developers is going to change
+dramatically. We're taking steps to publicize the Intel version of the
+BeOS. It's innovative, exciting, fast, interesting and NEW—and all of
+these factors combined with the sheer size of the Intel marketplace will
+translate into commercial opportunities for the experienced BeOS
+developer community.
+</p><p>
+To give you some idea of the reach of Intel, I just read that the Mac
+currently has 3.1% of the computer market. That means that BeOS is about
+to enter the marketplace that holds that other 96.9%. There will be
+bookshelves, and software shelves, and magazines waiting to be filled
+with BeOS books, software, and information.
+</p><p>
+There's a train rolling and we want you to be on it. We're already
+hearing from software publishers who are looking for BeOS applications
+and programmers. We're hearing from book publishers looking for authors.
+Technical magazines will need informational articles.
+</p><p>
+You—the existing BeOS developer community—are the knowledge base
+that software companies, book publishers, and magazine editors are going
+to look to for information.
+</p><p>
+And now, some suggestions to help you get ready to take advantage of the
+coming bonanza:
+</p><ul class="itemizedlist"><li><p>
+Important: Update your developer info in our database by visiting the
+registered developer section of our web site.
+</p></li><li><p>
+Get some software up onto BeWare. Publishers are looking there for
+promising products.
+</p></li><li><p>
+If you have software up on BeWare, please visit the web site and make
+sure your information is correct and current.
+</p></li><li><p>
+If you are a programmer available for a contract or employment let
+software publishers know about you by placing a classified ad in this
+newsletter. Send your ad to Valerie Peyre at valerie@be.com.
+</p></li><li><p>
+In addition, we are setting up a database of available BeOS
+programmers. I can't give you a URL yet, but watch the web page and
+developer e-mail—it will be available soon.
+</p></li><li><p>
+Think about topics for informational articles and start contacting
+the magazines to let them know you're available to write these articles.
+</p></li><li><p>
+Think about interesting topics for books and start your book proposal.
+</p></li></ul><p>
+Finally, if you are thinking about entering the market with a product or
+you were working on a product when the bottom dropped out of the Mac
+market, remember this: 3.1% vs 96.9%.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-4"></a>Returning to the Source</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last week, Netscape made important news. One of the items involved the
+public release of Navigator source code. This was well received as a
+smart move, a good reaction to the situation created by the availability
+of the free Internet Explorer, bundled with Windows or not.
+</p><p>
+The reasoning is that since Netscape is forced to give away the browser,
+they might as well release the sources. In doing so, Netscape gets an
+immediate shot of goodwill. Over the longer term—the theory being
+there are many more smart people not working at Netscape than inside --
+to quote Jim Barksdale, smart programmers will improve the browser in a
+myriad of creative, unforeseeable ways that will benefit users, Netscape
+and the industry in general.
+</p><p>
+This led an honorable correspondent to write and ask whether or not we
+would do the same for the BeOS and, in some way, make it the "people's
+OS." Interesting question, one we've actually asked ourselves several
+times over the life of our little company. In the end, there must be a
+simple answer, but it's still a complicated question.
+</p><p>
+Let's take the case of Navigator. Releasing the sources sounds simple,
+put the source tree up on the Web site and that's it. In reality, it is
+safe to assume there is licensed code inside Navigator, bits Netscape got
+from someone else and isn't at liberty to put in the public domain. This
+might explain why the public release isn't immediate and poses the
+problem of how functional the released product will be. Once this is
+done, we have to assume several competing versions will emerge after a
+while, a situation similar to the one we have with several public and
+proprietary versions of Unix.
+</p><p>
+In other words, balkanization, the fragmentation of the product in many
+different versions, seems to be the price to pay for the legion of
+independent improvements. With the versions of Unix, technically
+proficient users were willing to take the source code of an application,
+modify it, and recompile it for their version of the operating system.
+</p><p>
+With the Web, however, the situation might be different. The browser runs
+programs (or interprets HTML statements) over which it doesn't have the
+control Unix users had over their code. This constraint might actually
+limit the multigenerational mutations introduced by many independent
+versions, it might help some sites experiment with dialects of HTML while
+still reading whatever the "mainstream" dialect happens to be at the
+moment.
+</p><p>
+As we know from history, a single monolithic standard always becomes
+overly conservative, and we could all benefit from innovations introduced
+by "nonstandard" versions. Or things could get very messy. Personally, I
+don't believe so; the market will deal harshly with the really bad code.
+One might even be able to make money within such a context.
+</p><p>
+Let's say you set up a site for games played over the Web. You might
+improve the experience and, therefore, your profits, by enhancing
+responsiveness or other characteristics of the playing experience. You
+could do so by writing plug-ins for the dominant, integrated browser, or
+you might feel constrained by that environment and "offer" (terms of
+bundling to be determined) a modified browser you've crafted under your
+total control, based on the public domain sources from Netscape. It's an
+application; it will run beside, on top, or instead of the integrated
+browser; and, if it's compelling, it will make you money one way or the
+other as more people will pay for better gaming.
+</p><p>
+Back to reality, there might be more than one flavor of the Navigator
+sources, perhaps Windows, X-Windows, and Macintosh, and we don't know how
+this will play out and complicate things. In any case, it will be fun to
+watch what actually happens.
+</p><p>
+As for releasing the BeOS sources, not at this time. We need to advance
+the cause of BeOS developers, BeOS users and, as a result, Be
+shareholders. Keeping the Unix experience in mind, as well as our PC
+hardware target, we don't see how the problems created by balkanizing the
+BeOS platform would be outweighed by the many improvements independent
+programmers would, without a doubt, introduce in our product. I wish we
+could get the latter without the former and I know from experience how
+someone walking in on a project "sees" things one has stopped seeing
+after many months or years of work.
+</p><p>
+For the time being, we'll have to live by the "vigorous" feedback of
+developers and users and, perhaps, a few ideas of our own, or from our
+noble and worthy elders.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-4"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id659939"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id659945"></a>Subject: Running things before UserBootscript?</h4></div></div></div><p>
+Let's say you want to launch an app just after you boot but before any
+other apps—including the <span class="application">Tracker</span>—get into the act. You can achieve
+this sort of behaviour by modifying the system <code class="filename">Bootscript</code>—but is it a
+good idea?
+</p><p>
+A chorus of disapproval hummed the Dies Irae: Touch <code class="filename">Bootscript</code> and you'll
+be sorry. Lacrymosa Dies Illa. But see THE BE LINE, below.
+</p><p>
+The thread led to a discussion of the untouchableness of
+<code class="filename">/boot/beos/etc</code>.
+As Peter Morgensen pointed out...
+</p><p>
+“<span class="quote">The fact that
+<code class="filename">/etc</code> is linked to
+<code class="filename">/boot/beos/etc</code>
+makes <code class="filename">/etc</code> useless for
+ports of POSIX apps. A lot of major POSIX apps have
+<code class="filename">/etc</code> as the default
+place for config files.</span>”
+</p><p>
+Dominic Giampaolo administered triage:
+</p><p>
+“<span class="quote">If you want install a Unix app that needs to put things into an "etc"
+directory then feel free to put it in
+<code class="filename">~/config/etc</code> which is equivalent to
+<code class="filename">/usr/local/etc</code> on a unix system.</span>”
+</p><p>
+Back in the thick of it, Sean Gies beat the installation
+<span class="foreignphrase"><em class="foreignphrase">bete noir</em></span> with a
+stick:
+</p><p>
+“<span class="quote">I'm a big fan of self-contained applications. I hate it when I install
+something and it decides to spread itself across my file system. It would
+be nice to know that everything for my <span class="application">FooBar</span> App is in that single
+<code class="filename">FooBar</code> folder and not in 3
+different system folders as well. I'd hate to
+see BeOS to turn into the clutter that Windows and Unix have become.</span>”
+</p><p>
+In response, Osma Ahvenlampi injected a call for libprefs. With
+reasonable preferences management (i.e. something more controlled than
+saving settings in a file) file system clutter is minimized, the
+developer's job is made clearer, and (multi)users have an easier time
+setting preferences and uninstalling apps.
+</p><p>
+THE BE LINE: You can modify <code class="filename">Bootscript</code> on your own machine, but don't
+expect to publish anything that depends on it. As many listeners
+suggested, the only "official" approach is to petition Be to include a
+<code class="filename">Bootscript</code> hook.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id660099"></a>Subject: Replicants and multiple inheritance</h4></div></div></div><p>
+C++ shop talk. Multiple inheritance appears to stack the deck in favor of
+the first of the set of inherited-from classes (this is sort of a side-
+effect of the way the class components are offset, but that's not the
+issue). Because of this, the Be Book edict that a subclass implementation
+of <code class="classname">BArchivable</code>'s <code class="methodname">Instantiate()</code>
+should cast its return as an instance of
+the subclass is, according to Duncan Wilcox, misguided:
+</p><p>
+“<span class="quote">I think the fix is that every <code class="methodname">Instantiate()</code> should always return a
+<span class="type"><code class="classname">BArchivable</code>*</span>, I don't really
+understand why it was designed to return a
+pointer to an instance of its class.</span>”
+</p><p>
+THE BE LINE: (From Peter Potrebic) Duncan is correct. We will update the
+documentation. All <code class="methodname">Instantiate()</code> implementations should be declared to
+return a <span class="type"><code class="classname">BArchivable</code>*</span>.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id660160"></a>Subject: Be's stance on SMB</h4></div></div></div><p>
+Does Be Samba? The Session Message Block (SAMBA) protocol lets Windows
+talk to Linux—or at least lets them share disks and printers. Or
+something. Does Be or a third party want to get into this rhumba? Some
+feints, and then this cold water from Chris Herborth:
+</p><p>
+“<span class="quote">Samba assumes you're on a UNIX system, where a file descriptor == a
+socket; this isn't true on BeOS (or Win32, for that matter), so you'll
+end up re-writing a lot of code.</span>”
+</p><p>
+Not much else, here, except for the demon case-sensitivity which sat
+grumbling in the corner (how did we get there?). Dominic Giampaolo made
+an effort to staunch the flow with this reasoned summation (further
+reduced by the editor):
+</p><p>
+“When you're using a file open dialog box, the case sensitiveness of the
+file system doesn't matter because you're clicking on the file name...
+Case sensitiveness matters most when [you're trying to find a file in a
+Find panel and you] don't remember the exact case of a filename... We've
+made the Tracker's Find panel generate case-insensitive queries so that
+way it doesn't matter if you don't remember the name correctly.
+</p><p>
+This seems to be a best of all worlds. People clicking on file names
+don't care about case, people that can't remember a name don't have to
+remember the case, and shell users get the expected case- sensitive
+behavior.”
+</p><p>
+What about internationalization? Is Be preparing for the Spanish language
+version that will treat "ll" as a single character?
+</p><p>
+THE BE LINE: We want to do internationalization righter than sooner. It's
+a complicated problem begging for a simple solution. And so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id660223"></a>Subject: Desktop</h4></div></div></div><p>
+So what is this thing we call the Desktop (ask Sean Gies)? And why are
+entities from different volumes allowed to live on it at the same time?
+It's disturbing (continues Mr. Gies) to unmount a floppy and see a bunch
+of file icons disappear from the Desktop.
+</p><p>
+Disturbing? It's the way computers should work, says Jeff A. Campbell:
+</p><p>
+“<span class="quote">A desktop is for commonly used items. Maybe my commonly used items span
+more than one disk...</span>”
+</p><p>
+However, Mr. Campbell suggested that the Desktop should be a bit more
+virtual—it shouldn't be a literal directory. As it is, the Desktop is
+more amenable to links than to plain files; and creating a link to a file
+just so you can refer to it from the Desktop is a pain.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id660260"></a>Subject: distinguishing between add-ons and applications</h4></div></div></div><p>
+A question from Josh J. Berdine:
+</p><p>
+“<span class="quote">Is there a good way to differentiate add-ons and applications from the
+shell or mime types or whatever?</span>”
+</p><p>
+Many listeners wrote in with the bad (for Mr. Berdine) news: Nope. The
+MIME types (and all other scars and birthmarks) are the same. An add-on
+can act as an application can act as a library. Most of our listeners
+applaud the amorphism. Slap Replicants onto this ball of mud and things
+become even more approbatorially indistinct:
+</p><p>
+“<span class="quote">...there is no really clear technical distinction, because with
+Replicants, any application may be loaded as an add-on to another
+application. It's more a convenience of naming than a technical
+specification.</span>” (Jon Watte)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id660302"></a>Subject: multiple threads for blitting</h4></div></div></div><p>
+A question from Steve LaVietes:
+</p><p>
+“<span class="quote">Would the overhead of spawning multiple threads to simultaneously use
+DrawBitmap on divisions of the total area [of a view] be greater than
+using just one call?</span>”
+</p><p>
+Marco Nelissen responded, reasonably:
+</p><p>
+“<span class="quote">...those calls to <code class="methodname">DrawBitmap()</code> will effectively be serialized, each
+thread waiting for the other to complete. You simply can't have two
+threads drawing into a window at the same time. You might gain something
+by using <code class="methodname">DrawBitmapAsync()</code>, which won't wait for the app_server to finish
+the blit.</span>”
+</p><p>
+Mr. LaVietes mentioned that he was <span class="type">double</span> buffering through a Bitmap. Jon
+Watte suggested that this might not be necessary:
+</p><p>
+“<span class="quote">...<span class="type">double</span>-buffering might be SLOWER than just drawing the stuff you want
+to draw. Modern graphics card can fill rectangles and draw straight lines
+much faster than the time it takes to transfer the equivalent bits from
+memory.</span>”
+</p><p>
+But what about the flicker factor? Mr. LaVietes:
+</p><p>
+“<span class="quote">Assuming that a large window needed to be completely drawn over without
+flicker, what other idea [besides <span class="type">double</span> buffering] would you have?</span>”
+</p><p>
+Mr. Watte's response:
+</p><p>
+“<span class="quote">The trick is to ... not clobber an entire area with white and then start
+filling it in. If you're moving a rectangle, you should draw the
+rectangle at the new place, then draw whatever was underneath the
+rectangle in the old place.</span>”
+</p><p>
+Back to asynchronous drawing, Chris Herborth observed that...
+</p><p>
+“While working on DOOM, I found out that:
+</p><pre class="programlisting cpp">
+<code class="methodname">DrawBitmapAsync</code>( ... );
+<code class="methodname">Sync</code>();
+</pre><p>
+was faster than:
+</p><pre class="programlisting cpp">
+<code class="methodname">DrawBitmap</code>( ... );
+</pre><p>
+Strange but true.”
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-3.html">Issue 3-3, January 21, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-5.html">Issue 3-5, February 4, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-3.html" title="Issue 3-3, January 21, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-5.html" title="Issue 3-5, February 4, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

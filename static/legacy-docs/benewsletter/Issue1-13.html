@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-12.html" title="Issue 1-12, February 28, 1996" /><link rel="next" href="Issue1-14.html" title="Issue 1-14, March 13, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-12.html" title="Issue 1-12, February 28, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-14.html" title="Issue 1-14, March 13, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-12.html">Issue 1-12, February 28, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-14.html">Issue 1-14, March 13, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-13"></a>Issue 1-13, March 6, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-13"></a>Be Engineering Insights: Moving Data Around the BeBox</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Peter</span> <span class="surname">Potrebic</span></span></div></div></div><p>One of the main design goals of the <span class="trademark">Be OS</span>™ is to support easy and
+efficient sharing of data. I definitely won't claim that the Be OS has
+the end-all, be-all IPC, or that we've completely flushed out all the
+issues related to moving data around our system. However, I do believe we
+have a good
+start: The Be OS provides many useful data-sharing facilities you can use
+to write really exciting applications.</p><p>At the lowest level, the kernel provides three data-sharing facilities:
+Thread messages, areas, and ports.</p><p>Thread messages use the simple API of
+<a class="link bebook" href="../BeBook/TheKernelKit_ThreadsAndTeams.html#receive_data"><code class="function">send_data</code></a>
+and
+<a class="link bebook" href="../BeBook/TheKernelKit_ThreadsAndTeams.html#send_data"><code class="function">receive_data</code></a>.
+This is perhaps the most basic messaging mechanism in the system. These messages
+aren't buffered, so a call to send_data will block until it's read by the
+target thread. This mechanism is used in several places in the system,
+including the initial bootstrapping of applications with the app_server.
+When an application launches, it uses send_data to send a message to the
+app_server's 'picasso' thread. This message contains the IDs of a couple
+of ports; further messaging between the application and the app_server
+will use these ports.</p><p>You can use the kernel's second data-sharing facility, area, to create
+new valid regions in the virtual address space. The kernel allows the
+same area to be mapped into the address space of different teams
+(processes). One team can create the area and pass the area_id to other
+interested teams. These
+teams can then map that area into their address space. This allows
+applications to share memory. The
+<a class="link bebook" href="../BeBook/BMessage.html"><code class="classname">BMessage</code></a>
+class, discussed below, relies on this facility.</p><p>It's worth mentioning a couple of caveats about using shared memory. If
+you plan to share pointers, make sure that all the pointers point within
+the shared area, and that all teams map the area into the same virtual
+addresses. Otherwise one team's pointer may be another team's data
+exception! Another issue is synchronizing access to the area. You can use
+a semaphore to ensure that memory is only accessed when in a consistent
+state. Semaphores are a system-wide resource and
+the IDs are valid across all teams.</p><p>The third kernel facility that supports messaging is the port mechanism.
+Ports provide a system-wide buffered messaging system. These messages can
+be of arbitrary size. Anyone with a port_id can read from or write to the
+port. When you create a port, you specify the number of messages that the
+port can hold. If the port fills, the next call to write_port will block.
+At first glance this might seem undesirable, as code cannot assume that
+write_port won't block. We chose this
+design to prevent an orphaned port (a port that never gets read) from
+consuming all of system memory. Those buffered messages have to be stored
+somewhere—the system wouldn't
+be too happy buffering 1,493,467 1 K messages or around 1,500 MB of data.
+The <code class="classname">BMessage</code> class, along with
+<code class="classname">BMessenger</code> and <code class="classname">BLooper</code>, make use of ports
+to pass messages between teams. When using ports, take care to
+synchronize the writing and reading of messages. If the 'virtual' message
+spans multiple calls to write_port, you must take steps to correctly deal
+with other threads that might be writing to the same port. Similar issues
+arise if multiple threads read from the same port.</p><p>That gives a basic overview of messaging, from the kernel's perspective.
+The Be OS also has several higher-level messaging systems, used for
+different purposes, that are implemented on top of the lower-level
+services. The most visible form of messaging in the Be OS is defined by
+the
+<code class="classname">BLooper</code> and <code class="classname">BMessage</code> classes.
+A <code class="classname">BLooper</code> is an abstraction of the thread
+running a message loop. <code class="classname">BMessage</code>s are posted or sent to a looper and then
+dispatched to a message handler. (Release 1.1d7 sneak preview: The
+BReceiver class will be renamed <code class="classname">BHandler</code>.) A
+<code class="classname">BMessage</code> is a structured
+collection of data. This data includes a single 4-byte 'what' identifier.
+To this you can add arbitrary data entries, each entry having both a
+string name and a 4-byte type identifier. You can add multiple chunks of
+data under the same name and type. The data in a message is kept in what
+we call the "shared heap," a heap shared by all applications in the
+system. This heap is created using the kernel area API. When messages
+move between threads in the same team—typically using
+<code class="methodname">BLooper::PostMessage()</code>—the team is simply given the pointer to the
+shared data. Things are a little more complicated when using
+<code class="methodname">BMessenger::SendMessage()</code> to send a message to another team. In this case,
+the address of the data in the shared heap is written into a port. Once
+the destination reads the address out of the port, it has complete access
+to the data of the message. This design provides for fairly efficient
+messaging, as the data is only copied once—into the shared heap. From
+then on it can be passed among many different threads and teams.</p><p>The Be OS clipboard and drag-and-drop mechanism are both based on the
+<code class="classname">BMessage</code> object. Adding data to the clipboard is just like adding data to
+a <code class="classname">BMessage</code>. Responding to a PASTE message is just like being sent a
+message containing some data. Drag-and-drop works the same way. Our hope
+is that leveraging the <code class="classname">BMessage</code> system makes for a simple and reusable
+API.</p><p>The final data-interchange mechanism is defined by the Media Kit. The
+BeBox is designed to be a dream machine for audio/video developers. One
+of the big hurdles in developing applications that deal with audio/video
+data is being able to efficiently move very large amounts of data between
+interested parties—even those in different address spaces. The Media
+Kit is designed with this in mind. At its core is the <code class="classname">BStream</code> class,
+which implements a data-streaming facility
+using shared memory (there's that kernel area mechanism again). The
+BStream class synchronizes access to data that lives in dynamic areas of
+shared memory. Each participant in the stream is given access to the
+buffers present in the stream. Although <code class="classname">BStream</code> is defined in the Media
+Kit, it isn't constrained to just media data: You can use the class can
+for all kinds of tasks. If the API looks interesting, give it a try.</p><p>That's a brief overview of the various messaging options provided by the
+Be OS. Let us know if these features suit your needs—or more
+important, if they don't. Have fun!</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-13"></a>Be Developer Profile: Cronus</h2></div></div></div><p>For years, people have spoken of the Amiga as a sort of computer
+Shangri-la—a great, innovative personal computer platform that was
+doomed to oblivion by its manufacturer's indifference.</p><p>Fred Fish, owner of Cronus, is one of the Amiga faithful. His Tempe,
+Arizona, company (formerly Amiga Library Services) still supports the
+platform. But even he admits that although the Amiga is "not dead yet,
+it's certainly starting to smell a little funny." He hopes the BeBox will
+be able to step into the spotlight that the Amiga deserved but never got.</p><p>Fish became interested in the BeBox because "in a lot of ways, it's very
+similar to how the Amiga was—with very new, innovative technology. Who
+wants to work on PCs and Macs anymore? They're just not that exciting. I
+know there are a lot of other people who feel that the BeBox brings back
+some of the excitement that the Amiga generated. It's a good blend of
+hardware and software."</p><p>Cronus has been compiling public domain software for the Amiga since
+1985. "It seems obvious that one thing we might consider is doing a
+compilation of freely distributable software for the BeBox" as well, Fish
+says. Currently, Cronus supports the Free Software Foundation's suite of
+UNIX tools on the Amiga and Fish is thinking about doing something
+similar on the BeBox.</p><p>Later, he'd also like to produce a digital signal processing toolkit for
+the BeBox. This toolkit would consist of "lots of utilities that would
+connect together to produce simulations of larger systems," Fish says.</p><p>Eventually, Fish hopes the BeBox will become "what the Amiga should have
+become, gaining very widespread acceptance." Fish hopes that one day, the
+BeBox will be "one of the top three choices for people who walk into a
+computer store—you'd choose between a Mac, a PC, or a BeBox."</p><p>When that day comes, the Amiga faithful will be avenged at last.</p><p>Cronus is constructing a mirror of the Be ftp site, which you'll soon be
+able to find at http://ftp.ninemoons.com.</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-13"></a>500, The Magic Number</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>We're often asked what we think of the $500 Internet Terminal, of the
+Hollow Computer, of the NC (Network Computer). All these monikers refer
+in one way or another to the concept of an inexpensive Internet
+appliance. This is a great concept. Who wouldn't like to have a nice $500
+device for surfing the web, exchanging e-mail, and arguing in Usenet
+newsgroups. And buy things, listen to news, play virtual reality network
+games...</p><p>Before we look at the implementation issues, let's first deal with
+personalities and human emotions. A few people and companies have given
+the NC high visibility and a strong anti-Microsoft flavor. It might be
+amusing to see Larry Ellison throwing barbs at Netscape, charging them
+with wanting to be the Microsoft of the Internet, or to see Microsoft
+dressed in the same Big Brother clothes as IBM used to be. But it doesn't
+tell us much about the technical, the financial, and ultimately the
+market feasibility of the NC. Even the hype doesn't matter much. It
+didn't help Interactive TV or PDAs. It might even hurt, as the example of
+the Newton shows. Now that it has become substantially closer to its
+original claims for function, its credibility is spent, making a comeback
+a long, tricky exercise. Compare this with the Psion, which sells solely
+on the word-of-mouth of proud owners.</p><p>On to the implementation issues. Today, one can buy a 486-based PC for a
+little over $700 retail. At Demo 96, Jim Louderback, the Editor-in-Chief
+of Windows Sources, built one on stage for a little over $600, modem
+included. So what is the difference between that PC and the NC? The PC is
+just as capable of surfing the Net as its younger brother, it runs all
+sorts of applications from games to spreadsheets, it sports a monitor and
+a hard disk, and it can use inexpensive peripherals. The NC proponents
+will point to a few advantages. The NC doesn't need a hard disk,
+applications will be either in ROM or downloaded from the Net, including
+spreadsheets and word processors. Nor does it need a monitor. To reach
+the $500 retail price, not cost of goods, it will use your TV as a screen.</p><p>I have a hard time with both points. I just bought a 240 MB hard disk for
+my daughter Sophie's Mac, whose older drive had died. It cost me $77,
+reduced to $70 a week later. There is too much of an imbalance between
+the savings realized and the loss of the nice functionality provided by a
+hard disk. The applications are supposed to be loaded from the net, each
+time we'll need them. They'll generate data. Where are we going to store
+that data? On the net? This is "The Network Is the Computer" theory. It
+works for some applications, with some customers, and with some fast,
+expensive hardware and networks. Also, today's browsers need disk caches
+for decent performance. Factoring caches out will require a faster
+network or beaucoup RAM. More money one way or the other. As for the TV
+as your screen, we know it works for games. Beyond that, it's doubtful.
+In France we have the Minitel experiment, where attempts to use the TV as
+a screen for the terminal were short-lived. Even with less demanding text
+and graphics and direct RGB input in the back of those TVs.</p><p>The other argument in favor of the NC is the decrepitude and irrelevance
+of operating systems. I have a little or a lot of biases here. Somehow, I
+think, the NC will need system software to orchestrate the whole works.
+The next thing you know, it will sprout a disk, a monitor, and a printer
+and we'll have a web-oriented PC, at PC prices. Perhaps Oracle will sell
+its reference design to the folks at AT&amp;T. After passing up on buying
+Apple in 1990, buying and reselling NCR instead, investing in EGO,
+General Magic, and Ziff-Davis' Interchange, AT&amp;T now enters the Internet
+business. Regardless of the cost of goods, they could offer an Internet
+appliance for "free" as part of a marketing campaign targeted at the
+unconnected masses. The French PTT did just that with the Minitel. But
+that was 15 years ago. There was no Internet and, if memory serves, it
+sold a lot of Macs sporting a nice Minitel emulation.</p><p>Which leads me to my conclusion. Whether the NC evolves into a new
+personal computer platform or is used as a loss leader to develop the
+Internet market, it's good news, creates competition, stirs up
+creativity, and makes life more interesting.</p><p>Of course, I could be all wrong. I remember the mainframe stakeholders
+pooh-poohing the minis, the mini elders discounting the workstations, and
+the workstation ayatollahs explaining how PCs couldn't exist by reason of
+their lacking a true OS and a true network. So, I could be one of the PC
+dinosaurs not seeing the combined wisdom of Lou Gerstner and Larry
+Ellison. Time, or rather, customers will tell. So far, large companies
+have had little success imposing new platforms. PCs, minis, workstations,
+Ethernet, and the web come to mind. None have been spawned by corporate
+giants.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-12.html">Issue 1-12, February 28, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-14.html">Issue 1-14, March 13, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-12.html" title="Issue 1-12, February 28, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-14.html" title="Issue 1-14, March 13, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - Special Topics - Device Drivers</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="DeviceDrivers.html" title="Device Drivers" /><link rel="prev" href="DeviceDrivers.html" title="Device Drivers" /><link rel="next" href="DeviceDrivers_WritingDrivers.html" title="Writing Drivers" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="DeviceDrivers_WritingDrivers.html" title="Writing Drivers"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - Special Topics - Device Drivers</div></div><div id="headerB">Prev: <a href="DeviceDrivers.html">Device Drivers</a>  Up: <a href="DeviceDrivers.html">Device Drivers</a>  Next: <a href="DeviceDrivers_WritingDrivers.html">Writing Drivers</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction"></a>Introduction</h2></div></div></div><p>Writing device drivers requires additional knowledge of the inner
+workings of the BeOS. To write a driver you must follow the rules laid
+out in this chapter very carefully. These rules are not the same as those
+for writing a normal application—if your driver tries to do things
+it's not allowed to do, it could bring down the system.</p><p>This introduction covers how drivers interact with the kernel.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685216"></a>The Kernel and the Driver Author</h3></div></div></div><p>The BeOS kernel comprises the basic functionality of the operating
+system: It knows how to start the boot process and to manage memory and
+threads, and it contains the PCI bus manager, the ISA bus manager, the
+device file system (devfs, which manages
+<code class="filename">/dev</code>), the root file system
+(rootfs, which manages <code class="filename">/</code>), and a
+few other things.</p><p>But this isn't enough to satisfy the needs of most applications, so the
+kernel uses add-ons to provide additional functionality. During the boot
+process, add-ons are loaded to handle "real" file systems, devices,
+busses, and the like.</p><p>Although Be's kernel add-ons provide support for a wide range of
+hardware—from disk devices to joysticks—this support isn't
+all-inclusive. Hardware developers may need to create their own drivers
+for their products.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_TypesOfKernelAddOn"></a>Types of Kernel Add-on</h4></div></div></div><p>There are three types of kernel add-on:</p><div class="orderedlist"><ol><li><p>Device drivers are add-ons that communicate directly with devices.</p></li><li><p>Modules are kernel space add-ons that export an API for use by
+drivers (or by other modules).</p></li><li><p>File systems are add-ons that support specific file systems, such as
+BFS, DOSFS, HFS, and so forth.</p></li></ol></div><p>Device drivers and file systems, while extending the functionality of the
+kernel, are still accessible from user space: Applications can open and
+address them using file descriptors. Modules, on the other hand, are
+kernel-only units. Applications have no access to them; they're provided
+strictly for use by the kernel and other kernel add-ons.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_DeviceDrivers"></a>Device Drivers</h5></div></div></div><p>A device driver is an add-on that recognizes a specific device (or class
+of devices) and provides a means for the rest of the system to
+communicate with it. Usually this communication involves some form of
+device-specific protocol. For example, if the system wants to use an
+Ethernet card or graphics card, it needs to load a device driver add-on
+that knows how to communicate with that card. Similarly, code that knows
+how to talk to a class of devices
+(<acronym class="acronym" title="Small Computer Systems Interface">SCSI</acronym>
+disks, <acronym class="acronym" title="AT Attachment">ATA</acronym> devices,
+<acronym class="acronym" title="AT Attachment Packet Interface">ATAPI</acronym> disks,
+or <acronym class="acronym" title="Universal Serial bus">USB</acronym>
+input devices, etc.) must be implemented as a device driver add-on.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_Modules"></a>Modules</h5></div></div></div><p>Modules provide a uniform <acronym class="acronym">API</acronym> for use by other modules and drivers. A
+module is like a library in that it acts as a repository for common code
+that's shared among several drivers.</p><p>For example: Let's say you have a device driver that talks to a
+<acronym class="acronym">SCSI</acronym> device connected to a <acronym class="acronym">SCSI</acronym> bus.
+A computer can have multiple <acronym class="acronym">SCSI</acronym> busses. Because all
+<acronym class="acronym">SCSI</acronym> devices use the same command set independent of the
+particular controller used to send the commands, the command set can be
+(and is) implemented as a module. The <acronym class="acronym">SCSI</acronym> module knows
+how to handle all <acronym class="acronym">SCSI</acronym> cards the BeOS supports; the API
+that the <acronym class="acronym">SCSI</acronym> module defines is adopted by and augmented
+by the modules for specific <acronym class="acronym">SCSI</acronym> device types (hard
+disks, scanners, CD drives, etc). The <acronym class="acronym">SCSI</acronym> device
+modules are managed by a <acronym class="acronym">SCSI</acronym> bus manager module, which
+knows how to cope with multiple busses and presents them in encapulated
+form to the drivers. The drivers then only need to deal with the bus
+manager's API, which makes the life of a driver author much simpler.</p><p>Be provides bus managers for <acronym class="acronym">SCSI</acronym>,
+<acronym class="acronym">USB</acronym>,
+<acronym class="acronym" title="Integrated Drive Electronics">IDE</acronym>, and
+<acronym class="acronym">PCMCIA</acronym>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_FileSystems"></a>File Systems</h5></div></div></div><p>File system add-ons provide support for disk and network file systems,
+such as <acronym class="acronym">BFS</acronym>,
+<acronym class="acronym" title="Hierarchical Filing System">HFS</acronym>,
+<acronym class="acronym" title="File Allocation Table">FAT</acronym>,
+<acronym class="acronym" title="International Standards Organization">ISO</acronym> 9660,
+<acronym class="acronym" title="Common Internet Filing System">CIFS</acronym>,
+and so forth. By creating new file system add-ons, developers can provide
+access to disks that are formatted using other file system.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_InteractionsWithTheKernel"></a>Interactions with the Kernel</h4></div></div></div><p>The kernel provides a number of services that drivers and modules can
+use. These include:</p><ul class="itemizedlist"><li><p>Enabling and disabling interrupts.</p></li><li><p>Setting up memory for
+<acronym class="acronym" title="Direct Memory Access">DMA</acronym>
+transactions.</p></li><li><p>Access to other devices and modules.</p></li></ul><p>The kernel also provides, at the user level, a Posix-like API for
+accessing devices. An application can open a device through
+<code class="function">open()</code>, and use <code class="function">read()</code>,
+<code class="function">write()</code>, and <code class="function">ioctl()</code> to access
+the device.</p><p>The Posix functions are converted into system calls into the kernel,
+which then passes them, via devfs, to the appropriate device driver.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_devfs"></a>devfs</h3></div></div></div><p>The kernel manages device drivers through devfs, the device file
+system that's mounted at
+<code class="filename">/dev</code>
+during the boot process. In order to be accessed,
+a driver must "publish" itself by adding an entry in the
+<code class="filename">/dev</code>
+hierarchy. The basic Posix I/O functions (<code class="function">open()</code>,
+<code class="function">read()</code>, <code class="function">write()</code>,
+<code class="function">readv()</code>, <code class="function">writev()</code>,
+<code class="function">ioctl()</code>, and <code class="function">close()</code>) can then be
+used.</p><p>Devfs makes the drivers available as needed in
+<code class="filename">/dev</code>; this usually happens
+the first time a program iterates through the directory entries for a
+subdirectory in <code class="filename">/dev</code>.
+The kernel knows where in the /dev hierarchy to
+publish drivers based on their location in
+<code class="filename">/boot/beos/system/add-ons/kernel/drivers/dev</code>.
+For example, the <acronym class="acronym">ATAPI</acronym> driver publishes drivers in
+<code class="filename">/dev/disk/ide/atapi</code>, the driver is located in
+<code class="filename">/boot/beos/system/add-ons/kernel/drivers/dev/disk/ide/atapi</code>.
+Whew.</p><p>You can see this device hierarchy by using the "ls" command from a
+Terminal window. <code class="command">ls /dev</code> will show you the root of the device
+hierarchy, <code class="command">ls /dev/disk</code> will show you disk device busses,
+<code class="command">ls /dev/disk/ide</code> will show you the IDE devices, and so forth.</p><p>In reality, drivers tend to publish themselves in multiple locations in
+the <code class="filename">/dev</code> hierarchy, so instead
+of putting duplicate copies of the driver in the
+<code class="filename">…/drivers/dev</code>
+tree, the driver binaries are put at
+<code class="filename">/boot/beos/system/add-ons/kernel/drivers/bin</code>,
+and symlinks are created in the
+<code class="filename">…/drivers/dev</code>
+tree at the appropriate place. (The same is also done for drivers in
+<code class="filename">/boot/home/config/add-ons/kernel/drivers/…</code>)</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_DriverImplementationPrinciples"></a>Driver Implementation Principles</h3></div></div></div><p>Much of the stability of the BeOS is achieved by constructing a nearly
+impenetrable wall between the kernel and user applications. Drivers are
+chinks in that wall. If a driver misbehaves or fails, there's a strong
+possibility that it will cause unexpected behavior or kill the entire
+system. It's absolutely critical that drivers not only be very carefully
+tested before being released to the public, but that they follow the
+rules to the letter.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_KernelSpacevsUserSpace"></a>Kernel Space vs. User Space</h4></div></div></div><p>One way you can reduce the risk of your driver causing a general system
+failure is by putting as much code as possible in user space. Create a
+driver that loads into kernel space just enough code to handle the
+low-level interactions that absolutely have to be done in kernel space,
+then load code into user space to handle the rest of the work. If the
+add-on fails, the system will keep running—only your driver will
+fail.</p><p>Another plus to placing as much of your code as possible into user space
+is that it's much easier to debug code running in user space.
+Conventional debugging techniques that don't work for kernel code can be
+applied, and there's much less chance of taking down the system in the
+process.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_CodeSynchronization"></a>Code Synchronization</h4></div></div></div><p>Normally, spinlocks are a bad thing. A spinlock is a tight loop that
+watches for a condition to occur, looping endlessly until that condition
+is met (this is called "busy waiting"). This wastes valuable processor
+time, and is normally discouraged.</p><p>In general, you're encouraged to use semaphores instead of spinlocks;
+however, you can't acquire a semaphore while handling an interrupt. So if
+you need to synchronize code while handling an interrupt, you must use a
+spinlock. Put simply:</p><ul class="itemizedlist"><li><p>Use spinlocks to protect critical sections in interrupt-handling code.</p></li><li><p>Use semaphores in any other situation that calls for code
+synchronization.</p></li></ul><p>Anywhere you use a spinlock to protect a critical section, you should
+disable interrupts. Of course, in an interrupt handler, you know that
+interrupts are already disabled, so you don't need to explicitly disable
+interrupts yourself. Interrupt handlers include I/O interrupts installed
+using <code class="function">install_io_interrupt()</code> and timer interrupts installed by calling
+<code class="function">add_timer()</code>.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_FunctionsAvailableDuringSpinlocks"></a>Functions Available During Spinlocks</h5></div></div></div><p>While your spinlock is running, you can perform the following actions. If
+it's not on this list, you can't do it.</p><ul class="itemizedlist"><li><p>You can examine and alter hardware registers by using the appropriate
+bus manager hooks.</p></li><li><p>You can examine and alter any locked-down memory.</p></li><li><p>You can call the following kernel functions:
+<code class="function">system_time()</code>,
+<code class="function">atomic_add()</code>, <code class="function">atomic_or()</code>,
+<code class="function">atomic_and()</code>.</p></li><li><p>You can call the following bus manager functions:
+<code class="function">read_io_*()</code> and
+<code class="function">write_io*()</code>.</p></li></ul><p>If you do anything else inside your spinlock, you're breaking the rules,
+so don't do it.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_UsingSpinlocks"></a>Using Spinlocks</h5></div></div></div><p>You need to be sure that your calls to <code class="function">acquire_spinlock()</code> and
+<code class="function">release_spinlock()</code> are balanced. In addition, if you nest spinlocks, they
+must be released in logical order—that is, in the opposite order in
+which they're acquired.</p><p>The kernel keeps track of which spinlocks are being held and which are
+being waited upon. The kernel assumes that spinlocks are initialized to
+0, and then acquired and released in logical order.</p><p>By keeping track of spinlocks, the kernel can detect and break deadlocks
+on multiprocessor systems.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_DisablingInterrupts"></a>Disabling Interrupts</h4></div></div></div><p>The only time you should ever disable interrupts in a device driver is
+just before entering a spinlock-protected critical section. There is
+absolutely no other reason to do it, so don't.</p><p>After disabling interrupts, you should reenable them as quickly as
+possible. You must never, under any circumstances, leave interrupts
+disabled for more than 50 microseconds. This means that your interrupt
+handler code (which runs with interrupts implicitly disabled) must
+execute in 50 microseconds or less.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_FunctionsAvailableWhileInterruptsAreDisabled"></a>Functions Available While Interrupts Are Disabled</h5></div></div></div><p>If you have interrupts disabled and aren't in a spinlock, you can do the
+following things in addition to those listed above in "Functions
+Available During Spinlocks":</p><ul class="itemizedlist"><li><p>You can call <code class="function">release_sem_etc()</code> with the
+<code class="constant">B_DO_NOT_RESCHEDULE</code> flag set.</p></li><li><p>You can call <code class="function">get_sem_count()</code>, <code class="function">add_timer()</code>,
+<code class="function">cancel_timer()</code>, and <code class="function">dprintf()</code>.</p></li></ul><p>If you feel that you need to call a function not explicitly listed as
+permitted here, please contact Be Developer Support at devsupport@be.com
+and explain your needs; we'd be happy to discuss the situation with you.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_DontBlock"></a>Don't Block</h5></div></div></div><p>It's crucial that your interrupt handler never block, whether directly
+(by acquiring a semaphore, for example) or indirectly (by calling a
+function that might block).</p><p>Blocking can happen in a surprisingly large number of BeOS functions.
+It's obvious that <code class="function">acquire_sem()</code> can block, but you
+might not be aware that functions such as <code class="function">malloc()</code> or
+<code class="function">read_port()</code> can block. Even touching unlocked memory
+areas can block because of virtual memory hits.</p><p>The point is this: If the BeOS function you want to call isn't explicitly
+listed in this section as one you can use, don't call it.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_DontPreempt"></a>Don't Preempt</h5></div></div></div><p>Your interrupt handler or spinlock section can't be preempted.
+Preemption could occur if you call <code class="function">release_sem()</code> or
+<code class="function">release_sem_etc()</code> without specifying the
+<code class="constant">B_DO_NOT_RESCHEDULE</code> flag. Normally,
+<code class="function">release_sem()</code> lets the scheduler preempt your thread
+to allow other threads to acquire the semaphore as fast as possible. By
+specifying <code class="constant">B_DO_NOT_RESCHEDULE</code>, you tell the scheduler
+to allow your thread to continue running after it releases the
+semaphore.</p><p>If your interrupt handler wants to ensure that any preemption is
+handled immediately, it should specify
+<code class="constant">B_DO_NOT_RESCHEDULE</code> when calling
+<code class="function">release_sem()</code>, then return
+<code class="constant">B_INVOKE_SCHEDULER</code>. This causes the scheduler to
+immediately handle preemption after your interrupt handler returns, instead
+of resuming the interrupted task. This is especially useful if your code
+called <code class="function">release_sem_etc()</code> to release a semaphore that
+will allow other code to run elsewhere (such as in your driver's
+corresponding user-space code).</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>Again, when you call <code class="function">release_sem_etc()</code>, be sure
+to specify the <code class="constant">B_DO_NOT_RESCHEDULE</code> flag to avoid any
+chance of preemption.</p></div></div></div><p>In summary, the order in which you should do things is this:</p><ul class="itemizedlist"><li><p>Disable interrupts.</p></li><li><p>Acquire the spinlock.</p></li><li><p>Perform your tasks.</p></li><li><p>Release the spinlock.</p></li><li><p>Restore the original interrupt state.</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_FileIO"></a>File I/O</h5></div></div></div><p>Sometimes a driver needs to be able to access disk files. Perhaps the
+driver has a preference file it needs to read. There are two ways to do
+this. You can use Posix I/O calls, or you can use the driver settings API
+provided by BeOS. The latter is preferred.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h6 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_UsingPosixCalls"></a>Using Posix Calls</h6></div></div></div><p>Under BeOS, device drivers can access disk files using the standard
+low-level Posix I/O functions: <code class="function">open()</code>, <code class="function">close()</code>,
+<code class="function">read()</code>, <code class="function">write()</code>, and so
+forth. There aren't any special chores to attend to beforehand. Just
+<code class="function">open()</code> the file and do your thing.</p><p>Two Posix extensions that might be helpful when you're writing code to
+perform file I/O from a device driver: <code class="function">readv()</code>
+and <code class="function">writev()</code>.</p><pre class="programlisting example c"><span class="type">int</span> <code class="function">readv</code>(<span class="type">int</span> <code class="parameter">fd</code>, <span class="type">const struct iovec*</span><code class="parameter">vector</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+
+<span class="type">int</span> <code class="function">writev</code>(<span class="type">int</span> <code class="parameter">fd</code>, <span class="type">const struct iovec*</span><code class="parameter">vector</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+
+<span class="type">struct iovec</span> {
+   <span class="type">__ptr_t</span> <code class="varname">iov_base</code>;
+   <span class="type">size_t</span> <code class="varname">iov_len</code>;
+};</pre><p>These functions provide a means to read and write contiguous portions of
+a file from multiple buffers. vector is a pointer to an array containing
+count vector records, each of which contains a pointer to a buffer, and
+the size of the buffer. <code class="function">readv()</code> fills these buffers with data from the
+file, and <code class="function">writev()</code> writes them to the file, in order.</p><p>When successful, <code class="function">readv()</code> returns the number of bytes read.</p><p>For example, if your code needs to write two separate 1k buffers into a
+file, one after the other, you might do something like this:</p><pre class="programlisting example c"><span class="type">struct iovec</span> <code class="varname">v</code>[2];
+<code class="varname">v</code>[0].<code class="varname">iov_base</code> = &amp;<code class="varname">buffer1</code>;
+<code class="varname">v</code>[0].<code class="varname">iov_len</code> = 1024;
+<code class="varname">v</code>[1].<code class="varname">iov_base</code> = &amp;<code class="varname">buffer2</code>;
+<code class="varname">v</code>[1].<code class="varname">iov_len</code> = 1024;
+if (<code class="function">writev</code>(<code class="varname">fd</code>, &amp;<code class="varname">v</code>, 2) != <code class="constant">B_OK</code>) {
+   <span class="comment">/* error */</span>
+}</pre><p>Performing vectored I/O like this is often faster than doing multiple
+calls to <code class="function">read()</code> and <code class="function">write()</code>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h6 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DeviceDrivers_Introduction_TheDriverSettingsAPI"></a>The Driver Settings API</h6></div></div></div><p>If your driver is loaded before the file system for the disk on which
+your settings file resides, your driver might not be able to load its
+settings using Posix calls. The driver settings API lets you work around
+this circumstance. See
+"<a class="xref" href="DeviceDrivers_DriverSettingsAPI.html" title="Driver Settings API">Driver Settings API</a>"
+for details.</p></div></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="DeviceDrivers.html">Device Drivers</a>  Up: <a href="DeviceDrivers.html">Device Drivers</a>  Next: <a href="DeviceDrivers_WritingDrivers.html">Writing Drivers</a> </div><div id="footerB"><div id="footerBL"><a href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="DeviceDrivers.html" title="Device Drivers"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="DeviceDrivers_WritingDrivers.html" title="Writing Drivers"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

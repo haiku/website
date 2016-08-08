@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-40.html" title="Issue 2-40, October 8, 1997" /><link rel="next" href="Issue2-42.html" title="Issue 2-42, October 22, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-40.html" title="Issue 2-40, October 8, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-42.html" title="Issue 2-42, October 22, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-40.html">Issue 2-40, October 8, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-42.html">Issue 2-42, October 22, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-41"></a>Issue 2-41, October 15, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-41"></a>Be Engineering Insights: Fun with FilePanels</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Chinn</span></span></div></div></div><p>
+The new Expander application in PR2 started out as a simple idea, at
+least in my mind; maybe that says something about how I think, but we
+won't go into that here. As the project progressed I found I eventually
+had to deal with issues like providing additional features that people
+requested, and an interface that people could use.
+</p><p>
+Perhaps inevitably, it was another Be engineer who submitted this bug
+report:
+</p><p>
+"When a app needs to be expanded I am not allowed to expand into a
+selected folder."
+</p><p>
+Robert says that if you go up one level higher you then get to choose the
+folder.
+</p><p>
+This is dumb."
+</p><p>
+What the bug report was referring to was the process of selecting a
+destination folder via the default <code class="classname">BFilePanel</code> I was using in the
+application. If you were "in" the folder you wanted to select, you had to
+go "up" one level to select it, rather than being able to select it
+directly
+</p><p>
+Okay, so maybe the interface was a little confusing. And, well, maybe I
+was just being lazy and did not really want to add another feature to
+this supposedly simple application. But with a bug report like that (and
+from Melissa, no less), I was just going to have to do the extra work.
+</p><p>
+A <code class="classname">BFilePanel</code> can be constructed so that all displays are directories, as
+well as allowing the user to select a directory instead of a file. The
+goal for this article is to create a custom FilePanel, using the
+<code class="classname">BFilePanel</code> class, which allows for the selection of any directory, while
+you are in it or while you are browsing its parent.
+</p><p>
+In browsing the header file, <code class="filename">FilePanel.h</code>, you will find a nice, clean,
+self-contained class. Unfortunately, there does not seem to be a simple
+way of just adding a view, a button in our case, to the window.
+Fortunately, there is one method provided, <code class="methodname">Window()</code>, that returns the
+FilePanel's window. If you can get the window, you can get its views, and
+if you can get the views then you can add to them.
+</p><p>
+To accomplish this task a new class must be derived from <code class="classname">BFilePanel</code>. The
+constructor has been simplified for clarity, the <code class="methodname">SelectionChanged()</code>
+method has been included, and a <code class="classname">BButton</code> has been added:
+</p><pre class="programlisting cpp">
+class <code class="classname">TDirFilePanel</code> : public <code class="classname">BFilePanel</code> {
+
+  public:
+    <code class="methodname">TDirFilePanel</code>( <span class="type"><code class="classname">BMessenger</code>*</span> <code class="parameter">target</code>,
+                   <span class="type"><code class="classname">BRefFilter</code>*</span> <code class="parameter">filter</code>=<code class="constant">NULL</code> );
+    <span class="type">void</span> <code class="methodname">SelectionChanged</code>();
+
+  private:
+    <span class="type"><code class="classname">BButton</code> *</span><code class="varname">fCurrentDirBtn</code>;
+};
+</pre><p>
+To set up this custom FilePanel and provide the basic functionality
+requires six steps in your code:
+</p><div class="orderedlist"><ol><li><p>
+Retrieve the window from the FilePanel object.
+</p></li><li><p>
+Find the first child of the window and then find the view named
+"cancel button".
+</p></li><li><p>
+Create our new <code class="classname">BButton</code>, size it appropriately for its title, and
+place it relative to the <span class="guibutton">Cancel</span> button.
+</p></li><li><p>
+Set the target for the new button.
+</p></li><li><p>
+Set the message for the new button; part of the message will be the
+<span class="type">entry_ref</span> of the current directory. The current directory is retrieved
+via the <code class="methodname">GetPanelDirectory</code> method and
+the resulting <span class="type">entry_ref</span> is added
+to the message. When the user clicks this button it will send this
+message to the target (<code class="classname">BMessenger</code>) signifying a new directory
+selection.
+</p></li><li><p>
+In the target's <code class="methodname">MessageReceived</code> method, where we catch the message
+sent from our FilePanel, we need to do one more thing, send the
+FilePanel a <code class="methodname">Hide()</code> message.
+</p></li></ol></div><p>
+By setting the node_flavor parameter to <code class="constant">B_DIRECTORY_NODE</code>, the FilePanel
+allows the selection of directories instead of files; take a peek at
+<code class="filename">SupportDefs.h</code> to see the rest of the node flavors.
+</p><pre class="programlisting cpp">
+<code class="classname">TDirFilePanel</code>::<code class="methodname">TDirFilePanel</code>( <span class="type"><code class="classname">BMessenger</code>*</span> <code class="parameter">target</code>,
+                              <span class="type"><code class="classname">BRefFilter</code>*</span> <code class="parameter">filter</code> )
+  : <code class="classname">BFilePanel</code>( <code class="constant">B_OPEN_PANEL</code>, <code class="parameter">target</code>, <code class="constant">NULL</code>,
+                <code class="constant">B_DIRECTORY_NODE</code>, <code class="constant">false</code>, <code class="constant">NULL</code>, <code class="parameter">filter</code>)
+{
+  <span class="type"><code class="classname">BWindow</code>  *</span><code class="varname">w</code>;
+
+  <span class="comment">//  1) Get the window from the FilePanel</span>
+  <span class="comment">//     so we can find the window's children</span>
+
+  <code class="varname">w</code> = <code class="methodname">Window</code>();
+  if (<code class="varname">w</code>-&gt;<code class="methodname">Lock</code>()) {
+    <code class="classname">BRect</code> <code class="varname">btnrect</code>;
+
+    <span class="comment">//  2) Find the first view in the window,</span>
+    <span class="comment">//     and from that view we find the cancel button</span>
+
+    <span class="type"><code class="classname">BView</code> *</span><code class="varname">v</code> = <code class="varname">w</code>-&gt;<code class="methodname">ChildAt</code>(0);
+    <span class="type"><code class="classname">BView</code> *</span><code class="varname">cancelBtn</code> = <code class="varname">v</code>-&gt;<code class="methodname">FindView</code>("cancel button");
+
+    if (<code class="varname">cancelBtn</code>) {
+      <span class="type"><code class="classname">BView</code> *</span><code class="varname">parentview</code>;
+      <span class="type">float</span> <code class="varname">charWidth</code>;
+
+      <span class="comment">//  3) Construct and add the new 'Select Current</span>
+      <span class="comment">//     Directory' button</span>
+
+      <code class="varname">charWidth</code> = <code class="varname">cancelBtn</code>-&gt;<code class="methodname">StringWidth</code>("Select Current
+                  Directory");
+      <code class="varname">btnrect</code> = <code class="varname">cancelBtn</code>-&gt;<code class="methodname">Frame</code>();
+      <code class="varname">btnrect</code>.<code class="varname">right</code> = <code class="varname">btnrect</code>.<code class="varname">left</code> - 10;
+      <code class="varname">btnrect</code>.<code class="varname">left</code> = <code class="varname">btnrect</code>.<code class="varname">right</code> - <code class="varname">charWidth</code> - 40;
+      <code class="varname">fCurrentDirBtn</code> = new <code class="classname">BButton</code>(<code class="varname">btnrect</code>,
+        "current dir button", "Select Current Directory",
+        <code class="constant">NULL</code>, <code class="constant">B_FOLLOW_RIGHT</code> + <code class="constant">B_FOLLOW_BOTTOM</code>);
+
+      <span class="comment">//  4) Set the target for the new button</span>
+
+      <code class="varname">fCurrentDirBtn</code>-&gt;<code class="methodname">SetTarget</code>(*<code class="parameter">target</code>);
+
+      <code class="varname">parentview</code> = <code class="varname">cancelBtn</code>-&gt;<code class="methodname">Parent</code>();
+      <code class="varname">parentview</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">fCurrentDirBtn</code>);
+
+      <span class="comment">//  5) Set the message for the new button</span>
+
+      <span class="type">entry_ref</span> <code class="varname">ref</code>;
+      <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">msg</code> = new <code class="classname">BMessage</code>('slct');
+      <code class="methodname">GetPanelDirectory</code>(&amp;<code class="varname">ref</code>);
+      <code class="varname">msg</code>-&gt;<code class="methodname">AddRef</code>("refs",&amp;<code class="varname">ref</code>);
+      <code class="varname">fCurrentDirBtn</code>-&gt;<code class="methodname">SetMessage</code>(<code class="varname">msg</code>);
+    }
+
+    <code class="varname">w</code>-&gt;<code class="methodname">Unlock</code>();
+
+  }
+}
+</pre><p>
+Now we come upon another minor problem. When a user begins traversing
+directories, the <span class="type">entry_ref</span> in our new button also needs to change.
+Luckily in <code class="classname">BFilePanel</code> there is a method,
+<code class="methodname">SelectionChanged()</code>, that does
+just the trick. As the user clicks on a file or moves up or down in the
+directory structure, this method will get called. By calling
+<code class="methodname">GetPanelDirectory</code> we can then retrieve the current directory and update
+the button's message.
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">TDirFilePanel</code>::<code class="methodname">SelectionChanged</code>()
+{
+  <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">wind</code>;
+
+  <code class="varname">wind</code> = <code class="methodname">Window</code>();
+
+  if (<code class="varname">wind</code>-&gt;<code class="methodname">Lock</code>()) {
+    <span class="type">entry_ref</span> <code class="varname">currRef</code>;
+
+    <code class="methodname">GetPanelDirectory</code>(&amp;<code class="varname">currRef</code>);
+
+    <span class="comment">//  modify the btn's msg</span>
+
+    <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">msg</code> = new <code class="classname">BMessage</code>('slct');
+    <code class="varname">msg</code>-&gt;<code class="methodname">AddRef</code>("refs",&amp;<code class="varname">currRef</code>);
+    <code class="varname">fCurrentDirBtn</code>-&gt;<code class="methodname">SetMessage</code>(<code class="varname">msg</code>);
+
+    <code class="varname">wind</code>-&gt;<code class="methodname">Unlock</code>();
+  }
+}
+</pre><p>
+One final bit to help simplify our scenario. As we are traversing
+directories looking for a folder for our destination, we notice that
+every file is still visible through the FilePanel, even though we only
+want to select directories. The trick is to add a filter to the FilePanel.
+</p><p>
+Using a <code class="classname">BRefFilter</code> to do this is quite simple and only requires deriving
+a new class from <code class="classname">BRefFilter</code> and adding to its <code class="methodname">Filter()</code> method.
+</p><pre class="programlisting cpp">
+class <code class="classname">TDirFilter</code> : public <code class="classname">BRefFilter</code> {
+
+public:
+  <span class="type">bool</span> <code class="methodname">Filter</code>(<span class="type">constentry_ref*</span> <code class="parameter">e</code>, <span class="type"><code class="classname">BNode</code>*</span> <code class="parameter">n</code>, struct <span class="type">stat*</span> <code class="parameter">s</code>,
+              <span class="type">const char*</span> <code class="parameter">mimetype</code>);
+};
+</pre><p>
+The <code class="methodname">Filter</code> method receives all the information you will need to discern
+whether you want the file or directory to show. In our case we are just
+looking for directories and volumes and only need to look at the mimetype
+to do so.
+</p><p>
+Note that if the item is a symlink to a directory or a volume, this
+filter will not see it. I will leave that as a mini exercise for the
+reader.
+</p><pre class="programlisting cpp">
+<span class="type">bool</span>
+<code class="classname">TDirFilter</code>::<code class="methodname">Filter</code>(<span class="type">constentry_ref*</span> <code class="parameter">e</code>, <span class="type"><code class="classname">BNode</code>*</span> <code class="parameter">n</code>,
+                   struct <span class="type">stat*</span> <code class="parameter">s</code>, <span class="type">const char*</span> <code class="parameter">mimetype</code>)
+{
+  if (<code class="function">strcmp</code>("application/x-vnd.Be-directory",
+             <code class="varname">mimetype</code>) == 0)
+    return <code class="constant">true</code>;
+  else if (<code class="function">strcmp</code>("application/x-vnd.Be-volume",
+                  <code class="varname">mimetype</code>) == 0)
+    return <code class="constant">true</code>;
+  else
+    return <code class="constant">false</code>;
+}
+</pre><p>
+To use this RefFilter in the directory selection FilePanel above, you
+simply construct the custom FilePanel with the Filter object as its
+parameter:
+</p><pre class="programlisting cpp">
+<code class="classname">TDirFilter</code> <code class="varname">filter</code>;
+<span class="type"><code class="classname">TDirFilePanel</code> *</span><code class="varname">dirSelect</code> = new <code class="classname">TDirFilePanel</code>(new
+<code class="classname">BMessenger</code>(<code class="constant">NULL</code>,<code class="varname">this</code>),<code class="varname">filter</code>);
+</pre><p>
+So there we have it. A cleaner way to select directories, an examination
+of a simple class, <code class="classname">BFilePanel</code>, which we have all probably used, and a
+peek at using a <code class="classname">BRefFilter</code> to simplify the view that we present to our
+users. The addition of simple features such as these add a polished look
+to an application that a user definitely notices and appreciates.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-41-2"></a>Be Engineering Insights: A Few of My Favorite Things</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michael</span> <span class="surname">Alderete</span></span></div></div></div><p>
+Back in <a class="link" href="">Newsletter 2-#32</a>,
+Robert Polic wrote an article about spamming
+using the mail and query features built into the BeOS. The article
+provided an excellent illustration of several concepts in BeOS
+programming, including the basics of writing a command line application,
+using BeOS queries, and sending e-mail programmatically.
+</p><p>
+It was written with tongue firmly in cheek, but actually generated some
+fairly heated responses from people who apparently had received more spam
+than they'd like, and didn't want to see any more.
+</p><p>
+The thing is, writing a spamming tool is pretty trivial. Robert did his
+in just over a hundred lines of code, and I've even written one myself --
+and I'm *not* a software engineer.
+</p><p>
+The hard part of being a spammer is getting all the e-mail addresses to
+which you plan to send your junk mail. Collecting and managing this
+database of addresses and, presumably, demographic information is
+definitely where the "value" is in the life of a spammer.
+</p><p>
+Robert's spamming tool simply assumed the presence of a collection of
+BeOS Person records, files which are specially marked and which have
+extra, people-related attributes like "Name", "Phone Number", and
+"E-mail" attached to them.
+</p><p>
+Person files are really cool. You can drag them onto <span class="application">BeMail</span> to create a
+new message to those Persons, or drag them into an existing message to
+add them to the recipient list. There's a pop-up menu for the To:, CC:,
+and Bcc: fields in <span class="application">BeMail</span>, which lets you choose Persons you've created,
+and <span class="application">AdamMail</span> (and other applications, too, I'm sure) provides quite nifty
+expansion of e-mail addresses, also based on the Person files on your
+system.
+</p><p>
+Unfortunately, creating such Person files was, until recently, not
+terribly easy. With the Preview Release 2 (PR2), we've added a new
+application called People. It's my second favorite thing that's new in
+PR2. While it's not an industrial strength contact database (and
+therefore of little use to spammers), it does provide an easy way to
+create and update Person files. I think you'll find it quite handy!
+</p><p>
+My favorite new thing in PR2 has to be the changes to the Find function.
+While I find the ability to search across multiple volumes (disks) or
+only specific volumes useful, I'm *thrilled* about being able to edit
+(modify) the Find criteria.
+</p><p>
+Try this (when you get your PR2 CD, of course!): Do a find for all e-mail
+from the domains "cyberpromo.com", "savetrees.com", or contains "free" in
+the subject line (hint: detailed directions for doing this can be found
+in a BeOS Tip of the Week: http://www.be.com/users/tips/tip7.html).
+You'll get a results window with a lot of spam in it. Select All
+(<span class="keysym">Command</span>+<span class="keycap">A</span>)
+and Move To Trash
+(<span class="keysym">Command</span>+<span class="keycap">T</span>), and 3 seconds later you're
+spam-free.
+</p><p>
+Of course, you missed another notorious spammer, in the domain
+"pleaseread.com". In PR2, it's simple to add this evildoer to your
+killfile. Choose "Edit Query"
+(<span class="keysym">Command</span>+<span class="keycap">G</span>) from the File menu of the
+results window, make your changes or additions, and click "Find" again.
+Cool, n'est pas?
+</p><p>
+As the keeper of the Be FAQ lists, I've written most of our instructions
+for dealing with various compressed or archived files (.zip, .tar, .gz,
+or .tgz files, mostly) people download from the Internet. The
+instructions were long and required the command line, which turned a lot
+of people off—but no more! In PR2, we have a nifty new Expander
+utility, which makes short work of such archives.
+</p><p>
+It's a drag-and-drop tool, but in PR2 NetPositive will automagically hand
+off downloaded files to Expander for automatic extraction. The coolest
+part, though, is that now your archived files will have nifty Be-style
+icons!
+</p><p>
+Speaking of NetPositive, it's seen quite a few improvements in the way it
+handles <acronym class="acronym" title="HyperText Markup Language">HTML</acronym>
+which used to be problematic. The Webmaster and I are pretty
+happy about that, and so will you be when you get it.
+</p><p>
+There are, of course, other things which changed in PR2, but I'll let you
+read the Release Notes for details. I'll just mention two last things
+that I like a lot. Tracker columns are now "live" as you resize them, and
+the Tracker is smart about columns like Modified: If you make it
+narrower, the Tracker will abbreviate or change the format in which it
+displays the information, going from "Friday, October 10 1997, 05:54:12
+PM" to "Oct 10 1997, 05:54 PM" to "10/10/97", as necessary. Try it, and
+other columns, and see!
+</p><p>
+Last there's the obligatory (and new) About BeOS box, which displays
+system hardware and software version information. It's got more than
+that, though you'll need to play around a bit to see it (but did you know
+that Hiroshi is his *middle* name?).
+</p><p>
+That's all for this article, but be sure to read the Release Notes on the
+PR2 CD for more (and there's a fair amount more). Then you too can do
+your own Julie Andrews imitation.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-41"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+Can you believe it? This is my one year anniversary of working at Be,
+Inc. I first joined Be from my cozy self- started company of 12 years
+because I figured I liked programming the BeOS so much, I might as well
+participate directly. As I told Jean Louis when I was interviewing:
+</p><p>
+I've pushed the horse, when programming with NeXTSTEP. I've pulled the
+horse, when programming with Taligent. Now I want to ride the horse.
+</p><p>
+In the past year, my daughter has grown, I've corresponded with
+developers around the world, and we've put out a few releases of the
+BeOS. Quite a lot of activity for a small company. When I joined, I
+invented a new title for myself: "Technical Evangelist." An evangelist
+who knows how to program.
+</p><p>
+In a way, all engineers are technical Evangelists. If you've been
+programming the BeOS for any amount of time, you have probably seen the
+names of many Be engineers in newsgroups, on mailing lists, and here in
+this newsletter. This might lead you to believe that all Be engineers are
+part of the marketing organization.
+</p><p>
+Almost as soon as I joined Be, I was asked if I would fly to Washington
+in a couple of weeks to give demos, write a magazine article for MacTech
+magazine, pronto, and write a newsletter article. Well, I did it all, and
+the last task I've kept on doing ever since. Then I was asked to help
+hire a boat load of people, and get our DTS department started. I did
+that with varying degrees of success, which you can judge for yourself.
+</p><p>
+One aspect of this job that strikes people on the outside looking in, is
+how can anyone write every week about this stuff? Well, it's easy. If you
+examine your own programming, you'll find that there is a lot of
+excitement that occurs on an everyday basis. You're a real programmer's
+programmer aren't you? Yasmin ran a temperature... that reminds me, the
+BeOS is hot! Or as one of our own engineers put it: "The BeOS is the best
+operating system! I really like programming it."
+</p><p>
+What is it that drives people to make such comments about the BeOS? Is it
+the multithreaded programming model? Probably this and many other minute
+details that are continually exposed on a daily basis. Multithreaded
+programming can be a tremendous benefit to many programs, but not all OS
+implementations are alike. And even if they were, multithreaded
+programming demands a certain regimen or it can lead to little or no
+improvement in performance. In the past two articles I went over
+spinlocks wrong and right, but what good are any locks?
+</p><p>
+Let's take a simple task. You want to render a scene. You want to use
+multiple threads to do it. We can break this task up into multiple
+phases. Let's assume that the scene can be rendered by taking the
+individual objects in the scene and rendering them. If you had a thread
+per object, you would gain great parallelism. Well, we have many
+thousands of objects in the scene, so we don't necessarily want to do
+that, but we do want to use a pool of say 25 threads. The scene is
+described in some file format. Our task is to parse the file into
+objects, and place these objects onto an assembly line for the object
+renderers to take off.
+</p><p>
+Thread 1—Parse the scene, place objects onto the rendering line.
+</p><p>
+The rendering assembly line is represented by a
+<acronym class="acronym" title="First In First Out">FIFO</acronym> data structure. This
+is little more than a list with some ordering semantics.
+</p><pre class="programlisting cpp">
+<code class="classname">fifo</code>::<code class="methodname">push</code>(<code class="varname">aObject</code>)
+<code class="classname">fifo</code>::<code class="methodname">pull</code>(<code class="varname">aObject</code>)
+</pre><p>
+All you have to do in the parsing thread is push objects into the line as
+you parse the file.
+</p><pre class="programlisting cpp">
+<code class="classname">ALockClass</code> <code class="varname">gLock</code>;
+<code class="classname">AFIFOClass</code> <code class="varname">afifo</code>;
+
+<code class="function">parser_loop</code>()
+{
+  while(<code class="function">get_next_object</code>(<code class="varname">aObject</code>, <code class="varname">file</code>))
+  {
+    <code class="varname">gLock</code>.<code class="methodname">Lock</code>();
+    <code class="varname">afifo</code>.<code class="methodname">push</code>(<code class="varname">aObject</code>);
+    <code class="varname">gLock</code>.<code class="methodname">Unlock</code>();
+  }
+}
+</pre><p>
+Threads 2-26—Pull an object off the line and render it.
+</p><p>
+In a loop, each rendering thread does this:
+</p><pre class="programlisting cpp">
+loop()
+{
+  while (<code class="varname">afifo</code>.<code class="methodname">pull</code>(<code class="varname">aObject</code>))
+  {
+    <code class="varname">gLock</code>.<code class="methodname">Lock</code>();
+    <code class="varname">afifo</code>.<code class="methodname">pull</code>(<code class="varname">aObject</code>);
+    <code class="varname">gLock</code>.<code class="methodname">Unlock</code>();
+    <code class="methodname">render</code>(<code class="varname">aObject</code>);
+  }
+}
+</pre><p>
+Notice that any time you want to access the fifo object, you have to
+explicitly lock it. That is to guarantee that it remains in a consistent
+state while you are adding and removing objects. It would be bad to add
+objects and possibly change some internal value while you are deleting
+and causing a counter change in that same object, and thus you need the
+locks. They guarantee an atomic action is occurring.
+</p><p>
+But this form of usage can become cumbersome at times. You have to
+remember when to lock what because there is nothing preventing you from
+just accessing the fifo object directly without locking it.
+</p><p>
+One of the things you can do is to move the locking inside the object
+that is being locked. This vastly simplifies the code and helps alleviate
+many problems that are typically very hard to detect and fix. So instead
+of relying on the programmer to lock at the right times, do it for them.
+</p><pre class="programlisting cpp">
+<code class="classname">afifo</code>::<code class="methodname">push</code>(<code class="parameter">aObject</code>)
+{
+  <code class="varname">fLock</code>.<code class="methodname">Lock</code>()
+  <span class="comment">// do the push thing</span>
+  <code class="varname">fLock</code>.<code class="methodname">Unlock</code>()
+}
+
+<code class="classname">afifo</code>::<code class="methodname">pull</code>(<code class="parameter">aObject</code>)
+{
+  <code class="varname">fLock</code>.<code class="methodname">Lock</code>()
+  <span class="comment">// do the pull thing</span>
+  <code class="varname">fLock</code>.<code class="methodname">Unlock</code>()
+}
+</pre><p>
+That way, the locks in the rendering and parsing threads can go away, and
+your day is much lighter. So why doesn't <code class="classname">BList</code> implement things this way?
+Because it is a very low level primitive that is meant to be as light
+weight as possible. It can be utilized in other data structures like this
+fifo, which provide the appropriate locking semantics. "Don't use locks
+until you have to" is a basic programming idiom in the BeOS. And its
+companion, "Use locks where necessary."
+</p><p>
+Like I said, anyone can probably look at the 200 lines of code they write
+a day and turn it into a newsletter article. Life as a programmer can be
+fun and exciting... If you can put the right spin on it.
+</p><p>
+So, it's my one year anniversary. I'm still as excited about Be as I was
+before I joined. Even more so today as we move into greater markets like
+the Intel space, and the OS itself becomes more and more substantial.
+There are a lot of fantastic engineers here, and our marketing over the
+next year should make the "Best OS ever" statement more apparent to more
+programmers, which will produce more apps, which are just the best things
+since sliced code.
+</p><p>
+Have fun at the front.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-41"></a>Java Wars</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Once again, e-mail traffic suggested a topic for this week's column:
+Several honorable correspondents wanted to know our position regarding
+the Java war. Yes, we have one: We are unequivocally ambivalent.
+</p><p>
+Let's start by stating I'm not addressing the merits of the language,
+they are many, they are not infinite and Java could be the Basic of the
+Web, or much more. I just wish things would settle a bit more and allow
+us to better understand what Java's best and worst uses are; despite Rear
+Admiral Grace Hopper's contention, no one really wrote an operating
+system in Cobol. In any case, Java has achieved currency and that is that.
+</p><p>
+What is not settled, it appears, is how much Sun controls Java. Sun says
+they decide what Java is and its licensees are bound by the definition.
+Here, bound means if you ship a Java-based product, it must pass a series
+of tests demonstrating it complies with Sun's definition of Java.
+</p><p>
+Two events appear to have triggered Sun's breach of contract lawsuit
+against Microsoft. The first is less of an event than it is a habit:
+Microsoft "embraced and extended" Java, adding features to their version
+of the language. These features were designed to "connect" Java programs
+more closely to Windows.
+</p><p>
+This was explained as being dictated by performance or expressive
+reasons: Microsoft Java programs would run faster that way or they would
+access Windows resources more easily, or their look would be more
+consistent with other Windows programs.
+</p><p>
+This, of course, violated the "spirit" of Java: Write once, run
+everywhere. In that sense, these programs were no longer Java programs,
+they were Windows programs written in a language called Java, just as
+other Windows programs are written in C or C++.
+</p><p>
+One more thing before we move to Explorer 4.0: Microsoft managed to ship
+good Java programming tools and the fastest Java Virtual Machine. Who
+could say their embrace of Java was half-hearted?
+</p><p>
+As to Explorer 4.0, the second "event," it appears its Java components
+miss two methods, the Java Native Interface and the Remote Method
+Invocation. It seems the omissions were neither random nor capricious:
+I'm told by higher technical authorities a "full" implementation of Java
+would facilitate the remote execution of Windows programs. In other
+words, from an Excel-less computer, you'd be able to run a copy of Excel
+residing on another computer on the network.
+</p><p>
+More specifically, Network Computers, NCs, are often derided as standing
+for Not Compatible by their Microsoft opponents. If the "remote Excel"
+theory isn't too far from technical truth, suddenly, NCs would be able to
+run legacy Windows programs, albeit remotely. Citrix got into a dispute
+(now resolved) with Microsoft over running Excel or Word from "dumb"
+terminals connected to a modified Windows NT server, and Microsoft itself
+published a Hydra white paper describing their plans for a similar
+product offering.
+</p><p>
+With this in mind, we can turn to what the "Java war" is really about. It
+is not about the merits of Java as a programming language, it is about
+finding a way to topple Microsoft from its dominant position on the
+desktop. Create a modern programming language, bundle it with a run-time
+environment that isolates the programs from the hardware and the
+underlying OS, use the Intranet or the Internet to run legacy
+applications and, presto, you have the best of the old world and the
+freedom from Intel and Microsoft. You can sell your hardware and your
+software, instead of "theirs," without their dominant position preventing
+you from entering the market with better, faster, cheaper hardware and
+software.
+</p><p>
+Would the world be a better place if we had more real alternatives? The
+question, as posed, is poorly framed, it doesn't leave the opportunity to
+disagree, it fails the "no con" test.
+</p><p>
+For the time being, the more interesting questions are what does the
+contract really say, and what does the law permit. On the latter, my
+position is the law does not currently sort the applications from the OS.
+As a result, Microsoft and others can extend their reach in ways that
+might be unpleasant for the competition, but lawful nonetheless.
+</p><p>
+As for the contract, I can't wait to see it. Microsoft has agreed to make
+it public and Sun seems reluctant to do so. There might be good business
+reasons for confidentiality, but I'd feel better if we could rely on
+information instead of gossip.
+</p><p>
+Microsoft has one option, pick up its Java marbles and go home. No one
+sues anyone over versions of C++, they could implement most of Java
+without calling Java, or stop using Java altogether. Windows programmers
+would be left with their customary 90 or 95% of the desktop market, and
+pure Java programmers with the rest. Is this more choice?
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-40.html">Issue 2-40, October 8, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-42.html">Issue 2-42, October 22, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-40.html" title="Issue 2-40, October 8, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-42.html" title="Issue 2-42, October 22, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

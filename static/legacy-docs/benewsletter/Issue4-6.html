@@ -1,0 +1,797 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-5.html" title="Issue 4-5, February 3, 1999" /><link rel="next" href="Issue4-7.html" title="Issue 4-7, February 17, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-5.html" title="Issue 4-5, February 3, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-7.html" title="Issue 4-7, February 17, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-5.html">Issue 4-5, February 3, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-7.html">Issue 4-7, February 17, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-6"></a>Issue 4-6, February 10, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-6"></a>Be Engineering Insights: Abusing Multithreading</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+We've been telling you since the beginning that threads are neat and
+wonderful. A number of Newsletter articles have been written on how to
+increase parallelism in your applications by creating more threads and
+synchronizing them. Here are a few of those articles:
+</p><p>
+<a class="xref" href="Issue3-32.html#Engineering3-32" title="Be Engineering Insights: Fun with Threads, Part 1">Be Engineering Insights: Fun with Threads, Part 1</a><br />
+<a class="xref" href="Issue3-33.html#Engineering3-33" title="Be Engineering Insights: Fun with Threads, Part 2">Be Engineering Insights: Fun with Threads, Part 2</a><br />
+<a class="xref" href="Issue2-13.html#Engineering2-13" title="Be Engineering Insights: Fun with Semaphores">Be Engineering Insights: Fun with Semaphores</a><br />
+<a class="xref" href="Issue1-4.html#Engineering1-4" title="Be Engineering Insights: Summer Vacations and Semaphores">Be Engineering Insights: Summer Vacations and Semaphores</a>
+</p><p>
+All this is good, but it helped create the impression that programmers
+who spawn more threads are smarter than others. This perhaps led to some
+abuse and excess, with what appears to be a contest between some
+programmers for who will spawn the most threads. This doesn't really come
+as a surprise. Since multithreading is a relatively new programming
+model, some abuse is to be expected.
+</p><p>
+Abuse—or excessive use—of multithreading can cause a number of
+problems. First, threads are not free. It's true that they are
+lightweight. A BeOS thread is not as heavyweight as a typical UNIX
+process—for example, the address space and file descriptors are shared
+between teams. But they do use up precious system resources: memory,
+semaphores, etc.
+</p><p>
+For a start, each thread has a stack, which has to be allocated and
+consumes memory. How much memory? It depends on the thread, as stack
+pages are allocated on demand. But worse is the fact that the kernel
+stack—the part of the stack which is used when the thread runs in the
+kernel—has to be preallocated and locked down in memory—it can't be
+paged out to disk. This is about 32K of memory per thread that you can
+kiss goodbye. In addition, there are kernel structures used to keep the
+thread state, some of them stored in locked memory as well. As a result,
+20 threads eat up approximately 1M of memory. That's a lot.
+</p><p>
+Perhaps you don't care: you are writing an application targeted to
+high-end users with plenty of memory. And you're telling me that memory
+is cheap these days anyway. I could argue that this approach tends to
+make systems fatter and slower. But I have something more important to
+warn you about. By creating more threads and having to synchronize them,
+you greatly increase the risks of deadlocks. That risk does not increase
+linearly with the number of threads, but with the number of possible
+interactions between threads—which grows much faster.
+</p><p>
+Since I'm discussing interactions between threads, it might be useful to
+distinguish between different kinds of multithreading.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536325"></a>Regular Multithreading</h3></div></div></div><p>
+The threads are executing the same code on different data, and there is
+very little interaction between them. Typically, applications dealing
+with computations that can be easily parallelized, as on images, resort
+to this technique. Servers can also fire a thread for every client
+request, if the request is complex enough. For this type of
+multithreading, synchronization between the different threads is usually
+quite basic: the control thread fires all the computing threads and waits
+for them to complete.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536336"></a>Irregular Multithreading</h3></div></div></div><p>
+The threads interact in a complex manner. Each thread can be seen as an
+active agent that processes data and sends messages to other agents.
+Media Server nodes are an example of such an organization.
+Synchronization is usually complex. It can be of the producer-consumer
+type, using ports. Or it can be customized, based on basic tools like
+semaphores or shared memory.
+</p><p>
+It is clearly not a universal classification. Just a simple way to look
+at multithreading from the standpoint of interaction complexity.
+</p><p>
+With regular multithreading, adding threads does not add to the overall
+complexity of the application, because the additional threads don't
+interact between themselves. On the other hand, adding threads in the
+context of irregular multithreading increases complexity because the
+additional threads do interact between themselves.
+</p><p>
+My warning about the increased risk of deadlock clearly only concerns
+applications that use irregular multithreading. The risk of deadlock is
+high, and quickly gets beyond anybody's comprehension as the number of
+threads involved becomes larger than just a few. These deadlocks are
+usually non-trivial, and it might prove useful to review some of the
+classic scenarios:
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536377"></a>With nested semaphores:</h4></div></div></div><p>
+In an architecture where semaphores are nested, it's critical that the
+semaphores are always acquired in the same order by all the threads. If
+thread A acquires semaphore a and then semaphore b, and thread B acquires
+b and then a, a deadlock occurs. This gets increasingly complicated as
+the number of nested semaphores and threads increases.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536394"></a>With producer-consumer synchronization:</h4></div></div></div><p>
+It's easy to run into a circular dependence. The loop can involve two or
+more threads. With two threads, A sends a request to B that sends itself
+a request to A. If the requests are synchronous, the deadlock appears
+right away. In the asynchronous case, the message queue A is reading from
+has to be full for the deadlock to be triggered. This makes it hard to
+localize these bugs, and that can remain hidden for a long time. A
+standard but terrible work-around for these bugs is to increase the
+message buffer size... In addition, circular dependence that involves
+loops with more than two threads is difficult to find.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536406"></a>With reader/writer synchronization:</h4></div></div></div><p>
+A simple implementation of reader/writer synchronization involves a
+counted semaphore initialized with a count of N. Readers acquire the
+semaphore with a count of one, writers with a count of N. This
+implementation allows up to N concurrent readers. But what if a reader
+wants to become a writer? You might think that it should acquire N-1, but
+this leads to a deadlock if there is another writer in the wait queue of
+the semaphore. The correct technique is to release as a reader and
+reacquire as a writer.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id536417"></a>With benaphores</h4></div></div></div><p>
+(see <a class="xref" href="Issue1-26.html#Engineering1-26" title="Be Engineering Insights: Benaphores">Be Engineering Insights: Benaphores</a>)
+</p><p>
+Benaphores were invented by Dr. Benoît Schillings in the infancy of BeOS.
+They look like semaphores, taste like semaphores, and they're faster. But
+they lost some features offered by kernel semaphores. This means you
+can't always take an application and replace its semaphores by benaphores.
+</p><p>
+Specifically:
+</p><p>
+Benaphores require all the threads using the benaphore to live in the
+same address space, as they rely on shared memory. Semaphores are
+systemwide.
+</p><p>
+It's illegal to acquire a deleted benaphore. Acquiring a deleted
+semaphore guarantees to return <code class="constant">B_BAD_SEM_ID</code>. Semaphore deletion can hence
+be used to synchronize two threads. Not benaphore deletion.
+</p><p>
+Benaphores cannot be acquired with a count greater than 1 in the general
+case. For example, implementing the previous reader/writer
+synchronization using benaphores will lead to deadlocks in the case there
+is more than one thread asking for write access. Think of the following
+scenario:
+</p><ul class="itemizedlist"><li><p>
+The benaphore is initialized. Initial benaphore count: N. Its
+associated semaphore has a count of 0.
+</p></li><li><p>
+Thread A gets read access. The benaphore count decrements to N-1.
+</p></li><li><p>
+Thread B asks for write access. The benaphore count decrements to -1.
+But it is preempted before it acquires the semaphore with a count of 1.
+</p></li><li><p>
+Thread C asks for write access. The benaphore count decrements to
+-1-N and C waits on the associated semaphore with a count of N.
+</p></li><li><p>
+Thread B finally waits on the semaphore with a count of 1.
+</p></li><li><p>
+Thread A releases its read access. It should unblock B, waiting for
+its write access. The benaphore count increments to -N and the
+semaphore is released with a count of 1. Unfortunately, C "passed" B in
+the semaphore queue, and C won't be released because it's waiting with
+a count of N.
+</p></li></ul></div></div><p>
+I remember my initial experience of C++, and I can't help thinking of
+developers confronting multithreading for the first time. My first
+reaction to C++ was enthusiasm. I was very excited about seemingly neat
+features like operator overloading and multiple inheritance. I used it
+and abused it. What had to happen happened: I got trapped a number of
+times by subtleties I did not grasp in the first place, many of them
+being undocumented or compiler dependent. I almost became disillusioned
+from getting burned so many times. But eventually, I got a good sense of
+balance, knowing where to stop the house of cards I was building.
+</p><p>
+It's the same with multithreading: I believe all developers go through
+the same phases of excitement, disillusion and eventually wisdom. I can
+only recommend the greatest precautions when designing multithreaded
+applications. It's tempting to push multithreading to its limits, using a
+lot of threads that interact in complex ways. But it's always better to
+start with an architecture you fully comprehend.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-6-2"></a>Be Engineering Insights: Using Archived Interface Objects</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Baptiste</span> <span class="surname">Queru</span></span></div></div></div><p>
+Many developers ask how to archive interface objects and reuse them
+later. There are several reasons why you'd want to do that—here are
+the main ones:
+</p><ul class="itemizedlist"><li><p>
+It makes sharing the work among a team much easier. One person can
+design the UI, while another actually writes the code for it. It allows
+non-programmers to design user interfaces, and programmers don't have to
+change their code each time the user interface design changes.
+</p></li><li><p>
+It doesn't hard-code sizes, colors, layouts, texts, and most other
+visible interface parameters, making it easier to create different
+interfaces for the same app (the most striking example is
+internationalization, but it's not the only one).
+</p></li><li><p>
+It makes it possible to write very little code in the app itself to
+create the interface objects and put them on screen.
+</p></li></ul><p>
+That's enough marketing talk—this is "Engineering Insights" after all.
+Let's see what has to be engineered—and here's the good news --
+there's nothing you have to do, or, more accurately, very little.
+</p><p>
+Take a look at this example:
+</p><p>
+ftp://ftp.be.com/pub/samples/interface_kit/archint.zip
+</p><p>
+It comes with a makefile. Compile it with <code class="command">make</code>, or use an alternate
+resource with <code class="command">make alt</code>. Believe or not, both versions use the exact
+same code (with no cheating by simply checking a resource flag and
+changing the whole behavior of the app depending on this flag).
+</p><p>
+Now let's see the magic code, in <code class="filename">Application.cpp</code>:
+</p><p>
+The first part loads a <code class="classname">BMessage</code> from a resource (no great magic here):
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BMessage</code>*</span> <code class="function">ReadMessageFromResource</code>(<span class="type">int32</span> <code class="parameter">id</code>) {
+  <span class="type">app_info</span> <code class="varname">ai</code>;
+  <code class="classname">BFile</code> <code class="varname">f</code>;
+  <code class="classname">BResources</code> <code class="varname">r</code>;
+  <span class="type">size_t</span> <code class="varname">res_size</code>;
+  <span class="type">const void*</span> <code class="varname">res_addr</code>;
+  <code class="classname">BMessage</code>* msg=new <code class="classname">BMessage</code>;
+  if ((<code class="varname">be_app</code>-&gt;<code class="methodname">GetAppInfo</code>(&amp;<code class="varname">ai</code>)!=<code class="constant">B_OK</code>)
+    ||(<code class="varname">f</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">ai</code>.<code class="varname">ref</code>,<code class="constant">B_READ_ONLY</code>)!=<code class="constant">B_OK</code>)
+    ||(<code class="varname">r</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">f</code>)!=<code class="constant">B_OK</code>)
+    ||((<code class="varname">res_addr</code>=<code class="varname">r</code>.<code class="methodname">LoadResource</code>(<code class="constant">B_MESSAGE_TYPE</code>,<code class="parameter">id</code>,&amp;<code class="varname">res_size</code>))==<code class="constant">NULL</code>)
+    ||(<code class="varname">msg</code>-&gt;<code class="methodname">Unflatten</code>((<span class="type">const char*</span>)<code class="varname">res_addr</code>)!=<code class="constant">B_OK</code>)) {
+      delete <code class="varname">msg</code>;
+      return <code class="constant">NULL</code>;
+  }
+  return <code class="varname">msg</code>;
+}
+</pre><p>
+The second part creates the window from the <code class="classname">BMessage</code>; this is where the
+magic lies:
+</p><pre class="programlisting cpp">
+<code class="classname">AWindow</code>::<code class="methodname">AWindow</code>(<code class="classname">BMessage</code>* <code class="parameter">m</code>):<code class="classname">BWindow</code>(<code class="parameter">m</code>) {
+  <code class="function">atomic_add</code>(&amp;<code class="varname">numwindows</code>,1);
+  <code class="varname">numclicks</code> = <code class="parameter">m</code>-&gt;<code class="methodname">FindInt32</code>("clicks");
+  <code class="methodname">Show</code>();
+}
+</pre><p>
+As you can see, there's nothing difficult here. You just call the base
+class constructor and extract any extra data you might have stored in the
+<code class="classname">BMessage</code>. You'll notice that I didn't define any
+<code class="methodname">Instantiate()</code> function for my class, because I
+knew which class was stored in the <code class="classname">BMessage</code>. If
+you're doing something more complex (such as a multiple window interface),
+you'll want to implement <code class="methodname">Instantiate()</code> so that you
+can take a bunch of archived objects and feed them to
+<code class="function">instantiate_object()</code>, which will do the job for you.
+See the <code class="classname">BArchivable</code> chapter in the Be Book for more
+details.
+</p><p>
+This last part shows why custom <code class="classname">BView</code>s are not needed:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">AWindow</code>::<code class="classname">MessageReceived</code>(<code class="classname">BMessage</code>* <code class="parameter">m</code>) {
+  switch(<code class="parameter">m</code>-&gt;<code class="varname">what</code>) {
+    case 'colr' : {
+<span class="comment">// removed for clarity</span>
+      break;
+    }
+    case 'dump' : {
+      <code class="methodname">DumpArchive</code>();
+      break;
+    }
+    case 'clon' : {
+      <code class="methodname">CloneWindow</code>();
+      break;
+    }
+    default:
+      <code class="classname">BWindow</code>::<code class="methodname">MessageReceived</code>(<code class="parameter">m</code>);
+      break;
+    }
+  }
+
+<span class="type">void</span> <code class="classname">AWindow</code>::<code class="methodname">NewColor</code>(<span class="type">rgb_color</span> <code class="parameter">col</code>) {
+  <code class="classname">BView</code>* <code class="varname">v</code> = <code class="methodname">FindView</code>("colorview");
+  if (<code class="varname">v</code> != <code class="constant">NULL</code>) {
+    <code class="varname">v</code>-&gt;<code class="methodname">SetViewColor</code>(<code class="parameter">col</code>);
+    <code class="varname">v</code>-&gt;<code class="methodname">Invalidate</code>();
+  }
+}
+</pre><p>
+The trick is that the default target for a <code class="classname">BControl</code>
+is its <code class="classname">BWindow</code>, and a
+<code class="classname">BWindow</code> can find <code class="classname">BView</code>s by name.
+It's also a good idea to do some dynamic
+type-checking on the <code class="classname">BView</code> returned by
+<code class="methodname">FindView()</code>.
+</p><p>
+Now let's look at some drawbacks of using archived interface objects:
+</p><ul class="itemizedlist"><li><p>
+You'll probably need one or two custom classes which are missing from the
+current API. One is a <code class="classname">PictureView</code> (which simply
+displays a <code class="classname">BPicture</code>, just as a
+<code class="classname">BStringView</code> displays a String); another is a
+<code class="classname">PictureRadioButton</code> (because the current
+<code class="classname">BPictureButton</code> has no radio mode).
+</p></li><li><p>
+Unless you reverse-engineer their format, you won't be able to directly
+create <code class="classname">BMessages</code> that contain archived
+<code class="classname">BPicture</code>s. You'll have to create a
+<code class="classname">BPicture</code> and <code class="methodname">Archive()</code> it.
+</p></li><li><p>
+For some reason, some <code class="classname">BView</code>s will ignore any
+<code class="varname">ViewColor</code> and/or <code class="varname">LowColor</code> that's
+stored in the archive, because those views adjust their
+<code class="varname">ViewColor</code> and/or <code class="varname">LowColor</code> to match
+those from their parent. Most of the time, this is what you want. If it's
+not, you have two solutions: 1) you can manually override the colors in
+your window constructor (see the example in
+<code class="filename">Application.cpp</code>); or 2) you can enclose the
+<code class="classname">BView</code> you want to "protect" into another
+<code class="classname">BView</code> of the same size (see the example in
+<code class="filename">AddAlternateResource.cpp</code>).
+</p></li></ul></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-6"></a>Developers' Workshop: Getting Ahead of Ourselves - Playing Movies With
+the New Media Kit</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+This is the first in a series of articles about programming with the new
+Media Kit.
+</p><p>
+Soon there will be Media Kit add-ons available that provide support for
+various video file formats. This week, let's take a look at how to play
+back a movie using the new Media Kit and these add-ons.
+</p><p>
+You can download the code for this project at
+ftp://ftp.be.com/pub/samples/media_kit/simplemovie.zip. It consists of
+three C++ source files and two header files.
+</p><p>
+<code class="filename">main.cpp</code> instantiates the <code class="classname">MediaApp</code>
+object, passing <code class="varname">argv[1]</code> to the object.
+This argument should be the name of the movie to play (yes, this is a
+command-line movie player, hence the name <code class="classname">SimpleMovie</code>).
+</p><p>
+The <code class="classname">MediaApp</code> constructor converts the movie's pathname into an <span class="type">entry_ref</span>
+and passes that to a function called <code class="methodname">OpenRef()</code>, which will actually open
+and begin playing the movie file. It also calls <code class="methodname">SetPulseRate()</code> to cause
+the <code class="classname">MediaApp</code>::<code class="methodname">Pulse()</code> function to be called periodically; we'll use the
+<code class="methodname">Pulse()</code> function to watch for the movie to end.
+</p><p>
+<code class="methodname">OpenRef()</code> looks like this:
+</p><pre class="programlisting cpp">
+<code class="classname">MediaPlayer</code> *<code class="classname">MediaApp</code>::<code class="methodname">OpenRef</code>(<span class="type">entry_ref *</span><code class="parameter">ref</code>) {
+  <code class="classname">MediaPlayer</code> *<code class="varname">player</code> = new <code class="classname">MediaPlayer</code>(<code class="parameter">ref</code>);
+  if (<code class="varname">player</code>-&gt;<code class="methodname">InitCheck</code>() != <code class="constant">B_OK</code>) {
+    <code class="function">printf</code>("Can't set up the player\n");
+    delete <code class="varname">player</code>;
+    return <code class="constant">NULL</code>;
+  }
+  return <code class="varname">player</code>;
+}
+</pre><p>
+All it has to do is instantiate a <code class="classname">MediaPlayer</code> object
+to represent the movie. The movie is started automatically by the
+<code class="classname">MediaPlayer</code> constructor, so once this is done, the
+movie is playing. If an error occurs setting up the movie,
+<code class="classname">MediaPlayer</code>::<code class="methodname">InitCheck()</code> will return
+<code class="constant">NULL</code>, and we throw away the object.
+</p><p>
+The <code class="methodname">Pulse()</code> function checks the movie periodically to see if it's done
+playing:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MediaApp</code>::<code class="methodname">Pulse</code>(<span class="type">void</span>) {
+  if (<code class="varname">player</code>) {
+    if (!<code class="varname">player</code>-&gt;<code class="methodname">Playing</code>()) {
+      <code class="methodname">SetPulseRate</code>(0);    <span class="comment">// No more pulses, please</span>
+      delete <code class="varname">player</code>;
+      <code class="varname">player</code> = <code class="constant">NULL</code>;
+      <code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+    }
+  }
+  else {
+    <code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+  }
+}
+</pre><p>
+This is done by calling the <code class="classname">MediaPlayer</code>::<code class="methodname">Playing()</code>
+function. If it
+returns <code class="constant">true</code>, the movie is still playing; otherwise, the movie is done.
+If it's done, we turn off pulsing by calling <code class="code">SetPulseRate(0)</code>, delete the
+player object (which, as we'll see later, closes the various media
+connections), and post a <code class="constant">B_QUIT_REQUESTED</code> message to ourselves to quit
+the application.
+</p><p>
+If the <code class="classname">MoviePlayer</code> object, player, wasn't
+opened properly and is <code class="constant">NULL</code>, we
+post a quit request to bail out immediately.
+</p><p>
+Now we get to the meaty, "we've been waiting for this for two months"
+part: the <code class="classname">MediaPlayer</code> class. Before we begin, I should point out that
+this class assumes that the video is encoded and that the audio is not,
+and probably won't work right in any other case. It works fine for
+playing typical Cinepak-encoded QuickTime movies, though. Because the
+nodes aren't finished yet as I write this, this code isn't as flexible as
+it could be.
+</p><p>
+The <code class="classname">MediaPlayer</code> constructor's job is to find an appropriate node to
+process the movie file and instantiate a copy of the node to be used to
+actually perform the playback. It sets <code class="varname">playingFlag</code> to <code class="constant">false</code> (we use this
+flag to keep track of whether or not the movie is playing), and obtains a
+<code class="classname">BMediaRoster</code>:
+</p><pre class="programlisting cpp">
+<code class="varname">roster</code> = <code class="classname">BMediaRoster</code>::<code class="methodname">Roster</code>();  <span class="comment">// Get the roster object</span>
+</pre><p>
+This static call in the <code class="classname">BMediaRoster</code> class returns a media roster we can
+use. This object is used by all applications that interact with the Media
+Kit; it acts as an intermediary between the application and the nodes
+that provide media functionality.
+</p><p>
+Then it's necessary to identify a node that can handle the movie file
+that the user specified. This is done by calling
+<code class="classname">BMediaRoster</code>::<code class="methodname">SniffRef()</code>. This function looks at the file and returns a
+<span class="type">dormant_node_info</span> structure that describes the add-on that's most
+suitable for accessing the node.
+</p><pre class="programlisting cpp">
+<code class="varname">initStatus</code> = <code class="varname">roster</code>-&gt;<code class="methodname">SniffRef</code>(*<code class="varname">ref</code>, 0, &amp;<code class="varname">nodeInfo</code>);
+if (<code class="varname">initStatus</code>) {
+  return;
+}
+</pre><p>
+Note that errors are stashed in a member variable called <code class="varname">initStatus</code>; the
+<code class="methodname">InitStatus()</code> function returns this value so the application can determine
+whether or not the <code class="classname">MediaPlayer</code> was properly initialized.
+</p><p>
+Once an appropriate add-on has been identified and information about it
+stashed in <code class="varname">nodeInfo</code>, a node needs to be instantiated from that add-on.
+Nodes located in media add-ons are referred to as "dormant nodes." We
+call <code class="methodname">InstantiateDormantNode()</code> to accomplish this:
+</p><pre class="programlisting cpp">
+<code class="varname">initStatus</code> = <code class="varname">roster</code>-&gt;<code class="methodname">InstantiateDormantNode</code>(<code class="varname">nodeInfo</code>,
+  &amp;<code class="varname">mediaFileNode</code>);
+</pre><p>
+Since the <span class="type">media_node</span> <code class="varname">mediaFileNode</code> is a file handling node, we next have
+to tell the node what file to handle, by calling <code class="methodname">SetRefFor()</code>:
+</p><pre class="programlisting cpp">
+<code class="varname">roster</code>-&gt;<code class="methodname">SetRefFor</code>(<code class="varname">mediaFileNode</code>, *<code class="varname">ref</code>, <code class="constant">false</code>, &amp;<code class="varname">duration</code>);
+</pre><p>
+This sets up the <code class="varname">mediaFileNode</code> to read from the specified <span class="type">entry_ref</span>. The
+movie's length (in microseconds) is stored into the <span class="type">bigtime_t</span> variable
+duration.
+</p><p>
+Now that the file node has been instantiated, it's time to instantiate
+the other nodes needed to play back a movie. The <code class="methodname">Setup()</code> function handles
+this; we'll look at it momentarily. After the <code class="methodname">Setup()</code> function returns
+safely, <code class="classname">MediaPlayer</code>::<code class="methodname">Start()</code> is called to begin playback.
+</p><p>
+<code class="methodname">Setup()</code> begins by locating the standard audio mixer and video output
+nodes. These will be used to actually play the movie to the speakers (or
+other audio output device, as configured in the Audio preference panel)
+and to a window on the screen (or other video output device, as
+configured in the Video preference panel):
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetAudioMixer</code>(&amp;<code class="varname">audioNode</code>);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetVideoOutput</code>(&amp;<code class="varname">videoNode</code>);
+</pre><p>
+Next, a time source is needed. A time source is a node that can be used
+to synchronize other nodes. By default, nodes are slaved to the system
+time source, which is the computer's internal clock. However, this time
+source, while very precise, isn't good for synchronizing media data,
+since its concept of time has nothing to do with actual media being
+performed. For this reason, you typically will want to change nodes' time
+sources to the preferred time source. We get that using the following
+code:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetTimeSource</code>(&amp;<code class="varname">timeSourceNode</code>);
+<code class="varname">b_timesource</code> = <code class="varname">roster</code>-&gt;<code class="methodname">MakeTimeSourceFor</code>(<code class="varname">timeSourceNode</code>);
+</pre><p>
+The first call obtains a <span class="type">media_node</span> representing the preferred time
+source to which we'll slave our other nodes. The second call, to
+<code class="methodname">MakeTimeSourceFor()</code>, actually obtains a
+<code class="classname">BTimeSource</code> node object for that
+time source. This will be used in making calculations related to timing
+later on, that can't be done through the media roster.
+</p><p>
+You can think of a media node (represented by the <span class="type">media_node</span> structure)
+as a component in a home theater system. It has inputs for audio and
+video (possibly multiple inputs for each), and outputs to pass that audio
+and video along to other components in the system. To use the component,
+you have to connect wires from the outputs of some other components into
+the component's inputs, and the outputs into the inputs of other
+components.
+</p><p>
+The Media Kit works the same way. We need to locate audio outputs from
+the <code class="varname">mediaFileNode</code> and find corresponding
+audio inputs on the <code class="varname">audioNode</code>.
+This is analogous to choosing an audio output from your new DVD player
+and matching it to an audio input jack on your stereo receiver. Since you
+can't use ports that are already in use, we call <code class="methodname">GetFreeOutputsFor()</code> to
+find free output ports on the <code class="varname">mediaFileNode</code>,
+and <code class="methodname">GetFreeInputsFor()</code> to
+locate free input ports on the <code class="varname">audioNode</code>.
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetFreeOutputsFor</code>(<code class="varname">mediaFileNode</code>,
+        &amp;<code class="varname">fileAudioOutput</code>, 1, &amp;<code class="varname">fileAudioCount</code>,
+        <code class="constant">B_MEDIA_RAW_AUDIO</code>);
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetFreeInputsFor</code>(<code class="varname">audioNode</code>, &amp;<code class="varname">audioInput</code>,
+        <code class="varname">fileAudioCount</code>, &amp;<code class="varname">audioInputCount</code>,
+        <code class="constant">B_MEDIA_RAW_AUDIO</code>);
+</pre><p>
+We only want a single audio connection between the two nodes (a single
+connection can carry stereo sound), and the connection is of type
+<code class="constant">B_MEDIA_RAW_AUDIO</code>. On return, <code class="varname">fileAudioOutput</code>
+and <code class="varname">audioInput</code> describe the
+output from the <code class="varname">mediaFileNode</code> and the input into the <code class="varname">audioNode</code> that will
+eventually be connected to play the movie's sound.
+</p><p>
+We likewise have to find a video output from the <code class="varname">mediaFileNode</code> and an
+input into the <code class="varname">videoNode</code>. In this case, though, we expect the video
+output from the <code class="varname">mediaFileNode</code> to be encoded, and the <code class="varname">videoNode</code> will want
+to receive raw, uncompressed video. We'll work that out in a minute; for
+now, let's just find the two ports:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetFreeOutputsFor</code>(<code class="varname">mediaFileNode</code>,
+        &amp;<code class="varname">fileNodeOutput</code>, 1, &amp;<code class="varname">fileOutputCount</code>,
+        <code class="constant">B_MEDIA_ENCODED_VIDEO</code>);
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetFreeInputsFor</code>(<code class="varname">videoNode</code>, &amp;<code class="varname">videoInput</code>,
+        <code class="varname">fileOutputCount</code>, &amp;<code class="varname">videoInputCount</code>,
+        <code class="constant">B_MEDIA_RAW_VIDEO</code>);
+</pre><p>
+The problem we have now is that the <code class="varname">mediaFileNode</code> is outputting video
+that's encoded somehow (in Cinepak format, for instance). The <code class="varname">videoNode</code>,
+on the other hand, wants to display raw video. We need another node, in
+between these, to decode the video (much like having an adapter to
+convert <acronym class="acronym" title="Phase Alternating Line">PAL</acronym> video into
+<acronym class="acronym" title="National Television System Committee">NTSC</acronym>,
+for example). This node will be the codec
+that handles decompressing the video into raw form.
+</p><p>
+We need to locate a codec node that can handle the video format being
+output by the <code class="varname">mediaFileNode</code>. It's accomplished like this:
+</p><pre class="programlisting cpp">
+<code class="varname">nodeCount</code> = 1;
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetDormantNodes</code>(&amp;<code class="varname">nodeInfo</code>, &amp;<code class="varname">nodeCount</code>,
+        &amp;<code class="varname">fileNodeOutput</code>.<code class="varname">format</code>);
+if (!<code class="varname">nodeCount</code>) {
+  <code class="function">printf</code>("Can't find the needed codec.\n");
+  return -1;
+}
+</pre><p>
+This call to <code class="methodname">GetDormantNodes()</code> looks for a dormant node that can handle
+the media format specified by the <code class="varname">fileNode</code>'s output <span class="type">media_format</span>
+structure. Information about the node is returned in <code class="varname">nodeInfo</code>. <code class="varname">nodeCount</code>
+indicates the number of matching nodes that were found. If it's zero, we
+report that no codec was found.
+</p><p>
+Note that in real life you should ask for several nodes, and search
+through them, looking at the formats until you find one that best meets
+your needs.
+</p><p>
+Then we use <code class="methodname">InstantiateDormantNode()</code> to instantiate the codec node, and
+locate inputs into the node (that accept encoded video) and outputs from
+the node (that output raw video):
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">InstantiateDormantNode</code>(<code class="varname">nodeInfo</code>, &amp;<code class="varname">codecNode</code>);
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetFreeInputsFor</code>(<code class="varname">codecNode</code>, &amp;<code class="varname">codecInput</code>, 1,
+        &amp;<code class="varname">nodeCount</code>, <code class="constant">B_MEDIA_ENCODED_VIDEO</code>);
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetFreeOutputsFor</code>(<code class="varname">codecNode</code>, &amp;<code class="varname">codecOutput</code>, 1,
+        &amp;<code class="varname">nodeCount</code>, <code class="constant">B_MEDIA_RAW_VIDEO</code>);
+</pre><p>
+Now we're ready to start connecting these nodes. If we were setting up a
+home theater system, right about now we'd be getting rug burns on our
+knees and skinned knuckles on our hands, trying to reach behind the
+entertainment center to run wires. The Media Kit is way easier than that,
+and doesn't involve salespeople telling you to get expensive gold-plated
+cables.
+</p><p>
+We begin by connecting the file node's video output to the codec's input:
+</p><pre class="programlisting cpp">
+<code class="varname">tryFormat</code> = <code class="varname">fileNodeOutput</code>.<code class="varname">format</code>;
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">Connect</code>(<code class="varname">fileNodeOutput</code>.<code class="varname">source</code>,
+        <code class="varname">codecInput</code>.<code class="varname">destination</code>, &amp;<code class="varname">tryFormat</code>,
+        &amp;<code class="varname">fileNodeOutput</code>, &amp;<code class="varname">codecInput</code>);
+</pre><p>
+<code class="varname">tryFormat</code> indicates the format of the encoded video that
+will be output by the <code class="varname">mediaFileNode</code>.
+<code class="methodname">Connect()</code>, in essence, runs a wire between the
+output from the media node's video output
+(<code class="varname">fileNodeOutput</code>) to the codec node's input.
+</p><p>
+You may wonder what's up with the <code class="varname">fileNodeOutput.source</code> and
+<code class="varname">codecInput.destination</code> structures. These <span class="type">media_source</span> and
+<span class="type">media_destination</span> structures are simplified descriptors of the two ends
+of the connection. They contain only the data absolutely needed for the
+Media Kit to establish the connection. This saves some time when issuing
+the <code class="methodname">Connect()</code> call (and time is money, especially in the media business).
+</p><p>
+Next it's necessary to connect the codec to the video output node. This
+begins by setting up <code class="varname">tryFormat</code> to describe raw video of the same width
+and height as the encoded video being fed into the codec, then calling
+<code class="methodname">Connect()</code> to establish the connection:
+</p><pre class="programlisting cpp">
+<code class="varname">tryFormat</code>.<code class="varname">type</code> = <code class="constant">B_MEDIA_RAW_VIDEO</code>;
+<code class="varname">tryFormat</code>.<code class="varname">u</code>.<code class="varname">raw_video</code> = <span class="type">media_raw_video_format</span>::<code class="varname">wildcard</code>;
+<code class="varname">tryFormat</code>.<code class="varname">u</code>.<code class="varname">raw_video</code>.<code class="varname">display</code>.<code class="varname">line_width</code> =
+  <code class="varname">codecInput</code>.<code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">encoded_video</code>.<code class="varname">output</code>.<code class="varname">display</code>.<code class="varname">line_width</code>;
+<code class="varname">tryFormat</code>.<code class="varname">u</code>.<code class="varname">raw_video</code>.<code class="varname">display</code>.<code class="varname">line_count</code> =
+  <code class="varname">codecInput</code>.<code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">encoded_video</code>.<code class="varname">output</code>.<code class="varname">display</code>.<code class="varname">line_count</code>;
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">Connect</code>(<code class="varname">codecOutput</code>.<code class="varname">source</code>,
+        <code class="varname">videoInput</code>.<code class="varname">destination</code>, &amp;<code class="varname">tryFormat</code>, &amp;<code class="varname">codecOutput</code>,
+        &amp;<code class="varname">videoInput</code>);
+</pre><p>
+Now we connect the audio from the media file to the audio mixer node. We
+just copy the <span class="type">media_format</span> from the file's audio output, since both ends
+of the connection should exactly match.
+</p><pre class="programlisting cpp">
+<code class="varname">tryFormat</code> = <code class="varname">fileAudioOutput</code>.<code class="varname">format</code>;
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">Connect</code>(<code class="varname">fileAudioOutput</code>.<code class="varname">source</code>,
+        <code class="varname">audioInput</code>.<code class="varname">destination</code>, &amp;<code class="varname">tryFormat</code>,
+        &amp;<code class="varname">fileAudioOutput</code>, &amp;<code class="varname">audioInput</code>);
+</pre><p>
+The last step of configuring the connections is to ensure that all the
+nodes are slaved to the preferred time source:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">SetTimeSourceFor</code>(<code class="varname">mediaFileNode</code>.<code class="varname">node</code>,
+        <code class="varname">timeSourceNode</code>.<code class="varname">node</code>);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">SetTimeSourceFor</code>(<code class="varname">videoNode</code>.<code class="varname">node</code>,
+        <code class="varname">timeSourceNode</code>.<code class="varname">node</code>);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">SetTimeSourceFor</code>(<code class="varname">codecOutput</code>.<code class="varname">node</code>.<code class="varname">node</code>,
+        <code class="varname">timeSourceNode</code>.<code class="varname">node</code>);
+</pre><p>
+The <code class="methodname">Start()</code> function actually starts the movie playback. Starting
+playback involves starting, one at a time, all the nodes involved in
+playing back the audio. This includes the audio mixer (<code class="varname">audioNode</code>), the
+media file's node (<code class="varname">mediaFileNode</code>), the codec, and the video node. Because
+there's lag time between starting each of these nodes, we pick a time a
+few moments in the future for playback to begin, and schedule each node
+to start playing at that time. So we begin by computing that time in the
+future:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">GetStartLatencyFor</code>(<code class="varname">timeSourceNode</code>,
+        &amp;<code class="varname">startTime</code>);
+
+<code class="varname">startTime</code> +=
+  <code class="varname">b_timesource</code>-&gt;<code class="methodname">PerformanceTimeFor</code>(<code class="classname">BTimeSource</code>::<code class="methodname">RealTime</code>()
+        + 1000000 / 50);
+</pre><p>
+The <code class="classname">BTimeSource</code>::<code class="methodname">RealTime()</code> static member function is called to obtain
+the current real system time. We add a fiftieth of a second to that time,
+and convert it into performance time units. This is the time when the
+movie will begin (basically a 50th of a second from "now"). This value is
+saved in <code class="varname">startTime</code>. These are added to the value returned by
+<code class="methodname">GetStartLatencyFor()</code>, which returns the time required to actually start
+the time source and all the nodes slaved to it.
+</p><p>
+Then we simply call <code class="classname">BMediaRoster</code>::<code class="methodname">StartNode()</code> for each node, specifying
+<code class="varname">startTime</code> as the performance time when playback should begin:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">StartNode</code>(<code class="varname">mediaFileNode</code>, <code class="varname">startTime</code>);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">StartNode</code>(<code class="varname">codecNode</code>, <code class="varname">startTime</code>);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">StartNode</code>(<code class="varname">videoNode</code>, <code class="varname">startTime</code>);
+</pre><p>
+And we set <code class="varname">playingFlag</code> to <code class="constant">true</code>,
+since we've now begun playback. At this
+point (actually, a 50th of a second after this point, but who's
+counting?), the movie will begin playing.
+</p><p>
+Notice that we don't start the audio mixer node (<code class="varname">audioNode</code>), and, as
+we'll see shortly, we don't stop it, either. The audio mixer node is
+always running, and an application should never stop it.
+</p><p>
+The <code class="methodname">Stop()</code> function stops movie playback by
+calling <code class="methodname">StopNode()</code> for each
+node. It then sets <code class="varname">playingFlag</code> to <code class="constant">false</code>:
+</p><pre class="programlisting cpp">
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">StopNode</code>(mediaFileNode, 0, true);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">StopNode</code>(codecNode, 0, true);
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">StopNode</code>(videoNode, 0, true);
+<code class="varname">playingFlag</code> = <code class="constant">false</code>;
+</pre><p>
+The <code class="varname">true</code> values indicate that the nodes should stop playing
+immediately, instead of at some time in the future. If we wanted the
+nodes to stop in sync with each other, we could compute a performance
+time slightly in the future, and specify that time instead.
+</p><p>
+The <code class="methodname">Playing()</code> function determines whether or not the movie is still
+playing. Since we don't provide a pause feature, we can do this simply by
+looking to see whether or not the current performance time is at or past
+the end of the movie:
+</p><pre class="programlisting cpp">
+<code class="varname">currentTime</code> =
+  <code class="varname">b_timesource</code>-&gt;<code class="methodname">PerformanceTimeFor</code>(<code class="classname">BTimeSource</code>::<code class="methodname">RealTime</code>());
+
+if (<code class="varname">currentTime</code> &gt;= <code class="varname">startTime</code>+<code class="varname">duration</code>) {
+  <code class="varname">playingFlag</code> = <code class="constant">false</code>;
+}
+</pre><p>
+Here we obtain the current performance time by taking the real time and
+passing it through <code class="methodname">PerformanceTimeFor()</code>, then look to see if it's equal
+to or greater than the starting time plus the movie's duration. If it is,
+the movie's done playing.
+</p><p>
+Last, but not least, let's look at the <code class="classname">MediaPlayer</code> class destructor. It
+handles disconnecting the nodes from one another:
+</p><pre class="programlisting cpp">
+<code class="methodname">Stop</code>();
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">Disconnect</code>(<code class="varname">mediaFileNode</code>.<code class="varname">node</code>,
+        <code class="varname">fileNodeOutput</code>.<code class="varname">source</code>, <code class="varname">codecNode</code>.<code class="varname">node</code>,
+        <code class="varname">codecInput</code>.<code class="varname">destination</code>);
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">Disconnect</code>(<code class="varname">codecNode</code>.<code class="varname">node</code>,
+        <code class="varname">codecOutput</code>.<code class="varname">source</code>, <code class="varname">videoNode</code>.<code class="varname">node</code>,
+        <code class="varname">videoInput</code>.<code class="varname">destination</code>);
+
+<code class="varname">err</code> = <code class="varname">roster</code>-&gt;<code class="methodname">Disconnect</code>(<code class="varname">mediaFileNode</code>.<code class="varname">node</code>,
+        <code class="varname">fileAudioOutput</code>.<code class="varname">source</code>, <code class="varname">audioNode</code>.<code class="varname">node</code>,
+        <code class="varname">audioInput</code>.<code class="varname">destination</code>);
+</pre><p>
+This code makes sure playback is stopped (disconnecting currently playing
+nodes is discouraged), then disconnects each of the three connections we
+established in <code class="methodname">Setup()</code>. Then we need to let the Media Kit know we're done
+with the nodes by releasing them. We don't release the video and mixer
+nodes because we didn't actually instantiate them ourselves.
+</p><pre class="programlisting cpp">
+<code class="varname">roster</code>-&gt;<code class="methodname">ReleaseNode</code>(<code class="varname">codecNode</code>);
+<code class="varname">roster</code>-&gt;<code class="methodname">ReleaseNode</code>(<code class="varname">mediaFileNode</code>);
+</pre><p>
+Hopefully this sample code will be helpful in learning to write software
+that uses the new Media Kit for playback of media data. Updates to the
+Media Kit chapter of the Be Book are coming over the next few weeks (a
+large <code class="classname">BMediaRoster</code> update is being reviewed for accuracy now and should
+be available soon). Have fun!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-6"></a>More Browser Integration Bedtime Stories</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last week's column, "Another Bedtime Story" , triggered more mail than
+usual. Most of it was positive, with some requests for clarification of
+our position. Are we against browser integration—yes, no, and why? To
+paraphrase a highly placed government official, it depends what the
+meaning of "integration" is—and, one might add for precision, the
+intent, manner and consequences of integration.
+</p><p>
+What we have today with <span class="application">Explorer</span> and Windows is what I'd call tentacular
+integration. (I won't say here what the spellchecker on my diminutive
+Toshiba Libretto offers as an alternative for tentacular, a word it
+pretends not to know. It is in the American Heritage Dictionary and my
+Libretto will run the BeOS once we get Toshiba to release the specs of
+their sound chip.)
+</p><p>
+There is a single word for <span class="application">Explorer</span>, but the software itself has many
+tentacles that reach deep inside the system. As a result, Microsoft seems
+to be saying, a lot of damage will occur if you forcibly remove <span class="application">Explorer</span>.
+Specifically, when the now famous "Felten program" attempted to remove
+<span class="application">Explorer</span>, Microsoft wanted to show how Web access and navigation were
+still possible, if you knew your way around Windows Registry, where a
+myriad of settings are stored. <span class="application">Explorer</span> was so tightly integrated with
+Windows that one couldn't really remove it, just hide and disable it.
+</p><p>
+Furthermore, as a result of this failed "<span class="application">Explorer</span>-ectomy," performance
+suffered greatly. Sorry about that, said Microsoft, it's an imperfect
+world, but through our efforts consumers benefit from tight integration.
+</p><p>
+I won't add to the sum of ironies provoked by the videotapes that tried
+to persuade the courts of justice and public opinion of the soundness of
+this argument. Thinking of Redmond's serene and understated culture, one
+can imagine the sharing of thoughts following the discovery of
+unfortunate editing miscues.
+</p><p>
+But if, as Microsoft contends, <span class="application">Explorer</span> is not a separate application so
+much as an operating system upgrade—hence its size, depth, and
+complexity—one might be tempted to explore that line of reasoning.
+That is, the Web is important and is now tightly woven into our everyday
+lives. Certainly, a mere application cannot do justice to such an
+important and pervasive function. That responsibility belongs to the
+platform, to the operating system.
+</p><p>
+Perhaps. But couldn't one make a similar argument about word processing,
+spreadsheets, or presentations? Shouldn't these important functions also
+be integrated into the operating system? Come to think of it, if
+Microsoft Office isn't integrated with Windows, it comes pretty close for
+millions of users who receive Office as a bundled, if not integrated,
+product. The technical argument that one must "integrate" <span class="application">Explorer</span>, while
+one can merely "bundle" Office doesn't withstand technical scrutiny. Take
+two identical PCs loaded with a late version of Windows 95, OSR 2.1, or
+later. Install (integrate if you prefer) <span class="application">Explorer</span> on one and Navigator on
+the other, and compare performance. There's no significant difference.
+</p><p>
+If one reads carefully through Mr. Allchin's deposition and the language
+used in various video demonstrations, one sees the words "rich" and
+"richness" used to describe the improved user experience that results
+from making elements of the user interface more Web-like. This poses
+another question regarding the "how" of integrating Web capabilities
+inside the operating system. To oversimplify a bit, couldn't Microsoft
+have broken the job in two pieces—a system module and an application
+module? This approach would make removing the application module a simple
+and safe task. It would also make installing another browser—while
+preserving the "richness" afforded to other applications by the system
+module—easier. One might ask whether Microsoft had non-technical
+motives in choosing a tentacular implementation instead of the modular
+one.
+</p><p>
+Lastly, in reading the court transcript, Microsoft seems to allege that
+the BeOS <span class="application">NetPositive</span> browser is "integrated," and cites the help system
+as proof. If you trash <span class="application">NetPositive</span>, a simple operation, the help system
+no longer works: it needs a now absent HTML interpreter. Ergo,
+<span class="application">NetPositive</span> is integrated.
+</p><p>
+Assume for a moment that the help system is written in the format of an
+editor supplied with the OS. If you delete the editor, you can no longer
+read the help files. Unless, of course, you use a third-party editor.
+Does this mean that the supplied editor is integrated with the OS? Of
+course not. And what will Microsoft say when one or more of the
+third-party browsers currently under development for the BeOS become
+available and read the help file or the BeOS documentation—even if
+<span class="application">NetPositive</span> is missing? Will that make them—ipso facto—integrated
+with the BeOS?
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-5.html">Issue 4-5, February 3, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-7.html">Issue 4-7, February 17, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-5.html" title="Issue 4-5, February 3, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-7.html" title="Issue 4-7, February 17, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

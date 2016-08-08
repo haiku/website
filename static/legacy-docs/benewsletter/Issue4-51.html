@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-50.html" title="Issue 4-50, December 15, 1999" /><link rel="next" href="volume5.html" title="Volume 5: 2000" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-50.html" title="Issue 4-50, December 15, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-50.html">Issue 4-50, December 15, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="volume5.html">Volume 5: 2000</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-51"></a>Issue 4-51, December 15, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-51"></a>Be Engineering Insights: Using C++ in the Kernel</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jeff</span> <span class="surname">Bush</span></span></div></div></div><p>
+A while back, Ficus wrote a touching newsletter article about a kernel
+engineer venturing out into the big world of user space. As he didn't
+have time to finish his latest article before leaving for Christmas, he
+asked me to fill in for him, so I thought I would tell the mirror story.
+</p><p>
+I am but a lowly apps engineer, comfortable in my world of object
+oriented code and fancy tools, and the kernel is a big, strange place.
+Perhaps the biggest oddity I find with the kernel is the lack of C++. No
+multiple virtually inherited templatized functors, nor polymorphic
+container iterators. Most kernel people I talk to shudder and turn white
+when I mention using C double-plus in the kernel. Undeterred, I'm going
+to write about issues that bear on doing just that.
+</p><p>
+Be does not currently support C++ in the kernel, nor has it officially
+made any plans ever to do so. What I've been told (in a rather serious,
+fatherly tone) is that you should use C for drivers. So, with that
+disclaimer out of the way, and I hope without having brutally offended
+Cyril or Ficus (or any other kernel engineers; they're a very sensitive
+group), let's examine this more closely.
+</p><p>
+A driver is nothing more than a shared library that's loaded by the
+kernel as an add-on. There are three requirements for a kernel add-on:
+</p><div class="orderedlist"><ol><li><p>
+The binary is of the ELF or PEF format (depending on your platform).
+</p></li><li><p>
+Calls to kernel functions, or from the kernel to driver functions
+use the standard C style invocation; arguments are pushed onto the
+stack right to left and the caller cleans up the stack.
+</p></li><li><p>
+The binary has all the runtime support it needs compiled in.
+</p></li></ol></div><p>
+That's it. You may notice that this is a pretty broad definition.
+Language features such as name mangling, virtual method dispatch, and
+templates are not taken into consideration. That's because these things
+are totally internal to the compiler. The (gcc) compiler simply converts
+a text file containing a high-level language into a text file containing
+assembly language. The assembler knows nothing about C++ or its many
+colorful features. You can look at the assembly output of the compiler by
+using the  -S  flag for GCC. If you're unsure about the implementation of
+some feature, don't guess. Use   -S  and pick through the assembly. It can
+be very educational.
+</p><p>
+For starters, I'll point out that using high-level libraries like STL is
+out of the question. Remember that memory used by the kernel is wired in
+place and can't be paged out like application memory can. This reduces
+the amount of physical memory available to the rest of the system. It
+can't be emphasized enough how very important it is to be frugal with
+kernel memory.
+</p><p>
+Although, as mentioned earlier, the assembler (and consequently the
+binary) is language agnostic, it's important to consider the third point
+mentioned above. C++ is a little more runtime-library intensive than C.
+Certain low-level language primitives are partially implemented in a
+runtime library that is statically linked automatically with user space
+apps. The assembly output will have calls to these functions embedded
+when needed. For example:
+</p><pre class="programlisting">
+throw 2;
+</pre><p>
+produces the following code on Intel (I've condensed it a bit):
+</p><pre class="programlisting asm">
+pushl   %ebx
+pushl   $4
+call    __eh_alloc
+addl    $4,%esp
+movl    %eax,%ebx
+movl    $2,(%ebx)
+pushl   $0
+call    __tfi
+pushl   %eax
+pushl   %ebx
+call    __cp_push_exception
+addl    $12,%esp
+call    __throw
+movl    -4(%ebp),%ebx
+</pre><p>
+The functions <code class="function">__eh_alloc</code>, <code class="function">__tfi</code>,
+<code class="function">__cp_push_exception</code>, and <code class="function">__throw</code> are
+implemented in a library. On Intel, this library is called <code class="filename">libgcc.a</code>.
+Also, certain C++ specific initializations are done when an image is
+loaded. The initialization code is implemented in <code class="filename">crt0.o</code>. These modules
+are linked into user space apps automatically. However, neither of these
+libraries gets linked into a driver. They can't, because they make
+assumptions about being in user space. Some important C++ features that
+are dependent on this runtime library support are:
+</p><div class="orderedlist"><ol><li><p>
+Exceptions
+</p></li><li><p>
+Run time type information (RTTI); this includes <code class="function">dynamic_cast</code> and
+<code class="function">typeinfo</code>.
+</p></li><li><p>
+<code class="function">new</code> and <code class="function">delete</code>
+</p></li><li><p>
+The handler for <code class="function">pure_virtual()</code>
+</p></li><li><p>
+Static object instantiation
+</p></li></ol></div><p>
+There are two ways to work around the absence of these functions. One
+could avoid using the feature, or reimplement it in the driver in a
+kernel-friendly way. The latter can be more work, so consider carefully
+before embarking on this path. The runtime library is shipped with the
+compiler and statically linked into executables. Thus, if your driver
+runs on both platforms, you'll potentially have to implement the same
+feature for both Metrowerks and GCC, which usually differ in
+implementation. Worse, if some compiler implementation changed in some
+subtle way, in order to compile the driver with the new compiler,
+implementation of these runtime functions would have to be updated.
+</p><p>
+It's probably best to avoid exceptions, for example. The current
+exception implementation on GCC generates a lot of large static tables
+when exceptions are enabled, and can increase the binary size
+significantly. I've seen increases of around 25% with exceptions enabled,
+and that's even if you never use them. As mentioned earlier, kernel
+memory is a precious resource, not to be taken for granted. Also, the
+effects of uncaught exceptions propagating out of your code and into the
+kernel proper are fatal. Besides, implementing the stack unwinding code
+in your driver would take a fair amount of work and be tedious to debug.
+</p><p>
+<code class="function">new</code> and <code class="function">delete</code> are arguably important C++ features, and you'll
+probably want to implement them. Luckily, the compiler gives you an easy
+(and relatively portable) way to do this, by treating them as global
+operators. For example:
+</p><pre class="programlisting">
+<span class="type">void*</span> <code class="function">operator new</code>(<span class="type">size_t</span> <code class="parameter">size</code>, <span class="type">const nothrow_t&amp;</span>)
+     throw() { return <code class="function">malloc</code>(<code class="parameter">size</code>); }
+
+<span class="type">void*</span> <code class="function">operator new</code>[](<span class="type">size_t</span> <code class="parameter">size</code>, <span class="type">const nothrow_t&amp;</span>)
+     throw() { return <code class="function">malloc</code>(<code class="parameter">size</code>); }
+
+<span class="type">void</span> <code class="function">operator delete</code>(<span class="type">void *</span><code class="parameter">ptr</code>) { <code class="function">free</code>(<code class="parameter">ptr</code>); }
+
+<span class="type">void</span> <code class="function">operator delete</code>[](<span class="type">void *</span><code class="parameter">ptr</code>) { <code class="function">free</code>(<code class="parameter">ptr</code>); }
+</pre><p>
+Note the use of <code class="code">nothrow</code>. This is defined in the
+<code class="filename">new</code> header. This is
+important for handling out of memory conditions. You'll need to call new
+like so:
+</p><pre class="programlisting">
+<code class="classname">SomeClass</code> *<code class="varname">obj</code> = new (nothrow) <code class="classname">SomeClass</code>;
+if (<code class="varname">obj</code> == 0)
+    <span class="comment">// handle this politely</span>
+</pre><p>
+This version of new will generate code to check that the returned pointer
+is not <code class="constant">NULL</code> before calling your constructor or setting vtable pointers
+(which occurs before your constructor is invoked). You'll have to check
+to see if the result is <code class="constant">NULL</code> anywhere that you call new and handle it
+properly.
+</p><p>
+Note also that if you have instance variables that are objects, you must
+be very careful to check and make sure they initialize properly. This is
+very subtle, but very important.
+</p><p>
+The handler for pure_virtual is just a C function. It can be implemented
+simply as
+</p><pre class="programlisting">
+extern "C" <span class="type">void</span> <code class="function">pure_virtual</code>() { panic("pure virtual
+function call"); }
+</pre><p>
+This generally only happens when something is really hosed anyway, say,
+if you've trashed memory. But you'll get a linker error if you don't
+include it.
+</p><p>
+Finally, if you have declare global instances in your driver, their
+constructors will *not* be called (ever). It's probably not a good idea
+to do this anyway, as initialization order in a driver is generally
+important, and it is fragile to depend on the compiler to initialize
+things in a predefined order. It's cleanest and most prudent to
+explicitly instantiate everything.
+</p><p>
+It's important to mention that we often use a two- component driver model
+in BeOS, where a user level add-on lives in a server, with a smaller
+portion in the kernel. It's generally better to put all your C++ in the
+user level add-on and write a thin driver in C to bang registers and
+handle interrupts. This model can be faster (as you can perform certain
+operations on the driver without having to enter the kernel), more memory
+friendly (because the code in user space is swappable), and more stable,
+because bugs in the user level add-on are potentially less fatal.
+</p><p>
+As you can see, writing a driver in C++ is more complex than writing one
+in C. The official Be-sanctioned practice is to write drivers in C,
+keeping them small and simple. However, it's important to understand the
+issues involved.
+</p><p>
+Source Code: &lt;ftp://ftp.be.com/pub/samples/drivers/alphabet.zip
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-51"></a>Developers' Workshop: BeOS Driver FAQs (Part 1)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Todd</span> <span class="surname">Thomas</span></span></div></div></div><p>
+Over the years, Be tech writers and engineers have produced a substantial
+amount of prose and sample code on the subject of drivers for the BeOS.
+Really. The problem is that it's not so easy to find it all.
+</p><p>
+Enter the BeOS Driver FAQs, which will give you a crib sheet that should
+provide concise answers to your basic questions and serve as a launching
+pad for your deeper explorations of the BeOS driver universe. This
+document is making its initial appearance here in the Newsletter, but
+will soon go to live in the Be Book's "Drivers" section
+<a class="link bebook" href="../BeBook/DeviceDrivers_Introduction.html">DeviceDrivers_Introduction.html</a>. Without
+further ado, I give you the BeOS Driver FAQs (Part 1). Look for Part 2 in
+the next Newsletter.
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="qandadiv"><td align="left" valign="top" colspan="2"><h4 class="title"><a id="id837045"></a>1. Drivers</h4></td></tr><tr class="question"><td><a id="id837051"></a><a id="id837053"></a>Q:</td><td><p>What is a driver?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+In general, a driver is software that directly controls a hardware
+device, and may also provide an interface to the device for higher level
+software.
+</p><p>
+In BeOS parlance, a driver is one of three types of kernel add-ons. The
+other two are modules and file systems. As add-ons, drivers, modules, and
+file systems can be loaded and unloaded by the kernel as needed at
+runtime.
+</p><p>
+For more information on drivers, see "Device Drivers"
+<a class="link bebook" href="../BeBook/DeviceDrivers_Introduction.html">DeviceDrivers_Introduction.html</a> and
+"Writing Drivers"
+<a class="link bebook" href="../BeBook/DeviceDrivers_WritingDrivers.html">DeviceDrivers_WritingDrivers.html</a> in the Be Book.
+Also, you must read Jon Watte's article
+"<a class="xref" href="Issue4-7.html#Engineering4-7" title="Be Engineering Insights: An Introduction to Input Method Aware Views">Be Engineering Insights: An Introduction to Input Method Aware Views</a>" in the
+Be Newsletter (a newer version is available at
+&lt;http://www.b500.com/bepage/driver.html&gt;. It has very useful discussions
+of topics not strictly related to the interface in
+<code class="filename">drivers/Drivers.h</code>
+but essential to the task of writing a driver, such as how to write your
+driver's interrupt handler.
+</p></td></tr><tr class="question"><td><a id="id837109"></a><a id="id837112"></a>Q:</td><td><p>Where do BeOS drivers live?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+The driver binaries that ship with BeOS live in
+<code class="filename">/boot/beos/system/add-ons/kernel/drivers/bin</code>.
+Driver binaries provided by third parties should be placed in
+<code class="filename">/boot/home/config/add-ons/kernel/drivers/bin/</code> because the
+<code class="filename">/boot/beos/system/</code> hierarchy should not be modified.
+</p><p>
+For access from user space, the driver is published in the appropriate
+locations in the <code class="filename">/dev</code> hierarchy.
+<code class="filename">/dev</code> is managed by the devfs file
+system. For more information on devfs and how drivers are published in
+the <code class="filename">/dev</code> hierarchy, see the section "devfs"
+<a class="link bebook" href="../BeBook/DeviceDrivers_Introduction.html#DeviceDrivers_Introduction_devfs">DeviceDrivers_Introduction.html#DeviceDrivers_Introduction_devfs</a> in
+"Device Drivers" in the Be Book.
+</p></td></tr><tr class="question"><td><a id="id837177"></a><a id="id837180"></a>Q:</td><td><p>What is the driver API?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Drivers must implement the API declared in
+<code class="filename">drivers/Drivers.h</code>, which has
+two parts. One part is used by devfs
+<a class="link bebook" href="../BeBook/DeviceDrivers_Introduction.html#DeviceDrivers_Introduction_devfs">DeviceDrivers_Introduction.html#DeviceDrivers_Introduction_devfs</a> to manage the
+driver and publish it in the
+<code class="filename">/dev</code> hierarchy. This part consists of the
+following exported symbols:
+</p><table class="variablelist"><tbody><tr><td><p><span class="term"><code class="function">init_hardware()</code></span></p></td><td><p>
+Called when the system is booted, to let the driver detect and reset the
+hardware.
+</p></td></tr><tr><td><p><span class="term"><code class="function">init_driver()</code></span></p></td><td><p>
+Called when the driver is loaded, so it can allocate needed system
+resources.
+</p></td></tr><tr><td><p><span class="term"><code class="function">uninit_driver()</code></span></p></td><td><p>
+Called just before the driver is unloaded, so it can free allocated
+resources.
+</p></td></tr><tr><td><p><span class="term"><code class="function">publish_devices()</code></span></p></td><td><p>
+Called to obtain a list of device names supported by the driver.
+</p></td></tr><tr><td><p><span class="term"><code class="function">find_device()</code></span></p></td><td><p>
+Called to obtain a list of pointers to the hook functions for a specified
+device.
+</p></td></tr><tr><td><p><span class="term"><code class="varname">api_version</code></span></p></td><td><p>
+This exported value tells the kernel what version of the driver API it
+was written to, and should always be set to <code class="constant">B_CUR_DRIVER_API_VERSION</code> in
+your source code.
+</p></td></tr></tbody></table><p>
+Only devfs should call the above functions. So how does other code in
+kernel space or user space manipulate the driver? Via the second part of
+the driver API, which is a set of hook functions (the set returned from
+<code class="function">find_devices()</code>) that maps directly to the familiar posix file-handling
+functions <code class="function">open()</code>, <code class="function">close()</code>,
+<code class="function">read()</code>, <code class="function">write()</code>, <code class="function">ioctl()</code>, etc. The full set of
+hooks can be seen in the <span class="type">device_hooks</span> structure defined in
+<code class="filename">drivers/Drivers.h</code>:
+</p><pre class="programlisting">
+typedef struct {
+    <span class="type">device_open_hook</span> <code class="varname">open</code>;
+    <span class="type">device_close_hook</span> <code class="varname">close</code>;
+    <span class="type">device_free_hook</span> <code class="varname">free</code>;
+    <span class="type">device_control_hook</span> <code class="varname">control</code>;
+    <span class="type">device_read_hook</span> <code class="varname">read</code>;
+    <span class="type">device_write_hook</span> <code class="varname">write</code>;
+    <span class="type">device_select_hook</span> <code class="varname">select</code>;
+    <span class="type">device_deselect_hook</span> <code class="varname">deselect</code>;
+    <span class="type">device_readv_hook</span> <code class="varname">readv</code>;
+    <span class="type">device_writev_hook</span> <code class="varname">writev</code>;
+} <span class="type">device_hooks</span>;
+</pre><p>
+Thus you can manipulate a driver from kernel or user space by using the
+API defined in <code class="filename">unistd.h</code> and
+<code class="filename">fcntl.h</code> on its entry in the
+<code class="filename">/dev</code>
+hierarchy.
+</p><p>
+Some drivers may also implement a third kind of API: standard opcodes for
+the control hook function (which maps to <code class="function">ioctl()</code>).
+<code class="filename">drivers/Drivers.h</code>
+defines some fairly generic opcodes your device can support if it makes
+sense, such as <code class="constant">B_GET_MEDIA_STATUS</code> and <code class="constant">B_EJECT_DEVICE</code>. Arve describes
+these opcodes as of R4.5 in his article, "<a class="xref" href="Issue4-32.html#Engineering4-32-2" title="Be Engineering Insights: Common ioctls and Error codes for Drivers">Be Engineering Insights: Common ioctls and Error codes for Drivers</a>.
+</p><p>
+There are also suites of opcodes that must be supported by devices
+wishing to conform to specific Be protocols. For example, a driver that
+wants to be compatible with the multichannel audio media node discussed
+in Jon Watte's article "<a class="xref" href="Issue4-49.html#Engineering4-49" title="Be Engineering Insights: Do You Have 24 Ears?">Be Engineering Insights: Do You Have 24 Ears?</a>" needs to support the
+opcodes defined in <code class="filename">multi_audio.h</code>.
+This header file has not yet been
+finalized, but if you would like to work with a preliminary version of
+it, send a note to trinity@be.com.
+</p><p>
+For complete documentation of the driver API, see
+"<a class="link bebook" href="../BeBook/DeviceDrivers_WritingDrivers.html">Writing Drivers</a>"
+in the Be Book.
+</p></td></tr><tr class="question"><td><a id="id837525"></a><a id="id837528"></a>Q:</td><td><p>Where can I find driver sample code?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+In <code class="filename">/boot/optional/sample-code/drivers/</code>
+if you installed the optional
+sample code from the BeOS CD, or at &lt;ftp://ftp.be.com/pub/samples/drivers/&gt;.
+The Digit driver is a good starting
+place; the Sonic Vibes driver is meatier but demonstrates how to work
+with a real device.
+</p></td></tr><tr class="qandadiv"><td align="left" valign="top" colspan="2"><h4 class="title"><a id="id837551"></a>2. Modules</h4></td></tr><tr class="question"><td><a id="id837557"></a><a id="id837559"></a>Q:</td><td><p>What is a module?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+A module is a kernel add-on that exports an API for use by drivers or
+other modules. This API cannot be accessed from user space. A module is
+useful for providing services to a class of similar devices so that each
+device's driver does not have to implement those services independently.
+Modules can also provide services to other modules.
+</p><p>
+For more information about modules see
+"<a class="link bebook" href="../BeBook/DeviceDrivers_WritingModules.html">Writing Modules</a>"
+and "<a class="link bebook" href="../BeBook/DeviceDrivers_UsingModules.html">Using Modules</a>"
+in the Be Book.
+</p></td></tr><tr class="question"><td><a id="id837597"></a><a id="id837600"></a>Q:</td><td><p>What is an example of a module?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Every binary in the <code class="filename">/boot/beos/system/add-ons/kernel/</code>
+hierarchy except the binaries in
+<code class="filename">drivers/</code> and
+<code class="filename">file_systems/</code> is a module.
+</p><p>
+For example, in
+<code class="filename">/boot/beos/system/add-ons/kernel/bus_managers/</code> you'll
+find usb. This is the USB manager module. It exports an API declared in
+<code class="filename">drivers/USB.h</code>
+which implements useful functions just about every USB
+device driver will need, such as <code class="function">install_notify()</code> and
+<code class="function">get_device_descriptor()</code>.
+</p><p>
+On its backend, the USB manager interfaces with another example of a
+module—a bus module—which knows the implementation details of a
+particular USB host controller. For example,
+<code class="filename">/boot/beos/system/add-ons/kernel/busses/usb/uhci</code> is the bus module that
+knows how to work with UHCI-compliant USB host controllers. Thus
+individual USB device drivers can be written to one API and yet work with
+potentially many different USB host controllers. For more information on
+bus managers, see Arve's article, "<a class="xref" href="Issue3-20.html#Engineering3-20" title="Be Engineering Insights: Splitting Device Drivers and Bus Managers">Be Engineering Insights: Splitting Device Drivers and Bus Managers</a>"
+and Brian Swetland's article,
+"<a class="xref" href="Issue4-28.html#Engineering4-28" title="Be Engineering Insights: BeOS Kernel Programming Part IV: Bus Managers">Be Engineering Insights: BeOS Kernel Programming Part IV: Bus Managers</a>."
+</p><p>
+Another example of a module is the Atomizer, which implements a virtual
+device that returns a unique token for a null- terminated UTF8 string. In
+this case, a module is being used not to support hardware devices, but to
+extend the logical feature set of the kernel. For more information on the
+Atomizer module, see Trey Boudreau's article,
+"<a class="xref" href="Issue4-30.html#Engineering4-30-2" title="Be Engineering Insights: Creating Your Own System Services—the Modular Way">Be Engineering Insights: Creating Your Own System Services—the Modular
+Way</a>"
+</p></td></tr><tr class="question"><td><a id="id837696"></a><a id="id837698"></a>Q:</td><td><p>Where do modules live?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Two BeOS modules—the PCI and ISA bus managers—are built into the
+kernel.
+</p><p>
+All other BeOS modules live in the directories found in
+<code class="filename">/boot/beos/system/add-ons/kernel/</code>
+(excepting the
+<code class="filename">drivers/</code> and
+<code class="filename">file_systems/</code> directories, whose residents are of course drivers and
+filesystems), and in the analogous directories at
+<code class="filename">/boot/home/config/add-ons/kernel/</code>.
+</p></td></tr><tr class="question"><td><a id="id837742"></a><a id="id837744"></a>Q:</td><td><p>How do I use a module?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Call <code class="function">get_module()</code> to get a structure that has the module's info and
+pointers to its hook functions. Call <code class="function">put_module()</code> when you're done.
+Modules are ref-counted, so if you're the last remaining client, the
+module will be unloaded from memory when you call <code class="function">put_module()</code>.
+</p><p>
+Here's a quick chunk of sample code that demonstrates how to use the PCI
+bus module to see if your device is on the bus:
+</p><pre class="programlisting">
+#include &lt;drivers/PCI.h&gt;
+
+<span class="type">char</span> <code class="varname">pci_name</code>[] = <code class="constant">B_PCI_MODULE_NAME</code>;
+<span class="type">pci_module_info *</span><code class="varname">pci</code>;
+<span class="type">pci_info</span> <code class="varname">info</code>;
+
+<span class="type">int</span> <code class="varname">ix</code> = 0;
+
+if (<code class="function">get_module</code>(<code class="varname">pci_name</code>, (<span class="type">module_info **</span>)&amp;<code class="varname">pci</code>) != <code class="constant">B_OK</code>) {
+    <span class="comment">// handle error</span>
+}
+
+while ((*<code class="varname">pci</code>-&gt;<code class="varname">get_nth_pci_info</code>)(<code class="varname">ix</code>, &amp;<code class="varname">info</code>) == <code class="constant">B_OK</code>) {
+    if (<code class="varname">info</code>.<code class="varname">vendor_id</code> == <code class="constant">YOUR_VENDOR_ID</code> &amp;&amp;
+        <code class="varname">info</code>.<code class="varname">device_id</code> == <code class="constant">YOUR_DEVICE_ID</code>) {
+        <span class="comment">// device is on the bus</span>
+    }
+    <code class="varname">ix</code>++;
+}
+
+<code class="function">put_module</code>(<code class="varname">pci_name</code>);
+</pre></td></tr><tr class="question"><td><a id="id837899"></a><a id="id837901"></a>Q:</td><td><p>Where are public module API header files located?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+All public module API headers are found in
+<code class="filename">/boot/develop/headers/be/drivers/</code>.
+Here are some examples:
+</p><pre class="screen">
+Bus Managers
+PCI: <code class="filename">PCI.h</code>
+ISA: <code class="filename">ISA.h</code>
+SCSI (via Common Access Method): <code class="filename">CAM.h</code>
+USB: <code class="filename">USB.h</code>
+</pre><p>
+Miscellaneous
+Atomizer: <code class="filename">atomizer.h</code>
+area_malloc: <code class="filename">area_malloc.h</code>
+</p></td></tr><tr class="question"><td><a id="id837960"></a><a id="id837962"></a>Q:</td><td><p>Where can I find module sample code?</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Module sample code is mixed in with the driver sample code at
+&lt;ftp://ftp.be.com/pub/samples/drivers&gt;, although it should get its own
+directory soon. <code class="filename">atomizer.zip</code> and <code class="filename">xyz5038.zip</code> are good starting points,
+while <code class="filename">buslogic.zip</code> and <code class="filename">symbios.zip</code> contain working bus modules for actual
+SCSI controllers.
+</p></td></tr></tbody></table></div><p>
+Look for BeOS Driver FAQs (Part 2) in the next Newsletter.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-50.html">Issue 4-50, December 15, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="volume5.html">Volume 5: 2000</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-50.html" title="Issue 4-50, December 15, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

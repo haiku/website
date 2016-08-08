@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-18.html" title="Issue 4-18, May 5, 1999" /><link rel="next" href="Issue4-20.html" title="Issue 4-20, May 19, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-18.html" title="Issue 4-18, May 5, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-20.html" title="Issue 4-20, May 19, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-18.html">Issue 4-18, May 5, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-20.html">Issue 4-20, May 19, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-19"></a>Issue 4-19, May 12, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-19"></a>Be Engineering Insights: Attention Driver Writers!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+Starting with the Genki Beta 6, the kernel is a bit more strict about the
+way kernel add-ons, such as drivers and bus managers, use spinlocks and
+disable interrupts. In the past, if your driver violated one of the rules
+listed below, the kernel wouldn't complain—but you would degrade
+performance or even lock up the entire system. Now, if your driver does
+the wrong thing, the kernel panics. The solution: Clean up your driver
+code.
+</p><p>
+If you have any questions about the principles described below, don't
+hesitate to ask us: mail to devsupport@be.com.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785610"></a>Spinlocks</h3></div></div></div><p>
+Spinlocks are used to synchronize code; so are semaphores. But the way
+they achieve this synchronization isn't the same: Spinlocks "busy wait";
+semaphores don't. Busy waiting isn't good. However, acquiring a semaphore
+while handling an interrupt is forbidden. Therefore:
+</p><ul class="itemizedlist"><li><p>
+Use spinlocks to protect the critical section in an interrupt handler
+function.
+</p></li><li><p>
+Use semaphores everywhere else.
+</p></li></ul><p>
+Spinlock-protected critical sections should be executed with interrupts
+disabled. It isn't necessary to explicitly disable interrupts in
+spinlock-protected critical sections used only by interrupt handlers,
+because they are invoked with interrupts already disabled.
+</p><p>
+Here's what you can do when you're inside a spinlock:
+</p><ul class="itemizedlist"><li><p>
+You can touch hardware registers (through bus managers hooks).
+</p></li><li><p>
+You can touch memory that's locked down.
+</p></li><li><p>
+You can call the following functions: kernel: <code class="function">system_time()</code>,
+<code class="function">atomic_add()</code>, <code class="function">atomic_or()</code>,
+<code class="function">atomic_and()</code> bus managers:
+<code class="function">read_io&lt;size&gt;()</code>
+<code class="function">write_io&lt;size&gt;()</code>
+</p></li></ul><p>
+Everything else is forbidden.
+</p><p>
+Together, everybody: <span class="bold"><strong>EVERYTHING ELSE IS FORBIDDEN</strong></span>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785710"></a>Disabling Interrupts</h3></div></div></div><p>
+The only time you should ever disable interrupts is when you're about to
+enter a spinlock-protected critical section. (If you think you need to
+disable interrupts for another reason, we'll tell you why you're wrong.
+Mail to cyril@be.com.)
+</p><p>
+If you must disable interrupts, you should re-enable them as quickly as
+possible. In no case should you leave interrupts disabled for longer than
+50 microseconds. This means that your interrupt handler code—which
+runs while interrupts are implicitly disabled—must execute within that
+50 microseconds.
+</p><p>
+If you have interrupts disabled, but you're not inside a spinlock, you
+can do these things (in addition to the spinlock-safe calls listed above):
+</p><ul class="itemizedlist"><li><p>
+<code class="function">release_sem_etc()</code> with
+<code class="constant">B_DO_NO_RESCHEDULE</code> as flags.
+</p></li><li><p>
+<code class="function">get_sem_count()</code>
+</p></li><li><p>
+<code class="function">add_timer()</code>, <code class="function">cancel_timer()</code>
+</p></li><li><p>
+<code class="function">dprintf()</code>
+</p></li></ul><p>
+The principle here is that you absolutely must not block, directly or
+indirectly.
+</p><p>
+If you feel you need to call a function that is not in this list, discuss
+it with us at devsupport@be.com
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-19-2"></a>Be Engineering Insights: Tool Tips</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Polic</span></span></div></div></div><p>
+Windows has Tool Tips, Macintosh has Balloon Help, and the BeOS has, er,
+well, up to this point, nothing, in the way of context-sensitive help. To
+address this shortcoming I've written a ToolTip class that's easily
+integrated into a Be application. The Be version of tool tips behaves
+more like a Windows Tool Tip than a Macintosh Balloon. In other words, as
+you drag the cursor across different areas of a window, a small window
+pops up—after a settable delay—below and to the right of the cursor
+with a one-line description of the UI element. The tip is displayed until
+the cursor is moved again, the window or application is no longer active,
+or the settable hold-time is reached.
+</p><p>
+Source for the <code class="classname">TToolTip</code> class and demo application can be found at
+&lt;ftp://ftp.be.com/pub/samples/interface_kit/ToolTips.zip&gt;.
+</p><p>
+Integrating this class with your application is fairly straightforward.
+You'll first need to instantiate a <code class="classname">TToolTip</code> object. In the demo
+application provided, you do this in the constructor of the application
+and the pointer to the object is cached:
+</p><pre class="programlisting cpp">
+<code class="classname">ToolTipDemoApp</code>::<code class="methodname">ToolTipDemoApp</code>()
+               :<code class="classname">BApplication</code>("application/x-vnd.Be-Help"),
+                <code class="varname">fPrefWindow</code>(<code class="constant">NULL</code>)
+{
+    <span class="comment">// set up a rectangle, instantiate and show a new</span>
+    (<code class="varname">window</code> = new <code class="classname">ToolTipDemoWindow</code>(<code class="classname">BRect</code>(100, 80, 300, 152)))-&gt;<code class="methodname">Show</code>();
+
+    <span class="comment">// instantiate the tooltip window but don't show it</span>
+    <code class="varname">fToolTip</code> = new <code class="classname">TToolTip</code>();
+}
+</pre><p>
+The next step is to override the <code class="methodname">MessageReceived()</code> method of
+the application object to forward any <code class="constant">B_SOME_APP_ACTIVATED</code>,
+<code class="constant">eToolTipStart</code> or <code class="constant">eToolTipStop</code>
+messages to the <code class="classname">TToolTip</code> class:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">ToolTipDemoApp</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>)
+{
+    switch (<code class="parameter">msg</code>-&gt;<code class="varname">what</code>) {
+        <span class="comment">// these messages need to be forwarded to the</span>
+        <span class="comment">// TToolTip class</span>
+        case <code class="constant">B_SOME_APP_ACTIVATED</code>:
+        case <code class="constant">eToolTipStart</code>:
+        case <code class="constant">eToolTipStop</code>:
+            <code class="varname">fToolTip</code>-&gt;<code class="methodname">PostMessage</code>(<code class="parameter">msg</code>);
+            break;
+    }
+}
+</pre><p>
+The last step is to replace any <code class="classname">BControl</code> objects (<code class="classname">BButton</code>s,
+<code class="classname">BColorControl</code>, <code class="classname">BSlider</code>, etc.)
+with the <code class="classname">TToolTipControl</code>s equivalents.
+These objects look identical to the base class objects with the exception
+of taking a <code class="parameter">tip</code> parameter after all required parameters:
+</p><pre class="programlisting cpp">
+<code class="varname">view</code>-&gt;<code class="methodname">AddChild</code>(new <code class="classname">TToolTipButton</code>(<code class="classname">BRect</code>(10, 44, 90, 44),
+    "tool tip button",
+    "Quit", new <code class="classname">BMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>), "Click this
+    button to quit"));
+
+<code class="varname">view</code>-&gt;<code class="methodname">AddChild</code>(new <code class="classname">TToolTipButton</code>(<code class="classname">BRect</code>(110, 44, 190, 44),
+    "tool tip button",
+    "Preferences", new <code class="classname">BMessage</code>('PREF'), "Click this
+    button to set ToolTip preferences"));
+</pre><p>
+Views other than <code class="classname">BControl</code>s (<code class="classname">BBox</code>,
+<code class="classname">BMenuField</code>, <code class="classname">BListView</code>,
+<code class="classname">BView</code>, etc.) can
+also take advantage of the <code class="classname">TToolTip</code> class. To do this you'll need to
+sub-class the view you're interested in and override the <code class="methodname">MouseMoved()</code>
+method. In the constructor of the view, cache the tip string:
+</p><pre class="programlisting cpp">
+<code class="classname">TToolTipButton</code>::<code class="methodname">TToolTipButton</code>(<code class="classname">BRect</code> <code class="parameter">rect</code>,
+    <span class="type">const char *</span><code class="parameter">name</code>,
+    <span class="type">const char *</span><code class="parameter">label</code>,
+    <span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>,
+    <span class="type">const char *</span><code class="parameter">tip</code>,
+    <span class="type">uint32</span> <code class="parameter">resize_mask</code>,
+    <span class="type">uint32</span> <code class="parameter">flags</code>)
+   :<code class="classname">BButton</code>(<code class="parameter">rect</code>, <code class="parameter">name</code>, <code class="parameter">label</code>, <code class="parameter">msg</code>, <code class="parameter">resize_mask</code>, <code class="parameter">flags</code>), <code class="varname">fIn</code>(<code class="constant">false</code>)
+{
+    <span class="comment">// cache the ToolTip string</span>
+    <code class="varname">fTip</code> = (<span class="type">char *</span>)<code class="function">malloc</code>(<code class="function">strlen</code>(<code class="parameter">tip</code>) + 1);
+    <code class="function">strcpy</code>(<code class="varname">fTip</code>, <code class="parameter">tip</code>);
+}
+</pre><p>
+In the view destructor, stop displaying the tip if it's currently being
+displayed and free the cached tip string:
+</p><pre class="programlisting cpp">
+<code class="classname">TToolTipButton</code>::<code class="methodname">~TToolTipButton</code>()
+{
+    <span class="comment">// kill off any current ToolTip</span>
+    if (<code class="varname">fIn</code>)
+        <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">eToolTipStop</code>);
+    <span class="comment">// free cached ToolTip</span>
+    <code class="function">free</code>(<code class="varname">fTip</code>);
+}
+</pre><p>
+In the <code class="methodname">MouseMoved()</code> method, determine whether the cursor is moving into or
+out of the view. If it's moving in, build a message that contains the
+start point and bounds of the view (both in screen coordinates) and the
+tip string, and post it to the application:
+</p><pre class="programlisting cpp">
+<span class="comment">// if mouse has moved into our view, our window is active</span>
+<span class="comment">// and it previously wasn't in, send a message to start the ToolTip</span>
+if ((<code class="methodname">Bounds</code>().<code class="methodname">Contains</code>(<code class="varname">where</code>)) &amp;&amp; (<code class="methodname">Window</code>()-&gt;<code class="methodname">IsActive</code>()))
+{
+    if (!<code class="varname">fIn</code>) {
+        <code class="classname">BMessage</code>    <code class="varname">msg</code>(<code class="constant">eToolTipStart</code>);
+
+        <code class="varname">msg</code>.<code class="methodname">AddPoint</code>("start", <code class="methodname">ConvertToScreen</code>(<code class="varname">where</code>));
+        <code class="varname">msg</code>.<code class="methodname">AddRect</code>("bounds", <code class="methodname">ConvertToScreen</code>(<code class="methodname">Bounds</code>()));
+        <code class="varname">msg</code>.<code class="methodname">AddString</code>("string", <code class="varname">fTip</code>);
+        <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(&amp;<code class="varname">msg</code>);
+        <code class="varname">fIn</code> = <code class="constant">true</code>;
+    }
+}
+</pre><p>
+If the mouse is moving out of the view, post an <code class="constant">eToolTipStop</code> message to
+the application:
+</p><pre class="programlisting cpp">
+<span class="comment">// otherwise stop the message</span>
+else if (<code class="varname">fIn</code>) {
+    <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">eToolTipStop</code>);
+    <code class="varname">fIn</code> = <code class="constant">false</code>;
+}
+</pre><p>
+The <code class="classname">TToollTip</code> class is fully customizable as far as the font (and font
+size) used, the delay before the tip is displayed, the duration the tip
+is displayed, and most important, whether tool tips are enabled or not.
+To get the current settings:
+</p><pre class="programlisting cpp">
+<span class="type">tool_tip_settings</span> <code class="varname">settings</code>;
+<code class="varname">fToolTip</code>-&gt;<code class="methodname">GetSettings</code>(&amp;<code class="varname">settings</code>);
+</pre><p>
+To apply the new settings:
+</p><pre class="programlisting cpp">
+<code class="varname">fToolTip</code>-&gt;<code class="methodname">SetSettings</code>(<code class="varname">settings</code>);
+</pre><p>
+tool tip settings is the following structure:
+</p><pre class="programlisting cpp">
+struct <span class="type">tool_tip_settings</span> {
+    <span class="type">bool</span>        <code class="varname">enabled</code>;
+    <span class="comment">// flag whether tips are enables or not</span>
+
+    <span class="type">bool</span>        <code class="varname">one_time_only</code>;
+    <span class="comment">// flag to only display the tip once per time in view</span>
+
+    <span class="type">bigtime_t</span>   <code class="varname">delay</code>;
+    <span class="comment">// delay before tip is shown in microseconds</span>
+
+    <span class="type">bigtime_t</span>   <code class="varname">hold</code>;
+    <span class="comment">// amount of time tip is displayed in microseconds</span>
+
+    <code class="classname">BFont</code>       <code class="varname">font</code>;
+    <span class="comment">// font tip is drawn in</span>
+};
+</pre><p>
+Oh yeah, if you're going to add tool-tips to your application, please add
+a setting in your preference panel to enable or disable them.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-19"></a>Developers' Workshop: The Way Things Oughta BE</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ken</span> <span class="surname">McDonald</span></span></div></div></div><p>
+X and I were waiting at the polo field for the rest of the Be
+documentation team when we noticed one of the interns running towards us
+from the direction of the Be campus, about 26 miles away. He reached us,
+held out a piece of papyrus rolled into a tube and stamped with the seal
+of Management, clutched his chest, and collapsed. It's nice to see
+dedication like that in a summer intern.
+</p><p>
+X unrolled the papyrus and scanned it quickly. “<span class="quote">Oh, bother,</span>” he said,
+“<span class="quote">the developers are restless.</span>”
+</p><p>
+“<span class="quote">Hmm?</span>” I said, sipping my Louis XIV Remy-Martin cognac. “<span class="quote">What is it this
+time?</span>”
+</p><p>
+“<span class="quote">The normal tripe. 'All these great new features in the Be operating
+system, when do we get the documentation so we can start using them?',
+yada, yada, yada.</span>” He looked over a couple of paragraphs in more detail,
+and sighed. “<span class="quote">Still, I suppose we should do something about it. This is
+the third time in a month. It may call for drastic action.</span>”
+</p><p>
+“<span class="quote">Good lord, old boy,</span>” I said, and swallowed, “<span class="quote">you don't mean something
+like...cutting back on the recreational schedule!?</span>”
+</p><p>
+“<span class="quote">Of course not!</span>”, said X, a look of shocked outrage spreading across his
+face. “<span class="quote">That would mean forfeits in either the tennis or the yacht racing,
+and I'm certainly not going to give Stanford the pleasure!</span>” He thought
+for a moment. “<span class="quote">The big problem here is the engineers. They just keep
+writing more and more code that everyone wants to use. If we could
+somehow slow them down... Perhaps we could ask JLG to chain the engineers
+to their desks only twelve hours a day, instead of fourteen.</span>”
+</p><p>
+“<span class="quote">Nice idea, but it won't work,</span>” I said, “<span class="quote">most of them have never realized
+we lock them to their workstations, in the first place.</span>”
+</p><p>
+“<span class="quote">Oh, you're right,</span>” he said, and then shrugged. “<span class="quote">Well, what're you going
+to do? Let's not let it ruin the day. WAITER! Some more caviar and
+truffles over here, please...</span>”
+</p><p>
+&lt;POOF!&gt;
+</p><p>
+Ah, the daydreams of a Be technical writer. Sadly, however much the
+writing team at Be might deserve a scenario like the one above, reality
+is somewhat different. Not all the retin-A in the world can disguise the
+fact that the hard copy version of the Be Book is showing its age, and
+that someone who wishes to write code for the BeOS must collect
+information from many disparate sources in order to find out the real
+capabilities of the system. Let's not beat around the bush, either, but
+put the blame squarely where it lies—with the engineers, who in spite
+of being chained to their workstations, keep pumping out more and more
+clean, fast, useful code that needs to be documented before developers
+can use it. Add to this the fact that the doc team is about one-tenth the
+size of the engineering team, and that the kernel engineers have a
+tendency to steal any tech writer who knows enough to be useful, and well
+-- you get the idea.
+</p><p>
+The question then becomes, how to remedy this situation, so that the tech
+writers can enjoy the life of leisure they so richly deserve, without
+hindering the developers from getting on with developing?
+</p><p>
+Therein, Gentle Developer, lies the meat of this article. We're always
+looking for ways to get information to you more quickly and with greater
+accuracy. As the New Guy On the Block&amp;trade; in the documentation team,
+I'm particularly looking for the best way that I can serve the
+development community. Comments and suggestions in general are welcome
+(please send any to ken@be.com). Also, I'd like to solicit your views on
+two possibilities I'm thinking about.
+</p><p>
+When I first arrived at Be, lo these two months ago, one of the first
+things I did was to write a tutorial on using the basic menu user
+interface functions. Now, menus are simple things, and you're all
+probably familiar with the functions to use and manipulate them. The idea
+behind writing the tutorial wasn't to explain menus, but to test out an
+idea that for most developers and most programs, the Be Book is overkill.
+You don't really need all of that information if a short tutorial
+presenting the commonly used functionality of the API is available. So,
+take a look at
+&lt;http://www.be.com/developers/developer_library/tutorials/menu_tutorial.pdf
+&gt; (sorry, currently available only in .pdf format), and see if you think
+you'd like to read more papers in a "tutorial series," similar to this
+one but on different topics. Because these tutorial documents wouldn't be
+as long as comprehensive reference documentation, we can write them (and
+update them) more quickly than the chapters in the Be Book. A likely next
+tutorial topic: Mouse Stuff, because certain important aspects of working
+with the mouse are terribly out of date in the Be Book.
+</p><p>
+The other possibility I'd like to mention is automatic document
+generation from C++ header files. Currently, header files are the
+"documentation of last resort" for the desperate developer—if you
+can't find what you need anywhere else, go look through the headers.
+Unfortunately, certain aspects of headers, like indexing and formatting,
+are not quite so perfect as they could be. Automatic document generation
+from the headers can solve some of these problems, and can also turn code
+comments into documentation paragraphs with just a bit more effort. To
+test this, I've edited the already excellent comments in the new C++
+Network Kit API, and run those headers through an automatic doc
+generator. You can view the results
+&lt;http://www.be.com/documentation/be_book/The%20Network%20Kit/
+netapi_autogen/index.html&gt;. If you'd like to see us work toward making
+the other APIs available this way (probably starting with the newest and
+working backward) let me know, and be sure to rate the usefulness of this
+compared to other documentation projects we could be doing.
+</p><p>
+Oh, and one more thing. If you could put "DOC FEEDBACK" as the subject
+line in any responses to this article, it'd let me use those cool Be
+attributes to easily organize my mail.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-19"></a>Modular Windows?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This isn't about time travel and a return to the time when an earlier
+version of Windows Everywhere gave rise to such projects as Windows at
+Work and Modular Windows. (For history buffs, the head of that project
+was none other than Rob Glaser, now the CEO of Real Networks.) On second
+thought, my topic today is related to time travel, but to the future, to
+the After the Suit era. Specifically, I'll address some of the proposals
+for "remedies," for ways to level the playing field dominated by
+Microsoft.
+</p><p>
+I'll mention only briefly various structural remedies such as the "Baby
+Bills"—slicing and dicing Microsoft. There's the vertical way --
+breaking Microsoft up into several smaller, identical competing entities.
+The horizontal way, on the other hand, attempts to separate slices of the
+Microsoft mille-feuilles: hardware, OS, applications, Internet services,
+and so on.
+</p><p>
+The horizontal overhaul gets very complicated in a hurry. Take one
+example: How do you create four competing OS companies? Do you allocate
+engineers, executives, and marketers, using an eenie, meenie, mynie, moe
+algorithm? If you decide to auction off the source code to other
+companies, what about the comments written on the wall of some forgotten
+bathroom stall? Who decides who gets the people who know where the good
+stuff is?
+</p><p>
+Different but no less interesting questions arise on closer evaluation of
+vertical slicing. As discussed before, drawing an actionable line between
+types of software is very difficult—perhaps intractable.
+Misunderstandings arise because we treat software as a thing—which,
+clearly, it isn't. Creating Baby Bells is relatively easy to conceive and
+execute because geographical regions and local loops have a physical
+reality that's easy to map into a corporate structure. Car radios have a
+physical reality and a unit cost, software doesn't. As a result, similes
+between the bundling of cars radios at the factory and the bundling of
+software modules are misleading.
+</p><p>
+Software is information of a special kind. Information on a newspaper
+page is inert. Software is "recombinant" information, it does something
+by itself and in combination with other software. Such difficulties are
+being recognized in Washington and, rather than attempt the mystifying
+task of defining what is part of an operating system and what's not, some
+sages are suggesting abandoning the pursuit altogether. Microsoft wants
+to stay free to innovate, they say, so let them do that—but let's
+dictate the conditions under which they do so.
+</p><p>
+Specifically, as Windows is extended, let's make sure it's done in a
+clear, modularized, well-documented way. The idea is to give competitors
+equal access to the system's plumbing and blueprints so they can write
+functional equivalents. This refers us back to the "motives and methods"
+issue discussed in an earlier newsletter
+<a class="xref" href="Issue4-6.html#Gassee4-6" title="More Browser Integration Bedtime Stories">More Browser Integration Bedtime Stories</a>.
+</p><p>
+The tentacular method used by Microsoft in building a browser into
+Windows is viewed by some as a device, a way to maintain and extend its
+monopoly. The browser is difficult to remove—it is inextricably
+intertwined in the OS. This results in a barrier to entry by a
+competitor. Customers cannot remove the MS module and install the
+functional equivalent, the better, faster—or fatter, slower—module,
+thus letting the market work on a level playing field. Using the much
+discussed browser integration as an example, under the sages' proposal,
+Microsoft would create a browser in a "clean, well-lighted" way, making
+it easy to see where and how it connected to the system, implementing it
+as a well-delineated module. In that example, it would have been easy for
+Netscape to write an equivalent module that customers could easily swap
+for the MS implementation, lest we forget Netscape got there first.
+</p><p>
+Making Windows modular is a seductive proposal. It avoids the creation of
+roach motels by leveling access to system facilities and technical
+information and it does not prevent Microsoft from adding innovative
+features to Windows, it just limits its ability to use recombinant
+information as a way to maintain and extend its monopoly. But what will
+critics and/or Microsoft allies say? They'll probably start by claiming
+this type of disclosure is excessive, costly, slows them down, what about
+trade secrets, intellectual property... Critics will also ask pricing
+questions. A software module doesn't have much physical cost when added
+on an existing CD-ROM, thus giving the incumbent the ability to give it
+away and bleed its competition dry.
+</p><p>
+Others will introduce implementation issues, such as the need, real or
+tactical, to take three years and three thousand people in a separate
+building in order to disentangle and document Windows internals in
+compliance with the court order—by which time Microsoft will be
+Everywhere Else. The fact that there are pros and cons to this particular
+avenue of remediation is actually good news. When a proposal is all pro
+and no con—it's a con. There has been some debate of structural and
+contractual remedies, the latter being the easiest to implement, I hope
+we'll now hear a more detailed discussion of the modular approach.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-18.html">Issue 4-18, May 5, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-20.html">Issue 4-20, May 19, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-18.html" title="Issue 4-18, May 5, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-20.html" title="Issue 4-20, May 19, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

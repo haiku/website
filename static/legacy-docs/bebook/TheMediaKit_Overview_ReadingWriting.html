@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Media Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheMediaKit_Overview.html" title="The Media Kit" /><link rel="prev" href="TheMediaKit_Overview_Introduction.html" title="Introduction" /><link rel="next" href="TheMediaKit_ExampleNode.html" title="A BMediaEventLooper Example" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheMediaKit_Overview_Introduction.html" title="Introduction"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheMediaKit_Overview.html" title="The Media Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TheMediaKit_ExampleNode.html" title="A BMediaEventLooper Example"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Media Kit</div></div><div id="headerB">Prev: <a href="TheMediaKit_Overview_Introduction.html">Introduction</a>  Up: <a href="TheMediaKit_Overview.html">The Media Kit</a>  Next: <a href="TheMediaKit_ExampleNode.html">A BMediaEventLooper Example</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_Overview_ReadingWriting"></a>Reading and Writing Media Files</h2></div></div></div><p>Working with media files becomes relatively painless when you use the
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a> and
+<a class="link" href="BMediaTrack.html" title="BMediaTrack"><code class="classname">BMediaTrack</code></a>
+classes. This section looks at a sample
+program that converts a media file from one format to another, using
+these classes.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_PreparingAmedia_format"></a>Preparing a media_format</h3></div></div></div><pre class="programlisting example c"><span class="type">void</span> <code class="function">BuildMediaFormat</code>(<span class="type">int32</span> <code class="parameter">width</code>, <span class="type">int32</span> <code class="parameter">height</code>,
+            <span class="type">color_space</span> <code class="parameter">cspace</code>, <span class="type">media_format *</span><code class="parameter">format</code>) {
+   <span class="type">media_raw_video_format *</span><code class="varname">rvf</code> = &amp;<code class="parameter">format</code>-&gt;<code class="varname">u</code>.<code class="varname">raw_video</code>;
+
+   <code class="function">memset</code>(<code class="parameter">format</code>, 0, <code class="function">sizeof</code>(*<code class="parameter">format</code>));
+
+   <code class="parameter">format</code>-&gt;<code class="varname">type</code> = <code class="constant">B_MEDIA_RAW_VIDEO</code>;
+   <code class="varname">rvf</code>-&gt;<code class="varname">last_active</code> = (<span class="type">uint32</span>)(<code class="parameter">height</code> - 1);
+   <code class="varname">rvf</code>-&gt;<code class="varname">orientation</code> = <code class="constant">B_VIDEO_TOP_LEFT_RIGHT</code>;
+   <code class="varname">rvf</code>-&gt;<code class="varname">pixel_width_aspect</code> = 1;
+   <code class="varname">rvf</code>-&gt;<code class="varname">pixel_height_aspect</code> = 3;
+   <code class="varname">rvf</code>-&gt;<code class="varname">display</code>.<code class="varname">format</code> = <code class="parameter">cspace</code>;
+   <code class="varname">rvf</code>-&gt;<code class="varname">display</code>.<code class="varname">line_width</code> = (<span class="type">int32</span>)<code class="parameter">width</code>;
+   <code class="varname">rvf</code>-&gt;<code class="varname">display</code>.<code class="varname">line_count</code> = (<span class="type">int32</span>)<code class="parameter">height</code>;
+   if (<code class="parameter">cspace</code> == <code class="constant">B_RGB32</code>)
+      <code class="varname">rvf</code>-&gt;<code class="varname">display</code>.<code class="varname">bytes_per_row</code> = 4 * <code class="parameter">width</code>;
+   else {
+      <code class="function">printf</code>("can't build the format!n");
+      <code class="function">exit</code>(5);
+   }
+}</pre><p><code class="function">BuildMediaFormat()</code> accepts as input parameters describing a video
+format—the width, height, and color space of the video—and
+returns a <a class="link" href="TheMediaKit_DefinedTypes.html#media_format" title="media_format"><span class="type">media_format</span></a>
+structure describing that format. For our
+purposes, we require a <code class="constant">B_RGB32</code> colorspace, and the frames will be in raw
+video format.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheMediaKit_ConvertingTheFiles"></a>Converting the Files</h3></div></div></div><p>The <code class="function">transcode()</code> function below handles actually converting a media file
+into another format, writing the newly-converted media into a new file.
+We'll look at it in chunks to lighten the load.</p><p><code class="function">transcode()</code> accepts as input a
+<a class="link" href="BMediaTrack.html" title="BMediaTrack"><code class="classname">BMediaTrack</code></a>
+referring to the video track from the original file, and another
+<a class="link" href="BMediaTrack.html" title="BMediaTrack"><code class="classname">BMediaTrack</code></a> referring to the audio
+track. <code class="parameter">output</code> is the name of the new file to be created.</p><p><code class="parameter">family_name</code> specifies the file format family to be used when creating the
+new file, and <code class="parameter">video_name</code> and <code class="parameter">audio_name</code>
+indicate by name which encoders
+should be used for the video and audio tracks.</p><pre class="programlisting example c"><span class="type">void</span> <code class="function">transcode</code>(<span class="type">BMediaTrack *</span><code class="parameter">vidtrack</code>, <span class="type">BMediaTrack *</span><code class="parameter">audtrack</code>,
+         <span class="type">char *</span><code class="parameter">output</code>, <span class="type">char *</span><code class="parameter">family_name</code>, char *video_name,
+         <span class="type">char *</span><code class="parameter">audio_name</code>)
+{
+   <span class="type">char *</span><code class="varname">chunk</code>;
+   <span class="type">char *</span><code class="varname">bitmap</code> = <code class="constant">NULL</code>, <span class="type">*</span><code class="varname">sound_buffer</code> = <code class="constant">NULL</code>;
+   <span class="type">bool</span> <code class="varname">found_video_encoder</code> = <code class="constant">false</code>, <code class="varname">found_audio_encoder</code> = <code class="constant">false</code>;
+   <span class="type">bool</span> <code class="varname">found_family</code>;
+   <span class="type">int32</span> <code class="varname">i</code>, <code class="varname">sz</code>, <code class="varname">cookie</code>;
+   <span class="type">int64</span> <code class="varname">numFrames</code>, <code class="varname">j</code>;
+   <span class="type">int64</span> <code class="varname">framesize</code>;
+   <span class="type">status_t</span> <code class="varname">err</code>;
+   <span class="type">entry_ref</span> <code class="varname">ref</code>;
+   <code class="classname">BMediaFile</code> <code class="varname">out</code>;
+   <code class="classname">BMediaTrack</code> <code class="varname">vid</code> = <code class="constant">NULL</code>, *<code class="varname">aud</code> = <code class="constant">NULL</code>;
+   <span class="type">media_format</span> <code class="varname">format</code>, <code class="varname">outfmt</code>;
+   <span class="type">media_codec_info</span> <code class="varname">mci</code>;
+   <span class="type">media_file_format</span> <code class="varname">mfi</code>;
+   <span class="type">media_header</span> <code class="varname">mh</code>;
+
+   <code class="varname">err</code> = <code class="function">get_ref_for_path</code>(<code class="parameter">output</code>, &amp;<code class="varname">ref</code>);
+   if (<code class="varname">err</code>) {
+      <code class="function">printf</code>("problem with get_ref_for_path() -- %s\n",
+             <code class="function">strerror</code>(<code class="varname">err</code>));
+      return;
+   }</pre><p>The function begins by creating an
+<a class="link" href="BEntry.html#entry_ref" title="entry_ref"><span class="type">entry_ref</span></a>
+for the output file. If an error occurs, the function terminates
+after displaying an error message.</p><pre class="programlisting example c">   <code class="varname">cookie</code> = 0;
+   while((<code class="varname">err</code> = <code class="function">get_next_file_format</code>(&amp;<code class="varname">cookie</code>, &amp;<code class="varname">mfi</code>)) == <code class="constant">B_OK</code>) {
+      if (<code class="function">strcmp</code>(<code class="varname">mfi</code>.<code class="varname">short_name</code>, <code class="parameter">family_name</code>) == 0)
+         break;
+   }
+
+   if (<code class="varname">err</code> != <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("failed to find a file format handler !\n");
+      return;
+   }</pre><p>Next, a loop is used, calling
+<a class="link" href="TheMediaKit_Functions.html#get_next_file_format" title="get_next_file_format()"><code class="function">get_next_file_format()</code></a>
+to find the appropriate handler for the requested file format family. If
+the specified <code class="parameter">family_name</code> doesn't match the
+<code class="varname">short_name</code> field of any of the media file formats
+available, an error is printed and the function aborts. Otherwise,
+<code class="varname">mfi</code> contains a description of the file format.</p><pre class="programlisting example c">   <code class="varname">out</code> = new <code class="classname">BMediaFile</code>(&amp;<code class="varname">ref</code>, &amp;<code class="varname">mfi</code>);
+   <code class="varname">err</code> = <code class="varname">out</code>-&gt;<code class="methodname">InitCheck</code>();
+   if (<code class="varname">err</code> != <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("failed to properly init the output file... (%s)\n",
+             <code class="function">strerror</code>(<code class="varname">err</code>));
+      delete <code class="varname">out</code>;
+      return;
+   }</pre><p>Once the appropriate media file format has been determined, a new
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>
+is created. The
+<a class="link" href="BEntry.html#entry_ref" title="entry_ref"><span class="type">entry_ref</span></a>
+of the output file is specified, and
+the media file format we selected is provided. This will create the new
+media file, with no tracks. If this fails
+(<a class="link" href="BMediaFile.html#BMediaFile_InitCheck" title="InitCheck()"><code class="methodname">BMediaFile::InitCheck()</code></a>
+returns something other than <code class="constant">B_OK</code>), an error message is displayed, the
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>
+is deleted, and the function returns.</p><p>The next chunk of code handles creating the new video track. Note that
+this only runs if <code class="parameter">vidtrack</code>, the reference to the original
+<a class="link" href="BMediaTrack.html" title="BMediaTrack"><code class="classname">BMediaTrack</code></a>,
+isn't <code class="constant">NULL</code>. If it's <code class="constant">NULL</code>, the
+file is assumed not to have a video track.</p><pre class="programlisting example c">   if (<code class="parameter">vidtrack</code>) {
+      <code class="parameter">vidtrack</code>-&gt;<code class="methodname">EncodedFormat</code>(&amp;<code class="varname">format</code>);
+
+      if (<code class="parameter">video_name</code>) {
+         <span class="type">int</span> <code class="varname">width</code>, <code class="varname">height</code>;
+         <code class="varname">width</code> = <code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">encoded_video</code>.<code class="varname">output</code>.<code class="varname">display</code>.<code class="varname">line_width</code>;
+         <code class="varname">height</code> = <code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">encoded_video</code>.<code class="varname">output</code>.<code class="varname">display</code>.<code class="varname">line_count</code>;
+
+         <code class="function">memset</code>(&amp;<code class="varname">format</code>, 0, <code class="function">sizeof</code>(<code class="varname">format</code>));
+         <code class="function">BuildMediaFormat</code>(<code class="varname">width</code>, <code class="varname">height</code>, <code class="constant">B_RGB32</code>, &amp;<code class="varname">format</code>);
+
+         <code class="parameter">vidtrack</code>-&gt;<code class="methodname">DecodedFormat</code>(&amp;<code class="varname">format</code>);
+
+         <code class="varname">bitmap</code> = (<span class="type">char *</span>)<code class="function">malloc</code>(<code class="varname">width</code> * <code class="varname">height</code> * 4);
+
+         <code class="varname">cookie</code> = 0;
+         while (<code class="function">get_next_encoder</code>(&amp;<code class="varname">cookie</code>, &amp;<code class="varname">mfi</code>, &amp;<code class="varname">format</code>,
+                               &amp;<code class="varname">outfmt</code>, &amp;<code class="varname">mci</code>) == <code class="constant">B_OK</code>) {
+            <code class="function">printf</code>("found encoder %s (%d)\n", <code class="varname">mci</code>.<code class="varname">pretty_name</code>,
+                   <code class="varname">mci</code>.<code class="varname">id</code>);
+            if (<code class="function">strcmp</code>(<code class="parameter">video_name</code>, <code class="varname">mci</code>.<code class="varname">short_name</code>) == 0) {
+               <code class="varname">found_video_encoder</code> = <code class="constant">true</code>;
+               break;
+            }
+         }
+      }</pre><p>If the video track exists, we determine the encoded format by calling
+<a class="link" href="BMediaTrack.html#BMediaTrack_EncodedFormat" title="EncodedFormat()"><code class="methodname">BMediaTrack::EncodedFormat()</code></a>.
+The returned
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_format" title="media_format"><span class="type">media_format</span></a>
+describes the format of the video frames in the original file.</p><p>If a video encoder for the output was specified, a
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_format" title="media_format"><span class="type">media_format</span></a>
+constructed using the <code class="function">BuildMediaFormat()</code> function we implemented
+previously. This format will be used for reading the frames from the
+original file into a raw, unencoded video buffer. We call
+<a class="link" href="BMediaTrack.html#BMediaTrack_DecodedFormat" title="DecodedFormat()"><code class="methodname">BMediaTrack::DecodedFormat()</code></a>
+on the original video track, specifying that
+this format should be used for outputting frames. From this point onward,
+frames delivered by <code class="parameter">vidtrack</code> will be in raw video format.</p><p>A bitmap buffer is created. This will contain each frame of raw video
+while it's being transcoded, after being decoded and before it's encoded
+into the new file.</p><p>Another loop is used to locate an encoder that can convert raw video
+frames into the desired output format. This is done by calling
+<a class="link" href="BMediaFormats.html#get_next_encoder" title="get_next_encoder()"><code class="function">get_next_encoder()</code></a>
+in a loop, looking for an encoder that can accept data
+in the <a class="link" href="TheMediaKit_DefinedTypes.html#media_file_format" title="media_file_format"><span class="type">media_file_format</span></a>
+specified by <code class="varname">mfi</code>, converting the frames into the
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_format" title="media_format"><span class="type">media_format</span></a>
+specified by <code class="varname">format</code>. A description of the encoder is
+returned in <code class="varname">mci</code>. When a match is found, we check to see if it matches the
+encoder name, <code class="parameter">video_name</code>, requested by the input arguments. If it does,
+we accept it by setting the <code class="varname">found_video_encoder</code> flag to <code class="constant">true</code>.</p><pre class="programlisting example c">      if (<code class="varname">found_video_encoder</code>)
+         <code class="varname">vid</code> = <code class="varname">out</code>-&gt;<code class="methodname">CreateTrack</code>(&amp;<code class="varname">format</code>, &amp;<code class="varname">mci</code>);
+      else
+         <code class="varname">vid</code> = <code class="varname">out</code>-&gt;<code class="methodname">CreateTrack</code>(&amp;<code class="varname">format</code>);
+
+      if (<code class="varname">vid</code> == <code class="constant">NULL</code>) {
+         <code class="function">printf</code>("Failed to create video track\n");
+         delete <code class="varname">out</code>;
+         return;
+      }
+   }</pre><p>If a video encoder has been found, a new video track is created, using
+the found encoder, <code class="varname">mci</code>. Otherwise, a raw video track is created. This
+covers the case where the user indicates that he doesn't want any
+encoding (if they specify a <code class="constant">NULL</code> <code class="parameter">video_name</code>). A pointer to the new
+<a class="link" href="BMediaTrack.html" title="BMediaTrack"><code class="classname">BMediaTrack</code></a>
+is kept in <code class="varname">vid</code>.</p><p>If the track can't be created, an error message is displayed, the
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>
+for the output is deleted, and the function returns.</p><p>Next, the audio track is prepared in the same way: the encoded format is
+determined, the decoded format is specified, and an encoder is located,
+followed by the creation of the new track. A <code class="varname">sound_buffer</code> is allocated to
+contain the amount of audio data that will be stuffed into each buffer
+returned as the source track is read.</p><pre class="programlisting example c">   if (<code class="parameter">audtrack</code>) {
+      <code class="parameter">audtrack</code>-&gt;<code class="methodname">EncodedFormat</code>(&amp;<code class="varname">format</code>);
+
+      <code class="parameter">audtrack</code>-&gt;<code class="methodname">DecodedFormat</code>(&amp;<code class="varname">format</code>);
+      <code class="varname">sound_buffer</code> = (<span class="type">char*</span>)<code class="function">malloc</code>(<code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">raw_audio</code>.<code class="varname">buffer_size</code>);
+      <code class="varname">framesize</code> = (<code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">raw_audio</code>.<code class="varname">format</code>&amp;15)*
+                   <code class="varname">format</code>.<code class="varname">u</code>.<code class="varname">raw_audio</code>.<code class="varname">channel_count</code>;
+
+      if (<code class="parameter">audio_name</code>) {
+         <code class="varname">cookie</code> = 0;
+         while (<code class="function">get_next_encoder</code>(&amp;<code class="varname">cookie</code>, &amp;<code class="varname">mfi</code>, &amp;<code class="varname">format</code>,
+                                 &amp;<code class="varname">outfmt</code>, &amp;<code class="varname">mci</code>) == <code class="constant">B_OK</code>) {
+            <code class="function">printf</code>("found encoder %s (%d)\n", <code class="varname">mci</code>.<code class="varname">pretty_name</code>, <code class="varname">mci</code>.<code class="varname">id</code>);
+            if (<code class="function">strcmp</code>(<code class="parameter">audio_name</code>, <code class="varname">mci</code>.<code class="varname">short_name</code>) == 0) {
+               <code class="varname">found_audio_encoder</code> = <code class="constant">true</code>;
+               break;
+            }
+         }
+      }
+
+      if (<code class="varname">found_audio_encoder</code>)
+         <code class="varname">aud</code> = <code class="varname">out</code>-&gt;<code class="methodname">CreateTrack</code>(&amp;<code class="varname">format</code>, &amp;<code class="varname">mci</code>);
+      else
+         <code class="varname">aud</code> = <code class="varname">out</code>-&gt;<code class="methodname">CreateTrack</code>(&amp;<code class="varname">format</code>);
+
+      if (<code class="varname">aud</code> == <code class="constant">NULL</code>) {
+         <code class="function">printf</code>("Failed to create audio track\n");
+         delete <code class="varname">out</code>;
+         return;
+      }
+   }</pre><p>Final touches are then put on the new file's header.</p><pre class="programlisting example c">   <span class="comment">// Add the copyright and commit the header</span>
+   <code class="varname">out</code>-&gt;<code class="methodname">AddCopyright</code>("Copyright 1999 Be Incorporated");
+   <code class="varname">out</code>-&gt;<code class="methodname">CommitHeader</code>();</pre><p>In this example, a copyright notice is added to the file by calling
+<a class="link" href="BMediaFile.html#BMediaFile_AddCopyright" title="AddCopyright(), Copyright()"><code class="methodname">BMediaFile::AddCopyright()</code></a>.
+Once everything's ready, we call
+<a class="link" href="BMediaFile.html#BMediaFile_CommitHeader" title="CommitHeader()"><code class="methodname">BMediaFile::CommitHeader()</code></a>
+to indicate that we're about to begin writing
+media data into the file.</p><p>Then writing of the video track begins, if there is one.</p><pre class="programlisting example c">   <span class="comment">// Process the video track, if any</span>
+   if (<code class="parameter">vidtrack</code>) {
+      <span class="type">int</span> <code class="varname">is_key_frame</code> = 0;
+
+      if (<code class="varname">found_video_encoder</code>) {
+         <code class="varname">numFrames</code> = <code class="parameter">vidtrack</code>-&gt;<code class="methodname">CountFrames</code>();
+         for(<code class="varname">j</code> = 0; <code class="varname">j</code> &lt; <code class="varname">numFrames</code>; <code class="varname">j</code>++) {
+            <span class="type">int64</span> <code class="varname">framecount</code> = 1;
+            <code class="function">printf</code>(" r");
+            <code class="function">printf</code>("processing frame: %5Ld", <code class="varname">j</code>);
+            <code class="function">fflush</code>(<code class="varname">stdout</code>);
+            <code class="varname">err</code> = <code class="parameter">vidtrack</code>-&gt;<code class="methodname">ReadFrames</code>(<code class="varname">bitmap</code>, &amp;<code class="varname">framecount</code>, &amp;<code class="varname">mh</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("video: GetNextChunk error -- %s\n",
+                      <code class="function">strerror</code>(<code class="varname">err</code>));
+               break;
+            }
+            <code class="varname">err</code> = <code class="varname">vid</code>-&gt;<code class="methodname">WriteFrames</code>(<code class="varname">bitmap</code>, 1,
+                  <code class="varname">mh</code>.<code class="varname">u</code>.<code class="varname">encoded_video</code>.<code class="varname">field_flags</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("err %s (0x%x) writing video frame %Ld\n",
+                      <code class="function">strerror</code>(<code class="varname">err</code>), <code class="varname">err</code>, <code class="varname">j</code>);
+               break;
+            }
+         }</pre><p>If there's a video encoder in use (the output data will be encoded), we
+count up the number of frames in the video track by calling
+<a class="link" href="BMediaTrack.html#BMediaTrack_CountFrames" title="CountFrames()"><code class="methodname">BMediaTrack::CountFrames()</code></a>,
+then loop over all of the frames.</p><p>For each frame, we display a status notice to let the user know what
+we're doing, then read in the next frame from the source file by calling
+<a class="link" href="BMediaTrack.html#BMediaTrack_ReadFrames" title="ReadFrames()"><code class="methodname">BMediaTrack::ReadFrames()</code></a>.
+We specify the <code class="varname">bitmap</code> buffer as the buffer
+into which the frame should be read, and <code class="varname">framecount</code> will contain the
+number of read frames (it should always be 1 for video tracks). <code class="varname">mh</code>, a
+<a class="link" href="TheMediaKit_DefinedTypes.html#media_header" title="media_header"><span class="type">media_header</span></a>,
+will receive a description of the data in the buffer.</p><p>If an error occurs reading the frame, an error message is printed, and
+the video conversion is terminated.</p><p>Otherwise, the output video track, <code class="varname">vid</code>, is written into by calling
+<a class="link" href="BMediaTrack.html#BMediaTrack_WriteFrames" title="WriteFrames()"><code class="methodname">BMediaTrack::WriteFrames()</code></a>.
+The new frame is automatically encoded and
+appended to the new file. If an error occurs doing this, an error message
+is displayed and processing is terminated.</p><p>If there's no encoder being used (the output file is going to be written
+as raw or unknown-format data), the following code is used:</p><pre class="programlisting example c">      } else {
+         <code class="varname">numFrames</code> = <code class="parameter">vidtrack</code>-&gt;<code class="methodname">CountFrames</code>();
+         for(<code class="varname">j</code> = 0; <code class="varname">j</code> &lt; <code class="varname">numFrames</code>; <code class="varname">j</code>++) {
+            <code class="function">printf</code>(" r");
+            <code class="function">printf</code>("processing frame: %5Ld", <code class="varname">j</code>);
+            <code class="function">fflush</code>(<code class="varname">stdout</code>);
+
+            <code class="varname">err</code> = <code class="parameter">vidtrack</code>-&gt;<code class="methodname">ReadChunk</code>(&amp;<code class="varname">chunk</code>, &amp;<code class="varname">sz</code>, &amp;<code class="varname">mh</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("video: GetNextChunk error -- %s\n",
+                      <code class="function">strerror</code>(<code class="varname">err</code>));
+               break;
+            }
+
+            <code class="varname">err</code> = <code class="varname">vid</code>-&gt;<code class="methodname">WriteChunk</code>(<code class="varname">chunk</code>, <code class="varname">sz</code>,
+<code class="varname">mh</code>.<code class="varname">u</code>.<code class="varname">encoded_video</code>.<code class="varname">field_flags</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("err %s (0x%x) writing video frame %Ld\n",
+                     <code class="function">strerror</code>(<code class="varname">err</code>), <code class="varname">err</code>, <code class="varname">j</code>);
+               break;
+            }
+         }
+      }
+      <code class="function">printf</code>("r r");
+   }</pre><p>The only real difference here is that instead of using
+<a class="link" href="BMediaTrack.html#BMediaTrack_ReadFrames" title="ReadFrames()"><code class="methodname">BMediaTrack::ReadFrames()</code></a> and
+<a class="link" href="BMediaTrack.html#BMediaTrack_WriteFrames" title="WriteFrames()"><code class="methodname">BMediaTrack::WriteFrames()</code></a>,
+we use
+<a class="link" href="BMediaTrack.html#BMediaTrack_ReadChunk" title="ReadChunk()"><code class="methodname">BMediaTrack::ReadChunk()</code></a> and
+<a class="link" href="BMediaTrack.html#BMediaTrack_WriteChunk" title="WriteChunk()"><code class="methodname">BMediaTrack::WriteChunk()</code></a>.
+These work with
+media data without attempting to interpret the data in any way.</p><p>One or the other of these loops will continue until either an error
+occurs, or the entire video track is converted.</p><p>Next, the audio track is converted, if there is one. As you can see, this
+is done in almost exactly the same manner, except that each buffer we
+receive will have more than one frame of audio in it. Note how the loop
+that iterates over the frames adds <code class="varname">framecount</code> to its counter variable
+each pass; <code class="varname">framecount</code> indicates the number of frames returned by the last
+call to
+<a class="link" href="BMediaTrack.html#BMediaTrack_ReadFrames" title="ReadFrames()"><code class="methodname">BMediaTrack::ReadFrames()</code></a> or
+<a class="link" href="BMediaTrack.html#BMediaTrack_ReadChunk" title="ReadChunk()"><code class="methodname">BMediaTrack::ReadChunk()</code></a>.</p><pre class="programlisting example c">   <span class="comment">// Process the audio track, if any</span>
+   if (<code class="parameter">audtrack</code>) {
+      <span class="type">int64</span>       <code class="varname">framecount</code> = 0;
+
+      if (<code class="varname">found_audio_encoder</code>) {
+         <span class="comment">// Decode and encode all the frames</span>
+         <code class="varname">numFrames</code> = <code class="parameter">audtrack</code>-&gt;<code class="methodname">CountFrames</code>();
+         <code class="function">printf</code>("Total frame count : %Ld\n", <code class="varname">numFrames</code>);
+         for (<code class="varname">j</code> = 0; <code class="varname">j</code> &lt; <code class="varname">numFrames</code>; <code class="varname">j</code>+=<code class="varname">framecount</code>) {
+            <code class="varname">err</code> = <code class="parameter">audtrack</code>-&gt;<code class="methodname">ReadFrames</code>(<code class="varname">sound_buffer</code>, &amp;<code class="varname">framecount</code>, &amp;<code class="varname">mh</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("video: GetNextChunk error -- %s\n", <code class="function">strerror</code>(<code class="varname">err</code>));
+               break;
+            }
+
+            <code class="varname">err</code> = <code class="varname">aud</code>-&gt;<code class="methodname">WriteFrames</code>(<code class="varname">sound_buffer</code>, <code class="varname">framecount</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("err %s (0x%x) writing audio frame %Ld\n",
+                     <code class="function">strerror</code>(<code class="varname">err</code>), <code class="varname">err</code>, <code class="varname">j</code>);
+               break;
+            }
+         }
+      } else {
+         <code class="function">printf</code>("processing chunks...\n");
+         while (<code class="constant">true</code>) {
+            <code class="varname">err</code> = <code class="parameter">audtrack</code>-&gt;<code class="methodname">ReadFrames</code>(<code class="varname">sound_buffer</code>, &amp;<code class="varname">framecount</code>, &amp;<code class="varname">mh</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("audio: GetNextChunk error -- %s\n", <code class="function">strerror</code>(<code class="varname">err</code>));
+               break;
+            }
+
+            <code class="varname">err</code> = <code class="varname">aud</code>-&gt;<code class="methodname">WriteChunk</code>(<code class="varname">sound_buffer</code>, <code class="varname">framecount</code>*<code class="varname">framesize</code>);
+            if (<code class="varname">err</code>) {
+               <code class="function">printf</code>("err %s (0x%x) writing audio chunk %Ld\n",
+                     <code class="function">strerror</code>(<code class="varname">err</code>), <code class="varname">err</code>, <code class="varname">j</code>);
+               break;
+            }
+         }
+      }
+      <code class="function">printf</code>("r r");
+   }</pre><p>Once converting the audio is done, there's very little left to do but
+release the video and audio buffers we've allocated, close the output
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>,
+and delete it.</p><pre class="programlisting example c">   if (<code class="varname">bitmap</code>)
+      <code class="function">free</code>(<code class="varname">bitmap</code>);
+   if (<code class="varname">sound_buffer</code>)
+      <code class="function">free</code>(<code class="varname">sound_buffer</code>);
+
+   <code class="varname">out</code>-&gt;<code class="methodname">CloseFile</code>();
+   delete <code class="varname">out</code>;
+   <code class="varname">out</code> = <code class="constant">NULL</code>;
+}</pre><p>After this function returns, the caller is responsible for deleting the
+source
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id576140"></a>Using the transcode() Function</h3></div></div></div><p>Let's look at a <code class="function">main()</code> that uses the
+<code class="function">transcode()</code> function to provide a
+command-line utility for converting media files from one format to
+another.</p><pre class="programlisting example c"><span class="type">int</span> <code class="function">main</code>(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>) {
+   <span class="type">status_t</span> <code class="varname">err</code>;
+   <span class="type">entry_ref</span> <code class="varname">ref</code>;
+   <span class="type">media_format</span> <code class="varname">format</code>;
+   <code class="classname">BMediaFile</code> <code class="varname">mediaFile</code>;
+   <span class="type">BMediaTrack *</span><code class="varname">track</code> = <code class="constant">NULL</code>, *<code class="varname">vidtrack</code> = <code class="constant">NULL</code>, *<code class="varname">audtrack</code> = <code class="constant">NULL</code>;
+   <span class="type">int32</span> <code class="varname">i</code>, <code class="varname">numTracks</code>;
+   <span class="type">char *</span><code class="varname">input</code> = <code class="constant">NULL</code>, *<code class="varname">output</code> = <code class="constant">NULL</code>;
+   <span class="type">char *</span><code class="varname">video_encoder_name</code> = <code class="constant">NULL</code>, *<code class="varname">audio_encoder_name</code> = <code class="constant">NULL</code>;
+   <span class="type">char *</span><code class="varname">family_name</code> = <code class="constant">NULL</code>;
+
+   if (<code class="varname">argc</code> &lt; 2) {
+      <code class="function">printf</code>("usage: %s [-info][-avi|-qt][-wav][-aiff][-v
+&lt;encoder_name&gt;][-a &lt;encoder_name&gt;] &lt;filename&gt; [&lt;output&gt;]n", argv[0]);
+      return 1;
+   }</pre><p>If the number of arguments is less than 2, a usage notice is printed.</p><pre class="programlisting example c">   for (<code class="varname">i</code>=1; <code class="varname">i</code> &lt; <code class="parameter">argc</code>; <code class="varname">i</code>++) {
+      if (<code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-info") == 0) {
+         <code class="function">dump_info</code>();
+         <code class="function">exit</code>(0);
+      } else if (<code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-avi") == 0 ||
+               <code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-wav") == 0 ||
+               <code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-aiff") == 0 ||
+               <code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-quicktime") == 0) {
+         <code class="varname">family_name</code> = &amp;<code class="parameter">argv</code>[<code class="varname">i</code>][1];
+      } else if (<code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-qt") == 0) {
+         <code class="varname">family_name</code> = "quicktime";
+      } else if (<code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-v") == 0 &amp;&amp; argv[i+1]) {
+         <code class="varname">video_encoder_name</code> = <code class="parameter">argv</code>[<code class="varname">i</code>+1];
+         <code class="varname">i</code>++;
+      } else if (<code class="function">strcmp</code>(&amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0], "-a") == 0 &amp;&amp; argv[i+1]) {
+         <code class="varname">audio_encoder_name</code> = <code class="parameter">argv</code>[<code class="varname">i</code>+1];
+         <code class="varname">i</code>++;
+      } else if (<code class="varname">input</code> == <code class="constant">NULL</code>) {
+         <code class="varname">input</code> = &amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0];
+      } else if (<code class="varname">output</code> == <code class="constant">NULL</code>) {
+         <code class="varname">output</code> = &amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0];
+      } else {
+         <code class="function">printf</code>("%s: extra argument %s\n", &amp;<code class="parameter">argv</code>[0][0], &amp;<code class="parameter">argv</code>[<code class="varname">i</code>][0]);
+      }
+   }</pre><p>The arguments are interpreted here. The arguments are:</p><table class="variablelist arguments"><thead><tr><th>Argument</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="option">-info</code>:</span></p></td><td><p>Dumps information about the available media file formats and
+encoders; this function can be found in the description of the
+<a class="link" href="TheMediaKit_Functions.html#get_next_file_format" title="get_next_file_format()"><code class="function">get_next_file_format()</code></a>
+function.</p></td></tr><tr><td><p><span class="term"><code class="option">-avi</code>:</span></p></td><td><p>Specifies that the output file should be in AVI format; this
+sets the <code class="varname">family_name</code> to "avi".</p></td></tr><tr><td><p><span class="term"><code class="option">-wav</code>:</span></p></td><td><p>Specifies that the output file should be in WAV format; this
+sets the <code class="varname">family_name</code> to "wav".</p></td></tr><tr><td><p><span class="term"><code class="option">-aiff</code>:</span></p></td><td><p>Specifies that the output file should be in AIFF format; this
+sets the <code class="varname">family_name</code> to "aiff".</p></td></tr><tr><td><p><span class="term"><code class="option">-quicktime</code>:</span></p></td><td><p>Specifies that the output file should be a QuickTime
+movie; this sets the <code class="varname">family_name</code> to "quicktime".</p></td></tr><tr><td><p><span class="term"><code class="option">-qt</code>:</span></p></td><td><p>A shorthand form of <code class="option">-quicktime</code>.</p></td></tr><tr><td><p><span class="term"><code class="option">-v</code>:</span></p></td><td><p>Lets you specify a video encoder name other than one of the
+above, such as "-v myformat".</p></td></tr><tr><td><p><span class="term"><code class="option">-a</code>:</span></p></td><td><p>Lets you specify an audio encoder name other than one of the
+above, such as "-a audiowonderness".</p></td></tr></tbody></table><p><code class="option">input</code> is the input file's name, and
+<code class="option">output</code> is the name of the new media
+file to be created.</p><pre class="programlisting example c">   if (<code class="varname">output</code> == <code class="constant">NULL</code>)
+      <code class="varname">output</code> = "output";
+
+   <code class="varname">err</code> = <code class="function">get_ref_for_path</code>(<code class="varname">input</code>, &amp;<code class="varname">ref</code>);
+   if (<code class="varname">err</code>) {
+      <code class="function">printf</code>("problem with get_ref_for_path() -- %s\n", <code class="function">strerror</code>(<code class="varname">err</code>));
+      return 1;
+   }</pre><p>If no output file name is specified, the name "output" is assumed. An
+<a class="link" href="BEntry.html#entry_ref" title="entry_ref"><span class="type">entry_ref</span></a>
+to the input file is constructed; if the file isn't found, an
+error message is printed and the program exits.</p><pre class="programlisting example c">   <code class="varname">mediaFile</code> = new <code class="classname">BMediaFile</code>(&amp;<code class="varname">ref</code>);
+   <code class="varname">err</code> = <code class="varname">mediaFile</code>-&gt;<code class="methodname">InitCheck</code>();
+   if (<code class="varname">err</code>) {
+      <code class="function">printf</code>("cannot contruct BMediaFile object -- %s\n", <code class="function">strerror</code>(<code class="varname">err</code>));
+      return 1;
+   }</pre><p>A <a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>
+is then instantiated, referencing the input file. If an
+error occurs, an error is displayed and the program terminates.</p><pre class="programlisting example c">   <code class="varname">numTracks</code> = <code class="varname">mediaFile</code>-&gt;<code class="methodname">CountTracks</code>();
+   <code class="function">printf</code>("%s has %d media tracks\n", <code class="varname">input</code>, <code class="varname">numTracks</code>);
+   <span class="type">const char *</span><code class="varname">copyright</code> = <code class="varname">mediaFile</code>-&gt;<code class="methodname">Copyright</code>();
+   if (<code class="varname">copyright</code>)
+      <code class="function">printf</code>("#### copyright info: %s\n", <code class="varname">copyright</code>);</pre><p>The number of tracks in the source file is obtained by calling
+<a class="link" href="BMediaFile.html#BMediaFile_CountTracks" title="CountTracks()"><code class="methodname">BMediaFile::CountTracks()</code></a>,
+and the file's copyright notice is obtained by calling
+<a class="link" href="BMediaFile.html#BMediaFile_Copyright"><code class="methodname">BMediaFile::Copyright()</code></a>.
+This information is printed for the user to read.</p><pre class="programlisting example c">   for(<code class="varname">i</code>=0; <code class="varname">i</code> &lt; <code class="varname">numTracks</code>; <code class="varname">i</code>++) {
+      <code class="varname">track</code> = <code class="varname">mediaFile</code>-&gt;<code class="methodname">TrackAt</code>(<code class="varname">i</code>);
+      if (!<code class="varname">track</code>) {
+         <code class="function">printf</code>("cannot get track %d?!?\n", <code class="varname">i</code>);
+         return 1;
+      }
+
+      <span class="comment">// get the encoded format</span>
+      <code class="varname">err</code> = <code class="varname">track</code>-&gt;<code class="methodname">EncodedFormat</code>(&amp;<code class="varname">format</code>);
+      if (<code class="varname">err</code>) {
+         <code class="function">printf</code>("BMediaTrack::EncodedFormat error -- %s\n", <code class="function">strerror</code>(<code class="varname">err</code>));
+         return 1;
+      }
+
+      if (<code class="varname">format</code>.<code class="varname">type</code> == <code class="constant">B_MEDIA_RAW_VIDEO</code> ||
+         <code class="varname">format</code>.<code class="varname">type</code> == <code class="constant">B_MEDIA_ENCODED_VIDEO</code>) {
+
+         <code class="varname">vidtrack</code> = <code class="varname">track</code>;
+      } else if (<code class="varname">format</code>.<code class="varname">type</code> == <code class="constant">B_MEDIA_RAW_AUDIO</code> ||
+               <code class="varname">format</code>.<code class="varname">type</code> == <code class="constant">B_MEDIA_ENCODED_AUDIO</code>) {
+
+         <code class="varname">audtrack</code> = <code class="varname">track</code>;
+      } else {
+         <code class="varname">mediaFile</code>-&gt;<code class="methodname">ReleaseTrack</code>(<code class="varname">track</code>);
+         <code class="varname">track</code> = <code class="constant">NULL</code>;
+      }
+   }</pre><p>Next, a loop iterates over all the tracks in the file by calling
+<a class="link" href="BMediaFile.html#BMediaFile_TrackAt" title="TrackAt()"><code class="methodname">BMediaFile::TrackAt()</code></a>
+to obtain
+<a class="link" href="BMediaFile.html" title="BMediaFile"><code class="classname">BMediaFile</code></a>
+objects referencing them, one
+by one. Each track's encoded format is obtained, and is checked to see if
+the track represents a video or audio track. If it's a video track, it's
+kept in the <code class="varname">vidtrack</code> variable. If it's an audio track, it's kept in
+<code class="varname">audtrack</code>. If it's neither, the track is released.</p><p>This serves to search all the tracks for a video and an audio track to be
+converted; most movies will only have one of each, but may have other
+informational tracks, which need to be ignored for our purposes.</p><pre class="programlisting example c">   if (<code class="varname">vidtrack</code> == <code class="constant">NULL</code> &amp;&amp; <code class="varname">audtrack</code> == <code class="constant">NULL</code>) {
+      <code class="function">printf</code>("%s has no audio or video tracks?!?\n", <code class="varname">input</code>);
+      return 1;
+   }</pre><p>If there's neither a video nor an audio track, the source file is empty
+and isn't worth converting, so an error message is displayed and the
+program terminates.</p><pre class="programlisting example c">   if (<code class="varname">family_name</code> == <code class="constant">NULL</code> &amp;&amp; <code class="varname">vidtrack</code> == NULL)
+      <code class="varname">family_name</code> = "wav";
+   else if (<code class="varname">family_name</code> == <code class="constant">NULL</code>)
+      <code class="varname">family_name</code> = "quicktime";</pre><p>If the user didn't specify an output family, and the file has no video
+track, the WAV file format is assumed. You can change the program to
+assume AIFF for audio-only files by changing "wav" to "aiff" here.</p><p>For any file that has a video track, if no family is specified by the
+user, QuickTime format is assumed. Again, if you want the default to be
+another format, you can change that here.</p><pre class="programlisting c">   <code class="function">transcode</code>(<code class="varname">vidtrack</code>, <code class="varname">audtrack</code>, <code class="varname">output</code>, <code class="varname">family_name</code>,
+             <code class="varname">video_encoder_name</code>, <code class="varname">audio_encoder_name</code>);</pre><p>The conversion is performed by passing all these parameters to
+<code class="function">transcode()</code> to do the real work.</p><pre class="programlisting example c">   delete <code class="varname">mediaFile</code>;
+
+   return 0;
+}</pre><p>Once <code class="function">transcode()</code> returns, we simply delete the source file and exit the
+program. The file has been converted (assuming no errors occurred in
+<code class="function">transcode()</code>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id577561"></a>Integrating Into a Real Application</h3></div></div></div><p>When creating a real application, you'll need to provide a way for the
+user to review a list of the various media file formats available, as
+well as the encoders provided for each format. The <code class="function">dump_info()</code> sample
+function discussed in the description of the
+<a class="link" href="TheMediaKit_Functions.html#get_next_file_format" title="get_next_file_format()"><code class="function">get_next_file_format()</code></a>
+function shows how this can be done.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheMediaKit_Overview_Introduction.html">Introduction</a>  Up: <a href="TheMediaKit_Overview.html">The Media Kit</a>  Next: <a href="TheMediaKit_ExampleNode.html">A BMediaEventLooper Example</a> </div><div id="footerB"><div id="footerBL"><a href="TheMediaKit_Overview_Introduction.html" title="Introduction"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheMediaKit_Overview.html" title="The Media Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TheMediaKit_ExampleNode.html" title="A BMediaEventLooper Example"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

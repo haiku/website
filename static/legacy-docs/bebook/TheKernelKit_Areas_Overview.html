@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Kernel Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheKernelKit_Overview.html" title="The Kernel Kit" /><link rel="prev" href="TheKernelKit_Semaphores_Overview.html" title="Semaphores" /><link rel="next" href="TheKernelKit_Images_Overview.html" title="Images" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheKernelKit_Semaphores_Overview.html" title="Semaphores"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TheKernelKit_Images_Overview.html" title="Images"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Kernel Kit</div></div><div id="headerB">Prev: <a href="TheKernelKit_Semaphores_Overview.html">Semaphores</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheKernelKit_Images_Overview.html">Images</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheKernelKit_Areas_Overview"></a>Areas</h2></div></div></div><p>An area is a chunk of virtual memory. As such, it has all the expected
+properties of virtual memory: It has a starting address, a size,
+addresses it comprises are contiguous, and it maps to (possibly
+non-contiguous) physical memory. The features that an area provides that
+you don't get with "standard" memory are these:</p><dl class="variablelist"><dt><span class="term">Areas can be shared.</span></dt><dd><p>Different areas can refer to the same physical
+memory. Put another way, different virtual memory addresses can map to
+the same physical locations. Furthermore, the different areas needn't
+belong to the same application. By creating and "cloning" areas,
+applications can easily share the same data.</p></dd><dt><span class="term">Areas can be locked into RAM.</span></dt><dd><p>You can specify that the area's
+physical memory be locked into RAM when it's created, locked on a
+page-by-page basis as pages are swapped in, or that it be swapped in
+and out as needed.</p></dd></dl><p>Areas can be read- and write-protected.</p><dl class="variablelist"><dt><span class="term">Areas are page-aligned.</span></dt><dd><p>Areas always start on a page boundary, and
+are allocated in integer multiples of the size of a page. (A page is
+4096 bytes, as represented by the <code class="constant">B_PAGE_SIZE</code> constant.)</p></dd><dt><span class="term">You can specify the starting address of the area's virtual memory.</span></dt><dd><p>The specification can require that the area start precisely at a
+certain address, anywhere above a certain address, or anywhere at all.</p></dd></dl><p>Because areas are large—one page, minimum—you don't create
+them arbitrarily. The two most compelling reasons to create an area are
+the two first points listed above: To share data among different
+applications, and to lock memory into RAM.</p><p>In all particulars (but one) you treat the memory that an area gives you
+exactly as you would treat any allocated memory: You can read and write
+it through pointer manipulation, or through standard functions such as
+<code class="function">memcpy()</code> and <code class="function">strcpy()</code>.
+The one difference is between areas and malloc'd
+memory is…</p><ul class="itemizedlist"><li><p>You never <code class="function">free()</code> the memory that an area allocates for you. If you
+want to get rid of an area, use the
+<a class="link" href="TheKernelKit_Areas.html#delete_area" title="delete_area()"><code class="function">delete_area()</code></a>
+function, instead.</p></li></ul><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id564496"></a>Area IDs and Area Names</h3></div></div></div><p>Each area that you create is tagged with an <span class="type">area_id</span> number:</p><ul class="itemizedlist"><li><p>An <span class="type">area_id</span> number is a positive integer that's global and unique
+within the scope of the computer. They're not unique across the
+network, nor are they persistent across boots.</p></li><li><p>The <span class="type">area_id</span> numbers are generated and assigned automatically by the
+<a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a> and
+<a class="link" href="TheKernelKit_Areas.html#clone_area" title="clone_area()"><code class="function">clone_area()</code></a>
+functions. The other area functions
+operate on these <span class="type">area_id</span> numbers (they're required as arguments).</p></li><li><p>Although they are global, <span class="type">area_id</span> numbers have little meaning outside
+of the address space (application) in which they were created.</p></li><li><p>Once assigned, the <span class="type">area_id</span> number doesn't change; the number is
+invalidated when
+<a class="link" href="TheKernelKit_Areas.html#delete_area" title="delete_area()"><code class="function">delete_area()</code></a>
+is called or when the application (team) that created it dies.</p></li><li><p>Don't worry about recycled <span class="type">area_id</span> numbers. When an area is deleted,
+its <span class="type">area_id</span> goes with it. (<span class="type">area_id</span> values are recycled, but the
+turnover is at 2^31.)</p></li></ul><p>Areas can also be (loosely) identified by name:</p><ul class="itemizedlist"><li><p>When you create an area (through
+<a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a> or
+<a class="link" href="TheKernelKit_Areas.html#clone_area" title="clone_area()"><code class="function">clone_area()</code></a>), you
+get to name it.</p></li><li><p>Area names are not unique—any number of areas can be assigned
+the same name.</p></li><li><p>To look up an area by name, use the
+<a class="link" href="TheKernelKit_Areas.html#find_area" title="find_area()"><code class="function">find_area()</code></a> function.</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id564667"></a>Sharing an Area Between Applications</h3></div></div></div><p>For multiple applications to share a common area, one of the applications
+has to create the area, and the other applications clone the area. You
+clone an area by calling
+<a class="link" href="TheKernelKit_Areas.html#clone_area" title="clone_area()"><code class="function">clone_area()</code></a>.
+The function takes, as its last argument, the <span class="type">area_id</span>
+of the source area and returns a new (unique)
+<span class="type">area_id</span> number. All further references to the cloned area (in the cloning
+application) must be based on the <span class="type">area_id</span> that's returned by
+<a class="link" href="TheKernelKit_Areas.html#clone_area" title="clone_area()"><code class="function">clone_area()</code></a>.</p><p>So how does a cloner find a source <span class="type">area_id</span> in the first place?</p><ul class="itemizedlist"><li><p>The source application can pass the "original" <span class="type">area_id</span> number to the
+cloners.</p></li><li><p>The cloners can find the area by name, by calling
+<a class="link" href="TheKernelKit_Areas.html#find_area" title="find_area()"><code class="function">find_area()</code></a>.</p></li></ul><p>Keep in mind that area names are not forced to be unique, so the
+<a class="link" href="TheKernelKit_Areas.html#find_area" title="find_area()"><code class="function">find_area()</code></a>
+method has some amount of uncertainty. But this can be
+minimized through clever name creation.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id564761"></a>Cloned Memory</h4></div></div></div><p>The physical memory that lies beneath an area is never implicitly
+copied—for example, the area mechanism doesn't perform a
+"copy-on-write." If two areas refer to the same memory because of
+cloning, a data modification that's affected through one area will be
+seen by the other area.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id564778"></a>Locking an Area</h3></div></div></div><p>When you're working with moderately large amounts of data, it's often the
+case that you would prefer that the data remain in RAM, even if the rest
+of your application needs to be swapped out. An argument to
+<a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a>
+lets you declare, through the use of one of the following constants, the
+locking scheme that you wish to apply to your area:</p><table class="variablelist constants"><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><code class="constant">B_FULL_LOCK</code></span></p></td><td><p>The area's memory is locked into RAM when the area is
+created, and won't be swapped out.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_CONTIGUOUS</code></span></p></td><td><p>Not only is the area's memory locked into RAM, it's also
+guaranteed to be contiguous. This is particularly—and perhaps
+exclusively—useful to designers of certain types of device drivers.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_LAZY_LOCK</code></span></p></td><td><p>Allows individual pages of memory to be brought into RAM
+through the natural order of things and then locks them.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_NO_LOCK</code></span></p></td><td><p>Pages are never locked, they're swapped in and out as needed.</p></td></tr><tr><td><p><span class="term"><code class="constant">B_LOMEM</code></span></p></td><td><p>This is a special constant that's used for for areas that need to
+be locked, contiguous, and that fit within the first 16MB of physical
+memory. The folks that need this constant know who they are.</p></td></tr></tbody></table><p>Keep in mind that locking an area essentially reduces the amount of RAM
+that can be used by other applications, and so increases the likelihood
+of swapping. So you shouldn't lock simply because you're greedy. But if
+the area that you're locking is going to be shared among some number of
+other applications, or if you're writing a real-time application that
+processes large chunks of data, then locking can be a justifiable excess.</p><p>The locking scheme is set by the
+<a class="link" href="TheKernelKit_Areas.html#create_area" title="create_area()"><code class="function">create_area()</code></a>
+function and is thereafter immutable. You can't re-declare
+the lock when you clone an area.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id564920"></a>Area Info</h3></div></div></div><p>Ultimately, you use an area for the virtual memory that it represents:
+You create an area because you want some memory to which you can write
+and from which you can read data. These acts are performed in the usual
+manner, through references to specific addresses. Setting a pointer to a
+location within the area, and checking that you haven't exceeded the
+area's memory bounds as you increment the pointer (while reading or
+writing) are your own responsibility. To do this properly, you need to
+know the area's starting address and its extent:</p><ul class="itemizedlist"><li><p>An area's starting address is maintained as the <code class="varname">address</code> field in its
+<span class="type">area_info</span> structure; you retrieve the <span class="type">area_info</span> for a particular area
+through the
+<a class="link" href="TheKernelKit_Areas.html#get_area_info" title="get_area_info(), get_next_area_info(), area_info"><code class="function">get_area_info()</code></a>
+function.</p></li><li><p>The size of the area (in bytes) is given as the <code class="varname">size</code> field of its
+<span class="type">area_info</span> structure.</p></li></ul><p>An important point, with regard to <span class="type">area_info</span>, is that the address field
+is only valid for the application that created or cloned the area (in
+other words, the application that created the <span class="type">area_id</span> that was passed to
+<a class="link" href="TheKernelKit_Areas.html#get_area_info" title="get_area_info(), get_next_area_info(), area_info"><code class="function">get_area_info()</code></a>).
+Although the memory that underlies an area is global,
+the address that you get from an <span class="type">area_info</span> structure refers to a specific
+address space.</p><p>If there's any question about whether a particular <span class="type">area_id</span> is "local" or
+"foreign," you can compare the
+<span class="code"><span class="type">area_info</span>.<code class="varname">team</code></span> field to your thread's team.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id565024"></a>Deleting an Area</h3></div></div></div><p>When your application quits, the areas (the <span class="type">area_id</span> numbers) that it
+created through
+create_area() or
+<a class="link" href="TheKernelKit_Areas.html#clone_area" title="clone_area()"><code class="function">clone_area()</code></a>
+are automatically rendered
+invalid. The memory underlying these areas, however, isn't necessarily
+freed. An area's memory is freed only when (and as soon as) there are no
+more areas that refer to it.</p><p>You can force the invalidation of an <span class="type">area_id</span> by passing it to the
+<a class="link" href="TheKernelKit_Areas.html#delete_area" title="delete_area()"><code class="function">delete_area()</code></a>
+function. Again, the underlying memory is only freed if
+yours is the last area to refer to the memory.</p><p>Deleting an area, whether explicitly through
+<a class="link" href="TheKernelKit_Areas.html#delete_area" title="delete_area()"><code class="function">delete_area()</code></a>,
+or because your application quit, never affects the status of other areas that were
+cloned from it.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Areas_Examples"></a>Area Examples</h3></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Areas_Example1"></a>Example 1: Creating and Writing into an Area</h4></div></div></div><p>As a simple example of area creation and usage, here we create a ten page
+area and fill half of it (with nonsense) by bumping a pointer:</p><pre class="programlisting example c"><span class="type">area_id</span> <code class="varname">my_area</code>;
+<span class="type">char *</span><code class="varname">area_addr</code>, <span class="type">*</span><code class="varname">ptr</code>;
+
+<span class="comment">/* Create an area. */</span>
+<code class="varname">my_area</code> = <code class="function">create_area</code>("my area", <span class="comment">/* name you give to the area */</span>
+      (<span class="type">void *</span>)&amp;<code class="varname">area_addr</code>, <span class="comment">/* returns the starting addr */</span>
+      <code class="constant">B_ANY_ADDRESS</code>, <span class="comment">/* area can start anywhere */</span>
+      <code class="constant">B_PAGE_SIZE</code>*10, <span class="comment">/* size in bytes */</span>
+      <code class="constant">B_NO_LOCK</code>, <span class="comment">/* Lock in RAM? No. */</span>
+      <code class="constant">B_READ_AREA</code> | <code class="constant">B_WRITE_AREA</code>); <span class="comment">/* permissions */</span>
+
+<span class="comment">/* check for errors */</span>
+if (<code class="varname">my_area</code> &lt; 0) {
+      <code class="function">printf</code>("Something bad happenedn");
+      return;
+}
+
+<span class="comment">/* Set ptr to the beginning of the area. */</span>
+<code class="varname">ptr</code> = <code class="varname">area_addr</code>;
+
+<span class="comment">/* Fill half the area (with random-ish data). */</span>
+for (<span class="type">int</span> <code class="varname">i</code>; <code class="varname">i</code> &lt; <code class="constant">B_PAGE_SIZE</code>*5; <code class="varname">i</code>++)
+   *<code class="varname">ptr</code>++ = <code class="function">system_time</code>()%256;</pre><p>You can also <code class="function">memcpy()</code> and <code class="function">strcpy()</code> into the area:</p><pre class="programlisting example c"><span class="comment">/* Copy the first half of the area into the second half. */</span>
+<code class="function">memcpy</code>(<code class="varname">ptr</code>, <code class="varname">area_addr</code>, <code class="constant">B_PAGE_SIZE</code>*5);
+
+<span class="comment">/* Overwrite the beginning of the area. */</span>
+<code class="function">strcpy</code>(<code class="varname">area_addr</code>, "Hey, look where I am.");</pre><p>When we're all done, we delete the area:</p><pre class="programlisting example c"><code class="function">delete_area</code>(<code class="varname">my_area</code>);</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Areas_Example2"></a>Example 2: Reading a File into an Area</h4></div></div></div><p>Here's a function that finds a file, opens it (implicit in the
+<a class="link" href="BFile.html" title="BFile"><code class="classname">BFile</code></a>
+constructor), and copies its contents into RAM:</p><pre class="programlisting example c">#include &lt;File.h&gt;
+
+<span class="type">area_id</span> <code class="varname">file_area</code>;
+
+<span class="type">status_t</span> <code class="function">file_reader</code>(<span class="type">const char *</span><code class="parameter">pathname</code>)
+{
+   <span class="type">status_t</span> <code class="varname">err</code>;
+   <span class="type">char *</span><code class="varname">area_addr</code>;
+
+   <code class="classname">BFile</code> <code class="varname">file</code>(<code class="parameter">pathname</code>, <code class="constant">B_READ_ONLY</code>);
+   if ((<code class="varname">err</code>=<code class="varname">file</code>.<code class="methodname">InitCheck</code>()) != <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("%s: Can't find or open.n", <code class="parameter">pathname</code>);
+      return <code class="varname">err</code>;
+   }
+
+   <code class="varname">err</code> = <code class="varname">file</code>.<code class="methodname">GetSize</code>(&amp;<code class="varname">file_size</code>);
+   if (<code class="varname">err</code> != <code class="constant">B_OK</code> || <code class="varname">file_size</code> == 0) {
+      <code class="function">printf</code>("%s: Disappeared? Empty?n", <code class="parameter">pathname</code>);
+      return <code class="varname">err</code>;
+   }
+
+   <span class="comment">/* Round the size up to the nearest page. */</span>
+   <code class="varname">file_size</code> = (((<code class="varname">file_size</code>-1) % <code class="constant">B_PAGE_SIZE</code>)+1)*<code class="constant">B_PAGE_SIZE</code>;
+
+   <span class="comment">/* Make sure the size won't overflow a size_t spec. */</span>
+   if (<code class="varname">file_size</code> &gt;= ((1&lt;&lt;32)-1) ) {
+      <code class="function">printf</code>("%s: What'd you do? Read Montana?n");
+      return <code class="constant">B_NO_MEMORY</code>;
+   }
+
+   <code class="varname">file_area</code> = <code class="function">create_area</code>("File area", (<span class="type">void *</span>)&amp;<code class="varname">area_addr</code>,
+      <code class="constant">B_ANY_ADDRESS</code>, <code class="varname">file_size</code>, <code class="constant">B_FULL_LOCK</code>,
+      <code class="constant">B_READ_AREA</code> | <code class="constant">B_WRITE_AREA</code>);
+
+   <span class="comment">/* Check create_area() errors, as in the last example. */</span>
+   ...
+
+   <span class="comment">/* Read the file; delete the area if there's an error. */</span>
+   if ((<code class="varname">err</code>=<code class="varname">file</code>.<code class="methodname">Read</code>(<code class="varname">area_addr</code>, <code class="varname">file_size</code>)) &lt; <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("%s: File read error.n");
+      <code class="function">delete_area</code>(<code class="varname">file_area</code>);
+      return <code class="varname">err</code>;
+   }
+
+   <span class="comment">/* The file is automatically closed when the stack-based
+   * BFile is destroyed.
+   */</span>
+   return <code class="constant">B_OK</code>;
+}</pre></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Areas_Example3"></a>Example 3: Accessing a Designated Area</h4></div></div></div><p>In the previous example, a local variable (<code class="varname">area_addr</code>) was used to capture
+the starting address of the newly-created area. If some other function
+wants to access the area, it must "re-find" the starting address (and the
+length of the area, for boundary checking). To do this, you call
+<a class="link" href="TheKernelKit_Areas.html#get_area_info" title="get_area_info(), get_next_area_info(), area_info"><code class="function">get_area_info()</code></a>.</p><p>In the following example, an area is passed in by name; the function,
+which will write its argument buffer to the area, calls
+<a class="link" href="TheKernelKit_Areas.html#get_area_info" title="get_area_info(), get_next_area_info(), area_info"><code class="function">get_area_info()</code></a>
+to determine the start and extent of the area, and also to make sure that
+the area is part of this team. If the area was created by some other
+team, the function could still write to it, but it would have to clone
+the area first (cloning is demonstrated in the next example).</p><pre class="programlisting example c"><span class="type">status_t</span> <code class="function">write_to_area</code>(<span class="type">const char *</span><code class="parameter">area_name</code>,
+               <span class="type">const void *</span><code class="parameter">buf</code>,
+               <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+   <span class="type">area_id</span> <code class="varname">area</code>;
+   <span class="type">area_info</span> <code class="varname">ai</code>;
+   <span class="type">thread_id</span> <code class="varname">thread</code>;
+   <span class="type">thread_info</span> <code class="varname">ti</code>;
+   <span class="type">status_t</span> <code class="varname">err</code>;
+
+   if (!<code class="parameter">area_name</code>)
+      return <code class="constant">B_BAD_VALUE</code>;
+
+   <code class="varname">area</code> = <code class="function">find_area</code>(<code class="parameter">area_name</code>);
+
+   <span class="comment">/* Did we find it? */</span>
+   if (<code class="varname">area</code> &lt; <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Couldn't find area %s.n", <code class="parameter">area_name</code>);
+      return <code class="varname">err</code>;
+   }
+
+   <span class="comment">/* Get the info. */</span>
+   <code class="varname">err</code> = <code class="function">get_area_info</code>(<code class="varname">area</code>, &amp;<code class="varname">ai</code>);
+
+   if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Couldn't get area info.n");
+      return <code class="varname">err</code>;
+   }
+
+   <span class="comment">/* Get the team of the calling thread; to do this, we have
+   * to look in the thread_info structure.
+   */</span>
+   <code class="varname">err</code> = <code class="function">get_thread_info</code>(<code class="function">find_thread</code>(<code class="constant">NULL</code>), &amp;<code class="varname">ti</code>);
+
+   if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Couldn't get thread info.n");
+      return <code class="varname">err</code>;
+   }
+
+   <span class="comment">/* Compare this team to the area's team. */</span>
+   if (<code class="varname">ai</code>.<code class="varname">team</code> != <code class="varname">ti</code>.<code class="varname">team</code>)
+      <code class="function">printf</code>("Foreign area.n");
+      return <code class="constant">B_NOT_ALLOWED</code>;
+   }
+
+   <span class="comment">/* Make sure we're not going to overflow the area,
+   * and make sure this area can be written to.
+   */</span>
+   if (<code class="varname">len</code> &gt; <code class="varname">ai</code>.<code class="varname">size</code>) {
+      <code class="function">printf</code>("Buffer bigger than area.n");
+      return <code class="constant">B_BAD_VALUE</code>;
+   }
+   if (!(<code class="varname">ai</code>.<code class="varname">protection</code> &amp; <code class="constant">B_WRITE_AREA</code>)) {
+      <code class="function">printf</code>("Can't write to this area.n");
+      return <code class="constant">B_NOT_ALLOWED</code>;
+   }
+
+   <span class="comment">/* Now we can write. */</span>
+   <code class="function">memcpy</code>(<code class="varname">ai</code>.<code class="varname">address</code>, <code class="varname">buf</code>, <code class="varname">len</code>);
+   return <code class="constant">B_OK</code>;
+}</pre><p>It's important that you only write to areas that were created or cloned
+within the calling team. The starting address of a "foreign" area is
+usually meaningless within your own address space.</p><p>You don't have to check the area's protectection before writing to it (or
+reading from it). The memory-accessing fucntions (<code class="function">memcpy()</code>, in this
+example) will segfault if an invalid read or write is requested.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Areas_Example4"></a>Example 4: Cloning and Sharing an Area</h4></div></div></div><p>In the following example, a server and a client are set up to share a
+common area. Here's the server:</p><pre class="programlisting example cpp"><span class="comment">/* Server side */</span>
+class <code class="classname">AServer</code>
+{
+   <span class="type">status_t</span> <code class="methodname">make_shared_area</code>(<span class="type">size_t</span> <code class="parameter">size</code>);
+   <span class="type">area_id</span> <code class="varname">the_area</code>;
+   <span class="type">char *</span><code class="varname">area_addr</code>;
+};
+
+<span class="type">status_t</span> <code class="classname">AServer</code>::<code class="methodname">make_shared_area</code>(<span class="type">size_t</span> <code class="parameter">size</code>)
+{
+   <span class="comment">/* The size must be rounded to a page. */</span>
+   <code class="parameter">size</code> = ((<code class="parameter">size</code> % <code class="constant">B_PAGE_SIZE</code>)+1) * <code class="constant">B_PAGE_SIZE</code>;
+   <code class="varname">the_area</code> = <code class="function">create_area</code>("server area", (<span class="type">void *</span>)&amp;<code class="varname">area_addr</code>,
+            <code class="constant">B_ANY_ADDRESS</code>, <code class="parameter">size</code>, <code class="constant">B_NO_LOCK</code>,
+            <code class="constant">B_READ_AREA</code>|<code class="constant">B_WRITE_AREA</code>);
+
+   if (<code class="varname">the_area</code> &lt; <code class="constant">B_OK</code>) {
+      <code class="function">printf</code>("Couldn't create server arean");
+      return <code class="varname">the_area</code>;
+
+   return <code class="constant">B_OK</code>;
+}</pre><p>And here's the client:</p><pre class="programlisting example cpp"><span class="comment">/* Client side */</span>
+class <code class="classname">AClient</code>
+{
+   <span class="type">status_t</span> <code class="methodname">make_shared_clone</code>();
+   <span class="type">area_id</span> <code class="varname">the_area</code>;
+   <span class="type">char *</span><code class="varname">area_addr</code>;
+};
+
+<span class="type">status_t</span> <code class="classname">AClient</code>::<code class="methodname">make_shared_clone</code>()
+{
+   <span class="type">area_id</span> <code class="varname">src_area</code>;
+
+   <code class="varname">src_area</code> = <code class="function">find_area</code>("server area");
+   if (<code class="varname">src_area</code> &lt; <code class="constant">B_ERROR</code>) {
+      <code class="function">printf</code>("Couldn't find server area.n");
+      return <code class="varname">src_area</code>;
+   }
+
+   <code class="varname">the_area</code> = <code class="function">clone_area</code>("client area",
+               (<span class="type">void *</span>)&amp;<code class="varname">area_addr</code>,
+                  <code class="constant">B_ANY_ADDRESS</code>,
+               <code class="constant">B_READ_AREA</code> | <code class="constant">B_WRITE_AREA</code>,
+               <code class="varname">src_area</code>);
+
+   if (<code class="varname">the_area</code> &lt; <code class="constant">B_OK</code>)
+      <code class="function">printf</code>("Couldn't create clone arean");
+      return <code class="varname">the_area</code>;
+   }
+
+   return <code class="constant">B_OK</code>;
+}</pre><p>Notice that the area creator (the server in the example) doesn't have to
+designate the created area as sharable. All areas are candidates for
+cloning.</p><p>After it creates the cloned area, the client's <span class="type">area_id</span> value
+(<code class="classname">AClient</code>::<code class="varname">the_area</code>) will be different from the server's
+(<code class="classname">AServer</code>::<code class="varname">the_area</code>). Even
+though <span class="type">area_id</span> numbers are global, the client
+should only refer to the server's <span class="type">area_id</span> number in order to clone it.
+After the clone, the client talks to the area through its own <span class="type">area_id</span>
+(the value passed backed by
+<a class="link" href="TheKernelKit_Areas.html#clone_area" title="clone_area()"><code class="function">clone_area()</code></a>).</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Areas_Example5"></a>Example 5: Cloning Addresses</h4></div></div></div><p>It's sometimes useful for shared areas (in other words, a "source" and a
+clone) to begin at the same starting address. For example, if a client's
+clone area starts at the same address as the server's original area, then
+the client and server can pass area-accessing pointers back and forth
+without having to translate the addresses. Here we modify the previous
+example to do this:</p><pre class="programlisting example cpp"><span class="type">status_t</span> <code class="classname">AClient</code>::<code class="methodname">make_shared_clone</code>()
+{
+   <span class="type">area_id</span> <code class="varname">src_area</code>;
+
+   <code class="varname">src_area</code> = <code class="function">find_area</code>("server area");
+
+   if (<code class="varname">src_area</code> &lt; <code class="constant">B_ERROR</code>) {
+      <code class="function">printf</code>("Couldn't find server area.n");
+      return <code class="constant">B_BAD_VALUE</code>;
+   }
+
+   <span class="comment">/* This time, we specify the address that we want the
+   * clone to start at. The B_CLONE_ADDRESS constant
+   * does this for us.
+   */</span>
+   <code class="varname">area_addr</code> = <code class="varname">src_info</code>.<code class="varname">address</code>;
+   <code class="varname">the_area</code> = <code class="function">clone_area</code>("client area",
+               (<span class="type">void *</span>)&amp;<code class="varname">area_addr</code>,
+                  <code class="constant">B_CLONE_ADDRESS</code>,
+               <code class="constant">B_READ_AREA</code> | <code class="constant">B_WRITE_AREA</code>,
+               <code class="varname">src_area</code>);
+
+   if (<code class="varname">the_area</code> &lt; <code class="constant">B_OK</code>)
+      <code class="function">printf</code>("Couldn't create clone arean");
+      return <code class="varname">the_area</code>;
+   }
+
+   return <code class="constant">B_OK</code>;
+}</pre><p>Of course, demanding that an area begin at a specific address can be too
+restrictive; if any of the memory within <span class="code">[<code class="varname">area_addr</code>, <code class="varname">area_addr</code> +
+<code class="varname">src_info</code>.<code class="varname">size</code>]</span> is already allocated, the clone will fail.</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheKernelKit_Semaphores_Overview.html">Semaphores</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheKernelKit_Images_Overview.html">Images</a> </div><div id="footerB"><div id="footerBL"><a href="TheKernelKit_Semaphores_Overview.html" title="Semaphores"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TheKernelKit_Images_Overview.html" title="Images"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

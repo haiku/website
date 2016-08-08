@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-23.html" title="Issue 3-23, June 10, 1998" /><link rel="next" href="Issue3-25.html" title="Issue 3-25, June 24, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-23.html" title="Issue 3-23, June 10, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-25.html" title="Issue 3-25, June 24, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-23.html">Issue 3-23, June 10, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-25.html">Issue 3-25, June 24, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-24"></a>Issue 3-24, June 17, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-24"></a>Be Engineering Insights: Tools to Compare Releases</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Herold</span></span></div></div></div><p>
+Now that the Release 3.1 CDs for both Intel and PowerPC have been sent
+off to the duplicator, it's time to put together the downloadable update
+to Release 3. A question immediately arises: What's changed between the
+releases?
+</p><p>
+Rather than try to figure it out from the change logs, it's much more fun
+to write scripts and programs to do the work. The ultimate proof is in
+the bits on the CD.
+</p><p>
+The strategy we'll use is this:
+</p><ul class="itemizedlist"><li><p>
+Get both the R3 and R3.1 CDs
+</p></li><li><p>
+Generate a list of files on each CD
+</p></li><li><p>
+Figure out what files are unique to each CD
+</p></li><li><p>
+Compare all common files
+</p></li></ul><p>
+Getting the CDs is easy—I work here!
+</p><p>
+Generating the list of files on the R3 and R3.1 CDs is a bit more
+challenging. The shell commands do not provide an easy way to just make a
+list of all the files with full path names. This short shell script can
+do the job, however:
+</p><pre class="programlisting sh">
+#!/bin/sh
+#
+#  vnames [path]
+#
+#  lists all files in path (or cwd) with all directory
+#  components
+#
+
+trap "exit 2" 2   # interrupts cause us to exit quickly
+
+#
+# check arguments
+#
+
+if [ $# -gt 1 ]
+then
+  echo wrong number of arguments\(${#}\) to $0
+  echo usage: $0 [ path ]
+  exit 1
+else
+  if [ $# -eq 1 ]
+  then
+    dir=$1
+  else
+    dir=.
+  fi
+fi
+
+if [ "`ls "$dir"`" = "" ]  # empty directory?
+then
+  echo "$dir"
+else
+  for file in "$dir"/*
+  do
+    if [ -L "$file" -o ! -d "$file" ]  # link, or file?
+    then
+      echo "$file"
+    else                # it's a directory
+      "$0" "$file"
+    fi
+  done
+fi
+exit 0
+</pre><p>
+This script recurses down the directory hierarchy, frantically outputting
+filenames along the way. The only really tricky part is dealing with an
+empty directory, which will cause a filename expansion like "$dir/*" to
+evaluate to whatever is in $dir with a literal '/*' at the end. There may
+be a better way to do this, but none of the Unix wizards were around when
+I wrote this script.
+</p><p>
+To generate the list of files, I used the following commands:
+</p><pre class="screen">
+$ cd '/BeOS Intel R3'; vnames | sort &gt; ~/names_r3
+</pre><p>
+This creates a sorted list of names of all the files on the R3 CD, and
+puts it in a file names_r3 in my home directory. For the R3.1 CD, use
+this command:
+</p><pre class="screen">
+$ cd '/BeOS Intel R3.1'; vnames | sort &gt; ~/names_r3.1
+</pre><p>
+Sorting these lists is important for the next step. There's a handy
+command line tool, 'comm', which when given two files can identify the
+unique and common lines in each one. We use this to generate some more
+lists:
+</p><pre class="screen">
+$ cd
+$ comm -2 -3 names_r3 names_r3.1 &gt; unique_r3
+$ comm -1 -3 names_r3 names_r3.1 &gt; unique_r3.1
+</pre><p>
+The unique_r3 list is not too interesting—it tells us what cruft will
+be left around when we download any update. Examining this list revealed
+that no harm would be done by leaving these files around.
+</p><p>
+The unique_r3.1 list is much more useful. It tells us some of the files
+from the R3.1 CD to put in the update. Not included in this list are the
+files that have the same name in both releases, but whose content has
+changed. Figuring out which files with the same names have changed is the
+most challenging part of this task.
+</p><p>
+For text files and other non-executable files, a simple binary compare
+using the 'cmp' tool is sufficient. Executable files are harder—we put
+a version string into the binary, and the version changed for 3.1. The
+actual code and data, however did not change in most cases, so there is
+no point including the file in an update.
+</p><p>
+I put together executable compare tools for both the PE object file
+format used on x86 (pecomp) and the PEF format use on PowerPC (pefcomp).
+These tools compare only the important parts of the executables, ignoring
+things like version strings. In PEF, one has to ignore even more, as
+there are hints about where to find things in libraries, and if the size
+of the library changes, the hint changes. Given that our libraries DID
+change, but in most cases the apps did not, pefcomp must ignore the hint
+differences.
+</p><p>
+The script that follows recurses through the directory tree and compares
+things. It might have been easier to generate a list of common files
+between the two releases, iterate over the list, and pass just filenames
+to a simpler version of this script. However, luck would have it that
+this script was written first. Hindsight is always closer to 20/20...
+</p><pre class="programlisting sh">
+#!/bin/sh
+#
+#  vcompare dir1 dir2
+#
+#  compares all files in dir2 with files in dir1
+#
+
+usage()
+{
+  if [ $# -eq 2 ]
+  then
+    case $2 in
+      -*) echo "unknown option "$2"";;
+      *)  echo "extra parameter "$2"";;
+    esac
+  fi
+
+  echo "vcompare [-p | -m ] directory1 directory2"
+  echo "  -p    # print directories as they are compared"
+  echo "  -m    # output names missing from directory1"
+
+  exit $1
+}
+
+trap "exit 2" 2    # interrupts cause us to exit quickly
+
+progress=0
+missing=0
+opts=""
+dir1=""
+dir2=""
+
+# build a list of passed options
+for i do
+  case $i in
+    -*) opts="$opts $i";;
+  esac
+done
+
+# parse arguments
+for i do
+  case $i in
+    -p) progress=1;;
+    -m) missing=1;;
+    -*) usage 1 $i;;
+    *)
+      if [ "$dir1" = "" ]
+      then
+        dir1="$i"
+      elif [ "$dir2" = "" ]
+      then
+        dir2="$i"
+      else
+        usage 1 $i
+      fi
+      ;;
+  esac
+done
+
+if [ "$dir2" = "" ]  # this covers both dir1 and dir2 omitted
+then
+  echo "not enough arguments"
+  usage 1
+fi
+
+# make sure both args are directories
+[ ! -d "$dir1" ] &amp;&amp; { echo $dir1 is not a directory; usage 1; exit 1 }
+[ ! -d "$dir2" ] &amp;&amp; { echo $dir2 is not a directory; usage 1; exit 1 }
+
+# pick x86 or ppc tool
+if [ `uname -m` = BePC ]; then
+  tool=pecomp
+else
+  tool="pefcomp -q"
+fi
+
+# Handle empty directories (makes wildcard expansion easier)
+if [ "`ls "$dir2"`" = "" ]
+then
+  if [ "`ls "$dir1"`" = "" ]
+  then
+    exit 0
+  else
+    echo directory "$dir2" is empty, but directory "$dir1" is not
+  fi
+fi
+
+for file in "$dir2"/*
+do
+  base=`basename "$file"`
+  if [ -L "$file" ]      # link?
+  then
+    if [ ! -L "$dir1/$base" ]
+    then
+      if [ "$missing" = "1" ]; then
+        echo "$dir1/$base" does not exist, or is not a link
+      fi
+    fi
+  else
+    if [ -d "$file" ]    # directory?
+    then
+      if [ -d "$dir1/$base" ]
+      then
+        if [ "$progress" = "1" ]; then
+          echo examining directory $dir1/$base
+        fi
+        $0 $opts "$dir1/$base" "$file"
+        result=$?
+        [ $result != 0 ] &amp;&amp; exit $result
+      else
+        if [ "$missing" = "1" ]; then
+          echo directory "$dir1/$base" does not exist
+        fi
+      fi
+    else          # a file for sure
+      if [ -f "$dir1/$base" ]
+      then
+        # echo comparing "$dir1/$base" "$file"
+        # do simple compare first
+        if cmp -s "$dir1/$base" "$file"
+        then
+          true
+        else
+          # compare executables
+          $tool "$dir1/$base" "$file"
+          result=$?
+          if [ $result != 0 ]; then
+            echo "$dir1/$base" and "$file" differ
+           fi
+        fi
+      else
+        if [ "$missing" = "1" ] ; then
+          echo file "$dir1/$base" does not exist
+        fi
+      fi
+    fi
+  fi
+done
+exit 0
+</pre><p>
+We use this script as follows:
+</p><pre class="screen">
+$ vcompare '/BeOS Intel R3' '/BeOS Intel R3.1' &gt; ~/diffs_3_3.1
+</pre><p>
+Running this script generates a list of the common files between the
+releases that differ. Once we have this list, we combine it with the list
+of unique files for R3.1. Presto! We have a list of files that need to go
+into the update package.
+</p><p>
+These scripts and the pecomp/pefcomp tools are available on the Be ftp
+site at:
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-24"></a>Developers' Workshop: You'll Be Cool If You Do...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Douglas</span> <span class="surname">Wright</span></span></div></div></div><p>
+Ahhh, a breath of fresh air does wonders for the thought processes (along
+with an hour of skating in the empty parking lot at 3 am). Anyhow, it's
+way past time for sleep. The energy to continue comes in waves. For an
+hour, or half an hour, broken up by moments of complete ineptitude.
+</p><p>
+It's the programmer's high, and to go there, you need a deadline (not
+necessarily for the problem you're working on—a Newsletter deadline
+works too), a problem that you can't figure out, a splash of water in the
+face once an hour, and a couple bucks worth of quarters for the Coke
+machine.
+</p><p>
+Eat dinner pretty late so you don't get hungry—around 8:30pm works for
+me. It's fun to walk around the office after you eat, while the food-coma
+passes, and see who else is there at 9pm. There are usually at least 3 or
+4 other junkies who just can't get enough of the CRT glow. They all have
+their favorite distractions for moments of coding catatonia.
+</p><p>
+Several engineers, myself included, have instruments in our cubes. Some
+have computers from their formative years to fool with, and others have
+juggling blocks, doh! It's funny how well the stereotypes fit sometimes.
+</p><p>
+There are also a bunch of people you won't find at work late. They go
+home to a different place, another machine to play with. You'd be amazed
+how much more work gets done compared to during the day, despite the
+moments of aphasia, and the bugs that get entered then.
+</p><p>
+I have a small apartment and it's tough to resist my wife saying "Come
+on, everybody's doing it. Sleep won't hurt you. You'll be cool if you
+do." But I'm not like the other kids. Dark outside doesn't mean it's bed
+time, it means I don't have to wear sunglasses any more. So I stay at Be
+to do it. But enough about me.
+</p><p>
+What about you? Are you staying up late to put that extra edge into your
+code? Do you have some nagging problems eating into your sleepy time?
+</p><p>
+Well, we're here to help. Developer support is growing. We're four strong
+as of this week with the addition of Owen Smith, our new Interface Kit
+expert to be. And now someone's in charge of the scurvy lot of us --
+Hippo's been promoted to DTS manager. Look out, he's crackin' the whip.
+</p><p>
+That's right, we're specializing, specialized even. There's a new web
+form you can use to ask us questions—developers only need apply. The
+form is just a small piece of a larger project to amass a great deal of
+knowledge into the size of four little cubes of activity.
+</p><p>
+The new database we're working on lets us follow a thread from message to
+message. Unless you've done support before, you wouldn't believe how hard
+it can be to remember what someone is talking about when they don't
+include the entire original message in the reply. Now, it's taken care of
+for you. Just be sure not to muck with the subject of your replies to us,
+and we'll know just who you are, and what you're up to.
+</p><p>
+We are now also categorizing the questions, for a couple of reasons.
+First, your questions can be assigned to a DTS engineer who specializes
+in the area of the BeOS that you are asking about. Also, it means that we
+are building a knowledge base, for training new DevSupport engineers, and
+finding the answers to questions that we know have been asked before, but
+don't quite remember.
+</p><p>
+Oooo, it makes me tingle to think of it. We have coherent threads of
+interaction categorized in a searchable database. Wait a minute, if we
+can do all this through a web browser, why couldn't a developer do the
+same!?
+</p><p>
+Stop right there. No, we haven't implemented it yet. But just imagine it.
+No, it takes more time. Time I haven't got. I'm staying up all night
+writing drivers for digital audio I/O cards. But the plans are being
+laid. We're developing the knowledge base for such a system now, in the
+DevSupport database.
+</p><p>
+So if you've got a problem, bring it up, fill it out, and send it on in.
+You're helping the effort to build a bank of knowledge for you and for
+BeOS developers everywhere. Someday it will be searchable. And we will
+all be one—I mean up at 1:00am, or 2:00am, or..., writing software for
+BeOS.
+</p><p>
+If you need more information, don't hesitate to ask!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-24"></a>You're Contradicting Yourself!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+PC Expo is not Comdex. You know that because the cab drivers don't
+complain about the geeks' lack of sophistication—about people who stay
+in their rooms at night checking their e-mail instead of partying like
+the real men at the golf equipment convention last week. The schmoozing
+at PC Expo is just as good as at Comdex, and the food is much better than
+the fiber-free calories you get in Las Vegas, required for long stays at
+the gambling tables.
+</p><p>
+So far, we've done well. John Markoff from the NY Times passed on an
+invitation from John Dvorak to a get together at the Empire Tap Room on
+West 18th. This was an event designed to mix industry executives and
+writers for "informal" conversations, on the assumption—accurate I
+think—that these conversations have more content than press releases
+and conferences.
+</p><p>
+Strangely enough, the formula results more in industry people pitching
+each other than bending the ears of reporters present—something to do,
+perhaps, with the potential for money teleportation. Meanwhile, the
+writers watch the ballet, and the dancers watch the watchers wondering
+what rumors they'll start.
+</p><p>
+For my part, all I can say at this time is that the food, hearty Central
+Europe fare, was great, and came with world-class beer. And while
+enjoying Nikon's hospitality in hosting the party, John Dvorak and Alex
+Osadzinski were taking each other's picture taking each other's picture
+using identical Kodak digital cameras, making it a truly ecumenical event.
+</p><p>
+PC Expo opened this morning to a very substantial first day crowd. We'll
+have a more complete account of our first participation in this show next
+week, including audience reactions to the new BeOS applications and their
+role in fulfilling the promise of the Media OS.
+</p><p>
+Taking a first quick tour, a few perceptions pierced the fog of jet lag
+and caffeine deprivation. For instance, it is becoming retrospectively
+obvious that Compaq intends to become the next IBM. This carries with it
+a number of implications, most of them related to Compaq's control of its
+destiny.
+</p><p>
+Compaq prospered by building and marketing computing solutions based on
+Intel and Microsoft technologies. But, as these two companies have become
+arguably more powerful than Compaq, they exert a great deal of influence
+on it. Whether Compaq will assert more control over the definition of
+current or future computing platforms, and how, is anybody's guess, but
+the question is in the air.
+</p><p>
+Of course, skeptics describe doomsday scenarios, where the difficulties
+in merging Digital into Compaq, right after absorbing Tandem, will bring
+an end to these ambitions. In any case, we might be in for some
+interesting moments as spectators to sumo-à-trois between Intel, Compaq,
+and Microsoft.
+</p><p>
+Speaking of the latter giant, the spin on Windows 98 is noticeably
+dignified. At a PC Expo, 8 days—not months or years—before retail
+availability, you'd expect to see some kind of "Win 98 everywhere" theme.
+Instead, it is conspicuously absent or down played on major Wintel OEM
+booths; NT 5 and CE get more air time.
+
+Lastly, I had a good time watching Kiki Stockhammer. For the relative
+newcomers to this segment of the industry, Kiki is not what other
+politically incorrect individuals insensitively call a "booth babe," one
+of these females routinely sawed in two by a magician in the employ of a
+company running out of marketing gimmicks.
+
+No, Kiki unwittingly made a small contribution to the creation of this
+company. I first saw her many years ago, I won't say how many, when she
+demonstrated the Video Toaster, from a company called Newtek, running on
+an Amiga at a MacWorld Expo. One thought led to another and, a few
+episodes later, we show up at PC Expo.
+
+In the mean time, the Video Toaster has gone through its own
+karmictransformations. There is a new company called Play and a new
+hardware product called Trinity, a third or fourth generation Video
+Toaster. And there is Kiki, who, having long achieved icon status among
+the cognoscenti, is more than ever the demo goddess, blazing the video
+editing trail for her followers.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-24"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id706988"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id706994"></a>Subject: delay settings</h4></div></div></div><p>
+How long (oh Lord) must the mouse hesitate before a pop-up appears?
+Opinions:
+</p><ul class="itemizedlist"><li><p>
+Not immediately (a la Apple Help Balloons).
+</p></li><li><p>
+Tie it to the <span class="type">double</span>-click delay.
+</p></li><li><p>
+No, please, not that fast. Make it a separate setting
+</p></li></ul><p>
+So, then, “<span class="quote">should we complicate the interface by having a configurable
+delay time for everything that could conceivably have a delay?</span>” asked
+Tyler Riti rhetorically. After further testimony, pop-up delay ==
+<span class="type">double</span>-click delay gained favor (with the rider that a right-mouse click
+doesn't need a delay).
+</p><p>
+Sander Stoks thinks even faster with his gizmos:
+</p><p>
+“<span class="quote">If the user clicks and starts moving the mouse (more than a few pixels),
+even within the <span class="type">double</span> click time, I assume that he wants to select a
+menu item and I pop up the menu. This works quite nicely for me.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id707064"></a>Subject: Any use for _aliases_?</h4></div></div></div><p>
+Should Be introduce heat-seeking links that work more or less as do
+Macintosh aliases? Ernest S. Tomlinson finds POSIX symbolic links too
+"breakable." Eric Berdahl pointed out that you can simulate alias
+behaviour in your own "Alias" object by caching the inode (node_ref) and
+path.
+</p><p>
+After some thinking, Mr. Tomlinson realized that Mac aliases are one part
+evil for each part good:
+</p><p>
+“<span class="quote">...perhaps aliases aren't such useful things after all...too many
+aliases and all their usefulness disappears; navigating a bunch of
+hierarchical menus stuffed with dozens of items isn't exactly fun. I wish
+there were some better way to access any given file or application on my
+computer, without resort to such clumsy expedients as sprinkling the
+desktop with aliases.</span>”
+</p><p>
+THE BE LINE (from Dominic Giampaolo):
+<span class="type">entry_ref</span>s and <span class="type">node_ref</span>s provide most of the functionality of Mac aliases
+but I really want to *STRONGLY* discourage anyone from storing these on
+disk. It's ok to use them if they're passed to your app in a <code class="classname">BMessage</code> but
+if you store them on disk and then someone moves that file to another
+volume, the <span class="type">entry</span>/<span class="type">node_ref</span> is no longer valid.
+</p><p>
+The BeOS does not have Mac aliases because they are not supportable in a
+networked environment that uses
+<acronym class="acronym" title="Network Filing System">NFS</acronym> or
+<acronym class="acronym" title="Common Internet File System">CIFS</acronym> (and we were trying to think
+ahead a little bit). Much argument has been made over that decision but
+we're sticking to it.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id707147"></a>Subject: BeOS scheduler quantum</h4></div></div></div><p>
+Chris Tate recalls hearing that the scheduler quantum is 3 msecs. Has it
+changed lately? Should the quantum be adjusted to the speed of the CPU?
+Is Be planning to reassess the quantum?
+</p><p>
+THE BE LINE (paraphrasing Cyril
+Meurillon, keeper of the quantum):
+</p><p>
+“<span class="quote">The schedular quantum is, indeed, 3 milliseconds. However, in some
+circumstances (blocking threads, primarily) the schedular will be invoked
+before the 3 milliseconds is up. Relatedly, the <code class="function">snooze()</code> granularity is 1
+millisecond. Both quanta (schedular and <code class="function">snooze()</code>) are constantly
+scrutinized by the kernel team. The <code class="function">snooze()</code> granularity will almost
+certainly change in Release 4.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id707190"></a>Subject: How does ioctl work</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Persistent driver data</h5></div></div></div><p>
+When you pass data in an ioctl() call, should you encode the size of the
+data (in the opcode or in the data itself), or should you pass the size
+as an extra argument?
+</p><p>
+Dmitriy Budko:
+</p><p>
+“<span class="quote">...you can pass the size of the structure in the structure itself, but
+PLEASE pass <code class="code">sizeof([the struct])</code> to ioctl too.</span>”
+</p><p>
+Speaking of device drivers, Jens Kilian wants to know if there's an easy
+way to cache (user settable) data so it can be used by more than one
+device invocation. Trey Boudreau suggests...
+</p><p>
+“<span class="quote">Create an area in one of your <code class="function">init_*</code> entry points (I do it in
+<code class="function">init_hardware()</code>, but you can do it in
+<code class="function">init_driver()</code> if you like). Name
+the area something convenient, and do a <code class="function">find_area()</code> to locate it.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id707256"></a>Subject: How to send an array with BMessage? [To a remote application]</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Another Solution</h5></div></div></div><p>
+How do you add an array to a <code class="classname">BMessage</code>? Michael Crawford suggests that if
+the number of elements is small enough, you should simply add each
+element individually (through <code class="methodname">AddInt32()</code> or whatever), and let the
+receiver retrieve the elements by index (<code class="methodname">FindInt32(..., n, ...)</code>. If the
+array is large (Mr. Crawford continues) you may want to add the data
+through <code class="methodname">AddData()</code> and let the receiver reconstitute the array (through
+clever pointer'ing). Stephen van Egmond pointed out that because
+<code class="methodname">AddData()</code> deals with raw bytes, the sender and receiver either have to be
+on the same type of platform, or else they have to haggle over data sex
+and alignment. Jon Watte concedes that negotiation is necessary, but
+that's the way of the world:
+</p><p>
+“<span class="quote">So, <code class="classname">BMessage</code> data is like any other data that can travel between
+machines: it's like a file format. If you design it well with advance
+knowledge of the issues, reading/writing it is relatively easy. If you
+don't, it isn't...</span>”
+</p><p>
+Ironically, Mr. Crawford's other non-serious suggestion—put the data
+in a shared area—was later offered—seriously—by other listeners.
+Using a shared area is fine if both the sender and receiver are on the
+same (exact) machine.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-23.html">Issue 3-23, June 10, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-25.html">Issue 3-25, June 24, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-23.html" title="Issue 3-23, June 10, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-25.html" title="Issue 3-25, June 24, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

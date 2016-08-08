@@ -1,0 +1,719 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-45.html" title="Issue 3-45, November 11, 1998" /><link rel="next" href="Issue3-47.html" title="Issue 3-47, November 25, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-45.html" title="Issue 3-45, November 11, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-47.html" title="Issue 3-47, November 25, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-45.html">Issue 3-45, November 11, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-47.html">Issue 3-47, November 25, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-46"></a>Issue 3-46, November 18, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-46"></a>Be Engineering Insights: The Kitchen Sink</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Polic</span></span></div></div></div><p>
+What started as simple tutorial on how to do context-sensitive menus and
+drag-n-drop in a list view has turned into a light- weight application
+launcher. The full source (all 520 lines including headers and comments)
+for "EZ Launcher" can be found on our ftp site...
+</p><p>
+ftp://ftp.be.com/pub/samples/application_kit/EZLauncher.zip
+</p><p>
+EZ Launcher is a simple <code class="classname">BApplication</code> that constructs a single window with
+a scrolling list view containing icons and labels for all applications in
+the <code class="filename">/boot/apps</code> folder.
+Users can launch an application either by
+double-clicking the item, right-clicking the mouse to access a
+context-sensitive menu, or dragging and dropping back onto the window.
+All operations are done asynchronously to limit the amount of time the
+window is locked (and therefor unresponsive). Overkill for this app? You
+bet, but with the BeOS, it's almost as simple to spawn a thread to handle
+user actions as not to.
+</p><p>
+So I'll assume everyone here is familiar with constructing an application
+and window and will skip over that part and get to the meat, which in
+this case is the list. In this app I'll use a scrolling <code class="classname">BListView</code> to both
+maintain my list items and allow the user to select them...
+</p><pre class="programlisting cpp">
+<code class="classname">TEZLauncherWindow</code>::<code class="methodname">TEZLauncherWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>)
+    :<code class="classname">BWindow</code>(<code class="parameter">frame</code>, "EZ Launcher", <code class="constant">B_TITLED_WINDOW</code>,
+        <code class="constant">B_NOT_ZOOMABLE</code> | <code class="constant">B_WILL_ACCEPT_FIRST_CLICK</code>)
+{
+    <span class="comment">// set up a rectangle and instantiate a new view</span>
+    <code class="classname">BRect</code>       <code class="varname">aRect</code>(<code class="methodname">Bounds</code>());
+    <span class="type"><code class="classname">BScrollView</code> *</span><code class="varname">aScroller</code>;
+
+
+    <span class="comment">// reduce by size of vertical scroll bar</span>
+    <code class="varname">aRect</code>.<code class="varname">right</code> -= <code class="constant">B_V_SCROLL_BAR_WIDTH</code>;
+    <span class="comment">// construct a BListView</span>
+    <code class="varname">fList</code> = new <code class="classname">TEZLauncherView</code>(<code class="varname">aRect</code>);
+    <span class="comment">// construct a scroll view containing the list view</span>
+    <span class="comment">//and add it to the window</span>
+    <code class="methodname">AddChild</code>(<code class="varname">aScroller</code> = new <code class="classname">BScrollView</code>("", <code class="varname">fList</code>,
+        <code class="constant">B_FOLLOW_ALL</code>, <code class="constant">B_WILL_DRAW</code>, <code class="constant">true</code>,
+        <code class="constant">true</code>, <code class="constant">B_PLAIN_BORDER</code>));
+    <code class="methodname">BuildList</code>();
+}
+</pre><p>
+<code class="methodname">BuildList()</code> is the method that actually adds all the items from the
+<code class="filename">/boot/apps</code> directory to the list...
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TEZLauncherWindow</code>::<code class="methodname">BuildList</code>()
+{
+    <code class="classname">BDirectory</code>  <code class="varname">dir</code>;
+    <code class="classname">BEntry</code>  <code class="varname">entry</code>;
+    <code class="classname">BPath</code>       <code class="varname">path</code>;
+
+
+    <span class="comment">// walk through the apps directory adding</span>
+    <span class="comment">//all apps to the list</span>
+    <code class="function">find_directory</code>(<code class="constant">B_APPS_DIRECTORY</code>, &amp;<code class="varname">path</code>, <code class="constant">true</code>);
+    <code class="varname">dir</code>.<code class="methodname">SetTo</code>(<code class="varname">path</code>.<code class="methodname">Path</code>());
+    <span class="comment">// loop until we get them all</span>
+    while (<code class="varname">dir</code>.<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">entry</code>, <code class="constant">true</code>) ==
+            <code class="constant">B_NO_ERROR</code>)
+    {
+        if (<code class="varname">entry</code>.<code class="methodname">IsFile</code>())
+            <span class="comment">// construct a new BListItem</span>
+            <code class="varname">fList</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">TListItem</code>(&amp;<code class="varname">entry</code>));
+    }
+}
+</pre><p>
+<code class="classname">TListItem</code> is derived from from <code class="classname">BListItem</code>
+and takes a single parameter, an
+<span class="type">entry_ref</span>. Through this <span class="type">entry_ref</span>,
+<code class="classname">TListItem</code> will extract and cache the
+application name and icon...
+</p><pre class="programlisting cpp">
+<code class="classname">TListItem</code>::<code class="methodname">TListItem</code>(<span class="type"><code class="classname">BEntry</code> *</span><code class="parameter">entry</code>)
+    :<code class="classname">BListItem</code>()
+{
+    <code class="classname">BNode</code>   <code class="varname">node</code>;
+    <code class="classname">BNodeInfo</code>   <code class="varname">node_info</code>;
+
+
+    <span class="comment">// try to get node info for this entry</span>
+    if ((<code class="varname">node</code>.<code class="methodname">SetTo</code>(<code class="parameter">entry</code>) == <code class="constant">B_NO_ERROR</code>) &amp;&amp;
+        (<code class="varname">node_info</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">node</code>) == <code class="constant">B_NO_ERROR</code>)) {
+        <span class="comment">// cache name</span>
+        <code class="varname">entry</code>-&gt;<code class="methodname">GetName</code>(<code class="varname">fName</code>);
+        <span class="comment">// create bitmap large enough for icon</span>
+        <code class="varname">fIcon</code> = new <code class="classname">BBitmap</code>(
+            <code class="classname">BRect</code>(0, 0, <code class="constant">B_LARGE_ICON</code> - 1,
+                    <code class="constant">B_LARGE_ICON</code> - 1), <code class="constant">B_COLOR_8_BIT</code>);
+        <span class="comment">// cache the icon</span>
+        <code class="varname">node_info</code>.<code class="methodname">GetIcon</code>(<code class="varname">fIcon</code>);
+        <span class="comment">// adjust size of item to fit icon</span>
+        <code class="methodname">SetHeight</code>(<code class="varname">fIcon</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Height</code>() +
+                    <code class="constant">kITEM_MARGIN</code>);
+        <span class="comment">// cache ref</span>
+        <code class="varname">entry</code>-&gt;<code class="methodname">GetRef</code>(&amp;<code class="varname">fref</code>);
+    }
+    else {
+        <code class="varname">fIcon</code> = <code class="constant">NULL</code>;
+        <code class="function">strcpy</code>(<code class="varname">fName</code>, "&lt;Lost File&gt;");
+        <code class="methodname">SetHeight</code>(<code class="constant">kDEFAULT_ITEM_HEIGHT</code>);
+    }
+}
+</pre><p>
+<code class="classname">TListItem</code> is also responsible for drawing the
+item in the <code class="classname">BListView</code>'s
+view...
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TListItem</code>::<code class="methodname">DrawItem</code>(<span class="type"><code class="classname">BView</code> *</span><code class="parameter">view</code>, <code class="classname">BRect</code> <code class="parameter">rect</code>,
+                <span class="type">bool</span> <span class="comment">/* complete */</span>)
+{
+    <span class="type">float</span>       <code class="varname">offset</code> = 10;
+    <code class="classname">BFont</code>       <code class="varname">font</code> = <code class="varname">be_plain_font</code>;
+    <span class="type">font_height</span> <code class="varname">finfo</code>;
+
+
+    <span class="comment">// set background color</span>
+    if (<code class="methodname">IsSelected</code>()) {
+        <span class="comment">// fill color</span>
+        <code class="parameter">view</code>-&gt;<code class="methodname">SetHighColor</code>(<code class="constant">kSELECTED_ITEM_COLOR</code>);
+        <span class="comment">// anti-alias color</span>
+        <code class="parameter">view</code>-&gt;<code class="methodname">SetLowColor</code>(<code class="constant">kSELECTED_ITEM_COLOR</code>);
+    }
+    else {
+        <code class="parameter">view</code>-&gt;<code class="methodname">SetHighColor</code>(<code class="constant">kLIST_COLOR</code>);
+        <code class="parameter">view</code>-&gt;<code class="methodname">SetLowColor</code>(<code class="constant">kLIST_COLOR</code>);
+    }
+    <span class="comment">// fill item's rect</span>
+    <code class="parameter">view</code>-&gt;<code class="methodname">FillRect</code>(<code class="parameter">rect</code>);
+
+
+    <span class="comment">// if we have an icon, draw it</span>
+    if (<code class="varname">fIcon</code>) {
+        <code class="parameter">view</code>-&gt;<code class="methodname">SetDrawingMode</code>(<code class="constant">B_OP_OVER</code>);
+        <code class="parameter">view</code>-&gt;<code class="methodname">DrawBitmap</code>(<code class="varname">fIcon</code>,
+            <code class="classname">BPoint</code>(<code class="parameter">rect</code>.<code class="varname">left</code> + 2, <code class="parameter">rect</code>.<code class="varname">top</code> + 3));
+        <code class="parameter">view</code>-&gt;<code class="methodname">SetDrawingMode</code>(<code class="constant">B_OP_COPY</code>);
+        <code class="varname">offset</code> = <code class="varname">fIcon</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Width</code>() + 10;
+    }
+
+
+    <span class="comment">// set text color</span>
+    (<code class="methodname">IsEnabled</code>()) ?  <code class="parameter">view</code>-&gt;<code class="methodname">SetHighColor</code>(<code class="constant">kTEXT_COLOR</code>) :
+            <code class="parameter">view</code>-&gt;<code class="methodname">SetHighColor</code>(<code class="constant">kDISABLED_TEXT_COLOR</code>);
+
+
+    <span class="comment">// set up font</span>
+    <code class="varname">font</code>.<code class="methodname">SetSize</code>(12);
+    <code class="varname">font</code>.<code class="methodname">GetHeight</code>(&amp;<code class="varname">finfo</code>);
+    <code class="parameter">view</code>-&gt;<code class="methodname">SetFont</code>(&amp;<code class="varname">font</code>);
+
+
+    <span class="comment">// position pen</span>
+    <code class="parameter">view</code>-&gt;<code class="methodname">MovePenTo</code>(<code class="varname">offset</code>,
+        <code class="parameter">rect</code>.<code class="varname">top</code> + ((<code class="parameter">rect</code>.<code class="methodname">Height</code>() - (<code class="varname">finfo</code>.<code class="varname">ascent</code> +
+        <code class="varname">finfo</code>.<code class="varname">descent</code> + <code class="varname">finfo</code>.<code class="varname">leading</code>)) / 2) +
+        (<code class="varname">finfo</code>.<code class="varname">ascent</code> + <code class="varname">finfo</code>.<code class="varname">descent</code>) - 2);
+    <span class="comment">// and draw label</span>
+    <code class="parameter">view</code>-&gt;<code class="methodname">DrawString</code>(<code class="varname">fName</code>);
+}
+</pre><p>
+All mouse actions are directed to our ListView and from here we decide
+whether to display a context-sensitive menu, spawn a task to see if we
+need to initiate a drag, or do nothing and let the base class handle it...
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TEZLauncherView</code>::<code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">where</code>)
+{
+    <span class="type">uint32</span>  buttons;
+
+
+    <span class="comment">// retrieve the button state from the</span>
+    <span class="comment">// MouseDown message</span>
+    if (<code class="methodname">Window</code>()-&gt;<code class="methodname">CurrentMessage</code>()-&gt;<code class="methodname">FindInt32</code>(
+         "buttons", (<span class="type">int32 *</span>)&amp;<code class="varname">buttons</code>) == <code class="constant">B_NO_ERROR</code>)
+    {
+        <span class="comment">// find item at the mouse location</span>
+        <span class="type">int32</span> <code class="varname">item</code> = <code class="methodname">IndexOf</code>(<code class="parameter">where</code>);
+        <span class="comment">// make sure item is valid</span>
+        if ((<code class="varname">item</code> &gt;= 0) &amp;&amp; (<code class="varname">item</code> &lt; <code class="methodname">CountItems</code>()))
+        {
+            <span class="comment">// if clicked with second mouse button,</span>
+            <span class="comment">// let's do a context-sensitive menu</span>
+            if (<code class="varname">buttons</code> &amp; <code class="constant">B_SECONDARY_MOUSE_BUTTON</code>) {
+                <code class="classname">BPoint</code>  <code class="varname">point</code> = <code class="parameter">where</code>;
+                <code class="methodname">ConvertToScreen</code>(&amp;<code class="varname">point</code>);
+                <span class="comment">// select this item</span>
+                <code class="methodname">Select</code>(<code class="varname">item</code>);
+                <span class="comment">// do an async-popupmenu</span>
+                <code class="varname">fMenu</code>-&gt;<code class="methodname">Go</code>(<code class="varname">point</code>, <code class="constant">true</code>, <code class="constant">false</code>, <code class="constant">true</code>);
+                return;
+            }
+            <span class="comment">// clicked with primary button</span>
+            else
+            {
+                <span class="type">int32</span> <code class="varname">clicks</code>;
+                <span class="comment">// see how many times we've</span>
+                <span class="comment">//been clicked</span>
+
+
+                <code class="methodname">Window</code>()-&gt;<code class="methodname">CurrentMessage</code>()-&gt;
+                        <code class="methodname">FindInt32</code>("clicks", &amp;<code class="varname">clicks</code>);
+                <span class="comment">// if we've only been clicked once</span>
+                <span class="comment">// on this item, see if user</span>
+                <span class="comment">// intends to drag</span>
+                if ((<code class="varname">clicks</code> == 1) ||
+                    (<code class="varname">item</code>!=<code class="methodname">CurrentSelection</code>()))
+                {
+                    <span class="comment">// select this item</span>
+                    <code class="methodname">Select</code>(<code class="varname">item</code>);
+
+
+                    <span class="comment">// create a structure of</span>
+                    <span class="comment">// useful data</span>
+                    <code class="classname">list_tracking_data *</code><code class="varname">data</code> =
+                        new <code class="classname">list_tracking_data</code>();
+                    <code class="varname">data</code>-&gt;<code class="varname">start</code> = <code class="parameter">where</code>;
+                    <code class="varname">data</code>-&gt;<code class="varname">view</code> = <code class="varname">this</code>;
+
+
+                    <span class="comment">// spawn a thread that watches</span>
+                    <span class="comment">// the mouse to see if a drag</span>
+                    <span class="comment">// should occur.  this will free</span>
+                    <span class="comment">// up the window for more</span>
+                    <span class="comment">// important tasks</span>
+
+
+                    <code class="function">resume_thread</code>(<code class="function">spawn_thread</code>(
+                        (<span class="type">status_t</span> (*)(<span class="type">void *</span>)) <code class="varname">TrackItem</code>,
+                        "list tracking",
+                        <code class="constant">B_DISPLAY_PRIORITY</code>, <code class="varname">data</code>));
+                    return;
+                }
+            }
+        }
+    }
+    <span class="comment">// either the user dbl-clicked an item or</span>
+    <span class="comment">//clicked in an area with no</span>
+    <span class="comment">// items.  either way, let BListView take care of it</span>
+    <code class="classname">BListView</code>::<code class="methodname">MouseDown</code>(<code class="parameter">where</code>);
+}
+</pre><p>
+If we've determined that mouse down was a single-click on the item, we'll
+spawn a thread that monitors the mouse position and if the mouse moves
+more than <code class="constant">kDRAG_SLOP</code> in any direction, we'll initiate a DragMessage...
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">TEZLauncherView</code>::<code class="methodname">TrackItem</code>(
+                    <span class="type"><code class="classname">list_tracking_data</code> *</span><code class="parameter">data</code>)
+{
+    <span class="type">uint32</span>  buttons;
+    <code class="classname">BPoint</code>  point;
+
+
+    <span class="comment">// we're going to loop as long as the mouse</span>
+    <span class="comment">//is down and hasn't moved</span>
+    <span class="comment">// more than kDRAG SLOP pixels</span>
+    while (1) {
+        <span class="comment">// make sure window is still valid</span>
+        if (<code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">Window</code>()-&gt;<code class="methodname">Lock</code>()) {
+            <code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">GetMouse</code>(&amp;<code class="varname">point</code>, &amp;<code class="varname">buttons</code>);
+            <code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">Window</code>()-&gt;<code class="methodname">Unlock</code>();
+        }
+        <span class="comment">// not?  then why bother tracking</span>
+        else
+            break;
+        <span class="comment">// button up?  then don't do anything</span>
+        if (!<code class="varname">buttons</code>)
+            break;
+        <span class="comment">// check to see if mouse has moved more</span>
+        <span class="comment">// than kDRAG SLOP pixels in any direction</span>
+        if ((<code class="function">abs</code>((<span class="type">int</span>)(<code class="parameter">data</code>-&gt;<code class="varname">start</code>.<code class="varname">x</code> - <code class="varname">point</code>.<code class="varname">x</code>))
+                &gt; <code class="constant">kDRAG_SLOP</code>) ||
+        (<code class="function">abs</code>((<span class="type">int</span>)(<code class="parameter">data</code>-&gt;<code class="varname">start</code>.<code class="varname">y</code> - <code class="varname">point</code>.<code class="varname">y</code>))
+                &gt; <code class="constant">kDRAG_SLOP</code>))
+        {
+            <span class="comment">// make sure window is still valid</span>
+            if (<code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">Window</code>()-&gt;<code class="methodname">Lock</code>()) {
+                <span class="type"><code class="classname">BBitmap</code>  *</span><code class="varname">drag_bits</code>;
+                <span class="type"><code class="classname">BBitmap</code>  *</span><code class="varname">src_bits</code>;
+                <code class="classname">BMessage</code> <code class="varname">drag_msg</code>(<code class="constant">eItemDragged</code>);
+                <span class="type"><code class="classname">BView</code>    *</span><code class="varname">offscreen_view</code>;
+                <span class="type">int32</span>    <code class="varname">index</code> =
+                    <code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">CurrentSelection</code>();
+                <span class="type"><code class="classname">TListItem</code> *</span><code class="varname">item</code>;
+
+
+                <span class="comment">// get the selected item</span>
+                <code class="varname">item</code> = dynamic_cast&lt;<span class="type"><code class="classname">TListItem</code> *</span>&gt;
+                    (<code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">ItemAt</code>(<code class="varname">index</code>));
+                if (<code class="varname">item</code>) {
+                    <span class="comment">// init drag message with</span>
+                    <span class="comment">//some useful information</span>
+                    <code class="varname">drag_msg</code>.<code class="methodname">AddInt32</code>("index",<code class="varname">index</code>);
+                    <span class="comment">// we can even include the item</span>
+                    <code class="varname">drag_msg</code>.<code class="methodname">AddRef</code>("entry ref",
+                                    <code class="varname">item</code>-&gt;<code class="methodname">Ref</code>());
+
+
+                    <span class="comment">// get bitmap from current item</span>
+                    <code class="varname">src_bits</code> = <code class="varname">item</code>-&gt;<code class="methodname">Bitmap</code>();
+                    <span class="comment">// make sure bitmap is valid</span>
+                    if (<code class="varname">src_bits</code>)
+                    {
+                        <span class="comment">// create a new bitmap based on</span>
+                        <span class="comment">// the one in the list (we</span>
+                        <span class="comment">// can't just use the bitmap we</span>
+                        <span class="comment">// get passed because the</span>
+                        <span class="comment">// app server owns it after we</span>
+                        <span class="comment">// call DragMessage, besides</span>
+                        <span class="comment">// we wan't to create that cool</span>
+                        <span class="comment">// semi-transparent look)</span>
+                        <code class="varname">drag_bits</code> = new <code class="classname">BBitmap</code>(
+                            <code class="varname">src_bits</code>-&gt;<code class="methodname">Bounds</code>(),
+                            <code class="constant">B_RGBA32</code>, <code class="constant">true</code>);
+                        <span class="comment">// we need a view</span>
+                        <span class="comment">// so we can draw</span>
+                        <code class="varname">offscreen_view</code> =
+                            new <code class="classname">BView</code>(
+                              <code class="varname">drag_bits</code>-&gt;<code class="methodname">Bounds</code>(), "",
+                              <code class="constant">B_FOLLOW_NONE</code>, 0);
+                        <code class="varname">drag_bits</code>-&gt;
+                            <code class="methodname">AddChild</code>(<code class="varname">offscreen_view</code>);
+
+
+                        <span class="comment">// lock it so we can draw</span>
+                        <code class="varname">drag_bits</code>-&gt;<code class="methodname">Lock</code>();
+                        <span class="comment">// fill bitmap with black</span>
+                        <code class="varname">offscreen_view</code>-&gt;
+                            <code class="methodname">SetHighColor</code>(0, 0, 0, 0);
+                        <code class="varname">offscreen_view</code>-&gt;<code class="methodname">FillRect</code>(
+                            <code class="varname">offscreen_view</code>-&gt;<code class="methodname">Bounds</code>());
+                        <span class="comment">// set the alpha level</span>
+                        <code class="varname">offscreen_view</code>-&gt;
+                            <code class="methodname">SetDrawingMode</code>(<code class="constant">B_OP_ALPHA</code>);
+
+
+                        <code class="varname">offscreen_view</code>-&gt;
+                            <code class="methodname">SetHighColor</code>(0, 0, 0, 128);
+
+
+                        <code class="varname">offscreen_view</code>-&gt;
+                            <code class="methodname">SetBlendingMode</code>(
+                                <code class="constant">B_CONSTANT_ALPHA</code>,
+                                <code class="constant">B_ALPHA_COMPOSITE</code>);
+                        <span class="comment">// blend in bitmap</span>
+                        <code class="varname">offscreen_view</code>-&gt;
+                            <code class="methodname">DrawBitmap</code>(<code class="varname">src_bits</code>);
+                        <code class="varname">drag_bits</code>-&gt;<code class="methodname">Unlock</code>();
+
+
+                        <span class="comment">// initiate drag from center</span>
+                        <span class="comment">// of bitmap</span>
+
+
+                        <code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">DragMessage</code>(
+                          &amp;<code class="varname">drag_msg</code>, <code class="varname">drag_bits</code>,
+                          <code class="constant">B_OP_ALPHA</code>,
+                          <code class="classname">BPoint</code>(
+                          <code class="varname">drag_bits</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Height</code>()/2,
+                          <code class="varname">drag_bits</code>-&gt;<code class="methodname">Bounds</code>().<code class="methodname">Width</code>()/2 ));
+                    } <span class="comment">// endif src bits</span>
+                    else
+                    {
+                        <span class="comment">// no src bitmap?</span>
+                        <span class="comment">// then just drag a rect</span>
+                        <code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">DragMessage</code>(&amp;<code class="varname">drag_msg</code>,
+                            <code class="classname">BRect</code>(0, 0, <code class="constant">B_LARGE_ICON</code> - 1,
+                              <code class="constant">B_LARGE_ICON</code> - 1));
+                    }
+                } <span class="comment">// endif item</span>
+                <code class="parameter">data</code>-&gt;<code class="varname">view</code>-&gt;<code class="methodname">Window</code>()-&gt;<code class="methodname">Unlock</code>();
+            } <span class="comment">// endif window lock</span>
+            break;
+        } <span class="comment">// endif drag start</span>
+        <span class="comment">// take a breather</span>
+        <code class="function">snooze</code>(10000);
+    } <span class="comment">// while button</span>
+    <span class="comment">// free resource</span>
+    <code class="function">free</code>(<code class="parameter">data</code>);
+    return <code class="constant">B_NO_ERROR</code>;
+}
+</pre><p>
+The only thing left is to wait for a launch message to arrive at the
+window...
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TEZLauncherWindow</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>)
+{
+    <span class="type">char</span>        <code class="varname">string</code>[512];
+    <span class="type">int32</span>       <code class="varname">index</code>;
+    <span class="type">entry_ref</span>   <code class="varname">entry</code>;
+    <span class="type">entry_ref   *</span><code class="varname">ref</code> = <code class="constant">NULL</code>;
+    <span class="type">status_t</span>    <code class="varname">result</code>;
+    <span class="type"><code class="classname">TListItem</code>   *</span><code class="varname">item</code>;
+
+
+    switch (<code class="parameter">msg</code>-&gt;<code class="varname">what</code>) {
+        case <code class="constant">eItemDblClicked</code>:
+            <span class="comment">// item was dbl-clicked.</span>
+            <span class="comment">//from the message we can find the item</span>
+            <code class="parameter">msg</code>-&gt;<code class="methodname">FindInt32</code>("index", &amp;<code class="varname">index</code>);
+            <code class="varname">item</code> = dynamic_cast&lt;<span class="type"><code class="classname">TListItem</code> *</span>&gt;
+                (<code class="varname">fList</code>-&gt;<code class="methodname">ItemAt</code>(<code class="varname">index</code>));
+            if (<code class="varname">item</code>)
+                <code class="varname">ref</code> = <code class="varname">item</code>-&gt;<code class="methodname">Ref</code>();
+            break;
+
+
+        case <code class="constant">eItemMenuSelected</code>:
+            <span class="comment">// item was selected with menu.</span>
+            <span class="comment">//find item using CurrentSelection</span>
+            <code class="varname">index</code> = <code class="varname">fList</code>-&gt;<code class="methodname">CurrentSelection</code>();
+            <code class="varname">item</code> = dynamic_cast&lt;<span class="type"><code class="classname">TListItem</code> *</span>&gt;
+                (<code class="varname">fList</code>-&gt;<code class="methodname">ItemAt</code>(<code class="varname">index</code>));
+            if (<code class="varname">item</code>)
+                <code class="varname">ref</code> = <code class="varname">item</code>-&gt;<code class="methodname">Ref</code>();
+            break;
+
+
+        case <code class="constant">eItemDragged</code>:
+            <span class="comment">// item was dropped on us.</span>
+            <span class="comment">//get ref from message</span>
+            if (<code class="parameter">msg</code>-&gt;<code class="methodname">HasRef</code>("entry ref")) {
+                <code class="parameter">msg</code>-&gt;<code class="methodname">FindRef</code>("entry ref", &amp;<code class="varname">entry</code>);
+                <code class="varname">ref</code> = &amp;<code class="varname">entry</code>;
+            }
+            break;
+
+
+        default:
+            <code class="classname">BWindow</code>::<code class="methodname">MessageReceived</code>(<code class="parameter">msg</code>);
+    }
+    if (<code class="varname">ref</code>) {
+        <span class="comment">// if we got a ref, try launching it</span>
+        <code class="varname">result</code> = <code class="varname">be_roster</code>-&gt;<code class="methodname">Launch</code>(<code class="varname">ref</code>);
+        if (<code class="varname">result</code> != <code class="constant">B_NO_ERROR</code>) {
+            <code class="function">sprintf</code>(<code class="varname">string</code>,
+            "Error launching: %s", strerror(<code class="varname">result</code>));
+            (new <code class="classname">BAlert</code>("", <code class="varname">string</code>, "OK"))-&gt;<code class="methodname">Go</code>();
+        }
+    }
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-46"></a>Developers' Workshop: The Bitchin' Async</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+Recent events, such as, say, the intense effort to get R4 out the door,
+have inspired me to keep this article short and sweet.
+</p><p>
+I'll be addressing R4's asynchronous control capabilities in this
+article. These have already been covered in the R4 Beta release notes
+(with a few not-quite-correct points that will be cleared up here), and
+The Animal's most nifty summary article:
+</p><p>
+<a class="xref" href="Issue3-45.html#Engineering3-45" title="Be Engineering Insights: That BeOS is one baaad mother-[Shut your mouth!] ...just talking 'bout BeOS">Be Engineering Insights: That BeOS is one baaad mother-[Shut your mouth!]
+...just talking 'bout BeOS</a>
+</p><p>
+My simple contribution here is to add some sample code so that you can
+see these controls in action.
+</p><p>
+Enter Pot, the kitchen utensil for this week:
+ftp://ftp.be.com/pub/samples/interface_kit/pot.zip
+</p><p>
+Actually, Pot doesn't refer to a kitchen utensil, nor to a beefy roast,
+nor even to that medicinal restorative which entertains countless
+carefree souls, but rather to a simple <code class="classname">BControl</code>-derived class that
+implements a rotating dial. I've also thrown in, absolutely free of
+charge, a test application which shows this control in action (and
+demonstrates the new <code class="constant">B_OP_ALPHA</code> mode on the side).
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id760273"></a>Whither Async?</h3></div></div></div><p>
+New programmers and/or programmers coming from
+<acronym class="acronym" title="Microsoft Foundation Classes">MFC</acronym> or other
+async-friendly APIs probably won't need much motivation to start taking
+advantage of asynchronous controls. For those coming from the BeOS R3
+world of controls, though, some justification may be in order.
+</p><p>
+Here's how your control might have handled mouse movements in the past:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">ArthriticCtrl</code>::<code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">where</code>)
+{
+    <span class="comment">// handle mouse down</span>
+
+
+    <code class="classname">BPoint</code> <code class="varname">prev</code> = <code class="parameter">where</code>;
+    <span class="type">uint32</span> <code class="varname">buttons</code>;
+    do {
+        <code class="function">snooze</code>(40000);
+        <code class="methodname">GetMouse</code>(&amp;<code class="varname">where</code>, &amp;<code class="varname">buttons</code>);
+        if (<code class="varname">buttons</code> &amp;&amp; (<code class="parameter">where</code> != <code class="varname">prev</code>)) {
+            <span class="comment">// handle mouse moved</span>
+        }
+    } while (<code class="varname">buttons</code>);
+
+
+    <span class="comment">// handle mouse up</span>
+}
+</pre><p>
+There are two big wins you can get by moving to asynchronous controls:
+</p><div class="orderedlist"><ol><li><p>
+Simplicity. In the previous case you have to write a mouse processing
+loop and call a lower-level mouse handling function to figure out when
+the mouse is moved and released. With asynchronous controls, almost all
+of this work is done for you. All you have to do is write the code to
+handle the mouse moved and mouse button release.
+</p></li><li><p>
+Performance. The code listed above is inefficient because it forces the
+looper to sleep while it's not handling mouse functions. (Note that
+simply removing the snooze doesn't alleviate this situation at all, and
+degrades system performance!) With asynchronous controls, your looper is
+free to handle other messages while waiting for mouse input, which allows
+your control to remain responsive to other events.
+</p></li></ol></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id760422"></a>Implementing Asynchronous Controls</h3></div></div></div><p>
+Here are four simple steps to asynchronous nirvana if you're deriving
+from <code class="classname">BControl</code>:
+</p><div class="orderedlist"><ol><li><p>
+Inside <code class="methodname">MouseDown()</code>, when you want to track the mouse movement, you need
+to tell the app server that you want to receive all the generated mouse
+events while the mouse is moving—including movements outside of your
+view! Usually you'll want to use <code class="methodname">SetMouseEventMask()</code>, because the tracking
+is automatically ended for you when the mouse button is released.
+</p></li><li><p>
+Mouse movements are usually sent to you whenever the mouse is over the
+view—not necessarily when you're tracking the mouse. So, you also need
+to keep track inside your class of when you're actively tracking mouse
+movement. <code class="classname">BControl</code> provides two functions,
+<code class="methodname">SetTracking()</code> and <code class="methodname">IsTracking()</code>,
+that do this for you. Call
+<code class="code"><code class="methodname">SetTracking</code>(<code class="constant">true</code>)</code>
+from within <code class="methodname">MouseDown()</code>, and
+you'll be on your way.
+</p></li><li><p>
+Override <code class="methodname">MouseMoved()</code>, and if you're currently tracking the mouse
+(<code class="code"><code class="methodname">IsTracking()</code> == <code class="constant">true</code>)</code>,
+do whatever you need to do when the mouse moves.
+</p></li><li><p>
+Override <code class="methodname">MouseUp</code>, and if you're currently tracking the mouse
+(<code class="code"><code class="methodname">IsTracking()</code> == <code class="constant">true</code>)</code>,
+call <code class="code"><code class="methodname">SetTracking</code>(<code class="constant">false</code>)</code> after you've finished
+handling the mouse up event, to mark that you've finished tracking the
+mouse.
+</p></li></ol></div><p>
+<code class="classname">BPot</code>, my twiddle-happy control example, shows how this is done.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id760553"></a>Using Interface Kit Controls</h3></div></div></div><p>
+<code class="classname">BButton</code>, <code class="classname">BCheckBox</code>,
+and all the other Interface Kit classes that derive
+from <code class="classname">BControl</code>, now lead a two-faced existence. For compatibility's sake,
+they track mouse movement the old way (using the mouse processing loop in
+<code class="methodname">MouseDown()</code>) by default. However, they can be told to use the asynchronous
+method instead. You tell these controls to use the new implementation by
+passing the flag <code class="constant">B_ASYNCHRONOUS_CONTROLS</code> to their parent window. Because
+of the performance gain that the asynchronous method offers, you'll
+probably want to enable asynchronous controls in your windows, unless
+you're doing something special with the controls that depends on their
+previous mouse handling behavior.
+</p><p>
+If you're deriving from any of these classes, you can of course
+completely replace their mouse handling behavior, or leave their mouse
+handling code alone. However, if you want to augment their existing
+behavior, you need to be careful that you're working with them correctly:
+</p><ul class="itemizedlist"><li><p>
+Make sure <code class="constant">B_ASYNCHRONOUS_CONTROLS</code> is set in the parent window if you
+want them to handle things asynchronously—otherwise, you'll be in for
+a rude shock when the implementation's <code class="methodname">MouseDown()</code> is called!
+</p></li><li><p>
+If you call the inherited <code class="methodname">MouseDown()</code>, ALWAYS call the inherited
+<code class="methodname">MouseMoved()</code> and <code class="methodname">MouseUp()</code>
+as well if you override these functions. Many of
+the Interface Kit controls set up a special state in <code class="methodname">MouseDown()</code> that needs
+to be modified or cleaned up when the mouse is moved or released.
+</p></li><li><p>
+If you call the inherited <code class="methodname">MouseDown()</code>, you needn't take the liberty of
+calling <code class="methodname">SetMouseEventMask()</code> and
+<code class="methodname">SetTracking()</code> in the code—these calls will
+be taken care of in the inherited function, so long as you've set
+<code class="constant">B_ASYNCHRONOUS_CONTROLS</code> correctly in the window.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id760666"></a>Tweaking Asynchronous Behavior</h3></div></div></div><p>
+Last week's article covered these, but to recap, there are several ways
+you can tweak the asynchronous behavior to <span class="trademark">Do The Right Thing</span>™,
+depending on what your needs are:
+</p><ul class="itemizedlist"><li><p>
+You have a burning desire to capture not only <code class="methodname">MouseMoved()</code>
+and <code class="methodname">MouseUp()</code>
+events which occur outside of your view, but also <code class="methodname">MouseDown()</code> events. Or,
+let's say you want to receive mouse events which occur outside of your
+view all the time. <code class="methodname">SetMouseEventMask()</code> just won't cut it here, because it
+gets turned off when the mouse is released, at which point you'd need to
+concoct some way to turn it back on. Rather, use the more powerful
+<code class="methodname">SetEventMask()</code>, which is called in exactly the same way as
+<code class="methodname">SetMouseEventMask()</code>, and does essentially the same thing, but stays in
+effect until you explicitly turn it off (using the call
+<code class="code"><code class="methodname">SetEventMask</code>(0)</code>).
+</p></li><li><p>
+You'd really rather that Focus Follows Mouse doesn't steal the glory
+from your window when one of the child views is trying to track the
+mouse. Pass the flag <code class="constant">B_LOCK_WINDOW_FOCUS</code> as an option to
+<code class="methodname">SetMouseEventMask()</code>, and you'll ensure that the focus doesn't change while
+you're tracking the mouse. (This option doesn't have any effect when it's
+passed to <code class="methodname">SetEventMask()</code>; only
+<code class="methodname">SetMouseEventMask()</code> supports it.)
+</p></li><li><p>
+You notice that <code class="methodname">MouseUp()</code> events don't get handled until several seconds
+after you release the mouse. The problem here may be that your <code class="methodname">MouseMoved()</code>
+implementation is taking too long—I can receive upwards of 90 mouse
+events per second on my machine, and if each <code class="methodname">MouseMoved()</code> call takes .1 s
+to complete, the message queue deficit builds up awfully quickly. One way
+to keep the queue clean, and keep your application responsive, is to
+discard intermediate <code class="methodname">MouseMoved()</code> events while you're busy tracking the
+mouse. The <code class="constant">B_NO_POINTER_HISTORY</code> option in
+<code class="methodname">SetMouseEventMask()</code> takes care of
+this for you, so that your queue only has one pending <code class="methodname">MouseMoved()</code> event at
+a time.
+</p><p>
+This problem is a symptom of a larger problem that afflicts many Be
+applications: the more time you spend in message handling functions, the
+less responsive your looper becomes. In this case, discarding <code class="methodname">MouseMoved()</code>
+events may still have the undesirable effect of skipping user input, and
+suspending other looper activities, while an event is being processed. An
+even better solution, when it's feasible, is to reduce the time the
+looper spends processing the messages, by accumulating results before
+performing expensive operations on them, or passing off expensive
+calculations to helper threads. Doing this frees up your looper to
+respond to user events, and improves the visible performance of your
+application.
+</p></li><li><p>
+You want to receive keyboard events, or want to keep the focus views
+from receiving keyboard events. Add <code class="constant">B_KEYBOARD_EVENTS</code> to the mask, or add
+<code class="constant">B_SUSPEND_VIEW_FOCUS</code> to the options you pass to
+<code class="methodname">SetMouseEventMask()</code>.
+(<code class="constant">B_SUSPEND_VIEW_FOCUS</code> also doesn't have an effect on
+<code class="methodname">SetEventMask()</code>; only
+<code class="methodname">SetMouseEventMask()</code> supports it.)
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id760837"></a>Using Asynchronous Mouse Handling in Doodle</h3></div></div></div><p>
+Of course, you can use this shiny new mouse handling behavior in other
+places than controls. In fact, any <code class="classname">BView</code>-derived class can take advantage
+of the event mask. You'll probably need to conjure up some equivalent to
+<code class="classname">BControl</code>'s <code class="methodname">SetTracking()</code>
+and <code class="methodname">IsTracking()</code>, though; a simple <span class="type">bool</span> in your
+class ought to take care of this.
+</p><p>
+In trying to keep with the times, I've altered <span class="application">Doodle</span> yet again so that
+the document view can take advantage of asynchronous mouse handling
+(which really is a lot closer to the way that the <acronym class="acronym">MFC</acronym> library in Windows
+does things). The new version of Doodle's source code can be found among
+the optional items on the up-and-coming R4 CD-ROM, in:
+</p><p>
+/boot/optional/sample-code/doodle/
+</p><p>
+One big difference between the BeOS approach and the Windows approach
+here is the number of simultaneous objects that can "capture the mouse"
+(i.e., receive all mouse events). In Windows, only one view at a time
+captures the mouse, and instead of something like <code class="methodname">IsTracking()</code>, you craft
+your code in OnMouseMove to check to see whether the current view with
+the capture is your view. In the BeOS, any number of views can capture
+the mouse simultaneously, so each view needs to keep track separately of
+whether they are currently capturing the mouse. Also notice that the
+event mask in BeOS is more flexible, allowing both mouse and keyboard
+events to be captured, and giving you ways to tweak the behavior that
+I've described above.
+</p></div><p>
+That wraps it up for this week. Back to my post-release hibernation...
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-46"></a>More Notes From the Road: Comdex</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Last week, I wrote from Tokyo, where we had a great time with our
+partners, Hitachi and Plat'Home. This week, although the neon resembles
+Tokyo by night—down to the creative syntax—the streets are broader
+and the cabbies more aggressive, so this must be Vegas.
+</p><p>
+I'll skip the fashionable complaints about Las Vegas and Comdex. For me,
+Las Vegas looks like (I'll tone down the metaphor) an experienced diner
+waitress, fast on her feet, professional, and wise to the ways of human
+behavior. It's the perfect setting for the excesses of our own
+profession. I like those excesses; they're the mark of a prosperous and
+still young industry. Would we prefer a convention of steam engine
+makers? Put another way, there's no good culture without a dash of bad
+taste; a monopoly of good taste suggests restraint—you're not pushing
+the envelope. In this regard, Vegas and Comdex are very reassuring.
+</p><p>
+For the BeOS Release 4 coming out party, we have our own booth. Last
+year, we were in the main hall, guests of our Umax friends. This year, as
+true Comdex beginners, we're in the basement of the Sands, with a large
+number of small, aspiring companies. This beginner's status turns out to
+be a pleasant one. Between people who wanted to see us, and people who
+didn't expect to, we enjoy pretty good traffic. Also, we can converse and
+give demonstrations without the deafening noise in the main hall. There,
+like diners in a noisy restaurant who must talk loudly because of the din
+from other tables, exhibitors turn up the volume to be heard over their
+neighbors' loud song and dance acts. While we hope to have that problem
+in the future, for now we enjoy not having to shout at the top of our
+lungs.
+</p><p>
+We approached the first public demonstrations of R4 with the usual level
+of trepidation. "Undocumented features" have a way of eluding testing,
+only to manifest themselves at embarrassing moments, in the midst of a
+trade show demo, preferably with media or OEM dignitaries in the audience
+for added impact. The first day of this particular phase of public
+testing went well, no claims expressed or implied, and the demonstrations
+from our friends at Ro Design, Beatware, MGI, Mediapede, Gobe, Maxon, and
+Hitachi went smoothly.
+</p><p>
+Tomorrow, we'll hold a press conference, an opportunity to re-state our
+basic messages: the Media OS, Release 4 breaking the laws of system
+software physics (more features and faster), new applications, the
+specialized Media OS coexisting peacefully with the general-purpose
+Windows. On the last point, cheeky visitors needled me a little about the
+latest bit of BeOS PR, from Microsoft this time, at their shareholders
+meeting last week. It appears Bill Gates mentioned Linux and the BeOS as
+competitive concerns. To borrow a famous line, I'm shocked. But
+seriously, I hope this isn't a bedtime story for the DOJ, especially when
+Apple is nowhere mentioned.
+</p><p>
+Looking at our respective financial weights, according to the terms of
+our last round of financing, Be is worth between 1/2000th and 1/3000th of
+Microsoft market capitalization. So, on the sunny side of Bill's
+statement, he agrees with our investors, he sees potential. In any event,
+we appreciate the publicity, we need it. Or, as we say in California, we
+feel validated.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-45.html">Issue 3-45, November 11, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-47.html">Issue 3-47, November 25, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-45.html" title="Issue 3-45, November 11, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-47.html" title="Issue 3-47, November 25, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-12.html" title="Issue 4-12, March 24, 1999" /><link rel="next" href="Issue4-14.html" title="Issue 4-14, April 7, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-12.html" title="Issue 4-12, March 24, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-14.html" title="Issue 4-14, April 7, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-12.html">Issue 4-12, March 24, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-14.html">Issue 4-14, April 7, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-13"></a>Issue 4-13, March 31, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-13"></a>Be Engineering Insights: Doing File I/O From A Device Driver</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dmitriy</span> <span class="surname">Budko</span></span></div></div></div><p>
+Many BeOS developers ask if it is possible to do a file or <code class="filename">/dev/*</code> I/O
+from a kernel driver. This is a very reasonable question. On other OSes
+it's complicated: one has to use special unfamiliar functions like
+Windows 95/98 IFSMgr_Ring0_FileIO set
+(<code class="function">OpenCreateFile()</code>, <code class="function">ReadFile()</code>,
+<code class="function">WriteAbsoluteDisk()</code>, etc.) or Windows NT
+<code class="function">ZwCreatefile()</code>, <code class="function">ZwReadFile()</code>,
+etc. A small example from the Microsoft Windows NT DDK:
+</p><pre class="programlisting c">
+<code class="varname">ntStatus</code> = <code class="function">ZwCreateFile</code>( &amp;<code class="varname">NtFileHandle</code>,
+  <code class="constant">SYNCHRONIZE</code> | <code class="constant">FILE_READ_DATA</code>,
+  &amp;<code class="varname">ObjectAttributes</code>,
+  &amp;<code class="varname">IoStatus</code>,
+  <code class="constant">NULL</code>,   <span class="comment">// alloc size = none</span>
+  <code class="constant">FILE_ATTRIBUTE_NORMAL</code>,
+  <code class="constant">FILE_SHARE_READ</code>,
+  <code class="constant">FILE_OPEN</code>,
+  <code class="constant">FILE_SYNCHRONOUS_IO_NONALERT</code>,
+  <code class="constant">NULL</code>, <span class="comment">// eabuffer</span>
+  0 );  <span class="comment">// ealength</span>
+</pre><p>
+Can you understand without extensive comments what is going on here?
+</p><p>
+Or from the NT DDK documentation:
+</p><pre class="programlisting c">
+<span class="type">NTSTATUS</span> <code class="function">ZwReadFile</code>(
+  <span class="type">IN HANDLE</span> <code class="parameter">FileHandle</code>,
+  <span class="type">IN HANDLE</span> <code class="parameter">Event</code> OPTIONAL,
+  <span class="type">IN PIO_APC_ROUTINE</span> <code class="parameter">ApcRoutine</code> OPTIONAL,
+  <span class="type">IN PVOID</span> <code class="parameter">ApcContext</code> OPTIONAL,
+  <span class="type">OUT PIO_STATUS_BLOCK</span> <code class="parameter">IoStatusBlock</code>,
+  <span class="type">OUT PVOID</span> <code class="parameter">Buffer</code>,
+  <span class="type">IN ULONG</span> <code class="parameter">Length</code>,
+  <span class="type">IN PLARGE_INTEGER</span> <code class="parameter">ByteOffset</code> OPTIONAL,
+  <span class="type">IN PULONG</span> <code class="parameter">Key</code> OPTIONAL
+  );
+</pre><p>
+Under BeOS it's much easier: a driver can call the standard POSIX
+low-level I/O functions: <code class="function">open()</code>, <code class="function">close()</code>,
+<code class="function">read()</code>, <code class="function">write()</code>, etc.
+</p><p>
+Here is the simple driver that uses these functions and provides very
+simple encryption capabilities. It publishes a "secure" device in
+<code class="filename">/dev/misc/cryptodevice</code>.
+Programs can read/write to it as it was a normal
+file but the data is scrambled and stored in the normal
+<code class="filename">/boot/home/cryptod_storage</code> file. The source code, makefile, installation
+script, PPC and x86 BeIDE projects are at
+</p><p>
+ftp://ftp.be.com/pub/samples/drivers/cryptodevice.zip
+</p><pre class="programlisting c">
+#include &lt;OS.h&gt;
+#include &lt;KernelExport.&gt;h
+#include &lt;Drivers.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;string.h&gt;
+
+<span class="type">int</span> fh;
+<span class="type">const char*</span>  file_name  = "/boot/home/cryptod_storage";
+<span class="type">const char*</span>  key_string = "VERY lousy encryption";
+
+static <span class="type">void</span>
+<code class="function">encrypt</code>(<span class="type">uchar*</span> <code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>, <span class="type">off_t</span> <code class="parameter">pos</code>)
+{
+  <span class="type">size_t</span> i;
+  <span class="type">const size_t</span>  key_len = strlen(key_string);
+
+  for(i=0; i&lt;len; i++)
+    buf[i] ^= key_string[((unsigned)(pos+i))%key_len];
+}
+
+static <span class="type">void</span>
+<code class="function">decrypt</code>(<span class="type">uchar*</span> <code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>, <span class="type">off_t</span> <code class="parameter">pos</code>)
+{
+  <code class="function">encrypt</code>(<code class="parameter">buf</code>, <code class="parameter">len</code>, <code class="parameter">pos</code>);
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_open</code> (<span class="type">const char *</span><code class="parameter">name</code>, <span class="type">uint32</span> <code class="parameter">flags</code>, <span class="type">void **</span><code class="parameter">cookie</code>)
+{
+  <code class="function">dprintf</code>("cryptod: open()\n");
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_close</code> (<span class="type">void *</span><code class="parameter">cookie</code>)
+{
+  <code class="function">dprintf</code>("cryptod: close()\n");
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_free</code> (<span class="type">void *</span><code class="parameter">cookie</code>)
+{
+  <code class="function">dprintf</code>("cryptod: free()\n");
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_read</code> (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">pos</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">len</code>)
+{
+  <code class="function">dprintf</code>("cryptod: read(%Ld, %d)\n", <code class="parameter">pos</code>, *<code class="parameter">len</code>);
+
+  if(-1 == <code class="function">lseek</code>(<code class="varname">fh</code>, <code class="parameter">pos</code>, <code class="constant">SEEK_SET</code>))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_SEEK_ERROR</code>;
+  }
+
+  if (-1 == (*<code class="parameter">len</code> = <code class="function">read</code>(<code class="varname">fh</code>, <code class="parameter">buf</code>, *<code class="parameter">len</code>)))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_READ_ERROR</code>;
+  }
+  <code class="function">decrypt</code>((<span class="type">uchar*</span>)<code class="parameter">buf</code>, *<code class="parameter">len</code>, <code class="parameter">pos</code>);
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_write</code> (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">pos</code>, <span class="type">const void *</span><code class="parameter">buf</code>,
+  <span class="type">size_t *</span><code class="parameter">len</code>)
+{
+  <code class="function">dprintf</code>("cryptod: write(%Ld, %Ld)\n", <code class="parameter">pos</code>, *<code class="parameter">len</code>);
+
+  if(-1 == <code class="function">lseek</code>(<code class="varname">fh</code>, <code class="parameter">pos</code>, <code class="constant">SEEK_SET</code>))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_SEEK_ERROR</code>;
+  }
+
+  <code class="function">encrypt</code>((<span class="type">uchar*</span>)<code class="parameter">buf</code>, *<code class="parameter">len</code>, <code class="parameter">pos</code>);
+
+  if (-1 == (*<code class="parameter">len</code> = <code class="function">write</code>(<code class="varname">fh</code>, <code class="parameter">buf</code>, *<code class="parameter">len</code>)))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_WRITE_ERROR</code>;
+  }
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_readv</code> (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">pos</code>, <span class="type">const iovec *</span><code class="parameter">vec</code>,
+  <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">size_t *</span><code class="parameter">len</code>)
+{
+  <span class="type">size_t</span>  <code class="varname">i</code>;
+  <span class="type">off_t</span>  <code class="varname">cur_pos</code>;
+
+  <code class="function">dprintf</code>("cryptod: readv(%Ld, %d, %d)\n", <code class="parameter">pos</code>, <code class="parameter">count</code>, *<code class="parameter">len</code>);
+
+  if(-1 == <code class="function">lseek</code>(<code class="varname">fh</code>, <code class="parameter">pos</code>, <code class="constant">SEEK_SET</code>))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_SEEK_ERROR</code>;
+  }
+
+  if (-1 == (*<code class="parameter">len</code> = <code class="function">readv</code>(<code class="varname">fh</code>, <code class="parameter">vec</code>, <code class="parameter">count</code>)))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_READ_ERROR</code>;
+  }
+
+  for(<code class="varname">cur_pos</code>=<code class="parameter">pos</code>,<code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="parameter">count</code>; <code class="varname">i</code>++)
+  {
+    <code class="function">decrypt</code>((<span class="type">uchar*</span>)<code class="parameter">vec</code>[<code class="varname">i</code>].<code class="varname">iov_base</code>, <code class="parameter">vec</code>[<code class="varname">i</code>].<code class="varname">iov_len</code>, <code class="varname">cur_pos</code>);
+    <code class="varname">cur_pos</code> += <code class="parameter">vec</code>[<code class="varname">i</code>].<code class="varname">iov_len</code>;
+  }
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_writev</code> (<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">pos</code>, <span class="type">const iovec *</span><code class="parameter">vec</code>,
+  <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">size_t *</span><code class="parameter">len</code>)
+{
+  <span class="type">size_t</span>  <code class="varname">i</code>;
+  <span class="type">off_t</span>  <code class="varname">cur_pos</code>;
+
+  <code class="function">dprintf</code>("cryptod: writev(%Ld, %d, %d)\n", <code class="parameter">pos</code>, <code class="parameter">count</code>, *<code class="parameter">len</code>);
+
+  if(-1 == <code class="function">lseek</code>(<code class="varname">fh</code>, <code class="parameter">pos</code>, <code class="constant">SEEK_SET</code>))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_SEEK_ERROR</code>;
+  }
+
+  if (-1 == (*<code class="parameter">len</code> = <code class="function">writev</code>(<code class="varname">fh</code>, <code class="parameter">vec</code>, <code class="parameter">count</code>)))
+  {
+    *<code class="parameter">len</code> = 0;
+    return <code class="constant">B_DEV_WRITE_ERROR</code>;
+  }
+
+  for(<code class="varname">cur_pos</code>=<code class="parameter">pos</code>,<code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="parameter">count</code>; <code class="varname">i</code>++)
+  {
+    <code class="function">encrypt</code>((<span class="type">uchar*</span>)<code class="parameter">vec</code>[<code class="varname">i</code>].<code class="varname">iov_base</code>, <code class="parameter">vec</code>[<code class="varname">i</code>].<code class="varname">iov_len</code>, <code class="varname">cur_pos</code>);
+    <code class="varname">cur_pos</code> += <code class="parameter">vec</code>[<code class="varname">i</code>].<code class="varname">iov_len</code>;
+  }
+  return <code class="constant">B_OK</code>;
+}
+
+static <span class="type">status_t</span>
+<code class="function">cryptod_control</code>(<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">uint32</span> <code class="parameter">msg</code>, <span class="type">void *</span><code class="parameter">buf</code>,
+  <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+  return <code class="constant">B_DEV_INVALID_IOCTL</code>;
+}
+
+static <span class="type">device_hooks</span> <code class="varname">cryptod_device</code> = {
+  <code class="function">cryptod_open</code>,
+  <code class="function">cryptod_close</code>,
+  <code class="function">cryptod_free</code>,
+  <code class="function">cryptod_control</code>,
+  <code class="function">cryptod_read</code>,
+  <code class="function">cryptod_write</code>,
+  <code class="constant">NULL</code>,      <span class="comment">/* select */</span>
+  <code class="constant">NULL</code>,      <span class="comment">/* deselect */</span>
+  <code class="function">cryptod_readv</code>,
+  <code class="function">cryptod_writev</code>
+};
+
+<span class="type">static char *</span><code class="varname">cryptod_name</code>[] = {
+  "misc/cryptodevice",
+  NULL
+};
+
+<span class="type">status_t</span>
+<code class="function">init_driver</code>()
+{
+  <code class="function">dprintf</code>("cryptod: init_driver(), %s, %s\n",
+    __DATE__, __TIME__);
+
+  if(-1 == (<code class="varname">fh</code>=<code class="function">open</code>(<code class="varname">file_name</code>, <code class="constant">O_RDWR</code>| <code class="constant">O_CREAT</code>)))
+    return <code class="constant">B_ERROR</code>;
+  return <code class="constant">B_OK</code>;
+}
+
+<span class="type">void</span>
+<code class="function">uninit_driver</code>()
+{
+  dprintf("cryptod: uninit_driver()\n");
+  <code class="function">close</code>(<code class="varname">fh</code>);
+}
+
+<span class="type">const char **</span>
+<code class="function">publish_devices</code>()
+{
+  return (<span class="type">const char **</span>)&amp;<code class="varname">cryptod_name</code>;
+}
+
+<span class="type">device_hooks *</span>
+<code class="function">find_device</code>(<span class="type">const char *</span><code class="parameter">name</code>)
+{
+  return &amp;<code class="varname">cryptod_device</code>;
+}
+</pre><p>
+The driver just passes all read/write request to the file system.
+Everything should be obvious to any C/DOS/POSIX programmer except two
+functions: <code class="function">readv()</code>/<code class="function">writev()</code>. They are common extensions to POSIX and are
+used to read/write contiguous portion of a file from/to many buffers in
+one system (or file system) call. These functions may provide better
+performance in many cases then multiple calls are done to <code class="function">read()</code>/<code class="function">write()</code>.
+</p><p>
+And from Linux man pages, with a few changes:
+</p><pre class="programlisting c">
+#include &lt;sys/uio.h&gt;
+
+<span class="type">int</span> <code class="function">readv</code>(
+  <span class="type">int</span> <code class="parameter">fd</code>, <span class="type">const struct iovec *</span><code class="parameter">vector</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+
+<span class="type">int</span> <code class="function">writev</code>(
+  <span class="type">int</span> <code class="parameter">fd</code>, <span class="type">const struct iovec *</span><code class="parameter">vector</code>, <span class="type">size_t</span> <code class="parameter">count</code>);
+
+struct <span class="type">iovec</span> {
+  <span class="type">__ptr_t</span> <code class="varname">iov_base</code>; <span class="comment">/* Starting address. */</span>
+  <span class="type">size_t</span> <code class="varname">iov_len</code>; <span class="comment">/* Length in bytes. */</span>
+  };
+</pre><p>
+Description
+</p><p>
+<code class="function">readv()</code> reads data from file descriptor
+<code class="parameter">fd</code>, and puts the the order
+specified. Operates just like <code class="function">read()</code> except that data is put in vector
+instead of a contiguous buffer.
+</p><p>
+<code class="function">writev()</code> writes data to file descriptor
+<code class="parameter">fd</code>, and from the buffers described
+by vector. The number of buffers is specified by <code class="parameter">count</code>. The buffers are
+used in the order specified. Operates just like <code class="function">write()</code> except that data is
+taken from <code class="parameter">vector</code> instead of a contiguous buffer.
+</p><p>
+Return Value
+</p><p>
+On success <code class="function">readv()</code> returns the number of bytes
+read. On success <code class="function">writev()</code>
+returns the number of bytes written. On error, -1 is returned, and
+<code class="varname">errno</code>
+is set appropriately.
+</p><p>
+If you want to initialize and mount a file system on the encrypted device
+then you will have to:
+</p><div class="orderedlist"><ol><li><p>
+Use a raw device or partition like
+<code class="filename">/dev/disk/ide/ata/1/master/0/0_1</code>
+as the backing storage for the data.
+</p></li><li><p>
+Change the published device name to
+<code class="filename">/dev/disk/foo/bar</code>.
+</p></li><li><p>
+Implement <code class="function">ioctl()</code> handlers for the standard requests for a mass
+storage device. See old RAMDrive as an example:
+</p><p>
+ftp://ftp.be.com/pub/samples/drivers/obsolete/ramdrive.zip
+</p></li></ol></div><p>
+Unfortunately, in current versions of the BeOS you can not mount a file
+system over such device if it uses a file on a file system as the backing
+storage. A deadlock will occur. This will be fixed in a future version of
+the BeOS.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-13"></a>Developers' Workshop: Floating Point and Shared Libraries - Life's
+Different Down Under</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steven</span> <span class="surname">Olson</span></span></div></div></div><p>
+As a media driver writer I find myself working with many different audio
+devices. Of the milestones along the path to driver completion, the one I
+enjoy the most is getting a new audio card and corresponding driver to
+make some noise. Typically, this implies writing predetermined (as
+opposed to random) data directly to buffers on the device from the
+driver. A finished driver normally just passes data from a media node to
+the hardware, but this means that the interface to the node must be
+completed first. At the start of a project, I just want to see if the
+registers are documented correctly; I don't care about the final
+interface between the driver and the corresponding node.
+</p><p>
+Writing the values of a sine wave into the audio device's buffer would be
+a quick way to see if the registers are set correctly. However, because
+drivers operate in kernel space, they can't be linked against the shared
+math libraries (more on this later). Consequently, you can't use the
+<code class="function">sin()</code> function to determine values for the tone.
+</p><p>
+There are several methods you can use to get around this limitation. If
+you can stand listening to multiple tones, you could generate a signal
+using any one of a myriad of waveforms that don't require the math
+libraries. These include square, triangle, and sawtooth waves. If you're
+feeling ambitious, you can even use parabolas. The following code shows
+one way to do this:
+</p><pre class="programlisting c">
+<span class="type">short</span> <code class="varname">buffer</code>[2*<code class="constant">NUM_FRAMES</code>];
+<span class="type">short</span> <code class="varname">gain</code> = 320;
+<span class="type">short</span> <code class="varname">sign</code> = -1;
+
+for ( <code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="constant">NUM_FRAMES</code>; <code class="varname">i</code>++) {
+  if ( ! ( <code class="varname">i</code> % <code class="varname">half_period</code>) ) {
+    <code class="varname">sign</code> = -<code class="varname">sign</code>;
+    <code class="varname">x</code> = 0;
+  }
+  <code class="varname">buffer</code>[2*<code class="varname">i</code>] = <code class="varname">buffer</code>[2*<code class="varname">i</code>+1] =
+    (<span class="type">short</span>) (<code class="varname">sign</code> * <code class="varname">gain</code> * <code class="varname">x</code> * (<code class="varname">x</code> - <code class="varname">half_period</code>));
+  <code class="varname">x</code>++;
+}
+</pre><p>
+Try starting with a <code class="varname">half_period</code> of 10. Be
+careful when changing <code class="varname">gain</code> and
+<code class="varname">half_period</code> values, so you don't end up clipping the signal.
+</p><p>
+Why not use a Taylor series expansion instead? After all,
+<code class="literal">sin x = x - x^3/3! + x^5/5! - ...</code>
+and the signal harmonics will be much smaller than
+with any of the other waveforms. The Taylor series is not used because it
+requires floating point calculations, and using floating point in the
+kernel, while permitted in rare circumstances, is discouraged as a
+general rule.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id777145"></a>Floating Point in the Kernel</h3></div></div></div><p>
+Floating point calculations in the kernel are discouraged when using the
+BeOS. Their use, when absolutely required, should be restricted to simple
+addition, subtraction, multiplication, and division. Why? Because they're
+time consuming, and floating point exceptions in the kernel are a pain.
+The kernel is designed to be small and fast, with a limited set of export
+functions; it's not a general purpose playground (that's what user mode
+is for).
+</p><p>
+Also, remember that there's a difference between using floating point
+routines and calling math functions that are part of the shared
+libraries. On rare occasions, floating point calculations are allowed,
+but calling a function in the shared libraries is never supported in
+kernel mode; e.g., calling the standard library function <code class="function">sin()</code> from a
+driver. If you really need standard library and floating point support,
+have your node do the calculations in user mode and then pass the results
+to your driver. Your user mode node has the advantage of floating point
+support as well as the ability to link against the shared libraries that
+accompany the BeOS.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id777182"></a>Shared Libraries in the Kernel</h3></div></div></div><p>
+Kernel components in general, and drivers in particular, link against the
+kernel—not against the shared libraries that are a part of the BeOS.
+What if you need C runtime support in a driver? No problem, but realize
+that the functions are implemented and exported by the kernel and not by
+the shared libraries. This can be an issue if you're not aware of how the
+functions are implemented.
+</p><p>
+Consider the <code class="function">malloc()</code> function. When <code class="function">malloc()</code> is called by a user mode
+program, the function is implemented by the shared libraries and the
+memory allocated is not page locked. However, when <code class="function">malloc()</code> is called in
+a driver, the function is implemented by the kernel and the memory
+allocated is page locked. Another example is <code class="function">acquire_sem()</code>. When called
+from user mode, <code class="function">acquire_sem()</code> is interruptible; when called in kernel
+mode, it is non-interruptible. The moral of the story is to be aware of
+the implementation differences between the libraries and their
+corresponding kernel equivalents.
+</p><p>
+For obvious reasons, not all the shared library procedures have been
+implemented and exported from the kernel. What do you do if your driver
+needs to link against a shared library? You could copy the source code
+directly into your driver (if you have access to it). If not, you may
+want to consider linking statically instead of dynamically. However, this
+requires access to static libraries. Note that static linking will NOT
+work on shared (dynamic) libraries and that the libraries that ship with
+BeOS are dynamic. Static libraries have a <code class="filename">.a</code> extension, while dynamic
+(shared) libraries have a <code class="filename">.so</code> extension.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id777242"></a>The Missing Link</h3></div></div></div><p>
+When you actually link a driver, with or without floating point
+calculations, make sure that you're linking against the kernel and not
+the shared libraries. This is done by using the  -nostdlib  option with gcc
+(Intel) and the   -nodefaults  option with Metrowerks (PowerPC). This helps
+ensure that you won't link in things you shouldn't. I recommend using the
+templates that come with BeIDE to make sure that your link options are
+set correctly.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id777272"></a>And Finally....</h3></div></div></div><p>
+Because floating point exceptions were not disabled on the Pentium III
+during the transition to kernel mode, an "unbreaking" was made for the
+next release of the BeOS. Therefore, this article applies only to
+releases after BeOS Release 4.0.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-13"></a>Is There Life After the PC?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Before I answer the question—and possibly get into more trouble than I
+did with last week's column—I'd like to thank the sharp-eyed readers
+who kindly took me to task for creating more confusion than usual. I made
+an abrupt transition between VOIP (Voice Over IP) and voice recognition:
+"The relationship of BeOS to VOIP wasn't obvious, but the need to answer
+the Media OS challenge was clear."
+</p><p>
+"Wasn't obvious" was a poor choice of words. It left the impression that
+there was a connection to be discovered; there isn't. Please accept my
+apologies for the misleading turn of phrase. My only excuse is that I
+wrote the column on the road, at 2 a.m. Paris time. I won't blame tap
+water or Parisian waiters - just jet-lag.
+</p><p>
+The real topic of the column, the difficulties with available
+voice-recognition products, generated interesting mail beyond the gentle
+reminders. In particular, one reader asked if I wasn't too harsh in my
+criticism. In substance some readers asked whether, as we see the
+beginning of the "after the PC" era, voice isn't a good way to
+communicate with all the Web-connected appliances we read about in the
+news? Perhaps voice input can't help with dictating the Great Immigrant
+Novel but, with a more limited vocabulary, could recognition become
+robust enough to help control appliances?
+</p><p>
+Simplifying the problem sounds good. Let's start with the "after the PC"
+Web-connected appliances. I don't believe that PCs as we know them are
+forever and I also don't believe that they'll be "replaced" by
+appliances. What I think we'll see is a broader range of computing
+devices. Some will continue to look like the PCs we use everyday; others
+will assume different shapes and roles, just as most devices around us do
+as technology and tastes evolve.
+</p><p>
+The automobile market comes to mind. The word "appliance" implies a more
+specialized, single-purpose device than the protean PC, and we've all
+read about how the next generation of refrigerators or microwave ovens
+will have a screen and a Web connection. I prefer that to digitized
+reproductions of grand masters on the walls. In the case of the
+refrigerator, the story continues with my waving the egg carton before
+the built-in bar code reader, thus updating the e-shopping list
+maintained on the screen, adding a few items, pressing the one-click
+ordering button, and, voilà, groceries appear a few hours later.
+</p><p>
+This where voice input, with a limited vocabulary, might come in handier
+than scrolling through lists and menus. Go to the cereals aisle, pick
+three boxes of Frosties. Limiting the vocabulary works, as evidenced by a
+number of successful applications for physically challenged individuals
+or eye surgeons who use voice input as the "third hand" to control a
+stereoscopic microscope as they operate.
+</p><p>
+I'd like voice recognition to work on a broader range of devices, and I
+hope it will become robust enough for consumer appliances. But, for the
+short to medium term, I'm skeptical. I'm more optimistic about the
+prospects of networks in the home. Web-connected appliances aren't going
+to have an isolated connection; they'll be part of one of two forms of
+home networks, RF or hardwired.
+</p><p>
+In either case, the refrigerator, the microwave oven, or the MP3 player
+will be part of a network. And on this network, you'll find personal
+computers as we know them or specialized Web terminals—with the right
+applet to compensate for the UI limitation of the appliances. If I could
+use a mouse and a keyboard to program a VCR by merely clicking on the
+program guide, I'd watch more TV. Your idea of progress may vary. (In any
+event, others agree that this is an opportunity. Two companies, Replay
+and Tivo, skip the VCR and use a hard disk instead.)
+</p><p>
+I realize that home networks will not happen overnight, but they don't
+require any technical breakthrough, at least for the hardwired ones, and
+the benefits look so attractive and so close that I'd be surprised if
+they didn't become an important part of life with or without PCs.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-12.html">Issue 4-12, March 24, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-14.html">Issue 4-14, April 7, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-12.html" title="Issue 4-12, March 24, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-14.html" title="Issue 4-14, April 7, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

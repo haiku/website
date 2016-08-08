@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-29.html" title="Issue 1-29, June 26, 1996" /><link rel="next" href="Issue1-31.html" title="Issue 1-31, July 10, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-29.html" title="Issue 1-29, June 26, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-31.html" title="Issue 1-31, July 10, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-29.html">Issue 1-29, June 26, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-31.html">Issue 1-31, July 10, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-30"></a>Issue 1-30, July 3, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-30"></a>Be Engineering Insights: The Secrets of Be Sockets</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Bradley</span> <span class="surname">Taylor</span></span></div></div></div><p>
+As many of you know, Be uses a variation of the Berkeley socket
+interface. Writing socket code on the BeBox has been something of a black
+art, since our documentation is only a single page! In this article, I
+hope to clear up some of the mysteries of Be socket programming. If you
+aren't already familiar with Berkeley sockets, then this article will be
+extremely boring for you. For the rest of you, this article will be
+merely boring.
+</p><p>
+The most important thing to remember when using Be sockets is that
+they're not file descriptors the way Berkeley sockets are. This
+difference is felt in a number of ways:
+</p><ul class="itemizedlist"><li><p>
+You cannot call <code class="function">read()</code>, <code class="function">write()</code>, or <code class="function">close()</code> on a Be socket. Use
+<code class="function">recv()</code>, <code class="function">send()</code> and <code class="function">closesocket()</code> respectively, instead.
+</p></li><li><p>
+Be sockets live in a separate namespace from file descriptors, so the
+first socket you open is "0". Normally, in UNIX, the first socket is
+"3", since "0", "1", and "2" are opened already for standard I/O. So
+don't think you've made a mistake when you get back "0" when opening a
+socket.
+</p></li><li><p>
+Unlike file descriptors, Be sockets are not inherited by child
+processes, so after a POSIX <code class="function">fork()</code> and <code class="function">exec()</code> call, you lose all of
+your socket descriptors in the child process (the parent is not
+affected).
+</p></li><li><p>
+With Be sockets, you aren't limited by the per-team file table space
+in the kernel. You can pretty much open as many sockets as you want,
+provided you have enough memory.
+</p></li></ul><p>
+The next point has to do with unblocking a blocked socket call. In a
+single-threaded UNIX system, you can do this with a signal, which will
+cause the blocking call to unblock. This currently doesn't work under the
+Be OS, and signals aren't really a very good way of doing this in a
+multithreaded system anyway. So the rule is that any blocked socket call
+can be unblocked simply by operating on that same socket in another
+thread.
+</p><p>
+For example, if a socket is blocked on <code class="function">recv()</code>, it can be unblocked by
+another thread calling <code class="function">send()</code> on the same socket. (If you don't actually
+want to DO anything, call something innocuous like <code class="function">getsockname()</code>.)
+Currently, an interrupted read returns a status of -1; in DR8, <code class="varname">errno</code> will
+be set to the more descriptive <code class="constant">EINTR</code>. This isn't much different from
+single-threaded UNIX, since in order to operate on the same socket when
+you're blocked, you must do so in a signal handler that will cause the
+blocked call to fail and set <code class="varname">errno</code> to <code class="constant">EINTR</code>.
+</p><p>
+(For any of you who might be wondering about the thread safety of setting
+the <code class="varname">errno</code> variable, you can relax: In DR8, <code class="varname">errno</code> is *not* a global
+variable. Through the magic of the C preprocessor and function calls,
+<code class="varname">errno</code> returns a value that is unique per thread.)
+</p><p>
+A Be OS socket blocks if there isn't any data to be read, and unblocks
+when data arrives. This is precisely the UNIX behavior, as far as it
+goes, but UNIX also lets you specify nonblocking I/O as an option. This
+option will be available in DR8: In nonblocking mode, a socket that would
+otherwise have blocked will, instead, immediately return <code class="constant">EWOULDBLOCK</code>
+(this is the same as System V's <code class="constant">EAGAIN</code>).
+</p><p>
+Another item worth mentioning is <code class="function">select()</code>. Under UNIX, you can put any
+descriptor into the select mask. Typically, the mask only contains two
+sockets, but sometimes tty descriptors are thrown in there, as well. The
+Be OS only supports sockets in the select mask. Also, it only reports
+descriptors that are blocked on read. The write mask always reports that
+sockets are ready for writing, even if they may block. (This is something
+that will probably be fixed in DR8.)
+</p><p>
+I recommend avoiding <code class="function">select()</code> if you can, because it isn't really the
+right way to do socket programming in a multithreaded system. It's
+implemented by spawning a lot of threads that block, and so it isn't any
+more efficient than spawning the threads yourself. You should spawn
+threads for blocking calls, and use the trick described above (operating
+on the same socket in another thread) if you need to unblock any of the
+threads.
+</p><p>
+The next point concerns the netdb functions (<code class="function">gethostbyname()</code>,
+<code class="function">getservbyname()</code>, and so on). The only netdb functions that are completely
+implemented right now are the host lookup functions, <code class="function">gethostbyname()</code> and
+<code class="function">gethostbyaddr()</code>. The others, such as <code class="function">getservbyname()</code> and
+<code class="function">getprotobyname()</code>, are minimally implemented now, but will likely be fully
+implemented in a future release.
+</p><p>
+Most of the options that you can set with <code class="function">setsockopt()</code> are not
+implemented. Again, these will get implemented in future releases.
+</p><p>
+An infelicity that will likely be cleared up in DR8 concerns server TCP
+code that binds to the address "0.0.0.0". In UNIX, this is understood to
+mean "bind to all interfaces." In DR7 of the Be OS, it means "bind to the
+first interface you find." Typically, the interface that's found first is
+your Ethernet or PPP interface; your server will NOT bind to the local
+loopback address of "127.0.0.1". If you need local clients to talk to the
+server, then you need to explicitly bind to the address "127.0.0.1" with
+another socket. Thus, your server is actually listening on two sockets:
+One for the external network and one for the internal loopback network.
+</p><p>
+In summary, the basic stuff is implemented and many people have been
+successful writing network code on the BeBox. If you're porting code, you
+may have some trouble with some of the more obscure stuff that isn't
+implemented yet, or with the fact that Be sockets aren't file
+descriptors. This should be cleared up in future releases, although
+making Be sockets real file descriptors is probably a long way off.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-30"></a>Be Developer Profile: Paul Popernack</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Paul</span> <span class="surname">Popernack</span></span></div></div></div><p>
+I remember the fateful day last fall when I typed "www.be.com" into my
+Web browser and was treated to a vision of the future of personal
+computing. What I saw and read was breathtaking. I picked my jaw back up
+off the floor, wiped the drool off my keyboard, and went back for a
+second look. Could it be true? A dual-processor machine, tons of I/O, a
+modern OS complete with multiprocessing, multithreading, memory
+protection, and an integrated database—all at an affordable price?
+</p><p>
+The BeBox was the first computer that made me want to give up my
+Macintosh. Coming from a Mac-fanatic like me, that's a pretty serious
+statement.
+</p><p>
+I've been working on the Macintosh since 1987, when I co- developed a
+HyperCard database program for an archaeology research project at the
+University of Maryland. After getting my anthropology degree in 1991, I
+plunged straight into—you guessed it—the computer field. What's an
+anthropologist doing in computers? I'll let you do the math...
+</p><p>
+In the last five years, I've developed and maintained numerous research
+databases for a military medical project, using mostly Macintosh
+computers with statistical analysis done on a VAX. Whereas I started out
+doing mostly database development, I've expanded my scope to the much
+more exciting world of multimedia development. My current position
+focuses almost entirely on multimedia and program development with a
+special emphasis on medical and emergency medical readiness.
+</p><p>
+But I digress. Back to me finding Be on the Web... The BeBox and Be OS
+looked like hot stuff—too good to keep to myself—so I walked down
+the hall to a friend's office (he's an NT guy) and said, "Point your
+browser at www.be.com and check this out."
+</p><p>
+"Hmmm...interesting...seems a bit like the NeXT though..." he said.
+</p><p>
+The low price tag and use of the PC-clone organ bank made him take a
+second look, but it was when I showed him the Be demo video that he
+became a Be-liever. There's nothing like seeing the BeBox in action to
+turn skeptics into Be-lievers.
+</p><p>
+The BeBox presents a unique opportunity for a fresh start. It offers a
+clean, open highway to the next generation in personal computing—and
+that's where I want to be: Contributing to the growth of a new OS. It's
+exciting! The glowing comments in comp.sys.be from Peter Lewis and John
+Norstad—two Macintosh developers for whom I have the highest regard --
+really caught my attention. If THESE guys are hot on the BeBox...
+</p><p>
+Not only are the BeBox and Be OS pretty special, but so are the people
+behind Be. Developer support is exquisite, in fact, I'd say it's the best
+I've ever encountered. Be seems to understand that happy developers are
+key to their success.
+</p><p>
+Currently I develop for the BeBox on my own time, although my employer is
+expressing a growing interest in the platform. Right now I'm working on a
+text editor and some desktop utility programs to sink my teeth into the
+Be OS. I'm particularly excited about the BMessaging capability and
+having applications talk to each other and work together. That's the
+anthropologist in me.
+</p><p>
+I'm also interested in supporting a Be Users' Group in the Washington,
+DC, area. If you're in the DC area and would like to get together, please
+e-mail me at popernak@io.com.
+</p><p>
+My beret goes off to JLG and the folks at Be. You all have created
+something very special. I can't wait to reciprocate.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-30"></a>Be Marketing Mutterings</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>
+If you've been reading Be newsletters for a while, it will come as no
+surprise that our primary focus is on developers. Today, we only sell
+machines to bona fide developers who are enrolled in our developer
+program, and we devote all of our sales and marketing efforts to
+recruiting and supporting new developers. However, we get many enquiries
+from end users, resellers, VARs, and other nondevelopers who want to buy
+or resell BeBoxes. So, what are our plans?
+</p><p>
+By the late fall of this year, we expect tens, and then hundreds, of
+interesting new applications to ship on the Be OS and BeBox. For our
+sake, and the sake of our developers, we need to have ways to get product
+to the end users of these applications and, just as important, ways to
+provide hardware and software support. To this end, our intention is to
+offer direct mail/web order sales from Be, with Internet- based support,
+and to work with qualified resellers who will be able to configure, sell,
+service, and support products in specific geographic or application
+markets. Market efficiencies will guarantee that direct and reseller
+pricing will be very close, so the end user will have a true choice of
+how and where to buy BeBoxes. A partnership between Be, application
+developers, and resellers will be able to deliver solutions to end users;
+there's nothing innovative about this idea, but it has the great
+advantage that it's known to work well and to create satisfied customers.
+The most innovative aspect will be the cost (and hence price) reductions
+that will come from Internet-based software distribution and support
+services.
+</p><p>
+There's a class of end user who doesn't want to wait for applications.
+These are the true geeks (and we use that term with affection, as many of
+us at Be could easily be described as geeks), who don't necessarily want
+to develop applications for others but who want a neat platform to
+experiment with. The only reason that we're not offering BeBoxes to this
+geek market right now is that we're awaiting FCC Class B approval. We
+expect to be able to offer BeBoxes to the geek/hobbyist market in August;
+we'll announce it on our Web page and in this newsletter when the time
+comes.
+</p><p>
+We're very enthusiastic about working with the geek market: It's
+populated with fearless, creative, and innovative individuals who will
+torture our product and its new applications and figure out ways to use
+it that we couldn't begin to imagine.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-30"></a>US Uber Alles—The Opportunity</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Fifteen years ago the conventional wisdom was that the US computer
+industry was about to be streamrolled by the Japanese, in the same way
+they had flattened everything else on their path—from cameras to steel
+mills, from stereos to autos. They had the determination, the government
+support, the technology, and the discipline to conquer any market on
+which they set their sights.
+</p><p>
+In spite of these dire predictions, the US computer industry is doing
+very nicely. In some respects it's doing even better than fifteen years
+ago: It now virtually dominates Western Europe and has made substantial
+inroads in Japan. US domination is even more striking if we focus on
+software: Companies such as Microsoft, Oracle, Netscape, and Apple own
+the OS and application markets world-wide.
+</p><p>
+If this is the case—if only American software products can succeed --
+why do we even bother to evangelize and support developers in Australia,
+Iceland, France, or Finland? Are we financing yet another remake of "Beau
+Geste," or do we know something the rest of the industry doesn't know?
+It's a trick question, which offers little real choice: Foolishness or
+arrogance. But the trick is well-known. It's hidden in the assumptions
+that are made about the software trade.
+</p><p>
+We're told that large US companies dominate the software market because
+of the huge development and marketing investments required to wage war.
+The linchpin of this argument is in its mixing of two notions: "US" and
+"large." We simply don't buy this line. Neither US-centricity nor a work
+force the size of a small town with a concomitant budget are necessary in
+the new software world.
+</p><p>
+Let's look at the size argument: Does good software require a long and
+expensive gestation and a cast of thousands? If you're an established
+player updating a legacy application, then yes, it does. That's because
+existing programming models have become unendurably baroque, and because
+established companies tend to be conservative: They dedicate most of
+their resources to conserving their franchise, their existing business,
+whether it's application software or an operating system. Individual
+authors and small companies have mixed feelings about entering and
+playing in the legacy markets; the ocean is wide, but inhabited by nasty
+predators that can devour small fish faster than these fish can spawn. A
+fresh developer in the office-automation market has to spend roughly the
+same amount of time sifting the arcana of a baggage-laden OS as the big
+guys, but must do so without the benefit of a large and well-paid squad
+of marketeers and spin artists defending the line and clearing some space
+on the shelf at Fry's.
+</p><p>
+Conversely, with the BeBox, one or two individuals can write a major
+application in a fraction of the time and cost that it would take on an
+older platform: The programming model is simpler, (still) free from
+baggage, and code size is correspondingly smaller (by a factor of four or
+five). As expected, baggage-free code is also faster code. Admittedly,
+developers could harbor a mix of sentiments towards the Be platform:
+Exciting and unencumbered, yet unproven. But once we add the Internet,
+the leap of faith becomes safer for a larger number of developers in a
+wider range of locations.
+</p><p>
+Some have called the Internet the new printing press. But it's also a
+great marketing and distribution equalizer. A software developer in
+Finland can promote and deliver an application as easily and quickly as a
+competitor in the heart of Silicon Valley. But is the spreadsheet from a
+company in San Jose, simply by the fact of the company's location, better
+than the one from Helsinki? If you look at the demographics of the US
+software industry, you begin to suspect that the last decade of US
+domination wasn't entirely home-grown: In a land of immigrants, the
+software industry is well-populated by programmers from other countries
+(our company, minuscule as it is, is no exception). In fact, the
+advantages of developing in the US are mostly historical and coincidental
+—it's no great surprise that young, well-paid programmers have, in the
+past, jumped at the chance to live in California.
+</p><p>
+But when programmers can't come to the US, we'll go to them, via the net.
+Size and location are no longer the issue. With exciting new technology,
+a platform unencumbered by large competitors, with inexpensive market
+access, the most important question is: "Who can write the best code?" It
+may not be the only question. But it is the first one—before company
+size and location.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-30"></a>BeDevTalk Summary</h2></div></div></div><p>
+A number of heavy-traffic threads (notably "Call for type/creator
+reorganization") disappeared this week. The help system thread is still
+reasonably strong; "GUI/shell replacement" is losing steam. And to answer
+a question that was posed in one of this week's threads: Yes, Be does
+listen to the suggestions made in BeDevTalk.
+</p><p>
+More for amusement than anything else, the age of each thread ("NEW",
+"WEEK 2", and so on) is announced above the subject line. Older threads
+are given first.
+</p><p>
+Threads topics are given by the subject lines as they appear (literally,
+typos and all) in the mail. We don't summarize every thread, so don't
+take it personally if your favorite is left out. Better yet: Start a
+thread.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/about_be/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489714"></a>Subject: Suggestions for a Help system?</h3></div></div></div><p>
+This thread has become an HTML battleground. In addition to the staunch
+pro and con views, there are also opinions regarding the invention of
+app-specific HTML tags.
+</p><p>
+We also learned that the perlism "$_" is pronounced "ding- under."
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489733"></a>Subject: GUI/shell replacement</h3></div></div></div><p>
+More thoughts on parting the iron curtain that separates shells from
+GUI windows. This week: Should the Browser provide a name-only mode
+when displaying items in the dock?
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489747"></a>Subject: Virus Software</h3></div></div></div><p>
+How should the BeBox protect the motherboard from a virus that's loaded
+into the EEPROM? Latched (once-per-boot) access to the EEPROM was
+suggested.
+</p><p>
+THE BE LINE: We're working on it.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489765"></a>Subject: Browser Add-ons</h3></div></div></div><p>
+Where should the add-ons that apply to a particular Browser item be
+displayed? Currently, you have to right click and descend the "Add-ons"
+submenu. It was suggested that the add-ons should be in the item's
+top-level context menu. Should this decision (submenu versus top-level
+menu) be settable in a preference?
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489782"></a>Subject: OpenDoc</h3></div></div></div><p>
+A few participants lauded the concept of OpenDoc, and have suggested
+that some of the BeBox's "missing features" would be filled in by
+supporting ODF. The ensuing negative reaction was countered with a) a
+request for more descriptive evidence of ODF's flaws and b) the
+suggestion that designing something better is possible, but, given that
+OpenDoc exists today, spending the time to design the alternative may
+be a waste.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489800"></a>Subject: record_ref Persistence?</h3></div></div></div><p>
+This thread started with questions: Are record_refs values maintained
+through a database reindex? (Yes.) Through a database rebuild? (No.)
+</p><p>
+It then moved into a larger discussion of what a record_ref actually
+identifies, whether you should use refs instead of names, what sort of
+user prefers symbolic (that is, ref- like) identification as opposed to
+filenames, how refs and filenames compare when fit into the live query
+world, whether refs are simply new-fangled gizmos that will never
+replace the reality of pathnames, and so on. A pleasantly heated
+discussion on a topic that is, after all, at the heart of one of the
+selling points of the Box.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489817"></a>Subject: Write a mailer!</h3></div></div></div><p>
+Jon Watte (Metrowerks) outlined a command-line mail-sending program and
+opined that it would probably be a one-night hack to get the thing
+working. A five-minute (shell script) implementation showed up a few
+days later; also, news of a mail server was posted.
+</p><p>
+Woven throughout was a discussion of what Be's mail API should look
+like, and what mail services Be should provide. (A branching thread
+about add-ons is summarized below.)
+</p><p>
+THE BE LINE: Be will provide a mail daemon and mail API with DR8.
+Nothing terribly fancy—we're not out to compete with our developers
+—we just want to provide a base level of support for certain features
+in the SMTP/POP world.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id489847"></a>Subject: Add-ons</h3></div></div></div><p>
+Within this thread (sprouted from "Write a mailer!") were technical
+descriptions of how add-ons work, how to tell CodeWarrior to share data
+between add-ons, and so on, as well as a discussion of whether/where Be
+should allow a repository for "global" add-on modules, whether
+script-like manipulations (provided by an add-on) should be performed
+on an open document (as opposed to having to drop the document on an
+add-on icon), and to what extent Be should allow its interface to be
+customized through add-ons.
+</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-29.html">Issue 1-29, June 26, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-31.html">Issue 1-31, July 10, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-29.html" title="Issue 1-29, June 26, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-31.html" title="Issue 1-31, July 10, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

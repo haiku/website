@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-25.html" title="Issue 2-25, June 25, 1997" /><link rel="next" href="Issue2-27.html" title="Issue 2-27, July 9, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-25.html" title="Issue 2-25, June 25, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-27.html" title="Issue 2-27, July 9, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-25.html">Issue 2-25, June 25, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-27.html">Issue 2-27, July 9, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-26"></a>Issue 2-26, July 2, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-26"></a>Be Engineering Insights: Using Function Objects In The Be Messaging Model</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pavel</span> <span class="surname">Cisler</span></span></div></div></div><p>
+I would like to share with you a neat technique of using function objects
+with the <code class="classname">BMessage</code> class to simplify some common patterns in your
+application code.
+</p><p>
+Consider a menu containing an item for every window open in an
+application. When an item from the menu is selected, we would like to
+call some code to make the corresponding window active. Part of the menu
+building code might look something like this:
+</p><pre class="programlisting cpp">
+for (<span class="type">int32</span> <code class="varname">index</code> = 0; <code class="varname">index</code> &lt; <code class="varname">windowCount</code>; <code class="varname">index</code>++) {
+  <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code> = <code class="varname">windowList</code>-&gt;<code class="methodname">ItemAt</code>(<code class="varname">index</code>);
+  <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">message</code> = new <code class="classname">BMessage</code>(<code class="varname">kSelectWindowMessage</code>);
+  <code class="varname">message</code>-&gt;<code class="methodname">AddInt32</code>("index", <code class="varname">index</code>);
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>(<code class="varname">window</code>-&gt;<code class="methodname">Title</code>(), <code class="varname">message</code>));
+}
+</pre><p>
+We would then have a corresponding <code class="methodname">MessageReceived()</code> function, that would
+contain the following code:
+</p><pre class="programlisting cpp">
+switch (<code class="varname">message</code>-&gt;<code class="varname">what</code>) {
+  case <code class="varname">kSelectWindowMessage</code>:
+    <span class="type">int32</span> <code class="varname">index</code>;
+    <code class="varname">message</code>-&gt;<code class="methodname">FindInt32</code>("index", &amp;<code class="varname">index</code>);
+    <code class="varname">windowList</code>-&gt;<code class="methodname">ActivateIndexedWindow</code>(<code class="varname">index</code>);
+    ...
+</pre><p>
+where <code class="varname">windowList</code> is of an unspecified <code class="classname">WindowList</code> class.
+</p><p>
+When we were building up the window menu, we knew ahead of time that we
+would end up calling <code class="methodname">ActivateIndexedWindow()</code> when an item was selected, and
+passing it the index as a parameter, we knew we would call it on the
+<code class="varname">windowList</code> object. It seems like it would be convenient to be able to
+hide the corresponding message dispatching and parameter packaging code
+into some more convenient shorthand. Wouldn't it be nice if instead we
+could write:
+</p><pre class="programlisting cpp">
+for (<span class="type">int32</span> <code class="varname">index</code> = 0; <code class="varname">index</code> &lt; <code class="varname">windowCount</code>; <code class="varname">index++</code>) {
+  <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code> = <code class="varname">windowList</code>-&gt;<code class="methodname">ItemAt</code>(<code class="varname">index</code>);
+  <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">message</code> = new <code class="classname">NewFunctionObjectMessage</code>(
+    &amp;<code class="classname">WindowList</code>::<code class="methodname">ActivateIndexedWindow</code>, <code class="varname">windowList</code>, <code class="varname">index</code>);
+  <span class="type"><code class="classname">BMenuItem</code> *</span><code class="varname">item</code> = new <code class="classname">BMenuItem</code>(<code class="varname">window</code>-&gt;<code class="methodname">Title</code>(), <code class="varname">message</code>);
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>);
+}
+</pre><p>
+and get rid of the code in <code class="methodname">MessageReceived()</code> altogether. We will try to do
+just that using a function object packaged inside a <code class="classname">BMessage</code>.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id570346"></a>What is a function object?</h3></div></div></div><p>
+As a result of selecting our menu item we need to be able to call a
+function on an object with some parameters, in our case:
+</p><pre class="programlisting cpp">
+<code class="varname">windowList</code>-&gt;<code class="methodname">ActivateIndexedWindow</code>(<code class="varname">index</code>);
+</pre><p>
+A function object is an object that packages all this information—the
+function code address itself, the object we call it on and possibly some
+parameters. This information is all it takes to call the function.
+</p><p>
+Since we want the user interface and the execution parts of the
+application to be coupled loosely to support the multithreaded
+environment well, we need to be able to collect all that information at
+one point and use it to invoke a function call at a different point. We
+can use the following class to do that:
+</p><pre class="programlisting cpp">
+class <code class="classname">FunctionObject</code> {
+  public:
+    <code class="methodname">FunctionObject</code>(<span class="type">void</span> (<code class="classname">WindowList</code>::*<code class="parameter">callThis</code>)(<span class="type">int32</span>),
+      <span class="type"><code class="classname">WindowList</code> *</span><code class="parameter">onThis</code>,
+      <span class="type">int32</span> <code class="parameter">withThis</code>)
+      :  <code class="varname">function</code>(<code class="parameter">callThis</code>),
+         <code class="varname">target</code>(<code class="parameter">onThis</code>),
+         <code class="varname">parameter</code>(<code class="parameter">withThis</code>)
+      { }
+     <span class="type">void</span> <code class="methodname">operator</code>()() const
+       { (<code class="varname">target</code>-&gt;*<code class="varname">function</code>)(<code class="varname">parameter</code>); }
+  private:
+    <span class="type">void</span> (<code class="classname">WindowList</code>::*<code class="varname">function</code>)(<span class="type">int32</span>);
+    <span class="type"><code class="classname">WindowList</code> *</span><code class="varname">target</code>;
+    <span class="type">int32</span> <code class="varname">parameter</code>;
+  };
+</pre><p>
+Using this class we can construct a function object:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">FunctionObject</code> *</span><code class="varname">functor</code> = new <code class="classname">FunctionObject</code>(
+  &amp;<code class="classname">WindowList</code>::<code class="methodname">ActivateIndexedWindow</code>, <code class="varname">windowList</code>, <code class="varname">index</code>);
+</pre><p>
+Save it away into the functor variable and when the right time comes,
+call it just like this:
+</p><pre class="programlisting cpp">
+(*<code class="varname">functor</code>)();
+</pre><p>
+All the parameters (one <span class="type">ulong</span> in this case) and the target object get
+passed correctly, as if we called
+</p><pre class="programlisting cpp">
+<code class="varname">windowList</code>-&gt;<code class="methodname">ActivateIndexedWindow</code>(<code class="varname">index</code>);
+</pre><p>
+The <code class="classname">FunctionObject</code> class we have here would not be very practical,
+because it is pretty much hard coded for this particular example. We will
+need to make the class a little bit more general. We will use templates,
+that way we can adapt an appropriate function object to any target class,
+member function and parameter types. Templates won't handle the fact that
+we may have zero, one, two or more parameters in a call or that some
+member functions need to be <code class="code">const</code> so that they can get called on a <code class="code">const</code>
+version of the target object. To work around that we will just use
+inheritance and have a function object template for one of each of these
+calling patterns, that way we will have classes representing function
+objects for each of these:
+</p><pre class="programlisting cpp">
+<code class="function">function</code>();
+<code class="function">function</code>(<code class="parameter">param1</code>);
+<code class="function">function</code>(<code class="parameter">param1</code>, <code class="parameter">param2</code>);
+<code class="function">function</code>(<code class="parameter">param1</code>, <code class="parameter">param2</code>, <code class="parameter">param3</code>);
+...
+</pre><p>
+We might add a flavor of each of these that has a non <span class="type">void</span> return type,
+but we don't really need that for the kind of code we are trying to
+write. In a real world version of a function object class we would also
+want <code class="code">const</code> flavors that represent invoking a <code class="code">const</code> version of a member
+function, taking a <code class="code">const</code> target pointer. We will leave both of these out
+for simplicity.
+</p><pre class="programlisting cpp">
+class <code class="classname">FunctionObject</code> {
+  <span class="comment">// the abstract superclass that defines the common interface</span>
+  public:
+    virtual <code class="methodname">~FunctionObject</code>() {}
+    virtual <span class="type">void</span> <code class="methodname">operator()</code>() const = 0;
+    virtual <span class="type">ulong</span> <code class="methodname">Size</code>() const = 0;
+  };
+
+template&lt;class <code class="classname">FT</code>, class <code class="classname">T</code>&gt;
+class <code class="classname">PlainMemberFunctionObject</code> : public <code class="classname">FunctionObject</code> {
+  <span class="comment">// function object without any parameters</span>
+  public:
+    <code class="methodname">PlainMemberFunctionObject</code>(<code class="classname">FT</code> <code class="parameter">callThis</code>, <span class="type"><code class="classname">T</code> *</span><code class="parameter">onThis</code>)
+      :  <code class="varname">function</code>(<code class="parameter">callThis</code>),
+         <code class="varname">target</code>(<code class="parameter">onThis</code>)
+      {
+      }
+    virtual <code class="methodname">~PlainMemberFunctionObject</code>() {}
+    virtual <span class="type">void</span> <code class="methodname">operator()</code>() const
+      { (<code class="varname">target</code>-&gt;*<code class="varname">function</code>)(); }
+    virtual <span class="type">ulong</span> <code class="methodname">Size</code>() const { return <code class="function">sizeof</code>(*<code class="varname">this</code>); }
+  private:
+    <code class="classname">FT</code> <code class="varname">function</code>;
+    <span class="type"><code class="classname">T</code> *</span><code class="varname">target</code>;
+  };
+
+template&lt;class <code class="classname">FT</code>, class <code class="classname">T</code>, class <code class="classname">P</code>&gt;
+class <code class="classname">SingleParamMemberFunctionObject</code> : public <code class="classname">FunctionObject</code> {
+  <span class="comment">// function object with a single parameter</span>
+  public:
+    <code class="methodname">SingleParamMemberFunctionObject</code>(<code class="classname">FT</code> <code class="parameter">callThis</code>, <span class="type"><code class="classname">T</code> *</span><code class="parameter">onThis</code>, <code class="classname">P</code> <code class="parameter">withThis</code>)
+      :  <code class="varname">function</code>(<code class="parameter">callThis</code>),
+         <code class="varname">target</code>(<code class="parameter">onThis</code>),
+         <code class="varname">parameter</code>(<code class="parameter">withThis</code>)
+      {
+      }
+    virtual <code class="methodname">~SingleParamMemberFunctionObject</code>() {}
+    virtual <span class="type">void</span> <code class="methodname">operator()</code>() const
+      { (<code class="varname">target</code>-&gt;*<code class="varname">function</code>)(<code class="varname">parameter</code>); }
+    virtual <span class="type">ulong</span> <code class="methodname">Size</code>() const { return <code class="function">sizeof</code>(*<code class="varname">this</code>); }
+  private:
+    <code class="classname">FT</code> <code class="varname">function</code>;
+    <span class="type"><code class="classname">T</code> *</span><code class="varname">target</code>;
+    <code class="classname">P</code> <code class="varname">parameter</code>;
+  };
+
+template&lt;class <code class="classname">FT</code>, class <code class="classname">T</code>, class <code class="classname">P</code>&gt;
+class <code class="classname">DoubleParamMemberFunctionObject</code> : public <code class="classname">FunctionObject</code> {
+<span class="comment">// function object with two parameters</span>
+  public:
+    <code class="methodname">DoubleParamMemberFunctionObject</code>(<code class="classname">FT</code> <code class="parameter">callThis</code>, <span class="type"><code class="classname">T</code> *</span><code class="parameter">onThis</code>,
+      <code class="classname">P1</code> <code class="parameter">withThis1</code>, <code class="classname">P2</code> <code class="parameter">withThis2</code>)
+      :  <code class="varname">function</code>(<code class="parameter">callThis</code>),
+         <code class="varname">target</code>(<code class="parameter">onThis</code>),
+         <code class="varname">parameter1</code>(<code class="parameter">withThis1</code>),
+         <code class="varname">parameter2</code>(<code class="parameter">withThis2</code>)
+      {
+      }
+    virtual <code class="methodname">~DoubleParamMemberFunctionObject</code>() {}
+    virtual <span class="type">void</span> <code class="methodname">operator()</code>() const
+      { (<code class="varname">target</code>-&gt;*<code class="varname">function</code>)(<code class="varname">parameter1</code>, <code class="varname">parameter2</code>); }
+    virtual <span class="type">ulong</span> <code class="methodname">Size</code>() const { return <code class="function">sizeof</code>(*<code class="varname">this</code>); }
+  private:
+    <code class="classname">FT</code> <code class="varname">function</code>;
+    <span class="type"><code class="classname">T</code> *</span><code class="varname">target</code>;
+    <code class="classname">P1</code> <code class="varname">parameter1</code>;
+    <code class="classname">P2</code> <code class="varname">parameter2</code>;
+  };
+</pre><p>
+...and so on.
+</p><p>
+It gets a little repetitive, but you only do it once for your whole app.
+We have code to construct and call a function object, we will now add
+code that packages a function object into a <code class="classname">BMessage</code> on one side, unpacks
+and executes it on the other side. We will use yet another class for that:
+</p><pre class="programlisting cpp">
+class <code class="classname">FunctionObjectMessage</code> {
+  public:
+    static <span class="type">bool</span> <code class="methodname">DispatchIfFunctionObject</code>(<span class="type"><code class="classname">BMessage</code> *</span>);
+  protected:
+    static <span class="type"><code class="classname">BMessage</code> *</span><code class="methodname">NewMessage</code>(<span class="type">const<code class="classname">FunctionObject</code> *</span>);
+  };
+
+<span class="type"><code class="classname">BMessage</code> *</span>
+<code class="classname">FunctionObjectMessage</code>::<code class="methodname">NewMessage</code>(<span class="type">const<code class="classname">FunctionObject</code> *</span><code class="parameter">functor</code>)
+{
+  <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">message</code> = new <code class="classname">BMessage</code>('fCmG');
+    <span class="comment">// any message with this pattern</span>
+    <span class="comment">// will be a function object</span>
+  <code class="varname">message</code>-&gt;<code class="methodname">AddData</code>("functor", <code class="constant">B_RAW_TYPE</code>, <code class="parameter">functor</code>,
+    <code class="parameter">functor</code>-&gt;<code class="methodname">Size</code>());
+    <span class="comment">// invoke the virtual Size call here to get the actual size of</span>
+    <span class="comment">// the concrete function object subclass</span>
+    <span class="comment">// need to check for errors in a real app</span>
+  return <code class="varname">message</code>;
+}
+
+<span class="type">bool</span>
+<code class="classname">FunctionObjectMessage</code>::<code class="methodname">DispatchIfFunctionObject</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">message</code>)
+{
+  if (<code class="parameter">message</code>-&gt;<code class="varname">what</code> != 'fCmG')
+    return false;
+  <span class="comment">// find the function object</span>
+  <span class="type">long</span> <code class="varname">size</code>;
+  <span class="type">const<code class="classname">FunctionObject</code> *</span><code class="varname">functor</code>;
+  <span class="type">status_t</span> <code class="varname">error</code> = <code class="parameter">message</code>-&gt;<code class="methodname">FindData</code>("functor", <code class="constant">B_RAW_TYPE</code>, &amp;<code class="varname">functor</code>,
+    &amp;<code class="varname">size</code>);
+  if (<code class="varname">error</code> != <code class="constant">B_NO_ERROR</code>)
+    return <code class="constant">false</code>;
+  <span class="comment">// function object found, call it</span>
+  (*<code class="varname">functor</code>)();
+  return <code class="constant">true</code>;
+}
+</pre><p>
+We are now ready to start using function objects in our code. First of
+all in every looper that receives messages we add the function object
+dispatch stub that we just wrote. Note that you will typically only need
+to send function object messages against a looper, not against the
+individual handlers it might have. The dispatching mechanism picks the
+right function and object for you.
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">MyApp</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">message</code>)
+{
+  if (<code class="classname">FunctionObjectMessage</code>::<code class="methodname">DispatchIfFunctionObject</code>(<code class="parameter">message</code>))
+    return;
+  <span class="comment">// not a function object, handle other messages here</span>
+  ...
+</pre><p>
+Then we instantiate a function object for every signature of a function
+we call. You can conveniently do that in a subclass of the
+<code class="classname">FunctionObjectMessage</code> we already defined. In our example we were trying
+to call a function of some <code class="classname">WindowList</code> class:
+</p><pre class="programlisting cpp">
+class <code class="classname">WindowListFunctionObjectMessage</code> : public <code class="classname">FunctionObjectMessage</code> {
+  public:
+    static
+      <span class="type"><code class="classname">BMessage</code> *</span><code class="methodname">NewFunctionObjectMessage</code>(<span class="type">void</span> (<code class="classname">WindowList</code>::*<code class="methodname">func</code>)(),
+      <span class="type"><code class="classname">WindowList</code> *</span><code class="parameter">target</code>)
+      { return <code class="classname">NewMessage</code>(
+        &amp;<code class="classname">PlainMemberFunctionObject</code>&lt;<span class="type">void</span> (<code class="classname">WindowList</code>::*)(),
+          <code class="classname">WindowList</code>&gt;(<code class="varname">func</code>, <code class="varname">target</code>)); }
+
+    static <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">NewFunctionObjectMessage</code>(<span class="type">void</span>
+      (<code class="classname">WindowList</code>::*<code class="varname">func</code>)(<span class="type">ulong</span>),
+      <span class="type"><code class="classname">WindowList</code> *</span><code class="parameter">target</code>, <span class="type">ulong</span> <code class="parameter">param</code>)
+      { return <code class="methodname">NewMessage</code>(
+        &amp;<code class="classname">SingleParamMemberFunctionObject</code>&lt;
+          <span class="type">void</span> (<code class="classname">WindowList</code>::*)(<span class="type">ulong</span>),
+          <code class="classname">WindowList</code>, <span class="type">ulong</span>&gt;(<code class="parameter">func</code>, <code class="parameter">target</code>, <code class="parameter">param</code>)); }
+  };
+</pre><p>
+Here we are providing a <code class="methodname">NewFunctionObjectMessage</code> call for a signature of
+each function we want to call on a given class, in this case <code class="code">void
+(<code class="classname">WindowList</code>::*)()</code> and <code class="code"><span class="type">void</span> (<code class="classname">WindowList</code>::*)(<span class="type">ulong</span>)</code>
+</p><p>
+All we have to do now is use it.
+</p><pre class="programlisting cpp">
+for (<span class="type">int32</span> <code class="varname">index</code> = 0; <code class="varname">index</code> &lt; <code class="varname">windowCount</code>; <code class="varname">index</code>++) {
+  <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code> = <code class="varname">windowList</code>-&gt;<code class="methodname">ItemAt</code>(<code class="varname">index</code>);
+  <span class="type"><code class="classname">BMessage</code> *</span><code class="varname">message</code> =
+    new <code class="classname">WindowListFunctionObjectMessage</code>::
+      <code class="methodname">NewFunctionObjectMessage</code>(
+        &amp;<code class="varname">WindowList</code>::<code class="methodname">ActivateIndexedWindow</code>,
+        <code class="varname">windowList</code>, <code class="varname">index</code>);
+  <span class="type"><code class="classname">BMenuItem</code> *</span><code class="varname">item</code> =
+    new <code class="classname">BMenuItem</code>(<code class="varname">window</code>-&gt;<code class="methodname">Title</code>(), <code class="varname">message</code>);
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>);
+}
+</pre><p>
+This is pretty much what we tried to do in the first place.
+</p><p>
+What is the big advantage of using this approach?
+</p><p>
+Using this technique we might save some code in a medium-to-large sized
+app. It is really easy to add new user interface elements and supporting
+code: You write the function that gets called when your control/menu
+item/keyboard shortcut gets invoked, on the user interface side you add
+code to create a corresponding function object message, but you don't
+have to go and add anything on the receiving side, in the <code class="methodname">MessageReceived()</code>
+function of a corresponding handler.
+</p><p>
+Also this technique takes full advantage of C++ static type checking
+support. In our example we used simple ulong parameters, consider if you
+passed around some more elaborate types. Without this technique you would
+be embedding the parameters into a <code class="classname">BMessage</code>
+using <code class="methodname">AddData</code>/<code class="methodname">FindData</code> and
+using a lot of casts. If you embedded one type on the sending side but by
+mistake retrieved a different type on the receiving side, you would not
+get any compiler warnings. Using function objects you would get a
+compiler error whenever you try to pass a destination function of one
+type and parameters of a different type.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id571793"></a>Pitfalls</h3></div></div></div><p>
+You still have to worry about multithreading issues when using this
+technique. If you dispatch a function object in one looper that ends up
+calling a function/target object in another looper, you have to make sure
+the other looper is locked correctly, typically in the target function.
+The best way around this is to just target the right looper by targeting
+the original invoker. That way the target looper gets locked for you as a
+part of calling <code class="methodname">MessageReceived()</code>.
+</p><p>
+Passing a function object to a looper in a different address space will
+not work at all; the function address and the object itself will be
+inaccessible from the different address space.
+</p><p>
+Having class member functions as template parameters is a relatively new
+C++ feature and the Metrowerks compiler only supports it in the DR3
+version (released with BeOS Advanced Access Preview Release) or later.
+The code we used here would not work with DR2 compilers.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Support2-26"></a>Stargazing in Supportland</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Brian</span> <span class="surname">Mikol</span></span></div></div></div><p>
+Hello! Let me take this opportunity to introduce myself—I'm Brian, one
+of the Be support staff. I am often the one who replies to messages sent
+to custsupport, devsupport and devservices@be.com, so some of you have
+already had some interaction with me.
+</p><p>
+When I'm not running around the company searching for the answers to your
+questions, I accept (and occasionally regretfully deny) your applications
+to become official registered Be developers. I also test developer's
+BeWare submissions on the ftp site, and then move them into their
+appropriate pub/contrib directories.
+</p><p>
+And from time to time, I get pulled into helping out on whatever tasks
+need extra assistance at that particular moment (as does every Be
+employee). You may have seen me at Apple's WWDC, or you may read the few
+sections of the Be User's Guide authored by yours truly (10 points if you
+can guess which ones!).
+</p><p>
+Now that I have formally introduced myself, let me be a wee bit honest. I
+recently returned from vacation to find a friendly e-mail message from
+Valerie informing me of my assignment to write a Be Newsletter article.
+</p><p>
+Bewildered for a moment, it hit me—take this opportunity to try to
+clarify four issues which in the past we might have made confusing, in
+order to help you become informed about Be and the BeOS. Let me start
+with the required Be newsletter metaphor and go from there...
+</p><p>
+I recently went back to Massachusetts to attend my high school reunion.
+While there, I spent two nights in a row stargazing and reminiscing with
+an old friend. Friday night was rather overcast, with only the occasional
+star poking out here and there, but Saturday night was something else
+entirely. There was not a cloud in the sky and with the air in rural
+western Massachusetts, you can see EVERYTHING, from your favorite
+constellation to the beautiful stream of the Milky Way.
+</p><p>
+How does this pertain to online support at Be? I like to look at it in
+the following way: Trying to find information on some web sites is much
+like trying to stargaze on an overcast night. You might find a nugget or
+two of information, but for the most part, there are still unanswered
+questions.
+</p><p>
+Realizing how annoying this is for customers, at Be we try to make it as
+easy as stargazing on a clear night in rural Massachusetts. We believe we
+have very little to gain by keeping information from you. So before you
+ask your neighbor if Orion can be seen, try looking up. You'll be
+surprised at what you'll find in the sky—or on the Be web site!
+</p><p>
+Still, we do occasionally cloud our own skies; I can see that in some of
+the e-mail messages I respond to. I'd like to make an attempt to blow the
+clouds away from those issues, and clear the skies so you can see
+Neptune...
+</p><div class="orderedlist"><ol><li><p>
+If you are applying to become a registered Be developer:
+</p><p>
+Please, be talkative! It can only help you in getting accepted into
+our registered developer program. (And should you be rejected, don't
+take it personally! It doesn't mean that you can't develop for us.)
+</p><p>
+I'm referring to the "Previous Experience" and "Potential Apps" fields
+here. This is the only way that we can tell whether or not you are
+qualified to be a registered developer (as much as I wish it was
+otherwise, I am not psychic).
+</p></li><li><p>
+If you are a registered developer who submits your software to our
+ftp site:
+</p><p>
+Please follow the ftp submission guidelines found at the following URL:
+</p><p>
+http://www.be.com/developers/ftp/uploading.html
+</p><p>
+If you do not, your software will not be moved from the incoming
+directory. We'll try to contact you if there are problems, but the
+quantity of submissions make it necessary for our guidelines to be
+strict.
+</p></li><li><p>
+"Where can I find useful information about Be and the BeOS?"
+</p><p>
+Check our web site! I was recently talking with one of the gentlemen
+from the company who will be handling custsupport@be.com, and he was
+not shy in describing his awe at the amount of information we provide
+on our web site.
+</p><p>
+Both Ron and Michael do a terrific job in providing as much up-to-date
+information on the web site as possible—make their jobs worthwhile!
+</p></li><li><p>
+"Where should I write, if I do not find my answers on the web site?"
+</p><p>
+Here is the definitive list of Be e-mail addresses. Even though Be is
+pretty small now and a single person (such as me) might oversee more
+than one of the incoming support e-mail addresses, this won't always
+be the case. It's best to have everyone understand our addresses now,
+so there isn't any confusion later on.
+</p><p>
+As Be grows, more people will be handling the incoming support e-mail
+and it's in your best interest to send it to the right place, as we
+will then be able to respond to you more quickly. This will actually
+happen sooner than you might think, as we have just hired a company to
+handle all custsupport@be.com e-mail (and eventually phone calls too!).
+</p><ul class="itemizedlist"><li><p>
+bedemotour@be.com
+</p><p>
+Interested in seeing the Be Travelling Circus visit your locale?
+Forward any questions about hosting a Be demo day at your school
+(user group meeting, etc.) to this address. Sorry, we don't do
+bachelor / bachelorette parties.
+</p></li><li><p>
+custservice@be.com
+</p><p>
+Write to this address for assistance with non-technical customer
+issues. Your BeOS CD didn't arrive? Want to know the status on your
+product order? BeBox service and warranty issues? This is the place
+for you!
+</p></li><li><p>
+custsupport@be.com
+</p><p>
+This is the address to which you write for help with BeBox and BeOS
+technical questions which are not answered in the Be FAQs. So for
+questions concerning installing, configuring, and using the BeOS
+(not to mention software or hardware compatibility), write to this
+address
+</p></li><li><p>
+devservices@be.com
+</p><p>
+This address is set up to help our registered developers with
+developer-specific, non-technical issues. Should you need to change
+your name or company information in the developer database, check
+the status of your developer application, or have issues with your
+submissions to our ftp site, write here!
+</p></li><li><p>
+info@be.com
+</p><p>
+Write to this address for general information on Be, the company.
+</p></li><li><p>
+jobs@be.com
+</p><p>
+Think you're the perfect person to fill that really awesome position
+at the greatest company on earth? Write to this address!
+</p><p>
+E-mail an ASCII version of your cover letter and resume, your e-mail
+and postal addresses, and both day and evening phone numbers in the
+*body* of an e-mail message (attached documents will not be
+considered). Don't forget to put the title of the position you're
+applying for in the subject line of your message.
+</p></li><li><p>
+newsletter@be.com
+</p><p>
+Do you really like this article, or the newsletter in general?
+Please feel free to express your enthusiasm to the editor! Questions
+and comments are welcome as well.
+</p></li><li><p>
+orders@be.com
+</p><p>
+Pssst! Wanna buy a BeOS CD? We got some "choice" Be T-shirt to
+accompany that CD, as long as you're in the buying mood...
+</p></li><li><p>
+webmaster@be.com
+</p><p>
+This is the address to which you write if you have any difficulties
+with Be's Internet-based services and information. So if you have
+found a broken link, received an error message, have a suggestion,
+or are having problems with a Be electronic mailing list,
+webmaster@be.com is the address for you!
+</p></li></ul></li></ol></div><p>
+So that's it. I hope this article is of help to you and has cleared up
+any confusion we may have caused concerning any of the four issues I
+covered. Let me know if I need to brush up on my metaphors...
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-26"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+Can you spot the change from the last version?
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">HomeDirectory</code>(<span class="type">char *</span><code class="parameter">dir</code>, <span class="type">constint</span> <code class="parameter">buffLen</code>)
+{
+    <span class="type">app_info</span> <code class="varname">info</code>;
+    <code class="varname">be_app</code>-&gt;<code class="methodname">GetAppInfo</code>(&amp;<code class="varname">info</code>);
+
+    <code class="classname">BEntry</code> <code class="varname">appentry</code>;
+    <code class="varname">appentry</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">info</code>.<code class="varname">ref</code>);
+
+    <code class="classname">BPath</code> <code class="varname">path</code>;
+    <code class="varname">appentry</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>);
+    strncpy(<code class="parameter">dir</code>,<code class="varname">path</code>.<code class="methodname">Path</code>(),<code class="parameter">buffLen</code>);
+    <code class="parameter">dir</code>[<code class="parameter">buffLen</code>-1] = '\0';
+
+    return <code class="constant">B_NO_ERROR</code>;
+}
+</pre><p>
+Anyway... Blue box, yellow box, little blue box, Windows NT, pizza, Jolt,
+Mountain Dew, 90 degrees, 99.999% humidity... What does this sound like?
+</p><p>
+Mac Hack of course! You know, it's kind of funny. The conference starts
+at Midnight and goes on for a few days. You do a lot of, "How late did
+you stay up?", "5am". But then you don't wake up until 12pm. You might as
+well just go to bed on time and get up early, but that would not adhere
+to the hacker ethic.
+</p><p>
+It was fun. Yasmin and Anita came along too. While I was staying up
+bleary eyed, they were visiting the Henry Ford Museum, and other choice
+places around Detroit. This conference really is for the Mac faithful.
+The crowd was split between really old timers, and really new timers. The
+Woz gave his life history, which I actually found to be interesting,
+maybe because it didn't end until 3am. He even managed to slip in a
+controversial analysis of Steve Job's opinion of Apple's NeXT purchase.
+And in his mind, Apple should be concentrating on K-12.
+</p><p>
+Well, Benoit did a hack and gave a show. It was a real-time Mandelbrot
+zoomer that had the crowd cheering even before he showed the "fast"
+version. It didn't win one of the many awards, but things like
+multi-colored menus did. Things just aren't what they used to be. The
+take home point for me was, we are merely guests at this party.
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/mandelhack.tgz
+</p><p>
+I spent my time doing a hack as well, but I didn't feel like submitting
+it because it actually might be useful.
+</p><p>
+ftp://ftp.be.com/pub/dr9/samples/pciviewer.tgz
+</p><p>
+This thing is like PCIProbe and the poke command combined. It will list
+your PCI devices in the left half of the window using BOutlineListView,
+and show the actual register values and other stuff on the right when you
+click on the individual entries. For those of you who have been wanting
+to use the BOutlineListView, here's you're chance. It uses this class, as
+well as a custom ListItem. What great fun. I thought about making it into
+a full-fledged PCI debugger like poke is, but I ran out of time. Maybe
+that's an exercise for the reader.
+</p><p>
+Well, the Preview Release is now headed for the doors and the final
+anticipation can begin. You wouldn't believe how tense things can get
+when a lock down is in progress. We have a thing here called Dr. No.
+That's an engineer who is assigned the unthankful task of saying "NO!" to
+last minute changes so that the final release is as stable as possible,
+and actually gets out the door on time. The couple of Dr. No's did an
+excellent job and I think we have a really good release headed your way.
+As you read the release notes you will find that although we did a
+tremendous amount of good work, you can expect there to be some anomalous
+behavior. This release is a good solid foundation upon which our future
+can be built.
+</p><p>
+When you do finally get it within a few weeks, code like mad, give us
+feedback, and move on to commercial Nirvana.
+</p><p>
+Geoff is back from Europe, and his first e-mail said he is anxious to
+write an article about the experience. So, not to steal any steam, I'm
+sure you can look forward to an enlightening expose from our American in
+Paris.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-26"></a>Where are the UI guidelines?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I saw the question being asked in several on-line messages; this is a
+good opportunity to clarify our position on the matter of UI guidelines.
+First, as I write this in the Geneva airport, and if I believe e-mail and
+voice-mail messages, we're in great danger of cutting the final, really,
+Preview Release CD and sending it to duplication.
+</p><p>
+The developer conference AA:PR CD gave us a great deal of feedback,
+energetic and, for the most part, encouraging. Positive or humbling, the
+feedback is most appreciated and we're doing our best to reciprocate,
+that is, making this developer release a credible foundation upon which
+to start building useful and money-making applications. This, of course,
+is for developers to decide. I rest secure, sort of, in the knowledge
+we're not dealing with a shy and retiring community.
+</p><p>
+Still with the UI guidelines in mind, the Preview Release was a very
+ambitious project. Some would say we deluded ourselves when we started,
+others might add this is the very kind of denial required for starting a
+family, remodeling a house—or writing OS software. Among the features
+and functions we wanted to improve, the user interface. The graphic look,
+up to DR 8, was well received, but function was found wanting. In
+particular, the "dock" concept didn't get many votes. What we got,
+instead, were many requests for a (now) more conventional desktop,
+keeping the workspaces.
+</p><p>
+Make it so, you said.
+</p><p>
+This reopened many UI issues and launched us into a great deal of
+experimenting with everything from color schemes, to text, to icons, to
+taskbars, to preferences... In many respects, for the Preview Release, UI
+decisions were made last. The next result is our documentation is behind
+the software, itself behind schedule—with our apologies.
+</p><p>
+Now, when it comes to UI guidelines, I understand the need for them and,
+at the same time I fear them a little. I don't want them to stifle
+creativity. Call this trying to put a good face on our lateness, but
+after our sometimes painful experimentation with UI function and look, I
+hope we'll see some daring exploration from Be developers. You're not
+going to see UI ayatollahs from Be demanding observance to UI guidelines,
+published or not. I think it's a) for us at Be to set one (by no means
+representing it to be the only one) example of decent UI design and, b)
+for users to vote with their wallet for what they like most, no reasons
+asked.
+</p><p>
+Of course, there is danger with that approach. Anarchy, ugliness,
+confusion. As for anarchy, I firmly believe developers will do what they
+want, anyway. The meek will not inherit our region of the Earth. For
+ugliness, it disappears quickly, unless the product is incredibly useful,
+or inexpensive. All of which is fair. Lastly, confusion. In the early
+days of bit-mapped screens and pointing devices, perhaps, when customers,
+even sophisticated ones, were unfamiliar with the emerging paradigms,
+sorry, ways.
+</p><p>
+No such problem anymore.
+</p><p>
+Still, no excuses, we need to, and will publish UI guidelines, if only to
+provoke creativity and observance in the breach.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-25.html">Issue 2-25, June 25, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-27.html">Issue 2-27, July 9, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-25.html" title="Issue 2-25, June 25, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-27.html" title="Issue 2-27, July 9, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

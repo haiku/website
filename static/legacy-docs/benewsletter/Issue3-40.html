@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-39.html" title="Issue 3-39, September 30, 1998" /><link rel="next" href="Issue3-41.html" title="Issue 3-41, October 14, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-39.html" title="Issue 3-39, September 30, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-41.html" title="Issue 3-41, October 14, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-39.html">Issue 3-39, September 30, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-41.html">Issue 3-41, October 14, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-40"></a>Issue 3-40, October 7, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-40"></a>Be Engineering Insights: Mining The Net... (Part 1 of N)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+A while back, I started playing with the Internet in a new way. Instead
+of plodding along as usual in a browser, I wanted to bring all that data
+and functionality into my own programs. To do that, I started working on
+a set of objects that would let me mine the Web selectively, for my own
+purposes.
+</p><p>
+There's a lot to steal from the net. It's pretty easy, for instance, to
+write a piece of code that can find someone's phone number or display a
+map of a location. The Internet begins to look different—like the
+ultimate software candy store—when you start thinking of it as a giant
+subroutine to *your* program.
+</p><p>
+This week we'll start with some basic stuff—how to extract data from
+the Net. This was what I did first when I began working on the project.
+My idea was to get a program to display the latest satellite picture of
+California on my desktop.
+</p><p>
+In the next issue, we'll look at some more elaborate things you can make
+the Internet do for you, like controlling Alta Vista or HotBot from your
+application, or finding someone's e-mail address or phone number.
+</p><p>
+For now, let's start with a basic building block, which I call a
+<code class="classname">site_getter</code>. The <code class="classname">site_getter</code>
+knows how to play with basic low-level
+network access to get an arbitrary object from a web site.
+</p><pre class="programlisting">
+#include &lt;Be.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;string.h&gt;
+#include &lt;netdb.h&gt;
+
+enum <span class="type">NetResult</span> {
+  <code class="constant">NET_NO_ERROR</code>       =  0,
+  <code class="constant">NET_ERROR</code>          = -1,
+  <code class="constant">NET_NO_SOCKETS</code>     = -2,
+  <code class="constant">NET_UNKNOWN_HOST</code>   = -3,
+  <code class="constant">NET_CANT_CONNECT</code>   = -4,
+  <code class="constant">NET_CANT_SEND</code>      = -5,
+  <code class="constant">NET_CANT_RECV</code>      = -6,
+  <code class="constant">NET_TIMEOUT</code>        = -7,
+  <code class="constant">NET_IS_CLOSED</code>      = -8,
+  <code class="constant">NET_ALREADY_CLOSED</code> = -9,
+  <code class="constant">NET_DONT_DOWNLOAD</code>  = -10,
+
+  <code class="constant">NET_GET_URL</code>        = 'nget',
+  <code class="constant">HTTP_ERROR</code>         = -101
+};
+
+#define <code class="constant">MAX_BUF</code> 512000  <span class="comment">// This should be dynamic,</span>
+                        <span class="comment">// so do not load anything</span>
+                        <span class="comment">//bigger than that</span>
+
+class  <code class="classname">site_getter</code> {
+public:
+              <code class="methodname">site_getter</code>();
+virtual       <code class="methodname">~site_getter</code>();
+
+virtual <span class="type">int</span>   <code class="methodname">Fetch</code>(<span class="type">char *</span><code class="parameter">site_path</code>);
+        <span class="type">char  *</span><code class="methodname">GetData</code>(<span class="type">long *</span><code class="parameter">size</code>);
+        <span class="type">void</span>  <code class="methodname">WaitForData</code>();
+virtual <span class="type">int</span>   <code class="methodname">doit0</code>();
+
+private:
+    <span class="type">ulong</span>   LookupHost(<span class="type">const char *</span><code class="parameter">host</code>);
+    <span class="type">int</span>     <code class="methodname">Connect</code>(<span class="type">char *</span><code class="parameter">host</code>);
+    <span class="type">int</span>     <code class="methodname">Request</code>(<span class="type">long</span> <code class="parameter">msocket</code>,
+                    <span class="type">char *</span><code class="parameter">usrstring</code>, <span class="type">char *</span><code class="parameter">cpath</code>);
+    <span class="type">long</span>    <code class="methodname">FillBuffer</code>(<span class="type">long</span> <code class="parameter">msocket</code>, <span class="type">char *</span><code class="parameter">buffer</code>);
+
+    <span class="type">long</span>    <code class="varname">done_sem</code>;
+    <span class="type">char</span>    <code class="varname">full_path</code>[512];
+    <span class="type">char</span>    <code class="varname">done</code>;
+    <span class="type">char    *</span><code class="varname">fbuffer</code>;
+    <span class="type">long    </span><code class="varname">total</code>;
+    <span class="type">long</span>    <code class="varname">msocket</code>;
+};
+
+<span class="comment">// Load the data from the site once the connection is open</span>
+<span class="type">long</span> <code class="classname">site_getter</code>::<code class="methodname">FillBuffer</code>(<span class="type">long</span> <code class="parameter">msocket</code>, <span class="type">char *</span><code class="parameter">buffer</code>)
+{
+  <span class="type">long</span>  <code class="varname">size</code>;
+  <span class="type">long</span>  <code class="varname">i</code>;
+
+  <code class="varname">size</code> = 4096;
+  <code class="varname">size</code> = <code class="function">recv</code>(<code class="parameter">msocket</code>, <code class="parameter">buffer</code>, <code class="varname">size</code>, 0);
+
+  <code class="function">printf</code>("got %ld\n", <code class="varname">size</code>);
+  return <code class="varname">size</code>;
+}
+
+<code class="classname">site_getter</code>::<code class="methodname">site_getter</code>()
+{
+  <code class="varname">done_sem</code> = <code class="function">create_sem</code>(0, "site_getter");
+  <code class="varname">fbuffer</code> = 0;
+  <code class="varname">done</code> = 0;
+  <code class="varname">msocket</code> = -1;
+}
+
+<code class="classname">site_getter</code>::<code class="methodname">~site_getter</code>()
+{
+  <code class="function">free</code>((<span class="type">char *</span>)<code class="varname">fbuffer</code>);
+  <code class="function">delete_sem</code>(<code class="varname">done_sem</code>);
+}
+
+<span class="comment">// Little jumping board to start the internal thread</span>
+<span class="type">long</span> init_p(<span class="type">void *</span><code class="parameter">p</code>)
+{
+  <span class="type"><code class="classname">site_getter</code>  *</span><code class="varname">g</code>;
+
+  <code class="varname">g</code> = (<span class="type"><code class="classname">site_getter</code> *</span>)<code class="parameter">p</code>;
+
+  <code class="varname">g</code>-&gt;<code class="methodname">doit0</code>();
+  return 0;
+}
+
+<span class="comment">// separate the web site from the internal path on the</span>
+<span class="comment">// web site</span>
+<span class="type">void</span> parse(<span class="type">char *</span><code class="parameter">raw</code>, <span class="type">char *</span><code class="parameter">site</code>, <span class="type">char *</span><code class="parameter">path</code>)
+{
+  <span class="type">long</span>  <code class="varname">p</code>;
+  <span class="type">char  *</span><code class="varname">copy</code>;
+
+again:;
+
+  <code class="varname">p</code> = 0;
+
+  <code class="varname">copy</code> = <code class="parameter">raw</code>;
+
+  while(((*<code class="parameter">raw</code> != '/') || (*(<code class="parameter">raw</code> + 1) != '/')) &amp;&amp; (*<code class="parameter">raw</code>)) {
+    <code class="parameter">raw</code>++;
+  }
+
+  <code class="parameter">raw</code> += 2;
+
+  while(*<code class="parameter">raw</code> != '/' &amp;&amp; *<code class="parameter">raw</code>) {
+    <code class="parameter">site</code>[<code class="varname">p</code>] = *<span class="type">raw</span>;
+    <span class="type">raw</span>++;
+    <code class="varname">p</code>++;
+  }
+  <code class="parameter">site</code>[<code class="varname">p</code>] = 0;
+
+  <code class="function">strcpy</code>(<code class="varname">path</code>, <span class="type">raw</span>);
+  if (<code class="function">strlen</code>(<code class="parameter">path</code>) == 0) {
+    <code class="parameter">path</code>[0] = '/';
+    <code class="parameter">path</code>[1] = 0;
+  }
+}
+
+<span class="comment">// This is the main function for the site_getter object.</span>
+<span class="comment">// It will spawn a thread responsible for all its ,</span>
+<span class="comment">// functionality; that way the object can access a web site</span>
+<span class="comment">// in the background and let you open multiple connections</span>
+<span class="comment">// at the same time to multiple sites!</span>
+<span class="type">int</span> <code class="classname">site_getter</code>::<code class="methodname">Fetch</code>(<span class="type">char *</span><code class="parameter">site_path</code>)
+{
+  <span class="type">char  *</span><code class="varname">buffer</code>;
+  <span class="type">char  *</span><code class="varname">pb</code>;
+  <span class="type">long</span>  <code class="varname">size</code>;
+  <span class="type">long</span>  <code class="varname">total</code> = 0;
+  <span class="type">double</span>  <code class="varname">start</code>, <code class="varname">end</code>;
+  <span class="type">char</span>  <code class="varname">first</code> = 1;
+  <span class="type">long</span>  <code class="varname">i</code>;
+  <span class="type">char</span>  <code class="varname">site</code>[256];
+  <span class="type">char</span>  <code class="varname">path</code>[256];
+
+  <code class="varname">done</code> = 0;
+  <code class="function">strcpy</code>(<code class="varname">full_path</code>, <code class="parameter">site_path</code>);
+
+  <code class="function">resume_thread</code>(<code class="function">spawn_thread</code>(<code class="varname">init_p</code>,<code class="parameter">site_path</code>,
+    <code class="constant">B_NORMAL_PRIORITY</code>,<code class="varname">this</code>));
+  return 0;
+}
+
+<span class="comment">// find the actual address of a site</span>
+<span class="type">ulong</span> <code class="classname">site_getter</code>::<code class="methodname">LookupHost</code>(<span class="type">const char *</span><code class="parameter">host</code>)
+{
+  <span class="type">ulong</span> <code class="varname">result</code> = 0;
+
+  <span class="type">hostent*</span> <code class="varname">h</code> = <code class="function">gethostbyname</code>(<code class="varname">host</code>);
+  if (<code class="varname">h</code> &amp;&amp; <code class="varname">h</code>-&gt;<code class="varname">h_addr</code>) {
+    <code class="varname">result</code> = *(<span class="type">long *</span>)(<code class="varname">h</code>-&gt;<code class="varname">h_addr</code>);
+  }
+
+  <code class="varname">result</code> = <code class="function">ntohl</code>(<code class="varname">result</code>);
+  <span class="type">ulong</span> <code class="varname">a</code> = <code class="varname">result</code>;
+  return <code class="varname">result</code>;
+}
+
+<span class="comment">// open the connection with the web server</span>
+<span class="type">int</span> <code class="classname">site_getter</code>::<code class="methodname">Connect</code>(<span class="type">char *</span><code class="parameter">host</code>)
+{
+  <span class="type">sockaddr_in</span>  <code class="varname">addr</code>;
+  <span class="type">ulong</span>  <code class="varname">result</code>;
+  <span class="type">int</span>    <code class="varname">s</code>;
+
+  <code class="varname">addr</code>.<code class="varname">sin_family</code> = <code class="constant">AF_INET</code>;
+  <code class="varname">addr</code>.<code class="varname">sin_port</code> = <code class="function">htons</code>(80);
+
+  <code class="varname">result</code> = <code class="methodname">LookupHost</code>(<code class="parameter">host</code>);
+  <code class="varname">addr</code>.<code class="varname">sin_addr</code>.<code class="varname">s_addr</code> = <code class="function">htonl</code>(<code class="varname">result</code>);
+
+  if (<code class="varname">result</code> == 0) {
+    <code class="function">printf</code>("cannot resolve %s\n", <code class="varname">host</code>);
+    return -1;
+  }
+
+  <code class="varname">s</code> = <code class="function">socket</code>(<code class="constant">AF_INET</code>,<code class="constant">SOCK_STREAM</code>,<code class="constant">IPPROTO_TCP</code>);
+  if (<code class="varname">s</code> &lt; 0) {
+    return <code class="constant">NET_NO_SOCKETS</code>;    <span class="comment">// Can't get a socket</span>
+  }
+
+  if (<code class="function">connect</code>(<code class="varname">s</code>,(<span class="type">sockaddr *</span>)&amp;<code class="varname">addr</code>,sizeof(<span class="type">sockaddr_in</span>)) &lt; 0) {
+    <code class="function">closesocket</code>(<code class="varname">s</code>);
+    return <code class="constant">NET_CANT_CONNECT</code>;  <span class="comment">// Can't connect! Geez!</span>
+  }
+  return <code class="varname">s</code>;
+}
+
+<span class="comment">// send the HTTP request</span>
+<span class="comment">// We will pretend we are a web browser !</span>
+<span class="type">int</span> <code class="classname">site_getter</code>::<code class="methodname">Request</code>(<span class="type">long</span> <code class="parameter">msocket</code>, <span class="type">char *</span><code class="parameter">usrstring</code>,
+  <span class="type">char *</span><code class="parameter">cpath</code>)
+{
+  static  <span class="type">char *</span><code class="varname">HTTPVERS</code> = " HTTP/1.0\r\n";
+  static  <span class="type">char *</span><code class="varname">USER_AGENT</code> =
+    "User-Agent: Mozilla/2.0 (compatible; NetPositive; BeOS)\r\n";
+  static  <span class="type">char *</span><code class="varname">ACCCEPT</code> =
+    "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n";
+  static  <span class="type">char *</span><code class="varname">HOST</code> = "Host: ";
+
+  <span class="type">char</span>  <code class="varname">req</code>[2048];
+  <span class="type">char</span>  <code class="varname">path</code>[2048];
+
+  <code class="function">strcpy</code>(<code class="varname">path</code>, <code class="parameter">cpath</code>);
+
+  <span class="comment">//  GET or POST a request</span>
+  <code class="varname">req</code>[0] = 0;
+  <code class="function">strcat</code>(<code class="varname">req</code>, "GET ");
+  <code class="function">strcat</code>(<code class="varname">req</code>, <code class="varname">path</code>);
+  <code class="function">strcat</code>(<code class="varname">req</code>, <code class="varname">HTTPVERS</code>);
+  <code class="function">strcat</code>(<code class="varname">req</code>, <code class="varname">USER_AGENT</code>);
+  <code class="function">strcat</code>(<code class="varname">req</code>, <code class="varname">ACCCEPT</code>);
+  <code class="function">strcat</code>(<code class="varname">req</code>, <code class="varname">HOST</code>);
+  <code class="function">strcat</code>(<code class="varname">req</code>, <code class="parameter">usrstring</code>);
+  <code class="function">strcat</code>(<code class="varname">req</code>, "\r\n\r\n");
+
+  <code class="function">printf</code>("str = %s\n", <code class="varname">req</code>);
+  <span class="type">long</span> <code class="varname">result</code> = <code class="constant">NET_NO_ERROR</code>;
+
+  <code class="varname">result</code> = <code class="function">send</code>(<code class="parameter">msocket</code>, <code class="varname">req</code>, strlen(<code class="varname">req</code>), 0);
+  if (<code class="varname">result</code> &lt; 0) {
+    <code class="varname">result</code> = <code class="constant">NET_CANT_SEND</code>;
+  }
+  return <code class="varname">result</code>;
+}
+
+<span class="type">char *</span><code class="classname">site_getter</code>::<code class="methodname">GetData</code>(<span class="type">long *</span><code class="parameter">size</code>)
+{
+  *<code class="parameter">size</code> = <code class="varname">total</code>;
+  return <code class="varname">fbuffer</code>;
+}
+
+<span class="type">int</span> <code class="classname">site_getter</code>::<code class="methodname">doit0</code>()
+{
+  <span class="type">char  *</span><code class="varname">pb</code>;
+  <span class="type">long</span>  <code class="varname">size</code>;
+  <span class="type">char</span>  <code class="varname">first</code> = 1;
+  <span class="type">long</span>  <code class="varname">i</code>;
+  <span class="type">char</span>  <code class="varname">site</code>[256];
+  <span class="type">char</span>  <code class="varname">path</code>[256];
+
+  <code class="varname">total</code> = 0;
+  <code class="methodname">parse</code>(<code class="varname">full_path</code>, <code class="varname">site</code>, <code class="varname">path</code>);
+
+  if (<code class="varname">fbuffer</code> == 0) {
+    <code class="varname">fbuffer</code> = (<span class="type">char *</span>)<code class="function">malloc</code>(<code class="constant">MAX_BUF</code>);
+  }
+
+again:;
+
+  if (<code class="varname">msocket</code> &lt; 0) {
+    <code class="varname">msocket</code> = Connect(<code class="varname">site</code>);
+    if (<code class="varname">msocket</code>&lt;0) {
+      <code class="function">closesocket</code>(<code class="varname">msocket</code>);
+      <code class="function">release_sem</code>(<code class="varname">done_sem</code>);
+      <code class="varname">done</code> = 1;
+      return -1;
+    }
+  }
+  <code class="varname">pb</code> = <code class="varname">fbuffer</code>;
+  <code class="methodname">Request</code>(<code class="varname">msocket</code>, <code class="varname">site</code>, <code class="varname">path</code>);
+
+  <span class="comment">// Not really certain about what follows, but it seems to help !</span>
+
+  do {
+    <code class="varname">size</code> = <code class="methodname">FillBuffer</code>(<code class="varname">msocket</code>, <code class="varname">pb</code>);
+
+    if (<code class="varname">size</code> == 0) {
+      <code class="function">snooze</code>(32000);
+    }
+
+    if (<code class="varname">size</code> == -1) {
+      goto out;
+    }
+
+    <code class="varname">total</code> += <code class="varname">size</code>;
+    if (<code class="varname">total</code> &gt; (<code class="constant">MAX_BUF</code>-4096)) {
+      break;
+    }
+
+    <code class="varname">pb</code> += <code class="varname">size</code>;
+  } while((<code class="varname">total</code> == 0) || (<code class="varname">size</code> != 0));
+
+out:;
+
+  <code class="varname">size</code> = <code class="methodname">FillBuffer</code>(<code class="varname">msocket</code>, <code class="varname">pb</code>);
+  <code class="function">closesocket</code>(<code class="varname">msocket</code>);
+  <code class="varname">msocket</code> = -1;
+
+  <code class="function">release_sem</code>(<code class="varname">done_sem</code>);
+  <code class="varname">done</code> = 1;
+  return 0;
+}
+
+<span class="type">void</span>  <code class="classname">site_getter</code>::<code class="methodname">WaitForData</code>()
+{
+  <code class="function">acquire_sem</code>(<code class="varname">done_sem</code>);
+  <code class="function">release_sem</code>(<code class="varname">done_sem</code>);
+}
+
+<span class="comment">// To use this object, you just get it running on a</span>
+<span class="comment">// given site: For instance</span>
+<span class="type">void</span> main()
+{
+  <span class="type"><code class="classname">site_getter</code>  *</span><code class="varname">a_getter</code>;
+  <span class="type">char    *</span><code class="varname">data</code>;
+  <span class="type">long</span>    <code class="varname">data_size</code>;
+
+  <code class="varname">a_getter</code> = new <code class="classname">site_getter</code>();
+
+  <code class="varname">a_getter</code>-&gt;<code class="methodname">Fetch</code>(
+    "http://www.wrh.noaa.gov/wrhq/CURRENT/VIS1MTR.GIF");
+
+  <code class="classname">a_getter</code>-&gt;<code class="methodname">WaitForData</code>();
+
+  <code class="varname">data</code> = <code class="varname">a_getter</code>-&gt;<code class="methodname">GetData</code>(&amp;<code class="varname">data_size</code>);
+
+  <code class="function">printf</code>("got %ld bytes !\n", <code class="varname">data_size</code>);
+
+  delete <code class="varname">a_getter</code>;
+}
+</pre><p>
+Well, now that we have a basic object that can fetch data from the Net,
+we'll be able to start looking at that data.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-40"></a>Developers Workshop: Modal Muddle</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+In my last Newsletter article I created an application, Doodle, which
+illustrated differences between the Be way of doing things and the
+Windows way. A few days after the article appeared, I was approached by a
+Ms. Morgan le Be, BeOS hacker and mistress of the black arts.
+</p><p>
+"I'm a little disappointed with the way you handled modal dialogs," she
+said. This was a typical Morgan response.
+</p><p>
+"Ah, but I used the same kind of scheme
+<acronym class="acronym" title="Microsoft Foundation Classes">MFC</acronym> applications use, and same
+approach <code class="classname">BAlert</code> does, so it should work fine!", I retorted.
+</p><p>
+"Just take a look at your fiendish creation," replied the smug Ms. M. She
+pointed at the Pen Widths dialog. "Try dragging that dialog over your
+document window." To my dismay, the document window didn't redraw
+correctly! The document view was blank, and the menu and scroll bars
+showed garbage.
+</p><p>
+Obviously something was wrong. I asked Morgan what she'd suggest. "Make
+the dumb thing asynchronous, silly. Instead of waiting for the dialog to
+finish, just pack its data into a <code class="classname">BMessage</code> and post that to the document."
+</p><p>
+But that would defeat my goal of showing how to do modal dialogs on BeOS.
+Clearly, my first attempt was not going to satisfy our discerning
+audience of geeks. So, what follows is a grossly magnified look at that
+marvel of interface design: modal dialogs. The code for a slightly
+revised Doodle is at:
+</p><p>
+ftp://ftp.be.com/pub/samples/intro/doodle.zip
+</p><p>
+This time I've added a <code class="classname">MultiLocker</code> class and abstracted the modal
+processing loop into its own file, <code class="filename">syncutil.cpp</code>. More about this in a
+moment.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id744868"></a>User Behavior vs. Code Structure</h3></div></div></div><p>
+Before I begin, some clarification. There are two more or less orthogonal
+issues lumped together in the Windows conception of modal and modeless
+dialogs.
+</p><p>
+The first issue is how the user interacts with the dialog. A dialog is
+modal when it prevents the user from performing certain activities while
+it's being used. A modeless dialog imposes no restrictions on the user's
+activities. There's a continuum of possibilities here. By far the most
+common ones are, for modal, a dialog that prevents the user from working
+within any other application windows while the dialog is running; and for
+modeless, a dialog that allows the user to interact with all the
+application windows while the dialog is running.
+</p><p>
+The other issue is how the dialog is actually coded. There are two
+possibilities: synchronous or asynchronous invocation. In a synchronous
+situation, one or more of your main threads blocks until the dialog is
+finished, at which point it picks up where it left off. There are varying
+degrees of synchronicity you can implement, depending on how many threads
+in your application you've blocked. In asynchronous behavior, one of your
+main threads invokes the dialog (by spawning a dialog thread, for
+instance), and then goes on its merry way. Later, the dialog informs you
+when it's finished, and you pick up where you left off when you invoked
+the dialog.
+</p><p>
+In the MFC library, you don't really have a choice of which code
+structure to use—modal dialogs are always invoked synchronously, and
+modeless dialogs are always invoked asynchronously. In the BeOS, however,
+these issues are separate. Modal/modeless behavior is implemented by
+creating a window with or without a modal "feel," but you have a choice
+of whether you want to block your thread (or threads) waiting for the
+dialog to finish (synchronous), or whether you want your thread to
+continue processing while the modal dialog is running, and get the data
+in some other way (asynchronous).
+</p><p>
+So, there are two questions to address when coding dialogs on the BeOS:
+</p><div class="orderedlist"><ol><li><p>
+Should your dialog be modal or modeless?
+</p></li><li><p>
+Should you use synchronous or asynchronous design when creating your
+dialog?
+</p></li></ol></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id744913"></a>Defending Modality</h3></div></div></div><p>
+First, let's address the question of modal vs. modeless dialogs. Some UI
+zealots crusade against modal dialogs in applications because they limit
+the user's options. At the risk of igniting a UI jihad, I believe that
+modals are useful when it's desirable to limit the user's options. For
+instance, it might be useful to keep your user from closing a window and
+clobbering a document's data while you're waiting for the user to save
+the document.
+</p><p>
+Modal dialogs can also help simplify interactions between windows in your
+application. If the dialog's data depends on the active window, it can be
+difficult tracking the dialog's data in a modeless situation, where
+different windows may be activated—especially with Focus Follows Mouse
+turned on.
+</p><p>
+At the same time, it's good to make dialogs that are as unintrusive as
+possible. The BeOS gives you quite a bit of control over just how 'modal'
+you want a window to be (whether it blocks a specific set of windows in
+an application, all windows in an application, or—shame on you!—the
+entire system).
+</p><p>
+For further debate on this fascinating topic, please consult your local
+UI religious fanatic. Meanwhile, let's assume that you've decided to use
+modal dialogs and consider how to design them: synchronously or
+asynchronously?
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id744956"></a>Syncrosimplicity</h3></div></div></div><p>
+Why are modal dialogs so popular in Windows? In a word, simplicity.
+Here's what you have to do to implement a modal, synchronous dialog:
+</p><div class="orderedlist"><ol><li><p>
+Throw an instance of a CDialog-derived class onto the stack.
+</p></li><li><p>
+Stuff the dialog with the data you want it to be initialized with.
+</p></li><li><p>
+Execute <code class="methodname">DoModal()</code>. <code class="methodname">DoModal()</code> then :
+</p><div class="orderedlist"><ol><li><p>
+Initializes and starts the dialog.
+</p></li><li><p>
+Waits for the user to dismiss the dialog (the synchronous
+part).
+</p></li><li><p>
+Returns a value which tells you the ID of the command (i.e.
+button) that was used to dismiss the dialog (e.g. IDOK, IDCANCEL).
+</p></li></ol></div></li><li><p>
+Grab the data from the dialog once it's finished.
+</p></li><li><p>
+Get on with your life; the dialog is destroyed once you leave its
+scope.
+</p></li></ol></div><p>
+The nice thing about this approach is that all the synchronous dialog
+behavior is contained in one function call, and you get direct access to
+the dialog's data after it's done. It would be nice if we could apply
+that simplicity to modal dialogs on the BeOS as well.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745040"></a>The Fine Art of Doing Nothing</h3></div></div></div><p>
+The drawback to implementing synchronous dialogs is that you're blocking
+the calling thread. "But where's the problem there? When I'm running the
+modal dialog, my application doesn't do anything!" However, that's not
+the case. Even if your background windows don't respond to user events,
+they may still need to respond to
+</p><div class="orderedlist"><ol><li><p>
+Drawing updates (if the modal dialog or other applications' windows
+move).
+</p></li><li><p>
+Pulse events.
+</p></li><li><p>
+Events sent by other threads or applications.
+</p></li></ol></div><p>
+What happens if you block all of the threads in your entire application,
+ignoring all these events? You get the Ultimate Modal Dialog: background
+tasks in your application stop, your windows aren't redrawn correctly,
+and your message queue backs up. This will earn you howls of derision
+from the modern computer sophisticate—especially BeOS aficionados, who
+are used to having things happen Right Now, Where I Want It, and Not a
+Care About Anything Else in the World.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745088"></a>Synchronicity Among Threads</h3></div></div></div><p>
+"I seem to remember that Windows applications only have one thread by
+default. Why, then, doesn't your application grind to a halt when you run
+a modal dialog in Windows?" When you run a modal dialog in MFC, your
+thread doesn't actually block. Instead, it enters a special message
+processing loop (CWnd::RunModalLoop), continuing to dispatch messages to
+all your needy windows, while your dialog runs. But you probably have
+better things to do with your time than write a full-featured message
+processing loop, just to get synchronous dialogs implemented!
+</p><p>
+The good news is, you don't have to jump through that hoop to get
+synchronous dialogs implemented in the BeOS. Because each window runs in
+its own thread, they can process messages independently of each other. On
+the other hand, since you're in a multithreaded situation, there are
+synchronization issues to consider.
+</p><p>
+In order to keep your app responsive while your modal dialog is running,
+here are three cases to consider when running a synchronous dialog in the
+BeOS:
+</p><div class="orderedlist"><ol><li><p>
+The calling thread is unrelated to your window and application
+threads (i.e. they don't share access to any data). In this case,
+doing a synchronous call will have no effect on the rest of your
+system, so you can relax.
+</p></li><li><p>
+The calling thread is a window thread. In this case, just blocking
+the window thread would be bad since the window would no longer
+respond to messages or update events. At the bare minimum, you'll want
+the window to be able to draw itself. You can do this by telling the
+window to update itself periodically while you're blocking. (This is
+the same trick that <code class="classname">BAlert</code> uses; see
+<code class="methodname">WaitForDelete</code> in <code class="filename">syncutil.cpp</code>.)
+</p></li><li><p>
+The calling thread is not a window thread, but one of your windows
+shares data with this thread. Your window will be able to run
+normally, but you need to make sure that it will be able to acquire
+access to the data it needs to perform its operations.
+</p></li></ol></div><p>
+Note that if the calling thread is a <code class="classname">BLooper</code>, then while it's blocking,
+it won't be able to process messages in a timely manner. This will cause
+delays in message processing and can result in the message queue
+overflowing. It's up to you to determine whether this is an acceptable
+risk.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745169"></a>Wherefore Doodle?</h3></div></div></div><p>
+Of the cases described above, Doodle falls into category 3. Recall that
+in Doodle, there is the application thread, a thread for each window, and
+a thread for each open document. Also, recall that in the previous
+implementation of Doodle, access to the document's data was protected
+using the looper's lock.
+</p><p>
+Let's take the simplified case where there's one application thread, one
+open window, and one open document. When Pen&gt;Pen Widths is invoked
+synchronously, the document thread is the one that blocks. However, when
+it blocks, the window ceases to update correctly. Why?
+</p><p>
+There are two kinds of window events, occurring while the modal dialog is
+running, that depend on access to the document's data: (a) UpdateUI,
+which is called by the application thread's Pulse task to update the menu
+states, and (b) Draw, which the window's thread calls in response to
+window update events. Both of these functions attempt to access the
+document by locking the built-in looper lock before proceeding.
+</p><p>
+But Pen&gt;Pen Widths gets called from the document's MessageReceived, and
+the looper is automatically locked while handling messages. Thus, the
+document is locked for the entire duration of the synchronous dialog, so
+the windows block waiting for access to the document. The result? Window
+garbage.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745212"></a>To the Locksmith</h3></div></div></div><p>
+The way around this problem in Doodle is to change the way the locking
+mechanisms work. First, let me show you how NOT to solve the problem.
+"Simple," I said at first. "I'll just unlock the document looper, run the
+dialog synchronously, and then relock the document looper afterwards.
+Nobody outside will know the difference, and once I've unlocked, the
+windows are free to play with the document."
+</p><p>
+I asked Morgan le Be what she thought of this clever plan. "Nope," said
+Morgan. "What if the looper was locked multiple times before
+MessageReceived?" Well, I could unlock multiple times and then relock the
+same number of times, but that's forbidden: Never unlock something that
+you yourself didn't lock.
+</p><p>
+In coming up with a better locking mechanism, I realized that: (a) the
+windows only need to *read* the data to draw it, and (b) the looper
+locking mechanism doesn't have to be associated with the document's data
+at all. I can solve this problem by introducing a new, separate lock for
+the document's data. For maximum flexibility, I'll implement the data
+lock by using a multiple reader/single writer lock, provided by Stephen
+in a recent Newsletter article:
+</p><p>
+<a class="xref" href="Issue3-36.html#DevWorkshop3-36" title="Developers Workshop: Yet Another Locking Article">Developers Workshop: Yet Another Locking Article</a>
+</p><p>
+Even though the looper is locked, the document's data can be read, and
+the windows can continue with their merry business.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745264"></a>Asynchronous Dialogs</h3></div></div></div><p>
+As I mentioned before, an asynchronous dialog lets your thread continue
+to function while the thread is blocked, which means that you don't have
+to worry so much about other threads waiting for you. However, getting
+data out of asynchronous dialogs is akin to normal asynchronous window
+communication, and is usually a bit more complicated than synchronous
+dialogs. What do you have to do when you create a asynchronous dialog?
+</p><div class="orderedlist"><ol><li><p>
+Create a persistent instance of a dialog—or, if it's already
+running (a possibility for modeless dialogs), find it and make it
+active.
+</p></li><li><p>
+Stuff the dialog with the data you want it to be initialized with,
+and make sure the dialog knows who it's supposed to communicate with.
+You could hand the dialog a <code class="classname">BMessage</code>
+and a <code class="classname">BMessenger</code> to eliminate
+dependency between your application and dialog.
+</p></li><li><p>
+Start the dialog using <code class="methodname">ShowWindow()</code>.
+</p></li><li><p>
+Get on with your life, making sure that you're not doing anything
+behind the dialog's back that it doesn't expect or can't handle (the
+asynchronous part).
+</p></li><li><p>
+When the dialog is ready to give you data, you need to find some
+way of getting the dialog's data. There are several ways to do this:
+</p><div class="orderedlist"><ol><li><p>
+Have the dialog modify your data directly.
+</p></li><li><p>
+Have the dialog signal you when it's ready (e.g. via a
+message). You then grab the data directly from the dialog.
+Hopefully, nothing untoward will have happened to the dialog's data
+in the interim.
+</p></li><li><p>
+Have the dialog send you the new data in a message. It's a
+little tricky to do this in Windows since you're only given WPARAM
+and LPARAM arguments to work with. In comparison, the BeOS gives
+you the <code class="classname">BMessage</code> class, which is often a quite convenient way of
+solving this problem.
+</p></li></ol></div></li><li><p>
+When the dialog is finished (or if its target window or document is
+destroyed) send it a <code class="constant">B_QUIT_REQUESTED</code>
+message. You could <code class="methodname">Lock()</code> and
+<code class="methodname">Quit()</code> the dialog directly, but doing so could lead to deadlocks if
+the dialog uses locked, direct access to the target.
+</p></li></ol></div><p>
+For asynchronous dialogs, you create the dialog in a different place from
+where you handle it, and getting the data from the dialog requires a bit
+more thought. On the BeOS you can use <code class="classname">BMessage</code>s
+and <code class="classname">BInvoker</code>s to get data
+back to your application and eliminate some of the dependency between the
+dialog and your application. For many people, Morgan included, this
+approach is actually simpler than worrying about thread blocking issues.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id745401"></a>Conclusion</h3></div></div></div><p>
+Here are some parting guidelines to help you decide between synchronous
+and asynchronous dialogs:
+</p><ul class="itemizedlist"><li><p>
+Use synchronous dialogs if you really must stop your thread until the
+dialog has finished. Keep in mind that it's up to you to find a way to
+keep your application responsive to time-critical messages (drawing
+updates in particular) while your calling thread is blocked.
+</p></li><li><p>
+Consider synchronous dialogs if you want to be scrupulous about
+protecting the data that's exchanged between application and dialog, or
+if the data can't easily be packaged into a <code class="classname">BMessage</code>.
+</p></li><li><p>
+In all other cases, use asynchronous dialogs. They let your calling
+thread continue to be responsive, and when you use <code class="classname">BMessage</code>s to
+exchange data, you can eliminate dependencies between the dialog and
+your application. The drawback is that data exchange is a bit trickier,
+especially if your data doesn't fit well into a <code class="classname">BMessage</code>.
+</p></li></ul></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-40"></a>When Is It Done?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+The "it" in the title is the BeOS—that's easy. The matter of
+"doneness" is more complicated, because it can be seen &gt;from at least two
+perspectives, which I'll explore here.
+</p><p>
+From experience we know that an operating system is an evolving entity.
+Looking at Windows, Unix, RSTS, VMS, or the Mac OS, we realize these
+creations live much longer than their makers ever intended or dreamed
+they would. Unix is a spectacular case of OS longevity. Designed as a
+single-user version of Multics—hence the name Unix --it has prospered
+and proliferated on servers and workstations as Solaris, AIX, A/UX, SCO
+Unix, AT&amp;T Unix, FreeBSD, Linux, and Irix, to name a few.
+</p><p>
+"Invented in the late 1960s for a small computer with a 64K-byte address
+space," to quote Corey Satten, of the University of Washington, in his
+"Brief Introduction to Unix," this operating system shows that 30 years
+or so after its birth, few people think it's "done." In fact, as the
+enthusiasm for Linux shows, it looks as if predictions of Unix's demise
+at the hands of Windows NT were premature. In release after release, the
+many flavors of Unix keep adding features and hardware coverage. Each
+hardware platform, from Intel to Alpha and from PowerPC to MIPS, has
+several versions of Unix available. At its present distance from its
+Multics roots, Unix could now stand for Universal. So universal, in fact,
+that the BeOS includes a Posix "layer," a program interface that allows
+us to benefit from many Unix programs and utilities.
+</p><p>
+Another family of systems—younger than Unix—also demonstrates the
+evolving capability of system software: DOS and Windows. I haven't tried
+lately, but I bet most original DOS programs still run nicely on Windows
+98 or Windows NT. NT isn't exactly an evolutionary relative of DOS
+(itself the son of CP/M) but 17 years after the birth of the IBM PC,
+Windows 98 is a true descendant of DOS.
+</p><p>
+In a similar evolutionary sense, we hope the much younger BeOS is far
+from "done." In fact, we plan to demonstrate with our upcoming Release 4
+that we inhabit a part of the growth curve where returns on hardware
+still increase. That is, with BeOS Release 4, on the same hardware, speed
+and function both increase. More mature systems inhabit another part of
+the curve where, in general, on the same hardware, the price of
+additional features in a new release is a decrease in performance.
+</p><p>
+The word "done" has an additional meaning in our context. I'll use
+Windows again for comparison. In the summer of 1983, Bernard Vergnes gave
+me my first demo of Windows on a CGA screen, with tiled Windows. This was
+shortly after the difficult launch of the Lisa, and the even less
+auspicious kick off of VisiOn. Windows was by no means "done." It took a
+few more years—probably until Windows 3.0 in 1990, if memory serves.
+</p><p>
+Others will argue that Windows reached the "done" stage with 3.11, with
+Windows for Workgroups and the inclusion of reasonable networking
+features. I could take Macintosh examples as well, but as I've been
+involved with some stages of its development, including HFS (a good
+thing) and the System 6.0 MultiFinder (not so good), I probably lack the
+necessary distance.
+</p><p>
+Now, for the dangerous question. Using the frame of reference just
+described, where are we? Are we at the summer of '83 stage or the Windows
+3.0 stage, where most people could use and enjoy Windows? In some ways,
+we'll reach further than Windows 3.0. Again, I'm not comparing features
+but relative development stages; in other respects we'll still exist at
+an earlier stage.
+</p><p>
+By "further" I mean the BeOS will be in many respects more robust than
+Windows was at that stage—as a legacy-free OS must be. And by "earlier
+stage," I refer to the other side of legacy-free: Windows ran legacy
+applications; we, on the other hand, must continue to work with
+developers and generate a growing number of BeOS-specific applications
+that make full use of the platform.
+</p><p>
+I'm excited by the work the engineers have done for our next release, and
+by the plans for subsequent releases. This is the best project I've ever
+been a part of. Of course, in view of my rather close participation, one
+could say that my statement lacks objectivity. Perhaps it does, but I've
+always been accused of one kind of parental feeling or other for the
+projects I've been involved with, so I'll take the liberty of believing
+in the relative part of the feeling. In any case, developers and
+customers are the ones who will judge whether I'm right or not.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-39.html">Issue 3-39, September 30, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-41.html">Issue 3-41, October 14, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-39.html" title="Issue 3-39, September 30, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-41.html" title="Issue 3-41, October 14, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

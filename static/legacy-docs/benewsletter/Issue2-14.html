@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-13.html" title="Issue 2-13, April 2, 1997" /><link rel="next" href="Issue2-15.html" title="Issue 2-15, April 16, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-13.html" title="Issue 2-13, April 2, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-15.html" title="Issue 2-15, April 16, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-13.html">Issue 2-13, April 2, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-15.html">Issue 2-15, April 16, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-14"></a>Issue 2-14, April 9, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-14"></a>Be Engineering Insights: Synchronization in Device Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+Of all execution environments, I find that of the device driver the most
+challenging. Hardware interrupts can cause guileless code to run in an
+unexpected order and variables to acquire contradictory values. In the
+case of the BeOS, concurrently running threads may join the fray, adding
+to the confusion. Meanwhile, the hardware must be stroked in complicated,
+often undocumented ways, while threads from user space clamor for
+attention.
+</p><p>
+It is through the synchronization services of the Kernel Kit and
+additional kernel calls that order and execution ordering are achieved.
+However, the utmost programmer care is required, for a few reasons.
+Firstly, the human mind deals poorly with parallel operations. Secondly,
+the consequences of logical error are difficult to debug. Thirdly, driver
+writers do not enjoy a luxurious development environment. And finally,
+many problems at this level are timing-dependent.
+</p><p>
+This article is itself a victim of a synchronization error. I was unaware
+that my good friend, Benoît Schillings, was writing an article titled
+"Fun with Semaphores." Having discovered this just today, and having
+already started my article, it is too late to set a semaphore around the
+topic! I pray for a minimum of contradictions.
+</p><p>
+The essence of synchronization is wasting time: If you can't do something
+now, wait for a change in conditions, then try again. The two facilities
+for this purpose are semaphores and spinlocks. Both are described in The
+Be Book, in "The Kernel Kit" and "The Device Kit" chapters, respectively.
+Semaphores may block the current thread, meaning the CPU becomes
+available for other work. Spinlocks will simply burn CPU time on the spot.
+</p><p>
+If burning CPU time sounds bad, it is. The reason for using spinlocks is
+connected with hardware interrupts: The resulting flow of control through
+the interrupt handler code must not block. This rules out the acquisition
+of semaphores (releasing them is fine). Therefore, use spinlocks only
+where interrupts are involved, and only for the shortest time possible.
+</p><p>
+As synchronization primitives, semaphore and spinlock functions are
+rarely sufficient on their own. Rather, they are combined with data
+structures and with each other to provide higher-level services for the
+driver's particular needs.
+</p><p>
+The remainder of this article explores examples of increasing complexity.
+The code does not represent a complete driver, and some knowledge of
+driver structure is assumed: Please refer to "Developing a
+Kernel-Loadable Driver" in "The Device Kit" chapter of The Be Book for
+further background. Some declarations and prudent error checking have
+been omitted for brevity. When studying the code, remember that there are
+multiple flows of control contending for service: One that originates
+from the hardware interrupt system and a few from user mode.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id556065"></a>Example: Counter</h3></div></div></div><p>
+In this first example, user-mode threads enter the driver and block until
+the next device event. There is no race condition, because an event
+occurring earlier simply allows the <code class="function">acquire_sem</code> to return immediately.
+The semaphore, in effect, "counts" the number of events, while also
+synchronizing the threads. The events are not duplicated for each thread,
+but are dealt like playing cards from a deck.
+</p><pre class="programlisting c">
+<span class="type">device  *</span><code class="varname">dev</code>;
+<span class="type">sem_id</span>  <code class="varname">csem</code>;
+
+<code class="function">dev_init</code>( ...)
+{
+    <code class="varname">csem</code> = <code class="function">create_sem</code>( 0, "csem");
+}
+
+<span class="comment">/* flow of control runs at interrupt level */</span>
+<span class="type">long</span> <code class="function">dev_int</code>( ...)
+{
+    if (<code class="varname">dev</code>-&gt;<code class="varname">status</code> == <code class="constant">EVENT</code>)
+        <code class="function">release_sem_etc</code>( <code class="varname">csem</code>, 1, <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+
+}
+
+<span class="comment">/* run by background-level threads */</span>
+<span class="type">long</span> <code class="function">dev_control</code>( ...)
+{
+    <code class="function">acquire_sem</code>( <code class="varname">csem</code>);
+    return (<code class="constant">B_OK</code>);
+}
+</pre><p>
+The interrupt handler may not acquire semaphores, since that would risk
+blocking. Releasing semaphores will never block but may cause the
+rescheduling of threads, including the interrupt flow of control itself.
+The handler must avoid this possibility by deferring all scheduling
+activity, using the <code class="constant">B_DO_NOT_RESCHEDULE</code> flag.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id556192"></a>Example: Critical Regions</h3></div></div></div><p>
+This example resembles the previous one, except the device event is
+augmented by a piece of data. Note that interrupt- level and background
+both access the circular buffer, but not the buffer indices. The counting
+semaphore continues to directly synchronize producer and consumer, as
+they access the event buffer. The presence of multiple consumers,
+however, requires that the "tail" index be protected before use. Code
+that uses "tail" must lie within a "critical region": a section of code
+bracketed by a "locking" semaphore. The locking semaphore is created with
+an initial count of 1.
+</p><pre class="programlisting c">
+<span class="type">char</span>    <code class="varname">circular</code>[64];
+<span class="type">uint</span>    <code class="varname">head</code>,
+        <code class="varname">tail</code>;
+<span class="type">sem_id</span>  <code class="varname">lsem</code>;
+
+<code class="function">dev_init</code>( ...)
+{
+    <code class="varname">lsem</code> = <code class="function">create_sem</code>( 1, "lsem");
+}
+
+<span class="type">long</span> <code class="function">dev_int</code>( ...)
+{
+    <code class="varname">circular</code>[<code class="varname">head</code>] = <code class="varname">dev</code>-&gt;<code class="varname">byte</code>;
+    <code class="varname">head</code> = (<code class="varname">head</code>+1) % sizeof( <code class="varname">circular</code>);
+    <code class="function">release_sem_etc</code>( <code class="varname">csem</code>, 1, <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+}
+
+<span class="comment">/* run by background-level threads */</span>
+<span class="type">long</span> <code class="function">dev_read</code>( <span class="type">void *</span>, <span class="type">off_t</span>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">len</code>)
+{
+    <code class="function">acquire_sem</code>( <code class="varname">csem</code>);
+    <code class="function">acquire_sem</code>( <code class="varname">lsem</code>);
+    *(<span class="type">char *</span>)<code class="varname">buf</code> = <code class="varname">circular</code>[<code class="varname">tail</code>];
+    <code class="varname">tail</code> = (<code class="varname">tail</code>+1) % <code class="function">sizeof</code>( <code class="varname">circular</code>);
+    *<code class="varname">len</code> = 1;
+    <code class="function">release_sem</code>( <code class="varname">lsem</code>);
+    return (<code class="constant">B_OK</code>);
+}
+</pre><p>
+Why does the counting semaphore, csem, fail to protect the tail index?
+Imagine two consumers blocked at the start of <code class="function">dev_read</code>: If two events
+arrive simultaneously, both background threads will launch into the
+critical region.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id556396"></a>Example: Critical Regions With Interrupt</h3></div></div></div><p>
+This example resembles the previous one, in that data is incoming.
+However, the circular buffer has been replaced with a dynamically
+expandable linked list. Suddenly, interrupt-level and background cannot
+safely access the data structures concurrently: All data access must be
+placed in a "critical region." Since interrupts are involved, a spinlock
+is employed instead of <code class="varname">lsem</code>.
+</p><p>
+Spinlocks must be used in conjunction with the interrupt- disabling
+facilities of the BeOS. The following scenario illustrates the reason why:
+</p><div class="orderedlist"><ol><li><p>
+Background thread on CPU A acquires spinlock S
+</p></li><li><p>
+Device interrupts A
+</p></li><li><p>
+Interrupt handler running on A acquires spinlock S
+</p></li><li><p>
+CPU A is deadlocked
+</p></li></ol></div><p>
+Here is the code:
+</p><pre class="programlisting c">
+typedef struct data {
+    struct <span class="type">data *</span><code class="varname">next</code>;
+    <span class="type">char</span>        <code class="varname">c</code>;
+} data;
+
+<span class="type">spinlock</span>    <code class="varname">sl</code>;
+<span class="type">data        *</span><code class="varname">head</code>;
+<span class="type">data        *</span><code class="varname">tail</code>;
+
+<span class="type">long</span> <code class="function">dev_int</code>( ...)
+{
+    <span class="type">cpu_status</span> <code class="varname">ps</code> = <code class="function">lock</code>( );
+    <code class="function">putc</code>( <code class="varname">dev</code>-&gt;<code class="varname">byte</code>);
+    <code class="function">release_sem_etc</code>( <code class="varname">csem</code>, 1, <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+    <code class="function">unlock</code>( <code class="varname">ps</code>);
+}
+
+<span class="type">long</span> <code class="function">dev_read</code>( <span class="type">void *</span>, <span class="type">off_t</span>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">len</code>)
+{
+    <span class="type">cpu_status</span>  <code class="varname">ps</code>;
+
+    <code class="function">acquire_sem</code>( <code class="varname">csem</code>);
+    <code class="varname">ps</code> = <code class="function">lock</code>( );
+    *(<span class="type">char *</span>)<code class="parameter">buf</code> = <code class="function">getc</code>( );
+    *<code class="parameter">len</code> = 1;
+    <code class="function">unlock</code>( <code class="varname">ps</code>);
+    return (<code class="constant">B_OK</code>);
+}
+
+<code class="function">putc</code>( <span class="type">int</span> <code class="parameter">c</code>)
+{
+    <span class="type">data *</span><code class="varname">d</code> = (<span class="type">data *</span>) <code class="function">malloc</code>( sizeof *<code class="varname">d</code>);
+    <code class="varname">d</code>-&gt;<code class="varname">c</code> = <code class="varname">c</code>;
+    <code class="varname">d</code>-&gt;<code class="varname">next</code> = 0;
+    if (<code class="varname">head</code>)
+        <code class="varname">tail</code>-&gt;<code class="varname">next</code> = <code class="varname">d</code>;
+    else
+        <code class="varname">head</code> = <code class="varname">d</code>;
+    <code class="varname">tail</code> = <code class="varname">d</code>;
+}
+
+<code class="function">getc</code>( )
+{
+    <span class="type">data *</span><code class="varname">h</code> = <code class="varname">head</code>;
+    <span class="type">int</span> <code class="varname">c</code> = <code class="varname">h</code>-&gt;<code class="varname">c</code>;
+    <code class="varname">head</code> = <code class="varname">h</code>-&gt;<code class="varname">next</code>;
+    <code class="function">free</code>( <code class="varname">h</code>);
+    return (<code class="varname">c</code>);
+}
+
+<span class="type">cpu_status</span> <code class="function">lock</code>( )
+{
+    <span class="type">cpu_status</span> <code class="varname">ps</code> = <code class="function">disable_interrupts</code>( );
+    <code class="function">acquire_spinlock</code>( &amp;<code class="varname">sl</code>);
+    return (<code class="varname">ps</code>);
+}
+
+<code class="function">unlock</code>( <span class="type">cpu_status</span> <code class="parameter">ps</code>)
+{
+    <code class="function">release_spinlock</code>( &amp;<code class="varname">sl</code>);
+    <code class="function">restore_interrupts</code>( <code class="varname">ps</code>);
+}
+</pre><p>
+There are two sections of code, belonging to the same critical region:
+They are locked by the same spinlock. Shared variables must only be
+accessed within a critical region. The critical region is bracketed by
+calls to <code class="function">lock()</code> and <code class="function">unlock()</code>. Packaging the synchronization activity as
+isolated function calls is highly desirable as the complexity of the
+driver increases.
+</p><p>
+It would be an error to place all of <code class="function">dev_read()</code> in the critical region,
+that is, to call <code class="function">lock()</code> before <code class="function">acquire_sem()</code>. If ten background threads
+entered the driver, one would block on csem, while the other nine would
+spin. Even worse, the interrupt handler would spin—game over. The
+general rule: No blocking within a spinlock-critical region.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id556839"></a>Example: BYOB (Bring Your Own Blockable)</h3></div></div></div><p>
+In this final example the counting semaphore, csem, has been retired,
+replaced by the "z" facility. This facility permits data consumption in
+smorgasbord fashion: Data can be removed in any order, and in any amount.
+Data can even be added by the consumer, restaurant rules permitting. "z"
+relies on <code class="function">lock()</code>/<code class="function">unlock()</code>,
+while allocating more semaphores for internal
+use.
+</p><p>
+For background threads, each service (<code class="constant">GET_LINE</code>, <code class="constant">FLUSH_ON_NULL</code>,
+<code class="constant">WAIT_FOR_MORE</code>, <code class="constant">WAIT_UNTIL_EMPTY</code>) has its own independent agenda and
+possible side effects. In spite of the free-wheeling, new services can be
+added easily. Code correctness is maximized by isolating the tricky
+synchronization and providing simple rules.
+</p><p>
+Rule 1: All code that accesses the driver's common data (linked list,
+total) must be bracketed with <code class="function">lock()</code> and <code class="function">unlock()</code>.
+</p><p>
+Rule 2: All code that changes common data must call <code class="function">zalert()</code>.
+</p><p>
+Rule 3: Any critical-region background code can call <code class="function">zwait()</code> to wait for
+changes to common data.
+</p><pre class="programlisting c">
+<span class="type">int</span> <code class="varname">total</code>;
+
+<span class="type">long</span> <code class="function">dev_int</code>( ...)
+{
+    <span class="type">cpu_status</span> <code class="varname">ps</code> = <code class="function">lock</code>( );
+    <code class="function">putc</code>( <code class="varname">dev</code>-&gt;<code class="varname">byte</code>);
+    ++<code class="varname">total</code>;
+    <code class="function">zalert</code>( <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+    <code class="function">unlock</code>( <code class="varname">ps</code>);
+}
+
+<code class="function">dev_control</code>( <span class="type">void *</span>, <span class="type">ulong</span> <code class="parameter">com</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+    <span class="type">uint</span>    <code class="varname">i</code>;
+
+    <span class="type">cpu_status</span> <code class="varname">ps</code> = <code class="function">lock</code>( );
+    switch (<code class="parameter">com</code>) {
+    case <code class="constant">GET_LINE</code>:
+        <code class="varname">i</code> = 0;
+        while (<code class="function">findchar</code>( '\n') == 0)
+            <code class="varname">ps</code> = zwait( <code class="varname">ps</code>);
+        while (<code class="varname">i</code> &lt; <code class="parameter">len</code> &amp;&amp; <code class="varname">head</code>) {
+            <span class="type">uint</span> <code class="varname">c</code> = <code class="function">getc</code>( );
+            ((<span class="type">char *</span>)<code class="parameter">buf</code>)[<code class="varname">i</code>++] = <code class="varname">c</code>;
+            if (<code class="varname">c</code> == '\n')
+                break;
+        }
+        <code class="function">zalert</code>( 0);
+        break;
+    case <code class="constant">FLUSH_ON_NULL</code>:
+        while (<code class="function">findchar</code>( 0) == 0)
+            <code class="varname">ps</code> = <code class="function">zwait</code>( <code class="varname">ps</code>);
+        while (<code class="varname">head</code>)
+            <code class="function">getc</code>( );
+        <code class="function">zalert</code>( 0);
+        break;
+    case <code class="constant">WAIT_FOR_MORE</code>:
+        <code class="varname">i</code> = <code class="varname">total</code>;
+        while (<code class="varname">total</code> == <code class="varname">i</code>)
+            <code class="varname">ps</code> = <code class="function">zwait</code>( <code class="varname">ps</code>);
+        break;
+    case <code class="constant">WAIT_UNTIL_EMPTY</code>:
+        while (<code class="varname">head</code>)
+            <code class="varname">ps</code> = <code class="function">zwait</code>( <code class="varname">ps</code>);
+    }
+    <code class="function">unlock</code>( <code class="varname">ps</code>);
+    return (<code class="constant">B_OK</code>);
+}
+
+<span class="type">bool</span> <code class="function">findchar</code>( <span class="type">uint</span> <code class="parameter">c</code>)
+{
+    <span class="type">data    *</span><code class="varname">p</code>;
+
+    for (<code class="varname">p</code>=<code class="varname">head</code>; <code class="varname">p</code>; <code class="varname">p</code>=<code class="varname">p</code>-&gt;<code class="varname">next</code>)
+        if (<code class="varname">p</code>-&gt;<code class="varname">c</code> == <code class="varname">c</code>)
+            return (<code class="constant">TRUE</code>);
+    return (<code class="constant">FALSE</code>);
+}
+
+<span class="type">sem_id</span>  <code class="varname">ztab</code>[99];
+<span class="type">uint</span>    <code class="varname">zcount</code>;
+
+<span class="type">cpu_status</span> <code class="function">zwait</code>( <span class="type">cpu_status</span> <code class="parameter">ps</code>)
+{
+    <span class="type">sem_id</span> <code class="varname">sem</code> = <code class="function">create_sem</code>( 0, "z");
+    <code class="varname">ztab</code>[<code class="varname">zcount</code>++] = <code class="varname">sem</code>;
+    <code class="function">unlock</code>( <code class="parameter">ps</code>);
+    <code class="function">acquire_sem</code>( <code class="varname">sem</code>);
+    <code class="function">delete_sem</code>( <code class="varname">sem</code>);
+    return (<code class="function">lock</code>( ));
+}
+
+<code class="function">zalert</code>( <span class="type">uint32</span> <code class="parameter">f</code>)
+{
+    <span class="type">uint</span>    <code class="varname">i</code>;
+
+    for (<code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="varname">zcount</code>; ++<code class="varname">i</code>)
+        <code class="function">release_sem_etc</code>( <code class="varname">ztab</code>[<code class="varname">i</code>], 1, <code class="parameter">f</code>);
+    <code class="varname">zcount</code> = 0;
+}
+</pre><p>
+The trickiest part of this code is in <code class="function">zwait()</code>, where the background
+thread blocks on its newly created semaphore. Since the thread controls
+the critical region, simply blocking would generate a deadlock situation:
+The thread is preventing the very changes it desires. Therefore, it must
+exit the critical region first. Before returning, <code class="function">zwait()</code> regains the
+critical region. This call is not available for interrupts, of course.
+</p><p>
+For readers of this article who are still standing, the z facility can be
+improved to use just one semaphore, instead of the whole array. This
+exercise requires fanatical attention to race conditions. Those who can
+craft it should consider a career in operating systems.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id557407"></a>Conclusion</h3></div></div></div><p>
+The examples presented should make clear the difficulty of writing
+synchronization code (at least, code that works). Beyond trivial cases,
+the driver writer should segregate such code from device operations. A
+service of greater sophistication can be constructed from the semaphore,
+spinlock, and interrupt primitives by combining them with appropriate
+data structures.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-14-2"></a>Be Engineering Insights: Be Evangelism: The Lost Boy</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Scott</span> <span class="surname">Paterson</span></span></div></div></div><p>
+Saturday night, minutes away from midnight, I'm struck with a thought as
+my plane races down the Sierras bringing me home from the latest Be Demo
+Tour. I'm a vampire. Yes, really, and no, not the traditional "bite you
+on the neck" kind. Have a seat. Oh, I see you're already seated. I'll
+explain.
+</p><p>
+A traditional vampire requires fresh blood in order to sustain itself. I
+have seen some strange rituals during and after Be demos, but nothing
+involving blood yet. Anyway, I feed off something different. I require
+fresh and raw enthusiasm. I'm afraid that unlike the traditional
+vampire's needs, just having a warm body in the room is not adequate for
+my needs. So, I turn down the lights, just to get the right atmosphere,
+and I begin to prepare my meal with a little seasoning. Finding all the
+filenames containing an 'e' that are larger than 50 K nearly instantly on
+a 2 GB disk with more than 2,000 items draws a few gasps from the real
+geeks in the crowd.
+</p><p>
+Appetizers have been served!
+</p><p>
+Giving people their first taste for the responsiveness of the BeOS by
+playing a 16-bit stereo audio file at 44.1 KHz while moving a
+30-frames-per-second QuickTime/Cinepak movie around the screen with no
+loss of smoothness or skipped frames gives me my first course. By this
+point, it's easy to tell there's going to be a feast.
+</p><p>
+I think the engineers here at Be are on to me though. I think they
+realize what feeds an Evangelist, so they keep building better bait.
+Maybe the live queries won't draw you out. Perhaps eight
+QuickTime/Cinepak movies playing at the same time is "oh so ho-hum." But
+the 3D rendered book in which you can smoothly flip pages (the faster you
+move the mouse, the more the page warps) might just do it. Do I have to
+tease you by putting a couple of static images on the pages and flipping
+those back and forth? Fine, because if you're at all interested now, I'll
+catch you completely by throwing down a couple of movies on another two
+pages and flipping these back and forth as the movies continue to play
+while being mapped to the available surfaces of the pages. Just to be
+safe, let's bring up a rendered sphere and throw a movie on that. Hey,
+mop up that sauce with another image and another movie on both sides of a
+rendered wave. Someone pass me the wine, please.
+</p><p>
+Everyday life at Be is a fun and irreverent existence. Getting to eat
+lunch with Jean-Louis and the rest of the Be team nearly all the time is
+an eye-opening insight into the history of an industry. I definitely miss
+it while I'm away on Demo Tours—but I need more. I need to know
+firsthand that people are excited about the work we're doing. Having a
+couple hundred people show up for a Demo Tour meeting is just the
+beginning. Showing them an application crash into the debugger with no
+effect on the other four applications that are running (protected memory)
+is just the beginning. Showing them a few movies playing, a couple of
+sounds tracks layered over one another, a rendered three-dimensional cube
+rotating while painting its sides with static images, movies, and even a
+couple live video feeds on the other sides, this is still just the
+beginning. Did I say I was doing this all at the same time. Well I am and
+I do. Having the crowd murmur, gasp, applaud, and stand up cheering; now
+that's meat an Evangelist can sink his teeth into.
+</p><p>
+Do vampires eat dessert? I know I rarely pass up on this all-important
+dining pleasure, so I include it in my demos as well. I finish up with a
+foray into the Macintosh OS via the VirtualMac, which allows you to run
+Macintosh applications in a BeOS window. Like most people, I remember my
+favorite dessert. While not on a Demo Tour, it was during a demo at
+Macworld this past January. Showing VirtualMac for the first time it was
+remarkably stable, so imagine my surprise when Word 6.0 crashed the Mac
+OS. I paused briefly. The crowd suddenly became intensely interested. I
+closed the window, relaunched the VirtualMac without any problems, and
+when the Mac OS had booted, it brought up a dialog box that said, "This
+computer may not have been shut down properly the last time it was used."
+The crowd broke out in laughter while I dabbed at my lips with a napkin.
+</p><p>
+Coffee anyone? It's nice to sip from some of our third-party
+applications, so I always end by showing off a few of the native BeOS
+applications that are available. BeatWare's ReggaeWrite shows what an
+everyday productivity application such as a word processor gets from
+running on a modern OS. Hey, let's watch as I move a picture around in my
+document and the text is flowed throughout all 700 pages in a separate
+thread. Then there's the Sum-It spreadsheet, which handles all it's
+calculations in separate threads and is rock solid. *Slurp* Oops, excuse
+me. Sometime I get carried away.
+</p><p>
+"What about garlic and coffins?" you might ask. Well, no, I think the
+garlic thing is a myth, since I eat as much of it as I can. As far as
+coffins go, after spending as many nights in hotels and motels as I have,
+I can think of no better description.
+</p><p>
+I'm also starting to get suspicious of our engineers. Vampires don't like
+the light, and the Be engineers are spending a lot of late-night hours
+here in the office. I'm expecting some killer new bait pretty soon.
+</p><p>
+Well, thanks for joining me for my meal. If you've been one of my
+victims, don't worry. The only side effect is an insatiable desire to get
+your hands on a copy of the BeOS.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-14"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+Spring is in the air as well as in my step. Springtime is neat. The air
+is crisp and clear, flowers are in bloom, winter's chill is past. You
+feel warm and excited, like you can conquer the world. I guess it's like
+this for us in the computer industry. Whenever a new OS or something or
+other comes along, we get all excited as if it's the coming of spring and
+all our ambitions will be fulfilled.
+</p><p>
+As you go to the garage to clean it out, as you fix up the house, you
+realize that it's a lot of work... too much work. Sometimes this leads to
+discouragement, and you find yourself on the couch watching the monster
+truck pull instead. But, if you make it past this stage, you call up a
+couple of friends to enlist their help.
+</p><p>
+So too with creating a new operating system. Introducing something new
+into the world of computing is a daunting task—especially for a
+company of only 50 people. But fortunately we're not alone. There are
+many developers out there in the world producing applications for the
+BeOS. Some are freeware or shareware, others are serious commercial
+offerings. We say this over and over, but there's nothing like a
+shovelware CD to prove the point. The folks at Adamation have come out
+with their Be Specific Series II disc.
+</p><p>
+http://www.bespecific.com
+</p><p>
+Chock full of all the software from the Be ftp site, the BeDevTalk
+mailing list, and the comp.sys.be.* newsgroups. Quite a resource for the
+Be aficionado. If you want to play with a lot of BeOS software but don't
+want to spend the time downloading it all, this might be the thing for
+you.
+</p><p>
+When you have limited resources such as we do at Be, you rely more
+heavily on community building. A few weeks ago I put out some simple code
+for an MPEG-I decoder. I admitted that it wasn't the best decoder in the
+world, but it was enough to get people going. Soon thereafter, a couple
+of different developers released code for MPEG Audio decoders.
+</p><p>
+ftp://ftp.be.com/pub/contrib/audio/maplay.zip<br />
+ftp://ftp.be.com/pub/contrib/audio/maplay12_be01.zip
+</p><p>
+These are ports of a well-known MPEG audio player, and they work quite
+nicely. If you're interested in MPEG, you can also find:
+</p><p>
+ftp://ftp.be.com/pub/contrib/audio/Mpeg026.tar.gz<br />
+ftp://ftp.be.com/pub/contrib/gfx/viewers/BEMPEG.tar.gz<br />
+ftp://ftp.be.com/pub/contrib/gfx/viewers/mpeg.tar.gz<br />
+ftp://ftp.be.com/pub/contrib/gfx/viewers/mpeg2codec.tar.gz<br />
+ftp://ftp.be.com/pub/contrib/gfx/viewers/mpeg_util.tar.gz<br />
+</p><p>
+Boy, if there were only a Datatypes handler for MPEG, we'd be all set.
+One could only hope that we gain similar support for some of the more
+obscure video formats as well.
+</p><p>
+And if that's not enough, we now have BeTV:
+</p><p>
+ftp://ftp.be.com/pub/contrib/gfx/viewers/BeTV_0.3.tar.gz
+</p><p>
+Kevin Hendrickson at it with the Hauppauge tuner digitizer board again.
+Change the channels, use cable/air/composite, play with the parameters
+for best viewing. We're seeing more and more community-built software all
+the time.
+</p><p>
+Spring is in the air and we're in the midst of a barn raising. With the
+help of our developer community, we should have it up in time to protect
+us from the rains of Fall, and the Summer heat.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-14"></a>Quoting Bill Gates...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+...is a dangerous sport. I'm not referring to Bill or his aides making
+noises about your misusing his words; by now, Bill has grown used to the
+fact his words are going to be used and abused and it doesn't seem to
+affect his spiritual or financial well-being. No, quoting Chairman Bill
+gets you in two kinds of trouble, instead: Flames and obsolescence. You
+get burned at the stake for blasphemy or, worse, you're out of step, you
+didn't move fast enough, you're zigging while the Chairman is already in
+full zag. The more celebrated, and still fresh example is Microsoft's
+successive turns to the Internet.
+</p><p>
+We start with MSN, an on-line service in the AOL or CompuServe model
+(soon to be one, we're told). This was less than two years ago. Microsoft
+is creating an unfair advantage by bundling its on-line service with
+Windows 95! Never mind, come December '95, on the anniversary of Pearl
+Harbor, Bill Gates quoted Admiral Yamamoto, telling the world Netscape
+had awakened the giant. The Internet is everywhere. Therefore, no need
+for a division, it would be like having an electricity division. Three
+months later, like Athena, a new Internet division springs, fully armed,
+from the head of Microsoft. Admirable. No need to belabor the lessons of
+that one. Sometimes, I think the leadership and cultural strength
+demonstrated by Microsoft can only be emulated in part. The rest is in
+some set of genes. Like low cholesterol, good eating habits and exercise
+help a bit, but the surest recipe is picking your parents well.
+</p><p>
+A little more recently, Microsoft gave further proof of their flexibility
+and focus. Time will tell if it contains knowledge useable by lesser
+mortals. This is about the NC. In the old IBM fashion, it started with
+the usual: “<span class="quote">It's nothing, you don't need it.</span>” Then, as the pressure
+mounted, the NetPC and the Zero Administration Initiative came out. This
+was seen by many as an old-fashioned paper tiger. Good, hygienic, but not
+an NC. Awright. Citrix, under a license from Microsoft, had been selling
+a kind of NC product. From a dumb terminal, you run ordinary Windows
+applications: Lotus Notes (just kidding), Word, Excel, PowerPoint, and
+the like. The applications run on a Windows NT server and WinFrame, the
+Citrix product, does the rest. Microsoft got into negotiations with
+Citrix to acquire the WinFrame core technology. The talks apparently
+broke down around the end of February, with Microsoft stating it had a
+team developing similar technology. And last week, at SD '97, Bill Gates
+announced support in Windows NT 5.0 for a Windows "frozen" terminal. You
+buy it, you don't modify it, you keep it several years, and then you
+throw it away, because the technology has made it sufficiently obsolete.
+It offers the cost of ownership benefits of the NC, the control you want
+to regain, and the applications you're comfortable with. Admirable again.
+Now the NC has real competition.
+</p><p>
+The discussion will shift to technical and business arguments, away from
+religious ones. One can hope. Not that I'm such a Microsoft groupie, but
+I don't think a technology ought to be embraced, a product ought to be
+purchased, because it's "not Microsoft." It's religious and we know who
+gains the most from religion. Not the faithful. But the week had yet to
+be capped by the purchase of WebTV. Imagine a set-top box (I know, WebTV
+isn't exactly one, yet) running Windows CE. The home NC. Windows
+everywhere, on the server, on the desktop, in your pocket, and now, on
+your TV. Sony and Philips are now Microsoft licensees. Perhaps not what
+they had in mind.
+</p><p>
+Java started as a set-top-box language, but transmuted itself into a
+renaissance movement to create a new world of platform-independent
+applications, NCs, and, more to the point, a way to shake Microsoft's
+hold on the industry. And we end up back on top of the TV set.
+</p><p>
+Speaking of Java, I can't resist the pleasure of quoting Bill Gates in a
+message to Dave Winer (dwiner@well.com, http://www.scripting.com/).
+</p><p>
+Dave writes great software and a great newsletter, filled with discerning
+observations on our industry.
+</p><p>
+Here's some of what Bill Gates (billg@microsoft.com), is thinking about
+on a Saturday morning:
+</p><p>
+“<span class="quote">When Microsoft wanted to do Java, Sun told us we had to help fund
+JavaSoft in a big way and do a lot of other things, so we did what they
+asked. When Sun wanted to clone Windows they didn't call us or pay us or
+anything. Which is open Java or Windows?</span>”
+</p><p>
+“<span class="quote">Why are they trying to create a religion with purity concepts? Is native
+code compilation so bad? Is being able to call a platform a bad thing?
+Most languages can call the database libraries, multimedia libraries,
+graphics and text libraries that have already been created. They are
+insisting everything be rebuilt.</span>”
+</p><p>
+“<span class="quote">Imagine a pure application running on the Macintosh—no clipboard
+calls. No desktop integration. No scripting support. People rejected
+every application on the Mac that didn't exploit the platform. Now this
+is being demanded as part of the Java religion. Is this driven by what
+users want or what an industry insider wants?</span>”
+</p><p>
+“<span class="quote">Microsoft embraces Java as one of the languages that people will develop
+in—in fact we brought good debugging to Java and we have the best
+performance VM. Our AFC libraries give people graphics and UI richness.
+So we are one of the companies involved in Java but we think C, Visual
+Basic and other languages will still be of great importance. We have an
+advance in our object model we will show next month that allows all
+languages to work together with some big benefits.</span>”
+</p><p>
+“<span class="quote">As long as we are talking about Java, another important thing to
+disclose to people is that 16-bit machines (the 60 million computers
+running Windows 3.1) will never have usable Java performance. Netscape
+never went final with their 16-bit VM. Sun didn't even do one. Netscape
+claims they will do one with Communicator but Communicator won't fit on
+90% of 16-bit PCs. Our Caffeine marks were tripled recently from 13 to 41
+but it's too slow to be usable. We are over 1000 on Win32.</span>”
+</p><p>
+“<span class="quote">All languages are independent of hardware assuming you have the right
+code generator. Most applications require operating system services
+whether it's a duplicate operating system on top of the main one or the
+primary OS on the machine.</span>”
+</p><p>
+“<span class="quote">Of 6 emails I sent early on a Saturday morning I have already had
+responses to 4 of them. You, Esther Dyson and 2 Microsoft people. It's
+kind of crazy how much people are available on email but it's very nice.</span>”
+</p><p>
+Interesting comments on languages and platform independence.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-13.html">Issue 2-13, April 2, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-15.html">Issue 2-15, April 16, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-13.html" title="Issue 2-13, April 2, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-15.html" title="Issue 2-15, April 16, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

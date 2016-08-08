@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-26.html" title="Issue 1-26, June 5, 1996" /><link rel="next" href="Issue1-28.html" title="Issue 1-28, June 19, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-26.html" title="Issue 1-26, June 5, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-28.html" title="Issue 1-28, June 19, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-26.html">Issue 1-26, June 5, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-28.html">Issue 1-28, June 19, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-27"></a>Issue 1-27, June 12, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-28"></a>Be Engineering Insights: OS Writer's Cookbook</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Bob</span> <span class="surname">Herold</span></span></div></div></div><p>
+The engineers at Be have had the luxury of writing a new operating system
+from scratch. We've worked hard to make it as good as possible. Still,
+you might feel that you can write a better one, or that some other
+ancient OS is more suited to your taste. In the spirit of open, friendly
+competition, this article will describe how you can get control of a
+BeBox so you can boot your own operating system.
+</p><p>
+Before you start hacking away, you may want to get the data books
+describing the major components of the BeBox hardware. These books are
+listed at the end of this article.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id486198"></a>Getting Loaded</h3></div></div></div><p>
+To get control of the machine, you replace our kernel with yours. The
+kernel must be on a Be-formatted volume on a hard disk, floppy disk, or
+CD-ROM. The boot ROM looks for the PEF executable file "system/kernel",
+loads it at location 0x3100, and jumps to the __start entry point. (In
+the future we expect to support a more flexible bootstrap, with volume
+partitioning, alternate file system types, and perhaps boot blocks. For
+now we're Be-centric.)
+</p><p>
+The kernel file loaded by the boot ROM should be statically linked, i.e.,
+it shouldn't depend on any shared libraries. With the proper settings,
+you can use the Metrowerks IDE on either the BeBox or the Macintosh to
+generate such a beast.
+</p><p>
+The kernel should be prepared to accept both processors at the same time.
+As a model, the Be kernel parks one processor in a polling loop until the
+other one has initialized the kernel.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id486231"></a>System State</h3></div></div></div><p>
+Most of the hardware devices in the system are in an unpredictable state
+when the kernel gets control. The only given is that RAM has been set up
+contiguously starting at address zero (0x0). The processors are running
+in "real mode" (MMU off), with interrupts disabled (EE bit cleared in the
+MSR). R2 is set up with the kernel's TOC pointer, so kernel globals may
+be accessed immediately. The kernel is responsible for initializing the
+rest of the hardware in an orderly fashion.
+</p><p>
+Some useful information is placed in low memory by the boot ROM for the
+kernel:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><tbody><tr><td>0x3010</td><td>RAM size, in bytes</td></tr><tr><td>0x301C</td><td>Pointer to a null-terminated "list of stuff" passed to the kernel</td></tr></tbody></table></div><p>
+In the "list of stuff" you'll find bootitem structures:
+</p><pre class="programlisting c">
+typedef struct <span class="type">bootitem</span> {
+   struct <span class="type">bootitem  *</span><code class="varname">next</code>;   <span class="comment">/* -&gt; next item, or null */</span>
+   <span class="type">char</span>             *<code class="varname">name</code>;   <span class="comment">/* -&gt; item name */</span>
+   <span class="type">int</span>              <code class="varname">size</code>;    <span class="comment">/* item size */</span>
+   <span class="type">void</span>             *<code class="varname">data</code>;   <span class="comment">/* -&gt; item data */</span>
+} <span class="type">bootitem</span>;
+</pre><p>
+You can scan this list to look for a particular named data item. Items
+defined to date are:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /><col /></colgroup><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>"pci_table_v5"</td><td>pci_info</td><td>PCI device table</td></tr><tr><td>"boot_config_dev"</td><td>char*</td><td>Configured boot device name</td></tr><tr><td>"boot_kernel_dev"</td><td>char*</td><td>Where boot ROM found kernel</td></tr><tr><td>"boot_kernel_name"</td><td>char*</td><td>Name of booted kernel</td></tr><tr><td>"boot_ignore"</td><td>bool</td><td>Flag: mount only kernel vol</td></tr><tr><td>"boot_kvol_only"</td><td>bool</td><td>Flag: check only kvol for a bootable system</td></tr><tr><td>"debug_output"</td><td>bool</td><td>SERIAL4 debug enabled flag</td></tr></tbody></table></div><p>
+The <span class="type">pci_table_v5</span> is quite important. The boot ROM must relocate all PCI
+devices to make each one accessible. This item is a table of structures,
+one per device, that give the final device location and other useful
+information.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id486553"></a>Hardware Memory Map</h3></div></div></div><p>
+The MPC105 defines the physical memory map of the system as follows:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /><col /></colgroup><thead><tr><th>Start</th><th>Size</th><th>Description</th></tr></thead><tbody><tr><td>0x00000000</td><td>0x40000000</td><td>Physical RAM</td></tr><tr><td>0x40000000</td><td>0x40000000</td><td>Other system memory (motherboard glue regs)</td></tr><tr><td>0x80000000</td><td>0x00800000</td><td>ISA I/O</td></tr><tr><td>0x81000000</td><td>0x3E800000</td><td>PCI I/O</td></tr><tr><td>0xBFFFFFF0</td><td>0x00000010</td><td>PCI/ISA interrupt acknowledge</td></tr><tr><td>0xC0000000</td><td>0x3F000000</td><td>PCI memory</td></tr><tr><td>0xFF000000</td><td>0x01000000</td><td>ROM/flash</td></tr></tbody></table></div><p>
+The standard ISA hardware device registers are at the standard offsets
+within the ISA I/O space. The keyboard is at 0x80000060 and 0x80000064,
+SERIAL 1 is at 0x800003F8-0x800003FF, etc. The Be-specific ISA hardware
+(sound, <span class="trademark">GeekPort</span>™, infrared, extra serial ports) are also in ISA
+space. Describing their hardware interface is a future newsletter topic.
+</p><p>
+The boot ROM maps all the PCI devices into the PCI I/O and memory spaces.
+See the "PCI Local Bus Specification" and the "Device Kit" chapter of
+"The Be Book" for details.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id486742"></a>Be Motherboard Registers</h3></div></div></div><p>
+Five 32-bit registers are implemented in glue logic on the BeBox. These
+registers handle interrupt identification, masking and routing, as well
+as interprocessor interrupts, processor resets, and processor
+identification.
+</p><p>
+All five registers use an unusual mechanism where individual bits can be
+changed in a single write (a nice feature for a multiprocessor system).
+On a write, bit zero (Power PC style numbering, i.e., the most
+significant bit) controls whether other bits are set to one or zero.
+Other bits control whether the register bit is written or left unchanged.
+For instance, writing 0x90008000 sets bits 3 and 16, leaving others
+unchanged. Writing 0x08040200 clears bits 4, 13, and 22, leaving others
+unchanged.
+</p><p>
+The register locations are:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><tbody><tr><td>0x7ffff0f0</td><td>CPU 0 interrupt mask</td></tr><tr><td>0x7ffff1f0</td><td>CPU 1 interrupt mask</td></tr><tr><td>0x7ffff2f0</td><td>Interrupt sources</td></tr><tr><td>0x7ffff3f0</td><td>Cross-processor interrupts, processor ID</td></tr><tr><td>0x7ffff4f0</td><td>Processor resets, other stuff</td></tr></tbody></table></div><p>
+The interrupt source register has a bit for every interrupt source. If
+the bit is one, the device is asserting its interrupt line. The two
+interrupt mask registers control which CPU gets each interrupt. If the
+CPU 0 mask bit is set, CPU 0 gets it. If the CPU 1 mask bit is set, CPU 1
+gets it. Setting both bits is not covered under your warranty.
+</p><p>
+The two mask registers and the source register have the same layout:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Bit#</th><th>Interrupt Source</th></tr></thead><tbody><tr><td>0</td><td>(Used for setting/clearing mask registers)</td></tr><tr><td>1</td><td>(CPU 0 mask reg only) SMI interrupt to CPU 0</td></tr><tr><td>2</td><td>(CPU 1 mask reg only) SMI interrupt to CPU 1</td></tr><tr><td>3</td><td>Not used</td></tr><tr><td>4</td><td>IRQ4, a/k/a SERIAL1</td></tr><tr><td>5</td><td>IRQ3, a/k/a SERIAL2</td></tr><tr><td>6</td><td>SERIAL3</td></tr><tr><td>7</td><td>SERIAL4</td></tr><tr><td>8</td><td>MIDI1</td></tr><tr><td>9</td><td>MIDI2</td></tr><tr><td>10</td><td>SCSI</td></tr><tr><td>11</td><td>PCI slot 1</td></tr><tr><td>12</td><td>PCI slot 2</td></tr><tr><td>13</td><td>PCI slot 3</td></tr><tr><td>14</td><td>Sound</td></tr><tr><td>15</td><td>IRQ1, a/k/a Keyboard</td></tr><tr><td>16</td><td>IRQ8, a/k/a Real-Time Clock</td></tr><tr><td>17</td><td>IRQ5</td></tr><tr><td>18</td><td>IRQ6, a/k/a Floppy Disk</td></tr><tr><td>19</td><td>IRQ7, a/k/a Parallel Port</td></tr><tr><td>20</td><td>IRQ9</td></tr><tr><td>21</td><td>IRQ10</td></tr><tr><td>22</td><td>IRQ11</td></tr><tr><td>23</td><td>IRQ12, a/k/a Mouse</td></tr><tr><td>24</td><td>IRQ14, a/k/a IDE</td></tr><tr><td>25</td><td>IRQ15</td></tr><tr><td>26</td><td>8259 (ISA-compatible interrupt controller)</td></tr><tr><td>27</td><td>Infrared Controller</td></tr><tr><td>28</td><td>A2D Converter</td></tr><tr><td>29</td><td>GeekPort</td></tr><tr><td>30</td><td>Not used</td></tr><tr><td>31</td><td>Not used</td></tr></tbody></table></div><p>
+The cross-processor interrupt register (0x7ffff3f0) has the following
+layout:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Bit#</th><th>Interrupt Source</th></tr></thead><tbody><tr><td>0</td><td>(Used for setting/clearing individual bits)</td></tr><tr><td>1</td><td>0 - deassert /SMI to CPU 0, 1 - assert it</td></tr><tr><td>2</td><td>0 - deassert /SMI to CPU 1, 1 - assert it</td></tr><tr><td>3</td><td>Not used</td></tr><tr><td>4</td><td>0 - assert /TLBISYNC to CPU 0, 1 - deassert it</td></tr><tr><td>5</td><td>0 - assert /TLBISYNC to CPU 1, 1 - deassert it</td></tr><tr><td>6</td><td>(Read only) 0 if read by CPU 0, 1 if read by CPU 1</td></tr></tbody></table></div><p>
+The processor resets register (0x7ffff4f0) has the following layout:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Bit#</th><th>Interrupt Source</th></tr></thead><tbody><tr><td>0</td><td>(Used for setting/clearing individual bits)</td></tr><tr><td>1</td><td>0 - assert /SRESET to CPU 1, 1 - deassert it</td></tr><tr><td>2</td><td>0 - assert /HRESET to CPU 1, 1 - deassert it</td></tr><tr><td>3</td><td>FLUSHREQ workaround (see below)</td></tr><tr><td>4</td><td>not used</td></tr><tr><td>5</td><td>not used</td></tr><tr><td>6</td><td>not used</td></tr><tr><td>7</td><td>disk LED (0 - off, 1 - on)</td></tr></tbody></table></div><p>
+The FLUSHREQ workaround fixes a problem we encountered using the Intel
+PCI-ISA bridge (the 82378) together with the Motorola host-PCI bridge
+(the MPC105). If connected as specified in the data books, DMA cycles
+from the floppy controller could hang when other ISA interrupts are
+pending (until another read or write to ISA I/O space is done).
+</p><p>
+The FLUSHREQ/MEMACK functionality is not needed in our system, so we
+simply looped the FLUSHREQ output to the MEMACK input on the 82378.
+However, this caused ISA interrupt acknowledge cycles to hang! Therefore
+we temporarily reconnect FLUSHREQ and MEMACK between the two parts when
+running an ISA interrupt acknowledge cycle, then change it back
+afterwards.
+</p><p>
+The FLUSHREQ workaround bit should normally be zero, except when running
+an ISA interrupt acknowledge cycle.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id487559"></a>A Word About Interrupt Controllers</h3></div></div></div><p>
+There are two interrupt controllers in the BeBox. The Be interrupt
+controller is described above. One of the inputs to the Be controller is
+the output of the 8259-compatible standard ISA interrupt controller
+that's embedded in the Intel 2378 SIO chip.
+</p><p>
+Interrupt lines from the ISA slots and standard ISA devices are connected
+to both interrupt controllers. Edge-triggered interrupts should be
+handled in the ISA controller, and level-triggered interrupts should be
+handled in the Be controller. Setting up both interrupt controllers to
+handle the same interrupt is not advised.
+</p><p>
+When possible, interrupts should be handled with the Be controller where
+they can be directly identified and dispatched. Interrupts in the ISA
+controller require many (slow) ISA I/O accesses to identify and
+acknowledge the interrupt, and a second level of dispatching to get to an
+interrupt handler.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id487592"></a>In Conclusion</h3></div></div></div><p>
+Hopefully this article has swamped you with enough detail to discourage
+you from writing anything better than what we can come up with. Seriously
+though, we would like the BeBox to be open to all comers, even other
+operating systems—a Linux port is already up and running! For the
+lunatic fringe, getting control of the entire machine is the ideal
+environment. Happy OS hacking!
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id487609"></a>Data Books</h3></div></div></div><ul class="itemizedlist"><li><p>
+PowerPC Microprocessor Family: The Programming Environments,
+Motorola, Inc., 1994, Motorola Document MPCFPE/AD, or IBM Document
+MPRPPCFPE-01.
+</p></li><li><p>
+PowerPC 603e RISC Microprocessor User's Manual with Supplement for
+PowerPC 603 Microprocessor Motorola, Inc., 1995, Motorola Document
+MPC603EUM/AD, or IBM Document MPR603EUM-01.
+</p></li><li><p>
+MPC105 PCI Bridge/Memory Controller User's Manual Motorola, Inc.,
+1995, Motorola Document MPC105UM/AD.
+</p></li><li><p>
+82378 System I/O (SIO), Intel Corp., August 1994, Intel Document
+290473-004.
+</p></li><li><p>
+82091AA Advanced Integrated Peripheral (AIP), Intel Corp., January
+1994, Intel Document 290486-002.
+</p></li><li><p>
+NCR 53C810 PCI-SCSI I/O Processor Data Manual, NCR Corp., 1993.
+</p></li><li><p>
+TL16C554 Asynchronous Communications Element, Texas Instruments Inc.,
+1994.
+</p></li><li><p>
+Crystal Semiconductor Audio Databook, Crystal Semiconductor Corp.,
+January 1994 (for CS4231 Audio Codec info).
+</p></li><li><p>
+Benchmarq Data Book, Benchmarq Microelectronics, 1994 (for bq3285
+Real-Time Clock).
+</p></li><li><p>
+PCI Local Bus Specification, Revision 2.1, PCI Special Interest
+Group, 1995.
+</p></li><li><p>
+Maxim 1994 New Releases Data Book Volume III, Maxim Integrated
+Products, 1993, (for MAX186 ADC and MAX505 DAC).
+</p></li></ul></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-28"></a>Be Developer Profile: Night Owl Software</h2></div></div></div><p>
+Charles G. Fleming, director of software development at Night Owl
+Software in Saegertown, Pennsylvania, isn't afraid of new technology. The
+small software shop has been in business since 1989 developing for
+emerging platforms such as NEXTSTEP/OpenStep and Newton.
+</p><p>
+Night Owl's current products include a NEXTSTEP device driver for Nikon's
+Coolscan 35mm slide scanner, and a NEXTSTEP Interface Builder palette
+that provides objects that communicate with Mathematica. Night Owl mostly
+serves the higher education market, with incremental sales to business
+and scientific customers.
+</p><p>
+Now they're looking to the BeBox. Night Owl has had a BeBox in house
+since late December. “<span class="quote">The BeBox has the potential to be a great virtual
+reality development environment,</span>” says Charles. “<span class="quote">With the DR7 release and
+the full CodeWarrior development tools, we're finding programming it more
+enjoyable than ever.</span>”
+</p><p>
+Night Owl's plans to build BeBox development tools similar to those
+produced by NeXT. “<span class="quote">For rapid prototyping, we believe the BeBox needs a
+tool similar to NeXT's Interface Builder,</span>” Charles says. “<span class="quote">We already have
+a prototype for in-house use.</span>”
+</p><p>
+After that, Night Owl plans to focus its BeBox development on the
+educational market, possibly in art and modern languages. For example, an
+artist at Allegheny College is currently investigating "Interface Art" --
+works of art constructed from common interface widgets. Since the artist
+is an Amiga programmer, Night Owl is looking at the possibility of
+steering the artist toward the BeBox. “<span class="quote">We see an opportunity to attract
+former educational Amiga users.</span>”
+</p><p>
+For more information on Night Owl Software, send e-mail to Charles at
+cfleming@alleg.edu.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-28"></a>Teething Pains</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+As we grow and make the transition from a group of engineers developing
+hardware and software to a real business with shipping products, we
+experience problems and, unfortunately, we ship some of them. For this,
+I'd like to extend our apologies to our developers and thank them for
+their patience and feedback.
+</p><p>
+Last fall, we were surprised and more than a little overwhelmed by the
+reaction to the first public showing of the BeBox at the Agenda PC
+industry conference. Our web site was swamped, we got hundreds of
+developer applications, and we managed to ship over a hundred development
+systems. The motherboards came from Altatron, our manufacturing
+contractor in Milpitas, and each BeBox was assembled by hand in our
+offices. The front bezel was missing, the loud color scheme got equally
+loud reviews but, overall, we didn't experience any unusual hardware or
+software problems. The venture community was watching this and the warm
+reception, and this external validation played a crucial role in our
+getting serious financing.
+</p><p>
+As with many a start-up company, we had several good looks at the whites
+of the repo man's eyes. One of these "extreme cash conservation" episodes
+occurred in the two-to-three-month period preceding the close of our
+financing. As a result, we stopped manufacturing units for a while, thus
+creating frustrations in the developer community and the unfortunately
+accurate perception of availability problems. Once our financing closed,
+we ordered parts, restarted production of motherboards, and signed on a
+contractor for final assembly, test, pack, and shipment. On paper it
+looks good: A lighter infrastructure, outsourcing, flexibility. As we all
+found out, buzzwords don't make good processes. We got a bad batch of
+sound chips, our shipping container didn't protect our chassis, and
+miscellaneous other problems resulted in an abnormal number of bad
+systems shipped to our developers. Some were damaged in shipment, some
+were insufficiently tested to catch the sound problem before shipment.
+And we got frustrated developers and a stain on our reputation at a time
+when we ought to be happily focusing on going through our database of
+registered developers with the good news that we have systems available.
+Needless to say, we're mortified—but motivated. The good news is this
+happened early in our life. We didn't create problems on a grand scale.
+Better news is we got, shall we say, energetic, highly motivating
+feedback from the technically proficient recipients of our mistakes. We
+have a brand new Director of Manufacturing, Don Fotsch, assisted by Kevin
+Peoples, also a new hire, and we're focused on the product design,
+procurement, contractor management, and testing processes that led to
+these problems. At the same time, we're cleaning up the situation in the
+field—exchanging units or I/O boards as needed.
+</p><p>
+Now, we need to behave in a way that restores confidence and demonstrates
+we've learned from these bad experiences. You'll be the judge.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-26.html">Issue 1-26, June 5, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-28.html">Issue 1-28, June 19, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-26.html" title="Issue 1-26, June 5, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-28.html" title="Issue 1-28, June 19, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

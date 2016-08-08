@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-51.html" title="Issue 1-51, November 27, 1996" /><link rel="next" href="Issue1-53.html" title="Issue 1-53, December 11, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-51.html" title="Issue 1-51, November 27, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-53.html" title="Issue 1-53, December 11, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-51.html">Issue 1-51, November 27, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-53.html">Issue 1-53, December 11, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-52"></a>Issue 1-52, December 4, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-52"></a>Be Engineering Insights: The S in FS</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>Perhaps you've heard: There's a complete rewrite of the Be file system
+going on. In last week's Engineering Insights column, Dominic Giampaolo
+described how Be files are organized and represented in the new system
+and how database features are merged into this representation. In other
+words, last week we saw the "file" part of the file system; this week,
+I'm going to show you the "system."
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509646"></a>Loadable File Systems: The File System Protocol</h3></div></div></div><p>If we zoom out a bit, we'll see that the Be file system proper is
+actually just one implementation of the more general Be file system
+protocol (FSP).
+</p><p>The file system protocol is an API for a set of common file operations
+(open, read, write, and so on). To support a particular "brand" of file
+system, one simply implements the FSP API to do whatever the file system
+expects to be done.
+</p><p>In addition to our native file system, we've implemented (or are
+implementing) this protocol for DOS, HFS, NFS, and ISO9660. When you (the
+developer or user) want to talk to a file that resides on a DOS volume,
+the kernel simply loads the DOS FSP add-on, just as it would load an
+add-on to talk to a specific graphics card or other device. In fact,
+implementing an FSP is mostly an exercise in writing a kernel add-on: The
+type of work that's required is comparable to writing a new device
+driver. It's not for the hobbyist, but it's not terribly difficult
+(unless, of course, you care about efficiency, reliability, and
+integrity).
+</p><p>The communication between the kernel and a file system (that is, an FSP
+add-on) is "message-based." When a program makes a file system call, such
+as open(), read(), or mkdir(), the kernel maps the call to a specific FSP
+message and then "sends" the message to the file system. The part of the
+kernel that provides this mapping is called the file system independent
+layer (FSIL).
+</p><p>Currently, FSP messages are simply function calls; thus, for example,
+when your program calls open(), the FSIL maps the call to (and invokes)
+an FSP function called op_open(). This function-call-as-message interface
+works well with add-ons - - but we also want to extend the interface to
+make it more flexible. For example, we plan to allow user-level programs
+to act as file systems. Communication, in this case, could be through a
+pipe or port.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509692"></a>Design Goals</h3></div></div></div><p>While designing the file system protocol and the file system independent
+layer, we had three goals:
+</p><ul class="itemizedlist"><li><p>Parallelism. We wanted a given file system to be able to handle more
+than one FSP message at a time—it should be able to delete file A
+while writing to file B. To aid in this, we needed to design the FSIL
+such that it did as little serialization (of FSP messages) as possible.
+</p><p>Of course, some operations need to be serialized in order to maintain
+structural consistency and re-entrancy; but only the file system
+implementation (at the FSP level) should know which calls need to be
+serialized. The FSIL shouldn't make any assumptions. For example,
+imagine what would happen if the FSIL assumed that reading and closing
+a file were mutually exclusive operations that needed to be serialized:
+In other words, if you tried to close a file that you were reading, the
+FSIL would hold the close() message until the read() completed. This is
+fine for normal files—but it doesn't work for a UNIX-style pipe in
+which read() is often blocked waiting for more data to show up. If the
+FSIL withheld the close() call while the read() call was blocked, your
+application (and, possibly, the entire file system) would deadlock.
+</p></li><li><p>Re-entrancy. The FSIL must be thread-safe. Thread safety applies most
+notably to the identification of "nodes" (files or directories). How
+does the FSIL tell a file system which node an operation is meant to
+apply to? Names can't be used since there's no guarantee that the name
+will stay the same: For example, some other thread might rename the
+file we're currently reading—and we don't want our read to fail
+simply because the open file has been renamed! We could serialize all
+the calls to a particular node, but that violates our goal of maximum
+parallelism.
+</p><p>Instead, the FSIL maintains a "node structure" that's independent of
+the node name. This structure is passed with every file system
+operation. When can the FSIL free a node structure? It isn't safe to do
+it after deleting a node because some other thread may still hold the
+node open.
+</p><p>The solution we came up with is to provide a reference count on the
+nodes. Every time a node is opened (or passed as a parameter to an FSP
+function), its reference count is incremented. Then, when the node is
+closed (or after the FSP function returns), the reference count is
+decremented. The node is freed only when the reference count reaches 0.
+</p></li><li><p>Thorough Generality. We wanted the FSP to be general enough to handle
+a broad variety of file systems: DOS, HFS, NFS, ISO9660, and others.
+And in addition to these "real" file systems, we also wanted to be able
+to implement "virtual" file systems. Instead of representing real files
+stored somewhere on a disk, virtual file systems provide "services."
+For example, the /dev file system provides access to hardware devices;
+the /pipe file system gives access to UNIX-like pipes. Virtual file
+systems are potentially the most interesting part of the new system.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id509748"></a>Some FSP Calls</h3></div></div></div><p>I'm getting itchy... Let's look at some of the FSP protocol:
+</p><pre class="programlisting cpp">
+typedef <span class="type">int</span> <code class="function">op_open</code>(<span class="type">void *</span><code class="parameter">ns</code>, <span class="type">void *</span><code class="parameter">node</code>, <span class="type">int</span> <code class="parameter">omode</code>,
+<span class="type">void **</span><code class="parameter">cookie</code>);
+
+typedef <span class="type">int</span> <code class="function">op_close</code>(<span class="type">void *</span><code class="parameter">ns</code>, <span class="type">void *</span><code class="parameter">node</code>, <span class="type">void *</span><code class="parameter">cookie</code>);
+
+typedef <span class="type">int</span> <code class="function">op_free_cookie</code>(<span class="type">void *</span><code class="parameter">ns</code>, <span class="type">void *</span><code class="parameter">node</code>,
+<span class="type">void *</span><code class="parameter">cookie</code>);
+
+typedef <span class="type">int</span> <code class="function">op_read</code>(<span class="type">void *</span><code class="parameter">ns</code>, <span class="type">void *</span><code class="parameter">node</code>, <span class="type">void *</span><code class="parameter">cookie</code>,
+<span class="type">off_t</span> <code class="parameter">pos</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">len</code>);
+
+typedef <span class="type">int</span> <code class="function">op_write</code>(<span class="type">void *</span><code class="parameter">ns</code>, <span class="type">void *</span><code class="parameter">node</code>, <span class="type">void *</span><code class="parameter">cookie</code>,
+<span class="type">off_t</span> <code class="parameter">pos</code>, <span class="type">constvoid *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">len</code>);
+
+typedef <span class="type">int</span> <code class="function">op_ioctl</code>(<span class="type">void *</span><code class="parameter">ns</code>, <span class="type">void *</span><code class="parameter">node</code>, <span class="type">void *</span><code class="parameter">cookie</code>,
+<span class="type">int</span> <code class="parameter">cmd</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>);
+</pre><p>In these prototypes, <code class="parameter">ns</code> designates the "name space," or volume, that the
+node is on; this is necessary since a single FSP implementation (that is,
+for a particular file system) can serve more than one volume. The <code class="parameter">cookie</code>
+argument is what allows the file system to distinguish between different
+clients of the same file. Every time <code class="function">open()</code> is called, the file system
+has the opportunity to allocate a cookie. The FSIL passes the cookie as
+an argument to the FSP calls with every subsequent operation on this open
+file.
+</p><p>By looking at the operation names, the mapping between system calls and
+file system operations is quite obvious. For example, the system call
+<code class="function">open()</code> is turned into the <code class="function">op_open()</code>
+FSP function. <code class="function">op_free_cookie()</code> is the
+only operation that's not self-explanatory: It frees the cookie allocated
+by <code class="function">op_open()</code>. Why do we need a separate function for this? You might
+think that we could free the cookie in <code class="function">op_close()</code>—but that would
+actually be wrong. If <code class="function">op_close()</code> freed the cookie, there would be a race
+condition with ongoing <code class="function">op_read()</code> and <code class="function">op_write()</code> calls operating on the
+same cookie. The solution, once again, is to reference count the cookie.
+A separate operation <code class="function">op_free_cookie()</code> is invoked after <code class="function">op_close()</code> when
+the last operation on the cookie returns.
+</p><p>I hope you've gotten an idea of the kinds of issues we dealt with while
+designing the FSIL and the FSP. The FSP API probably won't be released
+until after DR9, but no doubt the subject will show up in the news groups
+before then. If you have any questions, don't hesitate to contact me at
+cyril@be.com.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News1-52"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>Last week was Thanksgiving. Other than the fact that it ushers in the
+heaviest shopping day of the year, I can't forget that I am grateful for
+many things.
+</p><p>My 19-month-old likes keyboards and mice.<br />
+My wife is a programmer.<br />
+I have plenty of computers.<br />
+I'm allowed to program as much as I want.<br />
+And my favorite computer now has a MIDI synthesizer in software!
+</p><p>In case you missed that, Marc Ferguson, who spelled out the whats and
+whyfors of MIDI in a previous newsletter, has released the software
+synthesizer for DR8.2. There are two packages you can install. One is
+relatively small and will get you hearing as soon as possible. The other
+is quite large and you can download it at a more leisurely pace.
+</p><p>ftp://ftp.be.com/pub/dr8_update/simple_midi_small.tgz
+</p><p>In this package you will find two things:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><tbody><tr><td>simple-midi</td><td>The actual player</td></tr><tr><td>general.midi.small</td><td>A smaller version of the instruments (315 K)</td></tr></tbody></table></div><p>Place the general.midi.small file into /boot/system/bin.data and rename
+it general.midi. Put the simple-midi file anywhere you like, possibly
+/boot/apps. You should do a setfile simple-midi once it's installed.
+</p><p>Alternatively, you can get the bigger package, which contains the
+higher-quality instruments.
+</p><p>ftp://ftp.be.com/pub/dr8_update/simple_midi_large.tgz
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><tbody><tr><td>simple-midi</td><td>The actual player</td></tr><tr><td>general.midi</td><td>The full bodied instruments (5 MB)</td></tr></tbody></table></div><p>Again, place the general.midi file into /boot/system/bin.data and put the
+simple-midi file anywhere you like.
+</p><p>This is a drag-and-drop interface for playing MIDI files. Simply drag a
+MIDI file onto the icon and it starts playing. You can also play files by
+starting the application and using the Open button. You should only
+execute a single MIDI player at a time. If you try tricks like copying
+the file and playing multiple files that way, you might not get what you
+expect.
+</p><p>Personally, I'm not a MIDI person. I don't do instruments, but I can
+certainly appreciate high-quality music (for a computer) when I hear it.
+I played with quite a few MIDI sequences and they sound great. And since
+the instruments will be the same on all machines that install this
+package, the music will sound relatively similar on yours, too.
+</p><p>This is not the final effort for software MIDI on the BeOS. This is
+merely a placeholder for what will come in DR9. The synthesizer doesn't
+provide you with an API so that you can use it from within your own
+application; this will show up in DR9. But for those who've been dying to
+hear some thumpin' sounds out of their machines without having to buy a
+hardware synthesizer, your day has come.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510270"></a>From Your Bench</h3></div></div></div><p>I thought I was a pretty good programmer and that I could help other
+programmers to get serious things done using the BeOS. One thing I've
+learned in recent years is that no matter how good you are, the Internet
+will bring someone to your door who is much better. I believe the BeOS
+has attracted extremely skilled, highly motivated programmers who crank
+out the most awesome stuff, and honestly, I find myself learning from
+them as often as I humbly try to teach them.
+</p><p>If you don't check the <span class="trademark">BeWare</span>™ and ftp.be.com site often, you should.
+There are new offerings coming out all the time. I've mentioned a number
+of developer offerings in the past, and I'll continue to try and
+highlight things as they come by.
+</p><p>Of particular note this week are two applications that have been
+progressing over the past few months. You can check the What's New page
+at ftp://ftp.be.com/pub/contrib/whatsnew.txt to see where they are.
+</p><ul class="itemizedlist"><li><p>BetMap. This is a drag-and-drop paint program, the likes of which
+you've probably never seen. I said the same thing when it first came
+out, and it's still true. Only now it has an API so you can participate
+in this add-ons-gone-wild world.
+</p></li><li><p>Zonic. This is a very useful and very clean layout engine and widget
+set. I think it demonstrates the ease with which multiple interfaces
+can be created for the BeOS without too much work. You should get the
+demo and play with it. "Really neat" is probably the best description.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510329"></a>Apologies And Cheerleading</h3></div></div></div><p>As many people have pointed out to me via e-mail, "Why aren't the samples
+available when the newsletter comes out?" No one to blame but me.
+Excuses... Excuses... Excuses... The standard refrains apply, and I'll
+try to do better in the future. There's only me doing these things, and
+things do get busy, but there is hope. One of the busy things I've been
+doing is interviewing many candidates to jump into the pit with me. It
+goes well, and you should have some new targets... I mean new voices of
+support soon.
+</p><p>Remember Macworld? It's now one week closer than the last time I
+mentioned it. Thump, thump, thump. Hear that? That's the beat of the Be
+Drum. It's pushing you to develop that code as fast as you can so that we
+can show your wares and what promises to be an illuminating, highly
+visible event for the BeOS and its developers.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-52"></a>Be Marketing Mutterings: Comdex, Sore Feet But No Sore Heads</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>I'm not a great fan of Comdex, so much so that I've avoided attending or
+exhibiting there for six years. But when Motorola graciously offered us
+two demo stations in their PowerPC Pavilion at Comdex this year, the
+tightwad in me couldn't resist. Accordingly, Maureen Miller, our trade
+show manager, Ron Theis, our Webmaster, and I spent five days showing the
+BeOS on a <span class="trademark">BeBox</span>™ and on a Power Computing machine to thousands and
+thousands of people.
+</p><p>It was actually fun.
+</p><p>This is quite amazing.
+</p><p>Most people work for two kinds of income: Actual money and psychic
+income. Psychic income is the satisfaction you get from doing your job.
+Comdex was fun because no matter how many times we gave the BeOS demo, we
+got tremendous psychic income from the reactions of the audience. It was
+also fun because Las Vegas appears to have outgrown the show. It was
+possible to get a cab without waiting for two hours. It was possible to
+get a table at a restaurant. And it was possible to get a hotel room,
+albeit for a price that made one's eyeballs bleed.
+</p><p>We survived the show by working hard and by avoiding the traditional
+trade show excesses of late-night parties and lots of drinking. Our feet
+hurt, but not our heads. I will confess that all three of us succumbed to
+the allure of the craps table but, incredibly, all won Big Money (well,
+OK, Some Money). This bodes well and probably means that there's good
+karma surrounding Be employees these days. The casino system seems to
+function on the basis that, while we cheered and rejoiced at winning $15
+(our threshold of excitement was fairly low), portly gentlemen in plaid
+pants smoking noxious cigars were losing $100 at a time.
+</p><p>The most pleasant and gratifying part of the show was that over half the
+people coming to our booth knew our company's name, knew roughly what
+we're trying to achieve, and wanted to see a demo. This is a huge change
+from, say, May of this year, when most visitors to a trade show booth had
+never heard of us. The rampant speculation in the press about our future
+seems to have had one benefit, at least. It was also nice to meet with
+many Be developers and put faces to e-mail addresses. Nicer still, many
+of the developers are working on real projects, having moved on from
+simply experimenting with the BeOS.
+</p><p>Were there any other interesting things at Comdex? I don't know! Our
+booth was never quiet enough to allow us to slip away to check out the
+rest of the show.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-52"></a>CoffeeBean</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>I just flew back from Maui by way of Pittsburgh, Pennsylvania. Using this
+itinerary to raise questions about my sanity is fruitless—I'm engaged
+in work on an alternative personal computer platform to begin with. But,
+seriously, I had a good reason. After taking my family of French pilgrims
+to celebrate the ultimate American holiday in a locale more fitting our
+(vastly exaggerated) hedonistic roots, I flew to Carnegie Mellon for the
+reading of Paul Clip's thesis, CoffeeBean, a Java virtual machine
+implemented on the BeOS under the tutelage of Professor Adam Beguelin.
+</p><p>It was good and useful fun. Developing applications for a platform still
+in its infancy isn't for everyone. Writing system-level code is living
+even more dangerously, especially at a time when the system is still
+changing at a fast pace from one revision to another. So, Paul Clip's
+project wasn't only a test of his intellect and manhood, but also a way
+to push our product in areas that aren't necessarily probed in other
+developments. Overall, Paul was generous in his comments, so much so I
+won't repeat the most enthusiastic ones. His work pointed out to several
+weaknesses (in California, "areas for improvement"). Some have to do with
+differences with Sun's views of the world. For instance, Java expects
+64-bit signed integers, which are unavailable in the current version of
+the C++ compiler on our system. There's also a difference between the
+systems used by the two worlds for priorities and synchronization. An
+opportunity for us to roadtest our kernel in subtle scheduling
+situations. Paul's work also fingered a problem other Be developers have
+discovered, this one related to hardware. Not all multithreading
+situations are dealt with equally well by our system. When we moved from
+the AT&amp;T Hobbit processor to the PowerPC, the 604 was unavailable and
+projected to be prohibitively expensive (for us at least). The 601 was
+clearly an ephemeral product. Only the 603 had the future and the price
+we liked. There was one glitch, however: Motorola stated that
+multiprocessor systems couldn't be implemented with the 603. On closer
+examination, this techno-marketing statement was based on the absence of
+cache-coherency hardware on the 603. Loosely speaking, cache coherency is
+a function by which one processor can advise others of the "pollution" of
+data contained in its cache, thus preventing its colleagues from reliance
+on now-invalid copies of the same data in their own caches. We decided we
+could work around that problem, mostly in software, and we produced
+working 603-based dual-processor hardware. In most cases, the workaround
+we designed imposes an invisible performance penalty. Now, imagine a
+situation where two threads, one to each processor, work on the same
+data. This can give rise to sizable overhead when the caches have to be
+constantly updated. One can construct cases when two processors perform
+more slowly than when one BeBox CPU is turned off. Fortunately, in real
+life, the system performs loosely coupled tasks most of the time, and the
+603 penalty isn't a factor. The 604 is now available, without much of the
+earlier price penalty exacted on our small company with its limited
+purchase power; it features cache-coherency hardware and thus does away
+with the limitations of the 603 in MP applications. If not all, most
+PowerMac licensees have 604 dual-processor hardware but not much system
+software to take advantage of it, a situation we intend to deal with
+promptly.
+</p><p>Back to Carnegie-Mellon, we're grateful for Prof. Beguelin's hospitality,
+we thank Paul Clip for his dissecting dissertation of our system, and
+we've already incorporated several of his suggestions into the next
+release of our system.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-52"></a>BeDevTalk Summary</h2></div></div></div><p>BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510497"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510503"></a>Subject: Better thread control</h4></div></div></div><p>More discussion on simulating Amiga "signals" using semaphores (or
+benaphores) and thread calls. Various scenarios were hypothesized; some
+were answered with source code examples.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510517"></a>Subject: [CALL FOR VOTE ?!] Active window != Frontmost window</h4></div></div></div><p>This discussion, which was initially about different ways to let the
+user place/tile/layer windows on the desktop, veered into a debate on
+the meaning and enforcement of "multi- user," as well as a search for
+the perfect real-world analogy for user-settable GUI preferences.
+</p><p>Combining the two thoughts, we have your boss's wife peeking over your
+shoulder as she tries to hijack your car. No one pointed out the
+blatant sexism in "the boss's wife," but the thread is young.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510541"></a>Subject: VMM the horror continues</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: DR9 And VMM</h5></div></div></div><p>A heated debate on whether VM is really a good thing. No clear
+consensus, but a number of folks pointed out that you have to keep the
+concept of VM separate from that of swapping—it's possible to have
+"good" VM but "bad" swapping. In particular, an unbounded swap file is
+bad.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510562"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510568"></a>Subject: Shutdown a BeBox</h4></div></div></div><p>A simple question—"How do I shutdown my BeBox from within a program"
+—was answered, and then the thread went on to discuss whether
+programatically shutting down or powering off is a desirable feature,
+and, if allowed, how it should be coordinated with a UPS. In general,
+soft-off is seen as a nice feature that can easily be abused; it was
+proposed that the mechanism be protected by root authentication (once
+multi-user is implemented).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510587"></a>Subject: Two comments on AppSketcher</h4></div></div></div><p>Some initial remarks about Marc Verstaen's AppSketcher led to a wider
+discussion of UI modeling engines (M. Verstaen pointed out that
+AppSketcher isn't intended to be such an engine). Should the UI for an
+app be hand-tweaked, and the coordinates hard-coded, or is this in
+itself an indication of poor design? It was offered that a good layout
+engine can figure out where things should go based on relative sizes
+and positions without the programmer having to supply any coordinate
+values. Others balk at the thought of automated UI design. It ended in
+tears.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510598"></a>Subject: new file system</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Newsletter #51 - File Details<br />
+AKA: Regarding journaling and DR9 FS.
+</h5></div></div></div><p>This thread collected comments on Dominic Giampaolo's article in last
+week's newsletter. Some folks are disappointed in the decision to
+retain a hierarchical file system, but there was approbation (and
+expectation) for the IFS aspects of the system. (See Cyril Meurillon's
+article in this issue for more information.) The final thread (of the
+above) offered suggestions for fine-tuning the journaling feature.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510624"></a>Subject: Preferences and version numbers</h4></div></div></div><p>Different schemes for storing and encoding of version denoters were
+proposed. The thread became quite precise in its detail: The exact
+format of version numbers and the structure that would store version
+information were discussed. The one debatable subject was whether
+version strings should be human-readable.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510641"></a>Subject: ImageViewer's drag-to-save protocol?</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Proposal for Browser drag-save protocol v0.1</h5></div></div></div><p>How does ImageViewer do its drag-to-save thing? A number of listeners
+(well, a couple, anyway) were interested in emulating this behavior.
+There were some guesses about what was happening, and then Peter
+Potrebic parted the curtains:
+</p><div class="orderedlist"><ol><li><p>User starts dragging a selection in ImageViewer. It doesn't
+know the destination so it uses it's own data format for the image.
+</p></li><li><p>The image is dropped on the Browser. The Browser doesn't
+understand the message so it replies with a <code class="constant">B_MESSAGE_NOT_UNDERSTOOD</code>.
+</p></li><li><p>ImageViewer receives the <code class="constant">B_MESSAGE_NOT_UNDERSTOOD</code> ... [creates]
+a temp file and replies back to the sender.
+</p></li><li><p>The Browser gets this reply. It knows what to do with files
+(refs) so it copies the data file to the appropriate place.
+</p></li></ol></div><p>You can find example code in the RRRRRRRRaster app:
+ftp://ftp.be.com/pub/Samples/Rras_sdk.tgz
+</p><p>A proposal for generalizing the drag-to-save mechanism was proposed and
+debated.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id510708"></a>Subject: international locales</h4></div></div></div><p>This thread introduced the notion of internationalizing the BeOS in
+general, and creating localized calendars specifically. It was conceded
+that the Chinese calendar is notoriously difficult.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-51.html">Issue 1-51, November 27, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-53.html">Issue 1-53, December 11, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-51.html" title="Issue 1-51, November 27, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-53.html" title="Issue 1-53, December 11, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-17.html" title="Issue 4-17, April 28, 1999" /><link rel="next" href="Issue4-19.html" title="Issue 4-19, May 12, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-17.html" title="Issue 4-17, April 28, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-19.html" title="Issue 4-19, May 12, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-17.html">Issue 4-17, April 28, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-19.html">Issue 4-19, May 12, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-18"></a>Issue 4-18, May 5, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-18"></a>Be Engineering Insights: High-Resolution Timing, Revisited</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jeff</span> <span class="surname">Bush</span></span></div></div></div><p>
+In an earlier newsletter, Ficus wrote an interesting article about how to
+get high-resolution timing in the BeOS using a clever hack and a device
+driver ("<a class="xref" href="Issue3-27.html#Engineering3-27" title="Be Engineering Insights: Porting WinSock Applications to the BeOS">Be Engineering Insights: Porting WinSock Applications to the BeOS</a>").
+Thanks to a number of changes in Genki, this sort of black magic is no longer
+necessary. The kernel now offers several ways to get fine-grained,
+precise timing both from device drivers and user space.
+</p><p>
+The sample code
+ftp://ftp.be.com/pub/samples/drivers/pcspeaker.zip demonstrates just
+how fine-grained you can get. The code is a driver for the built-in PC
+speaker. If you have a file in mono 8-bit unsigned 20k raw format, you
+can <code class="command">cat</code> it directly to
+<code class="filename">/dev/audio/pcspeaker</code> to play it. In lieu of that,
+I've included a 'sine' program that writes a sine wave to stdout, which
+can be redirected to this device. This was tested on a 333Mhz Pentium II.
+On slower machines, you may have to tweak the values to keep the machine
+usable.
+</p><p>
+The PC speaker is a primitive piece of hardware. It basically has two
+states: on and off. You can drive it from a programmable rate generator,
+or you can directly modify the state by setting a bit. The classic way to
+mimic analog signals with this type of speaker is to pulse it very
+quickly—faster than the speaker cone can physically move. The amount
+of time that current is applied to the output vs. the amount of time that
+it is not applied is controlled by the amplitude of the input signal,
+causing the speaker position to approximate the actual waveform. The
+sample driver will use this technique if it is compiled with the
+PLAY_IN_BACKGROUND macro set to 0. The down side to this approach is that it
+requires constant attention from the CPU. In order to get any kind of
+sound quality, you have to shut off interrupts, rendering the machine
+unusable. This is clearly undesirable.
+</p><p>
+The sample code takes a rather unique approach to this problem. It
+programs a timer to wake it up periodically so it can move the speaker
+cone. Other threads continue to run normally, but at defined intervals,
+an interrupt occurs and the speaker driver code is executed (at interrupt
+level) to control the speaker.
+</p><p>
+To get any quality, the interrupts need to occur frequently; around every
+30-60us. Note that, although the machine is still useable, interrupting
+this frequently cuts down performance quite a bit. This is a rather
+extreme case, but it does illustrate how fine- grained you can get with
+kernel timers. You should also note that the standard user space
+synchronization primitives use this underlying mechanism, and you can now
+get very accurate delays using system calls such as snooze, read port
+etc, or acquire sem etc. You don't need to write a device driver to get
+accurate timing.
+</p><p>
+From the driver level, the timers are programmed by using a new API added
+for Genki. The declarations for these functions are in
+<code class="filename">KernelExport.h</code>.
+Programming a timer in a device driver basically involves calling the add
+timer function, like so:
+</p><pre class="programlisting cpp">
+<code class="varname">ret</code> = <code class="function">add_timer</code>((<span class="type">timer*</span>)&amp; <code class="varname">my_timer</code>, <code class="varname">handler_function</code>, <code class="varname">time</code>,
+    <code class="constant">B_ONE_SHOT_ABSOLUTE_TIMER</code>);
+</pre><p>
+The first parameter is a pointer to a timer structure. You can add your
+own parameters to this by defining your own structure and making kernel's
+timer struct the first element, for example:
+</p><pre class="programlisting cpp">
+struct <span class="type">my_timer</span> {
+    <span class="type">timer</span> <code class="varname">kernel_timer</code>;
+    <span class="type">long</span>  <code class="varname">my_variable</code>;
+        .
+        .
+        .
+};
+</pre><p>
+The second parameter to the add timer function is a hook function that
+should be called when the timer expires. It has the form:
+</p><pre class="programlisting cpp">
+<span class="type">int32</span> <code class="function">timer_hook</code>(<span class="type">timer *</span><code class="parameter">t</code>);
+</pre><p>
+Note that the timer struct that you originally passed to add timer is
+also passed into this function, so you can access elements that you've
+added to that struct from the interrupt handler.
+</p><p>
+The third parameter is the time that this interrupt should occur. How
+this is interpreted is determined by the fourth parameter. There are
+three basic modes that a timer understands:
+</p><ul class="itemizedlist"><li><p>
+<code class="constant">B_ONE_SHOT_ABSOLUTE_TIMER</code>, as the name implies, is a single interrupt
+that occurs at a specific system time.
+</p></li><li><p>
+<code class="constant">B_ONE_SHOT_RELATIVE_TIMER</code> is similar, but allows you to specify an
+interval rather than an actual time.
+</p></li><li><p>
+<code class="constant">B_PERIODIC_TIMER</code> will cause the callback to be called repeatedly at a
+given interval.
+</p></li></ul><p>
+When playing in background mode, the speaker driver determines the next
+time the speaker cone has to move and program a timer for that time. If
+it's under 20us, it doesn't actually program the timer. This is because
+there is some overhead to handling an interrupt. If you program a timer
+that's too short, you may end up wasting time and be late for the next
+event you want to handle. Likewise, when it sets up the interrupt, it
+will set it a little early to compensate for the interrupt latency. A
+macro called SPIN determines whether the code will spin in a loop when it
+is early to handle event, or just move the speaker cone early. In the
+case of the speaker driver, which is obviously not a high- fidelity
+component, this isn't really necessary. In fact, since these interrupts
+occur so frequently, machine performance is degraded significantly when
+it behaves like this. In drivers where timing is critical, spinning like
+this is a way to be accurate.
+</p><p>
+A quick note about the implementation of timers. You may be familiar with
+the way timing is implemented on many operating systems (including BeOS
+before Genki). Normally, an operating system sets up a periodic interrupt
+that occurs every couple of milliseconds. At that time, the timeout queue
+is checked to see if there are expired timeouts. As a consequence, you
+can't get a dependable resolution of less than the interrupt period. In
+Genki, the kernel dynamically programs a hardware timer for the next
+thread to wake or sleep, allowing much finer resolutions. This, coupled
+with the preemptive nature of the kernel, is what allows the driver to
+accurately set timers for 30-60us.
+</p><p>
+When it finishes playing a chunk of data, the interrupt handler releases
+a semaphore that the calling thread was waiting for. Normally, when a
+semaphore is released, the scheduler is invoked to wake up threads that
+may have been waiting for the semaphore. As you're probably aware,
+rescheduling from within an interrupt handler is very bad. Driver writers
+must use the flag <code class="constant">B_DO_NOT_RESCHEDULE</code> when releasing a semaphore from an
+interrupt handler. This, by itself, was a limitation, however, because it
+meant that a thread waiting for some device driver call has to wait until
+the scheduler is invoked again (for some unrelated reason) before it will
+be run. This can be several milliseconds later. Generally, you want it to
+run as soon as possible.
+</p><p>
+In Genki, an interrupt handler can now return <code class="constant">B_INVOKE_SCHEDULER</code>, which
+call the scheduler immediately after your interrupt handler returns. If
+you have released semaphores from an interrupt handler, you can return
+this to make sure that waiting threads are woken up soon. This is
+especially useful for drivers where low-latency access to hardware is
+important.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-18-2"></a>Be Engineering Insights: My Faithful Companion</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Baron</span> <span class="surname">Arnold</span></span></div></div></div><p>
+I am here to spread propaganda. --+-@
+</p><p>
+At this typing there are 3407 open bugs against BeOS.
+All of them will be fixed in the next release.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id784883"></a>BeOS: How It Works</h3></div></div></div><p>
+I have this machine at home without a sound card. I only
+have one machine at home. I dial in at 19.2. I'm getting
+pretty good at blind typing after two years of practice.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id784897"></a>R5 Codename: Dragula</h3></div></div></div><p>
+It was a long weird life before I got to Be. Sometimes
+I sit in this chat room full of wannabe dj's raving-is-
+a-way-of-life-style-misfits, linux wonks and " and
+nick/nick's. I'd guess 60% of the time I spend there I
+spend going blah blah blah blah blah about BeOS, bEos,
+BEos. I am SO biased that I HAVE to be honest, about what
+we can do, and what we cannot do.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id784915"></a>I'll Pay You $20 To Eat A Twinkie Wiener Sandwich.</h3></div></div></div><p>
+I'll tell you what I cannot do, I cannot play
+<code class="filename">tnet113.zip</code>
+(Tetrinet) on beos. Want to know the only reason I boot
+into windows? No Tetrinet on bEOS. This is the developer
+newsletter right? Write or port it and I will send you a
+VERY limited edition 5038 CD single valued at $150
+featuring the HIT single 5038, the smash oldie virtual
+(void), ALL OTHER known versions of virtual (void) AND
+as a VERY SPECIAL bonus, a "CANDLELIGHT" edition of the
+record's title track.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id784938"></a>Tools And Audio</h3></div></div></div><p>
+Go get http://www.catastropherecords.com/5038.mp3 and
+the first one of you to file a feature request against
+MediaPlayer that politely requests it STREAM you the data
+gets a genki beta 5 t-shirt, "on me." (Be folk cannot
+participate in this contest.) You see, here in Kalifornia
+every second person I know has taken a day off work to be
+"Waiting for the DSL guy to show up." So I called and
+ordered it for Cat Rec Redwood City. Soon fresh bEos will
+be flowing down that pipe.
+</p><p>
+I hear there's a big race to build the first real
+multitrack audio editor for "the Be" but IKMultimedia
+is out in front solving my problems. T-Racks is a MUST
+HAVE if you even THINK you're serious about putting any
+kind of audio anywhere for any reason. It's a rearranger/
+smoosher/sparkler that worked wonders on 5038.
+</p><p>
+When it ships I will BUY NOW.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id784970"></a>Somebody Bump My Head</h3></div></div></div><p>
+You are a BEOS developer.<br />
+You are a rock star to the max.<br />
+You are a good friend in the mix.<br />
+You can really whip a camel's ass.
+</p><p>
+DTS comments have been opened up to the engineers for
+some feedback on anomalies you have filed. Your favorite
+operating system is maturing, in form and process.
+Please continue to file good bugs. We will continue to
+fix them. There are rumors of a BEOS Permanent Beta
+program where you will be able to taste fresh bEOs made
+daily at Be Farms. Stay tuned for details.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785000"></a>Breakdowns Come And Breakdowns Go</h3></div></div></div><p>
+(What are you going to do about it, that's what I'd
+like to know.)
+</p><p>
+If you're working on a big project, say a photoshop
+clone or any of the aforementioned audio tools, please
+consider contacting me about maintaining your bug database.
+Nothing will set your priorities straighter than a good
+thrashing of the "work so-far." We have a nice clean
+simple system for reporting and a crack team of reserve
+testers ready to beat down your application until you
+have corrected every flaw. We can provide UI input and
+technical knowhow to help shape your dream. We want you
+to grow with us, and we want to be inspired by you, by
+your imagination. We want to feed off your success, be
+it programmatic or financial. I want to help you bring
+stuff I can use to my desktop. What do you want to
+explode today?
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785016"></a>Tomorrow And Tomorrow And Tomorrow</h3></div></div></div><p>
+And so after all that has happened, to BeOS, to Be,
+have we learned any more about the world?<br />
+The market?<br />
+The consumer?<br />
+The technology?<br />
+Can we see into future at all?
+</p><p>
+I say, from <code class="filename">screen1.tga</code> to the screen actors guild...
+BEOS.
+</p><p>
+From the kernel debugger to the top of K2, we will count
+the bodies and climb on.
+</p><p>
+We cull concepts from known solutions and hack hack
+hack hack hack away at our art, our passion. Together
+we are sculpting an experience, a feeling, and not
+simply a set of features. We are writing a way to walk
+away "Satisfied." US from the "product." THEM from the
+"computer." We aim to provide an experience so seamless
+and simple that the "OS" becomes the "Appliance." The
+way you get driving directions, hear new music, find
+books, watch the weather and gather the information
+you need, the way you need it. The way you play games,
+make music, talk to friends. From the board room to the
+chat room we are working to make it so that one day...
+</p><p>
+There is only BEOS. --+-@
+</p><p>
+Rock over London.<br />
+Rock over Menlo Park.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-18"></a>Developers' Workshop: Media Nodes Made Easy (Well, Easier...)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Christopher</span> <span class="surname">Tate</span></span></div></div></div><p>
+As anyone who sat through the Node Track of the recent Be Developers
+Conference can attest, writing Media Kit nodes is a complex task. Be's
+engineering team has been hard at work extending the Media Kit APIs to
+simplify node construction; similarly, <acronym class="acronym">DTS</acronym> has been developing tools
+developers can use to debug their own <code class="classname">BMediaNode</code>s. This week's article
+introduces a tool for analyzing the behavior of any <code class="classname">BBufferProducer</code> node
+or node chain: the <code class="classname">LoggingConsumer</code>. Designed to work with the Genki/6
+beta release (I told you the <acronym class="acronym">API</acronym>s were under construction!), this node
+tracks the behavior of its input stream, logging a trace of all activity
+to a file for post-mortem analysis.
+</p><p>
+Before I discuss what exactly the <code class="classname">LoggingConsumer</code>
+does, here's the <acronym class="acronym">URL</acronym> to
+download it, so that you can follow along at home:
+</p><p>
+ftp://ftp.be.com/pub/samples/media kit/LoggingConsumer.zip
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785150"></a>So, What Is This "LoggingConsumer" Anyway?</h3></div></div></div><p>
+As <code class="classname">BBufferConsumer</code>s go,
+<code class="classname">LoggingConsumer</code> is pretty simple: it doesn't
+manipulate its input buffers in any way, it doesn't talk to hardware, and
+it doesn't pass buffers downstream—it sits at the end of the node
+chain. It has a single input, which can accept any kind of data. You, the
+developer, connect to a node or node chain that you're interested in,
+point it at an output file entry ref, and voilà! Useful information about
+buffer flow and internode handshaking is recorded for later
+interpretation.
+</p><p>
+The <code class="classname">LoggingConsumer</code> node serves two purposes: it
+produces a trace of node activity, for the purpose of debugging producers
+and producer/filter node chains; and it serves as a clean example of
+<code class="classname">BBufferConsumer</code> structure and behavior. The node
+tries to do everything "right," and is commented to help you
+understand what's going on at all points in the code. The node uses the
+latest and greatest <code class="classname">BMediaEventLooper</code> class. It
+publishes a set of controllable parameters via a
+<code class="classname">BParameterWeb</code>, and handles the
+<code class="constant">B_MEDIA_PARAMETERS</code> buffer type for changing those
+parameters. It reports late buffers to the producer, and reports latency
+changes as well. In short, it demonstrates pretty much all of the major
+functionality that a <code class="classname">BBufferConsumer</code> has to worry
+about.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785214"></a>So, How's It Work?</h3></div></div></div><p>
+In order to preserve the realtime behavior of a proper Media Kit node,
+the <code class="classname">LoggingConsumer</code> doesn't do any disk access from within its main
+<code class="classname">BMediaNode</code> control thread. Instead, it spawns a separate thread to write
+logged messages to disk, and passes messages to that thread via a kernel
+port. The LogWriter class encapsulates this pattern, managing the
+non-realtime thread and message port transparently to the <code class="classname">LoggingConsumer</code>
+node implementation.
+</p><p>
+The <code class="classname">LoggingConsumer</code> itself is another example of using the new
+<code class="classname">BMediaEventLooper</code> class to handle most of the nitty-gritty details of
+being a node. Because it does very little actual media-related
+processing, it's a pretty clear illustration of the organization we
+recommend that nodes use. The example application, which hooks the
+LoggingConsumer up to an audio file reader, also uses a simple
+"Connection" structure to illustrate the necessary bookkeeping for
+setting up and tearing down the connection between two nodes.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id785262"></a>What's It Give Me?</h3></div></div></div><p>
+Lots. Every virtual entry point a media node has generates an entry in
+the log file (with the minor exception of <code class="methodname">GetNextInput()</code> and
+<code class="methodname">DisposeInputCookie()</code>—and you can add support for these easily). Log
+entries are marked with the current real time (i.e., <code class="function">system_time()</code>) when
+they are generated, as well as the current time according to the
+LoggingConsumer's time source. Some operations log additional
+information, as well. For example, when a buffer is received, the logged
+message will indicate whether it is already late. When a buffer is
+handled (i.e., popped off of the BMediaEventLooper's event queue) the
+buffer's performance time is logged, as well as how early the buffer was
+handled. That "offset" needs to lie within the node's scheduling latency;
+if it doesn't, the buffer is late. The node also maintains a count of
+late buffers, so your testing application can follow what's happening.
+</p><p>
+<code class="classname">LoggingConsumer</code> is a <code class="classname">BControllable</code>,
+too, and you can manipulate certain
+aspects of its behavior while it's running. In particular, you can adjust
+its latency on the fly. Reacting to latency changes is one of the
+trickier aspects of <code class="classname">BBufferProducer</code> nodes, so having this facility in the
+buffer consumer lets you test a producer in a reliable, repeatable
+fashion. Future versions of the <code class="classname">LoggingConsumer</code> will have other
+controllable features as well, such as the ability to change media
+formats on the fly.
+</p><p>
+Here's an example of what you get in the log file:
+</p><pre class="screen">
+LOG REGISTERED           : realtime = 240371553910,
+                            perftime = 262890
+LOG ACCEPT FORMAT        : realtime = 240371564256,
+                            perftime = 2331465007
+LOG CONNECTED            : realtime = 240371564475,
+                            perftime = 2331465228
+LOG PREROLL              : realtime = 240371565650,
+                            perftime = 2331466400
+LOG START                : realtime = 240372603671,
+                            perftime = 2332503192
+LOG START HANDLED        : realtime = 240372603726,
+                            perftime = 2332503245
+LOG PRODUCER DATA STATUS : realtime = 240372604250,
+                            perftime = 2332503773
+LOG DATA STATUS HANDLED  : realtime = 240372604285,
+                            perftime = 2332503809
+    status = 2
+LOG BUFFER RECEIVED      : realtime = 240372604448,
+                            perftime = 2332503969
+    start = 2332553303, offset = -5666
+    Buffer received *LATE*
+LOG BUFFER HANDLED       : realtime = 240372604481,
+                           perftime = 2332504002
+    start = 2332553303, offset = -701
+    Buffer handled *LATE*
+LOG BUFFER RECEIVED      : realtime = 240372604687,
+                            perftime = 2332504209
+LOG BUFFER RECEIVED      : realtime = 240372605766,
+                            perftime = 2332505279
+LOG BUFFER RECEIVED      : realtime = 240372606497,
+                            perftime = 2332506016
+LOG BUFFER RECEIVED      : realtime = 240372607226,
+                            perftime = 2332506744
+LOG BUFFER RECEIVED      : realtime = 240372608545,
+                            perftime = 2332508060
+LOG BUFFER RECEIVED      : realtime = 240372624297,
+                            perftime = 2332523788
+LOG BUFFER HANDLED       : realtime = 240372638948,
+                            perftime = 2332538420
+    start = 2332593303, offset = 4876
+LOG BUFFER RECEIVED      : realtime = 240372678548,
+                            perftime = 2332577979
+LOG BUFFER HANDLED       : realtime = 240372678965,
+                            perftime = 2332578395
+    start = 2332633303, offset = 4906
+</pre><p>
+The <code class="varname">realtime</code> field is the current
+<code class="function">system_time()</code> at the moment the message was logged,
+and <code class="varname">perftime</code> is the
+<code class="classname">LoggingConsumer</code>'s idea of the current time according
+to its time source (i.e., the current performance time). As you can see,
+the node is registered, then the format negotiation with the producer
+occurs, the node is <code class="methodname">Preroll()</code>ed, then it's
+<code class="methodname">Start()</code>ed. When the producer node was started it
+sent a <code class="methodname">ProducerDataStatus()</code> message, then began
+sending buffers. Note that there is a distinction between the buffer's
+receipt in <code class="methodname">BufferReceived()</code> and its eventual
+handling in <code class="methodname">HandleEvent()</code>. Also note that given
+our stated scheduling latency of 5000 microseconds, the first buffer was
+sent too late for the <code class="classname">LoggingConsumer</code> to handle in a
+timely manner—information to be communicated to whoever wrote this
+particular <code class="classname">BBufferProducer</code> node!
+</p><p>
+The <code class="classname">LogWriter</code> class can easily be adapted to log other sorts of messages.
+Just add your own custom message codes to the <span class="type">log_what</span> <code class="code">enum</code> in
+<code class="filename">LogWriter.h</code>,
+string translations for them to the <code class="function">log_what_to_string()</code>
+function, and appropriate handling in <code class="methodname">LogWriter::HandleMessage()</code>. If you
+need to pass custom information in the log message, add a new variant to
+the union declared in the <span class="type">log_message</span> struct.
+</p><p>
+If you're developing <code class="classname">BBufferProducer</code> nodes, this class will help you
+debug them. If you're developing <code class="classname">BBufferConsumers</code>, this node will show
+you how to structure your code. And if you're just writing Media Kit
+applications, this node gives you an easy way to tell whether you've set
+up the rest of the node chain correctly. Any way you slice it,
+<code class="classname">LoggingConsumer</code> is a must-have component in any Media Kit development
+suite!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-18"></a>What Is a Web Appliance, Exactly?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Good question. As the range of devices connectable to the Web keeps
+growing, I'd like to offer Be's perspective on this increasingly hot
+topic. Every week brings new market research showing how enormous this
+category is anticipated to be—and such large numbers clearly assume
+the bundling of all sorts of devices. Even if IP-enabled refrigerators
+don't make a huge contribution to this new genre, the broad definition
+has to cover many disparate devices: <acronym class="acronym">PDA</acronym>s, cellular phones, game
+consoles, <acronym class="acronym">VCR</acronym>s, set-top boxes, WebTVs and similar devices, and the
+multimedia Web appliances announced by companies such as MicroWorkz in
+the US and contemplated by others in the US, Europe, and Japan.
+</p><p>
+Today I'll look at the multimedia Web appliance subcategory, and approach
+it by turning the now well-understood WebTV experience inside out. By
+this I mean that WebTV expects me to read my e-mail on the TV screen in
+the privacy of the family room. Another view of the world is reading my
+e-mail, or browsing eBay with two video windows on the screen, one with
+CNN, muted, the other one with a view of my front door, while I listen to
+MP3 music from the Web. Or any other such combination of unadulterated
+Web content—as opposed to content remanufactured for the need of a
+nonstandard rendering device such as a TV screen or the display on a Web
+phone.
+</p><p>
+Not that "remanufacturing" Web content is such a bad thing; WebTV has
+gained a loyal following, and Web-enabled phones and PDAs will be very
+successful. In the case of portable devices, the trade-offs, the
+additional complications of adapting Web content to "wearable" devices
+(as Motorola likes to call them) are gladly accepted as the price to pay
+for mobility.
+</p><p>
+The next question is whether or not the kind of Web appliance I just
+described is a replacement for a PC. The answer is a clear "no." In my
+mind they coexist, because they address different users and uses. The PC
+is a protean device—its seemingly infinite variety of application
+software enables it to assume an endless succession of shapes, from an
+entertainment center to a software development workstation to an office
+productivity toolkit. This is great as long as it's what the user is
+looking for, although it poses equally infinite complications in the
+layers of software silt inside the legacy operating systems and their
+applications.
+</p><p>
+But if all you want is the infinity of one space—the Web—a
+multimedia Web appliance might be your cup of computing. Why wait for a
+PC to boot? With broadband connectivity, DSL or cable modems, you can
+have the Web at your beck and call all the time, instantly, in the
+kitchen, the family room, or on your night stand.
+</p><p>
+Lastly, multimedia. Just as the print medium embraced color—even the
+venerable New York Times—the Web wants to create a multimedia
+experience, whether to charm you into buying something or entertain you,
+or to educate or inform you. I realize the word "hypermedia" has been so
+abused that its coin has lost some relief, but the fact remains that the
+BeOS offers a unique combination of smaller footprint, greater
+robustness, and multiple media streams for the creation of a compelling
+Web hypermedia experience. The very type of experience that defines our
+view of an extremely promising segment of the Web appliance market.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-17.html">Issue 4-17, April 28, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-19.html">Issue 4-19, May 12, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-17.html" title="Issue 4-17, April 28, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-19.html" title="Issue 4-19, May 12, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

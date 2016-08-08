@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-19.html" title="Issue 1-19, April 17, 1996" /><link rel="next" href="Issue1-21.html" title="Issue 1-21, May 1, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-19.html" title="Issue 1-19, April 17, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-21.html" title="Issue 1-21, May 1, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-19.html">Issue 1-19, April 17, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-21.html">Issue 1-21, May 1, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-20"></a>Issue 1-20, April 24, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-20"></a>Be Engineering Insights: Using Loadable Code to Enhance Your Application</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>
+One of the most welcome advances in application design over the last few
+years is the introduction of "plug-in" modules. Plug-ins are external
+pieces of code that you can load into your application, thereby extending
+the utility and intelligence of your app. This style of design, made
+popular by applications such as Photoshop, has many advantages:
+</p><ul class="itemizedlist"><li><p>
+"Plugged-into" applications are smaller and easier to write.
+</p></li><li><p>
+Plug-ins can be provided by third parties that specialize in specific
+algorithms or techniques.
+</p></li><li><p>
+End-users don't have to wait for the next release to "upgrade" the
+applications that they own.
+</p></li></ul><p>
+On the BeBox, plug-ins are called "add-ons". As an application writer,
+you define a set of functions that you want add-on modules to provide.
+Your app can then load any module that provides those functions.
+</p><p>
+As an example, consider a video application that wants to let the user
+apply a "wipe" between two video sources. But the application itself
+doesn't provide any wiping routines—instead, it loads an add-on that
+provides a wipe function, and then finds and calls that function.
+</p><p>
+To do this, the application and the add-on have to agree on a protocol
+for the function. As a graphical routine, wiping is a well-defined
+problem in which two input frames are processed to produce a third. The
+protocol of the <code class="function">wipe_frame()</code> function, below, embodies the parameters of
+the process: It accepts the input frames as (fictitious) <code class="classname">VideoFrame</code>
+object arguments, and returns the processed frame as a third <code class="classname">VideoFrame</code>.
+The function also takes a <span class="type">float</span> argument that specifies where we are in
+the wipe, given as a percentage of the total process:
+</p><pre class="programlisting">
+<span class="type"><code class="classname">VideoFrame</code> *</span><code class="varname">wipe_frame</code>(<span class="type"><code class="classname">VideoFrame</code> *</span><code class="varname">input_a</code>,
+                       <span class="type"><code class="classname">VideoFrame</code> *</span><code class="varname">input_b</code>,
+                       <span class="type">float</span> <code class="varname">percent</code>);
+</pre><p>
+Any add-on that provides such a frame-wiping function can be loaded into
+and used by the video application.
+</p><p>
+What does the code look like on the application side? First, we set a
+<code class="classname">BFile</code> to represent the add-on, and load the file through the Kernel Kit's
+<code class="function">load_add_on()</code> function:
+</p><pre class="programlisting">
+<code class="classname">BFile</code>      <code class="varname">add_on_file</code>;
+<span class="type">image_id</span>   <code class="varname">add_on_image</code>;
+
+<span class="comment">/* We'll assume that a_ref is a valid record_ref
+ * that refers to the add-on file.
+ */</span>
+<code class="varname">add_on_file</code>.<code class="methodname">SetRef</code>(<code class="varname">a_ref</code>);
+
+<code class="varname">add_on_image</code> = <code class="function">load_add_on</code>(&amp;<code class="varname">add_on_file</code>);
+if (<code class="varname">add_on_image</code> &lt; <code class="constant">B_NO_ERROR</code>) {
+    <span class="comment">/* error */</span>
+    ...
+}
+</pre><p>
+In the example, <code class="varname">add_on_image</code> is an <span class="type">image_id</span> value that identifies the
+add-on that was loaded. All further references to the add-on are based on
+this, the add-on's "image ID" number.
+</p><p>
+Now we need to get a handle on the add-on's <code class="function">wipe_frame()</code> function. To do
+this, we declare a function pointer variable (<code class="varname">add_on_wipe</code>), and point it
+at <code class="function">wipe_frame()</code> through the Kit's <code class="function">get_image_symbol()</code> function:
+</p><pre class="programlisting">
+<span class="comment">/* Declare the variable ...*/</span>
+<span class="type">int</span> (*<code class="varname">add_on_wipe</code>)(<code class="classname">VideoFrame</code> *<code class="parameter">input_a</code>,
+                   <code class="classname">VideoFrame</code> *<code class="parameter">input_b</code>,
+                   <span class="type">float</span> <code class="parameter">percent</code>);
+
+<span class="comment">/* and set its value. */</span>
+if (<code class="function">get_image_symbol</code>(<code class="varname">add_on_image</code>,
+                        "wipe_frame__FP5VideoFrameP5VideoFrame",
+                        <code class="constant">B_SYMBOL_TYPE_TEXT</code>,
+                        &amp;<code class="varname">add_on_wipe</code>) &lt; <code class="constant">B_NO_ERROR</code>)
+{
+      <span class="comment">/* Error; unload the add-on (at least). */</span>
+      <code class="function">unload_add_on</code>(<code class="varname">add_on_image</code>);
+      ...
+}
+</pre><p>
+The <code class="function">get_image_symbol()</code> function is, admittedly, a bit cryptic. In
+particular, the second argument needs some explanation: The C++ compiler
+mangles a function's name to encode the function's protocol. When you ask
+an add-on for a particular function, you identify the function by its
+compiler-mangled name. See the Kernel Kit chapter of The Be Book for more
+information on name-mangling and the <code class="function">get_image_symbol()</code> function.
+</p><p>
+Getting back on track, we now have a variable, <code class="varname">add_on_wipe</code>, that points
+to the add-on's <code class="function">wipe_frame()</code> function. We can now call the
+dynamically-loaded code with this short snippet:
+float percent;
+</p><pre class="programlisting">
+<code class="classname">VideoFrame</code> *<code class="varname">frame_a</code>, *<code class="varname">frame_b</code>, *<code class="varname">wiped_frame</code>;
+
+<span class="comment">/* You would undoubtedly set up a loop to get
+ * successive pairs of frames from the VideoFrame
+ * sources, to do something with the processed frame,
+ * and to bump the percent value.
+ */</span>
+while (...) {
+      ...
+      <code class="varname">wiped_frame</code> = <code class="function">add_on_wipe</code>(<code class="varname">frame_a</code>, <code class="varname">frame_b</code>, <code class="varname">percent</code>);
+      ...
+   }
+</pre><p>
+At each pass through the loop, <code class="varname">wiped_frame</code> points to the next stage of
+the wipe. Our video application doesn't need to know how the <code class="function">wipe_frame()</code>
+function works, it merely manages the input and output data, and provides
+a framework for the add-on to operate in.
+</p><p>
+One can imagine useful modules for other types of applications. For
+example, a spread sheet could recognize add-ons that calculate a result
+based on the input from a range of cells. A MIDI app might use add-ons to
+provide patch editors for various types of synthesizers. A paint program
+could use add-ons for different "brushes", a sound editor could use them
+to store different filters. The same add-on-loading technique is used in
+all these instances.
+</p><p>
+Now let's consider a more complicated example. Suppose we want to write a
+library that will load (graphic) images that are stored in various
+formats—GIF, JPEG, TIFF, and so on. Furthermore, we want our library
+to be able to load graphics that are stored in formats that aren't
+defined yet—we don't want the introduction of new formats to make our
+library (and the applications built from it) obsolete. Not only do we not
+want to re-write the library's code, we don't even want to recompile.
+</p><p>
+To implement this ideal, we have to add a couple of rules: Our shared
+library must present an immutable API that applications can depend on,
+and the add-on modules (files) must be kept in a place that the library
+knows about.
+</p><p>
+As a simple example of this model, let's say our graphic-loading library
+provides a single function, <code class="function">LoadGraphic</code>(record_ref ref). The interface
+between the library and the add-on is a function that's also called
+<code class="function">LoadGraphic()</code>. When the application calls <code class="function">LoadGraphic()</code>, the library
+decides which add-on to use (it could do this by looking at the file type
+or filename extension of the argument ref, or by loading add-ons one by
+one until it finds a winner), and then it passes the ref to the add-on's
+<code class="function">LoadGraphic()</code> function.
+</p><p>
+This method of operation completely decouples the shared library from any
+specific knowledge about the various graphic formats. A user can
+"educate" his or her system simply by installing a new or improved
+add-on: All applications using the shared library will immediately
+benefit from the new code. This enriches the user's environment, and
+creates a new market for third parties.
+</p><p>
+In summary, add-ons provide a way to make an application extensible, for
+the good of developers and users:
+</p><ul class="itemizedlist"><li><p>
+This extensibility reduces the effort that's needed to produce or
+improve an application, and lets developers provide upgrades to their
+applications between releases.
+</p></li><li><p>
+Third-party add-on developers can focus on particular algorithms or
+techniques without having to develop entire applications.
+</p></li><li><p>
+To the user, extensibility means you can add features without having
+to buy an entirely new application.
+</p></li></ul><p>
+Without a doubt, add-ons are cool.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id480700"></a>The App Modeler Application</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Verstaen</span></span></div></div></div><p>
+The prospect of developing applications on a new platform is always
+delightful. Everything is allowed, everything CAN be created again, from
+scratch, and you're THE creator: The empty page is in front of you.
+</p><p>
+Then comes the first step...and the first problem: Everything HAS TO be
+created again, from scratch. Once again you have to spend time and energy
+designing buttons, positioning text and pictures, loading menus,
+intercepting and interpreting mouse-clicks. All this dirty work, when
+your target is to create THE ultimate pea-sorting algorithm (I'm not
+allowed here to deal with apples), or THE view object that will create
+drawings that rival Picasso's—whatever part of software you like.
+</p><p>
+When my company, Lorienne [Now BeatWare], began to use the BeBox, we
+found many features we were waiting for: a good multitasking,
+multithreaded OS, a fast window system, an innovative approach to the
+file system—all these features on the same computer. But still, there
+was that old black hole into which time disappears when you don't have a
+good application modeling tool. Rather than throw up our hands and mutter
+"tant pis" with a dismissively Gallic sniff, we decided to inch up to the
+abyss and peek in.
+</p><p>
+First of all, we tried to determine the requirements of a "sufficient"
+app modeling solution. We agreed on these specifications:
+</p><ul class="itemizedlist"><li><p>
+A good application modeler must have a graphical interface design
+tool that can be used interactively.
+</p></li><li><p>
+Developers must be able to add their own C++ objects, either as
+interface elements, or simply as objects that their applications create.
+</p></li><li><p>
+There must be a means for connecting interface items (controls) with
+the member functions of the objects that have been added.
+</p></li><li><p>
+The application's variables—especially object pointers—must be
+accessible for initialization.
+</p></li><li><p>
+Most important, the modeler must be able to view an application as a
+project—it must be useful throughout the development of an app, and
+not just applied as a one-shot filter that doesn't do much more than
+create source and headers files that then must be edited by hand.
+</p></li></ul><p>
+Voila, voila, as we say in France. With such a tool, our problems
+disappear. But...who's going to write it?
+</p><p>
+Many times, I thought the solution was on my desk: the new <span class="trademark">Super++Tool</span>™
+. But there was something missing: either it was impossible to add my
+own objects into the framework, or I had to use a different language than
+the one I was developing with. Super++Tool gets better with each release,
+but we needed to go in a slightly different direction.
+</p><p>
+So we decided to write it ourselves.
+</p><p>
+The toughest part of a C++ application modeling tool is the language
+itself. Unlike other object-oriented languages, such as Objective C or
+Pascal Object, C++ doesn't know how to instantiate objects from classes
+that are added dynamically. To create custom objects, the tool has to
+generate, compile, and link a piece of source code. Generating source
+code is dangerous—programmers will want modify that code, and so our
+fifth requirement is threatened. But we found no way to escape this, so
+we did our best: We designed the program to generate as little code as
+possible.
+</p><p>
+The Application Modeler (as it's currently called) is running on selected
+BeBoxes around the world. Soon it will be shipped with every machine. The
+app isn't thoroughly polished—we plan to modify some features,
+especially for the user interface—but, still, you can create an
+interface, add and manipulate your own objects, and many other things.
+</p><p>
+We at Lorienne [Now BeatWare] are, of course, the first users of this
+tool. We're using it now to develop other applications: a word processor,
+drawing and paint programs, a spread sheet—but we'll leave these for
+another article.
+</p><p>
+For more information, send an e-mail message to Verstaen@beatware.com
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-20"></a>Be Developer Profile: Verified Logic</h2></div></div></div><p>
+“<span class="quote">UNIX just isn't my idea of a lot of fun,</span>” says Willy Langeveld, a Ph.D.
+physicist at the Stanford Linear Accelerator Center (a government-funded
+scientific research institution) in Palo Alto, California.
+</p><p>
+“<span class="quote">I work mostly on UNIX systems by day,</span>” Willy says. “<span class="quote">So I decided that in
+my free time, I wanted to enjoy myself.</span>” That's why he's developing for
+the BeBox. “<span class="quote">When I heard about the BeBox, it felt just like 10 years ago
+with the Amiga—it sounded like it would be fun!</span>”
+</p><p>
+Willy is no software rookie. While he formally established his company,
+Verified Logic, just this year, he's been developing for the Amiga for
+many years. His products include the terminal emulator VLT, the REXX
+support libraries rexxarplib and rexxmathlib, and the XPR (external file
+transfer protocol) standard. He also worked with Tom Rokicki of Radical
+Eye Software on a port of Maplesoft's Maple V release 3 to the Amiga.
+</p><p>
+Aside from fun, what Willy likes best about the BeBox is its fast,
+powerful multi-processor design. “<span class="quote">It's faster than any Amiga.</span>” And as for
+the BeOS? “<span class="quote">I think it could easily eclipse AmigaDOS within a year.</span>”
+</p><p>
+Currently, Willy is working on "rfs", a client/server protocol that
+mounts the BeBox file system on an Amiga. “<span class="quote">One might ask what use this
+will be once the BeBox acquires an NFS server—the answer is that rfs
+isn't a BeBox-only program. The file server isn't platform specific, it
+will run on just about anything. And anyone could write a client part to
+use with something other than an Amiga.</span>” He expects rfs to be available
+this summer.
+</p><p>
+Langeveld's BeBox plans include the possibility of a port of Maple V.
+Also, many people have asked him to port VLT to the BeBox.
+</p><p>
+“<span class="quote">My hopes are that the BeBox will become the next Amiga. After that, it
+will take over the world,</span>” says Langeveld. Of course, being a scientist,
+he admits, “<span class="quote">I'm too much of a realist to believe that both of these hopes
+will be realized. But I really think the first one might happen!</span>”
+</p><p>
+In the meantime, we're happy to report that Langeveld is accomplishing
+his goals: “<span class="quote">It's fun! Really fun! That's all I want right now.</span>”
+</p><p>
+For more information, send an e-mail message to langeveld@bix.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-20"></a>What Business Are We In, Really?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+As always, there is food for thought in comp.sys.be, the Internet
+newsgroup dedicated to the BeBox and the Be OS. Usenet newsgroups are not
+known for meekness and ours is no exception.
+</p><p>
+Recent threads suggest that we have made confusing gestures and
+statements about the company's goals and the vehicles that we think will
+get us there. They're good questions: Are we in the hardware business or
+the licensing business? In the PC or the workstation market? (The short
+answers: Yes, yes, yes, and no).
+</p><p>
+The confusion is understandable, and we acknowledge our part in prompting
+it. After all, we seem to want to do everything: we sell hardware but
+we'll also license the Be OS; the OS is new, but it also supports Posix.
+This raises more questions, some of which have been posed on the
+newsgroup: Why not just go Unix all the way (or NeXTStep, or OpenStep)?
+Why not port the Be OS to Mac hardware (and sell CD-ROMs to Mac users
+while they wait for Copland)?
+</p><p>
+To complicate matters, our slogans
+</p><p>
+“<span class="quote">Amiga 96</span>”
+“<span class="quote">The Samuel Adams of the PC business</span>”
+“<span class="quote">The muscles of a workstation, and the price of a PC</span>”
+</p><p>
+are a bit, shall we say, "omnidirectional." How could we be surprised by
+the confusion?
+</p><p>
+Let's deal with the Unix/Posix/workstation question first. A premise of
+our work is that we address the structural limitations of aging PC
+operating systems: The gods have to support an installed base, and that
+has made them brittle and rigid. We, on the other hand, can afford to be
+flexible—but we have no applications. So we shift the focus to the
+positive: We have higher throughput, a simpler programming model, an
+easier integration of new technology. These are tools for cutting-edge
+Web and digital media applications built by power-hungry, tinkering users
+(a.k.a. geeks). A Posix layer—purchased at an affordable amount of
+effort on our part—seemed a natural fit. It would help our customers
+by bringing in hundreds of public domain programs and utilities...But
+that doesn't make the BeBox a workstation.
+</p><p>
+Furthermore, my own observation of computer hardware and software is that
+they don't scale down very well. Once you've set out a design, it's much
+easier to add to it than to make a "lite" version. There is no
+Windows-lite or Unix Junior, and entry-level workstation hardware doesn't
+sell. Mindful of the scaling problem, we didn't want to start as a
+workstation with nowhere to go but bigger and unthinkably expensive.
+Instead, we set out to produce the least expensive multi-processor
+hardware we could, settling for the unloved 603.
+</p><p>
+(Why unloved? Because Motorola kept telling us the 603 “<span class="quote">couldn't do</span>”
+multi-processing. And because the small cache causes poor performance
+with the 68K emulator/crutch that the PowerMac needs to prop up old
+applications. Frankly, people who see the BeBox in action can't believe
+the performance we get out of a "low-end" chip. But it's not just
+hardware that does it--it's fresh, baggage-free software. And soon, we
+will scale up and the Be OS will really shine. Joe Palmer has us drooling
+over his 604-based designs.)
+</p><p>
+With regard to licensing and hardware: We offer the Be OS for licensing
+while we also sell it bundled with our quasi-PPCP hardware. I dealt in a
+prior newsletter with the PPCP opportunity: We can't make PPCP happen all
+by ourselves. If it becomes the PC/AT of the PowerPC business, our
+hardware will be PPCP compatible and we'll sell CD-ROMs with the BeOS to
+run on PPCP machines made by Apple and others.
+</p><p>
+In any event, there is a strong historic reason to offer OS licenses
+right from the start: If you don't do it from the very beginning, it's
+next to impossible to do it later. Let's try a thought experiment --
+purely fictitious, of course:
+</p><p>
+The scene is Apple's boardroom, 1986. Apple is making $1,000 gross margin
+on every Macintosh they sell. Everyone in the room agrees that the Mac OS
+should be offered for licensing. But an OS license goes for $100 or less.
+Shifting the business to licensing means disturbing the smooth graph of
+ever-increasing earnings that was promised as a sacred trust to Wall
+Street. So how smart would it be for the CEO and the CFO to face share
+holders and say:
+</p><p>
+“<span class="quote">Sure, we'll take a steep earnings dive for about three years. But after
+that, we'll re-emerge with a new business model and even greater
+shareholder value. Trust us.</span>”
+</p><p>
+(Of course, once the earnings were lowered by other factors, Apple's
+transition became easier--but a couple of CEOs and CFOs had come and gone
+in the meantime.)
+</p><p>
+By offering licenses from the very beginning, and sticking with a lean
+business model, we intend to make the hardware vs. software question a
+moot one. The most important thing we do is system software. We make
+hardware because of a chicken-and-egg situation in the PC business: There
+were no multi-processor personal computers because there was no MP OS,
+and there was no MP OS because no one made PC-priced MP hardware.
+</p><p>
+So, we apologize for the confusion. But with time—and success --
+confusion transmutes into the more approachable "complexity"; more
+success and complexity becomes "richness". Look at Microsoft—no one
+seems to be confused by their being in the OS and the application
+businesses...and hardware...and servers..and browsers...
+</p><p>
+Of course, I can't wait to find out where we'll be five years from today.
+In the meantime we need to continue evangelizing, supporting developers,
+marketing, and selling the BeBox and the Be OS. We might even get into
+the T-shirt business.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-19.html">Issue 1-19, April 17, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-21.html">Issue 1-21, May 1, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-19.html" title="Issue 1-19, April 17, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-21.html" title="Issue 1-21, May 1, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

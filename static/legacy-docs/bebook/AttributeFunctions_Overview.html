@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Storage Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheStorageKit_Overview.html" title="The Storage Kit" /><link rel="prev" href="TheStorageKit_Functions_Overview.html" title="Functions" /><link rel="next" href="IndexFunctions_Overview.html" title="Index Functions" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheStorageKit_Functions_Overview.html" title="Functions"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheStorageKit_Overview.html" title="The Storage Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="IndexFunctions_Overview.html" title="Index Functions"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Storage Kit</div></div><div id="headerB">Prev: <a href="TheStorageKit_Functions_Overview.html">Functions</a>  Up: <a href="TheStorageKit_Overview.html">The Storage Kit</a>  Next: <a href="IndexFunctions_Overview.html">Index Functions</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="AttributeFunctions_Overview"></a>Attribute Functions</h2></div></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="AttributeFunctions_An_Example"></a>An Example</h3></div></div></div><p>
+Before dropping straight into the reference on the <code class="function">fs_attr</code> API, let's
+have a look at a simple sample of how to use some of its features. The
+sample code fragment below opens the attribute directory for a file named
+/boot/home/dirtylaundry and scans through all the attributes in the file,
+fetching their names and values.
+</p><pre class="programlisting example c"><span class="type">DIR *</span><code class="varname">d</code>;
+<span class="type">dirent_t *</span><code class="varname">ent</code>;
+<span class="type">attr_info</span> <code class="varname">info</code>;
+<span class="type">int</span> <code class="varname">fd</code>;
+<span class="type">char *</span><code class="varname">buffer</code>;
+
+<code class="varname">d</code> = <code class="function">fs_open_attr_dir</code>("/boot/home/dirtylaundry");
+if (<code class="varname">d</code>) {
+   while (<code class="varname">ent</code> = <code class="function">fs_read_attr_dir</code>(<code class="varname">d</code>)) {
+   <code class="varname">fd</code> = <code class="function">open</code>("/boot/home/dirtylaundry", <code class="constant">O_RDONLY</code>);
+   <code class="function">fs_stat_attr</code>(<code class="varname">fd</code>, <code class="varname">ent</code>-&gt;<code class="varname">d_name</code>, &amp;<code class="varname">info</code>);
+   <code class="varname">buffer</code> = (<span class="type">char *</span>) <code class="function">malloc</code>((<span class="type">size_t</span>) <code class="varname">info.size</code>);
+   if (<code class="varname">buffer</code>)
+      <code class="function">fs_read_attr</code>(<code class="varname">fd</code>, <code class="varname">ent</code>-&gt;<code class="varname">d_name</code>, <code class="varname">info.type</code>, 0, <code class="varname">buffer</code>,
+            <code class="varname">info.size</code>);
+   ...
+   <code class="function">close</code>(<code class="varname">fd</code>);
+   <code class="function">fs_close_attr_dir</code>(<code class="varname">d</code>);
+}</pre><p>
+This snippet begins by opening the attribute directory for the file,
+using the <a class="link" href="TheStorageKit_Functions.html#fs_open_attr_dir" title="fs_open_attr_dir(), fs_fopen_attr_dir()"><code class="function">fs_open_attr_dir()</code></a>
+function. If this is successful, it returns
+a pointer to a directory that contains the list of attributes. A while
+loop is used to read into ent each attribute from the attribute directory
+by calling <a class="link" href="TheStorageKit_Functions.html#fs_read_attr_dir" title="fs_read_attr_dir()"><code class="function">fs_read_attr_dir()</code></a>.
+The information this call provides
+includes the size and type of the attribute, as well as its name.
+</p><p>
+Once we know the name of the attribute, we can obtain the type and size
+of the attribute by calling <a class="link" href="TheStorageKit_Functions.html#fs_stat_attr" title="fs_stat_attr()"><code class="function">fs_stat_attr()</code></a>; now we have all the
+information needed to get the value of the attribute. After allocating a
+buffer to contain the value of the attribute, we pass the attribute's
+name (<span class="code"><code class="varname">ent</code>-&gt;<code class="varname">d_name</code></span>),
+and the type and size (<code class="varname">info.type</code> and <code class="varname">info.size</code>) into
+the <a class="link" href="TheStorageKit_Functions.html#fs_read_attr" title="fs_read_attr()"><code class="function">fs_read_attr()</code></a>
+function. The value of the attribute is stored in the
+buffer we specify.
+</p><p>
+This sample skimps a bit on error handling; you'll do better, of course.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheStorageKit_Functions_Overview.html">Functions</a>  Up: <a href="TheStorageKit_Overview.html">The Storage Kit</a>  Next: <a href="IndexFunctions_Overview.html">Index Functions</a> </div><div id="footerB"><div id="footerBL"><a href="TheStorageKit_Functions_Overview.html" title="Functions"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheStorageKit_Overview.html" title="The Storage Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="IndexFunctions_Overview.html" title="Index Functions"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

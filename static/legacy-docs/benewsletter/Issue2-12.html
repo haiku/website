@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-11.html" title="Issue 2-11, March 19, 1997" /><link rel="next" href="Issue2-13.html" title="Issue 2-13, April 2, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-11.html" title="Issue 2-11, March 19, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-13.html" title="Issue 2-13, April 2, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-11.html">Issue 2-11, March 19, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-13.html">Issue 2-13, April 2, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-12"></a>Issue 2-12, March 26, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-12"></a>Be Engineering Insights: The Sound of Music</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Polic</span></span></div></div></div><p>
+Developer support recently released the source for the audio CD player
+that we ship with the BeOS. Unfortunately, if all you're interested in is
+how to make driver calls to perform the audio functions, you'll have to
+pore over a lot of UI fluff code to get to the interesting nuggets. The
+point of this article is to describe the driver calls available for
+playing, scanning, and saving CD audio, and to point you to some simple
+sample code that exercises all the available functions.
+</p><p>
+With DR9, the BeOS supports both
+<acronym class="acronym" title="Small Computer Systems Interface">SCSI</acronym> and
+<acronym class="acronym" title="AT Attachment Packet Interface">ATAPI</acronym>
+(<acronym class="acronym" title="Integrated Drive Electronics">IDE</acronym>)
+CD drives; both
+types of devices are serviced by the same set of driver ioctl calls for
+audio access.
+</p><p>
+A number of the calls described below use a positioning type called MSF,
+which stands for minute, second, frame. A minute is 60 seconds (duh), a
+second is 75 frames, and a frame is one 2352-byte sector, which contains
+588 samples of 16-bit stereo audio. I recommend you get either the <acronym class="acronym">ANSI</acronym>
+<acronym class="acronym">SCSI</acronym> standard or the <acronym class="acronym">ATAPI</acronym> standard
+for more detailed descriptions of a
+number of data structures that are used.
+</p><p>
+Before any audio functions can be performed, a device needs to be
+located. To do this, scan the DR9 <code class="filename">/dev/mountable</code> directory and make
+<code class="constant">B_GET_GEOMETRY</code> ioctl calls to all the drivers. Test the "device_type"
+field against the <code class="constant">B_CD</code> constant. Drivers with the type <code class="constant">B_CD</code> will
+support the calls described below.
+</p><p>
+Now that you have a device and have popped a disc in, you'll probably
+want to list the contents of the disc—the <code class="constant">SCSI_GET_TOC</code> call will do
+the trick:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_GET_TOC</code>, &amp;<code class="varname">toc</code>);
+</pre><p>
+<code class="varname">toc</code> is a pointer to a <span class="type">scsi_toc</span> data structure. This structure is
+described in the <acronym class="acronym">ANSI</acronym> <acronym class="acronym">SCSI</acronym> spec
+and the <acronym class="acronym">ATAPI</acronym> spec. The structure
+contains a four-byte header followed by an eight-byte TOC descriptor for
+each track. The header contains the starting and ending track number and
+the length of the TOC data. Each TOC descriptor contains the track
+number, the starting location for the track (in MSF format), and flags
+that you use to determine whether the track contains audio or data
+information.
+</p><p>
+Now that you've located an audio track you'll want to play it; unless, of
+course, you've popped in a Grateful Dead CD. The simplest way to play a
+track is to tell the driver to play from a starting track number to an
+ending track number:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_PLAY_TRACK</code>, &amp;<code class="varname">track</code>);
+</pre><p>
+<code class="varname">track</code> is a data structure used to specify the starting and ending track,
+along with a starting and ending index (in most cases 1).
+</p><p>
+To get a bit more control about where to start and end, use the following
+call:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_PLAY_POSITION</code>, &amp;<code class="varname">position</code>);
+</pre><p>
+<code class="varname">position</code> is a data structure that specifies the starting MSF and the
+ending MSF.
+</p><p>
+To pause, resume, and stop audio playback, you use these calls:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_PAUSE_AUDIO</code>);
+
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_RESUME_AUDIO</code>);
+
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_STOP_AUDIO</code>);
+</pre><p>
+Ejecting a disc is simple and satisfying:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_EJECT</code>);
+</pre><p>
+Too soft? Crank it up:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_GET_VOLUME</code>, &amp;<code class="varname">volume</code>);
+
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_SET_VOLUME</code>, &amp;<code class="varname">volume</code>);
+</pre><p>
+<code class="varname">volume</code> is a pointer to a <span class="type">scsi_volume</span> data structure. The data structure
+contains a channel and volume field for each port (four ports, maximum).
+For each port the volume range is from 0 (muted) to 255. To set the
+volume or channel for a particular port, you must also set the change
+flag bit for each field (this allows changing individual fields without
+affecting the other fields).
+</p><p>
+To get the current play status and position, use the following call:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_GET_POSTITION</code>, &amp;<code class="varname">position</code>);
+</pre><p>
+<code class="varname">position</code> is a pointer to a <span class="type">scsi_position</span> data structure. Once again this
+structure is described in detail in the <acronym class="acronym">ANSI</acronym> and
+<acronym class="acronym">ATAPI</acronym> specs; briefly, it
+contains a flag byte that indicates whether play is in progress, paused,
+completed, or "errored" and what are the current track, index, absolute
+MSF, and track-relative MSF position.
+</p><p>
+To scan (fast forward, fast reverse) there is the following call:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_SCAN</code>, &amp;<code class="varname">scan</code>);
+</pre><p>
+The scan data structure specifies the direction (+ = forward, - =
+reverse, and 0 = stop scanning) and the speed (0 = normal scanning, 1 =
+high-speed scanning) at which to scan. (Not all devices support
+high-speed scanning.) To stop scanning, you must use the same call again
+with a direction of 0.
+</p><p>
+The last command described is the one for reading audio data to memory:
+</p><pre class="programlisting c">
+<code class="function">ioctl</code>(<code class="varname">device</code>, <code class="constant">SCSI_READ_CD</code>, &amp;<code class="varname">read</code>);
+</pre><p>
+The read structure specifies the starting position (in MSF format),
+length (also in MSF format), buffer_length, buffer address, and a flag
+indicating whether to play the audio at the same time it's being read
+(not all devices support this). The format of the data read is 16-bit
+stereo, left channel followed by right channel. One last point to keep in
+mind: You'll need to byte-swap the audio data you read from the media
+before playing it back on the BeOS.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-12"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+With the recent rerelease of the Star Wars trilogy here in the United
+States, I find myself once again contemplating life and its reflection in
+visual media. I am now convinced that Jabba the Hutt was a programmer in
+his earlier career and chose a path of management.
+</p><p>
+I see the evidence in myself. When I started programming, oh so many
+years ago, I was thin, in good shape, and ready to take over the world.
+As the years roll on, as does my office chair, my bottom line keeps
+expanding. Unable to move, I delegate. Then along comes the BeOS.
+Something new and exciting to challenge and thrill. Suddenly I'm jumping
+up out of my seat and yelling YES!! whenever I can do something that I
+couldn't do before.
+</p><p>
+One of my pet programming things is to do graphics. That is, graphics
+libraries on the sly. It's never been my profession, but it's always been
+my obsession. When the <span class="trademark">BeBox</span>™ first hit the streets, I created a thing
+called the YAGS library. Of course this stands for Yasmin Adams' Graphics
+System, or for those who are more UNIXY, Yet Another Graphics System. The
+purpose of YAGS is to support much of the higher level graphics found in
+the BView class, but to do it on an arbitrary frame buffer. That means
+the screen, through the Game Kit, or a BBitmap.
+</p><p>
+To that end, YAGS has primitives to draw lines, ellipses, rectangles,
+triangles, and bezier curves. I twiddled with 3D a bit, but not enough. I
+ported it to DR8 and let it languish. So here it is:
+</p><p>
+ftp://ftp.be.com/pub/contrib/gfx/lib/yags.tgz
+</p><p>
+There's a simple demo program you can run to see how fast your little
+machine can really go. You can choose to either use the software-only
+routines or the Game Kit routines that will use hardware acceleration (if
+available).
+</p><p>
+As for some cleanup, last week we put out the vidview package, which
+allows you to write apps to the Hauppauge video digitizer board. Thanks
+to Kevin Hendrickson, a long- standing bug has been squashed.
+</p><p>
+In the vidview.cpp file you would find:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">VideoView</code>::<code class="methodname">WaitForStop</code>()
+..
+    <code class="function">kill</code>(<code class="varname">drawer_id</code>, <code class="constant">SIGINT</code>);
+</pre><p>
+Change this to:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">VideoView</code>::<code class="methodname">WaitForStop</code>()
+..
+    <code class="function">kill_thread</code>(<code class="varname">drawer_id</code>);
+</pre><p>
+You'll find that the application closes down more reliably more often.
+I've made this change to the sample code and added sliders for hue and
+saturation. You can download the revised package from:
+</p><p>
+ftp://ftp.be.com/pub/Samples/vidview.tgz
+</p><p>
+The DR9 man approacheth, and as that inevitable date draws near, we'll
+all become antsy with anticipation. Font system changes, file system
+changes, archiving, the Tracker, Unicode. That's a lot of change. What
+we'll do is to provide all the application samples that we included with
+DR8, but in a more timely manner. That way everyone will be able to
+compare new stuff to old stuff and see what's changed. We'll try to get
+these samples out much sooner than before to help you upgrade.
+</p><p>
+I may feel like a Hutt at times, but the BeOS is keeping me on my toes
+and at least exercising my mind—if not my whole body.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-12"></a>Good Net News</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+The last few days have brought very good news for the net. Older media
+giants loose oodles of money on their sites, Netcom buys full-page ads to
+announce a price increase, and Dell chalks up more than a million dollars
+a day in sales revenue from their Web site.
+</p><p>
+I'll leave the first item alone: We should be grateful to our well-heeled
+elders for exploring the new math on our behalf—and on their nickel.
+And it's nice to see Dell showing both muscle and flexibility in using
+the new medium, once again cashing in on the benefits of their reputation
+for good customer service. "Too bad they don't make Mac clones," sighed
+an unnamed Be wag.
+</p><p>
+Today, Netcom places large ads congratulating their employees for a great
+job and proudly announcing a new product. On closer inspection, the new
+product is a new price structure for all-you-can-eat net connections,
+with new "Fair Use" guidelines. Netcom, one of the early net access
+companies in the Valley, is taking the lead in trying to institute
+classes of service among their customers. As many politically incorrect
+observers predicted (led by Jack Rickard, the editor-in-chief of
+Boardwatch magazine), the all-you-can-eat buffet doesn't lead anywhere.
+It creates perverse reactions among users and ends up frustrating
+everyone, starting with the people owning shares in the restaurants.
+</p><p>
+At first the flat rate attracts customers. As the customers grow in
+numbers, some diseconomies of scale manifest themselves. There are phases
+in the growth of the system where adding more customers costs more,
+because some subsystems run out of capacity and grafting on bigger ones
+sends ripples through the whole thing, including your P/L. On the surface
+of things, ten subscribers per modem looks like a good number. But beyond
+a certain number of modems, you need big, expensive iron to aggregate the
+traffic. Beyond a certain size, the computers themselves have to be
+jettisoned, and further complications—and costs—occur when they
+have to be clustered.
+</p><p>
+Some have equated the problem of flat-rate ISPs to the all- you-can eat
+restaurant whose owner watches two buses of sumo wrestlers pull in. The
+metaphor needs a little tweaking. What in fact happens is the number of
+subscribers per port increases. As a result, quality of service—access
+when needed, in this case—degrades. Seeing this, customers stay
+connected once they gain access, whether they need the service or not.
+Other customers stay at the door. The ISP sees this and disconnects
+inactive users. The anxious customers get little utilities that fake
+activity. And so on. Why disconnect if it doesn't cost more and you can't
+reconnect? That's the vicious circle Netcom and other ISPs are trying to
+defeat when pledging allegiance to the Fair Use Initiative and trying to
+move to a tiered pricing system. The Fair Use Initiative addresses many
+more issues than just "hogging" a connection, but it essentially tries to
+promote the concept of moderation in a system that discourages it. We'll
+watch as they, and others, negotiate the transition to a more rational
+pricing structure. Especially when competitors might try to undercut
+them, only to raise prices later once they've caused enough concentration.
+</p><p>
+The rationale invoked for flat pricing is the phone companies' alleged
+flat costs for long distance. The legend is that AT&amp;T once considered
+flat pricing. All you can talk for a flat monthly fee. But people would
+have kept phone lines open for hours. Ask any parent owning or operating
+a teenager. Metered service is good. It doesn't have to be as greedy as
+the cellular providers rounding up to the next minute. Just raise the
+pricing slope a little, and the self- defeating hogging of connections
+will disappear without making the Internet much more expensive.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-12"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554331"></a>WEEK 3</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554337"></a>Subject: DR9 - Wish List</h4></div></div></div><p>
+More feature requests for DR9. This week: Stability. Is it possible to
+be absolutely crash-proof? Most folks think not. However, some
+listeners wrote in to request that the UI (at least) be perfectly safe.
+Giving the user an "uncrashable" OS is a worthy ideal, but, as Osma
+Ahvenlampi pointed out...
+</p><p>
+“<span class="quote">If you wanted to make a really secure OS, it would also be a really
+slow OS... If the OS is stable enough to stay running without a need to
+reboot it for 30 days on average... it's easily stable enough for most
+users to never see a crash.</span>”
+</p><p>
+Just as important as stability is integrity: If an app crashes (or
+otherwise misbehaves), it shouldn't damage critical files and resources
+such that the OS crashes or, worse, needs to be reinstalled.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554373"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554379"></a>Subject: sending data (net)</h4></div></div></div><p>
+More asynchronous <code class="function">send()</code> talk:
+</p><ul class="itemizedlist"><li><p>
+Is the <code class="function">memcpy()</code> in an asynchronous <code class="function">send()</code> implementation cheap
+enough that you don't have to worry about it?
+</p></li><li><p>
+If you run up a huge thread bill while multithreading synchronous
+<code class="function">send()</code> calls, will the accumulated stack space be prohibitive?
+</p></li><li><p>
+How do TCP communication and connection errors get reported back
+to an asynchronous <code class="function">send()</code>'er?
+</p></li></ul></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554433"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554439"></a>Subject: How about some mouse blanking???</h4></div></div></div><p>
+A request from Chris Dunphy:
+</p><p>
+“<span class="quote">One UI feature I haven't seen called for yet is mouse blanking. When I
+start typing, I want the mouse pointer to vanish and get out of my way,
+only appearing again when I actually touch the mouse.</span>”
+</p><p>
+A few listeners wrote in to point out that some applications (Edit, in
+particular) exhibit exactly this behavior. The request was then
+modified for scope: Can mouse blanking be a system-wide setting? Many
+votes in favor, but perhaps, thinks Brian Stern, global enforcement is
+too much:
+</p><p>
+“<span class="quote">It isn't always appropriate to obscure the cursor for every keydown...
+All that's missing is a line in the human interface guidelines saying
+that this [calling <code class="methodname">ObscureCursor()</code> within appropriate apps] is the
+right thing to do.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554485"></a>Subject: New File Selector in DR9?</h4></div></div></div><p>
+Will the "file selector" (or "Open panel") be smarter in DR9? In
+particular, will it support [from Steve Klingsporn and others]...
+</p><ul class="itemizedlist"><li><p>
+A "favorite folders" pop-up menu
+</p></li><li><p>
+View mode options (icon, small icon, list mode, and so on)
+</p></li><li><p>
+Special display of the selected file (SK: "You could have an icon
+showing the selected file in the left corner, or a list view of
+currently selected files...")
+</p></li><li><p>
+The ability to define and install your own panels
+</p></li><li><p>
+Drag-and-drop into the open panel
+</p></li><li><p>
+Easy Rename (as opposed to clunky Save As)
+</p></li></ul><p>
+Howard Shere (and others) proposed a "panel-less" system of
+saving/opening files, based on the idea that "standard" panels (and
+this applies to almost all modern GUI OS's) give you a redundant view
+of the world. Mr. Shere...
+</p><p>
+“<span class="quote">Save: An icon on the title bar of the window... can be dragged to the
+Tracker to save the file. You can save anywhere in this fashion. Spring
+loaded folder type action can allow you to drag into any folder in the
+system without releasing the mouse button. Open could open a small
+'drop box' window which documents can be dropped on to open them. Since
+this would not be modal, this could be opened all the time. It would
+have to float about all of the windows for this to work.</span>”
+</p><p>
+An objection to this system (paraphrasing Mike Manzano): The Open/Save
+panel is compact. When you use the Tracker to look for a file or
+folder, you get a window for each level of hierarchy. The Open/Save
+panel is much neater in this respect. Also, relying on the Tracker for
+these operations can lead to the "obscured target window" effect.
+</p><p>
+Relatedly, Jon Watte would like notification when a file is dragged to
+the trash:
+</p><p>
+“<span class="quote">[W]hen a file is dragged to the trash, the application having it open
+should close the file in question. Right now, there is no good way of
+finding out when and if a file is in the trash.</span>”
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554585"></a>Subject: Subject: Be Newsletter Issue #65, March 19, 1997</h4></div></div></div><p>
+Reaction to Dominic Giampaolo's Newsletter article on good programming
+practice. It was pointed out that Be's example source apps don't always
+adhere to the principles Dominic advised, particularly with regard to
+checking errors.
+</p><p>
+A few misconceptions were cleared up: It was thought that recycling
+resource IDs could create race conditions. Dominic pointed out that
+resource IDs (thread_id, sem_id, and so on) are NOT quickly recycled.
+The IDs are incremented to the maximum value before the incrementor
+turns over. After the turnover, moreover, only "free" slots are used.
+</p><p>
+There was also some thought that resources weren't reclaimed properly.
+Not so: The structures and address space-specific data that support an
+app's threads, semaphores, ports, images, teams, and areas ARE
+reclaimed when the app dies. The actual memory behind a shared area or
+add-on or library image is reclaimed when all apps that refer to that
+memory are dead.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554619"></a>Subject: BObject</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: B_DECLARE_CLASS_INFO usage</h5></div></div></div><p>
+BObject is going away in DR9. Is this a shame? There were some tears
+shed, but not many. Most folks think that mix-ins (and multiple
+inheritance in general) are a better means of sharing protocol.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554638"></a>Subject: another teaser...</h4></div></div></div><p>
+Dominic Giampaolo, idraulico di sistema cartellina, published some
+impressive DR9 file system performance numbers.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id554651"></a>Subject: Year 2000</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Leap years</h5></div></div></div><p>
+Is Be ready for the millennium? Is 2000 AD a leap year?
+</p><p>
+THE BE LINE: Yes. Yes.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-11.html">Issue 2-11, March 19, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-13.html">Issue 2-13, April 2, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-11.html" title="Issue 2-11, March 19, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-13.html" title="Issue 2-13, April 2, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-37.html" title="Issue 4-37, September 15, 1999" /><link rel="next" href="Issue4-39.html" title="Issue 4-39, September 29, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-37.html" title="Issue 4-37, September 15, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-39.html" title="Issue 4-39, September 29, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-37.html">Issue 4-37, September 15, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-39.html">Issue 4-39, September 29, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-38"></a>Issue 4-38, September 22, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-38"></a>Be Engineering Insights: When the Fast Case Is Not Enough</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">R. Jason</span> <span class="surname">Sams</span></span></div></div></div><p>
+Most programs where speed counts have a "fast case" code path somewhere
+in the code. This is a path which is optimized for a particular state of
+the program. Examples of this would be an aligned memcpy or gourad
+triangles in OpenGL. The developer has picked a state combination that he
+thinks is important and has created either an optimized C or asm path for
+that case. This often speeds up that case considerably. However, it has
+some problems.
+</p><p>
+The big problem with using fast cases is that not all cases are fast. An
+example of this would be setting any one of the color masks in GL to
+false. This will cut performance by ~25%, because you now miss what the
+designer considered a fast case and you hit the generic slow case. It's
+not that this case need be any slower, but either that it wasn't
+considered important or there wasn't time to write a fast case for it.
+</p><p>
+So, why not write fast cases for every path (or my path)? I often see the
+question "Why isn't drawing with XYZ enabled faster?" To give you an idea
+how many paths would have to be optimized just for triangle drawing,
+here's a brief list of state that needs to be considered.
+</p><pre class="screen">
+State               Possible Settings
+Color Masks                16
+Depth Mask                  2
+Depth Test                  2
+Depth Function              8
+Alpha Test                  2
+Alpha Function              8
+Stencil Test                2
+Stencil Function            8
+Stencil Pass Op             8
+Stencil Fail Op             8
+Total                 8388608 !!!!
+</pre><p>
+This table doesn't include texturing, stipple, fog, or blending, among
+others. You can see how choosing five or six of the above combinations
+can easily miss the needs of many applications.
+</p><p>
+Another solution is needed. One that works well is to dynamically
+generate the fast path for a given case as needed. This gives much
+greater flexibility in covering more cases and generally improving
+performance, because you can literally have a separate code path for
+every case.
+</p><p>
+Dynamic assembly is not the same as self-modifying code. It's much more
+closely related to a JIT (just-in-time compiler) than self-modifying
+code. With dynamic assembly, the code is not modified after it's created
+until it is no longer needed. This avoids the big problem with
+self-modifying code; that is, that most modern processors will at best
+stall for a few hundred cycles, or at worst not maintain coherency
+between the data and instruction caches. When the code is created we need
+only update the processor state once for many thousands of uses.
+</p><p>
+The next problem that comes up is creating the asm code. Many of you are
+probably wondering how to go about adding an assembler to your program.
+The answer is that you don't really need to do so for most programs.
+Let's take a simple case of a blitter.
+</p><p>
+We want the following abilities:
+</p><ul class="itemizedlist"><li><p>
+Source is 8-bit index or 32-bit RGBA.
+</p></li><li><p>
+Destination is 32-bit RGBA.
+</p></li><li><p>
+Support the eight standard alpha test functions.
+</p></li><li><p>
+Support replace and xor write modes.
+</p></li></ul><p>
+From the above list you get 2*8*2 paths. With 32 code paths it might be
+practical to implement every case by hand, but it would quickly get out
+of control if you added more destination or source types, or any other
+features.
+</p><p>
+To implement this the problem can be broken into these components, or
+steps:
+</p><div class="orderedlist"><ol><li><p>
+Some function initialization.
+</p></li><li><p>
+Loop initialization.
+</p></li><li><p>
+Loading of the source.
+</p></li><li><p>
+Alpha test.
+</p></li><li><p>
+Write destination.
+</p></li><li><p>
+Continue loop.
+</p></li><li><p>
+Clean up and return.
+</p></li></ol></div><p>
+Here is some sample code for each component (x86):
+</p><pre class="programlisting asm">
+Initialization
+    Push edi
+    Push esi
+    Mov edi, [esp+12]   ; Destination
+    Mov esi, [esp+ 16]  ; Source
+    Mov ecx, [esp+ 20]  ; Count
+
+
+Load source index
+    Movzx  edx, byte [esi]
+    Mov edx, [theTable + edx]
+
+
+Load source RGBA
+    Mov edx, [esi]
+
+
+Alpha test
+    Mov eax, edx
+    Shr eax, 24
+    Cmp eax, [alphaRefrence]
+    ## Jcc toContinueLoop
+
+
+Write destination
+    Mov [edi], edx
+
+
+Continue loop
+    Dec ecx
+    ## Jnz toLoop
+
+
+Cleanup and Return
+    Pop esi
+    Pop edi
+    Ret
+</pre><p>
+Once you have the above parts ready (probably in an assembly file of
+components) you can assemble them to make a function. The easiest way to
+do this (on x86) is simply to allocate some memory large enough to hold
+the largest case and copy the pieces into place from your parts file to
+the memory allocation. Here's the example for color index and alpha
+function of write on not equal:
+</p><div class="orderedlist"><ol><li><p>
+Allocate memory for function.
+</p></li><li><p>
+Copy initialization code.
+</p></li><li><p>
+Note the current index into the allocation for loop fix up later.
+</p></li><li><p>
+Copy source index loader.
+</p></li><li><p>
+Copy alpha test code.
+</p></li><li><p>
+Make space for conditional jump and note the location.
+</p></li><li><p>
+Copy destination writer code.
+</p></li><li><p>
+Fix up alpha test conditional jump. The function is not equal so we
+choose JE as our conditional test and insert it at the address noted
+from step 6 above to jump to the current location.
+</p></li><li><p>
+Copy continue loop code.
+</p></li><li><p>
+Fix up loop jump. We need a JNZ to jump from the current address
+to the address noted in step 3 above.
+</p></li><li><p>
+Copy clean up and return code.
+</p></li></ol></div><p>
+After following these steps you should have a blitter fully optimized for
+all the above cases. The trickiest part of dynamic assembly is carefully
+choosing the register allocation, since all your components are
+constrained by the choices you make. The other difficulty is dealing with
+all the conditional jumps. Because they are relative, the offsets need to
+be calculated at assembly time, unless the jump and its destination are
+contained within one code component. Calls are also relative and need a
+similar fix up if used.
+</p><p>
+I hope this will help you to write code that is very fast and covers all
+the needed cases. Please note that while this example is for x86, the
+techniques should also work well on other processors. Thanks for reading.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-38-2"></a>Be Engineering Insights: Long Live the Input Recorder, and 104-Key
+Keyboards, Too</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steven</span> <span class="surname">Black</span></span></div></div></div><p>
+Greetings one and all, whether you read my articles or ignore them! Today
+I'll talk about two new and different items. One's a little script which
+provides an unsupported keymap-independent solution for 104-key
+keyboards. The other is a generic input filter that enhances the Input
+Recorder.
+</p><p>
+First, my 104-key keyboard solution. Because we need access to the
+Option
+
+<sup>[<a id="id820902" href="#ftn.id820902" class="footnote">1</a>]</sup>
+
+key in BeOS, and 101-key keyboards lack an
+equivalent key, we've made the right <span class="keysym">Control</span> key behave like an <span class="keysym">Option</span>
+key by default. While most people don't notice this as a problem, if you
+have a 104-key keyboard and habitually use your right <span class="keysym">Control</span> key, it's
+inconvenient.
+</p><p>
+We have a "keymap" command line program which allows users to modify
+their own keymaps. Although it's fairly straight- forward, I wouldn't
+call it the easiest thing for a novice to use.
+</p><p>
+There was an item on BeWare which remapped the right <span class="keysym">Control</span> and <span class="keysym">Option</span>
+keys to be as labeled, but it mysteriously disappeared. I hadn't noticed
+its disappearance until I recommended it to someone. When I realized it
+was gone, I whipped up this script, as I felt bad about recommending
+something that didn't exist:
+</p><p>
+&lt;ftp://ftp.be.com/pub/contrib/util/104-keymap-script.zip&gt;
+</p><p>
+This script reads in your current keymap, adjusts it slightly, and writes
+it out to a file in your home directory. (It auto- matically loads the
+modified keymap, but doesn't automatically overwrite the file in your
+home directory.) There are command line options to alter both of these
+behaviors. Check out  --help  for details.
+</p><p>
+The script does a read-modify-write, with your current keymap. The only
+changes are to the right <span class="keysym">Option</span> and right <span class="keysym">Control</span> keys, and only if your
+current keymap has those two keys mapped to their defaults. (For example,
+if you're using a custom keymap with the right <span class="keysym">Control</span> behaving like
+number lock, it won't touch that key.)
+</p><p>
+And now for Part II of my article. This is an input filter which sends an
+application-defined message to an application, based upon a hot key
+combination.
+</p><p>
+While there are already applications which launch programs via key
+combinations, there is currently no generic solution for simply sending
+messages to applications. Because I wanted this for the Input Recorder, I
+decided to take the friendlier approach and whip up a generic solution
+for the problem.
+</p><p>
+The latest InputRecorder zip file has a WarmKeysFilter. The install
+script now also installs this:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/input server/InputRecorder.zip&gt;
+</p><p>
+As you'll see if you look at the source, the Input Recorder sends a
+message to the filter, informing it of the requested hot key information.
+One new, interesting use for this is that it lets you start and stop
+recording—even if the InputRecorder window is minimized or on a
+different workspace.
+</p><p>
+The Input Recorder uses the WarmKeys filter to enable the user to press
+Play—(<span class="keysym">Modifier</span>+<span class="keycap">P</span>),
+stop, (<span class="keysym">Modifier</span>+<span class="keycap">S</span>)—or Record --
+(<span class="keysym">Modifier</span>+<span class="keycap">R</span>) --
+when the application is not active or minimized. The Input Recorder
+filter was modified to pass through the WarmKeys messages, so you can
+press <span class="keysym">Modifier</span>+<span class="keycap">S</span>
+to stop, even when input is locked out. For the
+modifier, it uses the <span class="keysym">Menu</span> key on x86 systems keyboards, and the right
+<span class="keysym">Control</span> on PPC systems.
+</p><p>
+If you change which modifier key is used by WarmKeys, (for example, you
+want to use the menu key on your BeBox, or use a 101-key keyboard on your
+x86 machine) you'll also want to make a change in Input Recorder filter,
+so that it can't lock out the WarmKeys messages.
+</p><p>
+If there were a way to make the WarmKeys filter always get the keyboard
+event before the InputRecorder filter, it would always catch and process
+hot keys, and the InputFilter wouldn't need to know anything about
+passing through hot key events. However, this would also prevent the
+InputRecorder from recording hot key events.
+</p><p>
+Currently, there is no logic in the WarmKeys filter. The InputRecorder
+requests its three keys; if someone already has events attached to those
+keys, the request fails. While the InputRecorder could get a message
+informing it of the status of the request, there is no logic in place in
+the InputRecorder to deal with this.
+</p><p>
+Clearly, randomly requesting keys won't work in the long term. Some sort
+of method is required that allows the user to assign which keys do what
+when dealing with more applications.
+</p><p>
+In the WarmKeys filter, I've included ways to check to see who is
+receiving events from keys. There are also ways to verify that your hot
+keys were given to you properly.
+</p><p>
+However, I do see this as an excellent third-party opportunity. There's
+already at least one hot key enabling technology available on BeWare,
+although at the time I'm writing this, there's no solution which allows
+you to send application-defined messages.
+</p><p>
+The little filter does everything that I wanted done superbly. The Input
+Recorder is most grateful for this evolutionary leap in its development.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-38"></a>Developers' Workshop: Translation Kit Part 1: File Panel Fun</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Daniel</span> <span class="surname">Switkin</span></span></div></div></div><p>
+Welcome to Part I of a two-part look at the Translation Kit, a subject
+near and dear to my heart. In this installment, I'll look at a common
+task: how to modify a file panel in order to save an image in any
+available format.
+</p><p>
+I hear someone in the crowd yell, "But that's simple! Just subclass
+<code class="classname">BFilePanel</code>, and then start adding some controls to the window, and... uh,
+wait a second. What do you mean <code class="classname">BFilePanel</code> isn't a descendant of
+<code class="classname">BWindow</code>?" And so the matter of message handling comes up, as does font
+sensitivity, and with a few other gotchas along the way, you suddenly
+have a newsletter article worth reading again. So grab the code, and
+let's get to it! If the code is not there yet, it will be soon.
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/translation_kit/TranslatorPanel.zip&gt;
+</p><p>
+<code class="classname">BFilePanel</code> is a strange beast. Its headers live in the Storage Kit, but
+you have to link against <code class="filename">libtracker.so</code>. It also doesn't inherit from
+anything, it simply owns a window. The primary problem this poses is that
+when you add your own controls, you don't have a <code class="classname">BHandler</code> around to
+receive their messages. You could add all your controls to a view (which
+is a <code class="classname">BHandler</code>), but that would require them to be adjacent in a way that
+they all fit into that parent view. You could also handle the messages in
+the application's looper (where a <code class="classname">BFilePanel</code>'s messages go by default),
+but then your code is spread all over, and you don't have access to
+private members of your file panel.
+</p><p>
+The solution I've chosen (which is not the only one) is to build the save
+dialog by subclassing both <code class="classname">BFilePanel</code> and <code class="classname">BHandler</code>. This provides a
+<code class="methodname">MessageReceived()</code> hook where it's most needed, and allows me to place
+controls anywhere in the window. Of course, handlers need to be attached
+to loopers, and conveniently the file panel's window fits the bill. To
+set this up, do:
+</p><pre class="programlisting cpp">
+<code class="classname">TranslatorSavePanel</code>::<code class="methodname">TranslatorSavePanel</code>() : <code class="classname">BFilePanel</code>(),
+    <code class="classname">BHandler</code>() {
+
+    <code class="methodname">Window</code>()-&gt;<code class="methodname">AddHandler</code>(<code class="varname">this</code>);
+}
+</pre><p>
+Look at the source to see all the arguments and gory details. The one
+important thing to do before you start adding controls is to move the
+existing ones out of the way. The Be Book documents the names of all the
+standard parts of a file panel, so you can <code class="methodname">FindView()</code>
+and then <code class="methodname">MoveBy()</code>
+as appropriate. When you add your own controls, make sure they're
+positioned relative to the existing pieces:
+</p><pre class="programlisting cpp">
+<span class="comment">// Build the "Settings" button relative to the cancel button</span>
+<code class="classname">BRect</code> <code class="varname">rect</code> = <code class="varname">cancel</code>-&gt;<code class="methodname">Frame</code>();
+<code class="varname">rect</code>.<code class="varname">right</code> = <code class="varname">rect</code>.<code class="varname">left</code> - 10;
+<span class="type">float</span> <code class="varname">width</code> = <code class="varname">be_plain_font</code>-&gt;<code class="methodname">StringWidth</code>("Settings...")
+    + 20;
+<code class="varname">rect</code>.<code class="varname">left</code> = (<code class="varname">width</code> &gt; 75) ? (<code class="varname">rect</code>.<code class="varname">right</code> - <code class="varname">width</code>) :
+    (<code class="varname">rect</code>.<code class="varname">right</code> - 75);
+<span class="type"><code class="classname">BButton</code> *</span><code class="varname">settings</code> = new <code class="classname">BButton</code>(<code class="varname">rect</code>, "Settings",
+    "Settings...", new <code class="classname">BMessage</code>(<code class="constant">SAVE_FILE_PANEL_SETTINGS</code>),
+    <code class="constant">B_FOLLOW_RIGHT</code> | <code class="constant">B_FOLLOW_BOTTOM</code>,
+    <code class="constant">B_WILL_DRAW</code> | <code class="constant">B_NAVIGABLE</code>);
+<code class="varname">background</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">settings</code>);
+<code class="varname">settings</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">this</code>);
+</pre><p>
+Now to add a list of all the available translators. Some people like to
+add this to the menu bar on top; personally, I like to add a <code class="classname">BMenuField</code>
+above the file name. One way to do this is to subclass <code class="classname">BMenuItem</code> and add
+a translator id variable. This allows the desired output format to be
+queried by finding the currently marked menu item. When the user chooses
+to save a file, this id is included in the file panel's message, and is
+passed to <code class="methodname">Translate()</code> to complete the request. Building the menu looks
+like this:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">TranslatorSavePanel</code>::<code class="methodname">BuildMenu</code>() {
+    <code class="varname">formatpopupmenu</code> = new <code class="classname">BPopUpMenu</code>("FormatPopUpMenu");
+    <span class="type"><code class="classname">BTranslatorRoster</code> *</span><code class="varname">roster</code> = <code class="classname">BTranslatorRoster</code>::<code class="methodname">Default</code>();
+    <span class="type">translator_id *</span><code class="varname">translators</code>;
+    <span class="type">int32</span> <code class="varname">count</code>;
+
+    <span class="comment">// Find all translators on the system</span>
+    <code class="varname">roster</code>-&gt;<code class="methodname">GetAllTranslators</code>(&amp;<code class="varname">translators</code>, &amp;<code class="varname">count</code>);
+    <span class="type">const translation_format *</span><code class="varname">format</code>;
+    <span class="type">int32</span> <code class="varname">format_count</code>;
+
+    for (<span class="type">int</span> <code class="varname">x</code> = 0; <code class="varname">x</code> &lt; <code class="varname">count</code>; <code class="varname">x</code>++) {
+        <span class="comment">// Determine which formats this one can write</span>
+        <code class="varname">roster</code>-&gt;<code class="methodname">GetOutputFormats</code>(<code class="varname">translators</code>[<code class="varname">x</code>], &amp;<code class="varname">format</code>,
+            &amp;<code class="varname">format_count</code>);
+        for (<span class="type">int</span> <code class="varname">y</code> = 0; <code class="varname">y</code> &lt; <code class="varname">format_count</code>; <code class="varname">y</code>++) {
+            <span class="comment">// Check if this is an image translator</span>
+            if (<code class="varname">format</code>[<code class="varname">y</code>].<code class="varname">group</code> == <code class="constant">B_TRANSLATOR_BITMAP</code>) {
+                <span class="comment">// If this format saves to some native
+                // format build a menu item for it</span>
+                if (<code class="varname">format</code>[<code class="varname">y</code>].<code class="varname">type</code> == <code class="constant">B_TRANSLATOR_BITMAP</code>)
+                    continue;
+                <span class="type"><code class="classname">TranslatorMenuItem</code> *</span><code class="varname">item</code> = new
+                    <code class="classname">TranslatorMenuItem</code>(<code class="varname">format</code>[<code class="varname">y</code>].<code class="varname">name</code>,
+                    new <code class="classname">BMessage</code>(<code class="constant">SAVE_FILE_PANEL_FORMAT</code>),
+                    <code class="varname">translators</code>[<code class="varname">x</code>]);
+                <code class="varname">item</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">this</code>);
+                <code class="varname">formatpopupmenu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>);
+                break;
+            }
+        }
+    }
+    delete [] <code class="varname">translators</code>;
+
+    <span class="comment">// Pick the first translator in the list</span>
+    <span class="type"><code class="classname">TranslatorMenuItem</code> *</span><code class="varname">item</code> = (<span class="type"><code class="classname">TranslatorMenuItem</code>*</span>)
+        <code class="varname">formatpopupmenu</code>-&gt;<code class="methodname">ItemAt</code>(0);
+    if (<code class="varname">item</code> != <code class="constant">NULL</code>) <code class="varname">item</code>-&gt;<code class="methodname">SetMarked</code>(<code class="constant">true</code>);
+}
+</pre><p>
+Make sure you don't delete the default translator roster—you're just
+borrowing it.
+</p><p>
+The settings button tries to build a configuration view for the selected
+translator. It passes a pointer to a <code class="code">BRect(0, 0, 239, 239)</code> to
+<code class="methodname">BTranslatorRoster::MakeConfigurationView()</code> in case the translator doesn't
+set the size of the rect itself. It then builds a window according to
+this rect, and ensures that the view is the right size and in the right
+place. The layout and sizing of this view has been standardized for the
+next BeOS release—I'll go into details of that in my next article.
+</p><p>
+The rest of the app is fairly simple: it draws a bitmap if there is one,
+or "Drop an image here" if there isn't. It also handles loading and
+saving of images. Loading an image is as simple as grabbing an entry ref
+from a message:
+</p><pre class="programlisting cpp">
+<span class="type">entry_ref</span> <code class="varname">ref</code>;
+if (<code class="varname">message</code>-&gt;<code class="methodname">FindRef</code>("refs", &amp;<code class="varname">ref</code>) != <code class="constant">B_OK</code>) return;
+<code class="classname">BEntry</code> <code class="varname">entry</code>(&amp;<code class="varname">ref</code>);
+<code class="classname">BPath</code> <code class="varname">path</code>(&amp;<code class="varname">entry</code>);
+<span class="type"><code class="classname">BBitmap</code> *</span><code class="varname">new_bitmap</code> =
+    <code class="classname">BTranslationUtils</code>::<code class="methodname">GetBitmapFile</code>(<code class="varname">path</code>.<code class="methodname">Path</code>());
+</pre><p>
+Saving is also pretty easy, with only one catch. After recovering your
+information from the message, and creating a <code class="classname">BFile</code>, watch out for
+<code class="classname">BBitmapStream</code> taking your bitmap down with it:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BTranslatorRoster</code> *</span><code class="varname">roster</code> = <code class="classname">BTranslatorRoster</code>::<code class="methodname">Default</code>();
+<code class="classname">BBitmapStream</code> <code class="varname">stream</code>(<code class="varname">bitmap</code>);
+<span class="comment">// If the id is no longer valid or the translator fails
+// for any other reason, catch it here</span>
+if(<code class="varname">roster</code>-&gt;<code class="methodname">Translate</code>(<code class="varname">id</code>, &amp;<code class="varname">stream</code>, <code class="constant">NULL</code>, &amp;<code class="varname">file</code>, 0) != <code class="constant">B_OK</code>) {
+    <span class="type"><code class="classname">BAlert</code> *</span><code class="varname">alert</code> = new <code class="classname">BAlert</code>(<code class="constant">NULL</code>,
+        "Could not save the image.", "OK");
+    <code class="varname">alert</code>-&gt;<code class="methodname">Go</code>();
+}
+<span class="comment">// Reclaim the ownership of the bitmap, otherwise it would
+// be deleted when stream passes out of scope</span>
+<code class="varname">stream</code>.<code class="methodname">DetachBitmap</code>(&amp;<code class="varname">bitmap</code>);
+</pre><p>
+Stay tuned for Part II of our examination of the Translation Kit: a
+prefabricated translator add-on for reading and writing images.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-38"></a>A Whiff of Infinity...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+As the title of today's column does not suggest, my topic is Life After
+the PC. As for the title itself, I'll attempt to connect it to the topic
+without too many unseemly contortions or painful puns.
+</p><p>
+First of all, Life After the PC is a misnomer. PCs will be with us for a
+long time. We've progressed from the first crawling instances of the
+species in 1967, to the affordable microprocessors that started the
+current explosion in the late 70s, to the personal supercomputers of
+today (to quote a captain of our industry). Prospects for their
+continuing evolution are good: faster better cheaper processors and
+memories, I/O, displays, networks...
+</p><p>
+So, why even mention Life After the PC if so many refinements are at
+hand? Because PCs are becoming "free." Though as with cell phones, "free"
+actually means a different form of payment. That is, you commit to use a
+service, wireless telephony or Internet access, for a number of months,
+and you get a free phone or a free PC. Good services and good devices,
+where "free" amounts to a form of loan and risk-taking by the service
+provider. For PCs to achieve that status means we're now in a mature,
+commoditized market. One might joke that the girth of Office 2000 running
+on Windows 2000 requires a 600 Mhz Pentium III, but many consumers have
+figured out that a competent 366 Mhz Celeron PC, minus the Compuserve
+rebate, is "free" and perfectly capable of running Windows applications.
+</p><p>
+Note the last part of the sentence, Windows applications. Once upon a
+time, there was an appliance called a Word Processor. That's all it did
+and, for a while it processed words better than PCs running clunky
+imitation word processing software. But it died because PCs gave off this
+wonderful whiff of infinity. Customers perceived the infinite potential
+for PCs to run all kinds of software. Some useful, some not, some
+utilitarian, some fun, some reliable, some awful. But the abundance, the
+fun, the dream won over the seriousness, the finite fitness-to-purpose of
+word processing appliances.
+</p><p>
+So, if PCs are a) "free" and b) "infinite," how come we're so
+enthusiastic about the future of Web appliances? The answer lies in
+another infinity. Just as PCs are surrounded by myriads of applications,
+the Web offers another kind of infinity of content—information,
+entertainment, services, even applications available from servers
+somewhere in the clouds. Some believe that PCs will absorb this new Web
+dimension and offer both infinities rolled into one. This is the
+philosophy behind Microsoft's unified user interface for the desktop and
+the Net, with everything represented as a Web page. It was an interesting
+experiment. And, yes, one can hope PCs will become simpler, shedding
+costly, clunky, vestigial organs such as serial, parallel, and keyboard
+ports and the ISA bus. It might happen—the irresistible drive to offer
+add-ons, graphics and sound cards, new-fangled DVD-ROM or CR-RW units
+might subside—but when? In other words, some think PCs will be
+simultaneously even more protean and even simpler than they are today.
+Procrustean might be a better word.
+</p><p>
+I believe that discussing PCs and Web appliances in an either/or manner
+isn't helpful. We want both. Knowledgeable PC users know what PCs do
+well; where they're too complex and cumbersome, users will want both PCs
+and Internet appliances. Normal human beings who've stayed away from PCs
+because of their perceived Swiss Army knife complexity will be happy to
+have devices dedicated to one task. They'll appreciate drilling the Web
+and enjoying one kind of infinity without being encumbered by the other,
+or being constricted by the finite range of the older style appliances.
+</p><p>
+Which points to the need for a better word than "appliance" for the new
+genre we're discussing. Here in the land of neologism—and Silicon
+Valley is the capital of buzzwords—I know this immigrant is about to
+learn a new noun. "Wa" would be nice—sounds Japanese and actually
+means something like harmony. In any case, we need something short and
+crisp, like PIM, PDA, or NC. Suggestions?
+</p></div><div class="footnotes"><hr /><div class="footnote"><p><sup>[<a id="ftn.id820902" href="#id820902" class="para">1</a>] </sup>
+The key I refer to as the <span class="keysym">Option</span> Key, is only labeled "Option" on
+Mac-style keyboards. On 104-key keyboards, it often sports the logo of an
+alternate operating system (e.g., a "Window"). It's in the same location
+on all keyboards, between the <span class="keysym">Alt</span>/<span class="keysym">Command</span>
+key and the <span class="keysym">Control</span> key. I
+refer to it as the <span class="keysym">Option</span> key, because in BeOS its identifier is named
+<code class="constant">B_OPTION_KEY</code>.
+</p></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-37.html">Issue 4-37, September 15, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-39.html">Issue 4-39, September 29, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-37.html" title="Issue 4-37, September 15, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-39.html" title="Issue 4-39, September 29, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,950 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-6.html" title="Issue 4-6, February 10, 1999" /><link rel="next" href="Issue4-8.html" title="Issue 4-8, February 24, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-6.html" title="Issue 4-6, February 10, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-8.html" title="Issue 4-8, February 24, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-6.html">Issue 4-6, February 10, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-8.html">Issue 4-8, February 24, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-7"></a>Issue 4-7, February 17, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-7"></a>Be Engineering Insights: An Introduction to Input Method Aware Views</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Hiroshi</span> <span class="surname">Lockheimer</span></span></div></div></div><p>
+An input method is the software that converts keyboard events from one
+language into another. It is a translator of sorts: it enables the user
+to "type" in a language that doesn't mesh well with the traditional 100+
+key keyboards.
+</p><p>
+Take Japanese, for example. The Japanese language consists of a number of
+writing systems (sort of like alphabets). When combined, these alphabets
+contain literally many thousands of characters. Imagine a keyboard with
+that many keys!
+</p><p>
+Input methods were created to work around this impracticality. For
+example, Be's new Japanese input method—an installation option in R4
+-- transliterates the Roman alphabet (the keys on your keyboard) into
+Japanese. The process for doing this is somewhat complicated, but that's
+another subject. This article is about what you need to do in order to
+support languages that require input methods.
+</p><p>
+So, what do you need to do in order to capture the hearts of all those
+BeOS users out there in the rest of the world?
+</p><p>
+The short answer: You don't need to do a thing! Sort of... If your
+application's text entry needs are satisfied with <code class="classname">BTextView</code> (and
+<code class="classname">BTextControl</code>), then you really are set. Be's kit classes are all
+input-method aware straight out of the box. However, if you're rolling
+out your own text engine, you need to do a minimal amount of work to be
+fully input-method aware.
+</p><p>
+The first step is in the <code class="classname">BView</code> constructor. Every input method- aware
+view must have the <code class="constant">B_INPUT_METHOD_AWARE</code> flag set (take a look in
+<code class="filename">View.h</code>). If you don't set this
+flag, the OS will intervene as needed
+and pop up a proxy window (commonly known as the "offline" or
+"bottomline" window) that will handle the input method's needs for you.
+The window goes away when the current input transaction is complete. The
+resulting text is then converted into simulated <code class="constant">B_KEY_DOWN</code> messages and
+sent to the non-savvy view, thus ensuring that all views are capable of
+receiving the user's input.
+</p><p>
+When the <code class="constant">B_INPUT_METHOD_AWARE</code> flag is present, it is the view's
+responsibility to do what the bottomline window would otherwise do for
+you. This style of input is called "inline" input, and it is by far
+preferred to bottomline input, as everything occurs locally in the
+context of the current view. There are no windows popping up and
+disappearing; it provides a far more seamless experience to the user.
+</p><p>
+An input method-aware view receives key down messages in one of two ways:
+</p><div class="orderedlist"><ol><li><p>
+Through the standard <code class="constant">B_KEY_DOWN</code> messages that invoke
+your <code class="methodname">KeyDown()</code> method, or
+</p></li><li><p>
+Via the new <code class="constant">B_INPUT_METHOD_EVENT</code> message that you must
+catch in <code class="methodname">MessageReceived()</code>.
+</p></li></ol></div><p>
+All <code class="constant">B_INPUT_METHOD_EVENT</code> messages contain
+<span class="type">int32</span> opcodes under the name of <code class="varname">be:opcode</code>. Currently there are four
+opcodes defined (in <code class="filename">Input.h</code>):
+</p><ul class="itemizedlist"><li><p>
+<code class="constant">B_INPUT_METHOD_STARTED</code>
+</p></li><li><p>
+<code class="constant">B_INPUT_METHOD_STOPPED</code>
+</p></li><li><p>
+<code class="constant">B_INPUT_METHOD_CHANGED</code>
+</p></li><li><p>
+<code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code>
+</p></li></ul><p>
+The <code class="constant">B_INPUT_METHOD_STARTED</code> opcode signals to your view that a new input
+transaction has begun. There is a <code class="varname">be:reply_to</code>
+<code class="classname">BMessenger</code> stashed in these
+messages. Keep that messenger around; it's your only way to talk to the
+input method while this transaction is in effect.
+</p><p>
+<code class="constant">B_INPUT_METHOD_STOPPED</code>, surprisingly, is the opposite of
+<code class="constant">B_INPUT_METHOD_STARTED</code>. By the time you receive this message, the user is
+done with the current transaction. The <code class="varname">be:reply_to</code> messenger that you
+kept around is now officially stale. Throw it out.
+</p><p>
+<code class="constant">B_INPUT_METHOD_CHANGED</code> and
+<code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code> messages
+happen in between the started and stopped messages.
+<code class="constant">B_INPUT_METHOD_CHANGED</code> is where most of the work is done. It contains the
+following data:
+</p><ul class="itemizedlist"><li><p>
+<code class="varname">be:string</code> (a <span class="type">char*</span>)
+</p></li><li><p>
+<code class="varname">be:selection</code> (two <span class="type">int32</span>s)
+</p></li><li><p>
+<code class="varname">be:clause_start</code> (n-numbers of <span class="type">int32</span>s)
+</p></li><li><p>
+<code class="varname">be:clause_end</code> (the same number of <span class="type">int32</span>s as
+<code class="varname">be:clause_start</code>)
+</p></li><li><p>
+<code class="varname">be:confirmed</code> (a boolean)
+</p></li></ul><p>
+The string is what the user is currently entering. This is what you want
+to display at the current insertion point. <code class="classname">BTextView</code> highlights this text
+in blue to show that it is a part of a transitory transaction.
+</p><p>
+There may be a selection within the blue portion. This is expressed as a
+pair of <code class="varname">be:selection</code> <span class="type">int32</span>s that
+are offsets within <code class="varname">be:string</code>. <code class="classname">BTextView</code>
+highlights the selection in red instead of blue.
+</p><p>
+In languages such as Japanese, a single sentence or phrase is often
+separated into numerous clauses; <code class="varname">be:clause_start</code>
+and <code class="varname">be:clause_end</code> pairs
+delimit these clauses, also as offsets within be:string. <code class="classname">BTextView</code>
+separates the blue/red highlighting wherever there is a clause boundary.
+</p><p>
+Finally, <code class="varname">be:confirmed</code> is <code class="constant">true</code> when
+the user has entered and "confirmed"
+the current string, and wishes to either close the transaction or start a
+new one directly. <code class="classname">BTextView</code> unhighlights the blue/red at this point, and
+waits for either a <code class="constant">B_INPUT_METHOD_STOPPED</code> (to close the transaction) or
+another <code class="constant">B_INPUT_METHOD_CHANGED</code> (to start a new transaction directly).
+</p><p>
+<code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code> is the input method's way of asking you
+for the screen coordinates of each character in your representation of
+<code class="varname">be:string</code>. This information is used by the input method to pop up
+additional windows that give the user an opportunity to select certain
+characters from a list and so on. When you receive this event, simply
+reply to the <code class="varname">be:reply_to</code> messenger with a
+<code class="constant">B_INPUT_METHOD_EVENT</code> as such:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessage</code> <code class="varname">reply</code>(<code class="constant">B_INPUT_METHOD_EVENT</code>);
+<code class="varname">reply</code>.<code class="methodname">AddInt32</code>("be:opcode", <code class="constant">B_INPUT_METHOD_LOCATION_REQUEST</code>);
+
+<code class="classname">BPoint</code>  <code class="varname">screenDelta</code> = <code class="methodname">ConvertToScreen</code>(<code class="constant">B_ORIGIN</code>);
+<code class="varname">screenDelta</code> -= <code class="constant">B_ORIGIN</code>;
+
+for (<span class="type">int32</span> <code class="varname">i</code> = <code class="varname">inlineStartOffset</code>;<code class="varname">i</code> &lt; <code class="varname">inlineEndOffset</code>; <code class="varname">i</code> =
+    <code class="methodname">NextUTF8Character</code>(<code class="varname">i</code>)) {
+  <code class="varname">reply</code>.<code class="methodname">AddPoint</code>("be:location_reply",
+    <code class="methodname">LocalLocationOfCharacter</code>(<code class="varname">i</code>) + <code class="varname">screenDelta</code>);
+
+  <code class="varname">reply</code>.<code class="methodname">AddFloat</code>("be:height_reply", HeightOfCharacter(<code class="varname">i</code>));
+}
+
+<code class="varname">theBeReplyToMessenger</code>.<code class="methodname">SendMessage</code>(&amp;<code class="varname">reply</code>);
+</pre><p>
+The input method will take care of the rest for you.
+</p><p>
+That was a quick overview of what you need in order to get started.
+Taking the time to implement an input method-aware view is an excellent
+first step towards making your product ready for the markets around the
+world. Good luck!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-7"></a>Developers' Workshop: Using and Writing Device Drivers on the BeOS</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jon</span> <span class="surname">Watte</span></span></div></div></div><p>
+This is second in a series of Developer Workshop articles to help people
+program with the new Media Kit. It was written by Be's Director of Media
+Technology. The article first appeared on &lt;http://www.b500.com/bepage/&gt;,
+and possible future updates will be posted there.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id526723"></a>Using Device Drivers on the BeOS</h3></div></div></div><p>
+Rather than use a BeOS device driver directly, user-level applications
+instead use some higher-level API which calls a user-level add-on, which
+calls the driver. There's nothing, however, that prevents an application
+from talking directly to a driver just as an appropriate add-on would.
+Indeed, in cases where there is no appropriate add-on API you have to
+talk to the driver directly from an application. It's also useful to talk
+directly to the driver while developing and testing it. In this article,
+we'll call the entity (application or add-on) that is using the driver a
+"client" of the driver.
+</p><p>
+The first thing you need to do is to find the device. The driver will
+export one or more devices in subdirectories of the
+<code class="filename">/dev</code> directory. For
+instance, the sonic_vibes audio card driver exports in
+<code class="filename">/dev/audio/raw/sonic_vibes/</code>
+as well as in other locations.
+</p><p>
+Because most BeOS drivers support handling more than one installed card
+of the same kind, the convention is to number the installed cards,
+starting at 1. Thus, the first installed sonic_vibes card is found as
+<code class="filename">/dev/audio/raw/sonic_vibes/1</code>.
+You can use the <code class="classname">BDirectory</code> class or the
+<code class="function">opendir()</code> C function to look through a directory for available devices.
+</p><p>
+Once you know what device you want to use, you should open it using the
+<code class="function">open()</code> C call:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="varname">fd</code> = <code class="function">open</code>("/dev/audio/raw/sonic_vibes/1", <code class="constant">O_RDWR</code>);
+</pre><p>
+You'll use this file descriptor to refer to the open device from now on.
+The file descriptor should be closed with <code class="function">close()</code> when you're done with
+it. If the process (team) that opened the device crashes or otherwise
+goes away without closing the file descriptor, it will be garbage
+collected and closed by the kernel.
+</p><p>
+Many devices implement the <code class="function">read()</code> and <code class="function">write()</code>
+protocols. Thus, to record
+some audio from the default input device, you just do this:
+</p><pre class="programlisting cpp">
+<span class="type">short *</span> <code class="varname">data</code> = (<span class="type">short *</span>)<code class="function">malloc</code>(200000);
+<span class="type">ssize_t</span> <code class="varname">rd</code> = <code class="function">read</code>(<code class="varname">fd</code>, <code class="varname">data</code>, 200000);
+</pre><p>
+<code class="varname">rd</code> will contain the number of bytes actually read, or -1 if an error
+occurred (in which case the thread-local variable <code class="varname">errno</code> will contain the
+error code).
+</p><p>
+The format of the data returned by the device varies with the device; the
+default format of the sonic_vibes driver is stereo 16-bit signed
+native-endian 44.1 kHz PCM sample data. To play back this data using the
+<code class="varname">write()</code> call, do this:
+</p><pre class="programlisting cpp">
+<span class="type">ssize_t</span> <code class="varname">wr</code> = <code class="function">write</code>(<code class="varname">fd</code>, <code class="varname">data</code>, <code class="varname">rd</code>);
+</pre><p>
+<code class="varname">wr</code> will contain the actual number of bytes written, or -1 for error, in
+which case <code class="varname">errno</code> contains the error code.
+</p><p>
+Many devices do not work well with the simple <code class="function">read()</code>
+and <code class="function">write()</code>
+protocol; for instance, video capture cards often require a contiguous
+locked area of memory, which typically is not found in a buffer passed in
+by the user to <code class="function">read()</code> or <code class="function">write()</code>.
+Then you can implement your protocol as
+<code class="function">ioctl()</code> selectors. There are a number of
+well-defined <code class="function">ioctl()</code> values that
+your device can implement if they make sense for the class of device
+you're dealing with; specific subdirectories of
+<code class="filename">/dev</code> may require certain
+<code class="function">ioctl()</code> protocols to be implemented (such as
+<code class="filename">/dev/joystick</code>,
+<code class="filename">/dev/midi</code>, or
+<code class="filename">/dev/audio</code>).
+</p><p>
+Suppose we're using a video capture driver which implements the following
+protocol:
+</p><pre class="programlisting cpp">
+enum {
+  <code class="varname">drvOpSetBuffers</code> = <code class="constant">B_DEVICE_OP_CODES_END</code>+10001,
+  <code class="varname">drvOpStart</code>,
+  <code class="varname">drvOpStop</code>,
+  <code class="varname">drvOpWaitForFrame</code>,
+};
+
+struct <span class="type">drv_buffer_info</span> {
+  <span class="type">color_space</span> <code class="varname">in_space</code>;
+  <span class="type">int</span> <code class="varname">in_width</code>;
+  <span class="type">int</span> <code class="varname">in_height</code>;
+  <span class="type">int</span> <code class="varname">in_rowbytes</code>;
+  <span class="type">void *</span> <code class="varname">in_buffers</code>[2];   <span class="comment">/* even, odd */</span>
+};
+
+struct <span class="type">drv_frame_info</span> {
+  <span class="type">int</span> <code class="varname">out_frame_number</code>;
+};
+</pre><p>
+The client could then configure the driver like so:
+</p><pre class="programlisting cpp">
+<span class="type">drv_buffer_info</span> <code class="varname">buf_info</code>;
+<code class="varname">buf_info</code>.<code class="varname">in_space</code> = <code class="constant">B_YUV422</code>;
+<code class="varname">buf_info</code>.<code class="varname">in_width</code> = 640;
+<code class="varname">buf_info</code>.<code class="varname">in_height</code> = 240;
+<code class="varname">buf_info</code>.<code class="varname">in_rowbytes</code> = 640;
+
+<span class="type">area_id</span> <code class="varname">buf_area</code> = <code class="function">create_area</code>("capture buffers",
+  &amp;<code class="varname">buf_info</code>.<code class="varname">in_buffers</code>[0],
+  <code class="constant">B_ANY_KERNEL_ADDRESS</code>,
+  <code class="varname">buf_info</code>.<code class="varname">in_rowbytes</code>*<code class="varname">buf_info</code>.<code class="varname">in_height</code>*2,
+  <code class="constant">B_CONTIGUOUS</code>, <code class="constant">B_READ_AREA</code>|<code class="constant">B_WRITE_AREA</code>);
+
+<code class="varname">buf_info</code>.<code class="varname">in_buffers</code>[1] = ((<span class="type">char *</span>)<code class="varname">buf_info</code>.<code class="varname">in_buffers</code>[0])+
+  <code class="varname">buf_info</code>.<code class="varname">in_rowbytes</code>*<code class="varname">buf_info</code>.<code class="varname">in_height</code>;
+
+<span class="type">int</span> <code class="varname">err</code> = ioctl(<code class="varname">fd</code>, <code class="varname">drvOpSetBuffers</code>, &amp;<code class="varname">buf_info</code>);
+if (<code class="varname">err</code> == -1) <code class="varname">err</code> = <code class="varname">errno</code>;
+</pre><p>
+It would start video capture like so:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="varname">err</code> = <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="varname">drvOpStart</code>);
+<span class="type">int</span> <code class="varname">err</code> = <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="varname">drvOpStart</code>);
+</pre><p>
+It would wait for each frame to arrive like so:
+</p><pre class="programlisting cpp">
+while (<code class="varname">running</code>) {
+  <span class="type">drv_frame_info</span> <code class="varname">frm_info</code>;
+  <span class="type">int</span> <code class="varname">err</code> = <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="varname">drvOpWaitForFrame</code>, &amp;<code class="varname">frm_info</code>);
+
+  if (<code class="varname">err</code> == -1) <code class="varname">err</code> = <code class="varname">errno</code>;
+
+  <code class="function">process_frame</code>(<code class="varname">frm_info</code>.<code class="varname">out_frame_number</code>,
+    <code class="varname">buf_info</code>.<code class="varname">in_buffers</code>[<code class="varname">frm_info</code>.<code class="varname">out_frame_number</code> &amp; 1]);
+}
+</pre><p>
+Last, it would stop the capture like so:
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="varname">err</code> = <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="varname">drvOpStop</code>);
+if (<code class="varname">err</code> == -1) <code class="varname">err</code> = <code class="varname">errno</code>;
+</pre><p>
+In real life, a typical protocol is more capable, and thus more
+complicated, than shown here, but it should be enough to give you an idea
+of how the protocol between a user-level client and a driver can be
+structured.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id514363"></a>Writing Device Drivers on BeOS</h3></div></div></div><p>
+OK, now that you know how to use a device driver, and have some idea how
+to structure the protocol between the client and the driver, it's time to
+get down and dirty with the actual process of creating a driver. Creating
+a driver on BeOS is done using ANSI C; the C++ language requires certain
+support which is not available in the BeOS kernel environment.
+</p><p>
+If you already have a large C++ library that talks to your hardware
+device and want to port it to BeOS, we suggest that you make your driver
+very shallow and use it just to read/write card registers and service
+interrupts, and put all your C++ code in a user-level add-on. Some
+readers may know "interrupts" by the name "IRQ"; we'll call them
+"interrupts" because that's the terminology used by the BeOS kernel kit.
+</p><p>
+A driver is a loadable shared library (add-on) which exports certain
+well-known function names such as <code class="function">init_driver()</code>
+and <code class="function">publish_devices()</code>.
+The driver gets loaded by the "devfs" file system (which runs in the
+kernel) in response to some client calling file system functions
+<code class="function">opendir()</code>, <code class="function">open()</code>, and others. A driver may get loaded and unloaded
+several times, not necessarily being opened just because it's loaded. It
+will, however, never be unloaded while it is open. The moral of this
+story is that you cannot expect global or static variables to retain
+their values after <code class="function">uninit_driver()</code> has been called, or before
+<code class="function">init_driver()</code> is called.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id514426"></a>Drivers, Devices, and Hardware</h3></div></div></div><p>
+First, you have to decide what to call your driver and your devices.
+Typically, one driver will service any number of installed cards of the
+same type, and each of those cards may cause the driver to publish
+multiple device names under
+<code class="filename">/dev</code>. These device names will be referred to
+as "devices"; the actual binary add-on will be called the "driver"; and
+the pieces of hardware serviced by the driver will be called the
+"hardware."
+</p><p>
+Typically, you'll name your driver something similar to the name of the
+main chip serviced by the driver. The sonic_vibes driver drives the S3
+Sonic Vibes chip; the bt848 driver drives the Brooktree Bt848/878 chips;
+the awe64 driver drives the Creative Labs SoundBlaster AWE32/64 cards;
+etc.
+</p><p>
+Your device names will then be derived from the protocols they implement,
+as well as the driver name. Thus,
+sonic_vibes publishes devices in
+<code class="filename">/dev/audio/raw/sonic_vibes</code>,
+<code class="filename">/dev/audio/old/sonic_vibes</code>,
+<code class="filename">/dev/audio/mix/sonic_vibes</code>,
+<code class="filename">/dev/audio/mux/sonic_vibes</code>,
+<code class="filename">/dev/midi/sonic_vibes</code>,
+and <code class="filename">/dev/joystick/sonic_vibes</code>,
+each device implementing the protocol that's defined for that part of the
+<code class="filename">/dev</code>
+directory tree. If there is no protocol defined for your device, you can
+implement whatever protocol you wish. Try to be consistent in your
+naming, though. For instance, a video capture driver for a chip named
+Pixtor might publish devices in
+<code class="filename">/dev/video/pixtor/</code>. By convention, each
+card will be numbered from 1 and up, so the first "pixtor" device would
+be called
+<code class="filename">/dev/video/pixtor/1</code>.
+</p><p>
+If your device is of some irregular kind, you can always publish in
+<code class="filename">/dev/misc/your-name</code>.
+Please avoid publishing directly under
+<code class="filename">/dev</code> and
+avoid inventing new classes of devices under
+<code class="filename">/dev/</code>. If you feel you have
+to, contact BeOS developer support or your favorite Be engineer first, to
+check that your scheme will work well with the rest of the system.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id514552"></a>Life and Death</h3></div></div></div><p>
+The first function called in your driver, if you implement and export it,
+is the <code class="function">init_hardware()</code> hook. Please refer to the skeleton driver for the
+C function prototype of each driver function.
+</p><p>
+<code class="function">init_hardware()</code> will only be called the first time your driver is loaded,
+to find and reset your hardware and get it into some known state, if
+necessary. Many drivers can do without implementing this hook at all. If
+you implement this hook, but don't find any of your cards installed, you
+should return a negative error code, such as <code class="constant">ENODEV</code>.
+</p><p>
+Note: on BeOS, all the POSIX error codes (<code class="constant">EXXX</code>) are negative numbers, so
+you should return them as-is to signify error.
+</p><p>
+The next driver hook being called is <code class="function">init_driver()</code>, which definitely
+should be implemented by all drivers. If your device is an ISA card,
+you'll want to call <code class="function">get_module()</code> on the ISA bus manager module to
+initialize a global variable to refer to that module for easy access
+(typically, this variable will be named "isa"). For PCI cards, use the
+PCI bus manager module, found in
+<code class="filename">PCI.h</code>.
+</p><p>
+Then, use the bus manager module to iterate over available hardware,
+looking for instances of the hardware you support. For each piece of
+hardware, make sure you enable its PCI bus interface in the configuration
+registers if it isn't already. Then allocate whatever memory you need to
+keep track of the hardware and the devices that hardware will cause to be
+published, and make sure the hardware is in some safe, well-behaved state
+and not generating spurious interrupts or other bad behavior. To allocate
+memory, use <code class="function">malloc()</code>. To later deallocate this memory,
+use <code class="function">free()</code>.
+</p><pre class="programlisting cpp">
+<span class="comment">/* a global variable for the PCI module */</span>
+<span class="type">pci_module_info *</span> <code class="varname">pci</code>;
+
+<span class="comment">/* in init_driver() */</span>
+<span class="type">pci_info</span> <code class="varname">info</code>;
+<span class="type">int</span> <code class="varname">ix</code> = 0;
+<span class="type">int</span> <code class="varname">cards_found</code> = 0;
+
+if (get_module(<code class="constant">B_PCI_MODULE_NAME</code>, (<span class="type">module_info **</span>)&amp;<code class="varname">pci</code>) get_nth_pci_info)(<code class="varname">ix</code>, &amp;<code class="varname">info</code>)) {
+  if (<code class="varname">info</code>.<code class="varname">vendor_id</code> == <code class="constant">MY_VENDOR</code> &amp;&amp; <code class="varname">info</code>.<code class="varname">device_id</code> == <code class="constant">MY_DEVICE</code>) {
+    <code class="varname">cards_found</code>++;
+    <code class="varname">my_card_array</code>[<code class="varname">ix</code>].<code class="varname">info</code> = <code class="varname">info</code>;
+  }
+
+  <code class="varname">ix</code>++;
+
+  if (<code class="varname">cards_found</code> == <code class="constant">MAX_CARDS</code>)
+    break;
+}
+
+if (<code class="varname">cards_found</code> &lt; 1) return <code class="constant">ENODEV</code>;
+
+<code class="varname">names</code>[<code class="varname">cards_found</code>] = <code class="constant">NULL</code>;
+
+<span class="comment">/* in uninit_driver() */</span>
+<code class="function">put_module</code>(<code class="constant">B_PCI_MODULE_NAME</code>);
+</pre><p>
+If you find no hardware, return <code class="constant">ENODEV</code>. If you find hardware, but
+something is wrong and you're not prepared to publish any devices, return
+<code class="constant">ENOSYS</code> or <code class="constant">ENOENT</code>. If all is OK,
+return <code class="constant">B_OK</code>.
+</p><p>
+Next, the hook <code class="function">publish_devices()</code> will be called. It should return a
+pointer to an array of C string pointers, one per device you want to
+publish, and terminated by a <code class="constant">NULL</code> pointer. For a hypothetical "Pixtor"
+driver which publishes one device per installed hardware card, up to a
+maximum of four installed cards, you'll typically have a global variable
+"names", like so:
+</p><pre class="programlisting cpp">
+static <span class="type">char *</span> <code class="varname">names</code>[5] = {
+  "video/pixtor/1",
+  "video/pixtor/2",
+  "video/pixtor/3",
+  "video/pixtor/4",
+  <code class="constant">NULL</code>  <span class="comment">/* init_driver() sets unavailable slots to NULL */</span>
+};
+</pre><p>
+In <code class="function">init_driver()</code> you will allocate a name string per device you find
+(unless a static array will work, as shown), and make the corresponding
+slot in <code class="varname">names</code> point to that string. Then you can just return the
+<code class="varname">names</code> array in <code class="function">publish_devices()</code>:
+</p><pre class="programlisting cpp">
+<span class="type">const char **</span> <code class="function">publish_devices</code>() {
+  if (<code class="varname">names</code>[0] == <code class="constant">NULL</code>) return <code class="constant">NULL</code>;
+  return <code class="varname">names</code>;
+}
+</pre><p>
+Note that the names assume they live under
+<code class="filename">/dev/</code> and thus should NOT
+contain that part; a typical name may be
+<code class="filename">video/pixtor/1</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id514913"></a>Naming Detour</h3></div></div></div><p>
+How does the devfs file system know which driver to open when a program
+asks for the device named
+<code class="filename">/dev/foo/bar/1</code>? Under R3, devfs opened all
+drivers when the system booted and called their <code class="function">publish_devices()</code>
+function, so it could know what devices were available. However, this
+mechanism doesn't scale well with an increasing number of drivers
+available for BeOS, and a new mechanism was introduced in R4.
+</p><p>
+Inside <code class="filename">/system/add-ons/kernel/drivers</code> (and
+<code class="filename">~/config/add-ons/kernel/drivers</code>)
+there are now two folders,
+<code class="filename">dev</code> and
+<code class="filename">bin</code>.
+All driver binaries go into
+<code class="filename">bin</code>,
+and symlinks to the drivers go
+into the appropriate subdirectory of
+<code class="filename">dev</code>.
+Thus the hypothetical Pixtor driver would put the driver in
+<code class="filename">...kernel/drivers/bin</code>,
+and put a symlink to that driver in
+<code class="filename">...kernel/drivers/dev/video</code>.
+The symlink has to be put there by the installation program or script for the driver, or, for
+development purposes, by the driver build process.
+</p><p>
+Thus, when a client calls
+<code class="code">open("/dev/video/pixtor/1")</code> or
+<code class="code">opendir("/dev/video/")</code>,
+devfs will scan all symlinks found in
+<code class="filename">...kernel/drivers/dev/video</code>
+(and subdirectories thereof) and open the
+referenced drivers to call their <code class="function">init_driver()</code> and <code class="function">publish_devices()</code>
+functions, in order to figure out which driver(s) publish devices that
+would interest the client. Devfs is reasonably smart about only doing
+this once, and it uses the modification date of the driver in
+<code class="filename">.../bin</code> to
+do that, so when you replace your driver with a newer copy, subsequent
+<code class="function">open()</code> calls for your driver will cause devfs to load the new version
+(once all the old clients have closed the old driver).
+</p><p>
+Not having to reboot for the new driver to be found is one of my favorite
+features of BeOS for driver development.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id541281"></a>Getting to Open</h3></div></div></div><p>
+When a client decides to open one of your devices, the kernel calls your
+<code class="function">find_device()</code> hook with the name in question. It's up to you to map this
+name (which you previously published in <code class="function">publish_devices()</code>) to the right
+device type within your driver. If you support only one device type, this
+is easy; even if you support more than one, a simple <code class="function">strncmp()</code> is
+typically sufficient.
+</p><p>
+A "device type" consists of a set of function pointers that define the
+interface for a device. In
+<code class="filename">Drivers.h</code> you'll find the struct
+<span class="type">device_hooks</span>, which is what should be returned from <code class="function">find_device()</code>. The
+hooks for <code class="function">open</code>, <code class="function">close</code>, <code class="function">free</code>,
+<code class="function">read</code>, <code class="function">write</code>, and <code class="function">control</code> must be
+implemented; the hooks for <code class="function">select</code>, <code class="function">deselect</code>,
+<code class="function">readv</code>, and <code class="function">writev</code> are
+optional.
+</p><p>
+If you don't implement
+<code class="function">readv</code>/<code class="function">writev</code>, the kernel will
+emulate these functions by repeatedly calling your
+<code class="function">read</code>/<code class="function">write</code> hooks, which may be
+less efficient than if you supported the
+<code class="function">readv</code>/<code class="function">writev</code> functions directly.
+Don't confuse the hook name <code class="function">select()</code> with the Net Kit
+function <code class="function">select()</code>; currently they have nothing to do
+with each other.
+</p><p>
+Once you've returned a <span class="type">device_hooks</span> structure, the kernel calls the open
+hook therein, letting you turn the device name into a unique "cookie"
+which your other hooks will use to find the open device in other hook
+calls. The open mode is <code class="constant">O_RDONLY</code>, <code class="constant">O_WRONLY</code>,
+or <code class="constant">O_RDWR</code>. Depending on your
+driver's capabilities, you might want to ensure exclusive access to
+reading and writing respectively, and return a <code class="constant">EPERM</code> error if someone
+tries to open the same device with the same mode twice in a row. It may,
+however, make sense to allow one <code class="function">open()</code> for
+<code class="constant">O_RDONLY</code> and another <code class="function">open()</code>
+for <code class="constant">O_WRONLY</code>.
+</p><p>
+The kernel never dereferences the "cookie" value, so it can be a pointer
+to some private data you <code class="function">malloc()</code>, or a pointer to an element in a global
+array, or just an index of some sort. Suffice to say that you must be
+able to get all necessary state information for the open device, and the
+hardware associated with it, when given this cookie in later hook
+function calls.
+</p><p>
+Your <code class="function">open()</code> hook will typically need to call
+<code class="function">install_io_interrupt_handler()</code> to install an interrupt service routine
+for the hardware in question the first time it is opened, if you didn't
+already do that in <code class="function">init_driver()</code>. For PCI devices, you find the values to
+pass to this function in the <span class="type">pci_info</span> struct for your hardware. The
+"data" value will be passed to your interrupt handler, and thus is
+typically your "cookie" value.
+</p><p>
+Note that the <span class="type">device_hooks</span> structure may acquire more
+functions in later versions of BeOS. To tell the kernel what version of the
+interface you were compiled with, you should export an <span class="type">int32</span>
+variable named <code class="varname">api_version</code>, it should be initialized to
+<code class="constant">B_CUR_DRIVER_API_VERSION</code>. Assuming you put your
+<span class="type">device_hooks</span> structs in static or global memory, the compiler
+will clear out any slots you don't define at the end to
+<code class="constant">NULL</code> for the version of the <span class="type">device_hooks</span>
+struct you compile with; thus the value of
+<code class="constant">B_CUR_DRIVER_API_VERSION</code> changes when the size of the
+<span class="type">device_hooks</span> struct changes. Just adding this line to your
+driver is enough, as long as you include <code class="filename">Drivers.h</code> before it:
+</p><pre class="programlisting cpp">
+<span class="type">int32</span> <code class="varname">api_version</code> = <code class="constant">B_CUR_DRIVER_API_VERSION</code>;
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id534256"></a>Close and Free</h3></div></div></div><p>
+When the user is done with your device, he calls
+<code class="function">close()</code> on the file descriptor that references it.
+When the file descriptor is closed (or when the last file descriptor is
+closed, if the user uses <code class="function">dup()</code>), the kernel calls your
+<code class="function">close()</code> hook. You should start shutting down the
+device; set a status bit so that future <code class="function">read()</code>,
+<code class="function">write()</code>, and <code class="function">control()</code> hook calls
+will return an error, and preferably un-wedge any outstanding blocking I/O
+requests and have them return <code class="constant">EINTR</code>. One technique for
+doing this is to simply delete the semaphores you use for synchronizing
+I/O. The <code class="function">acquire_sem()</code> calls in your driver hooks
+should then detect the <code class="constant">B_BAD_SEM_ID</code> error and take
+that to mean that the device is being shut down, and return
+<code class="constant">EINTR</code> to the calling client.
+</p><p>
+Once all outstanding I/O requests have returned from your driver, the
+<code class="function">free()</code> hook is called. Here is where you can
+deallocate all memory you allocated in <code class="function">open()</code> or
+during the course of dealing with the specific open device (as indicated by
+the cookie), and re-set your driver to accept a future
+<code class="function">open()</code> for that device name. Note that there will be
+exactly one call to the <code class="function">free()</code> hook for each call to
+the <code class="function">open()</code> hook, and that a call to
+<code class="function">free()</code> for the cookie returned by
+<code class="function">open()</code> will always come after a call to
+<code class="function">close()</code> for that cookie. There is no relation between
+different cookies returned by different calls to
+<code class="function">open()</code>; as far as the kernel knows they are
+independent.
+</p><p>
+The <code class="function">free()</code> hook is a good place to call
+<code class="function">remove_io_interrupt_handler()</code> to remove the interrupt
+handler for your device if you installed it in <code class="function">open()</code>.
+If you allow multiple <code class="function">open()</code>s, it's easier to install
+the handler (once) in <code class="function">init_driver()</code> and remove it in
+<code class="function">uninit_driver()</code>; don't install a handler more than
+once for the same hardware! Pass the same "data" value as you
+passed to <code class="function">install_io_interrupt_handler()</code> in
+<code class="function">open()</code> (i.e., for most devices, your
+"cookie" value).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id539427"></a>Your Interrupt Handler</h3></div></div></div><p>
+Your interrupt handler is called whenever an interrupt on your interrupt
+number occurs. Because of interrupt sharing, your hardware may not be the
+hardware that generated the interrupt. Your interrupt handler will be
+called on to figure out whether the interrupt was caused by your
+hardware, and if so, to handle it. The first thing you do in the
+interrupt handler should be to read the appropriate status register on
+your hardware, and if the interrupt was not generated by your hardware,
+immediately return <code class="constant">B_UNHANDLED_INTERRUPT</code>. This lets the kernel move on to
+other interrupt handlers installed for the same interrupt number and see
+if they can handle the interrupt.
+</p><p>
+If the interrupt was indeed generated by your hardware, you can go ahead
+and handle the interrupt, and then return <code class="constant">B_HANDLED_INTERRUPT</code>.
+</p><p>
+While your interrupt handler runs, interrupts are turned off. Thus, threads
+cannot be rescheduled, and other interrupts cannot be handled. This means
+that your interrupt handler should run as fast as possible. A typical
+interrupt handler just acquires a spinlock (for mutual exclusion with
+user-level threads), adjusts some internal data structure, and quite
+possibly releases a semaphore which the user thread
+(<code class="function">read()</code>, <code class="function">write()</code>, or
+<code class="function">control()</code>) is waiting for. Because rescheduling with
+interrupts disabled can cause a total system hang, you should release
+semaphores using <code class="function">release_sem_etc()</code> and pass the
+<code class="constant">B_DO_NOT_RESCHEDULE</code> flag, like so:
+</p><pre class="programlisting cpp">
+<code class="function">release_sem_etc</code>(<code class="varname">my_cookie</code>-&gt;<code class="varname">some_semaphore</code>, 1,
+  <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+</pre><p>
+The scheduling quantum on BeOS is 3000 microseconds. Thus, if you release
+a semaphore without rescheduling, the longest you may have to wait before
+a reschedule happens, and the scheduler gets a chance to notice that your
+semaphore has become available, and thus be able to schedule the thread
+waiting on the semaphore, is 3 milliseconds. If this is too long (for
+low-latency media devices like audio and <acronym class="acronym">MIDI</acronym>, for example) your
+interrupt handler routine can return the special value
+<code class="constant">B_INVOKE_SCHEDULER</code>, which means that you handled the interrupt, and want
+a thread reschedule to happen at the earliest possible time. The kernel
+then calls <code class="function">resched()</code> as soon as it leaves interrupt level, which gives
+the scheduler a chance to notice that your semaphore has been released
+and your waiting thread is now ready to run.
+</p><p>
+Note that, because of multithreading and thread priorities, your thread
+may not be the thread chosen to run just because a reschedule happens. If
+you have really low latency requirements, and can't afford to have
+lower-priority threads come between your interrupt handler and your
+waiting thread getting scheduled, you have to use real-time priority for
+the thread waiting for the interrupt. Using real-time priority for
+threads is dangerous, however, because they may completely lock out other
+threads from the system, including the graphics threads that draw to the
+screen, making the system appear "hung" if your real-time thread does too
+much work without synchronizing with a blocking primitive (like a
+semaphore).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id539538"></a>Read(), Write(), and Control()</h3></div></div></div><p>
+Now that you know how your device is loaded and unloaded, and how to
+handle interrupts generated by your hardware, you can design the rest of
+your device API to be used by user-level clients.
+</p><p>
+The <code class="function">read()</code> hook is called in response to a call to the user-level
+function <code class="function">read()</code> on a file descriptor that references your device. The
+cookie for your device will be passed to the <code class="function">read()</code> hook, as well as the
+current position, as maintained by the kernel file descriptor layer. If
+your device does not support positioning (seeking) you can ignore the
+position parameter.
+</p><p>
+Your job inside the <code class="function">read()</code> hook is to transfer data into the buffer
+passed into the <code class="function">read()</code> hook. The buffer has a size of <code class="varname">*numBytes</code>. You
+should transfer at most that many bytes, and then set <code class="varname">*numBytes</code> to the
+number of bytes transferred. If any bytes were transferred, return <code class="constant">B_OK</code>.
+If an error occurred and/or no data was transferred, set <code class="varname">*numBytes</code> to 0
+and return a negative error code.
+</p><p>
+Please note that the buffer pointed at by "data" will typically be in the
+user space of the team calling <code class="varname">read()</code>. It will typically be in
+discontiguous memory, and it will not be locked in physical RAM. Thus, it
+is not accessible from an interrupt service routine, nor can you DMA
+directly into it without first locking the buffer and getting the
+physical memory mapping for it:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span>
+<code class="function">read_hook</code>(<span class="type">void *</span><code class="parameter">cookie</code>, <span class="type">off_t</span> <code class="parameter">position</code>, <span class="type">void *</span><code class="parameter">buffer</code>,
+  <span class="type">size_t *</span><code class="parameter">numBytes</code>)
+{
+  <span class="type">long</span> <code class="varname">entries</code> = 2+*<code class="varname">numBytes</code>/<code class="constant">B_PAGE_SIZE</code>;
+  <span class="type">physical_entry *</span> <code class="varname">pe</code> = (<span class="type">physical_entry *</span>)
+    <code class="function">malloc</code>(<code class="function">sizeof</code>(<span class="type">physical_entry</span>)*<code class="varname">entries</code>);
+  <span class="type">status_t</span> <code class="varname">err</code>;
+
+  <code class="function">lock_memory</code>(<code class="varname">buffer</code>, *<code class="varname">numBytes</code>, <code class="constant">B_DMA_IO</code>);
+  <code class="varname">entries</code> = <code class="function">get_memory_map</code>(<code class="varname">buffer</code>, *<code class="varname">numBytes</code>, <code class="varname">pe</code>, <code class="varname">entries</code>);
+  <span class="comment">/* set up and start your DMA here */</span>
+  ...
+  <span class="comment">/* assume your interrupt handler will release this
+     semaphore when DMA done */</span>
+  <code class="varname">err</code> = <code class="function">acquire_sem</code>(<code class="varname">my_dma_semaphore</code>);
+  <code class="function">unlock_memory</code>(<code class="varname">buffer</code>, *<code class="varname">numBytes</code>, <code class="constant">B_DMA_IO</code>);
+  if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>) {
+    *<code class="varname">numBytes</code> = 0;
+  }
+  <code class="function">free</code>(<code class="varname">pe</code>);
+  return <code class="varname">err</code>;
+}
+</pre><p>
+The same rules apply for the <code class="function">write()</code> hook, except that the data transfer
+direction is from the buffer passed by the client to your hardware.
+</p><p>
+An alternative is to use a contiguous buffer in kernel space that you
+allocate and copy to/from in <code class="function">read()</code> and
+<code class="function">write()</code>. If you have a sound card
+that uses a cyclic auto-repeat DMA buffer, this is often a good solution,
+for example. However, if the data rate is high, such as for live video or
+fast mass storage devices, you want to avoid copies. You might choose to
+just have <code class="function">read()</code> and <code class="function">write()</code> return
+an error, and use <code class="function">ioctl()</code> exclusively
+for communicating with your device. Another option is to make <code class="function">ioctl()</code> the
+preferred protocol, but have <code class="function">read()</code> and <code class="function">write()</code> call the appropriate
+<code class="function">ioctl()</code> functions for convenience.
+</p><p>
+These kinds of decisions are easier if you're implementing a device for
+which Be has defined a protocol, because then you just follow the
+protocol. However, if you're implementing a driver for a device for which
+there is no predefined protocol, or if your device will have
+significantly better performance using some other protocol, you'll have
+to design the driver protocol on your own.
+</p><p>
+The <code class="function">control()</code> hook is called in response to the user-level client calling
+the <code class="function">ioctl()</code> function:
+</p><pre class="programlisting cpp">
+struct <span class="type">the_args</span> {
+  <span class="type">int</span> <code class="varname">a</code>;
+  <span class="type">int *</span> <code class="varname">b</code>;
+};
+<span class="type">int</span> <code class="varname">foo</code>;
+struct <span class="type">the_args</span> <code class="varname">args</code>;
+<code class="varname">args</code>.<code class="varname">a</code> = 1;
+<code class="varname">args</code>.<code class="varname">b</code> = &amp;<code class="varname">foo</code>;
+<code class="varname">err</code> = <code class="function">ioctl</code>(<code class="varname">fd</code>, <code class="constant">SOME_CONSTANT</code>, &amp;<code class="varname">args</code>);
+if (<code class="varname">err</code> == -1) <code class="varname">err</code> = <code class="varname">errno</code>;
+</pre><p>
+The <code class="function">control()</code> hook receives the integer constant passed to <code class="function">ioctl()</code>, as
+well as the pointer argument. Currently, the <code class="parameter">size</code> argument will always
+be 0 when passed to the hook, so you can ignore it. Assume that the
+pointer argument is correct for the integer constant in question.
+</p><p>
+You can start numbering your own operation constants from
+<code class="constant">B_DEVICE_OP_CODES_END</code>+1 (in
+<code class="filename">Drivers.h</code>). If you want to avoid the risk
+of clashing with someone trying to use a protocol you do not know about
+on your device, you can choose an arbitrary larger number to start
+numbering from, such as your birthday or something. As long as the
+numbers (when read as signed 32-bit integers) are larger than
+<code class="constant">B_DEVICE_OP_CODES_END</code>.
+</p><p>
+In the example above, your device control hook can look like this:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span>
+<code class="function">control_hook</code>(<span class="type">void *</span> <code class="parameter">cookie</code>, <span class="type">uint32</span> <code class="parameter">operation</code>,
+  <span class="type">void *</span> <code class="parameter">data</code>, <span class="type">size_t</span> <code class="parameter">length</code>)
+{
+  <span class="type">my_device *</span> <code class="varname">md</code> = (<span class="type">my_device *</span>)<code class="parameter">cookie</code>;
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="constant">B_OK</code>;
+
+  switch (<code class="parameter">operation</code>) {
+  case <code class="constant">SOME_CONSTANT</code>: {
+      struct <span class="type">the_args *</span> <code class="varname">ta</code> = (struct <span class="type">the_args *</span>)<code class="parameter">data</code>;
+      <span class="type">int</span> <code class="varname">i</code>;
+      if (<code class="varname">ta</code>-&gt;<code class="varname">a</code> &gt; <code class="constant">MAX_INDEX_FOR_MY_DEVICE</code>) {
+        <code class="varname">ta</code>-&gt;<code class="varname">a</code> = <code class="constant">MAX_INDEX_FOR_MY_DEVICE</code>;
+      }
+      if (<code class="varname">ta</code>-&gt;<code class="varname">b</code> == <code class="constant">NULL</code>) {
+        <code class="varname">err</code> = <code class="constant">B_BAD_VALUE</code>;
+      }
+      else {
+        <code class="varname">err</code> = <code class="function">acquire_sem</code>(<code class="varname">md</code>-&gt;<code class="varname">lock_sem</code>);
+        if (<code class="varname">err</code> &lt; <code class="constant">B_OK</code>) {
+          return <code class="varname">err</code>;
+        }
+        for (<code class="varname">i</code>=0; <code class="varname">ia</code>; <code class="varname">i</code>++) {
+          <code class="varname">ta</code>-&gt;<code class="varname">b</code>[<code class="varname">i</code>] = <code class="varname">md</code>-&gt;<code class="varname">some_value</code>[<code class="varname">i</code>];
+        <code class="function">release_sem</code>(<code class="varname">md</code>-&gt;<code class="varname">lock_sem</code>);
+      }
+    }
+    break;
+  default:
+    <code class="varname">err</code> = <code class="constant">B_DEV_INVALID_IOCTL</code>;
+    break;
+  }
+  return <code class="varname">err</code>;
+}
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id540243"></a>Some Rules to Follow</h3></div></div></div><p>
+Semaphores may cause a reschedule to another thread when released. Thus,
+you should not release a semaphore from an interrupt handler, or with
+interrupts disabled, without passing the <code class="constant">B_DO_NOT_RESCHEDULE</code> flag (using
+<code class="function">release_sem_etc()</code>).
+</p><p>
+It is generally a good idea to put as much code as possible at the user
+level, and make your driver as shallow as possible even if you aren't
+forced to by porting C++ code. The less code there is in the driver, the
+less locked memory will be used, and the less code there is that may
+crash the kernel. All of your driver's code and global/static data, as
+well as all memory returned by <code class="function">malloc()</code> called from a driver, is locked
+(and thus safe to access from an interrupt handler). Be gentle on the
+system.
+</p><p>
+Disabling interrupts is NOT sufficient to guarantee atomicity, because on
+an <acronym class="acronym">SMP</acronym> system, the other <acronym class="acronym">CPU</acronym> may be calling into your driver at the same
+time. For synchronization with data accessed by interrupt handlers, you
+have to use a spinlock. Spinlocks are the most primitive synchronization
+mechanism available; basically they use some atomic memory operation to
+test-and-set a variable. When the test-and-set fails, the calling thread
+just keeps trying (busy-waiting) until it succeeds. Thus, contention for
+spinlocks can be quite <acronym class="acronym">CPU</acronym> intensive. Therefore, they should be used
+sparingly, and only to synchronize data that really has to be touched by
+an interrupt handler (since semaphores cannot be used by interrupt
+handlers).
+</p><p>
+A spinlock is simply an <span class="type">int32</span> value in some permanent storage (a global,
+or some memory you <code class="function">malloc()</code> as part of opening your device) that is
+initialized to 0 before being used the first time. To acquire a spinlock,
+you turn off interrupts and then call <code class="function">acquire_spinlock()</code>:
+</p><pre class="programlisting cpp">
+<span class="comment">/* these are global variables */</span>
+<span class="type">int32</span> <code class="varname">my_spinlock</code> = 0;
+<span class="type">char</span> <code class="varname">protected_data</code>[128];
+<span class="type">int</span> <code class="varname">protected_ctr</code> = 0;
+
+<span class="comment">/* Acquire spinlock. */</span>
+<span class="type">cpu_status</span> <code class="varname">cp</code> = <code class="function">disable_interrupts</code>();
+<code class="function">acquire_spinlock</code>(&amp;<code class="varname">my_spinlock</code>);
+<span class="comment">/* Do protected operations --
+   this should be fast and not cause */
+/* any reschedule, so don't call malloc() or any semaphore
+   operations */
+/* or any function that may call these functions. */</span>
+<code class="varname">protected_data</code>[<code class="varname">protected_ctr</code>++] = 0;
+<code class="varname">protected_ctr</code> = <code class="varname">protected_ctr</code> &amp; 127;
+<span class="comment">/* Release spinlock. */</span>
+<code class="function">release_spinlock</code>(&amp;<code class="varname">my_spinlock</code>);
+<code class="function">restore_interrupts</code>(<code class="varname">cp</code>);
+
+<span class="comment">/* in your interrupt handler */</span>
+<span class="comment">/* serialize with user code, possibly on other CPUs */</span>
+<code class="function">acquire_spinlock</code>(&amp;<code class="varname">my_spinlock</code>);
+<span class="comment">/* Do protected operations like hardware register access */</span>
+<code class="function">release_spinlock</code>(&amp;<code class="varname">my_spinlock</code>);
+</pre><p>
+If you fail to disable interrupts before acquiring the spinlock, you'll
+deadlock on single-CPU machines, because your interrupt handler may then
+be called (and try to <code class="function">acquire_spinlock()</code> your spinlock) while the regular
+thread is holding the spinlock. That would be bad.
+</p><p>
+Many people find it convenient to wrap spin-locking into two
+general-purpose <code class="function">lock()</code> and <code class="function">unlock()</code>
+routines to not forget to turn off
+interrupts. You can use the same routines inside your interrupt handler,
+because calling <code class="function">disable_interrupts()</code> and later
+<code class="function">restore_interrupts()</code> is OK
+even inside an interrupt handler (even though interrupt handlers run with
+interrupts already turned off). Spinlocks, like semaphores, don't nest
+like that, however, so think about what you're doing and don't call
+functions that may lock a spinlock from some function that already holds
+the same spinlock.
+</p><pre class="programlisting cpp">
+<span class="comment">/* Assuming you keep state information about your hardware */</span>
+<span class="comment">/* in a struct named my_card, with a 0-initialized         */</span>
+<span class="comment">/* spinlock named hardware_lock */</span>
+
+<span class="type">cpu_status</span> lock_hardware(<span class="type">my_card *</span> <code class="parameter">card</code>) {
+  <span class="type">cpu_status</span> <code class="varname">ret</code> = <code class="function">disable_interrupts</code>();
+  <code class="function">acquire_spinlock</code>(&amp;<code class="varname">card</code>-&gt;<code class="varname">hardware_lock</code>);
+  return <code class="varname">ret</code>;
+}
+
+<span class="type">void</span> <code class="function">unlock_hardware</code>(<span class="type">my_card *</span> <code class="parameter">card</code>, <span class="type">cpu_status</span> <code class="parameter">previous</code>) {
+  <code class="function">release_spinlock</code>(&amp;<code class="varname">card</code>-&gt;<code class="varname">hardware_lock</code>);
+  <code class="function">restore_interrupts</code>(<code class="varname">previous</code>);
+}
+</pre><p>
+It's important to not disable interrupts for a long time. As a general
+rule, no more than 50 microseconds is allowable. If you disable
+interrupts for longer, you'll jeopardize the overall performance of the
+BeOS and the machine it's running on. Similarly, your interrupt service
+routine should not run for more than 50 microseconds (and less is, of
+course, better).
+</p><p>
+You may find the lack of deferred procedure calls disturbing if you come
+from some other driver architecture. However, the time it takes for BeOS
+to service an interrupt, release a semaphore, and cause a reschedule into
+a user-level real-time thread is often less than the time it takes for
+other operating systems just to handle the interrupt and get to the
+deferred procedure call level. Thus, we prefer to do what needs to be
+done in the user-level client threads that call into the device hooks.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id537955"></a>Don't Use Kernel Threads in Drivers</h3></div></div></div><p>
+If at all possible, let the user of your device spawn whatever threads
+your device needs. Kernel threads are very tricky and live by different,
+undocumented rules. If you find a need for a periodic task, look into
+using timer interrupts (available as of BeOS R4.1). Look for <code class="function">add_timer()</code>
+and <code class="function">cancel_timer()</code> in
+<code class="filename">KernelExport.h</code>.
+</p><p>
+If you wish to use a kernel thread in your driver, there are several
+pitfalls that make doing this a bad idea. The kernel team is a team just
+like any other team, and your kernel thread will have a stack in the
+upper half of the kernel team address space. This stack (and stacks of
+other kernel threads) is not accessible from user programs, and thus is
+not accessible from device hooks called by user programs. Only the lower
+half of the kernel team address space (<code class="literal">0x0–0x7fffffff</code>) is accessible to
+all teams when they enter the kernel.
+</p><p>
+You also cannot use <code class="function">wait_for_thread()</code> in your
+<code class="function">close()</code> or <code class="function">free()</code> hooks,
+because doing so causes a deadlock with the psycho_killer thread, which
+is responsible both for reaping dead threads and for freeing file
+descriptors and their associated devices. Thus, it is impossible for you
+to be perfectly sure that your kernel thread has terminated before your
+<code class="function">free()</code> hook returns. This is a big enough problem that you should
+reconsider using kernel threads at all in your driver, if there is some
+other possibility. This specific problem will be fixed in a future
+version of the BeOS, but all the other problems with kernel threads will
+still remain; also, R4 will be the baseline BeOS for some time to come,
+so a design without kernel threads is thus more widely compatible.
+</p><p>
+Again: Put the threads you need in the user-level client (add-on,
+application, whatever). If the driver needs to perform periodic tasks not
+in response to hardware interrupts, use timer interrupts. They are even
+more lightweight than threads, and have fewer of the problems mentioned
+above. As with any interrupt routine, timer interrupts still cannot
+access memory that is not in the kernel space; thus if you need to write
+into user-supplied buffers, do it in your driver <code class="function">read()</code>,
+<code class="function">write()</code> and <code class="function">control()</code> hooks.
+</p><p>
+Good luck!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-7"></a>(No article this week)</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+(Due to a scheduling conflict, Jean-Louis Gassée's regular column will
+not run in this week's Newsletter. Look for one next week.)
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-6.html">Issue 4-6, February 10, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-8.html">Issue 4-8, February 24, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-6.html" title="Issue 4-6, February 10, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-8.html" title="Issue 4-8, February 24, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-48.html" title="Issue 4-48, December 1, 1999" /><link rel="next" href="Issue4-50.html" title="Issue 4-50, December 15, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-48.html" title="Issue 4-48, December 1, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-50.html" title="Issue 4-50, December 15, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-48.html">Issue 4-48, December 1, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-50.html">Issue 4-50, December 15, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-49"></a>Issue 4-49, December 8, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-49"></a>Be Engineering Insights: Do You Have 24 Ears?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jon</span> <span class="surname">Watte</span></span></div></div></div><p>
+I don't, but I have at least 11 friends who can play instruments and
+sing. With the coming of Maui, we can all jam together and record the
+results using BeOS and an appropriate third-party software package.
+That's because we've introduced support for multichannel audio devices
+and file formats out-of-the-box. This means some additions to the Media
+Kit API that I'll go over in this article.
+</p><p>
+First out, the <span class="type">media_raw_audio_format</span> struct needed to be enhanced to
+convey information about things like how many bits of an <span class="type">int32</span> sample are
+actually valid data, and which channels are assigned to which logical
+speaker positions or matrix channels. Unfortunately,
+<span class="type">media_raw_audio_format</span>
+had no padding to take, so we invented <span class="type">media_multi_audio_format</span>
+which is the same thing, plus the extra fields, plus padding.
+<span class="type">media_format</span>.<code class="varname">u</code>.<code class="varname">raw_audio</code>
+is now a <span class="type">media_multi_audio_format</span>, as is
+<span class="type">media_raw_audio_format</span>::<code class="varname">wildcard</code>.
+Because of the wonders of C++ inheritance, most
+of your code will compile unchanged, but you'd do well to string-replace
+all occurrences of "media_raw_audio_format" with
+"media_multi_audio_format".
+</p><p>
+The new fields in <span class="type">media_multi_audio_format</span> are:
+</p><table class="variablelist"><tbody><tr><td><p><span class="term"><code class="varname">channel_mask</code></span></p></td><td><p>
+Contains a bit mask of the logical channel assignments
+present in the format. If there are more channels in the format than
+bits in this bit mask, the rest of the channels are undefined. Channel
+assignments include <code class="constant">B_CHANNEL_LEFT</code>,
+<code class="constant">B_CHANNEL_RIGHT</code>, <code class="constant">B_CHANNEL_CENTER</code>,
+<code class="constant">B_CHANNEL_SUB</code>, <code class="constant">B_CHANNEL_REARLEFT</code>,
+<code class="constant">B_CHANNEL_REARRIGHT</code>, and about 10
+more that you can find in
+<code class="filename">MediaDefs.h</code>
+or the next version of the BeBook.
+</p></td></tr><tr><td><p><span class="term"><code class="varname">valid_bits</code></span></p></td><td><p>
+Contains a count of how many bits of an <span class="type">int32</span> sample
+actually contain valid data. The rest of the bits may contain
+out-of-band data, zeros, or noise. If this value is 0, assume the
+entire value is valid.
+</p></td></tr><tr><td><p><span class="term"><code class="varname">matrix_mask</code></span></p></td><td><p>
+Contains a bit mask for which matrix encoding format
+was used, if any, for the data. These include <code class="constant">B_MATRIX_PROLOGIC_LR</code> and
+<code class="constant">B_MATRIX_AMBISONIC_WXYZ</code>. Currently, the Be System Mixer does nothing
+with this information, but I think an Ambisonic "renderer" Node would
+be an excellent and fun application using the Be Media Kit.
+</p></td></tr></tbody></table><p>
+Unfortunately, struct <span class="type">media_encoded_audio_format</span> contained a
+<span class="type">media_raw_audio_format</span> with no extra padding, so the extra fields have been split
+out into a <code class="varname">multi_info</code> field of type <span class="type">media_multi_audio_info</span>.
+<span class="type">media_multi_audio_format</span> actually multiplies inherits from
+<span class="type">media_raw_audio_format</span> and
+<span class="type">media_multi_audio_info</span> for this reason. Something to be aware of when
+you're coding away.
+</p><p>
+There were some other places in the Media Kit which used a naked
+<span class="type">media_raw_audio_format</span> without padding; most notably the constructor for
+<code class="classname">BSoundPlayer</code>. <code class="classname">BSoundPlayer</code>
+has thus gotten a new constructor which takes
+not only a <span class="type">media_multi_audio_format</span> argument, but also a <span class="type">media_node</span> and
+<span class="type">media_input</span>, so that you can point it at the Node/input of your choice.
+This is a good way to send data directly at one of what may be many
+installed sound devices, without involving the Be System Mixer (which
+does stereo-only output in Maui).
+</p><p>
+Judging from questions I've received, I feel it is worth reiterating:
+<code class="classname">BSoundPlayer</code> is NOT being retired, but the
+helper class <code class="classname">BSound</code> IS being
+retired. Any bugs filed against <code class="classname">BSound</code> will go unfixed. The header may
+disappear at any moment. There may be secret code in the media server
+that deletes the header file <code class="filename">Sound.h</code>
+from your hard disk at some random date in the future. If you can't just
+use a <code class="classname">BSoundPlayer</code> directly (either by overriding
+<code class="methodname">PlayBuffer()</code> or by using the hooks) then I suggest
+you look into <code class="classname">BGameSound</code> and its most-derived
+classes <code class="classname">BSimpleGameSound</code>,
+<code class="classname">BFileGameSound</code> and
+<code class="classname">BPushGameSound</code>. Indeed, while most of the high-end
+Media Kit is gone in our separate "Stinger" product for Internet
+appliances, <code class="classname">BSoundPlayer</code> and
+<code class="classname">BGameSound</code> are still part of that product.
+<code class="classname">BSound</code> is not.
+</p><p>
+As far as file formats go, we've added support for the new
+<code class="constant">WAV_FORMAT_EXTENSIBLE</code> flavor of WAV files that was recently defined. Our WAV file
+writer and extractor will transparently read/write this flavor when
+dealing with formats that are not unambiguously describable using the old
+style of WAV header. Thus, if you use our WAV writer to write a 16-bit
+stereo file, that file will play fine on a friend's system running some
+other operating system product, whereas a 4-channel or 24-bit file may
+not, as his OS may not yet be prepared to deal with those files.
+</p><p>
+What about recording? This article comes with sample code for two
+utilities, one that plays a sound file back at the named sound device of
+your choice (from the command line) and one which records a multichannel
+file from the device of your choice. I've tried these with the Layla from
+Echo, a 10-in 12-out 20-bit device, and it works there; your system may
+vary. Feel free to snarf the parts of the sample code that you need into
+your own application, as long as you don't use that code for a non-BeOS
+product.
+</p><p>
+Sample Code: &lt;ftp://ftp.be.com/pub/samples/media_kit/multiaudio.zip&gt;
+</p><p>
+While debugging the new format negotiation in <code class="classname">BSoundPlayer</code>, we found some
+more ill-behaved applications which pass bad format descriptions to the
+<code class="classname">BSoundPlayer</code> constructor, and/or don't actually check which format is
+being used but assume some format which happened to be chosen on their
+system when they wrote the program. We've inserted code to stay
+compatible with these programs, but I suggest that you make sure to look
+at the format used by a <code class="classname">BSoundPlayer</code> and conform to that; don't just
+blithely assume some specific format, even if that's what you ask of it
+or what it has used in the past.
+</p><p>
+One humorous e-mail exchange started with, "I'm fixing bugs in
+app-name-deleted and it can't play audio anymore; it comes out as noise."
+It seems the developer had assumed floating-point samples, but changed
+the code to actually check and use whatever the <code class="classname">BSoundPlayer</code> wanted (in
+this case, <span class="type">int16</span>). Our workaround for the old version of the program
+assumed he was still giving us floats, and thus noise came out. The
+solution for him was to change his application's <acronym class="acronym">MIME</acronym> signature, which is
+the information we use in <code class="classname">BSoundPlayer</code> to activate possible application
+bug workarounds.
+</p><p>
+That said, you cannot assume that we'll cushion bugs in your code as we
+update the system. Some bugs are deemed too hard to work around or too
+egregious in nature to support, and a user upgrading the OS will see
+those applications stop working. Sometimes, we don't even have a copy of
+the application to test with, so we can't find the bug in the first
+place. Writing code that follows the rules is always your best defense.
+Check error codes, check modified non-const arguments, and don't assume
+any parameters (buffer size, sample format, etc.) will stay fixed just
+because they're on your machine.
+</p><p>
+One simple test is to run your program with "Real-Time Audio" enabled and
+disabled (restart media services in between) as enabling this option will
+make audio buffers smaller (how much depends on your sound card and CPU)
+and disabling it will make them bigger.
+</p><p>
+Are you one of the developers who reported sound glitch bugs with the
+<span class="application">MediaPlayer</span> application? You're not alone. It turns out that the
+<span class="application">MediaPlayer</span> was violating the "one clock" rule, and dropping/doubling
+buffers of audio when the audio stream played at a slightly different
+speed than <code class="function">system_time()</code>. <code class="constant">B_DONT_DO_THAT</code>. It also had a knack for
+tickling a bug in the mixer which resulted in faint "sparkles" in the
+sound. Both problems have been fixed as I write this article.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-49"></a>Developers' Workshop: Tonight on BBC2: How to Make Documentation Bookmarks</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><p>
+Along with personal jetpacks and submarine cars, documentation at your
+fingertips is one of those cold war promises that we've been looking
+forward to kicking and screaming. It's not enough to fish around for hard
+copy tucked open and face down under a pile of unprotected hard drives
+that we think we're going to get around to looking at again someday when,
+actually, they've long since been permanently de-gaussed by the janitor
+that doesn't work here anymore. All that amusing e-mail, gone.
+Expectations have been raised to such an upper shelf that we no longer
+tolerate the 10 mile snow trudge to explicitly open the on-line
+documentation and perform a search in the manner of the ancients. We want
+our tools to work for us. We want compilers that can correct the typos
+that our autocompleters create. We want servers that autodetect our
+network cards and software that deletes the spam that arrives
+therethrough. And we want to point to a function and say "Tell me about
+it."
+</p><p>
+As we all should know by now, the <span class="application">BeIDE</span> responds to this request, and has
+since about the winter of 19-aught-98. <span class="keysym">Alt</span> double-click a symbol defined
+by Be in the <span class="application">BeIDE</span> editor, and the documentation for the symbol pops open
+in a browser window (more or less).
+</p><p>
+But let's say you have your own library with HTML documentation. How can
+you play in this game?
+</p><p>
+Simple. So simple that I'm going to have to pile a few more pointless but
+oh-so-sassy and probably grammatically correct nonsequiturs onto just
+about every sentence in order to plump this article up to a size that
+won't get lost somewhere between the legitimate technical discussion
+above and the agitprop that follows. I could bang my head on the
+keyboard, for all this paragraph is going to tell you. 567rytuifghvbn
+567tyuighjvbnm 4675tyuighjkvnbm.
+</p><p>
+When the <span class="application">BeIDE</span> goes looking for a symbol, it creates a query that looks
+for files of type "application/x-vnd.Be-doc bookmark". Each such file
+represents a single symbol definition (function, class, constant, etc) in
+the Be Book. The file's name is the symbol itself; functions retain their
+parentheses, but without arguments (e.g. <code class="methodname">MessageReceived()</code>). The file
+type is associated with four special attributes:
+</p><ul class="itemizedlist"><li><p>
+<code class="varname">be:class_name</code> is the name of the class (or programming entity, such
+as "Threads", or "Tracker Add-ons") that the symbol is defined in.
+</p></li><li><p>
+<code class="varname">be:kit_name</code> is the name of the kit the symbol is part of.
+</p></li><li><p>
+<code class="varname">META:url</code> is the location of the documentation for the symbol. For
+example, the location of the <code class="methodname">PushGameSound::CurrentPosition()</code> function
+is:
+</p><p>
+file:///boot/beos/documentation/Be%20Book/The%20Game%20Kit/
+PushGameSound.html#CurrentPosition()
+</p></li><li><p>
+<code class="varname">be:short_description</code> is a short description for the symbol.
+</p></li></ul><p>
+The <span class="application">BeIDE</span> lookup logic doesn't depend on the
+<code class="varname">be:class_name</code>, <code class="varname">be:kit_name</code>,
+or <code class="varname">be:short_description</code> attributes—all it cares about is finding a
+symbol (i.e. a filename) that matches (or contains) the current
+selection. The attributes are used, however, to differentiate multiple
+hits.
+</p><p>
+If you want the <span class="application">BeIDE</span> to find your documentation, all you have to do is
+create a "application/x-vnd.Be-doc bookmark" file for each of your
+symbols, fill out the attributes, and put the files anywhere you want
+(except the Trash). The BeIDE query isn't restricted to the Be Book
+bookmark directory, which is somewhere inside the
+don't-look-here-oh-okay-go-ahead-and-look /boot/beos phone closet.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-49"></a>Opera on BeOS</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+As most BeOS followers have known for a while, the BeOS version of Opera
+has been making steady progress. I've used successive betas over the past
+three months and have been happy with the experience. Opera is a
+Norwegian company located in Oslo. Founded in 1995 by Jon Stephenson von
+Tetzchner and Geir Ivarsøy, it acquired a very good reputation for the
+quality of its independently developed browser. Opera 3.6 is now
+commercially available on Windows, with versions planned for Unix
+variants, MacOS, Epoc (the system inside the Psion organizers now
+spreading to other devices) and OS/2. More details are available at
+www.opera.com.
+</p><p>
+When you read Opera's home page, you can't miss their references to
+bloatware (their word, not mine). In fact, the commercial Windows version
+download needs 1.29 Mbytes and the application, once it's installed,
+requires 2.68 Mbytes. That's just a little more than Neoplanet itself,
+merely a "skin" for Explorer. Today, you can try Opera on Windows for 30
+days and see how well it compares with the integrated offering from
+Microsoft. For BeOS, there's the beta release already mentioned.
+</p><p>
+If you try it, I'm confident that you'll see why the technology and
+product philosophy are attractive to us, and why we've entered into a
+joint development and licence agreement with Opera for their browser. The
+legal agreement is a little more wordy than this last sentence, but the
+idea is to give us the opportunity to produce a nice BeOS version of
+their market-tested browser. More details are available in the press
+release and related material available at
+&lt;http://www.be.com/press/pressreleases/99-12-08_opera.html&gt;
+</p><p>
+Now, you might ask, why did we pick Opera over NetPositive? We looked at
+the two products and saw Opera as a clearly more evolved, functionally
+richer product. We've known the small group of people who produce it for
+awhile and respect their work. In licensing browser technology, we follow
+the example of our worthy elders: Explorer is built on a Spyglass
+license, and Navigator on code licensed from the NCSA at the University
+of Illinois.
+</p><p>
+A better browser, "integrated" or not, makes BeOS a better platform for
+desktop and appliance applications. And that's what the Be community --
+developers, users, and business partners—get as a result of this
+agreement. Looking back, we see this Opera agreement as being in line
+with recent technology and business agreements, such as Java and Real
+Networks. We're delighted with this opportunity to work with a fine group
+of people and to make our product more competitive.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-48.html">Issue 4-48, December 1, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-50.html">Issue 4-50, December 15, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-48.html" title="Issue 4-48, December 1, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-50.html" title="Issue 4-50, December 15, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

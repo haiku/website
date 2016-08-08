@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-29.html" title="Issue 2-29, July 23, 1997" /><link rel="next" href="Issue2-31.html" title="Issue 2-31, August 6, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-29.html" title="Issue 2-29, July 23, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-31.html" title="Issue 2-31, August 6, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-29.html">Issue 2-29, July 23, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-31.html">Issue 2-31, August 6, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-30"></a>Issue 2-30, July 30, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-30"></a>Be Engineering Insights: Synchronization In Device Drivers, Revisited</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+This article continues the exploration of process synchronization in BeOS
+device drivers. You may want to review the first article,
+"Synchronization in Device Drivers," from three months ago.
+</p><p>
+That article concluded with an example of the "z" facility which
+coordinates multiple "producers" and "consumers." This method yields a
+"broadcast" form of synchronization, where each thread examines the
+shared data, determining whether to proceed. As an exercise for readers,
+I did not show the version which uses just one semaphore. One reader,
+Oleg, deserves honorable mention for e-mailing the correct code.
+</p><p>
+My single-semaphore version follows. It assumes greater responsibility,
+being able to both coordinate threads and to lock data structures. In the
+previous article, locking was achieved through the <code class="function">lock()</code>/<code class="function">unlock()</code> calls.
+</p><pre class="programlisting c">
+struct <code class="varname">wchan</code> {
+    <span class="type">sem_id</span> <code class="varname">xsem</code>,
+           <code class="varname">wsem</code>;
+    <span class="type">uint</span> <code class="varname">nthread</code>;
+};
+
+<span class="type">void</span>
+<code class="function">wacquire</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    static <span class="type">spinlock</span> <code class="varname">sl</code>;
+
+    <span class="type">cpu_status</span> <code class="varname">ps</code> = <code class="function">disable_interrupts</code>( );
+    <code class="function">acquire_spinlock</code>( &amp;<code class="varname">sl</code>);
+    if (<code class="parameter">w</code>-&gt;<code class="varname">xsem</code> == 0) {
+        <code class="parameter">w</code>-&gt;<code class="varname">xsem</code> = <code class="function">create_sem</code>( 1, "excluded");
+        <code class="parameter">w</code>-&gt;<code class="varname">wsem</code> = <code class="function">create_sem</code>( 0, "waiting");
+    }
+    <code class="function">release_spinlock</code>( &amp;<code class="varname">sl</code>);
+    <code class="function">restore_interrupts</code>( <code class="varname">ps</code>);
+    <code class="function">acquire_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">xsem</code>);
+}
+
+<span class="type">void</span>
+<code class="function">wrelease</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    <code class="function">release_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">xsem</code>);
+}
+
+
+<span class="type">void</span>
+<code class="function">wsleep</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    ++<code class="parameter">w</code>-&gt;<code class="varname">nthread</code>;
+    <code class="function">release_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">xsem</code>);
+    <code class="function">acquire_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">wsem</code>);
+    <code class="function">acquire_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">xsem</code>);
+}
+
+<span class="type">void</span>
+<code class="function">wakeup</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    if (<code class="parameter">w</code>-&gt;<code class="varname">nthread</code>) {
+        <code class="function">release_sem_etc</code>( <code class="parameter">w</code>-&gt;<code class="varname">wsem</code>, <code class="parameter">w</code>-&gt;<code class="varname">nthread</code>, 0);
+        <code class="parameter">w</code>-&gt;<code class="varname">nthread</code> = 0;
+    }
+}
+</pre><p>
+A <span class="type">wchan</span> struct is allocated (statically) to protect a set of data,
+around which multi-threaded activities occur. An example is driver data
+for a serial port. N serial ports would require N <span class="type">wchan</span> structs.
+</p><p>
+The general idea is to acquire exclusive use of the data when you enter
+the driver, and relinquish it when you leave; the relevant calls are
+<code class="function">wacquire()</code> and <code class="function">wrelease()</code>. Within the driver, you may block for any
+reason, by calling <code class="function">wsleep()</code>, whereupon you temporarily lose control of
+the data. After unblocking, you automatically have control of the data,
+but it may have changed while you were "asleep." How were you woken up?
+By another thread in the driver, who called <code class="function">wacquire()</code> and then <code class="function">wakeup()</code>.
+</p><p>
+To simplify the discussion, this article is ignoring hardware interrupts
+entirely. Therefore, all flows-of- control are assumed to be background
+threads and, of course, in the kernel. As most hardware is operated with
+interrupts, this code would need augmentation before such use. See the
+previous article for details.
+</p><p>
+Here is the standard BeOS "control" entry-point for our hypothetical
+driver. It demonstrates the use of the "wchan" facility. Since there are
+no interrupts, all data producer and consumer threads must call this
+function. <code class="constant">PUT_DATA</code> is a producer command, while <code class="constant">GET_LINE</code> and
+<code class="constant">FLUSH_ON_NULL</code> are consumer commands.
+<code class="constant">WAIT_FOR_MORE</code> and <code class="constant">WAIT_UNTIL_EMPTY</code>
+consume nothing, but merely synchronize on some condition.
+</p><pre class="programlisting c">
+struct <code class="varname">device</code> {
+    struct <span class="type">wchan</span>  <code class="varname">w</code>;
+    struct <span class="type">clist</span>  <code class="varname">clist</code>;
+};
+
+<span class="type">status_t</span>
+<code class="function">dev_control</code>( <span class="type">void *</span><code class="parameter">v</code>, <span class="type">uint32</span> <code class="parameter">com</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+    <span class="type">status_t</span>    <code class="varname">s</code>;
+
+    <code class="function">wacquire</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>);
+    <code class="varname">s</code> = control( <code class="parameter">v</code>, <code class="parameter">com</code>, <code class="parameter">buf</code>, <code class="parameter">len</code>);
+    <code class="function">wrelease</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>);
+    return (<code class="varname">s</code>);
+}
+
+static <span class="type">status_t</span>
+<code class="function">control</code>( <span class="type">void *</span><code class="parameter">v</code>, <span class="type">uint32</span> <code class="parameter">com</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+    struct <span class="type">device  *</span><code class="varname">dp</code>;
+    <span class="type">size_t</span>  <code class="varname">i</code>;
+
+    <code class="varname">dp</code> = (struct <span class="type">device *</span>) <code class="varname">v</code>;
+    switch (<code class="parameter">com</code>) {
+    case <code class="constant">GET_LINE</code>:
+        while (<code class="function">findchar</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">clist</code>, '\n') == 0)
+            if (<code class="function">wsleep</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>) == 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+        for (<code class="varname">i</code>=0; <code class="varname">i</code>&lt;len; ++<code class="varname">i</code>) {
+            <span class="type">int</span> <code class="varname">c</code> = <code class="function">getc</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>, &amp;<code class="varname">dp</code>-&gt;<code class="varname">clist</code>);
+            if (<code class="varname">c</code> &lt; 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+            ((<span class="type">char *</span>)<code class="parameter">buf</code>)[<code class="varname">i</code>] = <code class="varname">c</code>;
+            if (<code class="varname">c</code> == '\n')
+                break;
+        }
+        break;
+    case <code class="constant">FLUSH_ON_NULL</code>:
+        while (<code class="function">findchar</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">clist</code>, 0) == 0)
+            if (<code class="function">wsleep</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>) == 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+        while (<code class="varname">dp</code>-&gt;<code class="varname">clist</code>.<code class="varname">nchar</code>)
+            if (<code class="function">getc</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>, &amp;<code class="varname">dp</code>-&gt;<code class="varname">clist</code>) &lt; 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+        break;
+    case <code class="constant">WAIT_FOR_MORE</code>:
+        <code class="varname">i</code> = <code class="varname">dp</code>-&gt;<code class="varname">clist</code>.<code class="varname">nchar</code>;
+        while (<code class="varname">dp</code>-&gt;<code class="varname">clist</code>.<code class="varname">nchar</code> == <code class="varname">i</code>)
+            if (<code class="function">wsleep</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>) == 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+        break;
+    case <code class="constant">WAIT_UNTIL_EMPTY</code>:
+        while (<code class="varname">dp</code>-&gt;<code class="varname">clist</code>.<code class="varname">nchar</code>)
+            if (<code class="function">wsleep</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>) == 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+        break;
+    case <code class="constant">PUT_DATA</code>:
+        for (<code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="parameter">len</code>; ++<code class="varname">i</code>)
+            if (<code class="function">putc</code>( &amp;<code class="varname">dp</code>-&gt;<code class="varname">w</code>, &amp;<code class="varname">dp</code>-&gt;<code class="varname">clist</code>,
+                  ((<span class="type">uchar *</span>)<code class="parameter">buf</code>)[<code class="varname">i</code>]) &lt; 0)
+                return (<code class="constant">B_INTERRUPTED</code>);
+    }
+    return (<code class="constant">B_OK</code>);
+}
+</pre><p>
+The purpose of the driver is to pass data between user-level threads.
+Data is buffered with byte-wide FIFOs, using the <code class="function">putc()</code>
+and <code class="function">getc()</code> calls.
+As a convenience, these will block when there is no data to get, or too
+much data already buffered. Note the call to <code class="function">wakeup()</code> whenever the FIFO
+changes: This serves all threads in the driver, not just those sleeping
+in the clist module.
+</p><pre class="programlisting c">
+struct cdata {
+    struct <span class="type">cdata  *</span><code class="varname">next</code>;
+    <span class="type">uchar</span>  <code class="varname">c</code>;
+};
+struct clist {
+    struct <span class="type">cdata  *</span><code class="varname">head</code>,
+                  *<code class="varname">tail</code>;
+    <span class="type">uint</span>  <code class="varname">nchar</code>;
+};
+
+<code class="function">putc</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>, struct <span class="type">clist *</span><code class="parameter">cl</code>, <span class="type">int</span> <code class="parameter">c</code>)
+{
+    struct <span class="type">cdata  *</span><code class="varname">d</code>;
+
+    while (<code class="parameter">cl</code>-&gt;<code class="varname">nchar</code> &gt;= <code class="constant">CLISTMAX</code>)
+        if (<code class="function">wsleep</code>( <code class="parameter">w</code>) == 0)
+            return (-1);
+    <code class="varname">d</code> = (struct <span class="type">cdata *</span>) <code class="function">malloc</code>( sizeof *<code class="varname">d</code>);
+    <code class="varname">d</code>-&gt;<code class="varname">c</code> = <code class="parameter">c</code>;
+    <code class="varname">d</code>-&gt;<code class="varname">next</code> = 0;
+    if (<code class="parameter">cl</code>-&gt;<code class="varname">head</code>)
+        <code class="varname">cl</code>-&gt;<code class="varname">tail</code>-&gt;<code class="varname">next</code> = <code class="varname">d</code>;
+    else
+        <code class="parameter">cl</code>-&gt;<code class="varname">head</code> = <code class="varname">d</code>;
+    <code class="parameter">cl</code>-&gt;<code class="varname">tail</code> = <code class="varname">d</code>;
+    ++<code class="parameter">cl</code>-&gt;<code class="varname">nchar</code>;
+    <code class="function">wakeup</code>( <code class="parameter">w</code>);
+    return (<code class="parameter">c</code>);
+}
+
+<code class="function">getc</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>, struct <span class="type">clist *</span><code class="parameter">cl</code>)
+{
+    struct <span class="type">cdata  *</span><code class="varname">h</code>;
+    <span class="type">int</span>  <code class="varname">c</code>;
+    while (<code class="parameter">cl</code>-&gt;<code class="varname">nchar</code> == 0)
+        if (<code class="function">wsleep</code>( <code class="parameter">w</code>) == 0)
+            return (-1);
+    <code class="varname">h</code> = <code class="parameter">cl</code>-&gt;<code class="varname">head</code>;
+    <code class="varname">c</code> = <code class="varname">h</code>-&gt;<code class="varname">c</code>;
+    <code class="parameter">cl</code>-&gt;<code class="varname">head</code> = <code class="varname">h</code>-&gt;<code class="varname">next</code>;
+    <code class="function">free</code>( <code class="varname">h</code>);
+    <code class="function">wakeup</code>( <code class="parameter">w</code>);
+    return (<code class="varname">c</code>);
+}
+
+<span class="type">bool</span>
+<code class="function">findchar</code>( struct <span class="type">clist *</span><code class="parameter">cl</code>, <span class="type">uint</span> <code class="parameter">c</code>)
+{
+    struct <span class="type">cdata  *</span><code class="varname">d</code>;
+
+    for (<code class="varname">d</code>=<code class="parameter">cl</code>-&gt;<code class="varname">head</code>; <code class="varname">d</code>; <code class="varname">d</code>=<code class="varname">d</code>-&gt;<code class="varname">next</code>)
+        if (<code class="varname">d</code>-&gt;<code class="varname">c</code> == <code class="varname">c</code>)
+            return (<code class="constant">TRUE</code>);
+    return (<code class="constant">FALSE</code>);
+}
+</pre><p>
+Devising a more conservative protocol for <code class="function">wakeup()</code> calls in the <span class="type">clist</span>
+module would greatly improve efficiency. A larger blocking factor for
+<code class="function">malloc()</code> would also help!
+</p><p>
+The attentive reader might have noticed that <code class="function">wsleep()</code> is defined as
+returning <code class="code">void</code>, but is used as if it returns <code class="code">bool.</code> This leads us to a
+key topic: The failure to acquire semaphores.
+</p><p>
+The call <code class="function">acquire_sem()</code> blocks until it succeeds; this is rarely the
+desired behavior for device drivers. The user may wish to abort an
+operation which is lagging or hung. Programs may want to timeout
+automatically, and retry. This is all possible with the <code class="function">acquire_sem_etc()</code>
+call. When a timeout occurs, or the thread is sent a signal, the call
+returns without having acquired the semaphore. The driver must respond,
+usually by returning an immediate error.
+</p><p>
+I must admit failure myself, in being unable to work this into the above
+implementation of "wchan." Readers are welcome to respond.
+</p><p>
+Therefore, I must return to a BYOB (bring your own blockable) approach,
+as in the first article. To recap, each thread that wants to block until
+"something happens" will call <code class="function">wsleep()</code>. A semaphore is created on the
+spot, and added atomically to the list of waiting threads. Later, a
+different thread will call <code class="function">wakeup()</code>, with the usual broadcast effect. The
+return from <code class="function">wsleep()</code> is <code class="constant">TRUE</code>.
+</p><p>
+However, the return may be <code class="constant">FALSE</code>. In this case, a signal is pending. This
+could have arrived during the <code class="function">wsleep()</code>, or some time before. When using
+<code class="function">acquire_sem_etc()</code>, the BeOS will not allow a thread to block, or remain
+blocked, with a pending signal. For the good of the driver, the error
+must be propagated from <code class="function">wsleep()</code>, and then out of the driver. All this
+occurs in the following code:
+</p><pre class="programlisting c">
+struct <code class="varname">wchan</code> {
+    <span class="type">sem_id</span>  <code class="varname">sem</code>;
+    struct <span class="type">wlink  *</span><code class="varname">threads</code>;
+};
+struct wlink {
+    <span class="type">sem_id</span>  <code class="varname">sem</code>;
+    struct <span class="type">wlink  *</span><code class="varname">next</code>;
+};
+
+<span class="type">void</span>
+<code class="function">wacquire</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    static <span class="type">spinlock</span> <code class="varname">l</code>;
+    <span class="type">sem_id</span>     <code class="varname">sem</code>;
+    <span class="type">cpu_status</span> <code class="varname">ps</code> = <code class="function">disable_interrupts</code>( );
+    <code class="function">acquire_spinlock</code>( &amp;<code class="varname">l</code>);
+    <code class="function">unless</code> (<code class="parameter">w</code>-&gt;<code class="varname">sem</code>)
+        <code class="parameter">w</code>-&gt;<code class="varname">sem</code> = <code class="function">create_sem</code>( 1, "excluded");
+    <code class="function">release_spinlock</code>( &amp;<code class="varname">l</code>);
+    <code class="function">restore_interrupts</code>( <code class="varname">ps</code>);
+    <code class="function">acquire_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">sem</code>);
+}
+
+<span class="type">void</span>
+<code class="function">wrelease</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    <code class="function">release_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">sem</code>);
+}
+
+<span class="type">bool</span>
+<code class="function">wsleep</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    <span class="type">bool</span>  <code class="varname">b</code>;
+    struct <span class="type">wlink *</span><code class="varname">l</code> = <code class="function">malloc</code>( sizeof *<code class="varname">l</code>);
+    <code class="varname">l</code>-&gt;<code class="varname">sem</code> = <code class="function">create_sem</code>( 0, "waiting");
+    <code class="varname">l</code>-&gt;<code class="varname">next</code> = <code class="parameter">w</code>-&gt;<code class="varname">threads</code>;
+    <code class="parameter">w</code>-&gt;<code class="varname">threads</code> = l;
+    <code class="function">release_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">sem</code>);
+    <code class="varname">b</code> = <code class="function">acquire_sem_etc</code>( <code class="varname">l</code>-&gt;<code class="varname">sem</code>, 1, <code class="constant">B_CAN_INTERRUPT</code>, 0);
+    <code class="function">acquire_sem</code>( <code class="parameter">w</code>-&gt;<code class="varname">sem</code>);
+    return (<code class="varname">b</code> == <code class="constant">B_OK</code>);
+}
+
+<span class="type">void</span>
+<code class="function">wakeup</code>( struct <span class="type">wchan *</span><code class="parameter">w</code>)
+{
+    struct <span class="type">wlink  *</span><code class="varname">l</code>;
+    while (<code class="varname">l</code> = <code class="parameter">w</code>-&gt;<code class="varname">threads</code>) {
+        <code class="function">release_sem</code>( <code class="varname">l</code>-&gt;<code class="varname">sem</code>);
+        <code class="function">delete_sem</code>( <code class="varname">l</code>-&gt;<code class="varname">sem</code>);
+        <code class="parameter">w</code>-&gt;<code class="varname">threads</code> = <code class="varname">l</code>-&gt;<code class="varname">next</code>;
+        <code class="function">free</code>( <code class="varname">l</code>);
+    }
+}
+</pre><p>
+The <code class="function">dev_control()</code> should now be fully understandable. This article has
+illustrated some fairly sophisticated approaches to process
+synchronization, which should help writers of BeOS device drivers. There
+are multiple ways to coordinate threads, and to prevent corruption of
+data structures. The approach that a driver writer adopts will depend on
+the service being exported, and the particulars of the hardware.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-30-2"></a>Be Engineering Insights: European Developer's Conference</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Geoff</span> <span class="surname">Woodcock</span></span></div></div></div><p>
+I wanted to give you all a synopsis of our European developer's
+conferences, which were held several weeks ago, and respond to some of
+our European developers' comments. Without further ado...
+</p><p>
+There were two sites for the conferences, one in London and one in
+Frankfurt. The London conference was held at Planet Hollywood and was
+attended by about 40 developers. There was a small theater in the back of
+the building operated by a nice old guy named Reg. Reg's first comment
+was "Hey, I'll try to help, but I don't know anything about computers." I
+showed him the OS and the VideoMania demo, and he was literally walking
+about telling his co-workers "we need to get one of those boxes!" (It's
+nice to know there's still some unconquered minds out there!) Time seemed
+short in London, and Christophe had to drag me out of the building at the
+end.
+</p><p>
+Computer Warehouse, a distributor of Macintosh clones, was there
+demonstrating a Tanzania-based clone in a dusty blue case called...the BE
+MACHINE! We had some problems with the keyboards, but once we cleared
+these up things went fine.
+</p><p>
+The Frankfurt conference was held in a community center and was attended
+by about 60 developers. We had more time, and when the presentations were
+over, people began pulling out their Zip drives and doing some coding,
+trading ideas and files. PIOS, a German clone maker, was there displaying
+a machine that will eventually be able to boot 6 different operating
+systems, including the BeOS.
+</p><p>
+The European developers in attendance were, on average, younger than
+their US counterparts. While optimistic, many were concerned about Be's
+direction. Many commented on things like the BeBox, GeekPort and database
+features of the original BeOS. They didn't so much think these were the
+most important features overall for the BeOS, but they definitely felt
+they were distinctive, and led them to investigate Be in the first place.
+</p><p>
+The European developers seemed extremely technically- oriented, even as
+compared to their US counterparts. They have very technical schooling and
+really know the BeOS. However, they didn't seem as concerned with making
+money from their efforts as the US developers. One of the best things
+that came out of the conference is that I think many of the developers
+left with the realization that they could commercialize their products
+with some effort and some help from Be Europe. To the European
+developers: You have an incredible resource in the Paris office! They
+have a huge amount of experience and they want to help you commercialize
+your products. Please, contact them and let them help you.
+</p><p>
+Speaking of contacting, many of the developers had questions and comments
+at the conference. Most of your comments I have already made known here
+at Be, and I have answers for many of your questions which I will begin
+emailing back to you this week. If you don't get a response before Boston
+MacWorld, send me a message at geoff@be.com.
+</p><p>
+The business stuff aside, the mood and small sizes of the conferences
+made for two great parties. England and Germany, both known for good
+beer! I'd like to thank all of you who were there for making my trip so
+enjoyable, and I hope to see you all again soon!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-30"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+One of the measures of excellence that most software engineers are proud
+of utilizing is the "I stayed up this late" factor. Dude, I stayed up
+'til 5am to get this nifty feature working!! I did that last night, and I
+proudly showed the fruits of my labors to my wife in the morning to which
+she responded, "Well, that's not very practical is it?" She was
+absolutely right, the feature I had implemented wasn't very practical,
+but it has sales appeal! You want a little sizzle with that steak?
+</p><p>
+Man, you wouldn't believe how many Master's Awards entries we've seen in
+the last hours approaching the entry deadline. Now, I've been on the
+vanguard of a few emerging platforms in my day, and they objections come
+in waves. Something new... It will never work... Oh that thing, there's
+no software for it... It doesn't run Windows apps...
+</p><p>
+The words are all too familiar, and all too often we in the herd blindly
+follow the beat of the Master drum without looking very closely at the
+veracity of the statements. Well, in my humble opinion, the BeOS is
+quickly approaching that critical mass point. We survive long enough,
+interesting software shows up, a cottage industry is born. I'm telling
+you, this software is hot! And new stuff is coming all the time.
+</p><p>
+We've got music, lights, sounds, movies, spreadsheets, mail, paint, word
+processing. If you ask me, I think we're beginning to look lively.
+</p><p>
+But let's not stop here. The BeDC is coming right quick, and if you're
+going you'll likely be able to see all this nifty stuff. We'll have a
+impromptu 3D contest, we're giving out machines, we're giving out disks,
+there will be dancing, singing, food, entertainment, and the Macintosh
+faithful. But before you go, have you ever considered how many infrared
+output devices exist in your world? I took a quick look around the office
+and found a keyboard, mouse, several TV and VCR controllers, and even a
+couple of PDA devices that do IRDA transfers.
+</p><p>
+The funny thing about infrared is that you get to sit further away from
+the device you are controlling. Say, in the comfort of your living room
+chair, or on your bed, or what have you. It's pretty easy to train an
+infrared receiver to recognize when signals are coming from a particular
+device. So here's some more info on that prototype board that we're using
+to do IR.
+</p><p>
+Insight Electronics<br />
+1-800-677-7716<br />
+Part: CDB8130<br />
+$200 (for two boards)<br />
+http://www.crystal.com/
+</p><p>
+This is one of those times when I say, just go out and buy this thing.
+What kind of a geek are you anyway? It's loads of fun, and when you
+figure out that you can go buy one of those infrared keyboards for about
+$80, you'll have no end of fun as to the evil you could do with it.
+</p><p>
+So, to recount, we have lots of software, lots of nifty video thingies,
+lots of MIDI thingies, bunches of game-type thingies, accelerated 3D
+graphics. It's beginning to smell like soup. I think when our many
+thousands of magazine readers get their disks, they will be eager to buy
+software to play on their new toy. This is where we want to be. So before
+you head for Boston, do just one more compile knowing that there will be
+thousands of end-users who will be interested in your wares real soon now.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-30"></a>Protecting Investors</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Almost every day, we get mail from people interested in investing in Be.
+This is very flattering, we very much appreciate the sentiment it
+reveals, but law and common sense—they sometimes agree—dictate we
+decline.
+</p><p>
+I can understand the interest: In the seventies, one of my colleagues at
+Hewlett-Packard and Data General, Bill Foster, started a company called
+Stratus; they made a non-stop computer system, roughly going after the
+same market as Tandem, a phenomenal success at the time. On the occasion
+of one of my trips to the East Coast, I called on Bill Foster and offered
+to put my savings in his company. He smiled, thanked me and declined very
+politely.
+</p><p>
+I was very disappointed and, for a while, considered buying a McDonald's
+franchise in Paris. Fortunately, your opinion may vary, that didn't
+happen either and I decided I still loved computers after all. A decade
+and a half later, I finally invested in a start-up, Be Inc., and I now
+have a much better perspective on the wisdom of US securities laws and
+the reasons for the barriers they erect between professional investors
+and the rest of us.
+</p><p>
+Investing early in a high-tech start-up looks enormously attractive.
+Compute the returns. Today, how much is $1,000 invested in the early
+Microsoft worth? Or Apple, or Intel, or SGI, or Oracle—the list is
+wonderfully long and interesting. It attests to the greatest, fastest,
+legal creation of wealth in the history of mankind around Sand Hill Road
+in Menlo Park, CA. That road is also known as VC Gulch for its high
+concentration of venture capital firms. How could one not want to get in
+at the ground floor and enjoy the ride?
+</p><p>
+Well, there are the crashes. The roadsides of VC Gulch are littered with
+the carcasses of failed start-ups. Early stage high-tech companies are
+not good places to park college education or retirement money.
+</p><p>
+Hardier individuals will object they know the risks and are willing to
+invest anyway: They're able and willing to put discretionary funds in
+play without endangering their or their family's future. In some very
+limited cases, the law allows individual investors to play in the same
+field as the pros. The restrictions are severe and involve, among other
+parameters, high requirements for the individual's net worth and
+education—and lots of paperwork. See your friendly securities attorney
+for details.
+</p><p>
+There is more. Early stage companies have ambitious plans, they aim high.
+But software or ASICs take time, the rendez-vous in orbit with some other
+technology may or may not happen. For a number of reasons, the company
+you've invested in needs more time, more money. At this stage,
+professional investors make a decision: They put more money in the
+company, or they don't.
+</p><p>
+If they do, or if new investors come in, they evaluate the "updated"
+opportunity offered by the company in a number of ways. If some pros
+decide not to put in more money, it means they see a higher risk and/or a
+lower reward than they like. As a consequence, the company has to offer
+better terms in order to make itself at least as attractive as other
+deals the pros could invest in. Practically, the share of the company
+owned by the earlier round investors shrinks to a smaller percentage,
+sometimes a much smaller one. This is still preferable to closing the
+business, so shareholders (including the founding employees) acquiesce.
+They see a potential in the business, they need money to actualize said
+potential, and they're willing to pay the price in reducing their
+percentage holding.
+</p><p>
+The dilution is sometimes severe enough to be called "washing out." This
+is not a problem for investors who stay with the play and put money in
+the new round. They usually conserve their percentage of the company or
+pretty close to it, depending upon complex sets of terms in their initial
+investment. New investors also try to treat employees well by issuing new
+options, they need their commitment.
+</p><p>
+So, assuming the company ultimately makes it, the only parties who really
+suffer in this process are the investors who don't play in the new round.
+If they are pros, washing out and being washed out is part of their
+everyday life. No hard feelings. They made a judgement call.
+</p><p>
+For the "small," non-professional investor, re-investing may or may not
+be possible; being washed out might be perceived as an unfair experience,
+cautionary paperwork or not. That's where securities law and common sense
+agree in preventing normal people from playing with, or against, the
+pros. Who wants to bet money and play pick-up basketball against Michael
+Jordan or Dennis Rodman? And, no, I have no VC names in mind as I write
+this.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk2-30"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id577877"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id577883"></a>Subject: Think of all the fun...</h4></div></div></div><p>
+An initial public interest suggestion—that all Be developers should
+buy the full-blown issue of the Preview Release rather than wait to get
+it for free—generated a lot of mail (and no objections). War stories
+were swapped ("...they all laughed when I sat down to my BeBox..."),
+and opinions on the blinking green lights exchanged (everybody seems to
+like them; one listener suggested that a BeBox-bezel clone to snap onto
+the front of the StarMax machine would be a great Christmas present).
+</p><p>
+Ingmar Krusch fairly assessed the co-worker critic situation:
+</p><p>
+“<span class="quote">When someone laughs at my box, I turn the power off, back on, boot in
+15 seconds, switch to 32 Bit resolution, open up 6 [QuickTime] movies
+and ask if their Pentium can do equal... [Of course] If they're not
+blown away by this and ask for real world applications, you should
+start improvising.</span>”
+</p><p>
+The thread was not without its nay-sayers. Jonathan Perret (a
+"believer" nonetheless, he assures us), answered Mr. Krusch's question:
+</p><p>
+“<span class="quote">You got a Millennium? As soon as I switch to 32-bit, all the redraws
+get very slow and ugly... Then I launch 6 QuickTime movies, the hard
+drive seeks like mad and renders the system nearly unusable—besides
+the fact that the movies are no longer at 25 fps. And besides, it's not
+*that* impressive. NT does it fine, in case you didn't know.</span>”
+</p><p>
+After the expected rebuttal, the thread opened a can of Pentium vs.
+PPC. Sit back, this one will probably be with us for awhile.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id577936"></a>Subject: suspend_thread(), resume_thread(), and recv()</h4></div></div></div><p>
+An initial question about unblocking a semaphore-blocked thread turned
+into a wider discussion of signals after one of our readers suggested
+using <code class="function">send_signal()</code> instead of <code class="function">suspend_thread()</code>. Are signals evil,
+non-portable, and old-fashioned? Or are they the only way to design a
+modern multi-tasking kernel? Also, is there a difference between
+"thread safe" and "signal safe"?
+</p><p>
+THE BE LINE: Contrary to a notion developed in this thread,
+<code class="function">suspend_thread()</code> *does* work on a semaphore-blocked thread (the thread
+is immediately unblocked and suspended, as described in the Be Book).
+</p><p>
+However, there *is* a bug on the resume side—if the <code class="function">suspend_thread()</code>
+and <code class="function">resume_thread()</code> calls are too close to each other, the resume is
+ignored.
+</p><p>
+For now, stick a greater-than-3ms snooze between the calls (this is
+demonstrated in the Be Book in the <code class="function">snooze()</code> description, but the snooze
+value is a bit on the low side.)
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id577995"></a>Subject: PR tidbits</h4></div></div></div><p>
+As folks received their Preview Release CDs, they pointed out some of
+the rough edges, disagreed with some of the interface decisions, and
+made some suggestions (quoting from a variety of unnamed sources):
+</p><ul class="itemizedlist"><li><p>
+Kaleidoscope: "When you resize the window to be tall enough, a
+slice at the bottom doesn't refresh properly."
+</p></li><li><p>
+"Be seems to be measuring double-click intervals from mouse-down
+to mouse-down, rather than (IMHO correctly) mouse-up to mouse-down."
+</p></li><li><p>
+"If you want the movies to play REALLY fast, here's a secret tip:
+Push down the Caps Lock key before starting them. " (from Jake Hamby
+of Be)
+</p></li><li><p>
+NetPositive: "Open it up, resize it only horizontally and see the
+dirty trail the Location TextControl leaves behind."
+</p></li><li><p>
+Tracker: "If you click on a file/folder name to edit it, the
+cursor stays in the I-beam "edit text" shape until you do it again."
+</p></li></ul></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578047"></a>Subject: Multiple Undo/Redo</h4></div></div></div><p>
+How do you treat an action that occurs "in the middle" of a series of
+undo/redo's? Should it be added to the end of the list, or inserted at
+the current position? Is it possible to store the action state as a
+tree (for undo, yes, but redo would be ambiguous).
+</p><p>
+Also, it was suggested that Be needs a standard undo/redo key mapping.
+How about Alt-z/Alt-Z? Should this be user or app-settable? And where
+are those user interface guidelines?
+</p><p>
+This led to a discussion of the "F&lt;n&gt;" keys—should they be used more
+often? As an example, Jon Ragnarsson suggested using an F&lt;n&gt; key to
+show/hide Replicators.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id578076"></a>Subject: B_TRANSPARENT_32_BIT in DR9?</h4></div></div></div><p>
+Sander Stoks wrote in to ask about the transparent 32 bit bug—is it
+fixed in PR?
+</p><p>
+The thread then became a discussion of how to manage windows that
+contain lots of views: Should you really have to "roll your own" views
+(by creating and managing rectangles yourself) in order to avoid the
+efficiency hit of multiple views? It was suggested that while it may be
+lamentable that BViews tend to become very slow when you throw a few
+dozen into a single window, this is simply the way of the Be world...
+</p><p>
+Jon Watte:
+</p><p>
+“<span class="quote">The only alternative I can see is moving lots of stuff from the
+app_server into libbe.so, and have the app_server ONLY talk to
+BWindows, letting BViews be handled entirely on the client side. That
+would reduce communication, but would probably have other problems,
+since that's not the solution they chose.</span>”
+</p><p>
+Marco Nelissen:
+</p><p>
+“<span class="quote">You could do it the other way around... Ideally, you should be able to
+add your own modules to the app_server, which would then perform
+layout, drawing, or whatever else needs to be done fast.</span>”
+</p><p>
+Dianne Hackborn:
+</p><p>
+“<span class="quote">...there's no reason to put layout managers in the app_server: Since
+they typically don't interact with the user, they don't really need the
+capabilities of a <code class="classname">BView</code>; about the only app_server-related functions
+they need to work with are <code class="methodname">Draw()</code>, <code class="methodname">FrameResized()</code>, etc., and those all
+can be handled outside of transactions with the server, with little
+trouble.</span>”
+</p><p>
+So—why isn't the <code class="classname">BView</code> class faster? Where does the time go? Dianne
+Hackborn suggested that it's sunk by the amount of data that flows
+between the client and the server. Jon Watte says the amount of data
+doesn't matter—it's the communication overhead that's consumptive.
+So should multiple manipulations be bracketed by calls to <code class="classname">BWindow</code>'s
+<code class="methodname">DisableUpdates()</code> and <code class="methodname">ReenableUpdates()</code>
+(in order to batch the commands)?
+</p><p>
+Mr. Stoks' question never did get answered.
+</p><p>
+THE BE LINE: The 32-bit transparency bug has been fixed (in PR).
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-29.html">Issue 2-29, July 23, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-31.html">Issue 2-31, August 6, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-29.html" title="Issue 2-29, July 23, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-31.html" title="Issue 2-31, August 6, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

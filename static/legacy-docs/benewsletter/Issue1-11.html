@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-10.html" title="Issue 1-10, February 14, 1996" /><link rel="next" href="Issue1-12.html" title="Issue 1-12, February 28, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-10.html" title="Issue 1-10, February 14, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-12.html" title="Issue 1-12, February 28, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-10.html">Issue 1-10, February 14, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-12.html">Issue 1-12, February 28, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-11"></a>Issue 1-11, February 21, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-11"></a>Be Engineering Insights: Be Careful</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Cyril</span> <span class="surname">Meurillon</span></span></div></div></div><p>
+C++ makes programming applications fun and efficient through the use of
+objects. Multithreading operating systems make computers more responsive
+because applications can be divided into independent tasks. The mixing of
+the two is natural in modern computers such as the BeBox.
+</p><p>
+In the programming model of the <span class="trademark">Be Operating System</span>™, applications
+spawn threads that create and share global objects such as windows and
+views. This is both very powerful and dangerous. The different threads of
+an application are running simultaneously, and one of them may destroy a
+shared object at any time. The other threads will keep trying to use the
+destroyed object, which is problematic, unless special precautions are
+taken. There are two solutions to the problem.
+</p><p>
+The first solution is to use unique IDs as object identifiers. The
+validity of the object is checked whenever it is used, and an error is
+returned if the object has been destroyed. It is then up to the thread to
+deal with the error. Unfortunately, C++ uses pointers as object
+identifiers, which aren't unique IDs as they may be recycled. This is
+consequently not a solution that can be considered when programming for
+the <span class="trademark">Be OS</span>™.
+</p><p>
+The second solution is somehow to synchronize the threads whenever a
+shared object is destroyed. For example, one can think of a scheme where
+threads receive a death notification, so that they can remember not to
+use the object any more. This is the kind of solution that a Be developer
+would adopt. Note that the implementation of such a scheme is the entire
+responsibility of the developer. But here are a couple examples.
+</p><p>
+Let's start with the Database Kit. <code class="classname">BRecord</code> objects implicitly refer to
+the <code class="classname">BDatabase</code> object associated with a volume. There is only one instance
+of this <code class="classname">BDatabase</code> object per team, which is shared by all the threads of
+the team. Everything is fine until the volume is unmounted. When this
+happens, the main application thread is sent a synchronous notification
+message, and then the <code class="classname">BDatabase</code> object is destroyed. But what about the
+other threads of the team? If one tries to instantiate a <code class="classname">BRecord</code> given a
+record_ref after the database has been destroyed, it is safe. The <code class="classname">BRecord</code>
+constructor will simply report an error. A record_ref is a unique ID that
+can be checked when a <code class="classname">BRecord</code> is created. But if the thread has already
+created the BRecord object when the database is destroyed, then things
+get more complicated. A <code class="classname">BRecord</code> object may stop functioning any time of
+its life, because the underlying <code class="classname">BDatabase</code> object goes away. You can't
+assume any <code class="classname">BRecord</code> method call will succeed, even after the object has
+been created and the record read in. Errors must be checked and dealt
+with absolutely everywhere. This makes programming especially difficult
+and unpleasant—something C++ isn't supposed to be.
+</p><p>
+What's the solution? The Browser solves this problem in an interesting
+way. When the main Browser thread receives an unmount notification, it
+synchronously broadcasts it to all its windows. On reception of this
+message, all the Browser window threads can safely dispose of <code class="classname">BRecord</code>s
+associated with the volume going off-line. This ensures that a thread can
+safely use a <code class="classname">BRecord</code> during each cycle through the event loop.
+</p><p>
+We see that great care should be taken. The only safe use of a <code class="classname">BRecord</code>
+object is in the context of an event-driven thread. <code class="classname">BRecord</code> objects can't
+be used in a thread that isn't event-driven (for example, a
+compute-intensive thread), because the underlying <code class="classname">BDatabase</code> object may be
+destroyed asynchronously.
+</p><p>
+Now let's consider the Application Kit. The <code class="classname">BLooper</code> object offers the
+<code class="methodname">Lock()</code> and <code class="methodname">Unlock()</code>
+methods so different threads can share an object
+safely. Whenever a thread accesses a
+<code class="classname">BLooper</code>, it must lock it. The thread
+can unlock it when it is done with the access.
+</p><p>
+Let's imagine two threads, A and B, sharing a <code class="classname">BWindow</code> object (which
+derives from <code class="classname">BLooper</code>). Thread A destroys the window and then thread B
+wants to access it. B invokes the <code class="methodname">Lock()</code> method on the destroyed window
+(note that <code class="methodname">Lock()</code> isn't a virtual function). The method invocation is
+simply a function call. No virtual table lookup is necessary, which is
+fortunate because the object doesn't exist any more. But you must admit
+that the idea of invoking a method on an object that doesn't exist any
+more is a little troublesome. The first thing that <code class="methodname">Lock()</code> does is to
+safely check whether the 'this' pointer is a valid <code class="classname">BLooper</code> object. If it
+isn't, <code class="methodname">Lock()</code> reports an error. If it is, <code class="methodname">Lock()</code> carefully locks the
+object.
+</p><p>
+All this seems perfectly safe. But it isn't. <code class="methodname">Lock()</code> catches all cases of
+invalid pointers. But what if the pointer becomes valid again? Pointers
+aren't unique IDs, and one can reasonably think of a new window being
+allocated at the same place as the old one. The new window would get
+locked, while the thread wanted to lock the old one. We see that <code class="methodname">Lock()</code>
+is successful at serializing all accesses to a shared <code class="classname">BLooper</code> as long as
+the object isn't destroyed.
+</p><p>
+The solution, once again, is to synchronously broadcast a message to all
+the threads of the team to notify tell them that the object has been
+destroyed. This prevents the use of such objects in threads that aren't
+event-driven, but allows safe sharing of objects among the different
+threads.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-11"></a>Be Developer Profile: The Mipsys GeekPlayer</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michel</span> <span class="surname">Safars</span></span></div></div></div><p>
+The company I run, Mipsys, specializes in videoconferencing software and
+industrial data acquisition and treatment. We also work with Echelon's
+LonWorks field bus technology in industrial and building automation. We
+do a lot of engineering development but we also produce products for
+other companies and for Mipsys itself.
+</p><p>
+I first met Jean-Louis in the USA back in the early 1990s to talk about
+"la pluie et le beau temps" [the rain and the good times]. A few minutes
+later, I was very surprised to see him leave the room and come back with
+an NDA (nondisclosure agreement).
+</p><p>
+I didn't want to have any confidential information at first, but
+Jean-Louis insisted. So I signed up.
+</p><p>
+He showed me the BeBox project. I was very happy to see that most of the
+best technologies were already in the machine, as well as some very smart
+operating system features, such as multiprocessing, an integrated
+database, and real-time capabilities.
+</p><p>
+Fourteen years ago, I started my computer life with the Apple II and I
+remember how useful the joystick port was for small home or laboratory
+experiments in many fields. So I offered to add some built-in data
+acquisition capabilities. Jean-Louis immediately agreed to the idea. But
+at that time, Be discontinued the Hobbit-based BeBox and started
+redesigning the BeBox with PowerPC processors. By redesigning the
+machine, it was now possible to include the <span class="trademark">GeekPort</span>™, a set of
+parallel and analog input/output connections. Including the GeekPort in
+the machine would allow any user to have all types of functionalities
+that were particularly useful for home automation, laboratories, or geek
+use!
+</p><p>
+Now that the hardware was going to be done directly by Be, Jean-Louis
+called me and asked me to think about software to control the GeekPort.
+</p><p>
+I had been dreaming of software for home automation and independent geek
+use for a long time. For years I had observed software evolving and
+becoming more user-friendly, but it happened slowly. Just as the Mac OS
+compared to its predecessors, I wanted something really more friendly.
+This was certainly not easy either to imagine or to develop.
+</p><p>
+With the help of Raphael Moll and Olivier Coudert, Mipsys invented a new
+software environment we named GeekPlayer. GeekPlayer is a special BeBox
+software environment for easily developing applications that control all
+kinds of experiments. We were the very first European developer to work
+on the BeBox, and our whole team is proud of that, because we truly
+believe the BeBox will become a widely used and useful computer. In this
+adventure we always did the best we could. We appreciate this creative
+and constructive way of doing business.
+</p><p>
+By joining BeBox developers you will certainly find one of the best ways
+to create, invent, and do good work. I also encourage European developers
+to participate actively and develop new original applications that take
+advantage of the BeBox.
+</p><p>
+I benefit from writing this article to say that we work in the
+videoconferencing field as well. If you are interested in working with
+us, just call me or send me e-mail at mipsysad@imaginet.fr.
+</p><p>
+Have fun, and let the creative spirit be with you.
+</p><p>
+GeekPlayer will soon be available on the Net!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-11"></a>Java</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+"What about Java? What do you think about it and what are your plans for
+it?" I'm often asked these questions on-line and in person and this is a
+place to begin answering them.
+</p><p>
+First, programming languages. I'm agnostic—or practical. Currency, for
+me, is the big determinant. If the language is in wide circulation,
+well-supported by toolsmiths, well-abused by programmers, I embrace it
+wholeheartedly. Do you think C++ is lovable? Unless you're into SM
+(Software Masochism), probably not. But it has currency. At this stage it
+has become the lingua franca of our business—just as English has
+become the world's communication vernacular. Do we think of BASIC as an
+elegant language? In the old Sears and Roebuck sense of style, perhaps  --
+I mean this in the comfortable, familiar, no-nonsense style of the old
+catalog of tools. Microsoft understood this and were very clever in
+making Visual Basic such a success.
+</p><p>
+I've been involved in decades of language arguments. Always interesting,
+even more so if you understand my culture of birth, where we enjoy
+nothing more than an intellectual argument—about wines or movies, or
+about APL, ADA, and Pascal. We even have existentialist cab drivers. But
+in the end, one set of circumstances or another, English colonies or Bell
+Labs and UNIX give a language wide circulation and momentum.
+</p><p>
+So what about Java in this frame of reference? It's mostly good news. I
+don't know if we should equate Sun with Bell Labs and, if I can twist the
+metaphor a little bit, it looks like there is a revolt afoot against the
+United Kingdom of Microsoft. I sense a great deal of the energy
+propelling Java as being anti-Microsoft. It's probably unavoidable now
+that Microsoft's size and power make the polarization easy, but it
+shouldn't be confused with what Java does for programmers and users  --
+even if one of Java's touted benefits is avoiding the dire consequences
+of a one-standard world dominated by Microsoft. I come from a company
+that made one great ad in 1984, introducing the Macintosh as a way to
+break Big Brother IBM's domination. And yes, recently, some wags have
+pasted Bill Gates' picture into the ad. Great ad, one of the greatest. It
+only helps a little in a long, complex battle.
+</p><p>
+So what about Java itself and the strategy to make it the Web's C++? It
+looks promising. Close to home, Metrowerks will ship Java tools on the
+next CodeWarrior CD and there are several efforts afoot to write a Java
+interpreter on the BeBox. The known limitations of Java are being
+addressed. Just-in-time compilers will deal with some of the performance
+issues, and enterprising programmers are already perverting the
+"standard," producing deviant extensions. Just as with human languages,
+barbarisms and neologisms are a sign of acceptance; people's desires are
+channeled into it, unnatural acts result in a robust life form, as in the
+Greek roots of the word "hybrid."
+</p><p>
+A few things remain to unfold. One of them is Sun's real plans. For many
+years I have admired Sun's skills at ideological warfare, at getting
+airtime, saying one thing and doing another. For instance, Sun has been
+very good at preaching the open systems gospel. In the end they have a
+proprietary offering of hardware and software, which they call an
+industry standard. When I see them promoting Java as an industry standard
+and announcing a little later they'll produce hardware to run Java really
+well, I'm interested. Are they using their considerable persuasive powers
+to promote a standard, channel into it the energy of many, with the
+intent of controlling their own "better" version of it? Come to think of
+it, isn't this the game Netscape plays with HTML and Navigator?
+</p><p>
+The other factor still to play out is Microsoft's OCX (OCs as they're
+newly called, standing for OLE Controls), objects—or applets in the
+Windows/OLE world. Now, Java's most compelling feature is
+platform-independent distribution of applications over the Net, a very
+attractive idea. What Microsoft will say is: OK, in theory you can do
+that with Java (to the best of my knowledge, they still haven't executed
+the letter of intent to license Java) for 100 percent of the machines
+connected to the Net. But in practice, you can do that with OCs for 90
+percent of the clients, without having to trade off simplicity or
+performance for the other 10 percent. An interesting argument, one that
+only reinforces the fears of Microsoft domination—but one that needs
+consideration nonetheless.
+</p><p>
+Here at Be, we all look forward to the emergence of Java as a successful
+independent standard, more like the Internet and C++, adopted by many and
+controlled by no one.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-10.html">Issue 1-10, February 14, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-12.html">Issue 1-12, February 28, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-10.html" title="Issue 1-10, February 14, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-12.html" title="Issue 1-12, February 28, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,2156 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="Ja">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<title>Art of BeOS Programming</title>
+	<link href="../css/format.css" rel="stylesheet" type="text/css">
+	<link href="../css/layout.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<div id="pagewidth">
+
+<div id="main">
+
+<br/>
+
+<br/>
+
+<h1>第9章 ファイルを操ろう</h1>
+<br/>
+
+この章では、BeOSのファイルシステムが持つ特徴的な機能を利用して、ファイルやフォルダの検索と属性設定を行います。つまり、主な題材として以下のものをとりあげます。<br/>
+
+<br/>
+
+ ◇指定された条件に合うファイルやフォルダを検索する<br/>
+
+ ◇ファイルやフォルダのアイコンを表示する<br/>
+
+ ◇ファイルやフォルダにキーワードを付けて管理する<br/>
+
+<br/>
+
+また、これに加えて以下の二つの題材を扱います。<br/>
+
+<br/>
+
+ ◇アプリケーションの初期設定ファイルを作成し、設定データを保存する<br/>
+
+ ◇ファイルやフォルダのドラッグ&ドロップ機能をサポートする<br/>
+
+<br/>
+
+以上の題材をプログラミングするために、BeOSのAPIが提供しているクラスのうち、主に以下のものを利用します。<br/>
+
+<br/>
+
+ ●BEntry(Storage Kit)<br/>
+
+ ●BNode(Storage Kit)<br/>
+
+ ●BNodeInfo(Storage Kit)<br/>
+
+ ●BQuery(Storage Kit)<br/>
+
+ ●BVolume(Storage Kit)<br/>
+
+ ●BVolumeRoster(Storage Kit)<br/>
+
+ ●BBitmap(Interface Kit)<br/>
+
+ ●BScrollView(Interface Kit)<br/>
+
+<br/>
+
+これらのクラスの間の階層関係を、図9.1に示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.01.jpg" alt="図 第9章で主に扱うクラス間の階層図"/><div>図[9.1]  第9章で主に扱うクラス間の階層図</div>
+</div>
+
+<br/>
+
+プログラミングの説明に使うサンプルアプリケーションは、全部で二つ用意しています。9.1節では、ファイル検索を行うアプリケーションを示します。それから、9.3節ではファイルやフォルダにキーワードを付けて管理するアプリケーションを示します。このアプリケーションには、9.1節のファイル検索アプリケーションの機能を取り込んでおり、簡単なドキュメント管理ツールとして利用することができます。<br/>
+
+<br/>
+
+9.3節で示すサンプルアプリケーションは、これまで説明に使ってきたものに比べると多少大がかりで、この本のサンプルの中で一番大きなものです。それでも、アプリケーションのファイルサイズは約70KBしかなく、BeOS付属の機能限定版CodeWarriorで作成することが可能です(注9-1)。キーワードによるドキュメント管理機能を持った、高度なアプリケーションでもこの程度の小ささで済むのは、BeOSが提供する高機能のファイルシステム(BeFS)のおかげです。BeOSのファイルシステムについては3.4節でも説明しましたので、その内容を忘れてしまった人は、この後の説明へ進む前に、もう一度読み返してみるのもよいでしょう。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-1</dt><dd>BeOS付属のCodeWarriorでは、リンカが生成できる実行ファイルのサイズは最大で64KBまでということになっています。しかし、アプリケーションファイルには実行コード以外にもリソースデータなどの付属データが含まれるため、全体のファイルサイズは64KBよりも大きくなる場合があります。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="9.1"></a>
+<h2>9.1&nbsp;&nbsp;ファイルを探す</h2>
+この節では、BeOSのファイルシステム(BeFS)の機能を利用したファイル検索のプログラミングについて説明します。3.4節で述べたように、BeFSは簡易データベース機能を持っており、とても単純なプログラミングでファイル検索処理を実現できます。説明に使うサンプルアプリケーションのソースコードを読んでみれば、そのことが良く分かるでしょう。<br/>
+
+<br/>
+
+<br/>
+<a name="9.1.1"></a>
+<h3>9.1.1&nbsp;&nbsp;BeFSのファイル検索機能</h3>
+まず、BeFSが提供するファイル検索機能について紹介します。BeFSは、他のOSのファイルシステムと同様に階層構造を持っており、ディレクトリ(フォルダ)とファイルによって階層木を構成します。階層木はディレクトリで枝分かれし、それぞれの枝の末端、つまり葉にあたるのがファイルです。また、階層木の頂点はルートファイルシステム("/")であり、その下にはマウントされたボリュームが繋がります。この様子は、デスクトップの“Disks”アイコンからファイル階層をたどっていくと分かりやすいでしょう。“Disks”の下にはマウントされたボリュームがあり、それぞれのボリュームの下には、その中に保存されているフォルダやファイルの階層があります。<br/>
+
+<br/>
+
+BeFSは、ファイルシステムが構成する階層木の枝や葉、つまりフォルダやファイルに対し、強力な検索機構を提供します。この検索において、フォルダとファイルはどちらも階層木の節点(ノード)として平等に扱われるため、それらを区別する必要はありません。すべてのフォルダとファイルは、三つの基本属性、すなわち名前とサイズと最終更新日時を持ち、これをキーとして検索できます。それだけではなく、個々のフォルダやファイルに対して任意の属性を設定し、設定した属性をキーとした検索を行うことができるのです。これは、MacOSやWindows、またUnix系のOSなど従来のOSに比べると、大きな特徴です。<br/>
+
+<br/>
+
+たとえば、MacOSでもファイルに対する検索機能は提供されていますが、検索キーとして使えるのは、名前やサイズや最終更新日時など、あらかじめシステムによって定義された属性だけです。BeOSのように、アプリケーションが独自に定義した属性を検索に利用することはできません。それどころか、ファイルやフォルダに対して任意の属性を定義し、それを設定できる機能自体、従来のOSにはなかったものです。9.3節の説明で使う“InfoChest”というサンプルアプリケーションでは、この機能を利用してファイルやフォルダにカテゴリを示すキーワードを付け、キーワードによる分類管理を行います。これは、「キーワード」という属性を定義して、任意のファイルやフォルダに対してそれを設定できるからこそ実現できたものです。<br/>
+
+<br/>
+
+また、検索条件が文字列で表現されるのもBeFSの特徴です。たとえば、「名前が“koga”で始まるもの」という条件は、“(name=="koga*")”という文字列で表わされます(注9-2)。これをBeFSのファイル検索APIに渡せば、その通りの検索を行ってくれます。検索条件を文字列で表現できるので、ファイルに保存しておいて後で同じ内容の検索を行うのも、簡単にできます。BeFSのファイル検索機能を利用したツールの代表例にTrackerの検索パネルがありますが、実際に、Trackerの検索パネルでは検索に使った条件文をファイルに保存しておくことが可能です。データベースの用語では、検索内容を指定する条件文のことを「問い合わせ文(クエリー)」と呼びますが、BeFSでも検索条件文を指して「クエリー(query)」と呼んでいます。<br/>
+
+<br/>
+
+以下は、BeFSが持つファイル検索機能の特徴をまとめたものです。<br/>
+
+<br/>
+
+ ・検索は、ファイルやフォルダ、すなわちファイルシステムが構成する階層木の節点(ノード)が持つ属性をキーとして行われる。検索結果として返されるのは、条件に合う属性値を持ったノードの集合である。<br/>
+
+<br/>
+
+ ・ファイルシステム階層のノードに設定する属性は、あらかじめシステムで定義されたもの以外に任意の属性を追加でき、それを検索キーに利用することが可能。<br/>
+
+<br/>
+
+ ・検索条件は文字列で表現され、ファイルシステムに対する問い合わせ文(クエリー)として使われる。<br/>
+
+<br/>
+
+ここに挙げたのは、BeFSが提供する基本的な検索機能に過ぎません。この次に説明するStorage KitのAPIでは、これらに加えて「ライブクエリー」という便利な機能が提供されています。また、クエリーを作成するのを簡単にしてくれる機能も用意されていますので、通常のプログラミングではそちらを利用します(注9-3)。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-2</dt><dd>ここで示したのは、大文字と小文字を区別する場合の条件式です。区別しない場合は“(name=="[kK][oO][gG][aA]*")”となります。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-3</dt><dd>BeFSに対する基本的な問い合わせ機能は、Kernel Kitのクエリー操作手続きを通して利用することができます。何らかの事情でC++を利用できないなど、どうしてもC言語のAPIが必要な場合に利用するとよいでしょう。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="9.1.2"></a>
+<h3>9.1.2&nbsp;&nbsp;FileSearchが利用するAPI</h3>
+ファイル検索のサンプルアプリケーションについて説明する前に、それが利用しているAPIを紹介しておきます。まずは、これまでの章のサンプルでは扱っていなかったStorage Kitのクラスです。このKitは、ファイルやディレクトリなど、ファイルシステム要素を操作するAPIを集めたものです。この節のサンプル(FileSearch)では、主に以下のクラスを利用しています。<br/>
+
+<br/>
+
+ ■BEntry<br/>
+
+  ファイルシステム階層のノード、すなわちファイルやディレクトリの位置情報を表わしたクラスです。9.2節で説明するように、BNodeクラスと連携させて使います。ノードの削除や位置の移動を行うメソッドを持っており、ファイルやフォルダに格納されたデータにアクセスするのではなく、データの入れ物、つまりファイルやディレクトリ自体を操作する場合に利用するクラスです。<br/>
+
+<br/>
+
+  なお、ここでいう「位置」とは、ファイルシステムの階層木における位置を指します。つまり、BEntryクラスが表わす位置情報とはファイルやディレクトリのパス情報であり、それらが所属する親ディレクトリと名前の対がBEntryの実体です(注9-4)。以降の説明では、BEntryクラスが表わすノードの位置情報のことを「エントリ情報」と呼びます。BEntryクラスでは、エントリ情報の受け渡しに使う“entry_ref”という構造体を定義しています。<br/>
+
+<br/>
+
+ ■BNode<br/>
+
+  ファイルやディレクトリの実体、すなわちファイルシステム階層のノード本体を表わしたクラスです。ノードが持っているデータ、つまりファイルやディレクトリの内容にアクセスするためのクラスです。このクラスには、BFile, BDirectory, BSymLinkという三つのサブクラスがあり、それぞれファイルとディレクトリ、そしてシンボリックリンクを表わしたものです。言い換えれば、BeFSのノードはこの三種類しかありません。<br/>
+
+<br/>
+
+  BeFSでは、ノードに対して任意の属性を設定できるというのは上で述べた通りです。BNodeクラスは、ノード属性にアクセスして値の読み出しや書き込みを行うメソッド、および属性の追加と削除を行うメソッドを持っています。9.3節で説明するサンプルアプリケーション(InfoChest)では、これらのメソッドを使っていますので参考にしてみて下さい。また、BFileクラスやBDirectoryなど、BNodeのサブクラスを使ったプログラミング例は第10章で扱います。<br/>
+
+<br/>
+
+ ■BNodeInfo<br/>
+
+  ファイルシステム階層のノードが持つ属性のうち、3.4節で述べたファイルタイプ・データベースに関するものにアクセスする場合に便利なクラスです。このクラスを使わなくても、BNodeクラスだけを使ってそれらの属性にアクセスすることは可能です。しかし、ファイルやフォルダ(ディレクトリ)のアイコンを取得したり、ファイルを開くのに使うアプリケーションを設定したりする時は、このクラスが提供している専用のメソッドを使う方が便利です。<br/>
+
+<br/>
+
+  たとえば、この章のサンプルではファイルやフォルダのアイコンデータを取り出すのに、BNodeInfoクラスのGetTrackerIcon()メソッドを使っています。このメソッドはノード属性として保存されているアイコンのビットマップデータを探し、それがない場合には、ファイルタイプ・データベースにアクセスして対応するビットマップデータを取り出してくれます。これと同じことをBNodeInfoクラスを使わずにやろうとすると、BNodeクラス、およびBMimeTypeクラス(注9-5)を組み合わせた面倒な処理が必要になります。<br/>
+
+<br/>
+
+ ■BQuery<br/>
+
+  ノード属性をキーとしてノードの検索を行うクラスです。検索に使う問い合わせ文(クエリー)の作成、および検索を実行するメソッドを持っています。検索によって見つかったノードの情報は、このクラスのGetNextEntry()メソッドを使い、エントリ情報として取り出します。クエリーを作成する時は、検索キーとして使う属性の名前、および属性の値と比較演算子をセットするメソッドを、順に呼び出します。それらのメソッド呼び出しによってBQuery内部にクエリーが生成され、検索実行メソッドによって使われるのです。この後の説明で、BQueryを使った検索手順の具体例を示します。<br/>
+
+<br/>
+
+  BQueryクラスは、クエリーの作成と検索の実行に加えて「ライブクエリー」機能を持っているのが大きな特徴です。ライブクエリーというのは、検索によって見つかったノードが削除されたり、検索条件に合うノードが新たに作成されたりした場合に、それを通知してくれる仕組です。9.3節のサンプル(InfoChest)では、ライブクエリーを利用してファイルやフォルダの削除や作成を検出し、それを表示に反映するようにしています。<br/>
+
+<br/>
+
+ ■BVolume<br/>
+
+  ファイルシステムの格納領域、つまりボリュームを表わしたクラスです。この後の例でも示すように、ファイルシステムに対してノード検索を行う場合は、BQueryオブジェクトにBVoluemオブジェクトを渡して検索するボリュームを指定します。<br/>
+
+<br/>
+
+ ■BVolumeRoster<br/>
+
+  マウントされているボリュームの一覧情報や、起動ボリューム情報を取得するためのクラスです。また、ボリュームが新たにマウントされたり、マウントの解除が行われた場合には、それを通知してくれる監視機能を持っています。8.1節で、現在動作しているアプリケーションの一覧情報を管理しているBRosterクラスを紹介しました。マウントされているボリュームの一覧を知ることができるという点でBVolumeRosterはBRosterに似ていますが、BRosterとは違い、BVolumeRosterクラスのインスタンスは自由に生成して構いません。<br/>
+
+<br/>
+
+以上が、この節のサンプルが使っているStorage Kitのクラスです。次に、BQueryクラスを利用してファイル検索を行う手順を説明します。BQueryクラスを使ったファイル検索は、以下のような手順で行います。<br/>
+
+<br/>
+
+ 1.)BQueryクラスのインスタンスを生成する。<br/>
+
+<br/>
+
+ 2.)検索キーにするノード属性の名前を、PushAttr()メソッドでセットする。<br/>
+
+<br/>
+
+ 3.)検索条件として使う属性の値を、PushInt32()メソッドやPushString()メソッドでセットする。なお、検索キーとして使える属性は、数値型または文字列型の値を持つものに限られます。<br/>
+
+<br/>
+
+ 4.)検索条件として使う演算子を、PushOp()メソッドでセットする。指定できる演算子は、数値型データの大小比較を行うものと文字列型データの包含関係を判定するもの、および複合条件を作るための論理演算子(AND, OR, NOT)です。<br/>
+
+<br/>
+
+ 5.)検索を行うボリュームを、SetVolume()でセットする。一つのBQueryオブジェクトでは、一つのボリュームに対する検索しか行えません。複数のボリュームに対して同時に検索を行う場合は、ボリュームの数だけBQueryオブジェクトを生成する必要があります。<br/>
+
+<br/>
+
+ 6.)Fetch()メソッドを呼び出して、検索を実行する。正しく実行できたら、GetNextEntry()かGetNextRef()、またはGetNextDirents()メソッドを繰り返し呼び出し、見つかったノードのエントリ情報を全て取り出す。<br/>
+
+<br/>
+
+具体例を見るために、先ほどのクエリーの説明で使った「名前が“koga”で始まるもの」に対する検索について、リスト9.1にコーディング例を示します。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.1] BQueryによる検索処理の例</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>
+    status_t      sts<font color="#990000">;</font>
+    BQuery        queryObj<font color="#990000">;</font>   <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> BQueryオブジェクトを生成 </font></i><i><font color="#9A1900">*/</font></i>
+    BEntry        anEntry<font color="#990000">;</font>    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 結果取得用のBEntryオブジェクト </font></i><i><font color="#9A1900">*/</font></i>
+    BVolume       theBootVol<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 起動ボリュームの指定用 </font></i><i><font color="#9A1900">*/</font></i>
+    BVolumeRoster volRoster<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ボリューム情報の取得用 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 起動ボリューム情報を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">(</font>sts <font color="#990000">=</font> volRoster<font color="#990000">.</font><b><font color="#000000">GetBootVolume</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theBootVol<font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ボリュームの取得に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索キーにする属性の名前をセット </font></i><i><font color="#9A1900">*/</font></i>
+    queryObj<font color="#990000">.</font><b><font color="#000000">PushAttr</font></b><font color="#990000">(</font><font color="#FF0000">"name"</font><font color="#990000">)</font><font color="#990000">;</font>          <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 「名前が」 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索条件に使う属性の値をセット </font></i><i><font color="#9A1900">*/</font></i>
+    queryObj<font color="#990000">.</font><b><font color="#000000">PushString</font></b><font color="#990000">(</font><font color="#FF0000">"koga"</font><font color="#990000">,</font> <b><font color="#0000FF">false</font></b><font color="#990000">)</font><font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 「"koga"」 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索条件に使う演算子をセット </font></i><i><font color="#9A1900">*/</font></i>
+    queryObj<font color="#990000">.</font><b><font color="#000000">PushOp</font></b><font color="#990000">(</font>B_BEGINS_WITH<font color="#990000">)</font><font color="#990000">;</font>     <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 「で始まるもの」 </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索対象のボリュームをセット </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">(</font>sts <font color="#990000">=</font> queryObj<font color="#990000">.</font><b><font color="#000000">SetVolume</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theBootVol<font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 不正なボリューム指定 </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索処理を実行 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">(</font>sts <font color="#990000">=</font> queryObj<font color="#990000">.</font><b><font color="#000000">Fetch</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索実行に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 見つかったエントリを全て取り出す </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> queryObj<font color="#990000">.</font><b><font color="#000000">GetNextEntry</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>anEntry<font color="#990000">,</font> <b><font color="#0000FF">false</font></b><font color="#990000">)</font><font color="#990000">;</font>
+        <i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900">         * 見つかったエントリに対する処理</font></i>
+<i><font color="#9A1900">         </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#FF0000">}</font>
+	
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+リスト9.1では、BVolumeRosterオブジェクトを使って起動ボリューム情報を取得し、起動ボリュームに対して検索を行っています。検索キーに使う属性名は、「名前」を指定する"name"を渡しています。それ以外の属性名は、「サイズ」が"size"、「最終更新日時」が"last_modified"です。詳しくはAPIリファレンスを参照して下さい。また、検索条件に使う演算子は、「で始まる」を指定するB_GEGINS_WITHを渡しています。演算子を指定する定数はBQueryクラスのインタフェースファイルで定義されています。こちらも、詳細はAPIリファレンスで確認して下さい。<br/>
+
+<br/>
+
+上の例では示していませんが、BQueryクラスの使い方についていくつか補足しておきます。まず、BQueryオブジェクトは検索を行うたびに生成する必要はありません。Clear()メソッドを呼び出すと指定したクエリーや検索結果がクリアされますので、クエリーをセットし直せば、同じオブジェクトを使って何度でも検索できます。<br/>
+
+<br/>
+
+次に、クエリーは“(name=="koga*")”のような単一の条件式だけではなく、論理演算子を使って複数の条件式を組み合わせ、複雑な条件を指定することが可能です。勘のいい人なら既にお気づきかも知れませんが、検索条件の設定は、逆ポーランド記法に基づいています。したがって、たとえば「名前が“koga”で始まり、かつサイズが500,000バイト以上」すなわち“(name=="koga*") && (size>=500000)”というクエリーを指定するには、以下の順序でBQueryオブジェクトに対するメソッド呼び出しを行います:<br/>
+
+<br/>
+
+ 1.)PushAttr()で"name"をセット。<br/>
+
+ 2.)PushString()で"koga"をセット。<br/>
+
+ 3.)PushOp()でB_BEGINS_WITHをセット。<br/>
+
+ 4.)PushAttr()で"size"をセット。<br/>
+
+ 5.)PushInt32()で"500000"をセット。<br/>
+
+ 6.)PushOp()でB_GEをセット。<br/>
+
+ 7.)PushOp()でB_ANDをセット。<br/>
+
+<br/>
+
+それから、BQueryオブジェクトのメソッドを使って作成したクエリーは、GetPredicate()メソッドを使って取り出すことができます。取り出したクエリーは文字列ですから、ファイルに保存しておいて後で再利用することもできます。クエリー文字列は、SetPredicate()メソッドによってBQueryオブジェクトを初期化するのに使えるのです。この後に説明するファイル検索のサンプルアプリケーション(FieSearch)では、ユーザの入力に従ってクエリーを作成した後、GetPredicate()メソッドでクエリーの文字列を取り出し、それを検索処理オブジェクトに渡しています。BQueryクラスには代入演算子が定義されていませんが、GetPredicate()とSetPredicate()を使えば、クエリーの受け渡しが可能です。<br/>
+
+<br/>
+
+また、BQueryクラスのライブクエリー機能を利用する場合は、SetTarget()メソッドに更新通知メッセージの送り先を渡すだけです。これについては9.3節で説明しますので、ここではこれ以上触れません。以上で、この節で利用しているStorage KitのAPIに関する説明を終わります。<br/>
+
+<br/>
+
+ファイル検索のサンプルアプリケーションの説明に移る前に、このサンプルで利用しているInterface KitのAPIについて補足しておきます。次に説明するサンプル(FileSearch)では、これまでの章のサンプルとは違った使い方をしているクラスが二つあります。以下に、これまでの章のものとの違いを書いておきますので、サンプルのソースコードを読む際の参考にして下さい。<br/>
+
+<br/>
+
+ ■BScrollView<br/>
+
+  第8章のサンプルとは違い、垂直方向のスクローラに加えて水平方向のスクローラを表示するようにしました。ウィンドウをリサイズした時にスクローラのサイズを調節するのは、BScrollViewクラスの役割ではありません。スクロール表示される方のビューが行なう仕事なのです。この章のサンプルで使っているBListViewのサブクラス(EntryListView)では、リサイズ時に水平方向のスクロールバーのサイズ調節を行う機能を追加しています。<br/>
+
+<br/>
+
+ ■BBitmap<br/>
+
+  第7章のサンプルとは違い、オフスクリーンバッファとして利用するのではなく、単なるビットマップデータの格納用に使っています。ファイルやフォルダのアイコンを描画するときは、BBitmapオブジェクトにアイコンのビットマップデータをセットして、BViewクラスのDrawBitmap()メソッドで描画します。使い方の実際は、EntryListViewクラスのソース(リスト9.15)を参照して下さい。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-4</dt><dd>Storage Kitには、単純な文字列としてのパス情報、つまりパス名を表わしたBPathというクラスもあります。BPathクラスには、パス名に含まれる階層の区切り文字('/')を解析する機能が用意されているだけで、ノードの削除や移動など、ファイルシステムを操作する機能は持っていません。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-5</dt><dd>BMimeTypeクラスは、ファイルタイプ・データベースにアクセスするためのクラスであり、Storage Kitで提供されています。本書のサンプルでは、BMimeTypeを扱ったものはありません。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="9.1.3"></a>
+<h3>9.1.3&nbsp;&nbsp;FileSearchの外部仕様</h3>
+サンプルアプリケーションに関する説明の手始めとして、その外部仕様、つまりユーザに提供する機能を述べます。図9.2が、これから説明する“FileSearch”という名前のサンプルを動かした様子です。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.02.jpg" alt="図 FileSearchのスクリーンショット"/><div>図[9.2]  FileSearchのスクリーンショット</div>
+</div>
+
+<br/>
+
+このアプリケーションの外部仕様は、以下の通りです:<br/>
+
+<br/>
+
+ ・起動すると、ファイル検索用のウィンドウを開く。<br/>
+
+<br/>
+
+ ・ファイルの名前とサイズ、および最終更新日時をキーとして検索を行い、検索結果を表示する。<br/>
+
+<br/>
+
+ ・検索結果の表示欄には、ファイル名と最終更新日時、およびファイルのアイコンをリスト表示する。<br/>
+
+<br/>
+
+この外部仕様と図9.2のスクリーンショットだけではFileSearchアプリケーションの動きが分からない場合は、実際に動かしてみて下さい。FileSearchのソースファイルは、付録に付けたサンプルコード集の“9.1_FileSearch”というフォルダに入っています。また、「1998年4月30日以降に更新されたファイル」をFileSearchで検索する手順を以下に示しますので、FileSearchを動かす場合の参考にしてみて下さい。<br/>
+
+<br/>
+
+ 1.)FileSearchのアイコンをダブルクリックして起動して下さい。図9.2のような検索パネルが開かれます。<br/>
+
+<br/>
+
+ 2.)ウィンドウの左上隅にあるポップアップメニューから、“Modified”という項目を選択して下さい。起動直後では、“Name”という項目が選択されています。“Modified”を選択すると、ポップアップメニューの下にあるテキスト表示が“after”に変わるはずです。<br/>
+
+<br/>
+
+ 3.)次に、その下にある入力フィールドへ“1998-4-30”とタイプ入力して下さい。以上で、検索条件として「1998年4月30日以降に更新されたもの」を指定したことになります。なお、FileSearch内部では、指定された条件に合うノードのうち、ファイルだけを探すようになっています。<br/>
+
+<br/>
+
+ 4.)検索条件の入力が終わったら、“Search”というラベルの付いたボタンをクリックして下さい。検索始まり、見つかったファイルが次々にリストボックスへ追加されていきます。<br/>
+
+<br/>
+
+ 5.)入力フィールドの下にある“On:”というラベルのポップアップメニューは、検索するボリュームを指定するものです。アプリケーションの起動直後は“All disks”という項目が選択されており、全てのボリュームに対して検索を行います。複数のボリュームがある場合、そのうちの一つだけをメニューから選択することが可能です。<br/>
+
+<br/>
+
+ 6.)リストボックスに表示されたファイルを選択し、“File”メニューから“Open”を選択すると、ファイルを開きます。また、リスト上でダブルクリックしても開くことができます。“Open”ではなく“Open Parent”を選択するか、またはオプションキーを押しながらダブルクリックすると、そのファイルが入っているフォルダを開いてくれます。<br/>
+
+<br/>
+
+以上の手順を読むと分かるように、FileSearchの使い方はTrackerの検索パネルに似ています。実は、Trackerの検索パネルが持っている機能のうち、一部だけを真似て作ったのがFileSearchなのです。<br/>
+
+<br/>
+
+<br/>
+<a name="9.1.4"></a>
+<h3>9.1.4&nbsp;&nbsp;FileSearchのモジュール構成</h3>
+FileSearchアプリケーションの動きが分かったら、次はその内部を見てみましょう。図9.3に、FileSearchのモジュール構成を示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.03.jpg" alt="図 FileSearchのモジュール構成"/><div>図[9.3]  FileSearchのモジュール構成</div>
+</div>
+
+<br/>
+
+図9.3に示したモジュールのうち、中心的な役割を果たすのがSearchEngineクラスとRetrieverViewクラスです。SearchEngineはファイルの検索処理を実行するクラスで、RetrieverViewは検索条件の設定と結果表示を行うための、基底クラスです。以下に、図9.3に示したクラスの概要を述べます。<br/>
+
+<br/>
+
+ ■FileSearchApp<br/>
+
+  FileSearchのアプリケーションクラス。BApplicationクラスが提供しているフック関数のうち、ReadyToRun()とAboutRequested()、それからMessageReceived()を再定義しています。ウィンドウを生成し、SearchViewを貼りつけて表示してくれます。<br/>
+
+<br/>
+
+ ■SearchWindow<br/>
+
+  ウィンドウクラスです。第8章のサンプルと共通に使っている、MonoWindowのサブクラスとして実装しています。BWindowクラスが提供しているフック関数のうち、MenusBeginning()とMessageReceived()を再定義しており、次に述べるRetrieverViewクラスと連携して動作します。<br/>
+
+<br/>
+
+ ■RetrieverView<br/>
+
+  BViewのサブクラスです。検索条件の設定と結果表示を行うビュークラスのための、基底クラスです。フック関数として提供しているMakeupQuery()は純仮想関数であり、サブクラス側で実装するようになっています。検索処理を実行するSearchEngineクラスと連携し、検索処理の実行を指示したり、検索によって見つかったノードのエントリ情報を受け取る機能を持っています。また、ファイルやフォルダのリスト表示を行うEntryListViewクラスを部品として使い、受け取った検索エントリ情報を一覧表示します。<br/>
+
+<br/>
+
+  次に述べるSearchView、および8.3節のサンプルで使っている“DocumentsView”クラスは、このRetrieverViewを継承しています。<br/>
+
+<br/>
+
+ ■SearchView<br/>
+
+  RetrieverViewのサブクラスです。ユーザによって入力された検索条件の収集と、検索結果の表示を行います。RetrieverViewがフック関数として提供しているMakeupQuery()メソッドを再定義し、入力部品から収集した検索条件を親クラスに伝えます。<br/>
+
+<br/>
+
+ ■EntryListView<br/>
+
+  リスト表示を行うビュークラスです。BListViewクラスを継承しており、ファイルやフォルダをリスト項目として表示します。ただし、リスト項目の表示処理自体は次に述べるEntryListItemに任せています。このクラスでは、リストに表示したファイルやフォルダのうち、指定されたものを開く機能を提供します。なお、このクラスは第11章のサンプル(MemoMailer)でも利用しているため、付録のサンプルコード集では、ライブラリフォルダ(“MyLib/GUI”)に収録しています。<br/>
+
+<br/>
+
+ ■EntryListItem<br/>
+
+  ファイルやフォルダの情報をリストに表示するためのクラスです。BListItemクラスを継承しており、BListViewクラスまたはそのサブクラスと連携して動作します。データとして渡されたファイルやフォルダのエントリ情報(entry_ref)を内部に持ち、アイコンのビットマップデータを取得して描画する機能を持っています。なお、このクラスは第11章のサンプル(MemoMailer)でも利用しているため、付録のサンプルコード集では、ライブラリフォルダ(“MyLib/GUI”)に収録しています。<br/>
+
+<br/>
+
+ ■SearchEngine<br/>
+
+  検索用の問い合わせ文、つまりクエリーを受け取って検索処理を実行します。専用のスレッドを生成して検索処理を行うので、検索を依頼した側では並行して別の処理を行うことが可能です。見つかったファイルやフォルダの情報は、検索を依頼したオブジェクトにメッセージを送って伝えます。検索処理は一つのボリュームのみに対して行うので、検索対象とするボリュームが複数ある場合は、このクラスのインスタンスをボリュームの数だけ生成して動かします。<br/>
+
+<br/>
+
+  なお、検索を行う際にファイルだけを探すのか、あるいはフォルダも一緒に探すのかどうかを、コンストラクタの引数で指定して切り替えることができます。FileSearchアプリケーションでは、ファイルだけを探すようにしています。<br/>
+
+<br/>
+
+上に述べた説明だけでは、それぞれのクラスがどのように連携してファイル検索が行われるのかが分かりにくいかも知れませんね。9.1.2で述べたファイル検索の手順に対し、それぞれのクラスがどう働くのかを以下に示します。ソースを読む際の参考にしてみて下さい。<br/>
+
+<br/>
+
+ a.)BQueryクラスのインスタンスを生成(手順の(1))<br/>
+
+  SearchEngineクラス、およびRetrieverViewクラスが行います。SearchEningeは、検索処理を実行するためにBQueryオブジェクトを生成します。一方、RetrieverViewクラスではクエリーを作成するために使います。RetrieverViewクラスがSearchEngineにクエリーを渡す時は、BQueryクラスのGetPredicate()メソッドを使って取得したクエリー文字列を渡しています。<br/>
+
+<br/>
+
+  なお、SearchEngineとRetrieverViewとで別々のBQueryオブジェクトを持つのは、RetrieverViewでは検索対象にするボリュームの数だけSearchEngineのインスタンスを生成して検索を行うため、両者の間で一つのBQueryオブジェクトを共有するわけにはいかないからです。<br/>
+
+<br/>
+
+ b.)BQueryクラスによるクエリーの作成(手順の(2)～(4))<br/>
+
+  SearchViewクラスのMakeupQuery()メソッドで行います。このメソッドは、“Search”ボタンがクリックされた時にRetrieverViewクラスStartSearch()メソッドから呼び出されます。<br/>
+
+<br/>
+
+ c.)BQueryクラスによる検索処理の実行と結果の取り出し(手順の(5)と(6))<br/>
+
+  SearchEngineクラスが行います。SearchEngineクラスでは、StartSearch()メソッドの中でBQueryオブジェクトにクエリーと検索対象ボリュームをセットし、それから検索用のスレッドを起動します。このスレッドは、SearchEngineのクラスメソッドであるExecSearch()を実行します。ExecSearch()の中では、BQueryオブジェクトに対してFetch()メソッドを呼び出して検索を実行し、それからGetNextEntry()メソッドを繰り返し呼び出して見つかったノードのエントリ情報を取得しています。取得したエントリ情報は、専用の通知メッセージ(KGSE_ENTRY_FOUND)を使って検索の依頼主、つまりRetrieverViewオブジェクトに伝えます。<br/>
+
+<br/>
+
+<br/>
+<a name="9.1.5"></a>
+<h3>9.1.5&nbsp;&nbsp;FileSearchのソースコード</h3>
+リスト9.2～9.6に、FileSearchアプリケーションを構成するクラスのうち、RetrieverViewとSearchView、それからSearchEngineのソースを示します。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.2] RetrieverView.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _RETRIEVER_VIEW_H_
+<b><font color="#000080">#define</font></b> _RETRIEVER_VIEW_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;interface/View.h&gt;</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;support/List.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	EntryListView<font color="#990000">;</font>
+<b><font color="#0000FF">class</font></b>	SearchEngine<font color="#990000">;</font>
+<b><font color="#0000FF">class</font></b>	BMenuBar<font color="#990000">;</font>
+<b><font color="#0000FF">class</font></b>	BQuery<font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * RetrieverViewクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> RetrieverView <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BView <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索用のユーティリティ</font></i>
+    <b><font color="#0000FF">static</font></b> status_t	<b><font color="#000000">GetQueryAwareVolumes</font></b><font color="#990000">(</font>BList<font color="#990000">*</font> outDevices<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">RetrieverView</font></b><font color="#990000">(</font>
+        BRect frame<font color="#990000">,</font> <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> title<font color="#990000">,</font> uint32 resizeMask<font color="#990000">,</font> uint32 flags<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">virtual</font></b> <font color="#990000">~</font><b><font color="#000000">RetrieverView</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メニュー調節</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">AddAdjustableMenuItem</font></b><font color="#990000">(</font>uint32 theCommand<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AdjustMenuItems</font></b><font color="#990000">(</font>BMenuBar<font color="#990000">*</font> ioMenuBar<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> xx</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">SetDragEnabled</font></b><font color="#990000">(</font><font color="#009900">bool</font> allowDrag<font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メッセージ処理</font></i>
+    <b><font color="#0000FF">virtual</font></b> <font color="#009900">void</font>	<b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">protected</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索結果の表示動作制御</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">SetEntryListView</font></b><font color="#990000">(</font>EntryListView<font color="#990000">*</font> inListView<font color="#990000">)</font><font color="#990000">;</font>
+    EntryListView<font color="#990000">*</font>	<b><font color="#000000">GetEntryListView</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索動作の制御</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">StartSearch</font></b><font color="#990000">(</font>
+        <b><font color="#0000FF">const</font></b> BList<font color="#990000">&amp;</font> inDevices<font color="#990000">,</font> <font color="#009900">bool</font> doLiveQuery<font color="#990000">,</font> uint32 theFlavor<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AbortSearch</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">virtual</font></b> <font color="#009900">void</font>	<b><font color="#000000">MakeupQuery</font></b><font color="#990000">(</font>BQuery<font color="#990000">*</font> outQuery<font color="#990000">)</font> <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索オブジェクトの管理</font></i>
+    SearchEngine<font color="#990000">*</font>	<b><font color="#000000">FindSearcher</font></b><font color="#990000">(</font>dev_t theDevice<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メッセージ処理</font></i>
+    <b><font color="#0000FF">virtual</font></b> <font color="#009900">void</font>	<b><font color="#000000">VolumeMounted</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">virtual</font></b> <font color="#009900">void</font>	<b><font color="#000000">VolumeUnmounted</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <font color="#009900">void</font>	<b><font color="#000000">HandleNodeMessage</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">SearchCompleted</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">EntriesFound</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">EntriesChanged</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索処理の実行</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">StartSearchOn</font></b><font color="#990000">(</font>dev_t theDevice<font color="#990000">,</font> BQuery<font color="#990000">*</font> theQuery<font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    EntryListView<font color="#990000">*</font> fListView<font color="#990000">;</font>    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> エントリのリスト表示ビュー </font></i><i><font color="#9A1900">*/</font></i>
+    BList          fMItemList<font color="#990000">;</font>   <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 状態調節を行うメニュー項目 </font></i><i><font color="#9A1900">*/</font></i>
+    BList          fSearchers<font color="#990000">;</font>   <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索オブジェクトのリスト </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#009900">bool</font>           fDoLiveQuery<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> live queryを行うかどうか </font></i><i><font color="#9A1900">*/</font></i>
+    uint32         fNodeFlavor<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索対象範囲 </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _RETRIEVER_VIEW_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.3] RetrieverView.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 検索動作の制御; RetrieverView</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+RetrieverView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">StartSearch </font></b><font color="#990000">(</font>
+    <b><font color="#0000FF">const</font></b> BList<font color="#990000">&amp;</font> inDevices<font color="#990000">,</font> <font color="#009900">bool</font> doLiveQuery<font color="#990000">,</font> uint32 theFlavor<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BQuery	theQuery<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 過去に行った検索情報を解放 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AbortSearch</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    fListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DeleteAll</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> リスト表示をクリア </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 新しい検索処理を開始 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">MakeupQuery</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theQuery<font color="#990000">)</font><font color="#990000">;</font>
+    fDoLiveQuery <font color="#990000">=</font> doLiveQuery<font color="#990000">;</font>
+    fNodeFlavor  <font color="#990000">=</font> theFlavor<font color="#990000">;</font>
+    <b><font color="#0000FF">for</font></b> <font color="#990000">(</font>int32 i <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">,</font> n <font color="#990000">=</font> inDevices<font color="#990000">.</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font> i <font color="#990000">&lt;</font> n<font color="#990000">;</font> <font color="#990000">+</font><font color="#990000">+</font>i<font color="#990000">)</font> <font color="#FF0000">{</font>
+        dev_t	theDevice <font color="#990000">=</font> <font color="#990000">(</font>dev_t<font color="#990000">)</font>inDevices<font color="#990000">.</font><b><font color="#000000">ItemAt</font></b><font color="#990000">(</font>i<font color="#990000">)</font><font color="#990000">;</font>
+		
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">StartSearchOn</font></b><font color="#990000">(</font>theDevice<font color="#990000">,</font> <font color="#990000">&amp;</font>theQuery<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+RetrieverView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">AbortSearch </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BMessageQueue<font color="#990000">*</font> msgQueue<font color="#990000">;</font>
+    BMessage<font color="#990000">*</font>      aMessage<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 全ての検索処理を中断して検索オブジェクトを解放 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">for</font></b> <font color="#990000">(</font>int32 i <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">,</font> n <font color="#990000">=</font> fSearchers<font color="#990000">.</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font> i <font color="#990000">&lt;</font> n<font color="#990000">;</font> <font color="#990000">+</font><font color="#990000">+</font>i<font color="#990000">)</font> <font color="#FF0000">{</font>
+        SearchEngine<font color="#990000">*</font>	aSearcher<font color="#990000">;</font>
+		
+        aSearcher <font color="#990000">=</font> <font color="#990000">(</font>SearchEngine<font color="#990000">*</font><font color="#990000">)</font>fSearchers<font color="#990000">.</font><b><font color="#000000">RemoveItem</font></b><font color="#990000">(</font><font color="#990000">(</font>int32<font color="#990000">)</font><font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>aSearcher<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AbortSearch</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">delete</font></b> aSearcher<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 不要になったメッセージを解放 </font></i><i><font color="#9A1900">*/</font></i>
+    msgQueue <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Looper</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">MessageQueue</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font><font color="#990000">(</font>aMessage <font color="#990000">=</font> msgQueue<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindMessage</font></b><font color="#990000">(</font>KGSE_ENTRY_FOUND<font color="#990000">,</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font>
+        msgQueue<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">RemoveMessage</font></b><font color="#990000">(</font>aMessage<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font><font color="#990000">(</font>aMessage <font color="#990000">=</font> msgQueue<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindMessage</font></b><font color="#990000">(</font>KGSE_COMPLETED<font color="#990000">,</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font>
+        msgQueue<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">RemoveMessage</font></b><font color="#990000">(</font>aMessage<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:RetrieverViewが所属するウィンドウのスレッドと、SearchEngine</font></i>
+<i><font color="#9A1900"> *    オブジェクト内の検索スレッドは、非同期のメッセージ通信を使って</font></i>
+<i><font color="#9A1900"> *    並行動作している。したがって、SearchEngineを解放して検索スレッ</font></i>
+<i><font color="#9A1900"> *    ドを終了しても、その前に送られてきたメッセージが残っている可能</font></i>
+<i><font color="#9A1900"> *    性がある。上でメッセージキューの「掃除」を行っているのは、それ</font></i>
+<i><font color="#9A1900"> *    に対処するためである。しかし、それだけでは完全でない。</font></i>
+<i><font color="#9A1900"> *    このメソッドが実行されている間、ウィンドウスレッドによるポート</font></i>
+<i><font color="#9A1900"> *    からのメッセージ読み出し処理は停止しているため、その間に送られ</font></i>
+<i><font color="#9A1900"> *    たメッセージはキューに入っていないのである。したがって、不要な</font></i>
+<i><font color="#9A1900"> *    メッセージが届けられてしまい、「新しい」検索条件には該当しない</font></i>
+<i><font color="#9A1900"> *    ファイルやフォルダが表示されてしまう場合がある。</font></i>
+<i><font color="#9A1900"> *</font></i>
+<i><font color="#9A1900"> *    この問題を完全に解決するには、毎回の検索ごとに「トランザクショ</font></i>
+<i><font color="#9A1900"> *    ンID」を発行し、それを使って不要なメッセージを判定するようにし</font></i>
+<i><font color="#9A1900"> *    なければならない。('98. 5/1, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 検索処理の実行; RetrieverView</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+RetrieverView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">StartSearchOn </font></b><font color="#990000">(</font>dev_t theDevice<font color="#990000">,</font> BQuery<font color="#990000">*</font> theQuery<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t      sts<font color="#990000">;</font>
+    SearchInfo    searchInfo<font color="#990000">;</font>
+    SearchEngine<font color="#990000">*</font> theSearcher<font color="#990000">;</font>
+    size_t        theLength <font color="#990000">=</font> theQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PredicateLength</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 既に同じディレクトリの検索を行っていたら無視 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindSearcher</font></b><font color="#990000">(</font>theDevice<font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索指定情報を設定 </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>searchInfo<font color="#990000">.</font>volume<font color="#990000">.</font><b><font color="#000000">SetTo</font></b><font color="#990000">(</font>theDevice<font color="#990000">)</font><font color="#990000">;</font>
+    searchInfo<font color="#990000">.</font>client <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">;</font>
+    searchInfo<font color="#990000">.</font>predicate <font color="#990000">=</font> <b><font color="#0000FF">new</font></b> <font color="#009900">char</font><font color="#990000">[</font>theLength<font color="#990000">]</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> theQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetPredicate</font></b><font color="#990000">(</font>searchInfo<font color="#990000">.</font>predicate<font color="#990000">,</font> theLength<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索処理を開始 </font></i><i><font color="#9A1900">*/</font></i>
+    theSearcher <font color="#990000">=</font> <b><font color="#0000FF">new</font></b> <b><font color="#000000">SearchEngine</font></b><font color="#990000">(</font>fNodeFlavor<font color="#990000">)</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> theSearcher<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">StartSearch</font></b><font color="#990000">(</font>searchInfo<font color="#990000">,</font> fDoLiveQuery<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err_release<font color="#990000">;</font>
+    fSearchers<font color="#990000">.</font><b><font color="#000000">AddItem</font></b><font color="#990000">(</font>theSearcher<font color="#990000">)</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> リストに追加 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err_release<font color="#990000">:</font>
+    <b><font color="#0000FF">delete</font></b> theSearcher<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"RetrieverView::StartSearchOn"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:SearchInfoは、BRectなどと同様構造体的な性格を持つクラスだが、</font></i>
+<i><font color="#9A1900"> *    デストラクタではpredicateメンバを正しく解放するので、呼び出し</font></i>
+<i><font color="#9A1900"> *    側で解放の心配をする必要はない。</font></i>
+<i><font color="#9A1900"> *    ('98. 1/29, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.4] SerarchView.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><font color="#009900">void</font>
+SearchView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MakeupQuery </font></b><font color="#990000">(</font>BQuery<font color="#990000">*</font> outQuery<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theAttr<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theValue<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theLabel<font color="#990000">;</font>
+    BMenuField<font color="#990000">*</font>   theMenuField<font color="#990000">;</font>
+    BTextControl<font color="#990000">*</font> theEditField<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 属性名をプッシュ </font></i><i><font color="#9A1900">*/</font></i>
+    theMenuField <font color="#990000">=</font> <font color="#990000">(</font>BMenuField<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kMenuAttrib<font color="#990000">)</font><font color="#990000">;</font>
+    theLabel <font color="#990000">=</font> theMenuField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Menu</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindMarked</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Label</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theLabel<font color="#990000">,</font> kNameLabel<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+        theAttr <font color="#990000">=</font> kAttrName<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theLabel<font color="#990000">,</font> kSizeLabel<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+        theAttr <font color="#990000">=</font> kAttrSize<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theLabel<font color="#990000">,</font> kModifiedLabel<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+        theAttr <font color="#990000">=</font> kAttrModified<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushAttr</font></b><font color="#990000">(</font>theAttr<font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 属性の値をプッシュ </font></i><i><font color="#9A1900">*/</font></i>
+    theEditField <font color="#990000">=</font> <font color="#990000">(</font>BTextControl<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kEditAttrib<font color="#990000">)</font><font color="#990000">;</font>
+    theValue <font color="#990000">=</font> theEditField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Text</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theAttr <font color="#990000">=</font><font color="#990000">=</font> kAttrName<font color="#990000">)</font>
+        outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushString</font></b><font color="#990000">(</font>theValue<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theAttr <font color="#990000">=</font><font color="#990000">=</font> kAttrSize<font color="#990000">)</font>
+        outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushInt64</font></b><font color="#990000">(</font><b><font color="#000000">strtoll</font></b><font color="#990000">(</font>theValue<font color="#990000">,</font> NULL<font color="#990000">,</font> <font color="#993399">10</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>
+        time_t	theSec <font color="#990000">=</font> <b><font color="#000000">parsedate</font></b><font color="#990000">(</font>theValue<font color="#990000">,</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">)</font><font color="#990000">;</font>
+        outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushInt32</font></b><font color="#990000">(</font>theSec<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 演算子をプッシュ </font></i><i><font color="#9A1900">*/</font></i>
+    outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushOp</font></b><font color="#990000">(</font>fCurrOp<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"SearchView::MakeupQuery"</font><font color="#990000">,</font> B_ERROR<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.5] SearchEngine.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _SEARCH_ENGINE_H_
+<b><font color="#000080">#define</font></b> _SEARCH_ENGINE_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;storage/Query.h&gt;</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;storage/Volume.h&gt;</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;support/Locker.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	BHandler<font color="#990000">;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索指定情報 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">struct</font></b> SearchInfo <font color="#FF0000">{</font>
+    BVolume   volume<font color="#990000">;</font>    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 対象ボリューム </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#009900">char</font><font color="#990000">*</font>     predicate<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索条件 </font></i><i><font color="#9A1900">*/</font></i>
+    BHandler<font color="#990000">*</font> client<font color="#990000">;</font>    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索結果の通知先 </font></i><i><font color="#9A1900">*/</font></i>
+
+    <b><font color="#000000">SearchInfo</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#000000">SearchInfo</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> SearchInfo<font color="#990000">&amp;</font> from<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">SearchInfo</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    SearchInfo<font color="#990000">&amp;</font>	<b><font color="#0000FF">operator</font></b><font color="#990000">=</font><font color="#990000">(</font><b><font color="#0000FF">const</font></b> SearchInfo<font color="#990000">&amp;</font> from<font color="#990000">)</font><font color="#990000">;</font>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索結果の通知メッセージ </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">enum</font></b> <font color="#FF0000">{</font>
+    KGSE_ENTRY_FOUND <font color="#990000">=</font> <font color="#FF0000">'efnd'</font><font color="#990000">,</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ファイル通知 </font></i><i><font color="#9A1900">*/</font></i>
+    KGSE_COMPLETED   <font color="#990000">=</font> <font color="#FF0000">'cmpl'</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索終了通知 </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 文字列定数 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">extern</font></b> <b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kSenderArg<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * SearchEngineクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> SearchEngine <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BLocker <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">SearchEngine</font></b><font color="#990000">(</font>uint32 targetFlavor<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">SearchEngine</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索処理の開始</font></i>
+    status_t	<b><font color="#000000">StartSearch</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> SearchInfo<font color="#990000">&amp;</font> inSearchInfo<font color="#990000">,</font>
+        <font color="#009900">bool</font> doLiveQuery<font color="#990000">,</font> int32 inBlockSize <font color="#990000">=</font> <font color="#993399">10</font><font color="#990000">)</font><font color="#990000">;</font>
+    status_t	<b><font color="#000000">AbortSearch</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">bool</font>		<b><font color="#000000">IsSearching</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 属性の取得</font></i>
+    dev_t		<b><font color="#000000">TargetDevice</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 検索処理の実行</font></i>
+    status_t	<b><font color="#000000">SearchCompleted</font></b><font color="#990000">(</font>BHandler<font color="#990000">*</font> inTarget<font color="#990000">)</font><font color="#990000">;</font>
+    status_t	<b><font color="#000000">StartWatching</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> int32	<b><font color="#000000">ExecSearch</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">*</font> data<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> <font color="#009900">bool</font>		<b><font color="#000000">MatchTo</font></b><font color="#990000">(</font>uint32 inFlavor<font color="#990000">,</font> <b><font color="#0000FF">const</font></b> BEntry<font color="#990000">&amp;</font> inEntry<font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    uint32     fFlavor<font color="#990000">;</font>     <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索対象範囲 </font></i><i><font color="#9A1900">*/</font></i>
+    thread_id  fThread<font color="#990000">;</font>     <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索スレッド </font></i><i><font color="#9A1900">*/</font></i>
+    int32      fBlockSize<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 一括通知の単位 </font></i><i><font color="#9A1900">*/</font></i>
+    SearchInfo fSearchInfo<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索指定情報 </font></i><i><font color="#9A1900">*/</font></i>
+    BQuery     fQuery<font color="#990000">;</font>      <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 問い合わせ文 </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#009900">bool</font>       fQuitting<font color="#990000">;</font>   <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 強制終了を指示されたか </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _SEARCH_ENGINE_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.6] SearchEngine.h.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>status_t
+SearchEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">StartSearch </font></b><font color="#990000">(</font>
+    <b><font color="#0000FF">const</font></b> SearchInfo<font color="#990000">&amp;</font> inSearchInfo<font color="#990000">,</font> <font color="#009900">bool</font> doLiveQuery<font color="#990000">,</font> int32 inBlockSize<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BAutolock <b><font color="#000000">lock</font></b><font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">)</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 自身をロック </font></i><i><font color="#9A1900">*/</font></i>
+    status_t  sts<font color="#990000">;</font>
+
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSearching</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索情報を保存 </font></i><i><font color="#9A1900">*/</font></i>
+    fSearchInfo <font color="#990000">=</font> inSearchInfo<font color="#990000">;</font>
+    fBlockSize  <font color="#990000">=</font> inBlockSize<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索条件を設定 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fQuery<font color="#990000">.</font><b><font color="#000000">Clear</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> fQuery<font color="#990000">.</font><b><font color="#000000">SetPredicate</font></b><font color="#990000">(</font>fSearchInfo<font color="#990000">.</font>predicate<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> fQuery<font color="#990000">.</font><b><font color="#000000">SetVolume</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>fSearchInfo<font color="#990000">.</font>volume<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 必要ならボリュームの監視を始める </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>doLiveQuery<font color="#990000">)</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">StartWatching</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索用のスレッドを生成して起動 </font></i><i><font color="#9A1900">*/</font></i>
+    fQuitting <font color="#990000">=</font> <b><font color="#0000FF">false</font></b><font color="#990000">;</font>
+    fThread <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">spawn_thread</font></b><font color="#990000">(</font>
+        ExecSearch<font color="#990000">,</font> <font color="#FF0000">"searcher"</font><font color="#990000">,</font> B_LOW_PRIORITY<font color="#990000">,</font> <b><font color="#0000FF">this</font></b>
+    <font color="#990000">)</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">resume_thread</font></b><font color="#990000">(</font>fThread<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"SearchEngine::StartSearch"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+SearchEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">AbortSearch </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 自身をロック </font></i><i><font color="#9A1900">*/</font></i>
+    BAutolock	<b><font color="#000000">lock</font></b><font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ライブクエリーを行っている場合は停止 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>fQuery<font color="#990000">.</font><b><font color="#000000">IsLive</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>fQuery<font color="#990000">.</font><b><font color="#000000">Clear</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索用のスレッドを破棄 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSearching</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        status_t	sts<font color="#990000">;</font>
+	
+        fQuitting <font color="#990000">=</font> <b><font color="#0000FF">true</font></b><font color="#990000">;</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">wait_for_thread</font></b><font color="#990000">(</font>fThread<font color="#990000">,</font> <font color="#990000">&amp;</font>sts<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:スレッドを終了するのにkill_thread()を使うのは安全が保障されな</font></i>
+<i><font color="#9A1900"> *    いため、終了通知フラグ(fQuitting)を使ってスレッド自身に終了させ</font></i>
+<i><font color="#9A1900"> *    ている。また、スレッドの終了と同期をとるため、wait_for_thread()</font></i>
+<i><font color="#9A1900"> *    を使って待ち合わせを行っている。なお、fThreadの値は検索スレッド</font></i>
+<i><font color="#9A1900"> *    によってリセットされるため、ここで更新する必要はない。</font></i>
+<i><font color="#9A1900"> *    ('98. 5/1, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+
+int32
+SearchEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">ExecSearch </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">*</font> data<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t      sts<font color="#990000">;</font>
+    SearchEngine<font color="#990000">*</font> theObj <font color="#990000">=</font> <font color="#990000">(</font>SearchEngine<font color="#990000">*</font><font color="#990000">)</font>data<font color="#990000">;</font>
+    BEntry        anEntry<font color="#990000">;</font>
+    entry_ref     aRef<font color="#990000">;</font>
+    BMessage      <b><font color="#000000">theMessage</font></b><font color="#990000">(</font>KGSE_ENTRY_FOUND<font color="#990000">)</font><font color="#990000">;</font>
+    BQuery<font color="#990000">*</font>       theQuery  <font color="#990000">=</font> <font color="#990000">&amp;</font>theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fQuery<font color="#990000">;</font>
+    BHandler<font color="#990000">*</font>     theClient <font color="#990000">=</font> theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fSearchInfo<font color="#990000">.</font>client<font color="#990000">;</font>
+    dev_t         theDevice <font color="#990000">=</font> theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fSearchInfo<font color="#990000">.</font>volume<font color="#990000">.</font><b><font color="#000000">Device</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メッセージの引数を初期化 </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>theMessage<font color="#990000">.</font><b><font color="#000000">AddRef</font></b><font color="#990000">(</font>kRefsArg<font color="#990000">,</font> <font color="#990000">&amp;</font>aRef<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索処理を実行 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Fetch</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索結果を取得して依頼先に通知 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font><font color="#990000">(</font>sts <font color="#990000">=</font> theQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetNextEntry</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>anEntry<font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fQuitting<font color="#990000">)</font> <font color="#FF0000">{</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 強制終了を指示されていたら終了 </font></i><i><font color="#9A1900">*/</font></i>
+            theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fThread <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900">          ::exit_thread(B_OK);</font></i>
+            <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> '98. 5/18 </font></i><i><font color="#9A1900">*/</font></i>
+       <font color="#FF0000">}</font>
+
+        <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 取得したエントリ情報を入れたメッセージを送付 </font></i><i><font color="#9A1900">*/</font></i>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fFlavor <font color="#990000">!</font><font color="#990000">=</font> B_ANY_NODE
+                <font color="#990000">&amp;</font><font color="#990000">&amp;</font> <font color="#990000">!</font><b><font color="#000000">MatchTo</font></b><font color="#990000">(</font>theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fFlavor<font color="#990000">,</font> anEntry<font color="#990000">)</font><font color="#990000">)</font>
+            <b><font color="#0000FF">continue</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 検索対象ではない </font></i><i><font color="#9A1900">*/</font></i>
+        anEntry<font color="#990000">.</font><b><font color="#000000">GetRef</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>aRef<font color="#990000">)</font><font color="#990000">;</font>
+        theMessage<font color="#990000">.</font><b><font color="#000000">ReplaceRef</font></b><font color="#990000">(</font>kRefsArg<font color="#990000">,</font> <font color="#990000">&amp;</font>aRef<font color="#990000">)</font><font color="#990000">;</font>
+        sts <font color="#990000">=</font> theClient<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Looper</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PostMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theMessage<font color="#990000">,</font> theClient<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+            <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+        <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ちょっと休憩 </font></i><i><font color="#9A1900">*/</font></i>
+        <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">snooze</font></b><font color="#990000">(</font><font color="#993399">20</font> <font color="#990000">*</font> <font color="#993399">1000</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 全部終わったら完了の通知 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">SearchCompleted</font></b><font color="#990000">(</font>theClient<font color="#990000">)</font><font color="#990000">;</font>
+    theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fThread <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"SearchEngine::ExecSearch"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:本当は、theObj-&gt;fBlockSizeを使って、fBlockSize個のエントリを</font></i>
+<i><font color="#9A1900"> *    一つのメッセージにまとめて入れて送る予定だったのだが、ここで</font></i>
+<i><font color="#9A1900"> *    は実装していない。気が向いた人がいたらやってみて下さい:-)</font></i>
+<i><font color="#9A1900"> *    ('98. 1/29, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+
+status_t
+SearchEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">SearchCompleted </font></b><font color="#990000">(</font>BHandler<font color="#990000">*</font> inTarget<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t  sts<font color="#990000">;</font>
+    BMessage  <b><font color="#000000">theMessage</font></b><font color="#990000">(</font>KGSE_COMPLETED<font color="#990000">)</font><font color="#990000">;</font>
+	
+    sts <font color="#990000">=</font> theMessage<font color="#990000">.</font><b><font color="#000000">AddPointer</font></b><font color="#990000">(</font>kSenderArg<font color="#990000">,</font> <b><font color="#0000FF">this</font></b><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> inTarget<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Looper</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PostMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theMessage<font color="#990000">,</font> inTarget<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"SearchEngine::SearchCompleted"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:このメソッドの中で自身にロックをかけてはいけない。</font></i>
+<i><font color="#9A1900"> *    AbortSearch()メソッドでは、自身にロックをかけたうえで、</font></i>
+<i><font color="#9A1900"> *    wait_for_thread()によって検索スレッドと同期をとっている。した</font></i>
+<i><font color="#9A1900"> *    がって、このメソッドを含め検索スレッドが呼び出すメソッドの中で</font></i>
+<i><font color="#9A1900"> *    ロックをかけた場合、デッドロックが生じてしまうからである。</font></i>
+<i><font color="#9A1900"> *    ('98. 5/4, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+上に示したリストについて、簡単に説明します。まず、リスト9.2と9.3は、RetrieverViewクラスのソースです。ただし、実装部を載せたリスト9.3の方には、最も重要なメソッドだけを入れています。StartSearch()メソッドでは、ボリュームのリストを引数に受け取り、検索処理を開始します。各ボリュームごとにStartSearchOn()メソッドを呼び出し、SearchEngineオブジェクトを生成して並列に検索していることに注目して下さい。AbortSearch()メソッドは、現在実行中の検索処理を強制終了するためのものです。リスト9.3を読むと分かるように、このメソッドはStartSearch()メソッドからも呼び出されています。これは、検索処理の実行が終わらないうちに新しい検索を指示された場合でも、正しく動作できるようにするためです。試しに、FileSearchで検索を行い、検索が終了しきらないうちに続けて“Search”ボタンをクリックしてみて下さい。特に問題なく動作するはずです。<br/>
+
+<br/>
+
+その次の、リスト9.4はSearchViewクラスのソースです。ただし、クエリーの作成を行うMakeupQuery()メソッドだけを載せました。ソースの他の場所で定義した文字列定数を使っているので分かりにくいかも知れませんが、検索パネルに入力された内容から、クエリーを作成しています。検索キーとして使う属性名はポップアップメニューの選択項目から判定し、属性の値は入力フィールドの内容を使っています。また、検索条件の演算子は、ポップアップメニューの選択項目が変わったときに送られるメッセージコードを記録しておき、それをセットしています。<br/>
+
+<br/>
+
+最後のリスト9.5と9.6は、SearchEngineクラスのソースです。ただし、実装部を載せたリスト9.6には、最も重要なメソッドだけを入れています。RetrieverViewクラスから呼び出されるStartSearch()メソッドでは、検索用のスレッドを生成し、実際の検索処理を行うExecSearch()メソッドの実行に割り当てます。つまり、検索処理をマルチスレッド化しているのです。AbortSearch()メソッドは検索用のスレッドを停止して解放させるもので、検索処理を実行中だった場合にデストラクタから呼び出されます。このメソッドでは、kill_thread()関数を使ってスレッドを終了するのではなく、終了通知フラグ(fQuitting)をセットしてスレッドに終了要求を伝え、スレッド自身に停止処理を行わせています。このようにするのが、安全なスレッドの終了手順です。<br/>
+
+ また、検索処理用のスレッドが実行するExecSearch()メソッドでは、終了通知に応えてスレッドを終了する際に、exit_thread()を使うのではなく、return文によってメソッドの呼び出しを終了しています。これは、exit_thread()で終了した場合、スタック上に割り付けたオブジェクトが正しく解放されず、その結果エラーを引き起こす可能性があるためです。リスト9.6ではBEntry型の変数(anEntry)とentry_ref構造体の変数(aRef)を宣言してスタック上に割り付けていますが、exit_thread()を使った場合、これらのデストラクタが呼び出されないために問題を引き起こします。<br/>
+
+ ExecSearch()メソッドは、検索によって見つかったノードのエントリ情報を取り出し、メッセージを送って検索の依頼主に渡します。検索処理が終わったら、SearchCompleted()メソッドを呼び出して依頼主に知らせます。依頼主、つまりRetrieverViewオブジェクトは、検索の終了通知を受け取るとSearchEngineオブジェクトを解放し、検索処理を完了するのです。<br/>
+
+<br/>
+
+以上で、掲載したリストの説明を終わります。なお、ページ数の都合からソースの掲載を省略したクラスのなかにも、説明を加えておくべきものがあります。以下に、その説明を述べます。<br/>
+
+<br/>
+
+ ■ファイルやフォルダのアイコン表示<br/>
+
+  ファイルやフォルダアイコンの描画処理は、EntryListItemクラスのソース(MyLib/GUI/EntryListItem.cp)で、SetEntryRef()メソッドとDrawItem()メソッドを見て下さい。まず、SetEntryRef()の中でBNodeInfoクラスのGetTrackerIcon()メソッドを呼び出し、アイコンのビットマップデータを取得しています。次に、DrawItem()でBViewクラスのDrawBitmap()メソッドによりアイコンのビットマップを描画しています。DrawBitmap()は、BListItemクラスが提供しているフック関数です。詳細は、APIリファレンスのInterface Kitの章を参照して下さい。<br/>
+
+<br/>
+
+ ■スクロールバーのサイズ調節<br/>
+
+  水平方向のスクロールバーのサイズを調節する処理は、EntryListViewクラスのソース(MyLib/GUI/EntryListView.cp)で、UpdateScrollbars()メソッドを見て下さい。EntryListItemクラスのPreferredWidth()メソッドを呼び出して「真の」横幅を取得し、それと現在の表示幅からスクロールバーのサイズを算出し、セットしています。EntryListViewクラスのUpdateScrollbars()メソッドは、ウィンドウに貼りつけられた時に呼び出されるAttachedToWindow()メソッド、およびリサイズされた時に呼び出されるFrameResized()メソッドから呼び出されます。なお、垂直方向のスクロールバーに関しては、親クラスのBListViewの方で行っているため、EntryListViewでは何もしていません。<br/>
+
+<br/>
+
+ ■メニュー生成用のユーティリティ<br/>
+
+  この章のサンプルからは、メニュー作成用のユーティリティクラスを使ってメニューやメニューバーを生成しています。このユーティリティクラス(MenuUtil)はサンプルコード集のライブラリフォルダ(“MyLib/GUI”)にソースを入れていますので、興味がある人は目を通してみて下さい。<br/>
+
+<br/>
+
+<br/>
+<a name="9.2"></a>
+<h2>9.2&nbsp;&nbsp;名前と体と付属物</h2>
+この節では、BeOSのファイルシステム(BeFS)について整理してみることにします。前の節の9.1.1と9.1.2では、主にファイル検索に関してBeFSの機能を説明しましたが、次の節で説明に使うドキュメント管理ツールのサンプル(InfoChest)に備えて、BeFSの構成要素について復習しておきましょう。<br/>
+
+<br/>
+
+<br/>
+<a name="9.2.1"></a>
+<h3>9.2.1&nbsp;&nbsp;ファイルに関する三通りの情報</h3>
+まず、ファイルやディレクトリ、すなわちファイルシステム階層のノードに関する三通りの情報について整理します。三通りというのは、エントリ情報とノード本体、それからノード属性です。Storage KitのAPIとこれらの関係は、それぞれ以下のようになっています。<br/>
+
+<br/>
+
+ ■エントリ情報<br/>
+
+  BEntryクラス、またはentry_ref構造体によって表現されます。あるノードについて、その名前と親ディレクトリを対にしたものです。つまり、ファイルシステム階層におけるノードの位置を与える情報ですが、単なるパス名とは違います。Unix系OSに詳しい人であれば、dirent構造体と等価なものだと考えて下さい(注9-6)。<br/>
+
+<br/>
+
+ ■ノード本体<br/>
+
+  BNodeクラスによって表現されます。ノードが持つデータにアクセスする手段を与えるものです。Unix系OSに詳しい人であれば、BNodeクラスのインスタンスはファイルディスクリプタと同じものだと考えて下さい。事実、BNodeクラスはファイルディスクリプタをデータメンバに持っており、インスタンスを一つ作ると、それが表わすノードに対するファイルディスクリプタを一つ生成します。<br/>
+
+<br/>
+
+ ■ノード属性<br/>
+
+  BNodeクラス、およびBNodeInfoクラスによって表現されます。ノード本体のデータとは別の、ノードと関連づけられた付属データの集まりです。ノード属性は名前と値の対から成り、それぞれのノードは任意個数の属性を持ちます。つまり、ノードに対して任意の属性を追加することが可能です。このノード属性を利用できるのが、BeFSの大きな特徴です。BeFS内部には属性を格納するための専用の領域があり(注9-7)、属性にアクセスするAPI内部では、その領域にアクセスして処理を行います。<br/>
+
+<br/>
+
+これら三つの情報の間には、次の関係があります。<br/>
+
+<br/>
+
+ a.)ノード本体にアクセスするには、そのエントリ情報が必要である。<br/>
+
+  BNodeクラスのインスタンスを初期化するには、BEntryオブジェクトまたはentry_ref構造体を渡し、ノードのエントリ情報を指定します。<br/>
+
+<br/>
+
+ b.)ノード属性にアクセスするには、ノード本体が必要である。<br/>
+
+  ノード属性をアクセスするには、BNodeオブジェクトのメソッドを使うか、またはBNodeInfoクラスを利用します。BNodeInfoクラスのインスタンスを初期化するには、BNodeオブジェクトが必要です。<br/>
+
+<br/>
+
+ c.)ノードを削除するには、BEntryクラスのメソッドを呼び出す。<br/>
+
+  ファイルやフォルダを削除するには、それらと関連づけたBEntryオブジェクトを生成し、そのオブジェクトに対してRemove()メソッドを呼び出します。<br/>
+
+<br/>
+
+つまり、ノード本体やノード属性にアクセスするには、必ずエントリ情報が必要なのです。それぞれのノードは位置情報、つまりエントリ情報を持っており、エントリ情報によって各ノードを特定します。エントリ情報を使わずに、直接ノードを指定する手段はありません(注9-8)。<br/>
+
+<br/>
+
+前の節で説明したBeFSのノード検索機構では、ノード属性を使って検索条件に合うノードを探し、そのエントリ情報を返します。ノード本体の情報ではなくエントリ情報を返すのは、上で述べたようにノード本体を直接指定する手段がないからなのです。エントリ情報とノード、およびノード属性の関係をモデル化したものを、図9.4に示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.04.jpg" alt="図 ノード本体とノード属性、およびエントリ情報の関係"/><div>図[9.4]  ノード本体とノード属性、およびエントリ情報の関係</div>
+</div>
+
+ ※ノード属性をキーとした検索のイメージもつかめるように図式化<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-6</dt><dd>実際、Kernel Kitが提供しているクエリー操作APIでは、検索によって見つかったノードの情報をdirent構造体として返します。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-7</dt><dd>ノードの属性、および属性に対するインデックスは、ボリューム内に作られる一種の隠しディレクトリにファイルとして記録されるようです。BeFSの内部構造に関しては解説書が出版される予定ですので、興味がある人はそちらをあたってみて下さい。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)9-8</dt><dd>ただし、ディレクトリの場合は例外で、ボリュームのデバイスIDとディレクトリのiノード番号を使って特定することが可能です。また、ライブクエリーやノード監視を行った際に送られる通知メッセージでは、エントリ情報を利用できない場合にノード参照情報(node_ref)が渡されます。詳細については、APIリファレンスでStorage Kitの章を参照して下さい。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="9.2.2"></a>
+<h3>9.2.2&nbsp;&nbsp;ファイルシステムとデータベース</h3>
+前の節でBQueryによるファイル検索手順を説明した時にも少し触れましたが、ノード属性をキーにして検索できるといっても、どの属性も検索キーに利用できるというわけではありません。検索キーとして使えるノード属性は、以下の条件を満たしている必要があります。<br/>
+
+<br/>
+
+ ・属性の値が数値型、または文字列型であること。また、文字列型の場合にはデータ長が255バイト以下であること。<br/>
+
+<br/>
+
+ ・その属性に対してインデックスが作成されていること。インデックスは、ボリュームごとに作成します。<br/>
+
+<br/>
+
+つまり、BeFSに対してノード検索を行う場合、検索APIの内部では全てのノードに対してノード属性を調べることはしません。そうではなく、あらかじめ専用の領域に作成されたノード属性のインデックスファイルを使って検索します。こうすることで、高速な検索処理を実現しているのです。アプリケーションで独自のノード属性を定義し、それをキーとした検索を行う場合は、上の二つの条件を忘れないようにして下さい。次の9.3節で説明するサンプルアプリケーション(InfoChest)では、検索キーとして利用するキーワードの長さを255バイト以下に制限しています。また、ファイルやフォルダにキーワードを付ける際、それが所属するボリューム上の属性インデックスを調べ、キーワード用のインデックスがない場合には作成するようになっています。<br/>
+
+<br/>
+
+さて、ファイルシステム階層のノードに対して自由に属性を設定できること、およびノード属性に対してインデックスを作成し、それをキーとした検索が可能であることは分かったと思います。これによって、BeFSは簡易データベース機能を実現しているのです。とはいえ、ファイルシステムに関してBeOSの面白いところは、未だ他にもあります。それが、9.1節でBQueryクラスを説明した時に述べた「ライブクエリー」の仕組です。BQueryの説明で述べた通り、ライブクエリーというのは検索条件に該当するノードの集合を監視し、それに変化が起きた場合はメッセージを送って知らせてくれる仕組です。つまり、「名前が“koga”で始まるもの」という条件のライブクエリーを発行した後で、新しく“koga-home”というフォルダを作ると、そのことを知らせるメッセージを送ってくれるのです。<br/>
+
+<br/>
+
+さらに、ライブクエリーに加え、個々のノードに対して監視を行う仕組も提供されています。ノードの監視には、Storage KitのBNodeMonitorクラスを使います。このクラスでは、指定したノードの名前や所属ディレクトリなど、エントリ情報に変化が起きると、そのことを知らせるメッセージを送ってくれます。図9.5に、BQueryによるライブクエリーとBNodeMonitorによるノード監視の様子を示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.05.jpg" alt="図 ライブクエリーとノード監視"/><div>図[9.5]  ライブクエリーとノード監視</div>
+</div>
+
+<br/>
+
+Trackerの検索パネルでは、検索した結果を表示するクエリーウィンドウがライブクエリーとノード監視機構を利用しています。検索によって見つかったファイルやフォルダに変更があると、即座に表示を更新するのが特徴ですが、それは上に述べたStorage KitのAPIを利用しているからなのです。<br/>
+
+<br/>
+
+<br/>
+<a name="9.3"></a>
+<h2>9.3&nbsp;&nbsp;分類できたらもっと便利</h2>
+この節では、この章で説明したBeFSとStorage Kitの機能を利用して簡単なドキュメント管理を行う、“InfoChest”と名付けたアプリケーションのサンプルを示します。このアプリケーションが70KBあまりのサイズしかないのを見れば、BeOSのAPIがいかに高機能でシンプルなものかが実感できるでしょう。<br/>
+
+<br/>
+
+<br/>
+<a name="9.3.1"></a>
+<h3>9.3.1&nbsp;&nbsp;InfoChestが利用するAPI</h3>
+InfoChestについて説明する前に、それが利用しているAPIを紹介しておきます。このアプリケーションでは、9.1節のFileSearchでは使っていなかった以下のAPIを利用しています。<br/>
+
+<br/>
+
+ ■BNodeを使った属性の追加と削除<br/>
+
+  FileSearchアプリケーションでは、BNodeクラスを実際に使ってはいませんでした。これから説明するInfoChestでは、BNodeクラスのWriteAttr()メソッドとRemoveAttr()メソッドを利用してノード属性の追加と削除を行います。<br/>
+
+<br/>
+
+ ■ノード属性に対するインデックスの操作<br/>
+
+  ノード属性に対するインデックスの作成や、インデックスが存在しているかどうかのチェックなどを行うには、Kernel Kitで提供されているインデックス操作手続きを利用します。あるインデックスが既にボリューム上に存在しているかどうかを調べるのはfs_stat_index()手続きを使い、インデックスを作成するには、fs_create_index()手続きを使います。<br/>
+
+<br/>
+
+  インデックスの作成と属性の追加を行う手順については、この後で例を示します。詳細に関しては、APIリファレンスでStorage Kitの章を参照して下さい。これらは、実際にはKernel Kitに所属するAPIなのですが、Storage Kitの章で説明されています。<br/>
+
+<br/>
+
+ ■BQueryによるライブクエリー<br/>
+
+  InfoChestでは、キーワードを付けたファイルやフォルダが削除された場合、それを即座に表示へ反映できるよう、BQueryクラスのライブクエリー機能を利用しています。この機能を利用するには、単にBQueryクラスのSetTarget()メソッドを呼び出し、メッセージの送り先と関連づけたBMessengerオブジェクトを渡すだけです。<br/>
+
+<br/>
+
+ ■ドラッグ&ドロップのサポート<br/>
+
+  InfoChestでは、ウィンドウとウィンドウの間でファイルやフォルダをドラッグ&ドロップできるようにしています。実は、ドラッグ&ドロップの仕組はInterface Kitが提供するフレームワークに組み込まれていますので、フック関数を再定義するだけで対応できます。<br/>
+
+<br/>
+
+  まず、ビュー部品が表示しているデータをドラッグして移動できるようにするには、BViewがフック関数として提供しているInitiateDrag()メソッドを再定義します。このメソッドを再定義し、BViewクラスのDragMessage()メソッドを呼び出せば、ドラッグ処理が行われます。実は、前の節のリスト9.11に示したEntryListViewクラスはドラッグ対応しています。ドラッグ処理の例を見るには、こちらを参照して下さい。<br/>
+
+<br/>
+
+  次に、ドロップされたデータを受け取る場合は、ビューまたはウィンドウのクラスでMessageReceived()メソッドを再定義します。BMessageクラスにはWasDropped()というメソッドがあり、これを使うと、ドラッグ&ドロップによって受け取ったメッセージなのかどうかを判定できます。ドロップされたメッセージであることが分かったら、後はBMessageクラスのメソッドを使ってデータを取り出します。<br/>
+
+<br/>
+
+以上が、InfoChestで新たに使うAPIです。次に、BNodeクラスを使ったノード属性の設定と、ノード属性に対するインデックスの作成手順を説明します。これらは、以下の手順で行います。<br/>
+
+<br/>
+
+ 1.)最初に、fs_create_index()手続きを使ってノード属性に対するインデックスを作成する。先にインデックスを作っておかないと、ノード属性を追加した時にインデックスファイルに登録されないので注意すること。<br/>
+
+<br/>
+
+ 2.)属性を設定するノードのエントリ情報を渡してBNodeオブジェクトを初期化し、WriteAttr()メソッドを呼び出す。これにより、ノード属性が追加される。<br/>
+
+<br/>
+
+ 3.)属性を削除する必要が生じたら、BNodeクラスのRemoveAttr()メソッドを使う。もちろん、このメソッドを呼び出す時もノードのエントリ情報を渡してBNodeオブジェクトを初期化しておかねばならない。<br/>
+
+<br/>
+
+具体例を見るために、“FTGUN:CATEGORY”という名前の属性について、インデックスの作成とノードに対する属性設定を行う場合について、リスト9.7にコーディング例を示します。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.7] ノード属性の追加とインデックスの作成</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>
+    status_t      sts<font color="#990000">;</font>
+    <font color="#009900">int</font>           retCode<font color="#990000">;</font>
+    BVolume       theBootVol<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 起動ボリュームの指定用 </font></i><i><font color="#9A1900">*/</font></i>
+    BVolumeRoster volRoster<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ボリューム情報の取得用 </font></i><i><font color="#9A1900">*/</font></i>
+    index_int     theInfo<font color="#990000">;</font>
+    BNode         theNode<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 起動ボリューム情報を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">(</font>sts <font color="#990000">=</font> volRoster<font color="#990000">.</font><b><font color="#000000">GetBootVolume</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theBootVol<font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>	<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ボリュームの取得に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ノード属性に対するインデックスの有無をチェック </font></i><i><font color="#9A1900">*/</font></i>
+    retCode <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">fs_stat_index</font></b><font color="#990000">(</font>
+        theBoolVol<font color="#990000">.</font><b><font color="#000000">Device</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <font color="#FF0000">"FTGUN:CATEGORY"</font><font color="#990000">,</font> <font color="#990000">&amp;</font>theInfo
+    <font color="#990000">)</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> <font color="#990000">(</font>retCode <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font> <font color="#990000">?</font> B_OK <font color="#990000">:</font> errno<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インデックスがなければ作成 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_ENTRY_NOT_FOUND<font color="#990000">)</font> <font color="#FF0000">{</font>
+        retCode <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">fs_create_index</font></b><font color="#990000">(</font>
+            theBootVol<font color="#990000">.</font><b><font color="#000000">Device</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <font color="#FF0000">"FTGUN:CATEGORY"</font><font color="#990000">,</font> B_STRING_TYPE<font color="#990000">,</font> <font color="#993399">0</font>
+        <font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>retCode <font color="#990000">!</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+            <b><font color="#0000FF">throw</font></b> errno<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 作成に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#FF0000">}</font> <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> fs_stat_index()の呼び出しに失敗 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> BNodeオブジェクトを初期化 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theNode<font color="#990000">.</font><b><font color="#000000">SetTo</font></b><font color="#990000">(</font><font color="#FF0000">"/boot/home/Test"</font><font color="#990000">)</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> パス名で初期化 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 初期化に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ノード属性を設定 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theNode<font color="#990000">.</font><b><font color="#000000">WriteAttr</font></b><font color="#990000">(</font>
+        <font color="#FF0000">"FTGUN:CATEGORY"</font><font color="#990000">,</font> B_STRING_TYPE<font color="#990000">,</font> <font color="#993399">0</font><font color="#990000">,</font> <font color="#FF0000">"test"</font><font color="#990000">,</font> <b><font color="#000000">strlen</font></b><font color="#990000">(</font><font color="#FF0000">"test"</font><font color="#990000">)</font> <font color="#990000">+</font> <font color="#993399">1</font>
+    <font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">throw</font></b> sts<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 設定に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+
+
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+リスト9.7では、BVolumeRosterオブジェクトを使って起動ボリューム情報を取得し、起動ボリューム上にインデックスがあるかどうかを調べています。また、ない場合にはfs_create_index()手続きを呼び出して作成しています。それから、起動ボリュームの“home”ディレクトリにある“Test”という名前のノードに対するパス名を使ってBNodeオブジェクトを初期化し、WriteAttr()メソッドを呼び出して属性を設定しています。この例では、属性“FTGUN:CATEGORY”の値として“test”が設定されます。<br/>
+
+  <br/>
+
+<br/>
+<a name="9.3.2"></a>
+<h3>9.3.2&nbsp;&nbsp;InfoChestの外部仕様</h3>
+必要な説明が終わったので、サンプルアプリケーションの説明に移ります。説明の手始めとして、外部仕様を述べます。図9.6が、これから説明する“InfoChest”という名前のサンプルを動かした様子です。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.06.jpg" alt="図 InfoChestのスクリーンショット"/><div>図[9.6]  InfoChestのスクリーンショット</div>
+</div>
+
+<br/>
+
+このアプリケーションの外部仕様は、以下の通りです:<br/>
+
+<br/>
+
+ ・起動すると、カテゴリの一覧表示ウィンドウを開く。このウィンドウを使って、カテゴリの追加と削除を行う。<br/>
+
+<br/>
+
+ ・カテゴリとは、ファイルやフォルダに対して一つだけ設定できるキーワードである。それぞれのカテゴリに所属するファイルやフォルダ、つまりカテゴリを設定したものを一覧表示するウィンドウ(「ドキュメント一覧ウィンドウ」)を開く。<br/>
+
+<br/>
+
+ ・FileSearchと同様の機能を持つ検索パネルを開き、ファイル検索を行うことができる。見つかったファイルは、検索パネルからカテゴリのドキュメント一覧ウィンドウにドラッグ&ドロップすると、カテゴリが設定される。<br/>
+
+<br/>
+
+ ・あるカテゴリに所属するファイルやフォルダに対して別のカテゴリを設定し直す場合は、ドキュメント一覧ウィンドウの間をドラッグ&ドロップで移動するだけでよい。<br/>
+
+<br/>
+
+この外部仕様と図9.6のスクリーンショットだけではInfoChestアプリケーションの動きが分からない場合は、実際に動かしてみて下さい。InfoChestのソースファイルは、付録に付けたサンプルコード集の“9.3_InfoChest”というフォルダに入っています。また、“test”というカテゴリを作り、フォルダに対してカテゴリを設定する手順を以下に示しますので、InfoChestを動かす場合の参考にしてみて下さい。<br/>
+
+<br/>
+
+ 1.)InfoChestのアイコンをダブルクリックして起動して下さい。“InfoChest”というタイトルのウィンドウが開かれます。これが、カテゴリの一覧表示ウィンドウです。<br/>
+
+<br/>
+
+ 2.)ウィンドウの“Category”メニューから“Add...”という項目を選択して下さい。ダイアログが開かれ、新しく追加するカテゴリを入力するよう求められます。<br/>
+
+<br/>
+
+ 3.)カテゴリ登録用のダイアログで、入力フィールドに“test”とタイプ入力して“OK”ボタンをクリックして下さい。“test”というカテゴリが登録され、(1)で開かれた一覧表示ウィンドウに表示されます。<br/>
+
+<br/>
+
+ 4.)カテゴリの一覧表示ウィンドウにあるリストボックスで、“test”という項目をダブルクリックして下さい。“test”というタイトルのウィンドウが開かれます。このウィンドウが、ドキュメント一覧ウィンドウです。<br/>
+
+<br/>
+
+ 5.)Trackerを使って、適当な場所に“Test”という名前のフォルダを作って下さい。作ったら、そのフォルダを(4)で開いたドキュメント一覧ウィンドウにドラッグ&ドロップして下さい。<br/>
+
+<br/>
+
+ 6.)ドロップしたフォルダがあるボリュームには、InfoChestが定義した属性のインデックスが存在しないため、インデックスを作成してもよいか確認するダイアログが開かれます。“OK”ボタンをクリックしてインデックスを作成して下さい。<br/>
+
+<br/>
+
+ 7.)“Test”フォルダにカテゴリが設定され、ドキュメント一覧ウィンドウに表示されます。<br/>
+
+<br/>
+
+ 8.)“test”カテゴリに登録したフォルダを、ごみ箱に移動し、ごみ箱を空にしてみて下さい。ドキュメント一覧ウィンドウの表示から、そのフォルダが消えるはずです。InfoChestはライブクエリー機能を利用しているので、カテゴリを設定したファイルやフォルダを削除すると、自動的に表示に反映されるのです。<br/>
+
+<br/>
+
+InfoChestでは、ドキュメント一覧ウィンドウを開くたびにカテゴリをキーとした検索を行います。このため、登録したファイルやフォルダを移動してしまっても、それを追跡できます。ただし、個々のノードに対する監視は行っていないため、ウィンドウを開いている間にファイルやフォルダを移動したり、名前の変更を行った場合は追跡できません。その場合は、一度ドキュメント一覧ウィンドウを閉じ、もう一度開いて再検索して下さい。<br/>
+
+<br/>
+
+<br/>
+<a name="9.3.3"></a>
+<h3>9.3.3&nbsp;&nbsp;InfoChestのモジュール構成</h3>
+InfoChestアプリケーションの動きが分かったら、次はその内部を見てみましょう。図9.7に、InfoChestのモジュール構成を示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/9.07.jpg" alt="図 InfoChestのモジュール構成"/><div>図[9.7]  InfoChestのモジュール構成</div>
+</div>
+
+<br/>
+
+図9.7に示したモジュールのうち、カテゴリの管理とノードに対する属性設定を行うのがCategorizerクラスです。以下に、図9.6に示したクラスの概要を述べます。<br/>
+
+<br/>
+
+ ■InfoChestApp<br/>
+
+  InfoCestAppのアプリケーションクラス。カテゴリの一覧表示ウィンドウとドキュメント一覧ウィンドウ、および検索パネルの管理を行います。<br/>
+
+<br/>
+
+ ■Categorizer<br/>
+
+  カテゴリ情報の管理と、ノードに対する属性設定を行います。カテゴリのリストをデータメンバとして持ち、アプリケーションの初期設定ファイルに記録して保存します。初期設定ファイルの利用例として見ることもできるでしょう。<br/>
+
+<br/>
+
+ ■InfoChestWin<br/>
+
+  カテゴリ一覧表示ウィンドウで使っているウィンドウクラス。“Category”メニューに応答します。<br/>
+
+<br/>
+
+ ■InfoChestView<br/>
+
+  カテゴリの一覧表示ウィンドウで使っているビュークラス。カテゴリを一覧表示するリストボックスの選択操作と、“Open”ボタンのクリックに応答します。<br/>
+
+<br/>
+
+ ■DocumentsWin<br/>
+
+  ドキュメント一覧ウィンドウで使っているウィンドウクラス。これまでの章のサンプルと共通に使っている、RegularWindowのサブクラスとして実装しています。BWindowクラスが提供しているフック関数のうち、MenusBeginning()とMessageReceived()を再定義しており、前の節のFileSearchアプリケーションと共通に使っているRetrieverViewクラスと連携して動作します。<br/>
+
+<br/>
+
+ ■DocumentsView<br/>
+
+  RetrieverViewのサブクラスです。MakeupQuery()メソッドを再定義し、自分に関連づけられたカテゴリが設定されたファイルやフォルダを検索して表示します。<br/>
+
+<br/>
+
+ ■SearchWindow<br/>
+
+  検索パネル用のウィンドウクラスです。前の節のFileSearchアプリケーションで使っていたものと殆ど同じですが、MonoWindowクラスではなくRegularWindowクラスを継承するように変更しました。<br/>
+
+<br/>
+
+なお、SearchViewとEntryListViewおよびEntryListItem、それからSearchEngineクラスはFileSearchアプリケーションと同じですので、ここでは省略します。<br/>
+
+<br/>
+
+上に述べた説明だけでは、それぞれのクラスがどのように連携してドキュメント管理が行われるのかが分かりにくいかも知れませんね。InfoChestアプリケーションが実現しているドキュメント管理機能のうち、特にドキュメントの登録と登録解除、およびライブクエリーによる表示の更新について、それぞれのクラスの働きを以下に示します。ソースを読む際の参考にしてみて下さい。<br/>
+
+<br/>
+
+ a.)ドキュメントの登録<br/>
+
+  DocumentsViewクラスとCategorizerクラスが行います。ドキュメント一覧ウィンドウにファイルやフォルダのアイコンをドラッグ&ドロップするか、または“File”メニューの“Add Document...”項目を選択してオープンダイアログを開き、ファイルやフォルダを指定すると、DocumentsViewクラスのRefsReceived()メソッドが呼び出されます。このメソッドの中から、CategorizerクラスのAttachCategory()メソッドを呼び出してカテゴリの属性を設定します。<br/>
+
+<br/>
+
+ b.)ドキュメントの登録解除<br/>
+
+  DocumentsViewクラスとCategorizerクラスが行います。ドキュメント一覧ウィンドウで“File”メニューの“Remove Document”項目を選択すると、DocumentsViewクラスのRemoveSelected()メソッドが呼び出されます。このメソッドの中からCategorizerクラスのDetachCategory()メソッドを呼び出し、カテゴリの属性を削除します。<br/>
+
+<br/>
+
+ c.)ライブクエリーによる表示の更新<br/>
+
+  DocumentsViewクラスとRetrieverViewクラス、およびSearchEngineクラスが行います。DocumentsViewクラスは、ウィンドウに貼りつけられてAllAttached()メソッドが呼び出されると、StartSearch()メソッドを呼び出して全てのボリュームに対する検索を開始します。この時、RetrieverViewクラスのStartSearch()メソッドを呼び出し、その第二引数にtrueを渡します。これはライブクエリーを行うかどうかを指定するもので、RetrieverViewクラスがSearchEngineクラスのStartSearch()メソッドを呼び出す時に渡されます。<br/>
+
+<br/>
+
+  SearchEngineクラスでは、ライブクエリーを行うように指示されるとBQueryオブジェクトに対してSetTarget()メソッドを呼び出し、ライブクエリー動作を開始させます。この時、通知メッセージの送り先には検索処理の依頼主、つまりDocumentsViewオブジェクトを指定します。なお、ライブクエリーによる通知メッセージはDocumentsViewに届きますが、実際の処理は、DocumentsViewクラスが継承しているRetrieverViewクラスで行われます。<br/>
+
+<br/>
+
+  RetrieverViewクラスでは、ライブクエリーによる通知メッセージ、つまりB_QUERY_UPDATEメッセージを受け取るとEntriesChanged()メソッドを呼び出し、一覧表示の内容を更新します。<br/>
+
+<br/>
+
+<br/>
+<a name="9.3.4"></a>
+<h3>9.3.4&nbsp;&nbsp;InfoChestのソースコード</h3>
+リスト9.8～9.10に、InfoChestアプリケーションを構成するクラスのうち、CategorizerとDocumentsViewのソースを示します。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.8] Categorizer.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _CATEGORIZER_H_
+<b><font color="#000080">#define</font></b> _CATEGORIZER_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;storage/Path.h&gt;</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;support/List.h&gt;</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;support/Locker.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	BQuery<font color="#990000">;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> エラーコード </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">enum</font></b> <font color="#FF0000">{</font>
+    KGCTG_FIRST_ERROR <font color="#990000">=</font> B_ERRORS_END<font color="#990000">,</font>
+    KGCTG_ALREADY_EXIST<font color="#990000">,</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インスタンスが既に存在 </font></i><i><font color="#9A1900">*/</font></i>
+    KGCTG_NO_INSTANCE<font color="#990000">,</font>    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インスタンスが存在しない </font></i><i><font color="#9A1900">*/</font></i>
+    KGCTG_BAD_PREF_FILE<font color="#990000">,</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルを開けない </font></i><i><font color="#9A1900">*/</font></i>
+    KGCTG_FAIL_READ_PREF<font color="#990000">,</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルを読めない </font></i><i><font color="#9A1900">*/</font></i>
+    KGCTG_FAIL_WRITE_PREF <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルに書けない </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * Categorizerクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> Categorizer <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BLocker <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 単一インスタンスの管理 [static]</font></i>
+    <b><font color="#0000FF">static</font></b> status_t     <b><font color="#000000">Startup</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> status_t     <b><font color="#000000">Cleanup</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> Categorizer<font color="#990000">*</font> <b><font color="#000000">GetInstance</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> インデックスファイルの管理 [static]</font></i>
+    <b><font color="#0000FF">static</font></b> status_t     <b><font color="#000000">DeleteIndexes</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> カテゴリの管理</font></i>
+    <font color="#009900">void</font>      <b><font color="#000000">GetCategories</font></b><font color="#990000">(</font>BList<font color="#990000">*</font> outCategories<font color="#990000">)</font><font color="#990000">;</font>
+    status_t  <b><font color="#000000">AddCategory</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">)</font><font color="#990000">;</font>
+    status_t  <b><font color="#000000">RemoveCategory</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> ドキュメントの管理</font></i>
+    status_t  <b><font color="#000000">MakeQueryFor</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">,</font> BQuery<font color="#990000">*</font> outQuery<font color="#990000">)</font><font color="#990000">;</font>
+    status_t  <b><font color="#000000">AttachCategory</font></b><font color="#990000">(</font>
+                <b><font color="#0000FF">const</font></b> entry_ref<font color="#990000">*</font> inDocument<font color="#990000">,</font> <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">)</font><font color="#990000">;</font>
+    status_t  <b><font color="#000000">DetachCategory</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> entry_ref<font color="#990000">*</font> inDocument<font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">Categorizer</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">Categorizer</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    status_t  <b><font color="#000000">LoadCategories</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> カテゴリの管理</font></i>
+    int32     <b><font color="#000000">FindCategory</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">)</font><font color="#990000">;</font>
+    status_t  <b><font color="#000000">SaveCategories</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BList<font color="#990000">&amp;</font> inCategories<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> ドキュメントの管理</font></i>
+    status_t  <b><font color="#000000">CheckIndex</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BVolume<font color="#990000">&amp;</font> inVolume<font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    BList  fCategories<font color="#990000">;</font>   <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリのリスト </font></i><i><font color="#9A1900">*/</font></i>
+    BPath  fPrefFilePath<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルのパス </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> クラスデータ</font></i>
+    <b><font color="#0000FF">static</font></b> Categorizer<font color="#990000">*</font>	sSingleton<font color="#990000">;</font>	<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 単一インスタンス </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _CATEGORIZER_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.9] Categorizer.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>status_t
+Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">LoadCategories </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t sts<font color="#990000">;</font>
+    BPath    thePath<font color="#990000">;</font>
+    FILE<font color="#990000">*</font>    thePrefFile<font color="#990000">;</font>
+    <font color="#009900">char</font>     strBuf<font color="#990000">[</font>kMaxCategoryLen<font color="#990000">+</font><font color="#993399">1</font><font color="#990000">]</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルのパスを初期化 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">find_directory</font></b><font color="#990000">(</font>B_COMMON_SETTINGS_DIRECTORY<font color="#990000">,</font> <font color="#990000">&amp;</font>thePath<font color="#990000">,</font> <b><font color="#0000FF">true</font></b><font color="#990000">)</font><font color="#990000">;</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900">  sts = ::find_directory(B_USER_SETTINGS_DIRECTORY, &amp;thePath, true);</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> thePath<font color="#990000">.</font><b><font color="#000000">Append</font></b><font color="#990000">(</font>kPrefFile<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    fPrefFilePath <font color="#990000">=</font> thePath<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ一覧をロード </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#000080">#ifdef</font></b> Pending  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> '98. 1/27 (</font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">) </font></i><i><font color="#9A1900">*/</font></i>
+    thePrefFile <font color="#990000">=</font> <b><font color="#000000">fopen</font></b><font color="#990000">(</font>fPrefFilePath<font color="#990000">.</font><b><font color="#000000">Path</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <font color="#FF0000">"a"</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> thePrefFile<font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> KGCTG_BAD_PREF_FILE<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ファイルを作れない </font></i><i><font color="#9A1900">*/</font></i>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">fseek</font></b><font color="#990000">(</font>thePrefFile<font color="#990000">,</font> <font color="#993399">0</font><font color="#990000">,</font> SEEK_SET<font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> KGCTG_FAIL_PREF_READ<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ファイルを読めない </font></i><i><font color="#9A1900">*/</font></i>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+<b><font color="#000080">#else</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> alternative src </font></i><i><font color="#9A1900">*/</font></i>
+    thePrefFile <font color="#990000">=</font> <b><font color="#000000">fopen</font></b><font color="#990000">(</font>fPrefFilePath<font color="#990000">.</font><b><font color="#000000">Path</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <font color="#FF0000">"r"</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> thePrefFile<font color="#990000">)</font> <font color="#FF0000">{</font>
+        thePrefFile <font color="#990000">=</font> <b><font color="#000000">fopen</font></b><font color="#990000">(</font>fPrefFilePath<font color="#990000">.</font><b><font color="#000000">Path</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <font color="#FF0000">"w"</font><font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> thePrefFile<font color="#990000">)</font> <font color="#FF0000">{</font>
+            sts <font color="#990000">=</font> KGCTG_BAD_PREF_FILE<font color="#990000">;</font>
+            <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:PR2付属のmwccでは、"a"モードでfopen()を実行すると、fseek()を</font></i>
+<i><font color="#9A1900"> *    実行しても先頭にシークできないようである。本来は、"a+"によって</font></i>
+<i><font color="#9A1900"> *    バイナリファイルとしてオープンしない限りは先頭にシークできる筈</font></i>
+<i><font color="#9A1900"> *    なのだが、仕方ないので上のようにしている。</font></i>
+<i><font color="#9A1900"> *    ('98. 1/27, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#000080">#endif</font></b>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font><b><font color="#000000">fgets</font></b><font color="#990000">(</font>strBuf<font color="#990000">,</font> <b><font color="#0000FF">sizeof</font></b><font color="#990000">(</font>strBuf<font color="#990000">)</font><font color="#990000">,</font> thePrefFile<font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#009900">char</font><font color="#990000">*</font>  newItem<font color="#990000">;</font>
+        int32  theLength <font color="#990000">=</font> <b><font color="#000000">strlen</font></b><font color="#990000">(</font>strBuf<font color="#990000">)</font><font color="#990000">;</font>
+	
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>strBuf<font color="#990000">[</font>theLength<font color="#990000">-</font><font color="#993399">1</font><font color="#990000">]</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#FF0000">'\n'</font><font color="#990000">)</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 改行文字を削除 </font></i><i><font color="#9A1900">*/</font></i>
+            strBuf<font color="#990000">[</font><font color="#990000">-</font><font color="#990000">-</font>theLength<font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">;</font>
+        newItem <font color="#990000">=</font> <b><font color="#0000FF">new</font></b> <font color="#009900">char</font><font color="#990000">[</font>theLength <font color="#990000">+</font> <font color="#993399">1</font><font color="#990000">]</font><font color="#990000">;</font>
+        <b><font color="#000000">strcpy</font></b><font color="#990000">(</font>newItem<font color="#990000">,</font> strBuf<font color="#990000">)</font><font color="#990000">;</font>
+        fCategories<font color="#990000">.</font><b><font color="#000000">AddItem</font></b><font color="#990000">(</font>newItem<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+    <b><font color="#000000">fclose</font></b><font color="#990000">(</font>thePrefFile<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"Categorizer::LoadCategories"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">SaveCategories </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BList<font color="#990000">&amp;</font> inCategories<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t sts<font color="#990000">;</font>
+    FILE<font color="#990000">*</font>    thePrefFile<font color="#990000">;</font>
+    <font color="#009900">char</font>     strBuf<font color="#990000">[</font>kMaxCategoryLen<font color="#990000">+</font><font color="#993399">1</font><font color="#990000">]</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルを開く </font></i><i><font color="#9A1900">*/</font></i>
+    thePrefFile <font color="#990000">=</font> <b><font color="#000000">fopen</font></b><font color="#990000">(</font>fPrefFilePath<font color="#990000">.</font><b><font color="#000000">Path</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <font color="#FF0000">"w"</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> thePrefFile<font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> KGCTG_BAD_PREF_FILE<font color="#990000">;</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 全てのカテゴリを書き込む </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">for</font></b> <font color="#990000">(</font>int32 i <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">,</font> n <font color="#990000">=</font> inCategories<font color="#990000">.</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font> i <font color="#990000">&lt;</font> n<font color="#990000">;</font> <font color="#990000">+</font><font color="#990000">+</font>i<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#009900">char</font><font color="#990000">*</font>	aCategory <font color="#990000">=</font> <font color="#990000">(</font><font color="#009900">char</font><font color="#990000">*</font><font color="#990000">)</font>inCategories<font color="#990000">.</font><b><font color="#000000">ItemAt</font></b><font color="#990000">(</font>i<font color="#990000">)</font><font color="#990000">;</font>
+		
+        <b><font color="#000000">strncpy</font></b><font color="#990000">(</font>strBuf<font color="#990000">,</font> aCategory<font color="#990000">,</font> kMaxCategoryLen<font color="#990000">)</font><font color="#990000">;</font>
+        strBuf<font color="#990000">[</font>kMaxCategoryLen<font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">fputs</font></b><font color="#990000">(</font>strBuf<font color="#990000">,</font> thePrefFile<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> EOF<font color="#990000">)</font>
+            <b><font color="#0000FF">goto</font></b> err_write<font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">fputc</font></b><font color="#990000">(</font><font color="#FF0000">'\n'</font><font color="#990000">,</font> thePrefFile<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> EOF<font color="#990000">)</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 改行文字を付加 </font></i><i><font color="#9A1900">*/</font></i>
+            <b><font color="#0000FF">goto</font></b> err_write<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ保存ファイルを閉じる </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#000000">fclose</font></b><font color="#990000">(</font>thePrefFile<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err_write<font color="#990000">:</font>
+    <b><font color="#000000">fclose</font></b><font color="#990000">(</font>thePrefFile<font color="#990000">)</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> KGCTG_FAIL_WRITE_PREF<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"Categorizer::SaveCategories"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+	<b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:本当は、現在のシステムフォントなどから得られる言語圏情報を使い、</font></i>
+<i><font color="#9A1900"> *    適切なバイト境界で文字列の切り捨てを行うべきである。</font></i>
+<i><font color="#9A1900"> *    ('98. 1/27, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+
+status_t
+Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">CheckIndex </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BVolume<font color="#990000">&amp;</font> inVolume<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t   sts <font color="#990000">=</font> B_OK<font color="#990000">;</font>
+    <font color="#009900">int</font>        retVal<font color="#990000">;</font>
+    index_info theInfo<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> inVolume<font color="#990000">.</font><b><font color="#000000">KnowsQuery</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b> B_UNSUPPORTED<font color="#990000">;</font>
+    retVal <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">fs_stat_index</font></b><font color="#990000">(</font>
+        inVolume<font color="#990000">.</font><b><font color="#000000">Device</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> kCategoryIndex<font color="#990000">,</font> <font color="#990000">&amp;</font>theInfo
+    <font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>retVal <font color="#990000">!</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+        sts <font color="#990000">=</font> errno<font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_ENTRY_NOT_FOUND<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGConfirm</font></b><font color="#990000">(</font>kCreateIndexMsg<font color="#990000">)</font><font color="#990000">)</font>
+            <b><font color="#0000FF">return</font></b> B_CANCELED<font color="#990000">;</font>
+        <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>
+            retVal <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">fs_create_index</font></b><font color="#990000">(</font>
+                inVolume<font color="#990000">.</font><b><font color="#000000">Device</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> kCategoryIndex<font color="#990000">,</font> B_STRING_TYPE<font color="#990000">,</font> <font color="#993399">0</font>
+            <font color="#990000">)</font><font color="#990000">;</font>
+            <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>retVal <font color="#990000">!</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+                sts <font color="#990000">=</font> errno<font color="#990000">;</font>
+            <b><font color="#0000FF">else</font></b>
+                sts <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"Categorizer::CheckIndex"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> B_ERROR<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MakeQueryFor </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">,</font> BQuery<font color="#990000">*</font> outQuery<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BAutolock <b><font color="#000000">lock</font></b><font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">)</font><font color="#990000">;</font>
+    status_t  sts<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 念のため </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Clear</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ検索用の問い合わせ文を作成 </font></i><i><font color="#9A1900">*/</font></i>
+    outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushAttr</font></b><font color="#990000">(</font>kCategoryIndex<font color="#990000">)</font><font color="#990000">;</font>
+    outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushString</font></b><font color="#990000">(</font>inCategory<font color="#990000">,</font> <b><font color="#0000FF">true</font></b><font color="#990000">)</font><font color="#990000">;</font>
+    outQuery<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">PushOp</font></b><font color="#990000">(</font>B_EQ<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"Categorizer::MakeQuery"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">AttachCategory </font></b><font color="#990000">(</font>
+	<b><font color="#0000FF">const</font></b> entry_ref<font color="#990000">*</font> inDocument<font color="#990000">,</font> <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inCategory<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BAutolock <b><font color="#000000">lock</font></b><font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">)</font><font color="#990000">;</font>
+    status_t  sts<font color="#990000">;</font>
+    BVolume   theVolume<font color="#990000">;</font>
+    BNode     theNode<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ボリューム情報を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theVolume<font color="#990000">.</font><b><font color="#000000">SetTo</font></b><font color="#990000">(</font>inDocument<font color="#990000">-</font><font color="#990000">&gt;</font>device<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 必要なインデックスがあるかチェック </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CheckIndex</font></b><font color="#990000">(</font>theVolume<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_UNSUPPORTED <font color="#990000">|</font><font color="#990000">|</font> sts <font color="#990000">=</font><font color="#990000">=</font> B_CANCELED<font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ属性を設定 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theNode<font color="#990000">.</font><b><font color="#000000">SetTo</font></b><font color="#990000">(</font>inDocument<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>theNode<font color="#990000">.</font><b><font color="#000000">WriteAttr</font></b><font color="#990000">(</font>
+        kCategoryIndex<font color="#990000">,</font> B_STRING_TYPE<font color="#990000">,</font>
+        <font color="#993399">0</font><font color="#990000">,</font> inCategory<font color="#990000">,</font> <b><font color="#000000">strlen</font></b><font color="#990000">(</font>inCategory<font color="#990000">)</font> <font color="#990000">+</font> <font color="#993399">1</font>
+    <font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"Categorizer::AttachCategory"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">DetachCategory </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> entry_ref<font color="#990000">*</font> inDocument<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t  sts<font color="#990000">;</font>
+    BAutolock <b><font color="#000000">lock</font></b><font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">)</font><font color="#990000">;</font>
+    BNode     <b><font color="#000000">theNode</font></b><font color="#990000">(</font>inDocument<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 正しく初期化できたかチェック </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">(</font>sts <font color="#990000">=</font> theNode<font color="#990000">.</font><b><font color="#000000">InitCheck</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ属性を削除 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theNode<font color="#990000">.</font><b><font color="#000000">RemoveAttr</font></b><font color="#990000">(</font>kCategoryIndex<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"Categorizer::DetachCategory"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.10] DocumentsWin.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><font color="#009900">void</font>
+DocumentsView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MakeupQuery </font></b><font color="#990000">(</font>BQuery<font color="#990000">*</font> outQuery<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t     sts<font color="#990000">;</font>
+    Categorizer<font color="#990000">*</font> categorizer <font color="#990000">=</font> Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">GetInstance</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    sts <font color="#990000">=</font> categorizer<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">MakeQueryFor</font></b><font color="#990000">(</font>fCategory<font color="#990000">,</font> outQuery<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"DocumentsView::MakeupQuery"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+DocumentsView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ドラッグ&ドロップ対応 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">WasDropped</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">MessageDropped</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+
+    <b><font color="#0000FF">switch</font></b> <font color="#990000">(</font>message<font color="#990000">-</font><font color="#990000">&gt;</font>what<font color="#990000">)</font> <font color="#FF0000">{</font>
+    <b><font color="#0000FF">case</font></b> ADD_DOCUMENT<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddDocument</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>			<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> RMV_DOCUMENT<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">RemoveSelected</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>			<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> SORT_BY_NAME<font color="#990000">:</font>
+    <b><font color="#0000FF">case</font></b> SORT_BY_MODIFIED<font color="#990000">:</font>
+    <b><font color="#0000FF">case</font></b> SORT_BY_SIZE<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ChangeSortKey</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> B_REFS_RECEIVED<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">RefsReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">default</font></b><font color="#990000">:</font>
+        RetrieverView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+DocumentsView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageDropped </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BPoint     theDropPoint <font color="#990000">=</font> message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DropPoint</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    BListView<font color="#990000">*</font> theListView  <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetEntryListView</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> スクリーン座標からローカル座標に変換 </font></i><i><font color="#9A1900">*/</font></i>	
+    theListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ConvertFromScreen</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theDropPoint<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> リストビューの中なら受け付け </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Bounds</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">.</font><b><font color="#000000">Contains</font></b><font color="#990000">(</font>theDropPoint<font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">RefsReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+DocumentsView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">RefsReceived </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t     sts<font color="#990000">;</font>
+    entry_ref    aRef<font color="#990000">;</font>
+    node_ref     aNodeRef<font color="#990000">;</font>
+    BEntry       anEntry<font color="#990000">;</font>
+    int32        theIndex    <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">;</font>
+    Categorizer<font color="#990000">*</font> categorizer <font color="#990000">=</font> Categorizer<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">GetInstance</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 全てのファイルシステムエントリに対してカテゴリを設定	</font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindRef</font></b><font color="#990000">(</font>kRefsArg<font color="#990000">,</font> theIndex<font color="#990000">+</font><font color="#990000">+</font><font color="#990000">,</font> <font color="#990000">&amp;</font>aRef<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> エントリの有効性を確認 </font></i><i><font color="#9A1900">*/</font></i>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>anEntry<font color="#990000">.</font><b><font color="#000000">SetTo</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>aRef<font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK
+                <font color="#990000">|</font><font color="#990000">|</font> anEntry<font color="#990000">.</font><b><font color="#000000">GetNodeRef</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>aNodeRef<font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+            <b><font color="#0000FF">continue</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 無効なエントリ </font></i><i><font color="#9A1900">*/</font></i>
+        <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> カテゴリ設定を試行 </font></i><i><font color="#9A1900">*/</font></i>		
+        sts <font color="#990000">=</font> categorizer<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AttachCategory</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>aRef<font color="#990000">,</font> fCategory<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_CANCELED<font color="#990000">)</font>
+            <b><font color="#0000FF">break</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ユーザがキャンセルした </font></i><i><font color="#9A1900">*/</font></i>
+        <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_UNSUPPORTED<font color="#990000">)</font> <font color="#FF0000">{</font>
+            <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>kUnsupportedVolMsg<font color="#990000">)</font><font color="#990000">;</font>
+            <b><font color="#0000FF">break</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インデックス付けできないボリューム所属 </font></i><i><font color="#9A1900">*/</font></i>
+        <font color="#FF0000">}</font> <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+            <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"DocumentsView::RefsReceived"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:カテゴリ(キーワード)を設定したエントリをリストビューに登録して</font></i>
+<i><font color="#9A1900"> *    いないのを不思議に思うかも知れないが、その必要はない。ライブク</font></i>
+<i><font color="#9A1900"> *    エリー機構により、そのエントリ情報がB_QUERY_UPDATEメッセージを</font></i>
+<i><font color="#9A1900"> *    使って通知されるからである。</font></i>
+<i><font color="#9A1900"> *    ('98. 5/1, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+上に示したリストについて、簡単に説明します。まず、リスト9.8と9.9は、Categorizerクラスのソースです。ただし、実装部を載せたリスト9.9の方には、重要なメソッドだけを入れています。LoadCategories()とSaveCategories()は、カテゴリ情報のロードとセーブを行うメソッドです。登録されたカテゴリはInfoChestアプリケーションの初期設定ファイルに保存し、アプリケーションを起動した時にロードされるようになっているのです。なお、ファイルに対するデータの入出力を行うAPIはまだ説明していませんので、リスト9.9ではANSI標準の関数を使っています。fopen()関数でファイルを作成して開き、fgets()関数とfputs()関数を使って入出力を行っています。<br/>
+
+ CheckIndex()は、カテゴリを設定する属性のインデックスがあるかどうかを調べるメソッドです。引数で指定されたボリュームにインデックスがない場合に、ユーザに確認したうえで作成します。ノード属性の設定と削除は、AttachCategory()メソッドとDeatchCategory()メソッドで行います。この二つのメソッドは、それぞれBNodeクラスのWriteAttr()メソッドとRemoveAttr()メソッドを呼び出します。また、MakeQueryFor()はカテゴリ検索のクエリーを作成するメソッドで、DocumentsViewクラスのMakeupQuery()メソッドから呼び出されます。<br/>
+
+<br/>
+
+その次のリスト9.10は、DocumentsViewクラスのソースです。ただし、クエリーの作成を行うMakeupQuery()メソッドと、それからファイルやフォルダのドラッグ&ドロップに応答するための三つのメソッドだけを載せました。MakeupQuery()は、CategorizerクラスのMakeQueryFor()メソッドを利用しているだけです。ファイルやフォルダをドラッグ&ドロップされた場合は、それを知らせるメッセージが届くので、MessageReceived()メソッドで処理します。BMessageクラスのWasDropped()メソッドを使えば、渡されたメッセージがドラッグ&ドロップのものかどうかを知ることができます。リスト9.10では、ドラッグ&ドロップによって届いたメッセージであることが分かったら、BMessageクラスのDropPoint()メソッドを使ってドロップされた場所を調べていることに注目して下さい。ドロップされたのがリストビューの中であれば、RefsReceived()メソッドを呼び出し、メッセージによって受け取ったファイルやフォルダにカテゴリをセットします。<br/>
+
+ ところで、ドキュメント一覧ウィンドウの“File”メニューから“Add Document...”を選択するとオープンダイアログを開きますが、このダイアログでファイルやフォルダを指定した時も、RefsReceived()メソッドが呼び出されるようになっています。実際のソースファイル(DocumentsView.cp)で確認してみて下さい。<br/>
+
+<br/>
+
+次に、ライブクエリーのための処理を行う部分のソースをリスト9.11と9.12に示します。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.11] RetrieverView.cp-2</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><font color="#009900">void</font>
+RetrieverView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>fListView <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font><font color="#990000">;</font>
+
+    <b><font color="#0000FF">switch</font></b> <font color="#990000">(</font>message<font color="#990000">-</font><font color="#990000">&gt;</font>what<font color="#990000">)</font> <font color="#FF0000">{</font>
+    <b><font color="#0000FF">case</font></b> B_NODE_MONITOR<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">HandleNodeMessage</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>    <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> B_QUERY_UPDATE<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">EntriesChanged</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>       <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> KGSE_ENTRY_FOUND<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">EntriesFound</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>         <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> KGSE_COMPLETED<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">SearchCompleted</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>      <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> OPEN_DOCUMENT<font color="#990000">:</font>
+    <b><font color="#0000FF">case</font></b> OPEN_PARENT<font color="#990000">:</font>
+        fListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font> <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">default</font></b><font color="#990000">:</font>
+        BView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+RetrieverView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">EntriesChanged </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t    sts<font color="#990000">;</font>
+    int32       theOpCode<font color="#990000">;</font>
+    entry_ref   theRef<font color="#990000">;</font>
+    node_ref    theNodeRef<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> theName<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> オペコードを取得 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindInt32</font></b><font color="#990000">(</font>kOpCodeArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theOpCode<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> エントリ情報を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindInt32</font></b><font color="#990000">(</font>kDeviceArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theRef<font color="#990000">.</font>device<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindInt64</font></b><font color="#990000">(</font>kDirectoryArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theRef<font color="#990000">.</font>directory<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theOpCode <font color="#990000">=</font><font color="#990000">=</font> B_ENTRY_CREATED<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindString</font></b><font color="#990000">(</font>kNameArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theName<font color="#990000">)</font><font color="#990000">;</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>theRef<font color="#990000">.</font><b><font color="#000000">set_name</font></b><font color="#990000">(</font>theName<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font> <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>
+        theNodeRef<font color="#990000">.</font>device <font color="#990000">=</font> theRef<font color="#990000">.</font>device<font color="#990000">;</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindInt64</font></b><font color="#990000">(</font>kNodeArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theNodeRef<font color="#990000">.</font>node<font color="#990000">)</font><font color="#990000">;</font>
+		
+        <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 移動した場合は特別 </font></i><i><font color="#9A1900">*/</font></i>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theOpCode <font color="#990000">=</font><font color="#990000">=</font> B_ENTRY_MOVED<font color="#990000">)</font> <font color="#FF0000">{</font>
+            <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindInt64</font></b><font color="#990000">(</font>kToDirArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theRef<font color="#990000">.</font>directory<font color="#990000">)</font><font color="#990000">;</font>
+            <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>message<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindString</font></b><font color="#990000">(</font>kNameArg<font color="#990000">,</font> <font color="#990000">&amp;</font>theName<font color="#990000">)</font><font color="#990000">;</font>
+            <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>theRef<font color="#990000">.</font><b><font color="#000000">set_name</font></b><font color="#990000">(</font>theName<font color="#990000">)</font><font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> オペコードに応じて分岐処理 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">switch</font></b> <font color="#990000">(</font>theOpCode<font color="#990000">)</font> <font color="#FF0000">{</font>
+    <b><font color="#0000FF">case</font></b> B_ENTRY_CREATED<font color="#990000">:</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> エントリ(ノード)が加わった </font></i><i><font color="#9A1900">*/</font></i>
+        fListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CreateItem</font></b><font color="#990000">(</font>theRef<font color="#990000">)</font><font color="#990000">;</font>            <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> B_ENTRY_REMOVED<font color="#990000">:</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> エントリ(ノード)が削除された </font></i><i><font color="#9A1900">*/</font></i>
+        fListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DeleteItem</font></b><font color="#990000">(</font>theNodeRef<font color="#990000">)</font><font color="#990000">;</font>        <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> B_ENTRY_MOVED<font color="#990000">:</font>    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ノードの移動でエントリ情報が変わった </font></i><i><font color="#9A1900">*/</font></i>
+        fListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ItemMoved</font></b><font color="#990000">(</font>theNodeRef<font color="#990000">,</font> theRef<font color="#990000">)</font><font color="#990000">;</font> <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">default</font></b><font color="#990000">:</font>
+        <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 無視 </font></i><i><font color="#9A1900">*/</font></i><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"RetrieverView::EntriesChanged"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:現在の実装では、B_ENTRY_MOVEDメッセージが送られて来ることは</font></i>
+<i><font color="#9A1900"> *    ない。このメッセージは、NodeMonitorのwatch_node()を使って</font></i>
+<i><font color="#9A1900"> *    個々のノードを監視した場合にのみ送られてくるものだからである。</font></i>
+<i><font color="#9A1900"> *</font></i>
+<i><font color="#9A1900"> *    リストに表示する全てのノードに対する監視を行うように修正する</font></i>
+<i><font color="#9A1900"> *    には、以下の改変が必要になる:</font></i>
+<i><font color="#9A1900"> *    1.)リスト表示にノード(エントリ)を追加する際、それぞれのノード</font></i>
+<i><font color="#9A1900"> *	     を引数としてwatch_node()を呼び出し、監視を開始する。</font></i>
+<i><font color="#9A1900"> *    2.)リスト表示からノード(エントリ)を削除するときは、それぞれの</font></i>
+<i><font color="#9A1900"> *      ノードに対してstop_watching()を呼び出し、監視を終了する。</font></i>
+<i><font color="#9A1900"> *    なお、watch_node()を呼び出して監視する場合、そのための「ス</font></i>
+<i><font color="#9A1900"> *    ロット」がシステム側に作られる。このスロットは4096個までしか</font></i>
+<i><font color="#9A1900"> *    作ることができないので、必ずstop_watching()を呼び出してスロッ</font></i>
+<i><font color="#9A1900"> *    トが解放されるようにしなければならない。</font></i>
+<i><font color="#9A1900"> *    ('98. 4/30, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font></tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト9.12] SearchEngine.cp-2</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>status_t
+SearchEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">StartWatching </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t  sts<font color="#990000">;</font>
+	
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsLocked</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSearching</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>fSearchInfo<font color="#990000">.</font>client <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font> <font color="#FF0000">{</font>
+        BMessenger	<b><font color="#000000">theMessenger</font></b><font color="#990000">(</font>fSearchInfo<font color="#990000">.</font>client<font color="#990000">,</font> NULL<font color="#990000">,</font> <font color="#990000">&amp;</font>sts<font color="#990000">)</font><font color="#990000">;</font>
+		
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+            <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+        sts <font color="#990000">=</font> fQuery<font color="#990000">.</font><b><font color="#000000">SetTarget</font></b><font color="#990000">(</font>theMessenger<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+            <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"SearchEngine::StartWatching"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+上に示したのは、RetrieverViewクラスのソースの一部と、SearchEngineクラスのソースの一部です。ライブクエリーのための処理を行うメソッドだけを載せました。BQueryクラスのSetTarget()メソッドを呼び出してライブクエリーを開始すると、クエリーに該当するノードの集合に変化が起きた時に、それを知らせるメッセージが届きます。リスト9.11でRetrieverViewクラスのMessageReceived()メソッドを見て下さい。ライブクエリーの通知メッセージ(B_QUERY_UPDATE)を受け取った場合は、<br/>
+
+EntriesChanged()メソッドを呼び出して処理しているのがわかるでしょう。ライブクエリーの通知メッセージでは、変化の内容を伝えるコード(オペコード)が付随データの項目として渡されます。リスト9.11では、クエリーに該当するノードが新たに加わった場合はリストの表示項目を追加し、またノードが削除された場合はリストの項目を削除しています。<br/>
+
+ また、リスト9.12に載せたSearchEngineクラスのStartWatching()メソッドでは、<br/>
+
+BQueryオブジェクト(fQuery)に対してSetTarget()メソッドを呼び出し、ライブクエリーを開始しています。SetTarget()の引数には検索の依頼主、つまりRetrieverViewオブジェクトを渡し、ライブクエリーの通知メッセージが届けられるようにしています。<br/>
+
+<br/>
+
+以上で、掲載したリストの説明を終わります。なお、二つほど補足しておくべきことがありますので、それを以下に述べます。<br/>
+
+<br/>
+
+ ■ドラッグ&ドロップのサポート<br/>
+
+  ドキュメント一覧ウィンドウに対してファイルやフォルダのアイコンをドラッグ&ドロップしたとき、そのエントリ情報を受け取る処理はDocumentsViewクラスで行っています。一方、ファイルやフォルダをドラッグできるようにするための処理は、9.1節で述べたEntryListViewクラスで行っています。BViewクラスがフック関数として提供しているInitiateDrag()メソッドを再定義し、ドラッグされるメッセージにエントリ情報をセットしています。詳細は、EntryListViewクラスのソースファイル(MyLib/GUI/EnttryListView.cp)を見て下さい。<br/>
+
+<br/>
+
+ ■初期設定ファイル<br/>
+
+  InfoChestアプリケーションは、登録したカテゴリのリストを初期設定ファイルに記録して保存します。リスト9.9を見ると分かるように、Storage Kitのfind_directory()関数を使って初期設定ファイルの保存フォルダ情報を取得しています。この手続きは、システムで定義されたフォルダのパス名を返してくれるものです。リスト9.9では、そのマシン全体で有効な初期設定情報を格納するフォルダのパスを取得しています。これについて、少し説明しておきましょう。<br/>
+
+<br/>
+
+リスト9.9では“B_COMMON_SETTINGS_DIRECTORY”を指定してfind_directory()関数を呼び出していますが、アプリケーションによっては、ユーザに固有な情報を格納する“B_USER_SETTINGS_DIRECTORY”を指定すべきです。現在のBeOSではマルチユーザ環境をサポートしていないため、これれはどちらも同じフォルダのパス、つまり/boot/home/config/settingsを返します。しかし、将来マルチユーザ環境がサポートされることになった場合のことを考えて、今のうちから対応しておく方が良いでしょう。InfoChestアプリケーションでは、一つのノードには一つのカテゴリしか設定できないという制限があるため、登録されたカテゴリ情報をマシン全体で大域的にすべきだと考えて“B_COMMON_SETTINGS_DIRECTORY”を指定しています。<br/>
+
+<br/>
+
+<br/>
+<a name="9.4"></a>
+<h2>9.4&nbsp;&nbsp;まとめと練習問題</h2>
+この章では、最初に挙げた題材をプログラミングするために、次のような解決手段を用いました:<br/>
+
+<br/>
+
+ ■指定された条件に合うファイルやフォルダを検索する<br/>
+
+  →BQueryオブジェクトに検索条件と検索対象ボリュームをセットした後、Fetch()メソッドを呼び出す。それから、見つかったファイルやフォルダのエントリ情報をGetNextEntry()メソッドで取得する。<br/>
+
+<br/>
+
+ ■ファイルやフォルダのアイコンを表示する<br/>
+
+  →BNodeInfoクラスのGetTrackerIcon()メソッドに、ファイルやフォルダのエントリ情報を渡してアイコンデータを取得する。それから、BViewクラスのDrawBitmap()メソッドを呼び出してアイコンを描画する。<br/>
+
+<br/>
+
+ ■ファイルやフォルダにキーワードを付けて管理する<br/>
+
+  →ファイルやフォルダのノード属性としてキーワードを設定し、そのキーワード属性に対するインデックスを作成する。属性の設定はBNodeクラスのWriteAttr()メソッドで行い、インデックスの作成はfs_create_index()関数を使って行う。インデックスを作成した属性は、BQueryクラスを利用した検索条件に使えるので、キーワードによる検索が可能になる。<br/>
+
+<br/>
+
+ ■アプリケーションの初期設定ファイルを作成し、設定データを保存する<br/>
+
+  →Storage Kitのfind_directory()関数を使って初期設定フォルダのパス情報を取得し、fopen()関数でファイルを作成する。データの読み書きはfgets()とfputs()を使う。<br/>
+
+<br/>
+
+ ■ファイルやフォルダのドラッグ&ドロップ機能をサポートする<br/>
+
+  →BViewクラスのMessageReceived()メソッド、およびInitiateDrag()メソッドを再定義する。ドロップされたデータを格納したメッセージをMessageReceived()メソッドで受け取り、その他のメッセージと区別するためにBMessageクラスのWasDropped()メソッドを利用する。また、ドラッグ機能をサポートするには、InitiateDrag()メソッドの中でDragMessage()を呼び出す。<br/>
+
+<br/>
+
+この章で説明したことや、説明に使ったサンプルアプリケーションに対する理解を深めるために、以下の練習問題について考えてみて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 1</div>
+
+  BQueryクラスのクエリー作成用メソッドについて調べ、クエリーを作成するプログラムを作ってみて下さい。プログラムを作ったら、クエリーを作成した後にBQueryオブジェクトに対してGetPredicate()メソッドを呼び出し、返されたクエリー文字列の内容を調べてみましょう。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 2</div>
+
+  練習問題1で作ったプログラムで作成したクエリーと同じ検索条件をTrackerの検索パネルで指定し、検索条件の指定形式を“Formula”に変更して下さい。表示された条件式の内容を、練習問題1で調べたクエリー文字列と比べ、同じ内容になっているかどうかを確認してみましょう。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 3</div>
+
+  BeOSでは、全てのノードが必ず備える検索可能属性に加えて、ユーザ情報やメール用の属性を定義しています。たとえば、システム付属の“People”アプリケーションで作成したユーザ情報ファイルには、ユーザの名前を表わす“META:name”やメールアドレスを表わす“META:email”という属性が付けられます。これらの属性をキーとして検索を行うプログラムを作ってみましょう。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 4</div>
+
+  9.3節で説明したサンプルのInfoChestアプリケーションは、カテゴリ設定に使うキノード属性に対するインデックスを自動的に作成しますが、削除することはできません。このアプリケーションを使わないことにしたユーザにとっては、インデックスを残したままにするとディスクの無駄です。そのようなユーザのために、InfoChestアプリケーションが作成したインデックスと、ファイルやフォルダに付けたノード属性を全て削除するプログラムを作ってみて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 5</div>
+
+  9.3節のInfoChestアプリケーションでは、ライブクエリーはサポートしているものの、ドキュメント一覧ウィンドウに表示しているノードに対する監視は行っていません。このため、それらのノードの名前や所属ディレクトリを変更した場合、それを追跡できなくなってしまいます。つまり、変更したファイルやフォルダを開こうとしても、InfoChestアプリケーションが持っているエントリ情報が無効になってしまっているため、開けないのです。この問題を解消するために、InfoChestアプリケーションを改変してノード監視機能を追加してみましょう。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 6</div>
+
+  9.1節で示したリスト9.6のSearchEngineクラスでは、検索処理の強制終了を行うAbortSearch()メソッドの中で、wait_for_thread()手続きを利用して検索実行スレッドの終了を待ち、同期をとっています。この行をコメントアウトしてFileSearchアプリケーションを作り直して下さい。改変したFileSearchアプリケーションで、時間のかかる検索を行わせ、まだ検索が済まないうちに“Search”ボタンをクリックしてみて下さい。FileSearchは、その時行っている検索処理を強制終了し、新しい検索を始めようとします。その強制終了時に使う同期用の手順を省略したことで、何が起きるようになるでしょうか。実験して確認してみて下さい。<br/>
+
+<br/>
+
+<br/>
+
+
+<hr>
+<address>
+Art of BeOS Programming<br/>
+koga@stprec.co.jp
+</address>
+
+
+</div><!-- End of main -->
+
+</div><!-- End of pagewidth -->
+
+</body>
+
+</html>
+

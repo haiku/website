@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-30.html" title="Issue 1-30, July 3, 1996" /><link rel="next" href="Issue1-32.html" title="Issue 1-32, July 17, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-30.html" title="Issue 1-30, July 3, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-32.html" title="Issue 1-32, July 17, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-30.html">Issue 1-30, July 3, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-32.html">Issue 1-32, July 17, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-31"></a>Issue 1-31, July 10, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-31"></a>Be Engineering Insights: DR8 Sneak Preview: Semaphore &amp; Port Changes</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>
+One of the first things most developers do when given a new operating
+system is to peruse the APIs to get a feel for what's there, what isn't,
+and what should be. Most of our developers have done exactly that and
+voiced their opinions on a number of issues. In looking at the Be OS
+kernel API, the first thing that strikes any classic OS weenie is the
+lack of nonblocking versions of <code class="function">read</code>/<code class="function">write_port()</code>
+and <code class="function">acquire_sem()</code>.
+We've been chastised for this, so we implemented additional functions for
+DR8 that offer solutions to these problems. Let's start at the bottom:
+Semaphores. In reviewing the semaphore API we noticed that the function
+names were getting a little out of hand. For example, there were four
+versions of the semaphore-acquisition function:
+</p><pre class="programlisting c">
+<code class="function">acquire_sem</code>(<code class="parameter">sem</code>)
+<code class="function">acquire_sem_count</code>(<code class="parameter">sem</code>, <code class="parameter">count</code>)
+<code class="function">acquire_sem_timeout</code>(<code class="parameter">sem</code>, <code class="parameter">timeout</code>)
+<code class="function">acquire_sem_count_timeout</code>(<code class="parameter">sem</code>, <code class="parameter">count</code>, <code class="parameter">timeout</code>)
+</pre><p>
+The kernel had several more versions of these functions with even longer
+names. Clearly this was not an API that could grow. For DR8 there are now
+only two semaphore routines:
+</p><pre class="programlisting c">
+<code class="function">acquire_sem</code>(<code class="parameter">sem</code>)
+<code class="function">acquire_sem_etc</code>(<code class="parameter">sem</code>, <code class="parameter">count</code>, <code class="parameter">flags</code>, <code class="parameter">timeout</code>)
+</pre><p>
+The new routine, <code class="function">acquire_sem_etc()</code>, allows for a bit more flexibility in
+specifying how you want to acquire a semaphore. The 'sem' and 'count'
+arguments are of course the same as before. The new 'flags' argument lets
+you set certain attributes when acquiring the semaphore; in particular,
+you can set the semaphore's "apply timeout" flag, <code class="constant">B_TIMEOUT</code>. By applying
+the timeout and passing a timeout value of 0, you tell the acquisition
+function that you don't want to block. (In DR7, a timeout of 0 meant
+"wait forever").
+</p><p>
+Given the presence of a nonblocking semaphore, it becomes trivial to
+implement nonblocking <code class="function">read_port()</code> and <code class="function">write_port()</code> functions (in fact it
+took less than five minutes!). The implementation mirrors that of
+<code class="function">acquire_sem()</code>; the following functions are new for DR8:
+</p><pre class="programlisting c">
+<code class="function">read_port_etc</code>(<code class="parameter">port</code>, <code class="parameter">code</code>, <code class="parameter">buf</code>, <code class="parameter">size</code>, <code class="parameter">flags</code>, <code class="parameter">timeout</code>)
+<code class="function">write_port_etc</code>(<code class="parameter">port</code>, <code class="parameter">code</code>, <code class="parameter">buf</code>, <code class="parameter">size</code>, <code class="parameter">flags</code>, <code class="parameter">timeout</code>)
+<code class="function">port_buffer_size_etc</code>(<code class="parameter">port</code>, <code class="parameter">flags</code>, <code class="parameter">timeout</code>)
+</pre><p>
+The 'flags' and 'timeout' arguments to these routines follow the same
+conventions as the <code class="function">acquire_sem_etc()</code> routine. So by combining the
+<code class="constant">B_TIMEOUT</code> flag with a timeout of zero you can do nonblocking port
+operations. Of course you can specify longer timeouts if you desire.
+</p><p>
+The use of small or zero timeouts does raise some issues though: One fear
+we have regarding the nonblocking functions is their potential for abuse.
+The functions make it easy to write a program that constantly polls a
+port or semaphore and simply burns CPU cycles while not accomplishing any
+useful work. Doing that is what some people refer to as "A Bad Thing";
+something we'd like to avoid. And so let us state up front that using a
+zero or very small timeout to constantly poll a port or semaphore is not
+acceptable.
+</p><p>
+How do you use these routines in a well-behaved manner then? One example
+is our Browser, which has a thread that periodically does some work and
+needs to know when to exit so it can cleanly free data structures, and so
+on. A way to accomplish this is to have the thread do a nonblocking
+acquire of a semaphore before it does its work, and then release the
+semaphore when it's done. When the Browser wants the thread to exit it
+simply grabs the semaphore and does a <code class="function">wait_for_thread()</code>. When the work
+thread attempts to acquire the semaphore in a nonblocking manner, it will
+get an error code (because the main Browser thread acquired the
+semaphore). When the work thread fails to acquire the semaphore it knows
+it's time to exit. This is a very simple mechanism that requires very
+little extra code in either thread while producing clean, consistent
+results.
+</p><p>
+As another example, consider a program where a background computation
+thread (rendering, FFTs, and so on) works on data while a front end
+allows a user to manipulate a GUI. Suppose that while the computation
+thread is running the user adjusts some parameter that affects the
+computation. Instead of waiting for the computation thread to finish
+before being able to inform it of the changes, the GUI thread can send
+the computation thread a message to tell it to restart. The computation
+thread can periodically poll for these messages by doing a nonblocking
+read of a message port. This is of course much cheaper and easier to do
+than creating and killing threads on the fly. It also falls outside our
+admonition about burning CPU cycles needlessly, because the computation
+is performing useful work.
+</p><p>
+Of course nonblocking port operations aren't the only use for the timeout
+parameter. The use of longer timeouts is very handy when you want to
+avoid hanging on a client or server that fails to respond within some
+specified time. By using timeouts you can improve the robustness of your
+applications and make them impervious to misbehaving clients or servers
+(also known as"A Good Thing").
+</p><p>
+These are just a few of the avenues you can explore with nonblocking and
+timeout-based semaphore and port operations. We hope that this
+functionality will allow you, our developers, to more easily create
+applications that wow, excite, and titillate the public (OK, maybe not
+titillate, but at least excite and wow).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-31"></a>Be Developer Talk: Technical Magic</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Gary JP</span> <span class="surname">Hewett</span></span></div></div></div><p>
+I've always been an entrepreneur, writing database and production
+automation software for large catalog and mail order companies. The
+technology in this field has a long way to go, but I'm excited about
+being a part of the process. There's a certain satisfaction in getting
+clients—who aren't necessarily technically literate—involved in the
+process of designing the tools that they'll be using. Even the smallest
+indoctrination can prevent the horror of the ill-informed client who asks
+for miracles and then merely shrugs when we deliver them.
+</p><p>
+There are four of us at Technical Magic. We've been spoiled for years
+working with NeXT software, but the integrated database on the BeBox was
+an ultimately compelling feature. More than anything else, we need a
+machine that has good database tools, reliable performance, and network
+scalability. I've only had my BeBox for about an hour so far, but things
+look exciting. It seems that there may be some nasty font issues, and Orb
+has crashed the machine a couple of times, but I'm impressed with the
+dual processors and graphics appear real snappy. I've got more than a few
+things yet to find in there I'm sure!
+</p><p>
+In the short term we hope to evaluate platform development tools, and
+then build baseline business software. (Time and Contact Managers,
+Financial Products, and so on—I figure all those prosperous Be
+developers would like to count their coins on a BeBox, right?) Recovery
+software might also be an area I'll explore. I'd also like to develop
+hardware that attaches to the <span class="trademark">GeekPort</span>™—break-out boxes and other
+attachments.
+</p><p>
+This is, of course, a young machine that will create a new market. One of
+the exciting things about the BeBox is that because of its newness, I can
+influence the markets that are created. We'll see.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-31"></a>"Are You Crazy?"</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We've said it many times: Harness a new platform (ours) to the Internet,
+and you create a great opportunity for small, unenfranchised software
+developers. On older platforms, a few dominant players, mostly US-based,
+can use their muscle to prevent fledgling new entrants from reaching
+critical mass. And without the affordable promotion and electronic
+distribution made possible by the Internet, young companies are killed by
+the expense of marketing.
+</p><p>
+As a result of what I've said and left unsaid, several readers of this
+newsletter have questioned our apparent bias in favor of smaller software
+developers. Your messages were invariably tactful—but the subtext was
+clear:
+</p><p>
+"Are you crazy?"
+</p><p>
+"Aren't you better off courting the established players, getting them to
+port their most successful applications to the BeBox, rather than looking
+for the next John Warnock or the next Mitch Kapor amongst the Diaspora of
+unwashed geeks?"
+</p><p>
+You've got a point.
+</p><p>
+One could make a nice list of industry-trusted, media- or
+communications-intensive applications that would look great and run even
+better if ported to the BeBox. Name your domain, from image processing to
+video editing, from multimedia authoring to digital audio, web services
+and software development for other platforms... Each time, a handful of
+titles comes to mind. Isn't this the best way, the only way perhaps, to
+find the "tractor application" the BeBox must get, or die?
+</p><p>
+The argument is seductively simple and intuitively obvious. But a couple
+of observations play against it. The first observation comes from past
+history. If memory serves, no new platform took off as a result of a port
+from an older one. For instance, none of the DOS or Apple ][ applications
+that were ported to the Macintosh actually helped the Mac. On the other
+hand, the home-grown PageMaker did (and, later, also became successful on
+Windows).
+</p><p>
+The second observation, or factor, is short-term economics. The primary
+business of any large company that's already successful on Windows or the
+Mac is fighting the competition and supporting existing customers. The
+short-term return on an investment in a new platform with a small
+installed base doesn't look good on Wall Street.
+</p><p>
+Still, let's assume that there exists a Be champion inside one of the
+fast-moving, successful software companies. She or he convinces
+management of the long-term benefits of betting on the Be platform,
+gathers political support inside the organization, and gets the human and
+financial resources needed for the port. What's required to complete a
+product that works and sells?
+</p><ul class="itemizedlist"><li><p>
+Stable management support is a must. Without it, the best people on
+the team will be pulled away to put out other fires in the product line.
+</p></li><li><p>
+A combination of political and technical astuteness is also required.
+This gets a little touchy. A straight port might be the easiest
+political sell inside. But technically, and in the eye of the paying
+customer as well, it might not make the most sense. For the "port" to
+make technical and commercial sense, a substantial amount of redesign
+might be required.
+</p></li><li><p>
+Finally, the project needs a dancer's light tread to balance what
+must be said and what must be done in order to reach successful
+completion. Arabesque.
+</p></li></ul><p>
+In the end, working with a large, established player means working
+against the conservative forces generated by its very success while using
+its momentum to help our platform take off. By now (I hope) I'll have
+confused our esteemed readers enough to convince them that working with
+the leading software companies isn't "do or die"—it's not a slam dunk.
+For example, we'd be flattered to see a "straight" port of Photoshop work
+on the BeBox, but we'd rather convince Adobe to do on the BeBox what we
+did ourselves: Maximize the benefits of innovation by shedding the
+baggage from the past. We don't know yet if they or their colleagues will
+do it, or if a small company will, but we'll do our best to find out.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-31"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads. To subscribe to
+BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/about_be/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490451"></a>WEEK 3</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490457"></a>Subject: Suggestions for a Help system?</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">A/K/A: HTML Help Files</h5></div></div></div><p>
+More HTML talk: It was suggested that a proposed "super-HTML" be used
+to encode entire interface layouts.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490476"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490482"></a>Subject: OpenDoc</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+A/K/A: Live update OLE? NO!<br />
+A/K/A: OLE, OpenDoc
+</h5></div></div></div><p>
+The OpenDoc debate flared up when it was suggested that OLE might be a
+welcome addition to the Be OS. Many listeners wrote in to object,
+citing authorities and their own experiences. It was suggested that the
+cogent questions are not about the quality of OpenDoc, but
+</p><div class="orderedlist"><ol><li><p>
+should Be use OpenDoc simply because it's an available standard,
+</p></li><li><p>
+is OpenDoc so widely accepted that it would be dumb not to support it, and
+</p></li><li><p>
+if it's
+actually accepted now (or soon) how long will this acceptance last?
+</p></li></ol></div></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490527"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490533"></a>Subject: Memory usage</h4></div></div></div><p>
+Some confusion over RAM, VM, the disk cache, and other memory matters:
+Does VM exist? Can it be configured? Why does the BeBox immediately eat
+up nearly all available RAM?
+</p><p>
+THE BE LINE: Yes, VM does exist and, no, it can't be "configured." The
+latter is a feature, not a bug. (You can lock data into RAM by using
+"areas"—see the Kernel Kit—but beyond that, the OS does the
+driving.) Furthermore, the VM system has been improved in DR8 for more
+efficient paging.
+</p><p>
+Regarding the "where'd all my RAM go?" business: The phrase "available
+RAM" (as used by Pulse, for example) is a misnomer in a VM system,
+particularly as it connotes evaporating resources. Rejoice when your
+machine is using nearly all its RAM; that's what it's there for.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490564"></a>Subject: BeBox slower to boot lately?</h4></div></div></div><p>
+Why does rebooting a heavily file-laden BeBox take a disproportionate
+amount of time?
+</p><p>
+THE BE LINE: There are some boot-time database integrity checks that
+will be removed once we're sure the database is unimpeachably stable.
+This series of checks, whose duration is related to the number and size
+of the files on your disk, is the primary cause of the boot delay. The
+checks will probably remain in place until the file system rewrite
+(post DR8). We apologize for the inconvenience.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490588"></a>Subject: OS Suggestions</h4></div></div></div><p>
+Be should provide a way to programmatically retrieve and set the colors
+that are used to draw GUI widgets (the encapsulation of such was termed
+a "pen"). When it was pointed out that a single widget is often a blend
+of many colors, the proposition became: The programmer should be able
+to declare a window's title bar to be blue (for example), and the
+system should provide all the appropriate shading within the bar.
+</p><p>
+On other subjects, developers are yearning for UI guidelines and for
+the scoop on "App Modeler," the GUI-building tool.
+</p><p>
+THE BE LINE: The UI guidelines and App Modeler will be part of DR8.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490616"></a>Subject: View/ListView and font info</h4></div></div></div><p>
+An initial query about how to retrieve font info turned into a
+discussion of whether it would be more intuitive/easier/elegant to
+express coordinates as a device-independent measure (as compared to the
+status quo where points == pixels).
+</p><p>
+THE BE LINE: Monitor-dependent point measurement greatly enhances
+drawing speed and app server efficiency. We don't expect this to change.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490638"></a>Subject: /proc needed?</h4></div></div></div><p>
+The necessity and desirability of the traditional UNIX /proc and /dev
+directories was debated.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490651"></a>Subject: BASH and PS1 expansion</h4></div></div></div><p>
+How do you set the shell prompt to display the current working
+directory? A number of solutions were offered. The cleanest was this
+(type this in a shell to test it; add it to your .profile when you're
+happy):
+</p><pre class="screen">
+PS1="`pwd`&gt; "
+</pre></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490669"></a>Subject: Better keyboard shortcuts for Edit, etc.</h4></div></div></div><p>
+Some folks are frustrated by the keyboard bindings used by Be's text
+editors. The Home and End keys, in particular, are less than ideal:
+They put you at the beginning and end of an entire document; some folks
+would rather they operate on the current line. A repeated-key solution,
+cribbed from BRIEF, was suggested: 1st Home goes to the beginning of
+current line, 2nd is the top of the screen, 3rd is the top of the
+document.
+</p><p>
+In general, consensus favors user-settable keyboard bindings and
+"swappable" editors (such that you could use the editor of your choice
+from within the IDE, for example).
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490695"></a>Subject: Message interception</h4></div></div></div><p>
+Application A can't intercept system messages intended for application
+B; nor can you find out which window the cursor is over if that window
+isn't yours. A call for both features was made. The utility of the
+get-me-the-window feature was questioned: What could application A *do*
+with application B's window? After an initial muddying of objects and
+pixels, an answer was offered: Application A could send a message to
+the "foreign" window.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id490713"></a>Subject: What about the desktop?</h4></div></div></div><p>
+It was suggested that the Browser allow icons to be left on the "desktop"
+(a la the Mac). But does a desktop filled with icons look too cluttered?
+As an alternative, the dock could provide "drawers" for storing multiple
+icons (this would replace the current dog-eared stack of icons).
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-30.html">Issue 1-30, July 3, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-32.html">Issue 1-32, July 17, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-30.html" title="Issue 1-30, July 3, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-32.html" title="Issue 1-32, July 17, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

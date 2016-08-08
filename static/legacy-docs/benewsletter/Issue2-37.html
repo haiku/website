@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-36.html" title="Issue 2-36, September 10, 1997" /><link rel="next" href="Issue2-38.html" title="Issue 2-38, September 24, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-36.html" title="Issue 2-36, September 10, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-38.html" title="Issue 2-38, September 24, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-36.html">Issue 2-36, September 10, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-38.html">Issue 2-38, September 24, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-37"></a>Issue 2-37, September 17, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-37"></a>Be Engineering Insights: Introducing the BSynth Class</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Ferguson</span></span></div></div></div><p>
+One of the new features in the Preview Release is the software MIDI
+synthesizer. The Midi Kit contains three classes for controlling the MIDI
+synthesizer: <code class="classname">BSynth</code>, <code class="classname">BMidiSynth</code>,
+and <code class="classname">BMidiSynthFile</code>. The <code class="classname">BSynth</code> object is
+the interface to the underlying synthesizer engine. <code class="classname">BMidiSynth</code> is a
+subclass of BMidi that forwards MIDI events to the <code class="classname">BSynth</code> object. And
+<code class="classname">BMidiSynthFile</code> is a specialization of
+<code class="classname">BMidiSynth</code> which reads from a
+standard MIDI file.
+</p><p>
+An application that uses the MIDI synthesizer starts by creating a <code class="classname">BSynth</code>
+object. Currently you can only create one <code class="classname">BSynth</code> object per application,
+but you probably only need one anyway. After creating the <code class="classname">BSynth</code>, call
+<code class="methodname">LoadSynthData</code>(<code class="constant">B_BIG_SYNTH</code>)
+on it. This tells the <code class="classname">BSynth</code> to use the
+instrument file
+<code class="filename">/boot/beos/etc/synth/big_synth.sy</code>.
+</p><p>
+If the call to <code class="methodname">LoadSynthData()</code> fails, it probably couldn't find the
+instrument file. <code class="methodname">LoadSynthData()</code> does not load the instruments into
+memory yet. Unless you are playing directly from a MIDI file you will
+still need to load the instruments.
+</p><p>
+The application then creates a <code class="classname">BMidiSynth</code> object which you can send MIDI
+events to just as you would to any other <code class="classname">BMidi</code> object. After creating the
+<code class="classname">BMidiSynth</code>, call <code class="methodname">EnableInput()</code>
+on it. The first argument to <code class="methodname">EnableInput()</code>
+should be true, and the second argument indicates whether to pre-load all
+instruments from the instrument file.
+</p><p>
+The easiest way to see how this works is to try it. Here is a program
+that plays six notes on a piano. Don't forget to link with
+<code class="filename">libmidi.so</code>.
+</p><pre class="programlisting cpp">
+#include &lt;MidiSynth.h&gt;
+
+<code class="function">main</code> ()
+{
+  <code class="classname">BSynth</code> <code class="varname">synth</code>;
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="varname">synth</code>.<code class="methodname">LoadSynthData</code>(<code class="constant">B_BIG_SYNTH</code>);
+  if (<code class="varname">err</code>) {
+    <code class="function">printf</code> ("LoadSynthData: %x\n", <code class="varname">err</code>);
+    return -1;
+  }
+
+  <code class="classname">BMidiSynth</code> <code class="varname">song</code>;
+  <code class="varname">err</code> = <code class="varname">song</code>.<code class="methodname">EnableInput</code>(<code class="constant">true</code>, <code class="constant">false</code>);
+  if (<code class="varname">err</code>) {
+    <code class="function">printf</code> ("EnableInput: %x\n", <code class="varname">err</code>);
+    return -1;
+  }
+
+  <span class="type">int</span> <code class="varname">channel</code> = 1;       <span class="comment">// MIDI channel number</span>
+  <span class="type">int</span> <code class="varname">instrument</code> = <code class="constant">B_ACOUSTIC_GRAND</code>; <span class="comment">// GM instrument</span>
+  <code class="varname">song</code>.<code class="methodname">LoadInstrument</code>(<code class="varname">instrument</code>);
+  <code class="varname">song</code>.<code class="methodname">ProgramChange</code>(<code class="varname">channel</code>, <code class="varname">instrument</code>);
+
+  for (<span class="type">int</span> <code class="varname">i</code> = 0; <code class="varname">i</code> &lt; 6; <code class="varname">i</code>++) {
+    <code class="varname">song</code>.<code class="methodname">NoteOn</code>(<code class="varname">channel</code>, 60 + 5 * <code class="varname">i</code>, 127);
+    <code class="function">snooze</code>(250000);
+  }
+
+  <code class="function">snooze</code>(2000000);
+  <code class="varname">song</code>.<code class="methodname">AllNotesOff</code>(<code class="constant">FALSE</code>);
+  return 0;
+}
+</pre><p>
+In this example <code class="varname">channel</code> is a MIDI channel number (1-16), and
+<code class="varname">instrument</code> is a General MIDI instrument number. The instrument numbers
+are represented by the <span class="type">midi_axe</span> constants defined in
+<code class="filename">MidiDefs.h</code>. The
+<code class="methodname">ProgramChange()</code> call associates an instrument with a channel.
+</p><p>
+You can also play the synthesizer from an external MIDI keyboard. If you
+are on a Mac you will also need a Mac MIDI interface (I'm using an
+"Opcode Midi Translator II"). To do this, you just connect a <code class="classname">BMidiPort</code> to
+the <code class="classname">BMidiSynth</code>:
+</p><pre class="programlisting cpp">
+<code class="classname">BSynth</code> <code class="varname">synth</code>;
+<code class="varname">synth</code>.<code class="methodname">LoadSynthData</code>(<code class="constant">B_BIG_SYNTH</code>);
+
+<code class="classname">BMidiSynth</code> <code class="varname">song</code>;
+<code class="function">printf</code>("Loading instruments...\n");
+<code class="varname">song</code>.<code class="methodname">EnableInput</code>(<code class="constant">true</code>, <code class="constant">true</code>);
+<code class="function">printf</code>("Done.\n");
+
+<code class="classname">BMidiPort</code> <code class="varname">port</code>;
+<span class="type">status_t</span> <code class="varname">err</code> = <code class="varname">port</code>.<code class="methodname">Open</code>("midi2"); <span class="comment">// printer port on Macs</span>
+if (<code class="varname">err</code>)
+  <code class="function">printf</code> ("Open: %x\n", <code class="varname">err</code>);
+<code class="varname">port</code>.<code class="methodname">Connect</code>(&amp;<code class="varname">song</code>);
+<code class="varname">port</code>.<code class="methodname">Start</code>();
+</pre><p>
+In this case the second argument to <code class="methodname">EnableInput()</code>
+is <code class="constant">true</code>. So all the
+instruments will be pre-loaded, which may take a few seconds. Note that
+on Macs, "midi1" is the modem port and "midi2" is the printer port.
+</p><p>
+To play a MIDI file, use a <code class="classname">BMidiSynthFile</code> instead of a <code class="classname">BMidiSynth</code>:
+</p><pre class="programlisting cpp">
+#include &lt;MidiSynthFile.h&gt;
+
+<code class="function">main</code> ()
+{
+  <code class="classname">BSynth</code> <code class="varname">synth</code>;
+  <code class="varname">synth</code>.<code class="methodname">LoadSynthData</code>(<code class="constant">B_BIG_SYNTH</code>);
+
+  <span class="type">char*</span> <code class="varname">filename</code> = "/boot/optional/midi/BeBoxBeBop.mid";
+  <code class="classname">BMidiSynthFile</code> <code class="varname">song</code>;
+  <span class="type">entry_ref</span> <code class="varname">ref</code>;
+  <code class="function">get_ref_for_path</code>(<code class="varname">filename</code>, &amp;<code class="varname">ref</code>);
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="varname">song</code>.<code class="methodname">LoadFile</code>(&amp;<code class="varname">ref</code>);
+  if (<code class="varname">err</code>) {
+    <code class="function">printf</code> ("LoadFile: can't open %s\n", <code class="varname">filename</code>);
+    return -1;
+  }
+
+  <code class="varname">song</code>.<code class="methodname">Start</code>();
+  while (!<code class="varname">song</code>.<code class="methodname">IsFinished</code>())
+    <code class="function">snooze</code>(1000000);
+  <code class="varname">song</code>.<code class="methodname">Fade</code>();
+  return 0;
+}
+</pre><p>
+There are also several other <code class="classname">BSynth</code> methods
+such as <code class="methodname">SetReverb()</code> and
+<code class="methodname">SetSynthVolume()</code> to experiment with, but this is enough to get started
+using the <code class="classname">BSynth</code>. So dig out those old MIDI keyboards and plug them in!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-37-2"></a>A Problem with Extensions</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Baron</span> <span class="surname">Arnold</span></span></div></div></div><p>
+Inspiration comes wheeling around the corner like a '68 Chevy Camero:
+screaming rubber, hoodless, with a caved-in passenger door. Greek blue
+and pumped to evade, or catch, or surprise.
+</p><p>
+Effort squeezes into a tiny hallway, sweaty and breathing hard. Then
+comes the split, the lesson, the book, the movie and you wanna know the
+rest...
+</p><p>
+Buy the rights.<br />
+How bizarre.
+</p><p>
+I spent 35 minutes waiting for my friend's 9500/132 to upgrade itself
+from 7.5.something to 7.6. Then Corel's word processor would lock up
+whenever she tried to save a document. Neat.
+</p><p>
+So she called Corel and they told her it was $25 for help.<br />
+Neat.
+</p><p>
+Tonight she told me that it turned out to be a problem with Extensions.
+Imagine that. A problem with Extensions. You could almost write a
+recent-history book called...
+</p><p>
+"A Problem with Extensions"
+</p><p>
+And you could write it with StyledEdit, and you could look up the words
+you don't know how to spell with NetPositive targeted to autoload your
+favorite online dictionary. You could even e-mail the final manuscript to
+your publisher, click back and check your bank account to make sure they
+don't stiff you on the five cents a word you're paid to describe the very
+disappointing behaviour of one careless twit behind that big fruity
+curtain.
+</p><p>
+Because baby you had it all along.<br />
+BeOS CDs are breeding like AOL floppies.
+</p><p>
+She asked if the BeOS would save her, and I said, "Yes."
+It's simple, really.
+</p><p>
+She's a student. She wants e-mail, a word processor, and Internet access.<br />
+She doesn't want a million upgrade headaches.<br />
+She doesn't need all those fancy legacy applications.<br />
+She's got nice hardware.<br />
+Calgon, take me away.
+</p><p>
+PR2 is almost ready.<br />
+It fixes most of what you were asking for.
+</p><p>
+Oh and those of you who have been submitting PPP bugs, please remember to
+tell us what kind of modem you have and if possible, what kind of modem
+you are connecting to.
+</p><p>
+So blah blah blah Power Computing and Apple, and blah blah blah CHRP and
+BURP (Be United Reference Platform.) Blah blah blah Moto and does it
+really matter anyway? Latitude is coming. Chill out for a couple months.
+Then it's gonna get VERY interesting. You saw the demo.
+</p><p>
+I'll see a thousand BIntel machines clog my cube before Xmas, and by
+Spring you'd be a fool not to be running multi-boot on your 95% of the
+back seat.
+</p><p>
+If you kids don't stop fighting I'll turn this IPO around right now!
+</p><p>
+And speaking of super-duper, if anyone out there at Radius is reading
+this, then we've got a couple of bugs with those kool expensive cards you
+sell. Achieve greater market penetration, contribute to the Be Hardware
+Fund. Pack up your dreams of compatibility and ship them to:
+</p><p>
+Baron Arnold<br />
+800 El Camino Real, Suite 300<br />
+Menlo Park, CA  94025.
+</p><p>
+Oh and props out to the people who built the Be Machine.<br />
+I use it as my main testing box.<br />
+It's fast and blue. =)<br />
+I love the overspray on the CD drawer the most.<br />
+Very kool.
+</p><p>
+But seriously, about the Be Hardware Fund, if you are somehow in charge
+of something where what you make is something you'd like to see
+BeCompatible, send me one please?
+</p><p>
+And for those of you just tuning in, the Intel world is just so chock
+full of hardware options, send me stuff. Really. You know the song. We'll
+try support it, but only if we can test it.
+</p><p>
+Speaking of testing, I wanna publicly thank Jake Hambey.
+He's filed a million good bugs and helped me take a few very big steps
+into scripting the testing grunt work by porting Expect. If you ever
+wanted to script a telnet session then get Expect from BeWare.
+</p><p>
+Wow. Thanks, Jake.<br />
+And ya know?<br />
+He plays a mean ocarina. =)
+</p><p>
+Driving up to the Avenues the other night, I was telling Jake that it's
+really the people at Be who have allowed us to develop at such a rapid
+rate. It has been the inter-linking of so many different personalities,
+of so many different work styles: so many concessions and acknowledgments
+made in the name of The Right Way. It's quite simple, and yet,
+terrifically effective. We joked with abstraction about the
+BeActionPlaySet, plastic StarWars-size BePlay figures of Dominic, and
+Benoit, and George. And we considered, with respect, how many more of
+each individual engineer Be would need to cover perfectly the near-future
+work to be done. As for testing, I think just one each of Ming and Mel
+and Jake and I could handle it. Well, maybe two Mings. One for each wing.
+=) We'll definitely need more space though.
+</p><p>
+And so the fourth floor acquisition is but one release away (gotta put
+those engineers somewhere). MIA and CBS and DVD and I'm a little worried
+that we will grow too fast. That there will be so much to do that we
+won't have time to find out who our co-workers are. What they love and
+dislike. What they have seen. Where they have been. Hmmm. Perhaps this is
+an attempt to jinx us. Keep the lid on our secret a little longer. Let
+this GUI simmer in these, the last of our simple days.
+</p><p>
+There are so many things we'd like to give you.<br />
+We talk about them every day.<br />
+At lunch, at dinner, on the weekends.<br />
+We want to give you everything.
+</p><p>
+So blah blah blah MacWorld and Comdex.<br />
+Blah blah blah shop talk shop talk shop talk.<br />
+Watch for BeShred in a shrink wrap near you.<br />
+Get your ticket now for "The Power of the Word NO."<br />
+Hang on to your sense of humor and consider please<br />
+that 150%, is just a sleepier 110.
+</p><p>
+Spin a few times, but never forever.<br />
+Try to be humble and honest and clever.<br />
+Love = work + your life and your friends so Valerie,<br />
+here's where my article ends.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-37"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+Are you AllAttached? When you're using a programming framework, sometimes
+it takes a while to figure out all the ins and outs of what happens when.
+The BeOS programming interface is clean and simple to use, but learning a
+little bit about proper usage can go a long way. I was recently playing
+with a library of code which was largely unknown to me, when my
+application kept crashing on initialization. It turns out that I was
+trying to set a target handler for a object that didn't quite exist yet.
+Specifically it was a button in one of the views that is not created
+until the <code class="methodname">AttachedToWindow()</code> method is called.
+</p><p>
+Well, <code class="methodname">AttachedToWindow()</code> gets called when you actually add a view to a
+window's hierarchy. At this point, you can call the <code class="methodname">Window()</code> method of a
+view to get a pointer to the window you're attached to. Also, at this
+point none of your child view's <code class="methodname">AttachedToWindow()</code> methods will have been
+called, and you know nothing about your sibling views. So what's safe to
+do here? Things that are directly related to your view that you didn't
+already do in your constructor. You might add child views, set your font
+and colors and all that.
+</p><p>
+What about <code class="methodname">AllAttached()</code>? You want to use this when it is absolutely
+paramount that all of your child views have been attached. This would be
+the case if you are going to perform an action that depends on the
+existence of your child views in the hierarchy.
+</p><p>
+So let's say there should be a button in your view with the name "OK".
+And you want to set the target handler of that button to be yourself.
+Ideally you want to do the following:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BButton</code> *</span><code class="varname">aButton</code> = (<span class="type"><code class="classname">BButton</code> *</span>)<code class="methodname">FindView</code>("OK");
+if (0 != <code class="varname">aButton</code>)
+  <code class="varname">aButton</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">this</code>);
+</pre><p>
+Where is it safe to put this code? Well, if you were the view writer and
+you know explicitly when the button was created, then you can do it
+anywhere you want. If you are sub-classing some other view, then it's
+safest to stick the code in the <code class="methodname">AllAttached()</code> method, assuming that the
+original view author created the button in their <code class="methodname">AttachedToWindow()</code>
+method.
+</p><p>
+This is what I did, and my bugs went away. Just goes to show you...
+</p><p>
+Then I got to figuring, there's got to be more uses of <code class="classname">BMessageFilter</code>s.
+So I sought to simplify the HelloWorld application. Often times when you
+create a simple little app, you might create a sub-class of <code class="classname">BApplication</code>
+and <code class="classname">BWindow</code>, simply to implement the
+<code class="classname">BWindow</code>::<code class="methodname">QuitRequested()</code> method so
+when the window closes, the app will quit. Well, that seems like a bit
+much just to quit an app, how about a filter?
+</p><pre class="programlisting cpp">
+#include &lt;MessageFilter.h&gt;
+#include &lt;Application.h&gt;
+#include &lt;Window.h&gt;
+
+static <span class="type">filter_result</span>
+<code class="function">QuitFilter</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>, <span class="type"><code class="classname">BHandler</code> **</span><code class="parameter">target</code>,
+           <span class="type"><code class="classname">BMessageFilter</code> *</span><code class="parameter">filter</code>)
+{
+  <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+  return <code class="constant">B_SKIP_MESSAGE</code>;
+}
+</pre><p>
+In this case, whenever this filter receives a message, it will post a
+message to the application object asking it to quit. You could have
+actually checked the <code class="code">*msg</code> passed in to make sure what type of message it
+is, but in this very simple case we don't care. As you will see below,
+the filter is installed in such a way that only one type of message will
+come to this filter in the first place.
+</p><p>
+So, now my simple application to pop a window up on the screen and quit
+when it's closed looks like this:
+</p><pre class="programlisting cpp">
+<code class="classname">BRect</code> <code class="varname">gWindowSize</code> = <code class="classname">BRect</code>(100,80,260,120);
+
+class <code class="classname">HelloView</code> : public <code class="classname">BView</code> {
+public:
+    <code class="methodname">HelloView</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>, <span class="type">char *</span><code class="parameter">name</code>);
+virtual  <span class="type">void</span>  <code class="methodname">Draw</code>(<code class="classname">BRect</code> <code class="parameter">updateRect</code>);
+};
+
+<code class="classname">HelloView</code>::<code class="methodname">HelloView</code>(<code class="classname">BRect</code> <code class="parameter">rect</code>, <span class="type">char *</span><code class="parameter">name</code>)
+        : <code class="classname">BView</code>(<code class="parameter">rect</code>, <code class="parameter">name</code>, <code class="constant">B_FOLLOW_ALL</code>, <code class="constant">B_WILL_DRAW</code>)
+{
+}
+
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+  <code class="methodname">SetFont</code>(<code class="varname">be_bold_font</code>);
+  <code class="methodname">SetFontSize</code>(24);
+
+  <code class="methodname">MovePenTo</code>(<code class="classname">BPoint</code>(10, 30));
+  <code class="methodname">DrawString</code>("Hello, World!");
+}
+
+<code class="function">main</code>()
+{
+  <span class="comment">// Start off with an instance of an application object</span>
+  <span class="type"><code class="classname">BApplication</code> *</span><code class="varname">myApplication</code> = new <code class="classname">BApplication</code>('HLWD');
+
+  <span class="comment">// Setup our window</span>
+  <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">aWindow</code> = new <code class="classname">BWindow</code>(<code class="varname">gWindowSize</code>, "Hello",
+    <code class="constant">B_TITLED_WINDOW</code>, <code class="constant">B_NOT_RESIZABLE</code>);
+
+  <span class="comment">// Create a filter that will only look at B_QUIT_REQUESTED</span>
+  <span class="comment">// message. These are sent to the window whenever the</span>
+  <span class="comment">// close box is clicked on, or when you do an Alt-Q.</span>
+  <span class="type"><code class="classname">BMessageFilter</code> *</span><code class="varname">filter</code> =
+    new <code class="classname">BMessageFilter</code>(<code class="constant">B_QUIT_REQUESTED</code>, <code class="varname">QuitFilter</code>);
+  <code class="varname">aWindow</code>-&gt;<code class="methodname">AddCommonFilter</code>(<code class="varname">filter</code>);
+
+  <span class="comment">// view rect should be same size as window rect but with</span>
+  <span class="comment">// left top at (0, 0)</span>
+  <code class="varname">gWindowSize</code>.<code class="methodname">OffsetTo</code>(<code class="constant">B_ORIGIN</code>);
+  <span class="type"><code class="classname">HelloView</code> *</span><code class="varname">aView</code> =
+    new <code class="classname">HelloView</code>(<code class="varname">gWindowSize</code>, "HelloView");
+
+  <span class="comment">// add view to window</span>
+  <code class="varname">aWindow</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">aView</code>);
+
+  <span class="comment">// make window visible</span>
+  <code class="varname">aWindow</code>-&gt;<code class="methodname">Show</code>();
+
+  <span class="comment">// Start the application running</span>
+  <code class="varname">myApplication</code>-&gt;<code class="methodname">Run</code>();
+
+  <span class="comment">// After it is finished running, delete it</span>
+  <span class="comment">// to be nice and tidy</span>
+  delete(<code class="varname">myApplication</code>);
+  return(0);
+}
+</pre><p>
+This is a very simple app. All it needs is a specialized view to be added
+to the window and you're all set. You can use this as a template for
+knocking out those quick and dirty apps where you just want to try
+something out in a window real quick.
+</p><p>
+If all your view does is draw something, you could conceivably create a
+simple base class view that you could install a drawing function into. It
+would then in turn call this drawing function whenever the Draw() method
+was called.
+</p><p>
+Fun things can be done with this. If you haven't already started playing
+with filters, then maybe this gives you some incentive. They really are
+flexible and allow you to quickly and dynamically change the nature of
+your application simply by installing and removing filters.
+</p><p>
+How can filters be used for an interface builder? Maybe that's what
+someone can do next?
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-37"></a>The Photoshop Machine</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+CHRP had the right goal: To create a hardware standard around the PowerPC
+similar in intent to what IBM's PC/AT became for the Intel processor, the
+core platform around which a huge industry was built. Almost forgotten is
+that while IBM designed the PC/AT, it lost control of the standard. It
+was IBM's very loss of control that gave birth to the clone industry, now
+driven, if not controlled, by Intel and Microsoft.
+</p><p>
+This bit of history isn't lost on Apple's management. They remember IBM's
+futile attempt to regain control of the PC standard with the proprietary
+PS/2 platform and have concluded that even with a hypothetical "private"
+version of CHRP, they would lose the hardware battle. In many respects,
+CHRP would have been a bigger danger to Apple than Power Computing ever
+was: Power's engineers were industrious and talented—had CHRP lived,
+industry and talent wouldn't have been necessary. Lower the bar and
+increase the competition.
+</p><p>
+Regardless of what we think of Apple's decision to bring the Mac cloning
+experiment to an end, the demise of CHRP is a logical consequence of the
+de-cloning move. Yet, many have stated their opinion that there is life
+left in CHRP—potentially. As a result, we've seen several suggestions
+on the 'Net with a view to breathing commercial life back into an
+"independent" PowerPC platform.
+</p><p>
+These observers go on to suggest there must be a considerable inventory
+of CHRP systems or, if not systems, ready-to-assemble components
+otherwise condemned to the scrap heap. The performance of CHRP hardware
+demonstrated by Motorola and IBM is enticing; why not use
+cost-competitive, if not "devalued" CHRP hardware to build a BeOS-based
+"Photoshop box"?
+</p><p>
+This is an engaging suggestion, and the thought experiment it triggers
+will allows us to explore issues such as dedicated systems vs. general
+purpose ones, the cost and performance benefits of the BeOS for a given
+application space and porting existing applications vs. enabling new ones.
+</p><p>
+If I follow the dominoes correctly, Photoshop has a large user base,
+these users are hungry for performance, or cost savings, or both, and
+many would buy one or more additional "boxes" just to run Photoshop if
+they saw enough productivity gains in a dedicated machine. A dual
+processor CHRP system just running a BeOS version of Photoshop would
+excite a large enough user population to incite one or more hardware
+manufacturers to ship such a product. In turn, this would constitute a
+sizeable enough business to trigger Adobe into making Photoshop available
+for this system.
+</p><p>
+This, needless to say, is purely hypothetical and I don't want to imply
+that any of the companies mentioned or alluded to have expressed the
+slightest shadow of interest for the idea. This is purely a thought
+experiment.
+</p><p>
+Even with this stipulation, I won't speculate too much as to why Adobe
+would or wouldn't consider such an idea. Performance is always welcome by
+Photoshop users and we've demonstrated substantial improvements on
+existing hardware as well as on affordable multi-processor systems.
+</p><p>
+Still, if I dare to imagine Adobe's concerns, there must be the cost of
+producing a new version of Photoshop and there must be the alternative of
+the Intel space. In the latter, there is inexpensive dual-processor
+hardware and interesting performance improvements in the making. I don't
+know what would happen if Adobe would let it be known they'd support the
+concept of a dedicated Photoshop system. Where would the best bids come
+from?
+</p><p>
+In the past, dedicated systems haven't fared too well. Take the word
+processor. In the early difficult days of the Mac, many observers
+remarked on the ease of use and beautiful printing obtained with
+MacWrite. They concluded the Mac should be reconfigured as a dedicated
+word processor. That didn't happen. Does this apply to the current idea?
+On the one hand customers have shown a liking for a system with a wide
+range of actual or potential uses. On the other hand, word processing
+applications are not driven by the thirst for performance Photoshop users
+experience.
+</p><p>
+Addressing cost, using the BeOS in a dedicated configuration might do
+more than add performance. Using the modularity of the BeOS and targeting
+Photoshop users could further reduce the footprint of the system and thus
+save hardware dollars. Still, others will remind us that hardware ought
+to stay as close as possible to the mainstream in order to best capture
+the benefits of competition between vendors.
+</p><p>
+Lastly, there is the question of new software versus mature applications.
+On this issue, the assumptions of today's thought experiment matter a
+great deal. Historically, ports from one generation of operating systems
+to a new one don't do well. The reasons might be that the technical
+constraints of the old design don't permit effective use of the new
+platform, or it could be that the press of business on the existing front
+leaves no financial or psychic energy for a risky bet on a new vehicle.
+(DOS to Windows, or Apple II to Mac are changes of generation; Mac to
+Windows isn't; Mac or Windows to the BeOS are.)
+</p><p>
+What differs in today's thought experiment is the assumption that a
+dedicated box would be sold almost exclusively to existing Photoshop
+users who want the simplest, least disruptive, most effective way of
+improving their existing work flow. In such a context a port could do
+very well.
+</p><p>
+It is too early to tell if the many suggestions we've seen on the 'Net
+for a "Photoshop box" will lead to an actual implementation, but we
+certainly appreciate the positive sentiments they convey.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-36.html">Issue 2-36, September 10, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-38.html">Issue 2-38, September 24, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-36.html" title="Issue 2-36, September 10, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-38.html" title="Issue 2-38, September 24, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

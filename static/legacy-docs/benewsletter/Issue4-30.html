@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-29.html" title="Issue 4-29, July 21, 1999" /><link rel="next" href="Issue4-31.html" title="Issue 4-31, August 4, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-29.html" title="Issue 4-29, July 21, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-31.html" title="Issue 4-31, August 4, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-29.html">Issue 4-29, July 21, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-31.html">Issue 4-31, August 4, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-30"></a>Issue 4-30, July 28, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-30"></a>Be Engineering Insights: Welcome to Kernel Debugging Land</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id805616"></a>Introduction</h3></div></div></div><p>
+When I first came to work at Be I was surprised by the complete lack of
+kernel debugging facilities. At the time there was nothing but a printf
+that went out to fourth serial port on a BeBox. Compared to the luxurious
+debugging environment in my prior job, the crudity of the Be tools came
+as a bit of a shock.
+</p><p>
+After the shock wore off I realized two things. First, you can't debug
+deadlocks very easily with <code class="function">printf()</code>. Second, why else do you go work for
+an OS company? So you can fix things that bug you instead of just
+complaining about them! I set to work during the Christmas holidays of
+1995/96 and pretty soon had a crude "debugger" that let me poke around
+the system, examine data structures, and conduct other nefarious
+debugging activities.
+</p><p>
+This article isn't about a trip down debugging nostalgia lane, however.
+It's about how to debug things that run in kernel mode—so let's get
+down to it and see how it's done on the BeOS.
+</p><p>
+A word of caution: Those of you who are accustomed to
+<a class="ulink" href="http://www.compuware.com/products/devpartner/default.htm">SoftICE</a> or other
+sophisticated Windows debugging tools may be in for as much of a shock as
+I was when I started at Be. Our tools are still fairly primitive by most
+standards—but they serve us reliably and produce good data to help in
+debugging. While I believe that tools can help you debug, in the end
+there's no substitute for just sitting down and figuring out a problem.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id805671"></a>Getting Started</h3></div></div></div><p>
+First off, where does the debugger output go? On an Intel Architecture
+(x86) PC our serial output goes to COM1 at 19,200 baud, 8 data bits, no
+stop bits, 1 parity bit, and no flow control at all (this is important).
+On the BeBox we use the fourth serial port (same settings) and on the Mac
+we use the modem port (again, same settings).
+</p><p>
+To interact with the debugger you need to get a NULL modem cable and
+connect it to another computer. The BeOS kernel debugger sets the serial
+port to 19,200 baud, 8 data bits, no parity, and 1 stop bit (commonly
+referred to as 8-N-1). There is also no flow control, so it's important
+to disable flow control in whatever software you're using on the remote
+machine. In the BeOS SerialConnect application you can do this by
+choosing the Settings-&gt;Flow Control-&gt;None menu item. Once you configure
+the remote machine and its terminal program you need to enable the
+debugging output on BeOS. On a PC or BeBox you do this by holding down
+the <span class="keycap">F1</span> key when you boot; on the Mac hold down the Delete key. When our
+nifty boot logo appears, press either <span class="keycap">F1</span> or <span class="keysym">Delete</span> until debug output
+appears on the serial port. If you see only garbled characters on the
+remote side you probably have the wrong modem settings (again it's 19,200
+baud, 8-N-1, and no flow control).
+</p><p>
+Once the serial connection is set up correctly, there are several ways to
+enter the kernel debugger. On a PC or BeBox you can press
+<span class="keysym">Alt</span>+<span class="keysym">PrintScreen</span>
+to "drop in." On the Macintosh press
+<span class="keysym">Command</span>+<span class="keysym">Power</span> key. The other (much
+less pleasant) way to enter the kernel debugger is if the kernel takes a
+fault it can't handle. This can happen if code running in the kernel
+touches nonexistent/unmapped memory, divides by zero, if an NMI
+(non-maskable-interrupt) occurs, or some other fault that can't be
+handled happens. Finally, you can enter the debugger if a driver
+explicitly calls <code class="function">kernel_debugger()</code> to force entry.
+</p><p>
+However you get there, when the kernel debugger takes control, the first
+CPU in the system is effectively frozen (the mouse stops, no threads are
+scheduled, and interrupts are disabled). In an MP environment the other
+processors may continue executing (assuming they don't block on some
+resource held by the CPU already in the kernel debugger). The only case
+when all CPUs will drop into the kernel debugger at the same time is when
+an NMI exception occurs (it's easy to make an ISA card with a button that
+can generate NMI exceptions).
+</p><p>
+In any case, when the kernel debugger takes control it prints the
+following message on the serial port:
+</p><pre class="screen">
+Welcome to Kernel Debugging Land:
+Running on cpu 0, iframe @ 0xfc023418
+
+
+    kdebug&gt;
+</pre><p>
+From there you can start entering commands. The kernel debugger has a
+number of built-in commands that you can always depend on. Some of these
+provide basic functionality, for example:
+</p><pre class="screen">
+  ps - show which threads are running
+  sc - print a stack trace for a specific thread
+ dis - disassemble code
+regs - dump the current registers
+  dm - dump memory
+</pre><p>
+There is also a help command which lists all the commands the debugger
+knows. You should read through this list. Many of these commands are
+esoteric and are useful only if you're debugging the kernel. Some
+informational commands such as "sem", "port", and "thread" can be of
+general use, however. The kernel debugger also accepts partial matches
+for command names, so you can enter shorthand and it will pick the first
+command that matches.
+</p><p>
+To exit the kernel debugger, enter the "continue" command or the
+abbreviation, "c". When you exit the system returns to normal if it can
+(assuming a kernel fault wasn't the reason you dropped in). You can drop
+in and continue from the debugger as often as you want.
+</p><p>
+Of course, when
+you're in the kernel debugger interrupts are disabled and the system is
+frozen—so devices that require interrupts to be serviced in a certain
+amount of time may become unhappy.
+</p><div class="admonition note"><div class="title">Note</div><div class="graphic"><img class="icon" alt="Note" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>
+Note: If you use the NMI button on a
+BeBox the NMI exception is not precise and the kernel may not be able to
+continue executing after you exit the kernel debugger. In practice this
+doesn't happen often.
+</p></div></div></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id805802"></a>The Prompt</h3></div></div></div><p>
+The kernel debugger's command prompt has some convenient features. First,
+there's a full expression evaluator available so you can enter a C-style
+expression and find the result. Expression handling supports all C
+arithmetic and boolean operators, so if you're looking at code in one
+window and debugging in another you can enter values and evaluate
+expressions such as:
+</p><pre class="screen">
+(12345 &lt;&lt; 13) | 0x1201
+</pre><p>
+This is handy when you're debugging OS code and you need to piece
+together physical addresses, etc. The results are also printed in hex,
+decimal, and ASCII (if appropriate), which makes this a convenient way to
+convert between number bases on the fly.
+</p><p>
+You can also use up to 128 variables to hold common values. For example,
+if you're debugging a driver and your driver prints the base address of
+your device (let's say it's at <code class="literal">0x10908000</code>) then you might enter the
+expression
+</p><pre class="screen">
+board=0x10908000
+</pre><p>
+so you can easily refer to the board without having to remember the
+address. After entering the above expression you could dump some
+registers on the board by entering the command "dm board".
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id805853"></a>Adding Commands</h3></div></div></div><p>
+The other nice feature of the Be kernel debugging environment is that
+code you load into the kernel (i.e., a driver, module, or bus manager)
+can add commands to the debugging environment. Adding debugger commands
+can significantly boost your ability to debug a driver or module. By
+adding commands to dump out the state of structures and/or the hardware
+you're developing for, you can quickly find out why a driver is
+misbehaving, analyze deadlocks, and examine the state of programs using
+your driver. When I developed BFS I also wrote a set of debugger commands
+to enable me to diagnose problems and snoop on the state of things. You
+can see some of the commands I added if you drop into the kernel debugger
+and look for the file system related commands (bfs, binode, dstream,
+sdata, and btree). Using those commands along with the debugger's
+built-in commands I was able to debug a 20,000+ line file system very
+easily, which would not have been possible without the debugger commands.
+</p><p>
+Adding a debugger command is simply a matter of calling
+</p><pre class="programlisting c">
+<span class="type">int</span> <code class="function">add_debugger_command</code>(<span class="type">char *</span><code class="parameter">name</code>,
+                 <span class="type">int</span> (*<code class="parameter">func_ptr</code>)(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char **</span><code class="parameter">argv</code>),
+                 <span class="type">char *</span><code class="parameter">help_text</code>);
+</pre><p>
+An example would be
+</p><pre class="programlisting c">
+<code class="function">add_debugger_command</code>("foobar", <code class="function">do_foobar</code>, "foobar
+[num entries]");
+</pre><p>
+which would add the command "foobar" to the debugger. When someone enters
+the command "foobar", the function do foobar is called.
+</p><p>
+The arguments to your command are regular <code class="parameter">argc</code>/<code class="parameter">argv</code> style (just like
+<code class="function">main()</code>). This makes it easy to have debugger commands with options and
+switches. Debugger commands also have access to the function
+<code class="function">parse_expression()</code> to evaluate numeric arguments (this is the same parser used
+to evaluate expressions at the debugger command line).
+</p><p>
+There are a few constraints when you're writing a debugger command.
+First, your command runs with interrupts disabled. This means that it
+can't call typical system services normally available to a driver. The
+constraints are these:
+</p><ul class="itemizedlist"><li><p>
+To print output you must use <code class="function">kprintf()</code>.
+</p></li><li><p>
+You cannot call any semaphore routines, allocate memory, or call
+other typical driver routines.
+</p></li><li><p>
+You can call <code class="function">strcmp()</code>, <code class="function">strlen()</code>,
+<code class="function">memcpy()</code>, <code class="function">memcmp()</code>. Other C library
+functions such as <code class="function">sscanf()</code> are definitely off limits.
+</p></li></ul><p>
+Once your command has control it can do anything it wants, within the
+rules outlined above. This offers many possibilities. The return value of
+your debugger command can also affect how the debugger behaves. If you
+return zero, nothing special happens. If you return the value
+<code class="constant">B_KDEBUG_CONT</code>, the debugger will remember the command and re-execute it if the
+user presses return at the next prompt. For example, the "dm" command
+returns <code class="constant">B_KDEBUG_CONT</code>, so if you start dumping memory you can continue
+dumping successive chunks of it just by pressing return. This is useful
+if you're stepping through a linked list or dumping out a lengthy data
+structure one piece at a time.
+</p><p>
+If your command returns the value <code class="constant">B_KDEBUG_QUIT</code>, the debugger will exit
+and continue normal execution of the system. This is useful if you want
+to have a command that checks the state of some data structures, and if
+they're ok, automatically returns control back to the system when it's
+done.
+</p><p>
+One final note about adding debugger commands: When your driver or module
+is unloaded you should be a good citizen and call the function
+<code class="function">remove_debugger_command()</code> to insure that there is no reference to your driver's
+code still in the debugger's data structures. You can find the prototype
+for this function in:
+</p><p>
+<code class="filename">/boot/develop/headers/be/drivers/KernelExport.h</code>
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id806070"></a>Real Debugging</h3></div></div></div><p>
+Now let's shift gears and discuss how you use the debugger to debug
+problems. One common task is to try to diagnose a deadlock. Generally,
+the system is hung and you're called in to see what's wrong. Assuming a
+normal semaphore-based deadlock, you can just press the kernel debugger
+hot key (<span class="keysym">Alt</span>+<span class="keysym">Printscreen</span>
+on a PC or BeBox and
+<span class="keysym">Command</span>+<span class="keysym">Power</span>
+key on a Mac). Once in the debugger, the first useful thing to do is to enter the
+"ps" command. This gives you a list of threads that are running. In the
+rightmost column is the name of the semaphore that a thread is blocked on
+(if it is blocked on a semaphore). The semaphore name is a clear
+indicator of what a thread is blocked on (especially if you named the
+semaphore!). After picking out the threads blocked on semaphores related
+to your driver or module, you can use the "sc" command to get a stack
+crawl. This is usually enough to cause a slap of the forehead and a loud
+exclamation of "DOH!" If not, a little time studying the code path that
+led to the situation is often sufficient to induce the forehead slapping
+response. Sometimes deadlocks involve more than just two threads, in
+which case some head scratching may occur. Still, the "ps" command and
+"sc" are powerful ways to debug deadlocks.
+</p><p>
+One additional debugger feature aids in debugging a driver—the function
+</p><pre class="programlisting c">
+<span class="type">int</span> <code class="function">load_driver_symbols</code>(<span class="type">const char *</span><code class="parameter">driver_name</code>);
+</pre><p>
+is a convenient way to have the kernel load the symbol information for
+your driver so that when you get a stack crawl it will print the symbol
+names of your functions (if they are not static). This, combined with the
+"dis" command to disassemble memory, is a handy way to pinpoint where you
+are in your code.
+</p><p>
+However, even with symbol information loaded it can be tedious to
+determine the exact line of C code that corresponds to a particular
+assembly instruction. Matching a faulting instruction with a specific
+line of high-level code is one area of our debugging environment that I
+would like to see improved.
+</p><p>
+Another common error is that a driver will take a fault if a driver
+touches an unmapped piece of memory. If the kernel takes a fault it can't
+handle and it is running in kernel mode, this is considered a
+catastrophic error and the system drops into the kernel debugger
+automatically to prevent any further damage. When the kernel debugger
+takes control in this situation the interrupt frame, or "ifr", is very
+important, because it contains information about the address of the
+faulting instruction and the registers in question. Typing "ifr" dumps
+out the state of the current interrupt frame. The instruction pointer
+that faulted is in the interrupt frame (it's the eip register on x86 and
+the pc register on PPC). To find out where the instruction pointer is,
+use the look-up function, "lkup". Type "lkup
+&lt;instruction-pointer-address&gt;" and if the kernel debugger knows where
+that address is, it will tell you the name of the symbol corresponding to
+that address.
+</p><p>
+If you do have symbols, the "sc" (sc == Stack Crawl) command will tell
+you the calling sequence that got you to where your driver crashed.
+Following that the "dis" command disassembles around the faulting
+instruction and is helpful for locating where the code crashed (calls to
+other functions show up in the disassembly and help map to where in the
+source code the fault occurred).
+</p><p>
+If there is no symbol associated with an address, the "addr" command may
+be useful. Type "addr 0xYOURADDRESS" and you'll get some information
+about the address, including the area name that it lives in. Often if a
+random driver just crashes we use this command to pinpoint the guilty
+party and then track the problem down on a second machine by
+disassembling the driver with "objdump -d".
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id806169"></a>Wrapping Up</h3></div></div></div><p>
+Good debugging skills take time to acquire but when you learn how to use
+our debugger you can make quick work of typical bugs using the few simple
+but powerful tools described above. I hope this brief introduction to our
+kernel debugger will help driver, bus manager, and module writers to
+understand the basics better, so they can debug their kernel mode code
+more efficiently.
+</p><p>
+Happy bug hunting!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-30-2"></a>Be Engineering Insights: Creating Your Own System Services—the Modular
+Way</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Trey</span> <span class="surname">Boudreau</span></span></div></div></div><p>
+The kernel team has done a good job recently of describing various
+aspects of kernel programming. But although it's been implied, no one has
+come right out and said that you can use the kernel's niftiest module
+mechanism as a way to extend its logical feature set. In other words, bus
+managers are fine, but what you really want is...an Atomizer!
+</p><p>
+Eh? Ok, so maybe *you* don't want an atomizer, but somebody else might.
+Just so that we're all on the same page, I'm using "atomizer" in same
+sense that the X Windows folks do. An "atom" is a token that represents
+some other (usually larger) thing. In our case, it's a UTF8 string. Atoms
+are unique, in that given some number of copies of the string, there will
+be exactly one atom that represents the strings. A trivial example:
+atomizing "foo" might return 1, atomizing "bar" might return 2, but
+atomizing "foo" again will always return what it returned for the first
+atomization. In this case, 1.
+</p><p>
+Now, you could create such a service in a shared library, but to be
+useful, atoms should be shared between applications. You could create a
+server to cough up atoms on demand, but then they wouldn't be available
+to kernel drivers and other modules. In my mind this makes an atomizer a
+decent candidate for a kernel level system service.
+</p><p>
+There are good reasons to make a new system service like this a module
+instead of linking it into the kernel:
+</p><ul class="itemizedlist"><li><p>
+Modules can be dynamically loaded and unloaded, as needs require.
+</p></li><li><p>
+If a client of a module can't find the module it needs, it will still
+load, possibly looking for an alternative way to get the features it
+needs or modifying its behavior to account for the absent module.
+</p></li></ul><p>
+In the archive for this article
+&lt;ftp://ftp.be.com/pub/samples/drivers/atomizer.zip&gt;, you'll find the
+source code for a module, a driver, and a simple test program.
+</p><p>
+The module is where most of the interesting stuff is, in that it
+implements all the gritty details of atomization. It supports multiple
+atomizers (in case you don't want to share), and various functions for
+getting info in and out of the atomizer. The API documentation is in the
+header <code class="filename">atomizer.h</code>.
+</p><p>
+The driver is mostly an empty shell whose purpose is to provide an API
+for user space programs, since user space apps can't talk to modules
+directly. The user/driver API is in
+<code class="filename">atomizer_driver.h</code>. The driver code
+shows how the module API should be used.
+</p><p>
+The test application trivially exercises the driver, and thus the module.
+The only feature of general interest in using the driver is the fact that
+the first four bytes of each structure passed to <code class="function">ioctl()</code> must match the
+driver's notion of a magic number. This helps ensure that some program
+isn't feeding garbage data to the driver. It's not foolproof, but it
+doesn't cost much to check.
+</p><p>
+If you're one of those folks who browse the header directories for each
+new release, you may have found preliminary versions of
+<code class="filename">atomizer.h</code> and
+<code class="filename">atomizer_driver.h</code>
+in the R4.5 headers hierarchy. Please ignore them, as
+there is no atomizer module or driver shipped with R4.5, and hence
+they're not officially part of the release. If the module turns out to be
+useful, we'll ship it with a future release.
+</p><p>
+As a side note, all work and no play makes Trey insane. That's why I'm
+not writing about graphics drivers in this article. If you have an
+interest in writing graphics drivers for the BeOS, check out the
+R4GraphicDriverKit in the /optional
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-30"></a>Developers' Workshop: The Magic of Messages Part 2: The Receiving</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+Last week I introduced you to the BeOS messaging system, and described
+how messages are sent in explicit, vivid, and sometimes violent detail.
+This week's article continues in the same vein, showing what happens on
+the other end, where the message is received.
+</p><p>
+If you haven't read last week's article yet, I recommend that you do it
+now, or you may find the learning curve on this week's article a bit
+steep:
+</p><p>
+<a class="xref" href="Issue4-29.html#DevWorkshop4-29" title="Developers' Workshop: The Magic of Messages Part 1: The Sending">Developers' Workshop: The Magic of Messages Part 1: The Sending</a>
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id806403"></a>Step 4: Receive</h3></div></div></div><p>
+When we left off, our message was sitting as a disassembled stream of
+bits in some <code class="classname">BLooper</code>'s port. Now, it's
+time for the <code class="classname">BLooper</code> to do
+something with this message.
+</p><p>
+The looper's main loop performs this cycle of steps ad infinitum (or
+until it's shut down):
+</p><ul class="itemizedlist"><li><p>
+Read data from a port.<br />
+The data that it's receiving is buffers of
+flattened <code class="classname">BMessage</code> data. <code class="classname">BLooper</code>s
+actually only read one message from
+the port at a time, whereas <code class="classname">BWindow</code>s read all the messages in a port at
+once and handle them in one big batch. There's a slight difference in
+performance between the two classes because of this.
+</p></li><li><p>
+Construct <code class="classname">BMessage</code>s from the data.<br />
+This is done by creating a new
+<code class="classname">BMessage</code>, and calling <code class="methodname">Unflatten()</code>
+on it. The <code class="classname">BMessage</code> that results is
+almost an exact copy of the <code class="classname">BMessage</code> that was passed to
+<code class="methodname">SendMessage()</code>/<code class="methodname">PostMessage()</code>
+on the other end (the difference being that it
+has some additional information identifying its target and where
+replies should be sent). The new <code class="classname">BMessage</code> is owned by the looper.
+</p></li><li><p>
+Stick the <code class="classname">BMessage</code>s into a message queue.<br />
+The message queue is an
+object of type <code class="classname">BMessageQueue</code>; it serves as a temporary holding pen for
+<code class="classname">BMessage</code>s. <code class="classname">BMessage</code>s
+thrown into the queue stay there until the <code class="classname">BLooper</code>
+gets around to dispatching them. You can inspect—and change!—the
+contents of the queue by calling <code class="classname">BLooper</code>::<code class="methodname">MessageQueue()</code>.
+</p><p>
+Remember that sneaky shortcut for sending messages that I mentioned
+last week? Well, once you know that you can get at this message queue,
+it's theoretically possible to bypass the messaging system and simply
+drop messages straight into the <code class="classname">BLooper</code>'s message queue, like this:
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BMessage</code>*</span> <code class="varname">msg</code> = new <code class="classname">BMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+<code class="varname">window</code>-&gt;<code class="methodname">MessageQueue</code>()-&gt;<code class="methodname">AddMessage</code>(<code class="varname">msg</code>);
+</pre><p>
+By doing this, you bypass most of the messaging system and the
+associated overhead from flattening and copying data. Moreover --
+though this is not always what you want—you ensure that this message
+is handled before any messages that arrive via the looper's port,
+because the looper dispatches all messages in its <code class="classname">BMessageQueue</code> before
+going back to retrieve more messages from the port.
+</p><div class="admonition note"><div class="title">Historical note:</div><div class="graphic"><img class="icon" alt="Historical note:" width="32" src="./images/admonitions/Info_32.png" /><div class="text"><p>
+This shortcut is actually how <code class="methodname">PostMessage()</code> used to
+behave. We changed the behavior of <code class="methodname">PostMessage()</code> when we realized that
+this technique affected the order in which messages were handled,
+sometimes in surprising ways. So, unless you have a good reason to use
+this optimization, we recommend avoiding it. Using <code class="methodname">PostMessage()</code> and
+<code class="methodname">SendMessage()</code> is safer, and you're more likely to get the results that
+you expect.
+</p></div></div></div></li><li><p>
+Dispatch all <code class="classname">BMessage</code>s in the message queue. This is where the most
+interesting stuff in the messaging system happens. In the next section,
+we'll examine what the dispatch pipeline looks like for <code class="classname">BMessage</code>s.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id806645"></a>Step 5: The Gauntlet</h3></div></div></div><p>
+Once your message has been received by the target looper, it must go
+through an arduous process to reach its final destination. This process
+determines what the final target of the message should be. At almost
+every point in the process, it's possible to "drop" the message, in which
+case the message dispatch stops, and we skip straight to Step 5. Here are
+the approximate steps involved, in the order they are performed:
+</p><ul class="itemizedlist"><li><p>
+Start with the intended handler. The intended target of the message
+is now contained in the <code class="classname">BMessage</code> itself. At this point that target is
+retrieved, and if it's valid, it becomes the current target of the
+message. If it is no longer a valid target, the message is dropped.
+</p></li><li><p>
+Resolve the preferred handler. If the message was intended for the
+looper's preferred handler, the message's target is set to the
+preferred handler. As I mentioned before, if there is no preferred
+handler, the message's target becomes the looper itself.
+</p></li><li><p>
+Determine the target of drag 'n' drop messages. If the message
+happens to be a drag 'n' drop message delivered to a window, the window
+will determine which view lies beneath the dropped object. This view
+becomes the new target of the message.
+</p></li><li><p>
+Resolve any specifiers in the message. Specifiers are special fields
+of the message that BeOS scripting uses to identify targets. The looper
+calls the current target's <code class="classname">BHandler</code>::<code class="methodname">ResolveSpecifier()</code>, which is a hook
+function that examines the specifiers and determines where the message
+should go. <code class="methodname">ResolveSpecifier()</code> returns
+a <code class="classname">BHandler</code> that should be the new
+target of the message. The looper then calls that handler's
+<code class="methodname">ResolveSpecifier()</code>, and keeps iterating like this until the target stops
+changing or until a <code class="constant">NULL</code> <code class="classname">BHandler</code> is returned (at which point the
+message is dropped).
+</p></li><li><p>
+Let all of the looper's filters take a crack at the message. Next, we
+let <code class="classname">BMessageFilter</code>s handle the message. The job of these objects is to
+examine the message and adjust the message's target if necessary. You
+can use <code class="classname">BMessageFilter</code>s to change the dispatching behavior of loopers
+or handlers dynamically and easily, which makes them extremely useful!
+</p><p>
+Each looper has a list of <code class="classname">BMessageFilter</code>s, called the common filter
+list. For each <code class="classname">BMessageFilter</code> in the list, the looper calls their
+Filter function. Each <code class="classname">BMessageFilter</code> can examine the target and change
+it if they want; that new target is passed along to the next
+<code class="classname">BMessageFilter</code> in the list. Any <code class="classname">BMessageFilter</code>
+can return <code class="constant">B_SKIP_MESSAGE</code> if they want, at which point the message is dropped.
+</p></li><li><p>
+Run through the handlers' filters. Here, a rather complicated
+iterative process ensues. Each <code class="classname">BHandler</code> potentially has its own list of
+<code class="classname">BMessageFilter</code>s, which filter messages intended for that specific
+target. The idea is to keep filtering the message using the target's
+message filters until the target stops changing or until the message is
+dropped. More specifically, the looper does the following:
+</p><div class="orderedlist"><ol><li><p>
+Get the current target's list of <code class="classname">BMessageFilter</code>s.
+</p></li><li><p>
+Run through each <code class="classname">BMessageFilter</code> in the list, allowing each one
+to specify a different target or drop the message.
+</p></li><li><p>
+Assuming that the message makes it through the list of filters
+without being dropped, if the target that the last filter returns is
+the same as the current target, then stop. Otherwise, make that
+target the new current target, go back to (1), and repeat.
+</p></li></ol></div></li><li><p>
+Dispatch the message. Finally, <code class="methodname">DispatchMessage()</code> is called. In
+<code class="methodname">DispatchMessage()</code>, the looper has a final chance to examine the message
+and target, and do whatever is necessary to deliver the message to the
+target. Generally, this is where the looper intercepts system messages
+and do whatever special dispatching needs to be done to them. For
+normal messages, the looper will call the handler's <code class="methodname">MessageReceived()</code>
+function—and the handler finally gets a chance to respond to the
+message!
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id806859"></a>Step 6: Cleanup</h3></div></div></div><p>
+Once the message has been handled, the looper's default behavior is
+simply to delete the message. This might be bad news if you wanted to
+keep the message around for some reason once you've received it. Luckily,
+there's a way for you to assume ownership of the message. When you call
+<code class="classname">BLooper</code>::<code class="methodname">DispatchCurrentMessage()</code>, you become the owner of the current
+message, and can do whatever you like with it; the looper will not delete
+it. Then, when you're done with the message, be sure to delete it—not
+just to avoid memory leaks, but because there may be somebody out there
+waiting for this message to be handled...
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id806887"></a>Step 7: Reply</h3></div></div></div><p>
+At any point in the process, you can send a reply to the originator of
+the message by using <code class="classname">BMessage</code>::<code class="methodname">SendReply</code>. That reply might go to the
+application, to a specified target, or might simply show up as the result
+of a <code class="methodname">SendMessage()</code> call. It's important to make sure a reply gets sent, in
+case somebody is waiting synchronously for a reply (i.e., the <code class="methodname">SendMessage()</code>
+synchronous send case).
+</p><p>
+If you do not reply to the message yourself using <code class="methodname">SendReply()</code>,
+the <code class="classname">BMessage</code>
+destructor will send a reply of its own (with a <code class="varname">what</code>
+code of <code class="constant">B_NO_REPLY</code>). Normally, the looper takes care of deleting the message itself,
+so you needn't worry about whether a reply will be sent. However, if you
+use <code class="methodname">DetachCurrentMessage()</code>, it becomes your responsibility to delete the
+message yourself when you're done with it. If you don't do this, and you
+don't explicitly send a reply, anybody waiting for your reply will never
+get one!
+</p><p>
+Fin!
+</p><p>
+So there you have it—the entire BeOS messaging system, distilled and
+presented for your coding pleasure. Now, I realize that by showing you
+the nuts and bolts of BeOS messaging, I may have stripped some of the
+magic out of it for you. So, I encourage you to correct the balance by
+using this system to create magic of your own. Listen, the Vegas crowds
+are beckoning...
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-30"></a>EDITOR'S NOTE: No article from Jean-Louis Gassée</h2></div></div></div><p>
+Jean-Louis Gassée is on vacation for two weeks. Hang in there faithful
+readers!
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-29.html">Issue 4-29, July 21, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-31.html">Issue 4-31, August 4, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-29.html" title="Issue 4-29, July 21, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-31.html" title="Issue 4-31, August 4, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

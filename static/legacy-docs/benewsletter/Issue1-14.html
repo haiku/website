@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-13.html" title="Issue 1-13, March 6, 1996" /><link rel="next" href="Issue1-15.html" title="Issue 1-15, March 20, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-13.html" title="Issue 1-13, March 6, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-15.html" title="Issue 1-15, March 20, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-13.html">Issue 1-13, March 6, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-15.html">Issue 1-15, March 20, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-14"></a>Issue 1-14, March 13, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-14"></a>Be Engineering Insights: Device Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Herold</span></span></div></div></div><p>
+Release 1.1d7 of the <span class="trademark">Be OS</span>™ will support loadable device drivers.
+Hardware developers will now be able to write drivers to support their
+unique hardware designs. This article provides an overview of device
+driver design for the Be OS.
+</p><p>
+The Be OS features an "add-on" facility for dynamically loading object
+files and linking them to running applications. Device drivers are
+implemented the same way, except that they're kernel add-ons. The kernel
+looks for drivers at boot time in the /boot/system/drivers directory.
+Each driver provides a few well-known external symbols that the kernel
+uses to enumerate which devices the driver supports and the entry points
+for the five calls for accessing each device (open, close, control, read,
+write). The device names are made available under the /dev
+pseudo-directory.
+</p><p>
+Note: One problem with the current design is that the name space is not
+all visible, symmetric, and otherwise perfect. In a Terminal window, you
+can't enter "<code class="command">cd /; ls -l</code>" and see all
+the mounted volumes, or "<code class="command">cd /dev;
+ls -l</code>" to show all the available devices. We hope to fix this in the
+future, probably when we integrate support for external file systems.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id476496"></a>Static vs. Dynamic Drivers</h3></div></div></div><p>
+Device drivers come in two flavors: Static drivers, which support a fixed
+set of devices known at compile time; and dynamic drivers, which
+determine what devices can be supported at run time.
+</p><p>
+Static drivers are identified by the presence of the "devices" external
+symbol. This is a table of <span class="type">device_entry</span> structures, each having a device
+name and function pointers for the five calls.
+</p><p>
+Dynamic drivers are identified by the presence of the
+<a class="link bebook" href="../BeBook/DeviceDrivers_WritingDrivers.html#publish_devices"><code class="function">publish_devices</code></a>
+external symbol. This a function that returns a
+table of pointers to device names. The function is called when the driver
+is first loaded, and also later when someone tries to open a device with
+a name the kernel has not yet seen. Dynamic drivers also must provide the
+<a class="link bebook" href="../BeBook/BView.DeviceDrivers_WritingDrivers.html#find_device"><code class="function">find_device</code></a>
+external symbol to return the <span class="type">device_entry</span> structure
+for a particular name that was published.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id476554"></a>Kernel Services</h3></div></div></div><p>
+Drivers are extensions of the kernel. They're loaded in the kernel
+address space, and are called with the processor's supervisor mode
+enabled. They usually install interrupt handlers. Driver code must be
+sensitive to issues of reentrancy, interrupt-level execution, scheduling,
+and virtual memory. The kernel exports many services to make it easier
+for your drivers to perform a number of tasks, including:
+</p><ul class="itemizedlist"><li><p>
+Getting information about PCI devices
+</p></li><li><p>
+Installing interrupt handlers for either the ISA-standard 8259
+interrupt controller or Be's (faster) interrupt controller
+</p></li><li><p>
+Creating critical sections in the driver code that interrupt handlers
+and regular calls can share
+</p></li><li><p>
+Locking and unlocking virtual buffers in physical memory (for devices
+that use DMA)
+</p></li><li><p>
+Locating the disparate physical memory blocks that comprise a
+contiguous virtual buffer
+</p></li><li><p>
+Setting up the ISA 8237 DMA controller
+</p></li><li><p>Sending debugging information out serial port 4 and a
+<a class="link bebook" href="../BeBook/DeviceDrivers_Functions.html#kernel_debugger"><code class="function">kernel_debugger()</code></a>
+call</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id476630"></a>ISA vs. PCI</h3></div></div></div><p>
+The PCI bus is fast, and the ISA bus is, well, ISA. Where else can you
+find a $19 Ethernet card? The BeBox has both PCI and ISA, and kernel
+services to support them.
+</p><p>
+ISA devices usually are hardwired to one of the IRQ lines on the ISA bus
+(we don't support ISA Plug-And-Play yet). If the device depends on the
+edge-sensitive interrupt controller found in the PC world, it uses the
+kernel routine <code class="function">install_isa_interrupt_handler</code> to attach its handler to a
+particular IRQ in the ISA interrupt dispatcher. If it can generate a
+level-sensitive interrupt, it uses the <code class="function">install_io_interrupt_handler</code> call
+to attach to the appropriate ID in Be's interrupt dispatcher. Be's
+interrupt dispatcher is a bit faster.
+</p><p>
+PCI devices always use Be's interrupt mechanism. The driver code looks up
+the PCI device (using the <code class="function">get_nth_pci_info</code> call), extracts all the
+information about how the device has been mapped into the system, and
+also extracts the interrupt ID to use.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id476675"></a>Critical Sections</h3></div></div></div><p>
+Device drivers often include a sequence to access a data structure or
+hardware registers that must be done atomically, both in the regular
+routines and in the interrupt handler. The kernel exports routines for
+implementing these critical sections.
+</p><p>
+<code class="function">disable_interrupts()</code> and <code class="function">restore_interrupts()</code> control the interrupt
+enable on the current processor and <code class="function">acquire_spinlock()</code> and
+<code class="function">release_spinlock()</code> control access between CPUs. A typical sequence is:
+</p><pre class="programlisting">
+<span class="type">cpu_status</span>    <code class="varname">old_status</code>;
+<span class="type">spinlock      *</span><code class="varname">lock</code>;
+
+<span class="comment">/* assumes lock was initialized */</span>
+<span class="comment">/* with create_spinlock() when driver was loaded */</span>
+
+<code class="varname">old_status</code> = <code class="function">disable_interrupts</code>();
+<code class="function">acquire_spinlock</code>(<code class="varname">lock</code>);
+
+<span class="comment">/* do stuff in this critical section */</span>
+
+<code class="function">release_spinlock</code> (<code class="varname">lock</code>);
+<code class="function">restore_interrupts</code> (<code class="varname">old_status</code>);
+</pre><p>
+Applications would typically use a semaphore to accomplish this. Drivers
+typically don't want to be rescheduled before entering the critical
+section, and must therefore use these kernel primitives.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id476786"></a>Special Rules for Interrupt Handlers</h3></div></div></div><p>
+The goal of an interrupt handler is to do its job quickly and exit.
+Polling hardware, lengthy data structure manipulations, and other
+time-consuming operations are discouraged. The typical sequence for an
+interrupt handler is:
+</p><ul class="itemizedlist"><li><p>
+Read/write the new data or status that caused the interrupt
+</p></li><li><p>
+Manipulate the hardware to deassert the interrupt
+</p></li><li><p>
+Optionally, release a semaphore that will unblock some thread waiting
+for the interrupt to have occurred
+</p></li></ul><p>
+Releasing the semaphore must happen after all hardware manipulations, as
+it may cause a reschedule. Rescheduling at the end of the handler is safe
+-- the interrupted thread will run again soon enough, and exit the
+interrupt handler at that time.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id476831"></a>Conclusions</h3></div></div></div><p>
+Loadable device drivers provide a flexible mechanism for supporting a
+wide variety of hardware in the BeBox. Many cards already exist for the
+PCI and ISA bus architectures. Starting with release 1.1d7, we can all
+start writing drivers for the Be OS to support this wealth of existing
+hardware, as well as inventing new devices tuned to the unique
+capabilities of the BeBox.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-14"></a>Be Developer Profile: Shelby Group, Ltd.</h2></div></div></div><p>
+No one can deny that the Internet is going mainstream. Just flip through
+the latest issue of Life magazine and you'll see web sites in the print
+advertisements from Buick, Toyota, and Plymouth. Can Publishers
+Clearinghouse Sweepstakes e-mail entries be far behind, we wonder?
+Probably not, if John Buckman, principal of Shelby Group, Ltd., has
+anything to do with it. And they just might be using the BeBox to do it.
+</p><p>
+Buckman's company has been developing Internet software for four years.
+Currently they're focusing on helping organizations with large,
+geographically distributed customer bases take better advantage of the
+communications capabilities of the Internet. That's why his company, a Be
+developer, is developing WorldBase, an e-mail list server for managing
+e-mail lists and facilitating group discussions on the Internet.
+</p><p>
+"Besides being far less expensive than postal mail, electronic mail
+allows highly targeted information distribution. Current e-mail list
+servers were written ten years ago and can't handle the load of the 'new'
+Internet. Because they process things one at a time, large jobs can
+easily bog down and delay other jobs. When you're dealing with large
+e-mail lists, this is a very real problem. A new approach needs to be
+taken."
+</p><p>
+Buckman sees great potential for the BeBox as a cost-effective,
+user-friendly alternative to UNIX for serious applications. "We're
+targeting the BeBox as a server platform, because PC and Macintosh
+clients don't care what server platform you're running. With its
+scalability and strong multithreading, the BeBox is the perfect vehicle
+for an e-mail list server for today's Internet. With its friendly graphic
+interface and low cost, we think we can entice people to buy a BeBox to
+try out WorldBase."
+</p><p>
+Magazine publishers, for example, have been talking to Buckman about
+their desire to distribute massive amounts of electronic information
+using e-mail list servers. "There needs to be a solution for these kinds
+of customers. I'm hoping a $10,000 super-BeBox will be a far more
+attractive proposition to them than a $100,000 UNIX server."
+</p><p>
+The BeBox's scalability is particularly attractive to Buckman. "I'm
+selling a server program that needs to accommodate varying loads of use.
+Small users will probably buy the Windows or Macintosh versions of
+WorldBase. However, many companies will phase-in Internet software. They
+might start with a pilot project of ten mailing lists of 5,000 people on
+each list. And if that succeeds, they'll try to put 50,000—even
+500,000—people on each list. Scalability is key, and the BeBox has it."
+</p><p>
+When people ask Buckman why he's developing WorldBase for the Be
+platform, he puts it this way: "Do you want the power, scalability, and
+robustness of the best UNIX platforms as well as something that's as easy
+to set up and use as a Macintosh? If so, then you need a BeBox!"
+</p><p>
+WorldBase is written from the ground up in C++, allowing for easy
+deployment on multiple platforms including Windows 95/NT, OS/2,
+Macintosh, Be OS, and several UNIX platforms. It is also programmable,
+and includes interfaces to popular databases including Oracle and Sybase.
+</p><p>
+Shelby Group, Ltd. hopes to release WorldBase for the BeBox in the Fall
+of 1996.
+</p><p>
+For more information, send an e-mail message to worldbase@shelby.com or
+visit their web site: http://www.worldbase.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-14"></a>Skunk Works?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+What are these Apple stories? David Coursey writes a leading industry
+newsletter, PC Letter. In an issue immediately following our first public
+appearance at Agenda, David reviewed the BeBox rather kindly, making more
+than passing reference to Apple. At the same time, Stewart Alsop ran an
+InfoWorld editorial equating the BeBox to what Apple could have, should
+have done. These articles amused a few insiders. Thankfully, no one else
+seemed to pay much lasting attention.
+</p><p>
+Two weeks ago, David Coursey wrote a more pointed lead piece in an open
+letter to Dr. Gil Amelio, Apple's brand new Chairman and CEO. Open
+letters are a regular and often tart feature of PC Letter. Many CEOs,
+from Jim Manzi to Lou Gerstner, have thus received advice ranging from
+acquisitions to resignation. This time Dave gravely informed Dr. Amelio
+that yours truly had never left Apple. Be was, in fact, a super-secret
+Apple project, a skunk works team designing the next generation
+Macintosh. In spite of the tongue-in-cheek tone of the piece and the
+explicit "not true" at the end, it has been taken seriously, generated
+some interesting, incredulous, or nervous e-mail.
+</p><p>
+While discussing speculation might have the perverse effect of giving it
+more currency, I think this is a good opportunity to set the record
+straight on this and other related Apple matters.
+</p><p>
+While we're honored and amused by the idea, we're not an Apple skunk
+works. But, in a way, we are. About half of us come from Apple. As a
+result there is a real and perceived connection. Then again, about half
+of us own and operate Psion pads. This doesn't make us a secret Psion
+business unit.
+</p><p>
+Seriously, we need to acknowledge our debt to the old company. Living
+inside the sausage factory, we gained an appreciation for the
+difficulties of incrementally evolving system software and developed a
+hunger for a simpler life, technically and organizationally. We gained a
+better understanding of the relationship between the mores, the size, the
+spending habits, the politics of an organization and its output, the
+product. When we showed our work to Taligent employees late last year,
+they cheered. They said, "This is Pink." Indeed, after the Macintosh II
+shipped in 1987, we started thinking about life after Macintosh. What had
+we learned, what would we do if we were granted a fresh start, a blank
+slate? These conversations led to a project called Pink, later
+transferred to the Apple-IBM joint venture, Taligent, subsequently
+abandoned when the two companies felt there was no promise in a new
+operating system. In August 1990, two months before I got off the Apple
+payroll, I had a casual conversation with John Sculley at a Claris party.
+The disagreements leading to my resignation in February 1990 were behind
+us and we were both in a good mood. I told John I needed to get one more
+thing off my chest before leaving. I suggested he cancel Pink and blame
+it on me. The project had grown too big, too rich, too fat, with too many
+politically correct goals, trying to have both feet firmly planted in the
+past and in the future. The corporate lymphocytes, hard to avoid in a
+large organization, had selected away the kind of hard-ass leadership
+needed for such a project, someone like Dave Cutler driving Windows NT. I
+felt responsible and wanted the situation rectified. The problem wasn't
+solved until much later, but we're richer for the experience.
+</p><p>
+And, yes, David Coursey must have pretty good antennae, or sources at the
+highest level at Apple. A year ago, I met with Michael Spindler and the
+subject of cross-licensing came up. I felt, and still feel, we were in
+the same PowerPC camp and I suggested we enter a cross-licensing
+agreement. Michael suggested we focus on the upcoming Common Hardware
+Reference Platform (called PPCP this week): Licensing the MacOS would be
+a much simpler matter and it could offer the Be OS a nice playing field.
+Hence my earlier statements here: "We'll be happy to help and benefit as
+the new platform gains momentum. But this is for the 1997 horizon." The
+other side of the cross-licensing agreement would have been access to the
+Be OS. I suggested it, perhaps prematurely, as some kind of insurance
+against Copland being beset by the same problems that affected Pink. As
+we know, nothing came of these discussions. Dave could have been
+prescient; instead he was only inspired, or well informed.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id477020"></a>BE EUROPE: Developers Must Meet Developers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Christophe</span> <span class="surname">Droulers</span></span></div></div></div><p>
+After several weeks of presence, Be is gaining interest in countries all
+over Europe and beyond. Developer Forms have come in from Reykjavik to
+Vladivostok. Some of these developers have been programming on their
+BeBoxes for months, while others will receive machines in April. We've
+even seen alpha versions of some applications.
+</p><p>
+Who is doing what and where? The following tables should give you an idea
+of how BeBoxes and Be developers are distributed across Europe (as of
+February 29):
+</p><pre class="screen">
+Be Developer Forms
+Country       Qty.  %
+----------------------
+Austria         2   1%
+Belgium         8   3%
+Denmark         7   3%
+England        36   15%
+Finland         4   2%
+France         95   38%
+Germany        30   12%
+Greece          1   -
+Hungary         2   1%
+Iceland         2   1%
+Ireland         3   1%
+Israel          2   1%
+Italy           5   2%
+Netherlands    14   6%
+Norway         12   5%
+Portugal        1   -
+Russia          1   -
+Spain           1   -
+Sweden         11   4%
+Switzerland    10   4%
+Turkey          1   -
+-----------------------
+Total:        248 100%
+
+BeBox Owners
+Country       Qty.  %
+-----------------------
+France         29  47%
+Germany         9  15%
+England         6  10%
+Norway          4   6%
+Switzerland     4   6%
+Netherlands     2   3%
+Sweden          2   3%
+Belgium         1   2%
+Finland         1   2%
+Iceland         1   2%
+Ireland         1   2%
+Israel          1   2%
+Portugal        1   2%
+-----------------------
+Total:         62  100%
+</pre><p>
+At Be, we believe that developers should have as much contact with each
+other as possible. During the GeekFest, we invited developers to fill out
+Developer Exchange forms. The information we collected through these
+forms will be available soon on the new Be Europe web site
+(http://www.beeurope.com). This new site also includes a mirror of the
+American Be web site.
+</p><p>
+If you didn't get a chance to fill out a Developer Exchange form, or if
+you'd like to update the public information concerning your application,
+we encourage you to send this information to us. By posting news of your
+work, your colleagues will have the opportunity to contact you and share
+ideas, suggestions—and maybe even bugs.
+</p><p>
+To continue in our effort to meet our developers—and to introduce you
+to each other—we're preparing a European tour for April. We're
+planning to give presentations, answer questions, and in general, provide
+a gathering place for Be sympathizers in a number of cities. If you're a
+registered Be developer, if you're thinking about it, or even if you just
+want to see the BeBox, simply get in touch with our office in Paris
+(droulers@BeEurope.com) for a copy of our itinerary. Tell your friends!
+We haven't yet determined the exact places where these events will take
+place (we plan to start the tour in England and then swing through
+Scandinavia and Germany). We'll try to arrange our visits so we can meet
+as many of you as possible—so let us know where you are and we'll try
+to come to you. If you have access to an assembly place (a university or
+school hall, a large meeting room, or a similar venue), or if you can
+offer advice on good places to meet in your area, we'd love to hear about
+it. Finally, we have changed our e-mail addresses. Use these for any
+questions you have regarding European topics:
+</p><p>
+General information: infobe@BeEurope.com
+</p><p>
+Sales, distribution: jcalmon@BeEurope.com
+</p><p>
+Developer information: droulers@BeEurope.com
+</p><p>
+Developer support: devsupport@BeEurope.com
+</p><p>
+Order processing: mclevrat@BeEurope.com
+</p><p>
+Use this occasion to send us a message with news about your Be projects.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-13.html">Issue 1-13, March 6, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-15.html">Issue 1-15, March 20, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-13.html" title="Issue 1-13, March 6, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-15.html" title="Issue 1-15, March 20, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

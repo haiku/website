@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 5: 2000</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume5.html" title="Volume 5: 2000" /><link rel="prev" href="Issue5-4.html" title="Issue 5-4, January 26, 2000" /><link rel="next" href="Issue5-6.html" title="Issue 5-6, February 9, 2000" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue5-4.html" title="Issue 5-4, January 26, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue5-6.html" title="Issue 5-6, February 9, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 5: 2000</div></div><div id="headerB">Prev: <a href="Issue5-4.html">Issue 5-4, January 26, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-6.html">Issue 5-6, February 9, 2000</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue5-5"></a>Issue 5-5, February 2, 2000</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering5-5"></a>Be Engineering Insights: The BeOS Networking Environment</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Howard</span> <span class="surname">Berkey</span></span></div></div></div><p>
+There have been a fair number of questions recently in BeDevTalk and
+BeUserTalk regarding the networking rewrite. I thought I'd use my shift
+in the newsletter sweatshop to describe the new architecture and give
+some details on its status.
+</p><p>
+This article is an attempt to roughly describe the stack internals and
+give developers who might wish to create new protocols or NIC drivers
+with some tasty tidbits of info. For sane, normal developers who have no
+desire to work on networking internals, be assured that the sockets API
+will be just as it is on your favorite BSD clone and skip down to the
+$ales Pitch.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id438813"></a>Overview</h3></div></div></div><p>
+BeOS networking is being completely replaced by a new architecture,
+called the BeOS Networking Environment, or <acronym class="acronym">BONE</acronym>. None of the existing
+R4.x networking will survive the change; it's either being ported over to
+the new architecture (in the case of drivers), or discarded completely
+(in the case of the net server, net kit, netdev kit/net server add-on
+architecture, PPP, Netscript, etc.) The new architecture focuses on
+performance, scalability, maintainability, and extensibility, in no
+specific order. It is simpler than the current net_server, yet far more
+flexible.
+</p><p>
+The <acronym class="acronym">BONE</acronym> architecture is a modular design that allows for easy removal or
+replacement of any of its individual parts, by users or by Be. In this
+regard, <acronym class="acronym">BONE</acronym> is an API spec for a networking architecture, and a
+description of how those modules interoperate. The implementation Be will
+ship can have parts replaced by users at will if they so desire, provided
+that they adhere to the specification.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id435437"></a>Obligatory ASCII Diagram</h3></div></div></div><pre class="screen">
+                          _______________
+                         |               |
+                         | libsocket.so  |
+                         |_______________|
+user land                        |
+- - - - - - - - - - - - - - - - -+- - - - - - - - - - - - -
+kernel land                      |
+                         ________|________
+                        |                 |
+    ______________      |  net api driver |
+   |              |     |_________________|
+   |   bone_util  |              |
+   |______________|      ________|________
+                        |                 |
+transport layer         | protocol module | (e.g.,. udp)
+                        |_________________|
+                                 |
+                         ________|________
+                        |                 |
+network layer           | protocol module | (e.g.,. ipv4)
+                        |_________________|
+                                 |
+                         ________|________
+                        |                 | (contains
+data link layer         | datalink module |  routing, ARP,
+                        |_________________|  etc.)
+                           /           \
+             _____________/___         _\_______________
+            |     loopback    |       |     802.3       |
+            | framing module  |       |  framing module |
+            |_________________|       |_________________|
+                     |                         |
+physical layer       |                         |
+             ________|________         ________|________
+            |                 |       |                 |
+            | loopback driver |       | ethernet driver |
+            |_________________|       |_________________|
+</pre><p>
+As you can see from the diagram, <acronym class="acronym">BONE</acronym> consists of a library in user space
+which is linked with user programs, and a driver and several modules in
+kernel space which implement the networking services. There are several
+networking protocol and framing modules, as seen in the diagram, which
+are structures that extend the <span class="type">module_info</span> structure to provide the
+standard API used by each module type. Put another way, each module in
+the above diagram is a concrete instance of an abstract C class
+representing each networking module type.
+</p><p>
+Let's look at each driver and module type in the architecture.
+</p><ul class="itemizedlist"><li><p>
+libsocket/Net API driver/kernel sockets module
+</p><p>
+All networking functionality visible to user programs is provided by
+libsocket, which is a very thin library that opens a driver (which
+provides the socket "file descriptor") and communicates with it via
+<code class="function">ioctl</code>s to provide the networking API. The net API driver instantiates the
+internal data structures associated with a socket (the <span class="type">bone_endpoint_t</span>),
+sets up the protocol stack for each socket, and handles all communication
+between the socket and the stack.
+</p><p>
+Other networking APIs besides BSD sockets interface could be implemented
+to talk to the net API driver using the same <code class="function">ioctl</code>s
+that <code class="filename">libsocket</code> does.
+</p><p>
+<acronym class="acronym">BONE</acronym> also provides a libnet emulation library which allows programs
+linked against the R4.x <code class="filename">libnet.so</code> to continue to function, ensuring
+binary compatibility.
+</p><p>
+And finally, for the truly ambitious amongst you who are developing
+networked file systems and such, you'll be happy to hear that there is a
+kernel module interface to the sockets API so you'll be able to use
+networking from kernel land.
+</p></li><li><p>
+<acronym class="acronym">BONE</acronym> utilities module
+</p><p>
+The <code class="filename">bone_util</code> module contains functionality that the other modules need
+and/or that doesn't fit elsewhere. <code class="filename">bone_data</code> (see below) manipulation,
+benaphores, fifos, masked data copying, and other "generic" utilities are
+provided here. All parts of the <acronym class="acronym">BONE</acronym> system use this important module. It
+defines operations for several data types.
+</p><p>
+A <span class="type">bone_data_t</span> is a data type that is used in <acronym class="acronym">BONE</acronym> as a container for
+transient networking data. While it fulfills the same requirements as
+<span class="type">mbuf</span>s do under a BSD networking architecture, <span class="type">bone_data_t</span> are quite
+different than <span class="type">mbuf</span>s and suffer from none of <span class="type">mbuf</span>s' limitations or
+problems.
+</p><p>
+Central to the efficiency of a networking stack is reducing the amount of
+data copies. Unlike <span class="type">mbuf</span>s, <span class="type">bone_data_t</span> are containers of lists of iovecs.
+A <span class="type">bone_data_t</span> contains two such lists: a "freelist," which contains
+pointers to actual memory addresses that need to be freed, and a
+"datalist," which contains a virtual "view" of networking memory that can
+not only be very efficiently accessed, but also easily modified.
+</p><p>
+Consider the following scenario. A user calls "sendto" with a buffer
+containing a udp datagram that is 2000 bytes long. This results in a
+<span class="type">bone_data_t</span> with the following layout:
+</p><div class="programlistingco"><pre class="programlisting c">
+<span class="type">bone_data_t</span> {
+    <code class="varname">datalist</code>: {<code class="varname">iov_base</code> = &amp;<code class="varname">buffer</code>, <code class="varname">iov_len</code> = 2000}
+    <code class="varname">freelist</code>: {&amp;<code class="varname">buffer</code>, 2000}<a id="bone_data.freelist"></a><span class="callout"><img src="./images/callouts/1.png" alt="1" /></span>
+}
+</pre><div class="calloutlist"><table summary="Callout list"><tr><td><a href="#bone_data.freelist"><span class="callout"><img src="./images/callouts/1.png" alt="1" /></span></a> </td><td>
+actually this wouldn't be here in this case since on datagram sends
+<acronym class="acronym">BONE</acronym> is zero-copy and would pass the user's buffer directly to the NIC
+driver rather than allocating a new buffer that would later need freeing.
+But we'll leave it here for demonstration purposes.)
+</td></tr></table></div></div><p>
+The udp layer would then add a header to the data. This is easily done by
+simply adding an <span class="type">iovec</span> to the chain:
+</p><pre class="programlisting c">
+<span class="type">bone_data_t</span> {
+    <code class="varname">datalist</code>: {&amp;<code class="varname">udp_header</code>, 8}, {&amp;<code class="varname">buffer</code>, 2000}
+    <code class="varname">freelist</code>: {&amp;<code class="varname">udp_header</code>, 8}, {&amp;<code class="varname">buffer</code>, 2000}
+}
+</pre><p>
+(Again, the <span class="type">udp_header</span> would not *really* be added to the free list,
+since the udp layer would be using a local buffer for it that would not
+need freeing, but we'll use it as an example, as with the IP header
+below.)
+</p><p>
+Now, suppose the interface it's being sent on has an MTU of 1500 bytes.
+IP would need to fragment the data and add an IP header to each frag.
+</p><p>
+On other systems (especially BSD-based systems that use mbufs), multiple
+copies would need to be done here. <acronym class="acronym">BONE</acronym> simply manipulates iovecs in
+their lists:
+</p><pre class="programlisting c">
+<span class="type">bone_data_t</span> {
+    <code class="varname">datalist</code>: {&amp;<code class="varname">ip_header</code>, 20},{&amp;<code class="varname">udp_header</code>, 8}, {&amp;<code class="varname">buffer</code>,
+   1472}, {&amp;<code class="varname">ip_header_2</code>, 20},
+{&amp;<code class="varname">buffer</code> + 1472, 528}
+    <code class="varname">freelist</code>: {&amp;<code class="varname">ip_header_2</code>, 20},{&amp;<code class="varname">ip_header</code>,
+20},{&amp;<code class="varname">udp_header</code>, 8}, {&amp;<code class="varname">buffer</code>, 2000}
+}
+</pre><p>
+By manipulating the logical view of the data rather than copying, bone
+will see a big scalability and performance win when using large datagrams
+(such as during bulk data transfer of things like large image files).
+</p></li><li><p>
+<span class="type">bone_proto_info_t</span>
+</p><p>
+All the protocols are implemented as instances of <span class="type">bone_proto_info_t</span>.
+These are chained together as appropriate in structures called
+<span class="type">bone_proto_node_t</span> for each networking endpoint instance when it is
+created. A <code class="filename">driver_settings</code> configuration file specifies which protocols
+to put in a socket's stack when the socket is created.
+</p><p>
+(If you're afraid of looking at a config file for efficiency reasons,
+don't be; the bone_util module contains optimized functions for reading
+the <acronym class="acronym">BONE</acronym> settings. On average, opening a socket under <acronym class="acronym">BONE</acronym> takes on the
+order of 300 usec (microseconds)).
+</p><p>
+When networking operations occur, the net api driver calls the
+appropriate function in the <span class="type">bone_proto_info_t</span> module on top of its
+protocol stack. The protocol then performs all necessary
+protocol-specific operations and calls the next protocol in the chain, on
+down to the network layer protocol, which passes the final data on to the
+datalink layer.
+</p><p>
+To add a new protocol to bone, one essentially creates a <span class="type">bone_proto_info_t</span>
+"subclass" for the protocol, and adds entries for it to the <acronym class="acronym">BONE</acronym>
+configuration file. It will be loaded at runtime by either the API driver
+(for new sockets) or the datalink layer (for inbound data).
+</p></li><li><p>
+<code class="filename">bone_datalink</code>
+</p><p>
+The datalink module is the center of the <acronym class="acronym">BONE</acronym> architecture.
+</p><p>
+The datalink module handles things like routing,
+<acronym class="acronym" title="Address Resolution Protocol">ARP</acronym>, interface
+management and link-level framing. The first thing the datalink module
+does is load the network interface driver modules. Each of them then
+scans hardware and does its hoodoo magic, and calls back into the
+datalink module to register an <span class="type">ifnet_t</span> structure for each instance of the
+networking card that they find. The modules reregister at any time they
+need to, responding to things like new cardbus cards being inserted, new
+USB interfaces being logically added, etc.
+</p><p>
+Each time an interface is brought up (via <span class="application">ifconfig</span>, etc.), the datalink
+module spawns off a thread which blocks on the interface module's receive
+method. When new data arrives on the interface, it's read by that thread,
+demuxed, and pushed up the appropriate protocol stack to the receive
+queue of the appropriate <span class="type">bone_endpoint_t</span>.
+</p><p>
+The fact that each interface has its own reader thread associated with
+it, in addition to the fact that multiple user-level threads will be
+pushing data simultaneously through the system, should provide <acronym class="acronym">BONE</acronym> with
+greater scalability than other systems, particularly in the area of stack
+latency. Multiple-interface BeOS systems perform quite well under <acronym class="acronym">BONE</acronym>.
+</p><p>
+Networking Interfaces are represented using the traditional BSD struct
+ifnet data structure, modified for BeOS. This structure contains much
+info about an interface, including the various addresses associated with
+it, volatile statistics, the <span class="type">bone_interface_info_t</span> module to use for the
+interface, and the <span class="type">bone_frame_info_t</span> module to use for framing the data.
+</p></li><li><p>
+<span class="type">bone_frame_info_t</span>
+</p><p>
+Since many different interfaces use the same link-level framing types,
+these were isolated out into modules to facilitate reuse. For example,
+any number of ethernet card driver modules can load the single bone_802.3
+module for their framing needs.
+</p><p>
+Similarly, by decoupling framing from the rest of the link layer, a
+single NIC driver module can use different types of framing. For example,
+a HiPPI interface that is configured to use the HiPPI physical layer vs.
+its logical layer framing. Another example would be an ethernet interface
+that wants to send jumbograms rather than 1500-byte ethernet frames.
+</p></li><li><p>
+<span class="type">bone_interface_info_t</span>
+</p><p>
+A networking-oriented interface to device drivers is added in <acronym class="acronym">BONE</acronym>, to be
+used in writing NIC drivers. If desired, a traditional device driver can
+also export a <span class="type">bone_interface_info_t</span> module interface, which makes porting
+existing drivers easy.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id433343"></a>Sample Code</h3></div></div></div><p>
+In the way of sample code, I have included the current snapshot of
+<code class="filename">bone_proto.h</code> and
+<code class="filename">bone_interface.h</code>, the two headers most useful to the
+majority of you who will be writing <acronym class="acronym">BONE</acronym> modules. I have also included a
+snapshot of the <code class="filename">bone_util.h</code> <acronym class="acronym">BONE</acronym> utilities header file, since the other
+files use it so much. Finally, I've included the source code to the <acronym class="acronym">BONE</acronym>
+loopback interface module to illustrate how to write a network interface
+module. To get the code: &lt;ftp://ftp.be.com/pub/samples/bone/bone.zip&gt;.
+</p><p>
+Note that these files should be considered alpha-level software. They are
+likely to change in the future. The loopback module is (purposely)
+nonoptimized and provided as an illustration; real loopback operations
+are heavily optimized in <acronym class="acronym">BONE</acronym> and bypass this module entirely.
+</p><p>
+While these files aren't everything you need to start developing for
+<acronym class="acronym">BONE</acronym>, they should give you an idea of the directions you should be
+heading in.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id433412"></a>Massively Cool Features (the $ales Pitch)</h3></div></div></div><p>
+In addition to the traditional BeOS GUI-based tools, all of your favorite
+UNIX networking utilities are either already ported or will port readily.
+Examples include:
+</p><ul class="itemizedlist"><li><p>
+BIND 8.2 tools: addr, dnsquery, irpd, named-bootconf, nslookup, dig,
+host, mkservdb, named-xfer, nsupdate, dnskeygen, named, ndc
+</p></li><li><p>
+Configuration Tools: route, ifconfig, etc.
+</p></li><li><p>
+Utilities: telnet, ping, ftp, traceroute, tcpdump, libpcap, etc.
+</p></li><li><p>
+and many more.
+</p></li></ul><p>
+Almost every feature that BeOS net developers have been asking for is
+there; sockets are file descriptors, the sockets API is much more
+compliant, raw sockets are there, it's relatively easy to add new
+protocols, there is a kernel networking interface, and so on.
+</p><p>
+Net performance has improved massively; there are no hard numbers (and we
+haven't finished optimizing) but our benchmarks are putting <acronym class="acronym">BONE</acronym> around
+twenty times (2000%) the speed of the current net_server; <acronym class="acronym">BONE</acronym> is in the
+same league as Linux and FreeBSD, though not fully competitive with their
+speed yet. Yet. :-)
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id450451"></a>Schedule</h3></div></div></div><p>
+OK, I realize that the biggest question all of you are asking is "when?" In
+traditional Be style, I can only say "soon." The new stack is almost ready
+for beta. And that's all I can say for now.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop5-5"></a>Developers' Workshop: Optimize Anytime with cputime</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marco</span> <span class="surname">Nelissen</span></span></div></div></div><p>
+As one of the new guys at Be, I've been able to avoid the task of writing
+a newsletter article for a while. Today though, my fellow DTS engineers
+finally located my secret hideout, and promptly assigned me the task of
+writing this week's Engineering Insights article. So, as we say in the
+Netherlands: "here it is."
+</p><p>
+In this article I'll present a small application, written a long time ago
+when I wanted to measure cpu usage of the <span class="application">SoundPlay</span> mp3 player (you may
+have heard of it). Specifically, I wanted to compare its cpu usage with
+that of the other players available at the time: I wanted to see which
+threads used the most cpu and when they used it. The resulting app is
+(not surprisingly) called <span class="application">cputime</span>. You can download the source code at
+&lt;ftp://ftp.be.com/pub/samples/kernel_kit/cputime.zip&gt;.
+</p><p>
+You can start from the command line this way:
+</p><pre class="screen">
+cputime application arguments
+</pre><p>
+where "application" is the application you want to measure and
+"arguments" are the arguments (if any) you want to pass to the
+application. <span class="application">cputime</span> will launch the specified application with the given
+arguments. While the application is running, <span class="application">cputime</span> will continuously
+monitor its cpu usage, either until the application exits or <span class="application">cputime</span>'s
+sampling buffer is full. When either of these happens, <span class="application">cputime</span> will open
+a window and graphically display the cpu-usage over time of each thread
+of the application.
+</p><p>
+Because of the way <span class="application">cputime</span> works, threads that are created and destroyed
+within one sampling interval are "lost" and don't show up in the display.
+If the application you want to monitor rapidly spawns new threads that
+run for only a very short time and then die, you may want to modify
+<span class="application">cputime</span> to use a higher sampling rate. This is left as an exercise for
+the reader.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee5-5"></a>From the Mailbox</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Not surprisingly, last week's column brought more questions and one or
+two arguments to my BeMail mailbox. I appreciate these responses—they
+help me understand where we need to make ourselves "even" clearer. More
+than one reader noted that I've become more cautious, shall we say, a
+little less "colorful" in my observations. It's not clear whether this is
+seen as regrettable or, au contraire, a welcome change.
+</p><p>
+And, yes, my column is vetted by our legal counsel for statements that
+would in fact or appearance cause trouble with the powers that oversee
+the stock market. It's one thing to believe in emerging opportunities,
+but one's optimism can to easily be interpreted as promoting not the
+product, but the company's securities (notwithstanding the potential
+entendre-doubling the latter noun might suggest). The fact that our
+company's stock is publicly traded impacts what I can and cannot say.
+</p><p>
+Second, several readers proclaimed they don't care for Internet
+Appliances, don't need them, and feel we're misguided for getting into
+them. This suggests that we haven't made a good enough case yet for this
+emerging genre of connected devices—for their benefits in general and
+for the role our technology can play in this emerging area. Readers
+object that "my PC does everything I need, so I have no use for any of
+these Internet devices." But this is not a PC versus IA (Internet
+Appliance) debate. It's PC and IA, not PC versus IA.
+</p><p>
+In theory, a PC is capable of infinite mutability through software and
+hardware add-ons that can simulate any experience. I'm exaggerating, of
+course, but the idea that the PC is a simulation engine is fundamentally
+correct. So is the idea that dedicated, specialized devices always appear
+in a prosperous ecological niche and coexist with the general purpose
+ones.
+</p><p>
+Let's put Swiss Army knives and screwdrivers aside and look at
+automobiles. The last 20 years have brought us specialized vehicles such
+as minivans and SUVs. The same kind of specialization is appearing in the
+digital realm, with telephones, Palm VIIs, TVs, stereos, alarm systems,
+WebPads, Tivo video recorders, pagers, Web Minitels, and similar
+information appliances and, yes, PCs. And for everything that we can see
+or imagine now, there are many other kinds of devices our inevitably
+derivative thinking prevents us from intuiting in the present moment.
+</p><p>
+As for myself, whether or not I can make good guesses as to which
+Internet Appliances will survive beyond the concept stage, I know we're
+onto something. Go buy a Tivo hard disk video recorder. Today, it
+connects to the Net through a slow telephone line. Watch your children
+use it and quickly forget that there was a time when Tivo didn't exist.
+Now let's muster our available derivative thinking and "picture" what
+will happen when the Net connection is always open, say via cable modem
+or DSL. We'll be able to program the recorder from anywhere in the house,
+or in the world, through a browser, with no need to download the TV
+schedule at night as the Tivo box does today.
+</p><p>
+No, it's not video on demand—that will come later with a beefier Net
+infrastructure. And no, we don't really need these appliances. Nor do we
+really need PCs, or cars, or chocolate. Personally, I'd rather give up
+PCs than books. But just as we don't seem to want to live without
+personal transportation, there's a good chance that we'll find these
+appliances exciting or liberating enough to want them, regardless of what
+we call need.
+</p><p>
+Next week, I'll describe how one of us uses PCs, appliances, and wireless
+technology for home entertainment.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue5-4.html">Issue 5-4, January 26, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-6.html">Issue 5-6, February 9, 2000</a> </div><div id="footerB"><div id="footerBL"><a href="Issue5-4.html" title="Issue 5-4, January 26, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue5-6.html" title="Issue 5-6, February 9, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

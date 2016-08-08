@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-21.html" title="Issue 3-21, May 27, 1998" /><link rel="next" href="Issue3-23.html" title="Issue 3-23, June 10, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-21.html" title="Issue 3-21, May 27, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-23.html" title="Issue 3-23, June 10, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-21.html">Issue 3-21, May 27, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-23.html">Issue 3-23, June 10, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-22"></a>Issue 3-22, June 3, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-22"></a>Be Engineering Insights: Writing A Sound Card Driver</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Ferguson</span></span></div></div></div><p>
+A number of people have expressed interest in writing sound card drivers
+for BeOS. This article describes the interface used by the current audio
+server to communicate with sound card drivers. Note that this interface
+is for the current audio server, and that the current audio server will
+be replaced with something better in a future release. But if you want to
+write a sound card driver and test it with the current audio server, this
+is what you will have to support.
+</p><p>
+These are the ioctl codes used by the audio server:
+</p><pre class="programlisting c">
+#include &lt;Drivers.h&gt;
+
+enum {
+  <code class="constant">SOUND_GET_PARAMS</code> = <code class="constant">B_DEVICE_OP_CODES_END</code>,
+  <code class="constant">SOUND_SET_PARAMS</code>,
+  <code class="constant">SOUND_SET_PLAYBACK_COMPLETION_SEM</code>,
+  <code class="constant">SOUND_SET_CAPTURE_COMPLETION_SEM</code>,
+  <code class="constant">SOUND_RESERVED_1</code>,   <span class="comment">/* unused */</span>
+  <code class="constant">SOUND_RESERVED_2</code>,   <span class="comment">/* unused */</span>
+  <code class="constant">SOUND_DEBUG_ON</code>,     <span class="comment">/* unused */</span>
+  <code class="constant">SOUND_DEBUG_OFF</code>,    <span class="comment">/* unused */</span>
+  <code class="constant">SOUND_WRITE_BUFFER</code>,
+  <code class="constant">SOUND_READ_BUFFER</code>,
+  <code class="constant">SOUND_LOCK_FOR_DMA</code>
+};
+</pre><p>
+The <code class="constant">SOUND_SET_PLAYBACK_COMPLETION_SEM</code> ioctl
+takes a (<code class="code">sem_id*</code>) argument
+which points to a semaphore that must be released once for each buffer
+written. The semaphore should be released when the data in the buffer is
+no longer needed.
+</p><p>
+The <code class="constant">SOUND_SET_CAPTURE_COMPLETION_SEM</code> ioctl
+takes a (<code class="code">sem_id*</code>) argument
+which points to a semaphore that must be released once for each buffer
+read. The semaphore should be released when the data in the buffer is
+valid.
+</p><p>
+The <code class="constant">SOUND_WRITE_BUFFER</code> ioctl takes
+an (<code class="code">audio_buffer_header*</code>) argument
+which is defined in <code class="filename">MediaDefs.h</code>:
+</p><pre class="programlisting c">
+typedef struct <span class="type">audio_buffer_header</span> {
+  <span class="type">int32</span> <code class="varname">buffer_number</code>;
+  <span class="type">int32</span> <code class="varname">subscriber_count</code>;
+  <span class="type">bigtime_t</span> <code class="varname">time</code>;
+  <span class="type">int32</span> <code class="varname">reserved_1</code>;
+  <span class="type">int32</span> <code class="varname">reserved_2</code>;
+  <span class="type">int32</span> <code class="varname">reserved_3</code>;
+  <span class="type">int32</span> <code class="varname">reserved_4</code>;
+} <span class="type">audio_buffer_header</span>;
+</pre><p>
+The audio data immediately follows the <span class="type">audio_buffer_header</span> in
+memory and is in stereo signed 16-bit linear native-endian format. The size
+in bytes of the audio data plus the <span class="type">audio_buffer_header</span> is stored in the
+<code class="varname">reserved_1</code> slot of the <span class="type">audio_buffer_header</span>
+(the audio server was written before the size argument to the ioctl call
+was implemented). The size and address of the audio data can be derived
+this way:
+</p><pre class="programlisting c">
+<span class="type">audio_buffer_header*</span> <code class="varname">header</code> = (<span class="type">audio_buffer_header*</span>) <code class="varname">ioctl_arg</code>;
+<span class="type">int32</span> <code class="varname">bytes_of_data</code> = <code class="varname">header</code>-&gt;<code class="varname">reserved_1</code> - sizeof(*<code class="varname">header</code>);
+<span class="type">int16*</span> <code class="varname">addr_of_data</code> = (<span class="type">int16*</span>) (<code class="varname">header</code> + 1);
+</pre><p>
+The driver can ignore the <code class="varname">buffer_number</code>
+and <code class="varname">subscriber_count</code> slots of
+the buffer header and should store an estimate of the
+<code class="function">system_time()</code>
+corresponding to the beginning of the buffer in the
+<code class="varname">time</code> slot of the
+buffer header.
+</p><p>
+The <code class="constant">SOUND_WRITE_BUFFER</code> call is allowed to return
+before the data in the buffer has been consumed but the playback completion
+semaphore must be released when the buffer can be recycled.
+</p><p>
+The <code class="constant">SOUND_READ_BUFFER</code> ioctl takes an
+(<span class="type">audio_buffer_header*</span>) argument. The size and address of the
+data can be computed as above. The <code class="varname">time</code> slot should be
+written with the estimate of the <code class="function">system_time()</code>
+corresponding to the beginning of the buffer. The call is allowed to return
+before the buffer is full but the capture completion semaphore must be
+released as soon as the buffer is full.
+</p><p>
+The <code class="constant">SOUND_GET_PARAMS</code> and
+<code class="constant">SOUND_SET_PARAMS</code> ioctls read and write a set of
+parameters which correspond to the settings in the sound preferences panel.
+The ioctl argument is a (<span class="type">sound_setup*</span>) in the following
+format:
+</p><pre class="programlisting c">
+enum <span class="type">adc_source</span> {
+  line = 0, cd, mic, loopback
+};
+
+enum <span class="type">sample_rate</span> {
+  kHz_8_0 = 0, kHz_5_51, kHz_16_0, kHz_11_025, kHz_27_42,
+  kHz_18_9, kHz_32_0, kHz_22_05, kHz_37_8 = 9,
+  kHz_44_1 = 11, kHz_48_0, kHz_33_075, kHz_9_6, kHz_6_62
+};
+
+enum sample_format {};  <span class="comment">/* obsolete */</span>
+
+struct <span class="type">channel</span> {
+  enum <span class="type">adc_source</span> <code class="varname">adc_source</code>;
+       <span class="comment">/* adc input source */</span>
+  <span class="type">char</span> <code class="varname">adc_gain</code>;
+       <span class="comment">/* 0..15 adc gain, in 1.5 dB steps */</span>
+  <span class="type">char</span> <code class="varname">mic_gain_enable</code>;
+       <span class="comment">/* non-zero enables 20 dB MIC input gain */</span>
+  <span class="type">char</span> <code class="varname">cd_mix_gain</code>;
+       <span class="comment">/* 0..31 cd mix to output gain in -1.5dB steps */</span>
+  <span class="type">char</span> <code class="varname">cd_mix_mute</code>;
+       <span class="comment">/* non-zero mutes cd mix */</span>
+  <span class="type">char</span> <code class="varname">aux2_mix_gain</code>;
+       <span class="comment">/* unused */</span>
+  <span class="type">char</span> <code class="varname">aux2_mix_mute</code>;
+       <span class="comment">/* unused */</span>
+  <span class="type">char</span> <code class="varname">line_mix_gain</code>;
+       <span class="comment">/* 0..31 line mix to output gain in -1.5dB steps */</span>
+  <span class="type">char</span> <code class="varname">line_mix_mute</code>;
+       <span class="comment">/* non-zero mutes line mix */</span>
+  <span class="type">char</span> <code class="varname">dac_attn</code>;
+       <span class="comment">/* 0..61 dac attenuation, in -1.5 dB steps */</span>
+  <span class="type">char</span> <code class="varname">dac_mute</code>;
+       <span class="comment">/* non-zero mutes dac output */</span>
+};
+
+typedef <span class="type">struct sound_setup</span> {
+  struct <span class="type">channel</span> <code class="varname">left</code>;
+       <span class="comment">/* left channel setup */</span>
+  struct <span class="type">channel</span> <code class="varname">right</code>;
+       <span class="comment">/* right channel setup */</span>
+  enum <span class="type">sample_rate</span> <code class="varname">sample_rate</code>;
+       <span class="comment">/* sample rate */</span>
+  enum <span class="type">sample_format</span> <code class="varname">playback_format</code>;
+       <span class="comment">/* ignore (always 16bit-linear) */</span>
+  enum <span class="type">sample_format</span> <code class="varname">capture_format</code>;
+       <span class="comment">/* ignore (always 16bit-linear) */</span>
+  <span class="type">char</span> <code class="varname">dither_enable</code>;
+       <span class="comment">/* non-zero enables dither on 16 =&gt; 8 bit */</span>
+  <span class="type">char</span> <code class="varname">mic_attn</code>;
+       <span class="comment">/* 0..64 mic input level */</span>
+  <span class="type">char</span> <code class="varname">mic_enable</code>;
+       <span class="comment">/* non-zero enables mic input */</span>
+  <span class="type">char</span> <code class="varname">output_boost</code>;
+       <span class="comment">/* ignore (always on) */</span>
+  <span class="type">char</span> <code class="varname">highpass_enable</code>;
+       <span class="comment">/* ignore (always on) */</span>
+  <span class="type">char</span> <code class="varname">mono_gain</code>;
+       <span class="comment">/* 0..64 mono speaker gain */</span>
+  <span class="type">char</span> <code class="varname">mono_mute</code>;
+       <span class="comment">/* non-zero mutes speaker */</span>
+} <span class="type">sound_setup</span>;
+</pre><p>
+On PPC systems the <code class="varname">mic_attn</code> and <code class="varname">mic_enable</code> parameters are used to
+control the amount of adc to dac "loopback" instead of the microphone
+input level.
+</p><p>
+The <code class="constant">SOUND_LOCK_FOR_DMA</code> ioctl takes an
+(<span class="type">audio_buffer_header*</span>) argument but
+can be ignored except on Macintosh. A Macintosh driver should call
+<code class="function">lock_memory()</code> on the audio buffer with the
+<code class="constant">B_DMA_IO</code> flag.
+</p><p>
+The audio server opens the driver named
+<code class="filename">/dev/old/sound</code>. So when you
+have implemented these ioctl calls and you want to test your driver with
+the audio server, you can either name it
+<code class="filename">/dev/old/sound</code> or name it
+something like <code class="filename">/dev/old/mydriver</code>
+and create a symbolic link in your
+<code class="filename">UserBootscript</code> file:
+</p><pre class="screen">
+ln -s /dev/old/mydriver /dev/old/sound
+</pre><p>
+The "old" in this path name is to remind you that this is an interface
+which will be deprecated in the future.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-22"></a>Developers' Workshop: DynaDraw, Part Two</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Michael</span> <span class="surname">Morrissey</span></span></div></div></div><p>
+In the previous article on DynaDraw, we built a no-frills app—a basic
+window and a view, and our drawing algorithm. In this article, we get to
+the fun part—adding lots of controls which modify how the calligraphy
+strokes are drawn.
+</p><p>
+Download the code from:
+</p><p>
+ftp://ftp.be.com/pub/samples/interface_kit/obsolete/dynadraw2.zip,
+</p><p>
+compile it, and see how the new features work before getting into the
+details of this article. I especially dig wireframe mode, which calls
+StrokePolygon instead of FillPolygon.
+</p><p>
+Let's start out the way we did last time, looking at what we'd like to
+do, and what we'll need to do it:
+</p><p>
+First, we'd like a menu bar across the top of the window. Under it, we'll
+put two menus: <span class="guimenu">File</span> and <span class="guimenu">Controls</span>.
+Under <span class="guimenu">File</span>, we'll have the items
+<span class="guimenuitem">About</span>, which brings up an About Box, and
+<span class="guimenuitem">Quit</span>, which, well, quits.
+Under <span class="guimenu">Controls</span>, we'll have three items:
+<span class="guimenuitem">Tweakables</span>, which brings up a
+panel for controlling the mass, drag, and other parameters;
+<span class="guimenuitem">Color</span>,
+which allows us to change the color of the pen; and
+<span class="guimenuitem">Clear Screen</span>, which
+clears our drawing.
+</p><p>
+The Tweakables panel and the Color panel will each have their own
+windows. R3 introduces a new window type, <code class="constant">B_FLOATING_WINDOW</code>, which is
+perfect for control windows. Floating windows have smaller borders and
+tabs than regular windows, and they are active whenever the application
+is active.
+</p><p>
+The next question is: which object should be responsible for managing
+these control windows? It's possible to add these duties to the <code class="classname">DDWindow</code>
+class, but if our application grows to include more windows, this
+approach will be cumbersome. A better solution is to subclass
+<code class="classname">BApplication</code> in an object which manages the creation and destruction of
+the control windows.
+</p><p>
+Here's our object list now:
+</p><ul class="itemizedlist"><li><p>
+<code class="classname">FilterView</code>, from the first article,
+</p></li><li><p>
+<code class="classname">DDWindow</code>, from the first article,
+</p></li><li><p>
+<code class="classname">TweakWin</code>, which controls pen parameters,
+</p></li><li><p>
+<code class="classname">ColorWin</code>, which controls pen color, and
+</p></li><li><p>
+<code class="classname">DDApp</code>, which manages the application and windows.
+</p></li></ul><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id702539"></a>Messaging</h3></div></div></div><p>
+Good object layout is half the battle, and the other half is good
+messaging. The heart of this entire application lies in the
+<code class="methodname">MessageReceived()</code> functions in each of the classes listed above. Reading
+those functions will tell you what duties those objects perform, so let's
+go over them now.
+</p><p>
+Our application object handles <code class="constant">B_ABOUT_REQUESTED</code>, and
+<code class="constant">B_QUIT_REQUESTED</code>, which is standard. It also handles
+<code class="constant">TWEAK_REQ</code> and <code class="constant">COLOR_REQ</code>, which
+are requests to open the tweakables window and the color window. These
+messages (or more properly, commands, because they are messages which
+contain no data) come from <code class="classname">DDWindow</code>, which sends
+them in response to the user selecting the appropriate menu item. Our
+application object also handles <code class="constant">TWEAK_QUIT</code> and
+<code class="constant">COLOR_QUIT</code>, messages sent from the tweakables window
+and from the color window the user has closed them.
+</p><p>
+<code class="classname">ColorWin</code> has only one specific message to deal with:
+<code class="constant">COLOR_CHG</code>, which is a message we requested the
+<code class="classname">BColorControl</code> send us when the user has chosen a new
+color. (This is specified in the <code class="classname">BColorControl</code>
+constructor.) In this case, we want to alert the
+<code class="classname">DDWindow</code> of the new color selection, so we pack the
+<acronym class="acronym">RGB</acronym> value of the user's selection into the message:
+</p><pre class="programlisting cpp">
+   case <code class="constant">COLOR_CHG</code>:
+    <span class="comment">/* get the current color settings,  */</span>
+    <span class="comment">/* attach to the message            */</span>
+    <span class="comment">/* and pass it along to the handler */</span>
+    <span class="type">rgb_color</span> <code class="varname">clr</code> = <code class="varname">cc</code>-&gt;<code class="methodname">ValueAsColor</code>();
+    <code class="varname">swatch</code>-&gt;<code class="methodname">SetViewColor</code>(<code class="varname">clr</code>);
+    <code class="varname">swatch</code>-&gt;<code class="methodname">Invalidate</code>();
+    <code class="varname">msg</code>-&gt;<code class="methodname">AddInt16</code>("red", <code class="varname">clr</code>.<code class="varname">red</code>);
+    <code class="varname">msg</code>-&gt;<code class="methodname">AddInt16</code>("green", <code class="varname">clr</code>.<code class="varname">green</code>);
+    <code class="varname">msg</code>-&gt;<code class="methodname">AddInt16</code>("blue", <code class="varname">clr</code>.<code class="varname">blue</code>);
+    <code class="varname">handler</code>-&gt;<code class="methodname">PostMessage</code>(<code class="varname">msg</code>);
+    break;
+</pre><p>
+So our message is really getting <span class="type">double</span>-duty: it serves as a command from
+the <code class="classname">BColorControl</code> object to
+<code class="classname">ColorWin</code> indicating a color change, and it
+serves as a message (with the <acronym class="acronym">RGB</acronym> value as data) from
+<code class="classname">ColorWin</code> to <code class="classname">DDWindow</code>.
+</p><p>
+<code class="classname">TweakWin</code>'s <code class="methodname">MessageReceived()</code>
+is more of the same. It handles <code class="constant">MASS_CHG</code>,
+<code class="constant">DRAG_CHG</code>, <code class="constant">WIDTH_CHG</code>, and
+<code class="constant">SLEEPAGE_CHG</code>, which arrive from the <code class="classname">BSlider</code>s
+created in <code class="classname">TweakWin</code>'s constructor. Again, an
+<span class="type">int32</span> value is added to each
+of these messages, and the message is then sent to the <code class="classname">DDWindow</code> object.
+</p><p>
+<code class="classname">TweakWin</code> also generates <code class="constant">FILL_CHG</code>
+and <code class="constant">ANGLE_CHG</code> messages, &gt;from the Fill
+and Angle check boxes. We don't need to add any data to these messages,
+so we can send them directly on to the target, <code class="classname">DDWindow</code>, rather than
+having <code class="classname">TweakWin</code>::<code class="methodname">MessageReceived()</code>
+pass the message along to <code class="classname">DDWindow</code>:
+</p><pre class="programlisting cpp">
+  <code class="varname">fill</code> = new <code class="classname">BCheckBox</code>(<code class="classname">BRect</code>(25,320,135,340), "fill",
+                      "Wireframe", new <code class="classname">BMessage</code>(<code class="constant">FILL_CHG</code>));
+  <code class="varname">fill</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">handler</code>);
+    <span class="comment">/* send FILL_CHG directly to handler */</span>
+</pre><p>
+<code class="methodname">SetTarget()</code> is a function defined in
+<code class="classname">BInvoker</code>, which is a subclass of
+<code class="classname">BCheckBox</code>.
+</p><p>
+This technique is also used in the menus of <code class="classname">DDWindow</code>. Since we want
+<code class="constant">B_ABOUT_REQUESTED</code> and <code class="constant">B_QUIT_REQUESTED</code> to be sent along to the
+application object, we can use a shortcut function, <code class="methodname">SetTargetForItems()</code>,
+which will send the messages of all menu items in the
+<span class="guimenu">File</span> menu to <code class="varname">be_app</code>:
+</p><pre class="programlisting cpp">
+  <span class="type"><code class="classname">BMenu</code>*</span> <code class="varname">menu</code> = new <code class="classname">BMenu</code>("File");
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("About",
+                new <code class="classname">BMessage</code>(<code class="constant">B_ABOUT_REQUESTED</code>)));
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Quit",
+                new <code class="classname">BMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>)));
+
+  <span class="comment">/* Both the About and Quit messages should be directed
+     to be_app */</span>
+
+  <code class="varname">menu</code>-&gt;<code class="methodname">SetTargetForItems</code>(<code class="varname">be_app</code>);
+  <code class="varname">mb</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">menu</code>);
+</pre><p>
+In the <span class="guimenu">Controls</span> menu, although we want
+<code class="constant">TWEAK_REQ</code> and <code class="constant">COLOR_REQ</code> to go to
+<code class="varname">be_app</code>, we want <code class="constant">CLEAR_SCREEN</code> to
+post to <code class="classname">DDWindow</code>, so we specify the
+targets one at a time:
+</p><pre class="programlisting cpp">
+  <code class="varname">menu</code> = new <code class="classname">BMenu</code>("Controls");
+  <span class="type"><code class="classname">BMenuItem</code>*</span> <code class="varname">tmpItem</code> = new <code class="classname">BMenuItem</code>("Tweakables",
+    new <code class="classname">BMessage</code>(<code class="constant">TWEAK_REQ</code>));
+  <code class="varname">tmpItem</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">be_app</code>);
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">tmpItem</code>);
+
+  <code class="varname">tmpItem</code> = new <code class="classname">BMenuItem</code>("Color", new <code class="classname">BMessage</code>(<code class="constant">COLOR_REQ</code>));
+  <code class="varname">tmpItem</code>-&gt;<code class="methodname">SetTarget</code>(<code class="varname">be_app</code>);
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">tmpItem</code>);
+
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddSeparatorItem</code>();
+  <code class="varname">menu</code>-&gt;<code class="methodname">AddItem</code>(new <code class="classname">BMenuItem</code>("Clear Screen",
+    new <code class="classname">BMessage</code>(<code class="constant">CLEAR_SCREEN</code>)));
+
+  <span class="comment">/* Target not specified for Clear, so the target will
+     be DDWindow */</span>
+
+  <code class="varname">mb</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">menu</code>);
+  <code class="methodname">AddChild</code>(<code class="varname">mb</code>);
+</pre><p>
+Notice that in <code class="classname">DDWindow</code>::<code class="methodname">MessageReceived()</code>, we
+simply pass all of the messages from the tweakables window and the color
+window to the <code class="classname">FilterView</code>, which actually interprets
+them. Note how values are extracted from messages in
+<code class="classname">FilterView</code>'s
+<code class="methodname">MessageReceived()</code>:
+</p><pre class="programlisting cpp">
+   case <code class="constant">COLOR_CHG</code>:
+     int16 <code class="varname">red</code>, <code class="varname">green</code>, <code class="varname">blue</code>;
+     <code class="varname">msg</code>-&gt;<code class="methodname">FindInt16</code>("red", &amp;<code class="varname">red</code>);
+     <code class="varname">msg</code>-&gt;<code class="methodname">FindInt16</code>("green", &amp;<code class="varname">green</code>);
+     <code class="varname">msg</code>-&gt;<code class="methodname">FindInt16</code>("blue", &amp;<code class="varname">blue</code>);
+     <code class="methodname">SetHighColor</code>(<code class="varname">red</code>,<code class="varname">green</code>,<code class="varname">blue</code>);
+     break;
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703305"></a>BSliders</h3></div></div></div><p>
+R3 introduces the <code class="classname">BSlider</code> class, an incredibly useful control device.
+It's really flexible too, allowing you to customize the look of the
+thumb, the tick marks, the track, and more. Since <code class="classname">BSlider</code> only deals with
+integers, you may need to do some small tricks to get the value you want,
+such as setting up a slider with a range of values between 0 and 100, and
+using this as a percentage of your maximum value. This is what we're
+doing with Mass, Drag, and Width.
+</p><p>
+Also, <code class="classname">BSlider</code>s are set up to have the left hand side be the minimum
+value, and the right hand side as the maximum value. Sometimes this isn't
+what you want to do: in the case of "Sleepage", it seemed more natural to
+me to "sleep less" towards the right of the control, and "sleep more"
+towards the left.
+</p><p>
+In this case, just set the slider up to go from your minimum to your
+maximum, and when reading that value, subtract it &gt;from your maximum, and
+add that value to your minimum. In the sleep case, I set up the slider to
+go from 3000 microseconds to 30000 microseconds, and then (in
+<code class="classname">FilterView</code>::<code class="methodname">MessageReceived()</code>)
+I subtract the slider value from 30000 (the
+maximum), and add the difference to 3000 (the minimum).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703361"></a>Future Enhancements</h3></div></div></div><p>
+This program can be extended in a variety of ways, and I encourage you to
+do so. Some small projects might include letting the user control the
+background color of the <code class="classname">FilterView</code>, and dynamic updating of the color
+swatch. Larger projects include saving the drawing to disk, printing, and
+letting the user undo brush strokes. Experiment and enjoy!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-22"></a>You're Contradicting Yourself!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We've "heard" this on e-mail and from newsgroups. We're likely to hear it
+again at PC Expo, so I thought I'd take a few minutes to clarify our
+position. The contradiction astute observers point out is this: On the
+one hand we present ourselves as a media OS, a specialized platform for
+audio and video applications. We sometimes use the "A/V Linux" sound byte
+-- and then proceed to show off "non-A/V" applications on our site and,
+soon, at our booth. Come on, they say, you're really trying to be a
+general purpose OS—you're competing with Microsoft, you just don't
+want to admit it!
+</p><p>
+Let's address the "non-A/V" applications first. We believe the "tractor
+apps" will come from the field of audio and video activities—editing,
+synthesizing, producing, and mangling digital media. However, this belief
+doesn't imply that the BeOS can't or shouldn't be put to other uses.
+</p><p>
+Imagine for a moment that you're a software developer and all you care
+about is word processing. Your mother said you shouldn't, but you do,
+either to aggravate her or just because it's in your soul. Let's further
+assume you want to make money at it, presumably to show dear old mom
+who's right. Are you going to try writing a Windows word processor? Of
+course not. Microsoft Office is the monarch and you'll never impress your
+mother.
+</p><p>
+On the BeOS though, the adventure might look risky, but not suicidal. And
+you can allay family scepticism by telling them about the advantages of
+Electronic Software Distribution (ESD) and how BeDepot.com is for
+software authors without knee pads.
+</p><p>
+"Non-A/V" applications for BeOS have another advantage: users will be
+happier with their BeOS system, even if their primary use is the
+"official" media driven one. They still want word processing and e-mail.
+</p><p>
+Further, imagine a page layout program on the BeOS. It's likely to be
+livelier, faster, more reactive, and more available to the user than its
+venerable elders are on the Mac or Windows now. The better feel of the
+program, its real-time WYSIWYG behavior comes from the programmer, of
+course. But it also makes a good case for what the BeOS platform has to
+offer: a good combination of multithreading and—on the right hardware
+-- multiprocessing, fast graphics, and good APIs.
+</p><p>
+But, keen observers will insist, this makes you a general-purpose OS,
+non? Therefore, you're competing with Microsoft and, therefore, you're
+dead—you just don't realize it yet.
+</p><p>
+Ah, but this is sophistry. Yes, computers are programmable, in fact they
+can all be simulated by a simple Turing machine. As a result, all
+hardware and all system software can do anything. All true enough, if we
+don't consider how much time, aggravation, or money is involved. So, in
+the general-purpose office productivity field, I don't believe anyone can
+beat Microsoft for the time being. Windows, with or without Internet
+Explorer, Office, Money... your everyday needs are well covered and OEM
+relationships are such that no new entrants can survive.
+</p><p>
+But, if Windows can "do" audio and video, it doesn't do it very well. And
+Windows 98 shows little sign of anything but marginal improvements on
+what Windows 95 offered. That's where we complement Windows, and the fact
+that Be developers offer a broader range of applications doesn't make us
+a competitor to Microsoft Office. In other words, just as Windows can
+"do" audio and video but doesn't shine there, we can "do" more than A/V,
+but that's not where we will win.
+</p><p>
+So, our priority continues to be the A/V domain, where we are most
+useful. And, when we like a page layout program or an e-mail client on
+the BeOS, that sentiment doesn't change the nature of our platform.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-22"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703520"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703526"></a>Subject:BLooper/multiple inheritance</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id703536"></a><a id="id703538"></a>Q:</td><td><p>
+Is this a bug? AK
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="classname">BLooper</code> and multiple inheritance??
+</p></td></tr></tbody></table></div><p>
+Multiple inheritance questions:
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id703561"></a><a id="id703564"></a>Q:</td><td><p>
+Given...
+</p><pre class="programlisting cpp">
+class <code class="classname">C</code> : public <code class="classname">A</code>, public <code class="classname">B</code> {...}
+</pre><p>
+...why does the <code class="classname">A</code> destructor not get
+called when a <code class="classname">C</code> object is deleted?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Most likely because the <code class="classname">A</code> destructor probably isn't declared <code class="code">virtual</code>.
+The same problem holds for single inheritance: If you use a base class
+pointer (<code class="classname">A</code>) to point to a derived instance (<code class="classname">C</code>)
+and then delete <code class="classname">A</code>, the <code class="classname">C</code>
+destructor will only be called if the <code class="classname">A</code> destructor is <code class="code">virtual</code>. (And note
+that virtual destructor declaration is inherited; if <code class="code">virtual <code class="methodname">~A</code>();</code> then
+the destructors of all classes that inherit from <code class="classname">A</code> will be virtual.)
+</p></td></tr><tr class="question"><td><a id="id703650"></a><a id="id703653"></a>Q:</td><td><p>
+What's the trick to getting the "diamond" problem (<code class="classname">D</code> derives from <code class="classname">B</code> and
+<code class="classname">C</code>; <code class="classname">B</code> and <code class="classname">C</code> both derive from <code class="classname">A</code>) to compile properly?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="classname">B</code> and <code class="classname">C</code> derivation (from <code class="classname">A</code>) must be virtual:
+</p><pre class="programlisting cpp">
+class <code class="classname">B</code> : virtual public <code class="classname">A</code> { ... }
+class <code class="classname">C</code> : virtual public <code class="classname">A</code> { ... }
+</pre><p>
+Otherwise, <code class="classname">D</code> will end up with two <code class="classname">A</code> instances.
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703735"></a>Subject: BTextControl cannot be made uneditable</h4></div></div></div><p>
+Wendell Beckwith has noticed that you can't set a <code class="classname">BTextControl</code>'s text
+view object to be uneditable until after the control has been added to
+its window. In other words, this is no good:
+</p><pre class="programlisting cpp">
+<code class="varname">control</code>-&gt;<code class="methodname">TextView</code>()-&gt;<code class="methodname">MakeEditable</code>(<code class="constant">false</code>);
+<code class="varname">window</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">control</code>);
+<span class="comment">/* The text view is still edible. */</span>
+</pre><p>
+Why should this be? Peter Potrebic suggests that instead of setting the
+text view's editable state, you should simply set the control to be
+disabled. But, responded Mr. Beckwith, disabling the control affects the
+control's label (it turns gray). Why should the two states (text
+editability and label appearance) be tied together?
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703800"></a>Subject:Shared libs on Intel</h4></div></div></div><p>
+From Sander Stoks, a question and a plea:
+</p><p>
+“<span class="quote">I searched the FAQ, searched BeGeek.com, tried everything. How does one
+make (use of) a shared lib on R3/Intel? [And] _please_ don't tell me that
+I will have to add <code class="code">__declspec()</code> stuff to all that code...</span>”
+</p><p>
+Jon Watte responded to Mr. Stoks question, but couldn't satisfy the
+no-declspec request:
+</p><p>
+“The easiest fix is to have a file <code class="filename">Exports.h</code>
+which <code class="code">__declspec()</code>-s all
+your classes, and include this file first in each and every one of your
+header files. You also need to <code class="code">__declspec(dllimport)</code> the same entities
+that you previously exported when you get around to using the shared
+library.
+</p><p>
+Also, you need to include the <code class="filename">init_term_dyn.o</code>
+file among your libraries
+for static initialization to happen correctly.”
+</p><p>
+Chris Herborth seconded the spirit of Mr. Stoks' letter:
+</p><p>
+“<span class="quote">Just fix the damn development tools. &gt;}:-( There should be NO DIFFERENCE
+when building an app/library/shared library for BeOS, whether you're on
+PowerPC or x86.</span>”
+</p><p>
+There was a groundswell of support for the position, which is, in
+essence, that Be should concentrate more on the performance, robustness,
+and portability of the development tools. Fred Fish gave a reasoned
+response to the escalating criticism:
+</p><p>
+“<span class="quote">Although I'm not thrilled about the current tools situation with all the
+'windows cruft', I've learned to hold my nose and just get on with
+work... I'm still hoping that someday we will have the opportunity to
+either hide this stuff better or dump it entirely. Whether that point is
+months from now or a few years down the road, I think it will eventually
+happen.</span>”
+</p><p>
+So how should Be go about "transitioning" to new tools? Wendell Beckwith
+says drop the hammer:
+</p><p>
+“<span class="quote">If Be ... should redraw the line for backwards compatibility and adopt a
+single object/executable file format that works across all of their
+architectures, then I believe the users/developers would rather bite the
+bullet now than wait until later when Be software is more numerous and
+doing something like this will be much harder to pull off.</span>”
+</p><p>
+The thread concentrated, thereafter, on itchy symbol exportation/library
+inclusion details. For more info on the topic, see "Project Libraries"
+and "Building a Library" in
+http://www.be.com/documentation/rel_notes/R3DevLayout.html
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703925"></a>Subject:Wizards</h4></div></div></div><p>
+Does the BeOS have any "Wizard" API? (According to Mark B. Elrod, a
+Wizard is a “<span class="quote">dialog which guides you through a process...It is most often
+used for installers and things that need to gather info.</span>”)
+</p><p>
+You can, of course, build a Wizard-like UI yourself from windows,
+textviews, buttons and bows. But should there be a specialized panel
+class that knows how to draw and apply back/forward labels to successive
+"slides"? Factotum Jon Watte rushed out and wrote one, damn it:
+ftp://ftp.b500.com/pub/BeOS/wizard.zip
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id703952"></a>Subject:What happened to the inherited keyword?</h4></div></div></div><p>
+It's dead. But, as Jon Watte pointed out:
+</p><p>
+“<span class="quote">You can use templates for the same effect. Or just make the rule that
+every class...should have a private typedef of inherited:</span>”
+</p><pre class="programlisting cpp">
+class <code class="classname">MyClass</code> : public <code class="classname">BView</code>
+{
+public:
+
+private:
+    typedef <code class="classname">BView</code> <span class="type">inherited</span>;
+};
+</pre><p>
+“<span class="quote">Making it private means it won't clash with further subclasses of
+MyClass.</span>”
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-21.html">Issue 3-21, May 27, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-23.html">Issue 3-23, June 10, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-21.html" title="Issue 3-21, May 27, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-23.html" title="Issue 3-23, June 10, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

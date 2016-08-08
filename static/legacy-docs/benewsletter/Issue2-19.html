@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-18.html" title="Issue 2-18, May 7, 1997" /><link rel="next" href="Issue2-20.html" title="Issue 2-20, May 21, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-18.html" title="Issue 2-18, May 7, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-20.html" title="Issue 2-20, May 21, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-18.html">Issue 2-18, May 7, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-20.html">Issue 2-20, May 21, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-19"></a>Issue 2-19, May 14, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-19"></a>Be Engineering Insights: Nino Redux: Porting Audio to the Preview Release</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Marc</span> <span class="surname">Ferguson</span></span></div></div></div><p>
+An article in a previous newsletter (Issue 36) contained sample code for
+the Nino class, a simple audio test bed which copies audio from the
+<acronym class="acronym" title="Analogue Digital Converter">ADC </acronym>
+input stream to the
+<acronym class="acronym" title="Digital Analogue Converter">DAC </acronym>
+output stream.
+</p><p>
+The audio API has changed slightly in the Preview Release. This article
+will illustrate the more important API changes by showing how the Nino
+class should be rewritten for the Preview Release.
+</p><p>
+The old Nino class definition contained a buffer, two semaphores for
+controlling the stream functions, and two <code class="classname">BAudioSubscriber</code> objects, one
+for the <acronym class="acronym">ADC</acronym> stream and one for the DAC stream. In the Preview Release,
+each <code class="classname">BAudioSubscriber</code> object has been replaced by two new objects, a
+generic <code class="classname">BSubscriber</code> object and either
+a <code class="classname">BADCStream</code> or <code class="classname">BDACStream</code> object.
+Thus the new <code class="classname">Nino</code> class contains one <code class="classname">BADCStream</code>,
+one <code class="classname">BDACStream</code>, and two
+<code class="classname">BSubscribers</code>:
+</p><pre class="programlisting cpp">
+struct <code class="classname">Nino</code>
+{
+  <code class="methodname">Nino</code>();
+  <code class="methodname">~Nino</code>();
+
+  <span class="type">short*</span> <code class="varname">adc_buffer</code>;
+
+  <span class="type">sem_id</span> <code class="varname">bufferReady</code>;
+  <span class="type">sem_id</span> <code class="varname">bufferUsed</code>;
+
+  <span class="type"><code class="classname">BADCStream</code>*</span> <code class="varname">adcStream</code>;
+  <span class="type"><code class="classname">BDACStream</code>*</span> <code class="varname">dacStream</code>;
+
+  <span class="type"><code class="classname">BSubscriber</code>*</span> <code class="varname">adcSubscriber</code>;
+  <span class="type"><code class="classname">BSubscriber</code>*</span> <code class="varname">dacSubscriber</code>;
+};
+</pre><p>
+There are two "stream functions," one for each stream, called
+<code class="function">adc_reader()</code> and <code class="function">dac_writer()</code>.
+The stream functions have a new "header"
+argument which provides access to a timing estimate for each buffer, but
+otherwise they work as before. <code class="function">adc_reader()</code> uses the <code class="varname">bufferReady</code>
+semaphore to indicate that an input buffer has been received, and
+<code class="function">dac_writer()</code> uses the <code class="varname">bufferUsed</code> semaphore to signal that it has finished
+merging the input buffer into the output buffer.
+</p><pre class="programlisting cpp">
+static <span class="type">bool</span>
+<code class="function">adc_reader</code> (<span class="type">void*</span> <code class="parameter">arg</code>, <span class="type">char*</span> <code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">void*</span> <code class="parameter">header</code>)
+{
+  <span class="type"><code class="classname">Nino</code>*</span> <code class="varname">my_nino</code> = (<span class="type"><code class="classname">Nino</code>*</span>) <code class="parameter">arg</code>;
+  <code class="varname">my_nino</code>-&gt;<code class="varname">adc_buffer</code> = (<span class="type">short*</span>) <code class="parameter">buf</code>;
+  <code class="function">release_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferReady</code>);
+  <code class="function">acquire_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferUsed</code>);
+  return <code class="constant">TRUE</code>;
+}
+
+static <span class="type">bool</span>
+<code class="function">dac_writer</code> (<span class="type">void*</span> <code class="parameter">arg</code>, <span class="type">char*</span> <code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">count</code>, <span class="type">void*</span> <code class="parameter">header</code>)
+{
+  <span class="type"><code class="classname">Nino</code>*</span> <code class="varname">my_nino</code> = (<span class="type"><code class="classname">Nino</code>*</span>) <code class="parameter">arg</code>;
+  <span class="type">short*</span> <code class="varname">dac_buffer</code> = (<span class="type">short*</span>) <code class="parameter">buf</code>;
+  <code class="function">acquire_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferReady</code>);
+
+  for (<span class="type">int</span> <code class="varname">i</code> = 0; <code class="varname">i</code> * sizeof(<span class="type">short</span>) &lt; <code class="parameter">count</code>; <code class="varname">i</code>++) {
+    <span class="type">int32</span> <code class="function">sample</code> = (<span class="type">int32</span>) <code class="varname">dac_buffer</code>[<code class="varname">i</code>]
+                           + <code class="varname">my_nino</code>-&gt;<code class="varname">adc_buffer</code>[<code class="varname">i</code>];
+    if (<code class="varname">sample</code> &gt; 0x7FFF)
+      <code class="varname">sample</code> = 0x7FFF;
+    if (<code class="varname">sample</code> &lt; -0x7FFF)
+      <code class="varname">sample</code> = -0x7FFF;
+    <code class="varname">dac_buffer</code>[<code class="varname">i</code>] = (<span class="type">short</span>) <code class="varname">sample</code>;
+  }
+
+  <code class="function">release_sem</code> (<code class="varname">my_nino</code>-&gt;<code class="varname">bufferUsed</code>);
+  return <code class="constant">TRUE</code>;
+}
+</pre><p>
+To simplify the example, these functions assume that both streams have
+the same buffer size. Be careful not to erase whatever may already be in
+the output stream. <code class="function">dac_writer()</code> is being a good citizen and mixing the
+ADC stream into the output rather than overwriting it.
+</p><p>
+In the Preview Release, the <acronym class="acronym">ADC</acronym> stream and DAC stream always contain
+16-bit stereo samples. The functions <code class="function">SetADCSampleInfo()</code> and
+<code class="function">SetDACSampleInfo()</code> no longer exist. The sampling rate can still be
+changed. The default sample rate is 44.1kHz and this rate should be used
+when practical.
+</p><p>
+The Nino constructor initializes the semaphores, streams, and subscribers
+and enters the subscribers into their respective streams.
+</p><pre class="programlisting cpp">
+<code class="classname">Nino</code>::<code class="methodname">Nino</code>()
+{
+  <code class="varname">bufferReady</code> = <code class="function">create_sem</code> (0, "buffer ready");
+  <code class="varname">bufferUsed</code> = <code class="function">create_sem</code> (0, "buffer used");
+
+  <code class="varname">adcStream</code> = new <code class="classname">BADCStream</code>();
+  <code class="varname">dacStream</code> = new <code class="classname">BDACStream</code>();
+
+  <code class="varname">adcSubscriber</code> = new <code class="classname">BAudioSubscriber</code> ("Nino ADC reader");
+  <code class="varname">dacSubscriber</code> = new <code class="classname">BAudioSubscriber</code> ("Nino DAC writer");
+
+  <code class="varname">adcSubscriber</code>-&gt;<code class="methodname">Subscribe</code> (<code class="varname">adcStream</code>);
+  <code class="varname">dacSubscriber</code>-&gt;<code class="methodname">Subscribe</code> (<code class="varname">dacStream</code>);
+
+  <code class="varname">adcSubscriber</code>-&gt;<code class="methodname">EnterStream</code> (<code class="constant">NULL</code>, <code class="constant">FALSE</code>,
+                              <code class="varname">this</code>, <code class="varname">adc_reader</code>,
+                              <code class="constant">NULL</code>, <code class="constant">TRUE</code>);
+  <code class="varname">dacSubscriber</code>-&gt;<code class="methodname">EnterStream</code> (<code class="constant">NULL</code>, <code class="constant">TRUE</code>,
+                              <code class="varname">this</code>, <code class="varname">dac_writer</code>,
+                              <code class="constant">NULL</code>, <code class="constant">TRUE</code>);
+}
+</pre><p>
+Note that the <code class="methodname">Subscribe()</code> function has been simplified in that there is
+no longer a "clique" argument. <code class="methodname">EnterStream()</code> works as before.
+</p><p>
+The Nino destructor carefully waits for <code class="varname">dacSubscriber</code> to exit before
+deleting the semaphores:
+</p><pre class="programlisting cpp">
+<code class="classname">Nino</code>::<code class="methodname">~Nino</code>()
+{
+  <code class="varname">dacSubscriber</code>-&gt;<code class="methodname">ExitStream</code> (<code class="constant">TRUE</code>);
+  <code class="function">delete_sem</code> (<code class="varname">bufferReady</code>);
+  <code class="function">delete_sem</code> (<code class="varname">bufferUsed</code>);
+  <code class="varname">adcSubscriber</code>-&gt;<code class="methodname">ExitStream</code> (<code class="constant">TRUE</code>);
+
+  delete <code class="varname">adcSubscriber</code>;
+  delete <code class="varname">dacSubscriber</code>;
+  delete <code class="varname">adcStream</code>;
+  delete <code class="varname">dacStream</code>;
+}
+</pre><p>
+To test a Nino using an audio CD as input, open the sound preference
+panel and select "CD" as the input source, turn down the input gain, and
+turn off the loopback. Put an audio CD in your CD drive and use the
+CDPlayer application to play it. You can now experiment with digital
+audio processing by modifying the code in the <code class="function">dac_writer()</code> function.
+</p><p>
+To summarize, the most important changes which have to be made when
+porting audio to the Preview Release are replacing the <code class="classname">BAudioStream</code>
+object with a pair of objects (<code class="classname">BSubscriber</code> and
+<code class="classname">BADCStream</code> or <code class="classname">BDACStream</code>),
+adding a "header" parameter to the stream functions, and always using the
+16-bit stereo sample format.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-19-2"></a>Be Engineering Insights: Attributes, File And Human</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Geoff</span> <span class="surname">Woodcock</span></span></div></div></div><p>
+I had a conversation with a friend of mine who works for a well-known
+international high-tech company. He told me a story about the way this
+company works. "There isn't a single guy in my group who knows what the
+---- is going on. Management wants me to save them, but I know I don't
+know anything either." But, apparently he knows more than most of them.
+"I wrote an application note, I didn't think anything about it,' he said.
+"Two weeks later, my boss tells me that &lt;name deleted&gt; turned it in as
+his own work." He continued for several minutes, ending with, "What you
+know doesn't mean ----, it's all politics."
+</p><p>
+Maybe I'm just naive for being shocked at this. But it's a useful
+reminder of why I like working at Be so much. Knowledge is definitely
+more important than rank. Nobody could get away with that stuff here. I'm
+feeling insecure because I'm pretty sure the VP of sales is a better
+programmer than I am. I get PC configuration tips from the CEO. These
+people do not get their credibility from their titles. This atmosphere is
+what gives all of us the courage to test conventional wisdom by gambling
+on something that appeals to our common sense. Let's step over the
+gangrenous bodies of these other companies. Like they say, those who die
+in train wrecks are the ones who were afraid to get on a jet.
+</p><p>
+The DR9 file system has changed a lot. Besides everything else, the
+database-like structure you knew has been completely replaced. So, what
+to do if you were using the database?
+</p><p>
+The new, attributed file system still has features that can be used like
+a database. You can do queries. A query is just a set of Boolean
+operators connecting "&lt;name&gt; = &lt;value&gt;" strings, where &lt;name&gt; is an
+attribute name. A query can only be executed on a single volume at a
+time. Queries return lists of entry_refs, although this may change. Paths
+may become the standard currency for referencing things in the file
+system.
+</p><p>
+Here's an example, from <code class="filename">BTSQueryWindow.cpp</code> in the sample app:
+</p><pre class="programlisting cpp">
+<span class="comment">// Create a query object.</span>
+<span class="type"><code class="classname">BQuery</code>*</span> <code class="varname">query</code> = new <code class="classname">BQuery</code>();
+
+<span class="comment">// Get the query string from the text box</span>
+<span class="type">const char*</span> <code class="varname">queryString</code> = <code class="varname">mQueryField</code>-&gt;<code class="methodname">Text</code>();
+
+<span class="comment">// Figure out which volume is selected.</span>
+<span class="type"><code class="classname">BMenuItem</code>*</span> <code class="varname">item</code> = <code class="varname">mVolumeMenu</code>-&gt;<code class="methodname">FindMarked</code>();
+<span class="type">int32</span> index = mVolumeMenu-&gt;IndexOf(item);
+const <code class="classname">BVolume</code> <code class="varname">volume</code>((<span class="type">dev_t</span>)<code class="varname">mDeviceList</code>.<code class="methodname">ItemAt</code>(<code class="varname">index</code>));
+
+<span class="comment">// Define the query.</span>
+<code class="varname">query</code>-&gt;<code class="methodname">SetPredicate</code>(<code class="varname">queryString</code>);
+<code class="varname">query</code>-&gt;<code class="methodname">SetVolume</code>(&amp;<code class="varname">volume</code>);
+<span class="comment">// Execute the query.</span>
+<code class="varname">query</code>-&gt;<code class="methodname">Fetch</code>();
+</pre><p>
+The query is just a list of <span class="type">entry_ref</span>s. Here's how to show a list of
+paths in a listbox, from <code class="filename">BTSResultWindow.cpp</code>:
+</p><pre class="programlisting cpp">
+<code class="classname">BEntry</code> <code class="varname">entry</code>;
+<code class="classname">BPath</code> <code class="varname">path</code>;
+
+<span class="comment">// Start at the beginning.</span>
+<code class="varname">mQuery</code>-&gt;<code class="methodname">Rewind</code>();
+
+<span class="comment">// Step through the entries</span>
+while (<code class="varname">mQuery</code>-&gt;<code class="methodname">GetNextEntry</code>(&amp;<code class="varname">entry</code>) == <code class="constant">B_NO_ERROR</code>)
+{
+  <span class="comment">// Get the path, put it in the listbox.</span>
+  <code class="varname">entry</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>);
+  <span class="type">const char*</span> <code class="varname">pathName</code> = <code class="varname">path</code>.<code class="methodname">Path</code>();
+  <span class="type"><code class="classname">BStringItem</code>*</span> <code class="varname">item</code> = new <code class="classname">BStringItem</code>(pathName);
+  <code class="varname">mFileListView</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>);
+}
+</pre><p>
+Once you figure out which file you want, you've got to scan for the
+attributes you're interested in. Here's some code that puts all the
+attributes for an <span class="type">entry_ref</span> into a listbox, from
+<code class="filename">BTSAttrListWindow.cpp</code>:
+</p><pre class="programlisting cpp">
+<span class="comment">// Make node from BEntry object.</span>
+<code class="classname">BNode</code> <code class="varname">node</code>(<code class="varname">mEntry</code>);
+while(<code class="varname">node</code>.<code class="methodname">GetNextAttrName</code>(<code class="varname">attrName</code>) == <code class="constant">B_NO_ERROR</code>)
+{
+  <span class="type">char*</span> <code class="varname">name</code> = strdup(<code class="varname">attrName</code>);
+
+  <span class="comment">// Get the attribute info (type, size)</span>
+  <code class="varname">node</code>.<code class="methodname">GetAttrInfo</code>(<code class="varname">attrName</code>, &amp;<code class="varname">info</code>);
+
+  <span class="comment">// Create a string to put in the listbox</span>
+  <code class="function">strncpy</code>(<code class="varname">type</code>, (<span class="type">char*</span>)&amp;(<code class="varname">info</code>.<code class="varname">type</code>), 4);
+  <code class="function">sprintf</code>(<code class="varname">listLine</code>, "\"%-32.32s\" \'%-4.4s\' %-9.9Ld",
+    <code class="varname">attrName</code>, <code class="varname">type</code>, <code class="varname">info</code>.<code class="varname">size</code>);
+  <span class="type"><code class="classname">BStringItem</code>*</span> <code class="varname">item</code> = new <code class="classname">BStringItem</code>(<code class="varname">listLine</code>);
+
+  <span class="comment">// Add the item to the listbox</span>
+  <code class="varname">mAttrListView</code>-&gt;<code class="methodname">AddItem</code>(<code class="varname">item</code>);
+  <code class="varname">mAttrNameList</code>.<code class="methodname">AddItem</code>(<code class="varname">name</code>);
+}
+</pre><p>
+Adding and removing attributes is easy. Just figure out the name, type,
+and data, and create a <code class="classname">BNode</code> that references the file to which you want
+to assign the attribute. A <code class="classname">BNode</code> can be
+created from a path, a <code class="classname">BEntry</code>, an
+<span class="type">entry_ref</span>, a <code class="classname">BNode</code>, or a
+<code class="classname">BDirectory</code>. Here's writing and reading
+attributes, from <code class="filename">BTSAttrView.cpp</code>:
+</p><pre class="programlisting cpp">
+<span class="comment">// The window keeps track of the selected BEntry in the</span>
+<span class="comment">// mEntry member.</span>
+<code class="classname">BNode</code> <code class="varname">node</code>(<code class="varname">mEntry</code>);
+
+<span class="type">void*</span> <code class="varname">data</code>;
+<span class="type">size_t</span> <code class="varname">size</code>;
+<span class="type">uint32</span> <code class="varname">type</code>;
+
+<span class="comment">// Get the data, size, and type from the currently</span>
+<span class="comment">// displayed view.</span>
+<code class="varname">mCurView</code>-&gt;<code class="methodname">GetData</code>(&amp;<code class="varname">data</code>, &amp;<code class="varname">size</code>, &amp;<code class="varname">type</code>);
+
+<span class="comment">// If it's not a new attribute, and the new attribute is</span>
+<span class="comment">// smaller in size, you have to remove the attribute to</span>
+<span class="comment">// resize it.</span>
+if (!<code class="varname">mNewAttr</code>) <code class="varname">node</code>.<code class="methodname">RemoveAttr</code>(<code class="varname">mAttrName</code>);
+
+<span class="comment">// just write the data.</span>
+<code class="varname">node</code>.<code class="methodname">WriteAttr</code>(<code class="varname">mAttrName</code>, <code class="varname">type</code>, 0, <code class="varname">data</code>, <code class="varname">size</code>);
+</pre><p>
+So, if you want a database table, an easy approach is to make a
+directory, and create one file per record. (Of course, there's no reason
+they have to be in the same directory. If your app needs to spread things
+around, go ahead!) The attributes on the files represent the columns of
+the record. Records created in this way don't have to all have the same
+columns. Also, remember when you overwrite an existing attribute that you
+may need to remove it first, if you want to reduce the size of the
+attribute.
+</p><p>
+Attributes can be indexed for fast searching. Only <span class="type">int32</span>, <span class="type">int64</span>, <span class="type">float</span>,
+<span class="type">double</span>, and string types can be indexed, and indices are placed on the
+volume. Also, when you create a new index, existing attributes don't get
+added to it; you have to rewrite the attributes to add them to the index.
+You should see a sample in
+ftp://ftp.be.com/pub/dr9/samples/IndexUpdate.tar.gz that will update
+indices for you.
+</p><p>
+A few of the current concerns with attributes. If you have a bunch of
+small attributes, they may be space inefficient. There's a ~780 byte
+reserved area for initial attributes (for a volume with 1024 byte
+blocks), but additional attributes will require an extra file block.
+Also, you can't have two attributes with the same name, which could
+compound the size problem. If you need to do this, you'll probably want
+to pack multiple attributes in a single buffer and store them under one
+name.
+</p><p>
+One thing that's still a little up in the air is, what is the standard
+way to store complex attributes? Anybody can pull up a string attribute,
+but what about a bitmap? Is the color space the first thing in the data
+buffer? What about a <code class="classname">BRect</code>? This becomes important if different apps want
+to look at and edit attributes of unrelated files. There are also as yet
+no standards for attribute names; how do you find an email address, is it
+"email" or "e-mail"? If it becomes necessary, Be will publish guidelines.
+</p><p>
+One simple way to put just about anything in an attribute is to make it
+archivable. Something that's archivable has a constructor that takes a
+<code class="classname">BMessage</code> and implements the
+<code class="code"><code class="methodname">Archive</code>(<span class="type"><code class="classname">BMessage</code>*</span> <code class="parameter">message</code>)</code>
+method. Since
+messages can still be flattened to a buffer, you can store just about
+anything as an attribute and have an easy way to recreate it, getting the
+other benefits of archiving to boot!
+</p><p>
+What else can be done with attributes? You've got to think differently,
+you've probably never before had a feature like this, built right into
+the OS to exploit. What about an OpenDoc-like document draft system,
+where old revisions of the document are stored as diffs in attributes?
+What about a compiler that puts function/method meta-data in attributes
+so you can search it easily? How can your apps share information to make
+them better? Any time your document/app has meta-data, consider putting
+it in an attribute instead of in the file.
+</p><p>
+Lastly, when should you use attributes, when should you use resources?
+Resources are not searchable. Attributes are less portable, as other
+filesystems may not support attributes. This problem with attributes will
+be mitigated by tools like zip that know how to include attribute
+information. When in doubt, use an attribute.
+</p><p>
+If you want to see a working demo using attributes, download
+ftp://ftp.be.com/pub/dr9/samples/AttrBrowser.tar.gz, a simple,
+database-browser type app that supports the editing of a few attribute
+types. To put a bitmap in an attribute, try dragging and dropping one
+from Rraster.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-19"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+We've done the impossible, or at least something that is of historical
+significance to the company. We have completed our first 2 day World Wide
+Developer's conference. For those of you who attended, I hope you all had
+a good time and learned a lot. For those of you who couldn't make it, I
+hope you can make it to MacHack or Boston MacWorld.
+</p><p>
+We had all the drama that you would expect for a major event. Many
+engineers staying up late nights, demos not working until the last
+minute. Slides not coming up. But in the end, I think we made a good
+accounting for ourselves and disseminated a lot of very useful
+information. We had our first Master's awards program, the results of
+which will be posted on the web site shortly. We also had a chance to
+form new alliances, and impress a flock of new developers.
+</p><p>
+If you were at the Conference, you received a Early Access CD. Judging by
+our email, you've gotten it onto your machine without too much
+difficulty, and are now looking around for the documentation. You should
+also find on the CD a number of sample applications. There are some old
+familiar ones, as well as some DR9 specific new ones. You should be able
+to mine these sources for useful tips on DR9isms. In the coming weeks we
+will be working very hard to complete the documentation and write more
+sample apps; until then, send those pressing questions to DevSupport, via
+the online Developer Support form in the Registered Developers Area and
+we'll try to help you out. In many cases we might refer you to one sample
+app or another. If that doesn't help, then tell us so and we'll go
+further.
+</p><p>
+During any new release, there are questions and concerns. We'll do our
+best to keep you informed and programming towards the Preview Release.
+</p><p>
+Coming up, we have three days of conferences in Europe, Mac Hack in June,
+and MacWorld in August. This makes for a very busy summer. We want you
+programmers to work real hard, because the harder you work, the faster we
+can show your apps, and the faster they get exposure, the better chance
+they will have of making money for you so that you can continue to
+program for the BeOS.
+</p><p>
+Our short term job is not over yet. It's only just begun. This week we
+will be preaching to the Mac faithful at the Apple World Wide Developer's
+Conference. I look forward to what will hopefully be a favorable
+reception and a community building experience.
+</p><p>
+Again, for those of you who couldn't make this conference, keep up the
+good work, and we'll see you in Boston. For those of you who did make it,
+you now know that Yams truly does exist, and she is truly the littlest
+geek. She has the tatoos to prove it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-19"></a>And Now</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We are just emerging from last weekend's conference, a successful one. On
+the opening day, Saturday May 11th, we tallied over 650 developers coming
+from the US, mostly, but also Europe and Japan. This is, as a ZDNet
+report noted, twice as many as at our conference right after MacWorld, in
+January of this year. And, Sunday night, there were more than two thirds
+of the initial audience in the room for the closing session. On Mother's
+day... What this means depends upon your perspective. We have no life, no
+feelings of guilt, or the conference had something going for it. It
+wasn't the food, we made sure of that, nor the location, no Palm Springs
+in the lowlands of Santa Clara.
+</p><p>
+Seriously, how not to be ecstatic, just for a moment, before we return to
+our usual oscillations between excitement and anxiety. Last week, I wrote
+we were going to appear before a jury of our peers: skeptical, competent
+programmers. The interest they demonstrated throughout the entire
+conference was the best reward we could hope. It's one thing to believe
+in our work—we do, the belief has carried us through "interesting"
+times. Feeling the enthusiasm of people we respect takes our motivation
+to another level.
+</p><p>
+The feedback we received from the January conference has been very
+useful. In particular, we heeded the advice to put more technical content
+in our presentations and to create parallel "tracks", simultaneous
+presentations broadening the range of topics.
+</p><p>
+Early indications are that this was well received. We had our share of
+glitches with hardware, software and sound systems, probably less than we
+had a right to expect. No hugely embarrassing crashes, this will be for
+an even bigger occasion.
+</p><p>
+As we grow, I'd like us to continue with an effort to put on a
+professional show for our audience, but, at the same time, I wouldn't
+want to get too far on the side of gloss. It's a bad sign when
+programming manuals start looking like Cadillac brochures. The same goes
+for the venue. Our use of a weekend creates a burden, but we got great
+rates on everything, including airfare. I heard the hotel charged less
+than one third the rate it did the following week for the bigger
+company's event.
+</p><p>
+In many conferences, it is what takes place between sessions, the hallway
+schmoozing, that makes the value of the event. We haven't yet facilitated
+enough of this, it seems. It usually requires a resort, an off-site
+location where people stay for a couple of days. We would have to find
+creative ways to make it affordable without ending in a bad suburb of
+Paris.
+</p><p>
+In the same vein of encouraging two-way communication, the "plenary" Q&amp;A
+session at the end will demand rethinking. A larger group will make it
+unwieldy and/or superficial. Those are great problems. And we need your
+help in addressing them in the right combination of professional and
+unconventional fashions. Venues, content, calendar, style, length,
+participants, guests, media, everything is open to re-examination. But
+for the central goal, creating the conditions for Be developers to
+succeed, and for us to rise with the tide as a result.
+</p><p>
+I will not leave the topic without expressing again my heartfelt thanks
+to Be developers who give meaning to our lives, and to my colleagues at
+Be for the best work I have ever been a part of.
+</p><p>
+Now, enough ecstasy, we have to deliver.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-18.html">Issue 2-18, May 7, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-20.html">Issue 2-20, May 21, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-18.html" title="Issue 2-18, May 7, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-20.html" title="Issue 2-20, May 21, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Kernel Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheKernelKit_Overview.html" title="The Kernel Kit" /><link rel="prev" href="TheKernelKit_Overview_Introduction.html" title="Introduction" /><link rel="next" href="TheKernelKit_Ports_Overview.html" title="Ports" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="TheKernelKit_Overview_Introduction.html" title="Introduction"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="TheKernelKit_Ports_Overview.html" title="Ports"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Kernel Kit</div></div><div id="headerB">Prev: <a href="TheKernelKit_Overview_Introduction.html">Introduction</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheKernelKit_Ports_Overview.html">Ports</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="TheKernelKit_ThreadsAndTeams_Overview"></a>Threads And Teams</h2></div></div></div><p>A thread is a synchronous process that executes a series of program
+instructions. A team is a group of threads that make up a single program
+or application.</p><p>Every application has at least one thread: When you launch an
+application, an initial thread—the main thread—is
+automatically created (or spawned) and told to run. The main thread
+executes the ubiquitous <code class="function">main()</code> function, winds through the functions that
+are called from <code class="function">main()</code>, and is automatically deleted (or killed) when
+<code class="function">main()</code> exits.</p><p>The Be operating system is multithreaded: from the main thread you can
+spawn and run additional threads; from each of these threads you can
+spawn and run more threads, and so on. All the threads in all
+applications run concurrently and asynchronously with each other.</p><p>Threads are independent of each other. Most notably, a given thread
+doesn't own the other threads it has spawned. For example, if thread A
+spawns thread B, and thread A dies (for whatever reason), thread B will
+continue to run. (But before you get carried away with the idea of
+leap-frogging threads, you should take note of the caveat in
+"<a class="xref" href="TheKernelKit_ThreadsAndTeams_Overview.html#ThreadsAndTeams_DeathAndTheMainThread" title="Death and the Main Thread">Death and the Main Thread</a>".)</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>Threads and the
+<acronym class="acronym" title="Portable Operating System Interface for uniX">POSIX</acronym>
+<code class="function">fork()</code> function are not compatible. You can't mix
+calls to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>
+(the function that creates a new thread) and
+<code class="function">fork()</code> in the same application: If you call
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>
+and then try to call <code class="function">fork()</code>, the <code class="function">fork()</code>
+call will fail. And vice versa.</p></div></div></div><p>Although threads are independent, they do fall into groups called teams.
+A team consists of a main thread and all other threads that "descend"
+from it (that are spawned by the main thread directly, or by any thread
+that was spawned by the main thread, and so on). Viewed from a higher
+level, a team is the group of threads that are created by a single
+application. You can't "transfer" threads from one team to another. The
+team is set when the thread is spawned; it remains the same throughout
+the thread's life.</p><p>All the threads in a particular team share the same address space: Global
+variables that are declared by one thread will be visible to all other
+threads in that team.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThraedsAndTeams_SpawningAThread"></a>Spawning a Thread</h3></div></div></div><p>You spawn a thread by calling the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>
+function. The function
+assigns and returns a system-wide <span class="type">thread_id</span> number that you use to
+identify the new thread in subsequent function calls. Valid <span class="type">thread_id</span>
+numbers are positive integers; you can check the success of a spawn thus:</p><pre class="programlisting example c"><span class="type">thread_id</span> <code class="varname">my_thread</code> = <code class="function">spawn_thread</code>(...);
+
+if ((<code class="varname">my_thread</code>) &lt; <code class="constant">B_OK</code>)
+   <span class="comment">/* failure */</span>
+else
+   <span class="comment">/* success */</span></pre><p>The arguments to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>,
+which are examined throughout this
+description, supply information such as what the thread is supposed to
+do, the urgency of its operation, and so on.</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_ThreadsAndAppImages"></a>Threads and App Images</h4></div></div></div><p>A conceptual neighbor of spawning a thread is the act of loading an
+executable (or loading an app image). This is performed by calling the
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>
+function. Loading an image causes a separate program,
+identified as a file, to be launched by the system. For more information
+on the
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>
+function, see
+<a class="xref" href="TheKernelKit_Images.html" title="Images">Images</a>.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_TellingAThreadToRun"></a>Telling a Thread to Run</h3></div></div></div><p>Spawning a thread isn't enough to make it run. To tell a thread to start
+running, you must pass its <span class="type">thread_id</span> number to either the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#resume_thread" title="resume_thread()"><code class="function">resume_thread()</code></a>
+or <a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>
+function:</p><table class="variablelist functions"><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><p><span class="term"><a class="link" href="TheKernelKit_ThreadsAndTeams.html#resume_thread" title="resume_thread()"><code class="function">resume_thread()</code></a></span></p></td><td><p>Starts the new thread running and immediately
+returns. The new thread runs concurrently and asynchronously with the
+thread in which
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#resume_thread" title="resume_thread()"><code class="function">resume_thread()</code></a>
+was called.</p></td></tr><tr><td><p><span class="term"><a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a></span></p></td><td><p>Starts the thread running but doesn't return until
+the thread has finished. (You can also call
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>
+on a thread that's already running.)</p></td></tr></tbody></table><p>Of these two functions,
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#resume_thread" title="resume_thread()"><code class="function">resume_thread()</code></a>
+is the more common means for starting a thread that was created through
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>.
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>
+is typically used to start the thread that was created
+through
+<a class="link" href="TheKernelKit_Images.html#load_image" title="load_image()"><code class="function">load_image()</code></a>.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_TheThreadFunction"></a>The Thread Function</h3></div></div></div><p>When you call
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>,
+you must identify the new thread's thread
+function. This is a global C function (or a static C++ member function)
+that the new thread will execute when it's told to run. The thread
+function, defined as
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#thread_func" title="thread_func"><span class="type">thread_func</span></a>,
+takes a single (<span class="type">void *</span>) argument and
+returns an <span class="type">int32</span> error code. When the thread function exits, the thread
+is automatically killed.</p><p>You pass a thread function as the first argument to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>. For
+example, here we spawn a thread that uses a function called <code class="function">lister()</code> as
+its thread function. The last argument to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>
+is forwarded to the thread function:</p><pre class="programlisting example c"><span class="type">int32</span> <code class="function">lister</code>(<span class="type">void *</span><code class="parameter">data</code>)
+{
+   <span class="comment">/* Cast the argument. */</span>
+   <span class="type">BList *</span><code class="varname">listObj</code> = (<span class="type">BList *</span>)<code class="parameter">data</code>;
+   ...
+}
+
+<span class="type">int32</span> <code class="function">main</code>()
+{
+   <span class="type">BList *</span><code class="varname">listObj</code> = new <code class="classname">BList</code>();
+   <span class="type">thread_id</span> <code class="varname">my_thread</code>;
+
+   <code class="varname">my_thread</code> = <code class="function">spawn_thread</code>(<code class="function">lister</code>, ..., (<span class="type">void *</span>)<code class="varname">listObj</code>);
+   <code class="function">resume_thread</code>(<code class="varname">my_thread</code>);
+   ...
+}</pre><p>See <a class="xref" href="TheKernelKit_ThreadsAndTeams_Overview.html#ThreadsAndTeams_PassingDataToAThread" title="Passing Data to a Thread">Passing Data to a Thread</a> for other methods of passing data to a
+thread.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_ThreadNames"></a>Thread Names</h3></div></div></div><p>A thread can be given a name which you assign through the second argument
+to <a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>.
+The name can be 32 characters long (as represented by
+the <code class="constant">B_OS_NAME_LENGTH</code> constant) and needn't be unique—more than one
+thread can have the same name.</p><p>You can look for a thread based on its name by passing the name to the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#find_thread" title="find_thread()"><code class="function">find_thread()</code></a>
+function; the function returns the <span class="type">thread_id</span> of the
+so-named thread. If two or more threads bear the same name, the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#find_thread" title="find_thread()"><code class="function">find_thread()</code></a>
+function returns the first of these threads that it finds.</p><p>You can retrieve the <span class="type">thread_id</span> of the calling
+thread by passing <code class="constant">NULL</code> to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#find_thread" title="find_thread()"><code class="function">find_thread()</code></a>:</p><pre class="programlisting example c"><span class="type">thread_id</span> <code class="varname">this_thread</code> = <code class="function">find_thread</code>(<code class="constant">NULL</code>);</pre><p>To retrieve a thread's name, you must look in the thread's
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#thread_info" title="thread_info"><span class="type">thread_info</span></a>
+structure. This structure is described in the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#get_thread_info" title="get_thread_info(), get_next_thread_info()"><code class="function">get_thread_info()</code></a>
+function description.</p><p>Dissatisfied with a thread's name? Use the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#rename_thread" title="rename_thread()"><code class="function">rename_thread()</code></a>
+function to change it. Fool your friends.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_ThreadPriorities"></a>Thread Priorities</h3></div></div></div><p>In a multi-threaded environment, the CPUs must divide their attention
+between the candidate threads, executing a few instructions from this
+thread, then a few from that thread, and so on. But the division of
+attention isn't always equal: You can assign a higher or lower priority
+to a thread and so declare it to be more or less important than other
+threads.</p><p>You assign a thread's priority (an integer) as the third argument to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>.
+There are two categories of priorities: "time-sharing"
+and "real-time."</p><dl class="variablelist"><dt><span class="term">Time-sharing (values from 1 to 99).</span></dt><dd><p>A time-sharing thread is executed
+only if there are no real-time threads in the ready queue. In the
+absence of real-time threads, a time-sharing thread is elected to run
+once every "scheduler quantum" (currently, every three milliseconds).
+The higher the time-sharing thread's priority value, the greater the
+chance that it will be the next thread to run.</p></dd><dt><span class="term">Real-time (100 and greater).</span></dt><dd><p>A real-time thread is executed as soon
+as it's ready. If more than one real-time thread is ready at the same
+time, the thread with the highest priority is executed first. The
+thread is allowed to run without being preempted (except by a real-time
+thread with a higher priority) until it blocks, snoozes, is suspended,
+or otherwise gives up its plea for attention.</p></dd></dl><p>The Kernel Kit defines seven priority constants (see Thread Priority
+Values for the list). Although you can use other, "in-between" value as
+the priority argument to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#spawn_thread" title="spawn_thread()"><code class="function">spawn_thread()</code></a>,
+it's suggested that you stick with these.</p><p>Furthermore, you can call the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#suggest_thread_priority"><code class="function">suggest_thread_priority()</code></a>
+function to let
+the Kernel Kit determine a good priority for your thread. This function
+takes information about the thread's scheduling and CPU needs, and
+returns a reasonable priority value to use when spawning the thread.</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_SynchronizingThreads"></a>Synchronizing Threads</h3></div></div></div><p>There are times when you may want a particular thread to pause at a
+designated point until some other (known) thread finishes some task. Here
+are three ways to effect this sort of synchronization:</p><ul class="itemizedlist"><li><p>The most general means for synchronizing threads is to use a
+semaphore. The semaphore mechanism is described in great detail in
+<a class="xref" href="TheKernelKit_Semaphores.html" title="Semaphores">Semaphores</a>.</p></li><li><p>Synchronization is sometimes a side-effect of sending data between
+threads. This is explained in
+"<a class="xref" href="TheKernelKit_ThreadsAndTeams_Overview.html#ThreadsAndTeams_PassingDataToAThread" title="Passing Data to a Thread">Passing Data to a Thread</a>",
+and in <a class="xref" href="TheKernelKit_Ports.html" title="Ports">Ports</a>.</p></li><li><p>Finally, you can tell a thread to wait for some other thread to die
+by calling
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>,
+as described earlier.</p></li></ul></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_ControllingAThread"></a>Controlling a Thread</h3></div></div></div><p>There are four ways to control a thread while it's running:</p><div class="orderedlist"><ol><li><p>You can put the calling thread to sleep for some number of
+microseconds through the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#snooze" title="snooze(), snooze_until()"><code class="function">snooze()</code></a> and
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#snooze_until"><code class="function">snooze_until()</code></a>
+functions.</p></li><li><p>You can suspend the execution of any thread through the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#suspend_thread" title="suspend_thread()"><code class="function">suspend_thread()</code></a>
+function. The thread remains suspended until you
+"unsuspend" it through a call to
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#resume_thread" title="resume_thread()"><code class="function">resume_thread()</code></a> or
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#wait_for_thread" title="wait_for_thread()"><code class="function">wait_for_thread()</code></a>.</p></li><li><p>You can send a POSIX "signal" to a thread through the
+<code class="function">send_signal()</code> function. The
+<span class="signal">SIGCONT</span> signal tries to unblock a blocked or sleeping
+thread without killing it; all other signals kill the thread. To
+override this behavior, you can install your own signal handlers.</p></li><li><p>You can kill the calling thread through
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#exit_thread" title="exit_thread(), kill_thread(), kill_team(), on_exit_thread()"><code class="function">exit_thread()</code></a>,
+or kill some other thread through
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#kill_thread"><code class="function">kill_thread()</code></a>.
+Feeling itchy? Try killing an entire team of threads: The
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#kill_team"><code class="function">kill_team()</code></a>
+function is more than a system call. It's therapy.</p></li></ol></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_DeathAndTheMainThread"></a>Death and the Main Thread</h4></div></div></div><p>As mentioned earlier, the control that's imposed upon a particular thread
+isn't visited upon the "children" that have been spawned from that
+thread. However, the death of an application's main thread can affect the
+other threads:</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>When a main thread dies, the game is pretty much over. The main thread
+takes the team's heap, its statically allocated objects, and other
+team-wide resources—such as access to standard IO—with it.
+This may seriously cripple any threads that linger beyond the death of
+the main thread.</p></div></div></div><p>It's possible to create an application in which the main thread sets up
+one or more other threads, gets them running, and then dies. But such
+applications should be rare. In general, you should try to keep your main
+thread around until all other threads in the team are dead.</p></div></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="ThreadsAndTeams_PassingDataToAThread"></a>Passing Data to a Thread</h3></div></div></div><p>Every thread has a message cache. You can write to a thread's message
+cache through the
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#send_data" title="send_data()"><code class="function">send_data()</code></a>
+function. The thread can pick up your
+message (a combination of an integer and a buffer) through
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#receive_data" title="receive_data()"><code class="function">receive_data()</code></a>.
+The cache is only one message deep; if there's a message
+already in the cache,
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#send_data" title="send_data()"><code class="function">send_data()</code></a>
+will block. Conversely, if there's no message in the cache,
+<a class="link" href="TheKernelKit_ThreadsAndTeams.html#receive_data" title="receive_data()"><code class="function">receive_data()</code></a>
+will block.</p><p>You can also pass data to thread through a port. Arbitrarily deep, ports
+are more flexible than the message cache. See
+<a class="xref" href="TheKernelKit_Ports.html" title="Ports">Ports</a> for details.</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="TheKernelKit_Overview_Introduction.html">Introduction</a>  Up: <a href="TheKernelKit_Overview.html">The Kernel Kit</a>  Next: <a href="TheKernelKit_Ports_Overview.html">Ports</a> </div><div id="footerB"><div id="footerBL"><a href="TheKernelKit_Overview_Introduction.html" title="Introduction"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheKernelKit_Overview.html" title="The Kernel Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="TheKernelKit_Ports_Overview.html" title="Ports"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

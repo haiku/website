@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-25.html" title="Issue 4-25, June 23, 1999" /><link rel="next" href="Issue4-27.html" title="Issue 4-27, July 7, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-25.html" title="Issue 4-25, June 23, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-27.html" title="Issue 4-27, July 7, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-25.html">Issue 4-25, June 23, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-27.html">Issue 4-27, July 7, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-26"></a>Issue 4-26, June 30, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-26"></a>Be Engineering Insights: Programmink Ze Quernelle, Part 3: Le Module</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Ficus</span> <span class="surname">Kirkpatrick</span></span></div></div></div><p>
+This article is about kernel modules (hereafter, "modules"). I will, for
+the sake of article autonomy, repeat some of what Mani said in his
+overview article, but if you haven't read it, you should. I command thee:
+</p><p>
+<a class="xref" href="Issue4-21.html#Engineering4-21" title="Be Engineering Insights: Kernel Programming on the BeOS: Part 1">Be Engineering Insights: Kernel Programming on the BeOS: Part 1</a>
+</p><p>
+As an example, we will use the until-recently-fictitious "xyz5038"
+module, which provides an interface to the still- fictitious XYZ Systems
+Model 5038 Squarepusher chip, a mainstay of many popular squarepushing
+peripherals. It's a simple chip, and has only two hardware registers, FOO
+and BAR. You can find the code for the "xyz5038" module at
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/drivers/xyz5038.zip&gt;
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id793346"></a>Using Modules</h3></div></div></div><p>
+Modules export an API through a structure containing pointers to the
+functions the module provides, and any other ancillary information:
+</p><pre class="programlisting c">
+#define <code class="constant">XYZ5038_MODULE_NAME</code>     "generic/xyz5038/v1"
+
+struct <span class="type">xyz5038_module_info</span> {
+    <span class="type">module_info</span>        <code class="varname">module</code>;
+
+    <span class="comment">// returns contents of FOO</span>
+    <span class="type">int32</span> (*<code class="function">read_foo</code>)();
+    <span class="comment">// returns contents of BAR</span>
+    <span class="type">int32</span> (*<code class="function">read_bar</code>)();
+    <span class="comment">// returns previous contents of FOO</span>
+    <span class="type">int32</span> (*<code class="function">write_foo</code>)(<span class="type">int32</span> <code class="varname">new_value</code>);
+    <span class="comment">// returns previous contents of BAR</span>
+    <span class="type">int32</span> (*<code class="function">write_bar</code>)(<span class="type">int32</span> <code class="varname">new_value</code>);
+};
+</pre><p>
+In order to use these functions, all you have to do is ask the kernel for
+a pointer to this structure, and you're in business:
+</p><pre class="programlisting c">
+struct <span class="type">xyz5038_module_info</span> *<code class="varname">xyz5038</code> = <code class="constant">NULL</code>;
+
+<span class="comment">// get a pointer to the xyz5038 module</span>
+<code class="function">get_module</code>(<code class="constant">XYZ5038_MODULE_NAME</code>,
+          (<span class="type">module_info</span> **)&amp;<code class="varname">xyz5038</code>);
+<span class="comment">// read the value of FOO</span>
+<code class="varname">foo</code> = <code class="varname">xyz5038</code>-&gt;<code class="function">read_foo()</code>;
+</pre><p>
+When you've no more use for the module, simply tell the kernel so:
+</p><pre class="programlisting c">
+<code class="function">put_module</code>(<code class="constant">XYZ5038_MODULE_NAME</code>);
+</pre><p>
+Your practical use of modules will be dependent on the functions exported
+by the ones you use, but that's all you need to get started using them.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id793538"></a>Writing Modules</h3></div></div></div><p>
+Creating your own module is a matter of extending the basic one defined
+in &lt;module.h&gt;. Note that the first field in xyz5038_module_info is a
+module_info:
+</p><pre class="programlisting c">
+struct <span class="type">module_info</span> {
+    <span class="type">const char*</span> <code class="varname">name</code>;
+    <span class="type">uint32</span>      <code class="varname">flags</code>;
+    <span class="type">status_t</span>   (*<code class="varname">std_ops</code>);
+}
+</pre><p>
+The <code class="varname">name</code> field should be the name you provide in the header file for
+your module; in this case, <code class="constant">XYZ5038_MODULE_NAME</code> (or "generic/xyz5038/v1").
+</p><p>
+The <code class="varname">flags</code> field, surprisingly enough, is how you indicate which flags
+you want to be in effect for your module. <code class="constant">B_KEEP_LOADED</code> is currently the
+only flag there is.
+</p><p>
+The first time someone calls <code class="function">get_module()</code> with your module's name, the
+kernel loads it. With every subsequent call, a reference count associated
+with your module is incremented. Every time someone calls <code class="function">put_module()</code>
+with your module's name, that reference count is decremented, and when it
+reaches zero, your module is unloaded—unless you set <code class="constant">B_KEEP_LOADED</code>.
+</p><p>
+"std_ops" is pointer to a function you provide that deals with standard
+module operations. Currently, the only two things that entails are
+initialization and uninitialization. <code class="function">std_ops()</code> usually looks like this:
+</p><pre class="programlisting c">
+<span class="type">static status_t</span>
+<code class="function">std_ops</code>(<span class="type">int32</span> <code class="varname">op</code>, ...)
+{
+    switch(<code class="varname">op</code>) {
+    case <code class="constant">B_MODULE_INIT</code>:
+        <code class="function">module_init_hijinks()</code>;
+        break;
+    case <code class="constant">B_MODULE_UNINIT</code>:
+        <code class="function">module_uninit_shenanigans()</code>;
+        break;
+    default:
+        return <code class="constant">B_ERROR</code>;
+    }
+    return <code class="constant">B_OK</code>;
+}
+</pre><p>
+Exporting your module to the outside world is similar to publishing
+device driver hooks, but since you are the one defining the hooks, there
+are a few twists. You'll need to have a filled-out version of your module
+info struct:
+</p><pre class="programlisting c">
+static struct <span class="type">xyz5038_module_info</span>
+<code class="varname">xyz5038_module</code> = {
+    <span class="comment">// module_info for the kernel</span>
+    {
+        <code class="constant">XYZ5038_MODULE_NAME</code>,
+        0,
+        <code class="function">std_ops</code>
+    },
+    <code class="function">read_foo</code>,
+    <code class="function">read_bar</code>,
+    <code class="function">write_foo</code>,
+    <code class="function">write_bar</code>
+};
+</pre><p>
+When loading your module, the kernel looks for a symbol called "modules",
+which contains a list of pointers to the modules you export, terminated
+by a <code class="constant">NULL</code>:
+</p><pre class="programlisting c">
+_EXPORT <span class="type">module_info *</span><code class="varname">modules</code>[] = {
+    (<span class="type">module_info *</span>)&amp;<code class="varname">xyz5038_module_info</code>,
+    <code class="constant">NULL</code>
+};
+</pre><p>
+Clever readers may have surmised by now that in the same process of
+including module_info to make your own module, APIs can be defined on top
+of that and then extended in other modules. As a matter of fact, this has
+already been done with bus managers, and it will be discussed in a future
+article.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-26-2"></a>Be Engineering Insights: Using a Test Harness to Build Ethernet Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Russ</span> <span class="surname">McMahon</span></span></div></div></div><p>
+The standard method for creating Ethernet device drivers is to write the
+entire driver and then use the protocol stack (NetServer) for testing and
+debugging. While there are samples and documentation to assist
+developers, this approach has some weaknesses:
+</p><ul class="itemizedlist"><li><p>
+If you use your driver on the same machine you use to retrieve mail
+and browse the network, it's a hassle to switch between a solid network
+connection with a working driver and an unstable connection with the
+driver you're developing.
+</p></li><li><p>
+The driver is affected by the protocol layers above, which is good in
+the later stages of development but adds unnecessary complications to
+early stages.
+</p></li><li><p>
+It's difficult to test individual driver components as they're
+developed.
+</p></li><li><p>
+There is virtually no way to do structured, controlled testing
+through the NetServer.
+</p></li></ul><p>
+To address these problems, I wrote the <span class="application">E-Drive</span> application ("E" for
+Ethernet, and "Drive" for pushing or controlling) to help create and test
+a fully working Ethernet driver. The code is available from
+&lt;ftp://ftp.be.com/pub/samples/drivers /E-Drive.zip&gt;. I want to add more
+features to this, so please see the TODO file and contact me for updates
+or to offer suggestions.
+</p><p>
+In development, the first real packets to go through a new driver are
+typically the ubiquitous "pings." Ping is often used as a simple network
+diagnostic tool, and the Internet Control Message Protocol (<acronym class="acronym">ICMP</acronym>)
+protocol supports sequence numbers and variable payload lengths, so it
+was a natural choice to build into E-Drive. Of course, the driver only
+sees an array of bytes, but those bytes make up <acronym class="acronym">ICMP</acronym> echo messages.
+<span class="application">E-Drive</span> also has limited Address Resolution
+Protocol (<acronym class="acronym">ARP</acronym>) support. <acronym class="acronym">ARP</acronym>
+allows other workstations on the network to resolve the address of your
+device while you're sending out ping requests. <span class="application">E-Drive</span> works with the
+BeOS, Linux, and FreeBSD as both the sender and receiver of <acronym class="acronym">ICMP</acronym> echo
+packets.
+</p><p>
+<span class="application">E-Drive</span> is written like a normal Be application, with one menu and a text
+view for the main window. Choose File-&gt;Open Receive to load the driver
+and start reading incoming packets. File-&gt; Transmit sends out ping
+requests. <span class="application">E-Drive</span> dumps raw packets, debug information, and statistics to
+the text view (instead of standard out). There is also a settings panel
+for user preferences and network "must haves" like source and destination
+IP addresses. The values are saved in an <span class="application">E-Drive</span> preference file.
+</p><p>
+The guts of <span class="application">E-Drive</span> application are in the I0 class. The Open method
+opens the driver and gets the card's hardware address. By default, the
+driver must be in the
+<code class="filename">/boot/beos/system/add-ons/kernel/drivers/bin</code>
+folder with a link in
+<code class="filename">/boot/beos/system /add-ons/kernel/drivers/dev/net</code>
+folder. As a quick check that the kernel has located and loaded the
+driver, look in
+<code class="filename">/dev/net</code> for the driver's published name. If it's not
+there, E-Drive won't be able to open the driver.
+</p><p>
+Once the driver is open, a reader thread is spawned from the <code class="methodname">IOCtrl()</code>
+method. The thread loops continuously and receives incoming packets. If
+the packet is an <acronym class="acronym">ARP</acronym> or Ping request,
+the <code class="methodname">PrepareArpReply()</code> and
+<code class="methodname">PreparePingReply()</code> methods build up an appropriate reply packet. Both
+methods do some address swapping, set a few bytes, and calculate an <acronym class="acronym">IP</acronym>
+checksum. <span class="application">E-Drive</span> then replies to the requesting host. If the packet is a
+ping reply to a request sent from <span class="application">E-Drive</span>,
+the <code class="methodname">ProcessPingReply()</code> method
+is called. The <code class="methodname">ProcessPingReply()</code> does some simple round trip
+calculations and displays the results. Other packets are ignored,
+although they can be viewed by the <code class="methodname">DumpPacket()</code> method.
+</p><p>
+For sending packets, a transmitter thread is spawned from the <code class="methodname">IOCtrl()</code>
+method when the user chooses File-&gt;Transmit from the main menu. The
+thread loops continuously and calls <code class="methodname">PreparePingRequest()</code> at set time
+intervals to build up ping request packets. Each time
+<code class="methodname">PreparePingRequest()</code> is called, the sequence number is incremented and
+set in the <acronym class="acronym">ICMP</acronym> header. For the <acronym class="acronym">ICMP</acronym>
+identifier, <span class="application">E-Drive</span> uses the
+transmitter thread ID. The thread then sends the packet.
+</p><p>
+Using a test harness like <span class="application">E-Drive</span> lets you focus on writing kernel code
+to manipulate a device without having to worry about the protocol layers
+above. And that lets you develop and test Ethernet device drivers with
+more confidence and control.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-26"></a>Developers' Workshop: Copying Files</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Christopher</span> <span class="surname">Tate</span></span></div></div></div><p>
+Several Gentle Readers have commented that perhaps we should call this
+column "Media Kit Workshop" rather than "Developer's Workshop." There's
+some truth in that—we have been emphasizing the glories of the R4.5
+Media Kit over the last few months. However, we know that not every
+application needs to fling video clips around the screen. So this week
+I'll leave the rarefied world of real-time media handling and begin a
+series of articles on a more mundane—but necessary—topic: copying
+files.
+</p><p>
+"Bah!" you say. "Copying files is easy! Read the data, write it out
+again, and you're done!" Ahhh, but the Be File System (bfs) is a bit more
+complex than the run-of-the-mill flat Unix-style file system, and with
+power comes responsibility. Attribute data is important, too—some
+files, such as Net Positive bookmarks, consist solely of attribute data
+-- so a file-copying routine for bfs will be more sophisticated than one
+for a flat-data file system like ext2 or FAT.
+</p><p>
+You'll find a simple file-copying function and a simple program which
+uses at &lt;ftp://ftp.be.com/pub/samples/storage_kit/CopyFile.zip&gt;.
+</p><p>
+When I say "simple," I mean it. No bells, no whistles, just the ability
+to copy one file to another. Here's a quick look at the copy routine's
+salient points.
+</p><p>
+First, the prototype:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> <code class="function">CopyFile</code>(<span class="type">const entry_ref&amp;</span> <code class="parameter">source</code>,
+    <span class="type">const entry_ref&amp;</span> <code class="parameter">dest</code>,
+    <span class="type">void*</span> <code class="parameter">buffer</code> = <code class="constant">NULL</code>, <span class="type">size_t</span> <code class="parameter">bufferSize</code> = 0);
+</pre><p>
+Notice that instead of taking the source and destination files' paths as
+arguments, the function takes <span class="type">entry_ref</span>s. <span class="type">entry_ref</span>s are the standard
+BeOS representation of a file system entity (that is, a file or a
+directory). They're easier to manage than character string paths: no
+messy string manipulations or foreign character sets to deal with. Most
+of the Storage Kit uses <span class="type">entry_ref</span>s as the basic token for indicating a
+file.
+</p><p>
+<span class="type">entry_ref</span>s can be inconvenient when dealing with user input, as users
+tend to think in terms of file names and paths, but the Storage Kit
+provides a couple of ways to convert from a path to an <span class="type">entry_ref</span>. The
+first is the <code class="classname">BEntry</code> class, which encapsulates
+an <span class="type">entry_ref</span> inside a
+useful object wrapper. One of its constructors takes a path as an
+argument; once it is constructed, the <span class="type">entry_ref</span> struct can be extracted
+via the <code class="classname">BEntry</code>::<code class="methodname">GetRef()</code>
+method. The second alternative is a C function
+called <code class="function">get_ref_for_path()</code> that converts from a character string path
+directly to an <span class="type">entry_ref</span>. The sample "copyall" command line application
+in today's code illustrates both of these mechanisms.
+</p><p>
+The <code class="parameter">buffer</code> and <code class="parameter">bufferSize</code>
+arguments to <code class="methodname">CopyFile()</code> are optional; they
+allow the caller to specify a buffer to be used when copying the file's
+data. If they are unspecified, the function allocates its own buffer and
+deallocates it when it's finished, so unless you're concerned with memory
+usage you generally won't bother to supply a buffer.
+</p><p>
+We all know how to copy *data* from one file to another, right? To
+conserve newsletter space I'll just skip to the interesting part: copying
+attributes from one file to another.
+</p><p>
+The attributes of a file are accessed by name. The BNode class provides
+access to a file's attributes via its <code class="methodname">GetNextAttrName()</code> method, which
+iteratively returns the name of every attribute associated with the file.
+Copying the attributes involves successively reading each attribute of
+the source file and replicating it in the destination file.
+</p><p>
+There's some subtlety involved in guaranteeing that while you're reading
+the list of attributes, no other program is adding new ones to the file,
+or deleting old ones. To circumvent this unhappy race condition, the
+<code class="classname">BNode</code> class provides a locking mechanism.
+While the <code class="classname">BNode</code> is locked, the
+lock holder has the exclusive ability to access the file. Once the
+attributes are copied, of course, it's considered polite (to put it
+mildly) to unlock the <code class="classname">BNode</code> again.
+</p><p>
+In all, <code class="methodname">CopyFile()</code> is a pretty simple routine. For now, it will serve as
+an introduction to file data and attribute manipulation, and give
+developers a commonly needed tool. In my next article, I'll dig a little
+deeper into the subject of copying files and discuss how to determine
+ahead of time whether a given file will fit on the destination volume.
+Estimating the amount of physical disk space required to store a file
+under bfs is tricky, as we shall see....
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-25.html">Issue 4-25, June 23, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-27.html">Issue 4-27, July 7, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-25.html" title="Issue 4-25, June 23, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-27.html" title="Issue 4-27, July 7, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

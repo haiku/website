@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-34.html" title="Issue 2-34, August 27, 1997" /><link rel="next" href="Issue2-36.html" title="Issue 2-36, September 10, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-34.html" title="Issue 2-34, August 27, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-36.html" title="Issue 2-36, September 10, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-34.html">Issue 2-34, August 27, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-36.html">Issue 2-36, September 10, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-35"></a>Issue 2-35, September 3, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-35"></a>Be Engineering Insights: The Dirty Little Secret of lock_memory()</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Herold</span></span></div></div></div><p>
+By far and away most of Be's developers are writing applications. I love
+these guys because they are, through their creative best efforts, writing
+the killer titles that attract paying customers to the BeOS, thereby
+paying for my children's tickets to college with their 100 GHz Pentium
+Wristband firmly strapped on. However, there is another class of
+programmer developing for the BeOS.
+</p><p>
+The oppressed community of device driver writers is seldom heard from.
+Slogging through the digital bilge that accumulates in the hold of any
+computer platform, they grunt and groan to keep the disks whining, the
+mouse smooth and the keyboard responsive.
+</p><p>
+This is not the clean, antiseptic world of <code class="classname">BLooper</code>s
+and <code class="classname">BView</code>s. The ugly
+reality of ancient hardware, designed by engineers adept at squeezing
+maximal functionality into a minimum of gates and thereby rendering the
+device inscrutable to anyone but themselves, implemented by penny
+pinching silicon sweat shops with little regard for stated timing
+parameters, documented by sadistic teases who grudgingly reveal just
+enough detail to confuse even the folks at Langley—this is the milieu
+of the device driver writer.
+</p><p>
+Not that I have a chip on my shoulder.
+</p><p>
+Hardware devices are often capable of transferring data directly to or
+from the main system memory, bypassing the memory management unit (MMU)
+in the main processor that translates virtual addresses into actual
+physical addresses. Drivers written for these Direct Memory Access (DMA)
+devices need to use the physical addresses in main system memory for
+their transfers.
+</p><p>
+Most clients of device drivers, however, use virtual addresses when
+referring to system memory. Usually, the range of virtual addresses is
+pageable. That is, the kernel is free to decide almost anytime that it
+needs the physical memory for something else, after first writing the
+current content to a disk-based swap file for retrieval later when a
+program actually gets around to using it.
+</p><p>
+If a device driver has recorded the physical address of a buffer (using
+the <code class="function">get_memory_map()</code>) call, and starts blasting data into it while the
+kernel has decided to use it for something else (perhaps some frilly user
+interface widget), things could get exciting.
+</p><p>
+The <code class="function">lock_memory()</code> call is an essential function exported from the kernel
+for device drivers to use to prevent such excitement. Device drivers
+intending to use DMA should first use the <code class="function">lock_memory()</code> call on the range
+of virtual addresses they will be playing with. <code class="function">lock_memory()</code> will
+guarantee that all the underlying data in the range is actually in
+physical memory and not gathering dust in the swap file. It also nails
+the data down, so it will not be paged out or moved for the duration of
+the lock.
+</p><p>
+There is, of course, an <code class="function">unlock_memory()</code> call to undo all these Draconian
+measures. Martha Stewart recommends that every call to <code class="function">lock_memory()</code> be
+matched by a call to <code class="function">unlock_memory()</code>, preferable after the
+<acronym class="acronym" title="Direct Memory Access">DMA </acronym> device has
+completed its dirty business.
+</p><p>
+The prototypes for these two calls are:
+</p><pre class="programlisting c">
+extern <span class="type">long</span> <code class="function">lock_memory</code> (
+  <span class="type">void  *</span><code class="parameter">buf</code>, <span class="comment">/* -&gt; virtual buffer to lock (make resident) */</span>
+  <span class="type">ulong</span> <code class="parameter">num_bytes</code>,  <span class="comment">/* size of virtual buffer */</span>
+  <span class="type">ulong</span> <code class="parameter">flags</code> );
+
+extern <span class="type">long</span> <code class="function">unlock_memory</code> (
+  <span class="type">void  *</span><code class="parameter">buf</code>,       <span class="comment">/* -&gt; virtual buffer to unlock */</span>
+  <span class="type">ulong</span> <code class="parameter">num_bytes</code>,  <span class="comment">/* size of virtual buffer */</span>
+  <span class="type">ulong</span> <code class="parameter">flags</code>
+  );
+</pre><p>
+The nuances of the flags are not only useful, they even provide insight
+into some interesting design quirks in a few of the platforms that
+support the BeOS (or do their damndest not to!).
+</p><p>
+The flags are:
+</p><pre class="programlisting c">
+#define   <code class="constant">B_DMA_IO</code>        0x00000001
+#define   <code class="constant">B_READ_DEVICE</code>   0x00000002
+</pre><p>
+<code class="constant">B_READ_DEVICE</code> is used to tell the kernel that the device being read from
+will be depositing data directory into memory. In the BeOS implementation
+of virtual memory, the kernel often attempts to be clever and see if a
+range of memory has been changed since the last time it was read in from
+the swap file on disk. If it has not changed, there is no need to write
+it back to disk when the memory needs to be used for something else.
+</p><p>
+The MMU has a built in mechanism for detecting changes affected by the
+processor, but this mechanism does not detect <acronym class="acronym">DMA</acronym> transactions from other
+devices. The <code class="constant">B_READ_DEVICE</code> flag tells the kernel that indeed the memory
+is going to change, so don't try to be clever about it.
+</p><p>
+The <code class="constant">B_DMA_IO</code> flag is an unfortunate crutch made necessary by what some
+might perceive as a flawed implementation of the bridge between the
+<acronym class="acronym" title="Peripheral Component Interconnect">PCI</acronym>
+bus and the main system memory bus in certain motherboard designs from
+one of our supported platforms. Normally, when a <acronym class="acronym">DMA</acronym> transaction is
+started by a device on the <acronym class="acronym">PCI</acronym> bus and travels though the bridge to
+system memory, the bridge is responsible for notifying any and all
+devices on the main system bus (e.g. the processor(s)) that the memory is
+being written, and that those devices should remove any copies of that
+memory they may have stashed in a local cache for fast access. This
+mechanism was not implemented in a few designs—my suspicion is that it
+was implemented, but did not work reliably, and was disabled.
+</p><p>
+The work around for this lame behavior is to tell all the processors to
+NEVER cache locations that may have <acronym class="acronym">DMA</acronym> transactions coming in. This can
+result in a significant performance hit if those locations are accessed
+frequently. The <code class="constant">D_DMA_IO</code> tells the kernel to temporarily mark the range
+uncacheable until the matching <code class="function">lock_memory</code>.
+</p><p>
+This turns out to be a very complex operation. Data in that range needs
+to be flushed from all caches. The data structures used by the cache to
+determine an address's cacheability need to be updated to reflect the new
+non-cacheable status—but if a part of the range shares a cache line
+with anything that gets used in updating the data structures, it will end
+up back in the cache! This alone probably added a few weeks to the
+Preview Release's schedule.
+</p><p>
+This is only one example of the murky world navigated by the unsung
+heroes of the modern age—the device driver writer. It's time to give
+them all raises, take them to lunch and admire their cool white socks.
+Then lock them back in their beloved windowless rooms where they belong.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="HR2-35"></a>I Love to Build</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Melissa</span> <span class="surname">Rogers</span></span></div></div></div><p>
+SPC (single, privately owned, corporation), 7, well-endowed with stock
+options, seeks multiple partners to work on the OS of the future.
+</p><p>
+You must have stamina, a sense of humor, communication abilities, and
+enjoy eating out six nights a week in Menlo Park. Long walks through
+kernel code, strenuous hikes through the Tracker, and lazy afternoons
+spent staring at an app_server crash can all be yours.
+</p><p>
+I can offer you intellectual discussions, health benefits, bleeding edge
+experiments, and soft couches.
+</p><p>
+Don't delay, act now...
+</p><p>
+http://www.be.com/aboutbe/jobs/index.html On a serious note, we are
+looking for a number of great people to fill positions in all areas:
+marketing, sales, and engineering. In the past we have hired a number of
+Be developers, William Adams and Jake Hamby to name two. We like Be
+Developers. Don't be shy, come talk to us, we want to hire you!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-35"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+If you say something often enough, doesn't that make it so? The BeOS is
+the Media OS. Pretty fast, able to handle large amounts of data.
+Frameworks for sight and sound. Well, we've said it often enough that our
+developers deliver on the promise and are coming out with some very
+interesting things indeed. Some more mentionables:
+</p><p>
+Power Pulsar—Raphael MOLL
+</p><p>
+This little thing is a tekno funk DJ's dream come true. It displays all
+sorts of nifty lights, curves and other effects all based on the
+pulsations of the music being played. And of course the music sources can
+be varied between CD and digital audio off your hard disk.
+</p><p>
+Dual Player—Tinic Urou
+</p><p>
+How about a sound player that will play most sound file formats you can
+think of and throws in quite a few nifty real-time filters to boot. You
+just have to play with this one. Tinic is one of my favorite programmers,
+and is prolific in the extreme. His work really shines with this one. He
+uses his own MIDI synthesizer, which sounds very good, and the live
+effects are enviable.
+</p><p>
+These are both shareware products that can be found in the Audio section
+of our BeWare web pages:
+</p><p>
+http://www.be.com/beware/Audio.html
+</p><p>
+or in general
+</p><p>
+http://www.be.com/beware/
+</p><p>
+Of course, these aren't the only things in BeWare. Every time I've given
+a demo, I am asked naturally enough, where's the software? And, I often
+times respond with, take a look at our BeWare pages. I took a look
+recently at the audio section and found no fewer than 5 applications that
+were capable of playing good quality sound. There were a couple of sound
+editing systems, and a lot of source code.
+</p><p>
+What does that mean? Well, it means that we move ever closer to a point
+at which a person would look foolish for asking the question, "where's
+the software." Of course we're a long ways off, but one inch closer is
+one inch.
+</p><p>
+If you are a developer wanting to use sound in your application, you
+would do well to study what gets dropped into the BeWare site often.
+There is so much source available, and often times new stuff that isn't
+simply a port of something from the UNIX or Mac worlds. It gets me all
+goose pimply to see such a positive outflow of applications all the time.
+</p><p>
+Another thing that's exciting is when you can interact with a developer
+and bounce ideas off one another spiraling up the features further and
+further. Recently, Doug Fulton pulled me aside and said, "pppssst, hey
+buddy, you wanna see the killer app?" How could I refuse. Doug showed me
+this thing called axe. I have no idea what axe stands for, but it was a
+fun toy to play with. Me, a decidedly non-audio person, had fun laying
+down notes on this radar screen thing and was able to make interesting
+compositions in minutes. I'm sure he'll use it to write a nifty
+newsletter article, so I won't spoil the fun now. The main point of it
+was that audio on the BeOS is a very easy thing to play with. Anyone has
+quick and easy access to MIDI services, and real-time audio filtering is
+a snap.
+</p><p>
+I hope this trend continues and spreads to the visual realm as well. From
+what I've been seeing lately, I think we have some very serious
+applications on the horizon that will further demonstrate the meaning and
+value of the Media OS.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-35"></a>Scalability or Modularity?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Scalability is a very attractive idea. Unsurprisingly, it is a much
+abused one as well. Scalable went from signifying something could be
+climbed to referring to measurability along a scale. Only recently did
+scalable become a computerese synonym for extensible, a handle for the
+ability to work over a wide range, a large scale of sizes. By that
+definition, a scalable architecture is very desirable. An example of
+scalability would be a family of processors implementing the same
+instruction set or, on the software side, the same operating system, for
+targets ranging from watches to mainframes. Desirable, but not very
+realistic.
+</p><p>
+You don't just shrink a 64-bit workstation processor or expand a 4-bit
+micro-controller, nor do you perform similar operations on the equivalent
+software engines. In practice, the architectures we know offer limited
+scalability around their original design center. In other words, they
+don't stray very far from their place of birth. This is true for PC
+operating systems such as Windows and the Mac OS, for Unix, or for
+embedded software engines.
+</p><p>
+Windows NT is an apparent exception, targeting desktops, workstations,
+servers and, we are told, mainframes. But, here, we're dealing more with
+modularity than with scalability. To some degree, Windows NT covers a
+broader range of targets by adding, removing and replacing modules. This
+is a benefit arising from Windows NT's modern architecture. Its older
+siblings are more monolithic and cannot be "edited" as easily. In other
+words, if you try to cut them, they bleed a lot, they have no way to go
+but up, they never scale down.
+</p><p>
+But I didn't set out as a Windows NT advocate, even if I admire the
+Microsoft combination of engineering and marketing prowess that made NT
+the holy terror of the enterprise market. I was merely attempting to
+differentiate scalability from modularity as well as giving an example of
+the advantages of more modern, more modular architectures.
+</p><p>
+Besides broadcasting a few hundred thousand of copies of the BeOS through
+bundling agreements and magazine inserts in the US, Europe and Japan,
+we've been experimenting with different versions of our product.
+Architectural features such as the client-server architecture inside the
+BeOS make it relatively easy to reconfigure modules and to remove
+functions not needed when addressing a different target application.
+We've been asking ourselves if our core technology couldn't be also
+applied to smaller devices, to emerging consumer multimedia and network
+computing applications.
+</p><p>
+So far, we've built a small number of interesting test cases; the most
+extreme one resides on a 1.44 Mb floppy, incorporating the core BeOS and
+our browser. Take a bare bones Pentium clone costing about $350 (sans
+hard disk, but including a $19.99 Ethernet card), connect it to the
+network, boot it from the floppy and "presto," you're browsing the Web.
+</p><p>
+It would be very premature to read into this we intend to make a play for
+network computing or embedded consumer multimedia applications. We have
+completed the first phase of the BeOS development and are broadcasting
+the Preview Release. Having established the foundation, we are now moving
+into a new phase and investigating opportunities to broaden the range of
+applications for the technology we've created.
+</p><p>
+And we are also hard at work on a forthcoming update fixing bugs and
+adding a few polishing touches to the current Preview Release.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-34.html">Issue 2-34, August 27, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-36.html">Issue 2-36, September 10, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-34.html" title="Issue 2-34, August 27, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-36.html" title="Issue 2-36, September 10, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

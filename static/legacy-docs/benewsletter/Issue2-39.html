@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-38.html" title="Issue 2-38, September 24, 1997" /><link rel="next" href="Issue2-40.html" title="Issue 2-40, October 8, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-38.html" title="Issue 2-38, September 24, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-40.html" title="Issue 2-40, October 8, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-38.html">Issue 2-38, September 24, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-40.html">Issue 2-40, October 8, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-39"></a>Issue 3-39, October 1, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-39"></a>Be Engineering Insights: Video Basics</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Steve</span> <span class="surname">Sakoman</span></span></div></div></div><p>
+As you step off the elevator into Be's reception area, one of the first
+things you see is a large poster proclaiming "RESISTANCE IS NOT FUTILE".
+Being quite stubborn by nature, I've enthusiastically taken this
+philosophy to heart and have managed to resist being drafted into dreaded
+"newsletter article" duty.
+</p><p>
+Until now.
+</p><p>
+Valerie has triumphed in the battle between immovable object and
+irresistible force. And so, to atone for past sins, this is the first in
+a series of articles dealing with capturing, displaying, storing, and
+manipulating still and moving video images with the BeOS.
+</p><p>
+I always like to start a new project with a blissfully simple first cut
+implementation. There's something comforting in taking some time to
+become familiar with the fundamental issues before layering on
+complexity. When designing the first Be motherboard back in 1990, I began
+with a prototype that consisted of nothing more than a single processor,
+memory, and a serial port. The next version added slots and bus
+arbitration, the one after that additional processors, then various
+flavors of I/O. Ah, the good old days!
+</p><p>
+I'll use a similar approach in these articles. We'll start out nice and
+simple, using the infamous BeOS HelloWorld sample program as the basis
+for our first effort: Capturing a single frame of video from channel 5.
+</p><p>
+This program requires special hardware. Any of the following PCI video
+capture cards will do (retail prices are in the $89 to $199 range):
+</p><ul class="itemizedlist"><li><p>
+Hauppauge Models 400, 401, 405, 406 Wincast/TV cards
+</p></li><li><p>
+IXMICRO TurboTV (formerly IMS TurboTV)
+</p></li><li><p>
+miroMEDIA PCTV
+</p></li><li><p>
+Intel Smart Video Recorder III (no tuner included)
+</p></li></ul><p>
+We'll be making use of the <code class="classname">Bt848Source</code> class to hide some of the
+complexities of dealing directly with the video capture driver for the
+above cards.
+</p><p>
+The first decision we need to make is the size image to capture. In
+making this decision it helps to know a bit about the character of the
+video signal that we'll be sampling. For a variety of historical reasons,
+video standards throughout the world use a technique called interlacing
+to transmit the image. With this technique, the odd scan lines are
+displayed during the first refresh interval, the even lines during the
+next interval. These sets of even and odd scan lines are called fields.
+</p><p>
+Interestingly, line numbers start at one, not zero—this standard was
+established long before computers influenced us to start counting at zero!
+</p><p>
+While interlacing is a reasonable approach for viewing moving images on
+TV sets, it presents some challenges for high quality image captures.
+These problems are most evident during image sequences that contain
+rapidly moving objects.
+</p><p>
+Because the odd and even fields are sampled at different points in time
+in the video camera, the edge of a moving object is not at the same
+position in the odd and even fields. If we simply combine the odd and
+even fields by interleaving them into a single frame, we will discover
+that moving objects have a severe case of the "jaggies."
+</p><p>
+There are many sophisticated techniques for dealing with this problem.
+We're going to take the easy way out, though. Recognizing that the issue
+only arises if you combine fields, we'll neatly side step it by capturing
+just a single field.
+</p><p>
+In the US we use a video standard known as NTSC-M. This standard has
+525.5 lines of resolution, the active video portion uses about 480 of
+these lines (the rest contain synchronization information and optionally
+some interesting digitally encoded data—more on that in a future
+article).
+</p><p>
+We'll capture just the 240 odd lines. Each line of video contains about
+640 pixels. Since we're throwing out half of the vertical information by
+capturing the odd field, we need to scale the horizontal samples by 1/2
+to maintain the original aspect ratio. This gives us a desired image size
+of 320 x 240 square pixels—a format called Common Interchange Format
+or CIF.
+</p><p>
+With this decision out of the way, it's time to start editing our
+HelloWorld sample code! Only one change is required in
+<code class="filename">HelloWorld.cpp</code> to
+set the window size to 320 x 240. <code class="filename">HelloWindow.cpp</code> is unchanged.
+</p><pre class="programlisting cpp">
+<code class="function">main</code>()
+{
+  <span class="type"><code class="classname">HelloApplication</code> *</span><code class="varname">myApplication</code>;
+  <code class="varname">myApplication</code> = new <code class="classname">HelloApplication</code>();
+  <code class="varname">myApplication</code>-&gt;<code class="methodname">Run</code>();
+  <code class="function">delete</code>(<code class="varname">myApplication</code>);
+  return(0);
+}
+
+<code class="classname">HelloApplication</code>::<code class="methodname">HelloApplication</code>()
+    : <code class="classname">BApplication</code>("application/x-vnd.Be-Video-sample1")
+{
+ <span class="type"><code class="classname">HelloWindow</code> *</span><code class="varname">aWindow</code>;
+ <span class="type"><code class="classname">HelloView</code> *</span><code class="varname">aView</code>;
+ <code class="classname">BRect</code> <code class="varname">aRect</code>;
+
+ <span class="comment">//Window size is 320 x 240</span>
+ <code class="varname">aRect</code>.<code class="methodname">Set</code>(50, 50, 50 + 320 - 1, 50 + 240 - 1);
+ <code class="varname">aWindow</code> = new <code class="classname">HelloWindow</code>(<code class="varname">aRect</code>);
+ <code class="varname">aRect</code>.<code class="methodname">OffsetTo</code>(<code class="constant">B_ORIGIN</code>);
+ <code class="varname">aView</code> = new <code class="classname">HelloView</code>(<code class="varname">aRect</code>, "HelloView");
+ <code class="varname">aWindow</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">aView</code>);
+ <code class="varname">aWindow</code>-&gt;<code class="methodname">Show</code>();
+}
+
+<code class="classname">HelloWindow</code>::<code class="methodname">HelloWindow</code>(<code class="classname">BRect</code> <code class="parameter">frame</code>)
+        : <code class="classname">BWindow</code>(<code class="parameter">frame</code>, "Video", <code class="constant">B_TITLED_WINDOW</code>,
+                  <code class="constant">B_NOT_RESIZABLE</code>)
+{
+}
+
+<span class="type">bool</span> <code class="classname">HelloWindow</code>::<code class="methodname">QuitRequested</code>()
+{
+  <code class="varname">be_app</code>-&gt;<code class="methodname">PostMessage</code>(<code class="constant">B_QUIT_REQUESTED</code>);
+  return <code class="constant">TRUE</code>;
+}
+</pre><p>
+The major changes to the program are in our implementation of
+<code class="filename">HelloView.cpp</code>. Let's start by taking a look at the view constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">HelloView</code>::<code class="methodname">HelloView</code>(<code class="classname">BRect</code> <code class="parameter">rect</code>, <span class="type">char *</span><code class="parameter">name</code>)
+    : <code class="classname">BView</code>(<code class="parameter">rect</code>, <code class="parameter">name</code>, <code class="constant">B_FOLLOW_ALL</code>, <code class="constant">B_WILL_DRAW</code>)
+{
+ <code class="varname">bt848</code> = new <code class="classname">Bt848Source</code>("/dev/video/bt848/0");
+
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetVideoFormat</code>(<code class="constant">BT848_NTSC_M</code>);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SelectVideoSource</code>(<code class="constant">BT848_TUNER</code>);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetTunerLocale</code>(<code class="constant">BT848_US_NTSC_CABLE_HRC</code>);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SelectChannel</code>(5);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SelectAudioSource</code>(<code class="constant">BT848_MUTE_AUDIO</code>);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetDecimation</code>(0);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetBrightness</code>(0);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetContrast</code>(0);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetHue</code>(0);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetSaturation</code>(0);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetColorFormat</code>(<code class="constant">BT848_RGB32</code>);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SetCaptureMode</code>(<code class="constant">BT848_SINGLE</code>);
+
+ <code class="varname">capture</code>.<code class="varname">buffer_size</code> = (((320 * 240 * 4) +
+                        <code class="constant">B_PAGE_SIZE</code>)/<code class="constant">B_PAGE_SIZE</code>) *
+                        <code class="constant">B_PAGE_SIZE</code>;
+ if (<code class="varname">bt848</code>-&gt;<code class="methodname">AllocateCaptureBuffer</code>(&amp;<code class="varname">capture</code>) &lt; <code class="constant">B_NO_ERROR</code>)
+ {
+   <code class="function">printf</code>("error allocating frame buffer\n");
+   exit(0);
+ }
+ <code class="varname">capture_buffer</code> = (<span class="type">unsigned char *</span>)<code class="varname">capture</code>.<code class="varname">buffer_address</code>;
+ <code class="varname">bm</code> = new <code class="classname">BBitmap</code>(<code class="classname">BRect</code>(0,0,320-1,240-1),<code class="constant">B_RGB_32_BIT</code>,
+                  <code class="constant">false</code>,<code class="constant">false</code>);
+}
+</pre><p>
+The first line in the constructor instantiates a <code class="classname">Bt848Source</code> object for
+the first video capture card in the machine
+(<code class="filename">/dev/video/bt848/0</code>).
+</p><p>
+We then set up the capture card to expect US style video input
+(<code class="constant">BT848_NTSC_M</code>). Developers outside the US will want to change this line
+to reflect their area of the world. Other options include:
+<code class="constant">BT848_PAL_BDGHI</code>, <code class="constant">BT848_NTSC_JAPAN</code>,
+<code class="constant">BT848_PAL_M</code>, <code class="constant">BT848_PAL_N</code>, and
+<code class="constant">BT848_SECAM</code>.
+</p><p>
+Since we'd like to capture an image from a TV broadcast, our next step is
+to configure the tuner appropriately. First we select the output of the
+tuner as our capture source (<code class="constant">BT848_TUNER</code>). If you want to capture from a
+video camera, you could change this to <code class="constant">BT848_COMPOSITE</code> or
+<code class="constant">BT848_SVIDEO</code>.
+</p><p>
+Here in Menlo Park we get our cable TV service from Cable Coop, who uses
+a somewhat unusual set of cable channel frequency allocations
+(<code class="constant">BT848_US_NTSC_CABLE_HRC</code>) which are offset from the more common cable
+frequencies (<code class="constant">BT848_US_NTSC_CABLE_IRC</code>) by 1.25Mhz. Those who are using an
+antenna should choose <code class="constant">BT848_US_NTSC_AIR</code>. Other supported choices include
+<code class="constant">BT848_PAL_BG_CABLE</code> and <code class="constant">BT848_PAL_BG_AIR</code>.
+</p><p>
+We then set the channel we'd like to capture from, make sure that the
+tuner audio is disabled during our capture, and set the brightness,
+contrast, hue and saturation controls to their center positions (zero --
+the range on all of the controls is from -100 to +100).
+</p><p>
+For this capture we're going to use the highest quality color format for
+our pixels: <code class="constant">BT848_RGB32</code>. This format stores each pixel in a 32 bit word
+with 8 bits allocated for R, G, and B (commonly referred to as ARGB, A is
+always set to 0). Other options include <code class="constant">BT848_RGB16</code>, <code class="constant">BT848_RGB15</code>,
+<code class="constant">BT848_RGB8</code>, and <code class="constant">BT848_Y8</code>—see
+<code class="filename">bt848_driver.h</code> for a description of how
+these formats are stored in memory. We then set up the driver to do a
+single frame capture (<code class="constant">BT848_SINGLE</code>) rather than repetitive captures
+(<code class="constant">BT848_CONTINUOUS</code>).
+</p><p>
+We finish up the view constructor by allocating storage for a capture
+frame buffer (320 x 240 x 4 bytes per pixel, rounded up to the next page
+boundry) and creating a bitmap to use for displaying the captured image.
+</p><p>
+We also add a destructor to deallocate the resources reserved in the
+constructor:
+</p><pre class="programlisting cpp">
+<code class="classname">HelloView</code>::<code class="methodname">~HelloView</code>()
+{
+ <code class="varname">bt848</code>-&gt;<code class="methodname">FreeCaptureBuffer</code>(&amp;<code class="varname">capture</code>);
+ delete <code class="varname">bt848</code>;
+ delete <code class="varname">bm</code>;
+}
+</pre><p>
+And now the five line meat of the program:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">AttachedToWindow</code>()
+{
+ <code class="varname">bt848</code>-&gt;<code class="methodname">ConfigureCapture</code>(320,240,<code class="varname">capture_buffer</code>,(<span class="type">void *</span>)0);
+ <code class="varname">bt848</code>-&gt;<code class="methodname">StartCapture</code>();
+ <code class="varname">bt848</code>-&gt;<code class="methodname">SyncWithTimeout</code>(250000);
+ <code class="function">memcpy_nc2c</code>(<code class="varname">bm</code>-&gt;<code class="methodname">Bits</code>(), <code class="varname">capture_buffer</code>, 320 * 240 * 4);
+}
+
+<span class="type">void</span> <code class="classname">HelloView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code>)
+{
+ <code class="methodname">DrawBitmap</code>(<code class="varname">bm</code>);
+}
+</pre><p>
+We start by specifying that we desire a 320 x 240 capture into our
+capture buffer, start the capture, and then patiently block till the
+capture is complete (well, we're patient for a quarter second, anyway).
+We copy the capture buffer to the bitmap and the view's draw function
+draws it. There you have it—one field of channel five in a window!
+</p><p>
+If you're still awake at this point you might be wondering:
+</p><ul class="itemizedlist"><li><p>
+Can't we just capture directly into the bitmap?
+</p></li><li><p>
+Why on earth are we using the <code class="classname">Bt848Source</code> object to allocate the
+capture buffer?
+</p></li></ul><p>
+The answer to the first question is a qualified yes. If we were to create
+the bitmap with the <code class="varname">needsContiguousMemory</code> flag set to <code class="constant">true</code>, we could
+indeed capture directly into the bitmap. This works well on BeBoxes,
+Intel motherboards, and some Macs. Unfortunately Macs based on the
+Tanzania architecture have a cache coherency problem that is tickled by
+PCI bus masters DMAing into main memory. We work around this problem by
+using the driver to allocate the buffer in non-cachable, locked,
+contiguous memory. This also explains why we use the special version of
+<code class="function">memcpy</code> (<code class="function">memcpy_nc2c</code>).
+</p><p>
+Full source to this and all of the sample programs in this series will be
+made available on our ftp site at:
+</p><p>
+ftp://ftp.be.com/pub/samples/preview/video/video_sample_1.zip
+</p><p>
+Next time we'll look at getting our captured images moving and resizable.
+Till then, some exercises for the reader:
+</p><p>
+Add user interface to:
+</p><ul class="itemizedlist"><li><p>
+do repeated captures via a button
+</p></li><li><p>
+set and store capture preferences
+</p></li><li><p>
+save the captured images using Datatypes
+</p></li><li><p>
+??? (surprise us!)
+</p></li></ul><p>
+Send me your efforts and I'll share the best of them: sakoman@be.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-39-2"></a>Be Engineering Insights: Chelsea 'n' Me</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">George</span> <span class="surname">Hoffman</span></span></div></div></div><p>
+Last weekend I went through transfer orientation at Stanford University.
+I believe there were some other students who went through orientation
+too, although it was difficult to find them among the roaming clumps of
+frightfully earnest media and literally hundreds of mafioso-like Secret
+Service agents.
+</p><p>
+It was kind of neat to have that extra symbol next to particular events
+in the orientation handbook that meant you shouldn't bring anything that
+could conceal a firearm. I amused myself by playing Spot the Undercover
+Bodyguards and offering to various People's Interest Correspondents to
+answer any questions they might have about the BeOS, but they seemed
+preoccupied with the First Babe. Oh, well, their loss.
+</p><p>
+Don't worry, I won't pull a William Adams and try to relate all this in
+some way to software development on the BeOS.
+</p><p>
+But speaking of the BeOS...
+</p><p>
+They threw a party for new students, and of course I, being a certified
+grade A par-tay animal, attended. The freak was flowing, the funk was
+being gotten out quite effectively, and Chelsea 'n' me were gettin' our
+boogie down to one of the infinite variations on The Techno Song, when it
+suddenly occurred to me:
+</p><p>
+"Golly! I bet people are curious about HFS, and writing external file
+systems for the BeOS."
+</p><p>
+Yes, as a member of the Be graphics team, one of my duties has been to
+write and debug the external HFS file system.
+</p><p>
+The code uses the core of Robert Leslie's hfsutils package to do most of
+the work involved in actually mucking with data on the disk. As this
+package is GNU copylefted, the code for the file system will be available
+soon after Preview Release 2 is in the mail for the general public to
+critique. hfsutils was very useful in this endeavor and Robert was
+helpful in confirming and fixing the few bugs that I found. Thanks
+Robert! Your Preview Release 2 CD will go out with everyone else's.
+</p><p>
+Although much of the work was handled by hfsutils, there was also a good
+amount of voodoo involved in getting HFS running reliably using our new
+File System Independent Layer (which, by the way, rocks steady). Some of
+this will be difficult (or downright impossible) to understand unless
+you've at least glanced over the file system protocol. Just a warning.
+</p><p>
+Parlez-vous filez-systemp d'independent-o?
+</p><p>
+(I started French I on Wednesday. How am I doin' so far? I'm so
+excited...I'll finally be hip to the Be secret lingo.)
+</p><p>
+The basis of the <acronym class="acronym" title="File System Independent Layer">FSIL</acronym>
+abstraction is the "vnode", a virtual inode, if you
+will. Vnodes are identified by a <span class="type">vnode_id</span>, which is a 64-bit identifier,
+scoped by volume. The way the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym>
+interacts with the file system is to
+request a vnode with a <span class="type">vnode_id</span> and perform operations on this vnode
+(<code class="function">open</code>, <code class="function">close</code>,
+<code class="function">read</code>, <code class="function">write</code>, <code class="function">stat</code>,
+etc.) A vnode can also be "walked,"
+which refers to finding a <span class="type">vnode_id</span> given a directory vnode and a filename.
+</p><p>
+This abstraction of having each vnode identified by a 64-bit vnode_id is
+nice, and <span class="type">vnode_id</span>s can often be mapped directly to block numbers or even
+disk addresses, making things very fast and easy to manage (although
+requiring a bit more error checking).
+</p><p>
+Under HFS, because the equivalents of inodes are actually stored as leaf
+nodes within one large B*Tree, blocks or disk addresses were out.
+Fortunately, each HFS node has a unique identifier, called a CNID
+(catalog node ID). Unfortunately, the catalog B*Tree is not actually
+keyed by these IDs, but rather by a combination of the parent directory's
+CNID and the name of the file.
+</p><p>
+In order to efficiently respond to requests from the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym> in the form
+they are given, CNIDs are used as <span class="type">vnode_id</span>s and a hash table is used to
+map a CNID to a parent CNID and filename. In this way, given only the
+CNID, a file can first be looked up in the hash table and then the parent
+CNID and filename can be used to find the actual node in the catalog
+B*Tree. This ends up being fairly efficient because the first time a file
+is referenced is usually during a read of its parent directory; at this
+time, the file is cached in the hash table.
+</p><p>
+Slowing down the system as much as possible
+</p><p>
+Much of the weirdness centered around getting HFS, which is designed to
+be absolutely single-threaded, to work with a
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym> like ours, which is
+designed to take full advantage of a multi-threaded file system like BFS.
+</p><p>
+Understand that when I refer to a file system as "multi-threaded" or
+"single-threaded" I'm simply referring to the layout on disk and the kind
+of access to which that layout lends itself.
+</p><p>
+HFS stores all meta-data about files (i.e. all data other than the actual
+file contents themselves) in two honking-big B*Trees, the catalog and
+extents-overflow files. It would be difficult, and not highly productive,
+to try to allow much concurrent read-write access to such a beast. BFS,
+on the other hand, has an independent B+Tree for each directory, a
+structure which encourages concurrent access.
+</p><p>
+In any case, because the <acronym class="acronym" title="File System Independent Layer">FSIL</acronym>
+is designed to allow concurrent access of
+this kind, there are some issues that you need to worry about when
+copping out (as I did) and serializing access to the file system.
+</p><p>
+Because there are parallel structures in the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym> and the file system
+itself for each vnode, and because the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym> makes sure that only one copy
+of a particular vnode is ever kept in memory, any time the file system
+needs to access a particular vnode, it must call into the kernel with
+<code class="function">get_vnode()</code>, which in turn may call the file system's
+own <code class="function">read_vnode</code>
+function, if the vnode is not already in memory.
+</p><p>
+Even though read_vnode is passed a flag which tells it whether it is
+being reentered in this way (to allow a more efficient locking strategy),
+a serialized file system _must_ unlock the volume before calling
+<code class="function">get_vnode()</code>. Not doing so can cause a deadlock. The reason for this is
+somewhat esoteric; basically, another thread can attempt to read this
+vnode non-reenterantly (is that a word?) after the volume has been locked
+and so block on the volume lock. In the meantime, out in the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym>, the
+vnode has been allocated but marked busy. Now you call <code class="function">get_vnode</code> (with
+the volume locked, because you didn't listen to me) and the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym> waits
+forever for the vnode in question to become unbusy.
+</p><p>
+Now, it's easy enough for me to say to unlock the volume before calling
+<code class="function">get_vnode</code>, but there are some cases when you absolutely need to know if a
+file exists and be sure that this knowledge is consistent with the state
+of the disk; furthermore, if the file does exist, you need its vnode.
+</p><p>
+Take the example of renaming a file. If the location to which you are
+attempting to rename the target file is occupied, you need to delete the
+old file first. Simply deleting it on disk won't work, because the
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym>
+might already have it in memory. But if we unlock the volume, call
+<code class="function">get_vnode()</code> and then re-lock, we run the risk of the file having been
+created between the attempted read of the vnode and re-locking the volume.
+</p><p>
+The answer is to enter a tight loop in which you unlock the volume, call
+<code class="function">get_vnode()</code>, and re-lock. If you retrieved a vnode, then great! The
+<acronym class="acronym" title="File System Independent Layer">FSIL</acronym>
+will make sure it stays around until you call <code class="function">put_vnode()</code> to release it;
+you are guaranteed a consistent state. However, if no vnode is returned,
+the file may have been created since you checked but before you locked
+again. Therefore, you must do another lookup, while locked, and ensure
+that there is in fact no such file on disk. If there is, your state is
+inconsistent, so repeat the loop. In the vast majority of cases, this
+loop will never be executed more than once. Purists may cringe at the
+lack of guaranteed forward progress. It's not pretty, but it's the price
+of a clean, multithreading-friendly abstraction.
+</p><p>
+Pretending you're sophisticated
+</p><p>
+One of the fun parts about writing a BeOS external file system is fooling
+the system into thinking that you're cool. The file system protocol
+recognizes attributes (which are cool). Most file systems do not support
+attributes, but many have other extensive meta-data associated with files
+which can be mapped into attributes for many cool and even downright
+useful effects. HFS, for example, has a quaint node layout which
+hard-codes information about file placement, window size and position,
+and file type and handler information right alongside file length and
+block run data.
+</p><p>
+With the BeOS FSP, even cute little file systems like HFS can act
+bad-ass. The resource fork, of course, maps directly to an attribute. The
+file system also does some limited translations between well-known MIME
+types and their Mac OS 4-character file type equivalents, presenting the
+translations in the standard MIME type attribute, "BEOS:TYPE", and
+represents unknown types as a MIME type which can easily be translated
+back (a file of Mac OS type code "RULZ", for instance, will have a BeOS
+MIME type of "application/x-MacOS-RULZ"). The file creator and other
+interesting flags and meta-data are also represented as attributes.
+</p><p>
+In the BeOS, every file and directory can have a custom icon, presented
+in the dual attributes "BEOS:M:STD_ICON" and "BEOS:L:STD_ICON", which
+contain, respectively, the custom mini and large icons. Although the
+format of the desktop database of an HFS volume is private and subject to
+change, and thus no attempt is made to read from it, applications and
+other files with custom icons within their resource fork will have the
+icons extracted and these attributes "spoofed" for them as BeOS icons.
+Icon placement within directory windows and size and placement of those
+windows are also translated into Tracker-friendly attributes, the format
+of which will be "documented" in the HFS code.
+</p><p>
+Another advantage of this approach is that copying an HFS file from an
+HFS volume to another HFS volume, or even from HFS to BFS and back to a
+different HFS volume, should preserve the resource fork, type, creator,
+flags, and other meta-data associated with the file (given some implicit
+limitations associated with the desktop database not being modified).
+</p><p>
+Pretending I'm sophisticated
+</p><p>
+So anyway, have a blast writing those file systems! I've gotta go
+register for classes. Aside from French I, I'm thinking maybe I'll take a
+programming course and finally learn C. It'll be a big project to finally
+convert the app_server over from Logo, but the rewards should be great.
+Party on!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-39"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+[Webmaster's Note: William published a follow-up to this article in
+<a class="link" href="">Be Newsletter 2-#40</a>.
+In the follow-up he points out the flaws of the
+implementation in the article below. This follow-up should be read by
+anyone considering implementing what he's suggested below.]
+</p><p>
+So, since my bottom line has been spreading, I've recently taken up
+running again. Now one thing about running is that there is a lot of time
+to do mental exercises. What to do while you're pounding the pavement at
+6am? Think about programming the BeOS of course!
+</p><p>
+So you're sitting around doing multi-threaded programming and you are
+anxious to squeeze every little last ounce of performance out of your
+app. Of course your algorithms are perfect, so you look toward speeding
+up various system services. Your first victim, semaphores. Don't they go
+into kernel space and eat up a context switch and waste all sorts of evil
+time? No, not really, but if you are so inclined, you might seek a more
+light-weight locking mechanism.
+</p><p>
+Frequent readers of the Be Newsletter no doubt sat with rapt attention
+last year as the Benaphore was laid out in all its detail. The Benaphore
+is a faster semaphore in that it does a quick check to see if the heavy
+weight semaphore is actually needed, if it isn't, then skips the calls
+into the kernel, if it is, then you're no worse off than before.
+</p><p>
+A benaphore is pretty good, and it ultimately rests on a semaphore. There
+is another locking mechanism commonly used in kernel device driver code.
+That is, the spinlock. What's a spinlock? Well, it's basically a locking
+mechanism utilized in situations where you really aren't expecting to
+spend much time in a critical section of code. Typically, you are just
+changing the state of one or two variables and that's it. The lock blocks
+the locking process by wasting CPU cycles.
+</p><p>
+I created a little spinlock class in my bebits library because I like
+having this mechanism in higher level code than just the device driver.
+First I created a generic abstract base class that has the locking
+protocol than any general locking class can implement.
+</p><pre class="programlisting cpp">
+class <code class="classname">PBinaryLock</code>
+{
+  public:
+    virtual <span class="type">int</span> <code class="methodname">Lock</code>() = 0;
+    virtual <span class="type">int</span> <code class="methodname">Unlock</code>() = 0;
+};
+</pre><p>
+Then I created a concrete class
+</p><pre class="programlisting cpp">
+class <code class="classname">ASpinLock</code> : public <code class="classname">PBinaryLock</code>
+{
+  public:
+    <code class="methodname">ASpinLock</code>();
+    <span class="type">int</span> <code class="methodname">Lock</code>();
+    <span class="type">int</span> <code class="methodname">Unlock</code>();
+
+  private:
+    volatile <span class="type">long</span> <code class="methodname">fLockStatus</code>;
+};
+</pre><p>
+And here's the actual code.
+</p><pre class="programlisting cpp">
+<span class="type">long</span> <code class="function">test_and_set</code>(volatile <span class="type">long *</span><code class="parameter">addr</code>)
+{
+  <span class="type">long</span> <code class="varname">old_value</code>;
+  <code class="varname">old_value</code> = <code class="function">write_32_swap</code> (<code class="parameter">addr</code>, 1);
+  if (<code class="varname">old_value</code> == 0)
+    return 0;
+  return 1;
+}
+</pre><p>
+The <code class="function">test_and_set()</code> function is the crux of all locking mechanisms of this
+variety. It ideally implements an atomic operation which is necessary in
+any multithreaded, multiprocessor system. At the very least, you need to
+be able to check the value of a variable and set it in one fell swoop. If
+you can't guarantee this, then you would check the variable, and some
+other process may come in and check and change it before you're done.
+That <code class="function">write_32_swap()</code> function is the most important function in the BeOS
+kernel.
+</p><pre class="programlisting cpp">
+<code class="classname">ASpinLock</code>::<code class="methodname">ASpinLock</code>()
+  : <code class="varname">fLockStatus</code>(0)
+{}
+</pre><p>
+Here in the Lock call, we test the <code class="varname">fLocalStatus</code> variable. As long as it's
+1, indicating the lock is already held, we will continue looping doing
+nothing. As soon as whoever holds the lock calls <code class="methodname">Unlock()</code>, the variable
+will be set to 0, and we will grab it.
+</p><pre class="programlisting cpp">
+<span class="type">int</span> <code class="classname">ASpinLock</code>::<code class="methodname">Lock</code>()
+{
+  while (<code class="function">test_and_set</code>(&amp;<code class="varname">fLockStatus</code>) == 1)
+    ;
+  return 0;
+}
+
+<span class="type">int</span> <code class="classname">ASpinLock</code>::<code class="methodname">Unlock</code>()
+{
+  <span class="comment">// Release the lock by setting its value to</span>
+  <span class="comment">// 0 atomically. Assuming this does a flush</span>
+  <span class="comment">// of any caches so that other processors get</span>
+  <span class="comment">// the word.</span>
+  <span class="comment">// fLockStatus = 0;</span>
+
+  <code class="function">write_32_swap</code> (&amp;<code class="varname">fLockStatus</code>, 0);
+  return 0;
+}
+</pre><p>
+There you have it. A very simple spinlock class. The usage is simple. If
+you wanted some more automatic usage, you could implement a destructor
+that <code class="methodname">Unlock</code>s automatically:
+</p><pre class="programlisting cpp">
+<code class="function">somefunc</code>()
+{
+  <code class="classname">ASpinLock</code> <code class="varname">lock</code>;
+
+  <span class="comment">// critical section.</span>
+  <code class="varname">lock</code>.<code class="methodname">Lock</code>()
+
+  <span class="comment">// do critical stuff</span>
+
+  <code class="varname">lock</code>.<code class="methodname">Unlock</code>();
+}
+</pre><p>
+I personally use these simple locks to lock access to things like queues,
+lists, and other container structures. They're small, lightweight, and
+get the job done with a minimal amount of fuss, or system resource
+utilization. And in a machine with multiple CPUs, you don't mind wasting
+a few cycles here and there do you?
+</p><p>
+So, is it your algorithm, or is it the system services that need to be
+optimized? Well, here's one tool which will help you figure that out. Now
+you'll have something to think about when you're out on your run around
+the block.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-39"></a>Software On/Off the Web</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+From time to time, presenting to prospective investors, new hires,
+developers, reporters or even market research analysts, I get the frown,
+the Web marketing and distribution frown. Using poetic license, I
+sometimes describe the Web as a "superconductor" for the marketing
+message, the purchasing transaction, and the product itself. Others refer
+to a "friction-free" business model. The frown says: "Do you really
+believe BeOS developers can build a viable business using the Web as
+their sole conduit to customers?"
+</p><p>
+Of course I do. But rather than offer yet another profession of my faith,
+I'd like to turn to what others have been doing for a while—meaning
+they found a way to put food on the boardroom table on an iterative basis.
+</p><p>
+Before the Internet begot the Web, hardy BBS operators and Compuserve
+customers could download shareware, freeware or honorware. Try it, send
+me money if you really want to keep using it. From there, Compuserve
+evolved a more organized registration and payment structure, and
+companies such as Kagi Software collected after-the-fact shareware
+payments for loved and respected Macintosh utilities such as Peter Lewis'
+Anarchie.
+</p><p>
+Initially, with the Internet's reputation for being a hacker's nest, the
+fear of seeing one's credit card number fall into unscrupulous hands got
+in the way of commerce. There was more fear of the unknown than rational
+basis to such fear. After all, credit card issuers shoulder most if not
+all of the loss when a credit card number is stolen. Isn't a restaurant
+or the dumpster at the mall a better place to get paper receipts bearing
+the precious numbers? This isn't to say fraud, or fear of fraud, don't
+exist on the Web, but initial reticence has abated.
+</p><p>
+My own experience in buying software off the Web has been mostly
+positive. I'm still puzzled when people insist on sending me a floppy for
+a 31K utility (an alarm clock for a Palm Pilot) instead of letting me
+download it after I submit my Visa number, but this was done very quickly
+and courteously.
+</p><p>
+In retrospect, Eudora's transition from its heroic shareware origins has
+been very smooth. You can still download a very nice free version of
+Eudora and, now, you can buy and get Web delivery of the feature-expanded
+Eudora Pro version.
+</p><p>
+Qualcomm, being a bigger and better financed company, manages to get
+shelf space at Fry's, distributor sales, as well as sales from their own
+Web site. They charge full retail, letting retailers and distributors
+compete on price, leaving the final choice to the customer. This
+methodology also avoids the sometimes irritating feeling one gets when a
+product is advertised and one can't buy it. Regis McKenna has a
+wonderfully descriptive but unprintable name for the feeling, it has to
+do with spheres, electrons and one of the colors of the Be logo.
+</p><p>
+The most frequent mode of operation is ordering the product, downloading
+it on the spot and getting a password by e-mail minutes to hours after
+the purchase, once the credit-card number has been verified. The password
+is used to unlock the compressed archive, or during the installation
+process.
+</p><p>
+Speaking of frequency, a site such as http://www.windows95.com/ features
+mountains of Windows 95 products delivered electronically. And for the
+Palm Pilot, there is a ring of Web sites featuring software and
+accessories (start at http://www.usr.com/palm/) from which I purchased
+and downloaded a nice e-mail client and an Excel-compatible spreadsheet.
+I'd rather play spreadsheet than MineHunt. There is even a "lending
+library" from which you can download literary classics for reading during
+long flights, or meetings...
+</p><p>
+Seriously, selling software on the Net is no longer reserved for
+gearheads and obscure utilities. BeOS application developers don't have
+to be pioneers in all facets of their business, others have already
+blazed the Web commerce trail.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-38.html">Issue 2-38, September 24, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-40.html">Issue 2-40, October 8, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-38.html" title="Issue 2-38, September 24, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-40.html" title="Issue 2-40, October 8, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

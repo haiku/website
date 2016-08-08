@@ -1,0 +1,550 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="Ja">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<title>Art of BeOS Programming</title>
+	<link href="../css/format.css" rel="stylesheet" type="text/css">
+	<link href="../css/layout.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<div id="pagewidth">
+
+<div id="main">
+
+<br/>
+
+<h1>第11章 メールを送ろう</h1>
+<br/>
+
+これが最後の章です。本書では、主に一般的なアプリケーションを作るために必要なAPIについて解説してきました。中心となるApplication Kit、そしてInterface KitとSupport Kit。それから、ファイルにアクセスしてデータの保存や読み出しを行うのに使うStorage Kit。また、スレッドの生成と実行制御など、マイクロカーネルの機能を直接呼び出すためのKernel Kit。5章から10章まで、六つの章を使って解説を行いました。これまでの説明を読んで、章末の練習問題の答えも大体分かった人は、もうBeOSプログラミングの上級者です。お願いですから僕にコーチして下さい。<br/>
+
+<br/>
+
+・・・でも、まだ扱っていないAPIはたくさん残ってます。Kitごとに見てみても、Translation KitにNetwork Kit、それからMail Kit。Game KitとMedia Kitは楽しそうですね。OpenGLを使った3Dプログラミングも、本書では扱っていません。さらに、BeOSのためのデバイスドライバ開発なんてのもあるんです。何てこったい!<br/>
+
+<br/>
+
+やれやれ。この章では、残っているAPIの中からMail KitとNetwork Kitをとりあげることにしました。それほど使い方の難しいKitではありませんし、サンプルアプリケーションも簡単なもので済んだからです。「どんなサンプルを使ってるんだ。」ですって?それは、本文の解説を読んでみて下さい。では、最後の章を始めます。<br/>
+
+<br/>
+
+この章では、ネットワーク機能を利用したプログラミングの例として、メールの送信を行うアプリケーションのサンプルを示します。つまり、主な題材として以下のものをとりあげます。<br/>
+
+<br/>
+
+ ◇ソケットAPIを使ってメールを送る<br/>
+
+ ◇BeOSのMail Kitを利用してメールを送る<br/>
+
+ ◇ファイルを添付してメールを送る<br/>
+
+<br/>
+
+BeOSのAPIが提供しているクラスのうち、以上の題材をプログラミングするために利用するのは、実は一つしかありません。<br/>
+
+<br/>
+
+ ●BMailMessage(Mail Kit)<br/>
+
+<br/>
+
+したがって、クラス階層図は示しません。ただし、BMailMessageクラスの他に、C言語の手続きとして提供されているAPIを利用します。<br/>
+
+<br/>
+
+プログラミングの説明に使うサンプルアプリケーションは、前の章で作ったテキストエディタ(MemoApp)を改造したものです。改造点はごく小さなものですので、本章ではサンプルアプリケーションの構造について詳しく説明することはしません。このサンプルは、インターネットのメール送信プロトコル(SMTP)を使ってメールサーバと通信するバージョンと、BeOSのmail_daemonに送信を代行してもらうバージョンの二つがあります。両者を比べれば、BeOSのMail Kitを利用するとメールの送信処理が非常に簡単になることが分かるでしょう。<br/>
+
+<br/>
+
+<br/>
+<a name="11.1"></a>
+<h2>11.1&nbsp;&nbsp;ソケットだったら知ってるよ</h2>
+2.6節で述べたように、BeOSのNetwork KitではBSDソケット準拠のAPIを提供しています。ソケットについては、Unix系OSに限らずWindowsでも広く使われているAPIですから、知っている人も多いでしょう。ごく簡単にいうと、ソケットというのはネットワーク通信を行う場合に、データの入力や出力を行うインタフェースとなる口です。たとえば、メール送信を行うSMTPサーバと通信する場合は、以下の手順でソケットを作成してサーバと接続し、データを送ります。<br/>
+
+<br/>
+
+ 1.)ソケットを作成する。作成にはsocket()関数を使う。<br/>
+
+ 2.)サーバのアドレス情報を作成する。アドレス情報には、SMTPサーバのIPアドレスとSMTPのポート番号をセットする。<br/>
+
+ 3.)サーバと接続する。socket()が戻り値として返した「ソケットディスクリプタ」とサーバのアドレス情報を引数として、connect()を呼び出す。<br/>
+
+<br/>
+
+このようにしてサーバと接続したら、あとはソケットディスクリプタを引数としてデータの入出力手続きを呼び出し、サーバとの通信処理を実行します。ただし、ソケットに関してはBSD版との間に仕様の違う点があります。その違いを以下に示します。<br/>
+
+<br/>
+
+ ■BeOSでは、ソケットディスクリプタとファイルディスクリプタは違う<br/>
+
+  BSDソケットでは、socket()関数が返すソケットディスクリプタとは、ファイルディスクリプタと同じものです。したがって、いったんソケットを作ってサーバと接続してしまえば、後はファイルと同じように入出力操作を行うことが可能です。<br/>
+
+<br/>
+
+ ■BeOSでは、ソケットに対する入出力はrecv()とsend()で行う<br/>
+
+  BSDソケットでは、OS内部の働きにより、ソケットを使ったネットワーク通信とファイルに対する入出力とを同じ操作で行えます。つまり、ネットワークによるデータの受信と送信を行うのに、ファイルに対する入出力と同じ手続き、すなわちread()とwrite()を使うことができます。しかし、BeOSではソケットとファイルはOSによって区別されており、ソケットに対してread()とwrite()を使うことはできません。このため、ソケット専用に用意された、“recv()”と“sedn()”という手続きを使って受信と送信を行います。<br/>
+
+<br/>
+
+ ■BeOSでは、ソケットの接続解除と解放をclosesocket()で行う<br/>
+
+  BSDソケットでは、OSの働きによってソケットとファイルが共通化されています。したがって、通信相手との接続を解除してソケットを解放するのは、ファイルを閉じるのと同じclose()で行います。一方、BeOSでは両者が区別されていますので、ソケット専用に用意されれた“closesocket()”を使う必要があります。<br/>
+
+<br/>
+
+この違いにさえ気をつければ、あとはUnix系OSの場合と同じようにして、ソケットを使った通信処理をプログラミングできます。図11.1に、第10章の“MemoApp”を改造してメール送信機能を追加した、“MemoMailer”というサンプルのスクリーンショットを示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/10.01.jpg" alt="図 MemoMailerのスクリーンショット"/><div>図[10.1]  MemoMailerのスクリーンショット</div>
+</div>
+
+<br/>
+
+“MemoMailer”は、テキスト編集ウィンドウに入力したテキストを、指定した宛先にメール送信する機能を持っています(注11-1)。このサンプルのソースコードは紙面への掲載を省略しますが、付録のサンプルコード集には収録していますので、興味がある人は読んでみて下さい。ソケットディスクリプタに関する違いを除けば、Unix系OSの場合と同じようなプログラミングであるのが分かるでしょう。<br/>
+
+<br/>
+
+<div id="column">
+<a href="./column10.1.html" target="new"><span id="column_t">囲みコラム</span><br/>「ファイルを使った抽象化機能」
+</a></div>
+
+<span id="annotate"><dl><dt>(注)11-1</dt><dd>“MemoMailer”アプリケーションは、ごく基本的なメール送信機能しか持たないサンプルです。SMTPプロトコルのうち必須部分しか実装していませんし、また多バイト文字を送信するのに必要な、変換処理も行っていません。ですから、BeOSのソケットAPIを使ったサンプルとして見るだけにして下さい。</dd></dl></span>
+<br/>
+
+11.2Mail Kitはとっても便利<br/>
+
+次に、BeOSのMail Kitを使ってメール送信を行うサンプルを示します。このサンプルは、図10.1に示した“MemoMailer”の改良版です。最初のバージョンではテキストを送るだけでしたが、改良版ではファイルを添付してメールを送信できるように機能追加しています。図10.2が、改良版のスクリーンショットです。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/10.02.jpg" alt="図 Mail Kitを使って実装したMemoMailerのスクリーンショット"/><div>図[10.2]  Mail Kitを使って実装したMemoMailerのスクリーンショット</div>
+</div>
+
+<br/>
+
+<br/>
+<a name="11.2.1"></a>
+<h2>11.2.1&nbsp;&nbsp;Mail Kitの使い方</h2>
+MemoMailerについて説明する前に、それが利用しているMail Kitについて説明しておきます。Mail Kitでは、以下のAPIが提供されています。<br/>
+
+<br/>
+
+ ■BMailMessage<br/>
+
+  メールの送信処理に使うクラスです。送信メールを表わしたもので、非常にシンプルなものです。メールの送信先アドレスやサブジェクトなど、ヘッダ情報をセットするAddHeaderField()メソッドと、メール本文をセットするAddContent()メソッド、それから添付ファイルや添付データをセットするAddEnclosure()メソッドを持っており、これらを呼び出して送信メールを作ります。送信メールができあがったら、Send()メソッドを呼び出して送信します。<br/>
+
+<br/>
+
+ ■mail_daemonを呼び出す手続き<br/>
+
+  2.3節で述べたように、インターネットメールサーバと接続してメールの送受信を行うサーバモジュールです。BMailMessageクラスのSend()メソッドは、内部でmail_daemonを呼び出してメールの送信処理を依頼するものです。Mail Kitでは、mail_daemonを呼び出すための手続きも提供されています。提供されているのは、メール受信用のPOPアカウント情報とメール送信用のSMTPサーバ情報に対するアクセスを行う手続き、およびインターネットメールサーバと接続し、メールの送受信を実行させる手続きです。また、添付書類データの変換などに利用する、base-64方式の符号化および複合化手続きも提供されています。<br/>
+
+<br/>
+
+BMailMessageクラスを使えば、最初のバージョンのMemoMailerで行ったようなSMTPサーバとの通信処理を行わずに済ます。つまり、以下のような簡単な手順でメールを送信できるのです。<br/>
+
+<br/>
+
+ 1.)BMailMessageクラスのインスタンスを生成する。<br/>
+
+<br/>
+
+ 2.)メールのヘッダに付けるそれぞれのフィールドごとに、AddHeaerField()メソッドを呼び出して内容をセットする。<br/>
+
+<br/>
+
+ 3.)AddContent()メソッドを呼び出して、メールの本文をセットする。<br/>
+
+<br/>
+
+ 4.)添付書類を付ける場合には、AddEnclosure()メソッドを呼び出してセットする。<br/>
+
+<br/>
+
+ 5.)BMailMessageオブジェクトに送信メールの内容を全てセットしたら、Send()メソッドを呼び出して送信する。<br/>
+
+<br/>
+
+では、実際のプログラミングを見るためにサンプルアプリケーションの説明へ進みましょう。<br/>
+
+<br/>
+
+11.2.2MemoMailerのモジュール構成とソースコード<br/>
+
+まず、サンプルアプリケーション(MemoMailer)のモジュール構成を説明します。図11.3が、MemoMailerのモジュール構成です。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/11.03.jpg" alt="図 MemoMailerのモジュール構成"/><div>図[11.3]  MemoMailerのモジュール構成</div>
+</div>
+
+<br/>
+
+図に示したクラスのうち、MemoMailerで中心的な役割を果たすのがMailWindowとMailSenderクラスです。以下に、この二つについて述べます。<br/>
+
+<br/>
+
+ ■MailWindow<br/>
+
+  送信メール情報を入力するためのウィンドウクラスです。MemoMailerのウィンドウで“Mail”メニューから“Send...”を選択すると、このウィンドウが開かれます。このウィンドウで送信先アドレスと添付書類をセットし、“Send”ボタンをクリックすれば、次に述べるMailSenderクラスの働きによってメールの送信処理が行われます。<br/>
+
+<br/>
+
+ ■MailSender<br/>
+
+  メールの送信処理を行うクラスです。内部にBMailMessageオブジェクトを持ち、そのメソッドを呼び出して実際の処理を行うだけのクラスです。11.1節でしたMemoMailerの最初のバージョンでは、このクラスはBMailMessageの代わりに“MySMTPClient”というクラスを使っています。内部の実装が変わっても、このクラスを使う側から見ると違いがないようにするために設けた、いわゆるラッパー(wrapper)クラスです。<br/>
+
+<br/>
+
+リスト11.1と11.2に、MailSenderクラスのソースを示します。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト11.1] MailSender.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _MAIL_SENDER_H_
+<b><font color="#000080">#define</font></b> _MAIL_SENDER_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;app/Invoker.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	BMailMessage<font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * MailSenderクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> MailSender <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BInvoker <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">MailSender</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">,</font> BHandler<font color="#990000">*</font> handler<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">MailSender</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">Init</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メール送信</font></i>
+    <font color="#009900">void</font>  <b><font color="#000000">SetHeader</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inToAddr<font color="#990000">,</font>
+            <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> inFromAddr </font></i><i><font color="#9A1900">*/</font></i><font color="#990000">,</font> <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inSubject<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>  <b><font color="#000000">SetContent</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inBodyText<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>  <b><font color="#000000">AddEnclosure</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> entry_ref<font color="#990000">&amp;</font> inRef<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>  <b><font color="#000000">Send</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 送信動作の制御</font></i>
+    <font color="#009900">bool</font>  <b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">bool</font>  <b><font color="#000000">Cancel</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <b><font color="#0000FF">static</font></b> int32	<b><font color="#000000">ExecSend</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">*</font> data<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> <font color="#009900">bool</font>		<b><font color="#000000">CheckMailDaemon</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    BMailMessage<font color="#990000">*</font> fMailObj<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メールオブジェクト </font></i><i><font color="#9A1900">*/</font></i>
+    thread_id     fThread<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 送信スレッド </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _MAIL_SENDER_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト11.2] MailSender.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#include</font></b> <font color="#FF0000">"MailSender.h"</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">"KGUtility/kgAlert.h"</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">"KGUtility/kgDebug.h"</font>
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;mail/E-mail.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 文字列定数 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kSendingNowMsg<font color="#990000">[</font><font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">"Do you abort the session?"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kNoDaemonMsg<font color="#990000">[</font><font color="#990000">]</font>   <font color="#990000">=</font> <font color="#FF0000">"mail_daemon is not running.\n"</font>
+    <font color="#FF0000">"Would you like to launch it?"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kMailDaemonSig<font color="#990000">[</font><font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">"application/x-vnd.Be-POST"</font><font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * MailSenderクラスの非公開メソッド</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+int32
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">ExecSend </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">*</font> data<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t    sts<font color="#990000">;</font>
+    MailSender<font color="#990000">*</font> theObj <font color="#990000">=</font> <font color="#990000">(</font>MailSender<font color="#990000">*</font><font color="#990000">)</font>data<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> mail_daemonが動いているかチェック </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> <b><font color="#000000">CheckMailDaemon</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fThread <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>
+        <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 起動できない </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メールの送信を実行 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fMailObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Send</font></b><font color="#990000">(</font><b><font color="#0000FF">true</font></b><font color="#990000">,</font> <b><font color="#0000FF">false</font></b><font color="#990000">)</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> すぐに送信 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 完了通知 </font></i><i><font color="#9A1900">*/</font></i>
+    theObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Invoke</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fThread <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 自身の終了を記録 </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MailSender::ExecSend"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    theObj<font color="#990000">-</font><font color="#990000">&gt;</font>fThread <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 自身の終了を記録 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">bool</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">CheckMailDaemon </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <font color="#009900">bool</font>      isRunning <font color="#990000">=</font> <b><font color="#0000FF">false</font></b><font color="#990000">;</font>
+    status_t  sts<font color="#990000">;</font>
+    app_info  theAppInfo<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> mail_daemonの動作状態を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetAppInfo</font></b><font color="#990000">(</font>kMailDaemonSig<font color="#990000">,</font> <font color="#990000">&amp;</font>theAppInfo<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        isRunning <font color="#990000">=</font> <b><font color="#0000FF">true</font></b><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 動いていなければユーザに確認して起動 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font>isRunning <font color="#990000">&amp;</font><font color="#990000">&amp;</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGConfirm</font></b><font color="#990000">(</font>kNoDaemonMsg<font color="#990000">)</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Launch</font></b><font color="#990000">(</font>kMailDaemonSig<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+            <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+        isRunning <font color="#990000">=</font> <b><font color="#0000FF">true</font></b><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> isRunning<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MailSender::CheckMailDaemon"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> <b><font color="#0000FF">false</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> MailSenderクラスの公開メソッド </font></i><i><font color="#9A1900">*/</font></i>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 初期化と解放; MailSender</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MailSender </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">,</font> BHandler<font color="#990000">*</font> handler<font color="#990000">)</font>
+    <font color="#990000">:</font> <b><font color="#000000">BInvoker</font></b><font color="#990000">(</font>message<font color="#990000">,</font> handler<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    fMailObj <font color="#990000">=</font> NULL<font color="#990000">;</font>
+    fThread  <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Init</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+MailSender<font color="#990000">:</font><font color="#990000">:</font><font color="#990000">~</font><b><font color="#000000">MailSender </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> スレッドが生きていたら強制終了 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>fThread <font color="#990000">!</font><font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">)</font>
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">kill_thread</font></b><font color="#990000">(</font>fThread<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">delete</font></b> fMailObj<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Init </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メールオブジェクトを生成し直す </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">delete</font></b> fMailObj<font color="#990000">;</font>
+    fMailObj <font color="#990000">=</font> <b><font color="#0000FF">new</font></b> <b><font color="#000000">BMailMessage</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * メール送信; MailSender</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">SetHeader </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inToAddr<font color="#990000">,</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> inFromAddr </font></i><i><font color="#9A1900">*/</font></i><font color="#990000">,</font> <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inSubject<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>inToAddr  <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>inSubject <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    status_t	sts<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> Toアドレスをセット</font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fMailObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddHeaderField</font></b><font color="#990000">(</font>B_MAIL_TO<font color="#990000">,</font> inToAddr<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> Subjectをセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fMailObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddHeaderField</font></b><font color="#990000">(</font>B_MAIL_SUBJECT<font color="#990000">,</font> inSubject<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MailSender::SetHeader"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">SetContent </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font> inBodyText<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>inBodyText <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    status_t	sts<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メール本文をセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fMailObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddContent</font></b><font color="#990000">(</font>inBodyText<font color="#990000">,</font> <b><font color="#000000">strlen</font></b><font color="#990000">(</font>inBodyText<font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MailSender::SetContent"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">AddEnclosure </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> entry_ref<font color="#990000">&amp;</font> inRef<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    status_t  sts<font color="#990000">;</font>
+    entry_ref copiedRef <font color="#990000">=</font> inRef<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 添付書類をセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fMailObj<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddEnclosure</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>copiedRef<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MailSender::AddEnclosure"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Send </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font><font color="#990000">!</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    status_t	sts<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 送信処理用のスレッドを生成して起動 </font></i><i><font color="#9A1900">*/</font></i>
+    fThread <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">spawn_thread</font></b><font color="#990000">(</font>
+        ExecSend<font color="#990000">,</font> <font color="#FF0000">"sender"</font><font color="#990000">,</font> B_LOW_PRIORITY<font color="#990000">,</font> <b><font color="#0000FF">this</font></b>
+    <font color="#990000">)</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">resume_thread</font></b><font color="#990000">(</font>fThread<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MailSender::Send"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 送信動作の制御; MailSender</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">bool</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">IsSending </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">return</font></b> <font color="#990000">(</font>fThread <font color="#990000">!</font><font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">)</font><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">bool</font>
+MailSender<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Cancel </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <font color="#009900">bool</font>	isCanceled <font color="#990000">=</font> <b><font color="#0000FF">true</font></b><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 送信中なら、ユーザに確認してスレッドを強制終了 </font></i><i><font color="#9A1900">*/</font></i>	
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">IsSending</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGConfirm</font></b><font color="#990000">(</font>kSendingNowMsg<font color="#990000">)</font><font color="#990000">)</font>
+            isCanceled <font color="#990000">=</font> <b><font color="#0000FF">false</font></b><font color="#990000">;</font>
+        <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>
+            <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">kill_thread</font></b><font color="#990000">(</font>fThread<font color="#990000">)</font><font color="#990000">;</font>
+            fThread <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> isCanceled<font color="#990000">;</font>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 注意:ここではkill_thread()を使って強制終了しているが、本当はそうす</font></i>
+<i><font color="#9A1900"> *    べきではない。Mail Kitの呼び出しを強制終了することによって、</font></i>
+<i><font color="#9A1900"> *    mail_daemonや、さらにはnet_serverをクラッシュさせてしまう可能性</font></i>
+<i><font color="#9A1900"> *    すらあるからである。('98. 5/16, </font></i><u><font color="#0000FF">koga@ftgun.co.jp</font></u><i><font color="#9A1900">)</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+MailSenderで行っている処理は簡単なものですから、ソースコードの内容については特に説明しません。また、残りのクラスのソースも付録のサンプルコード集に収録していますので、興味がある人は取り出して読んでみて下さい。<br/>
+
+<br/>
+
+<br/>
+<a name="11.3"></a>
+<h2>11.3&nbsp;&nbsp;まとめと練習問題</h2>
+この章では、最最初の挙げた題材をプログラミングするために、次のような解決手段を用いました:<br/>
+
+<br/>
+
+ ■ソケットAPIを使ってメールを送る<br/>
+
+  →SMTPサーバと接続し、RFCに記載されたプロトコルに従って通信する。<br/>
+
+<br/>
+
+ ■BeOSのMail Kitを利用してメールを送る<br/>
+
+  →BMailMessageクラスのインスタンスを生成し、AddHeaderField()メソッドでメールのヘッダ情報をセットする。それからAddContent()メソッドで本文をセットし、Send()メソッドを呼び出して送信する。<br/>
+
+<br/>
+
+ ■ファイルを添付してメールを送る<br/>
+
+  →BMailMessageクラスのAddEnclosure()メソッドに、添付ファイルのエントリ情報を渡す。<br/>
+
+<br/>
+
+なお、この章には練習問題を用意していません。少しばかり退屈で長かったこの本の説明も、これでようやく終わりです。これからは、あなたは自分自身の素敵なアプリケーションを作りあげていって下さい。その時に、この本が少しでも役に立てればよいと願っています。読んでしまったからといって捨てたりしないで下さいね。捨てるよりは、この本を友達にあげて下さい。もちろん、できるだけ仲の良い友達をお願いします!<br/>
+
+<br/>
+
+<br/>
+
+
+<hr>
+<address>
+Art of BeOS Programming<br/>
+koga@stprec.co.jp
+</address>
+
+
+</div><!-- End of main -->
+
+</div><!-- End of pagewidth -->
+
+</body>
+
+</html>
+

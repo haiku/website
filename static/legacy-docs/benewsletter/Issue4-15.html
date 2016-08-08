@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-14.html" title="Issue 4-14, April 7, 1999" /><link rel="next" href="Issue4-16.html" title="Issue 4-16, April 21, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-14.html" title="Issue 4-14, April 7, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-16.html" title="Issue 4-16, April 21, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-14.html">Issue 4-14, April 7, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-16.html">Issue 4-16, April 21, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-15"></a>Issue 4-15, April 14, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-15"></a>Be Engineering Insights: Driver Settings</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Arve</span> <span class="surname">Hjønnevåg</span></span></div></div></div><p>
+BeOS drivers are allowed to open files, but there are a few reasons why
+you don't want to do this to read settings. For one thing, if your driver
+is loaded before the file system, you can't open your settings file. If
+the boot volume's disk driver needs information from the settings file
+before it can access the disk, just opening a file won't work. Also,
+parsing settings files can be complicated by corrupt files, and a crash
+in driver code is fatal.
+</p><p>
+The next BeOS release will have an API for drivers and kernel modules to
+get settings. The API includes easy access to Boolean and string
+settings, and is available for all drivers and modules. For complex
+settings, a call is provided that returns the settings as a tree of
+parameters and values. The boot loader reads the settings files from the
+selected boot volume and passes them to the kernel for use by drivers.
+The boot loader also lets the user append settings at boot time. A line
+of the form "filename:parameters" in the advanced safemode menu will add
+"parameters" to the end of the specified settings file. This can be used
+to change debugging information, and to test different options on
+hardware where the driver doesn't work. For beta testers, all this should
+already work in 4.1b3.
+</p><p>
+The functions are defined as follows:
+</p><pre class="programlisting c">
+<span class="type">void*</span> <code class="function">load_driver_settings</code>(<span class="type">const char *</span><code class="parameter">drivername</code>);
+
+<span class="type">status_t</span> <code class="function">unload_driver_settings</code>(<span class="type">void *</span><code class="parameter">handle</code>);
+
+<span class="type">const char*</span> <code class="function">get_driver_parameter</code>(<span class="type">void*</span> <code class="parameter">handle</code>,
+                                 <span class="type">const char*</span> <code class="parameter">keyname</code>,
+                                 <span class="type">const char*</span> <code class="parameter">unknownvalue</code>,
+                                 <span class="type">const char*</span> <code class="parameter">noargvalue</code>);
+
+<span class="type">bool</span> <code class="function">get_driver_boolean_parameter</code>(<span class="type">void*</span> <code class="parameter">handle</code>,
+                                  <span class="type">const char*</span> <code class="parameter">keyname</code>,
+                                  <span class="type">bool</span> <code class="parameter">unknownvalue</code>,
+                                  <span class="type">bool</span> <code class="parameter">noargvalue</code>);
+
+<span class="type">const driver_settings*</span> <code class="function">get_driver_settings</code>(<span class="type">void*</span> <code class="parameter">handle</code>);
+</pre><ul class="itemizedlist"><li><p>
+<code class="parameter">drivername</code> is the name of the settings file and should match the
+name of the driver.
+</p></li><li><p>
+<code class="parameter">handle</code> is the handle returned from load driver settings.
+</p></li><li><p>
+<code class="parameter">keyname</code> is the parameter name to search for in the file.
+</p></li><li><p>
+<code class="parameter">unknownvalue</code> is the value to return if the key is not found.
+</p></li><li><p>
+<code class="parameter">noargvalue</code> is the value to return if the key is found but no value
+is specified.
+</p></li></ul><p>
+A driver calls <code class="function">load_driver_settings()</code> with the name of
+the settings file as the argument.
+</p><pre class="programlisting c">
+<code class="varname">settingshandle</code> = <code class="function">load_driver_settings</code>(<code class="varname">drivername</code>);
+</pre><p>
+This returns a handle that is
+passed to the other driver settings functions. The driver can look for
+specific parameters by calling <code class="function">get_driver_parameter()</code>
+and <code class="function">get_driver_boolean_parameter()</code>, or it can get a
+pointer to the parsed settings from
+<code class="function">get_driver_settings()</code>. When the settings have been
+processed, <code class="function">unload_driver_settings()</code> will free the
+resources.
+</p><p>
+Let's look a simple example first. A driver "sample1" has one
+setting, "foo", that can be <code class="constant">true</code> or
+<code class="constant">false</code>. To specify the value of "foo", a line
+of form "foo value" is placed in the settings file. If there is
+no entry for "foo" in the file, the default is
+<code class="constant">false</code>; if there is an entry "foo" but no
+value is specified, we assume the value is <code class="constant">true</code>. The
+code for our example looks like this:
+</p><pre class="programlisting c">
+<span class="type">void *</span><code class="varname">settingshandle</code>;
+<span class="type">bool</span> <code class="varname">foo</code>;
+<code class="varname">settingshandle</code> = <code class="function">load_driver_settings</code>("sample1");
+
+<code class="varname">foo</code> = <code class="function">get_driver_boolean_parameter</code>(<code class="varname">settingshandle</code>, "foo",
+                                   <code class="constant">false</code>, <code class="constant">true</code>);
+
+<code class="function">unload_driver_settings</code>(<code class="varname">settingshandle</code>);
+</pre><p>
+Now let's look at how this works. If there is no settings file named
+"sample1" in
+<code class="filename">~/config/settings/kernel/drivers/</code>, load driver settings will
+return <code class="constant">NULL</code>. Since we pass <code class="constant">NULL</code> to
+<code class="function">get_driver_boolean_parameter()</code> it will
+return the value we specified for no entry: <code class="constant">false</code>. "foo" will therefore
+be <code class="constant">false</code>.
+</p><p>
+If the file exists, but doesn't contain an entry "foo", the
+result is the same. In this case, we get a valid handle and
+<code class="function">get_driver_boolean_parameter()</code> will look for a
+"foo" parameter in the file. Since the file doesn't contain
+"foo", it returns <code class="constant">false</code> as requested.
+</p><p>
+If the file contains one line starting with "foo", the second
+word in this line is used as the value. If no value is specified,
+<code class="function">get_driver_boolean_parameter()</code> will return the last
+argument passed. If a value is specified and is one of the strings
+"1", "true", "yes", "on",
+"enable", or "enabled", <code class="constant">true</code> will
+be returned. If the value is "0", "false",
+"no", "off", "disable", or
+"disabled", <code class="constant">false</code> is returned. If the value
+doesn't match any of these strings it is treated the same as if no entry
+was found; in this case, <code class="constant">false</code>.
+</p><p>
+If more than one line in the file starts with "foo", the last one is
+used. This allows the user to override settings from the boot loader.
+</p><p>
+Another simple case is when a driver has a string setting.
+</p><pre class="programlisting c">
+<span class="type">void *</span><code class="varname">settingshandle</code>;
+<span class="type">const char *</span><code class="varname">string</code>;
+
+<code class="varname">settingshandle</code> = <code class="function">load_driver_settings</code>("sample1");
+
+<code class="varname">string</code> = <code class="function">get_driver_parameter</code>(<code class="varname">settingshandle</code>, "string",
+                              <code class="constant">NULL</code>, "default");
+
+<code class="function">unload_driver_settings</code>(<code class="varname">settingshandle</code>);
+</pre><p>
+This works the same way as <code class="function">get_driver_boolean_parameter()</code>, except that the
+string value of string is returned instead of the logical value. If the
+file doesn't exist, or exists but has no line starting with "string",
+string will be <code class="constant">NULL</code>. If the last line starting with "string" has no
+values, string will be "default". If string has a value, it is returned
+as a string. Note that only one value is returned. If more than one value
+is needed for a key, use <code class="function">get_driver_settings()</code> and search for your key.
+</p><p>
+For drivers that need complex settings, the <code class="function">get_driver_settings()</code> will
+return the settings file as a tree. This tree allows a parameter to have
+multiple values and subparameters.
+</p><p>
+The following structure holds the root of the tree.
+</p><pre class="programlisting c">
+typedef <span class="type">struct driver_settings</span> {
+    <span class="type">int</span> <code class="varname">parameter_count</code>;
+    <span class="type">struct driver_parameter *</span><code class="varname">parameters</code>;
+} <span class="type">driver_settings</span>;
+</pre><p>
+Each parameter is of the form:
+</p><pre class="programlisting c">
+typedef <span class="type">struct driver_parameter</span> {
+    <span class="type">char *</span><code class="varname">name</code>;
+    <span class="type">int</span> <code class="varname">value_count</code>;
+    <span class="type">char **</span><code class="varname">values</code>;
+    <span class="type">int</span> <code class="varname">parameter_count</code>;
+    <span class="type">struct driver_parameter *</span><code class="varname">parameters</code>;
+} <span class="type">driver_parameter</span>;
+</pre><p>
+The settings file follows these rules:
+</p><ul class="itemizedlist"><li><p>
+The file consists of parameters and comments.
+</p></li><li><p>
+When a word starting with a '#' character is found, the rest of the
+line is treated as a comment.
+</p></li><li><p>
+A parameter can have values and subparameters. A parameter has the
+following form in the settings file:
+</p><pre class="screen">
+name [value]* [{
+[parameter]*
+}] ['\n',',']
+</pre><p>
+( [] optional part, []* optional repeated part )
+</p></li><li><p>
+Names and values may not contain spaces unless they are preceded by a
+'\' or enclosed in quotes.
+</p></li></ul><p>
+Here's an example that clarifies these points. For the file:
+</p><pre class="screen">
+device 0 {
+    attribute1 value
+    attribute2 value
+}
+device 1 {
+    attribute1 value
+}
+</pre><p>
+<code class="function">get_driver_settings()</code> will return a pointer to the following tree:
+</p><pre class="screen">
+driver settings = {
+  parameter count = 2
+  parameters = {
+    {
+      name = "device"
+      value count = 1
+      values = { "0" }
+      parameter count = 2
+      parameters = {
+        {
+          name = "attribute1"
+          value count = 1
+          values = "value"
+          parameter count = 0
+          parameters = NULL
+        },
+        {
+          name = "attribute2"
+          value count = 1
+          values = "value"
+          parameter count = 0
+          parameters = NULL
+        }
+      }
+    },
+    {
+      name = "device"
+      value count = 1
+      values = { "1" }
+      parameter count = 1
+      parameters = {
+        {
+          name = "attribute1"
+          value count = 1
+          values = "value"
+          parameter count = 0
+          parameters = NULL
+        }
+      }
+    }
+  }
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-15"></a>Developers' Workshop: All Hail the Mother Node!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+Our thanks to the developers who attended last weekend's BeDC. It was
+great to meet you and to pass on our Media Kit knowledge to you. We
+promised you some sample code RealSoonNow(tm) at the conference, so
+here's the first delivery.
+</p><p>
+In the Node Track session, we presented a new class—the <code class="classname">MotherNode</code> --
+as a work in progress for the next release. This class helps manage the
+events your node needs to handle. It's another virtual <code class="classname">BMediaNode</code>
+subclass, so you can mix it with all the other classes: <code class="classname">BBufferConsumer</code>,
+<code class="classname">BBufferProducer</code>, <code class="classname">BControllable</code>,
+<code class="classname">BFileInterface</code>, and <code class="classname">TimeSource</code>. Unlike
+these other classes, however, the <code class="classname">MotherNode</code> doesn't define any new
+services that your node must provide. Instead, it implements some basic
+node necessities for you.
+</p><p>
+In a nutshell, the <code class="classname">MotherNode</code> services the node's control port with its
+own thread. When <code class="classname">BMediaNode</code> messages come in, the
+<code class="classname">MotherNode</code> pushes
+events on to its <code class="classname">BTimedEventQueue</code>. In the
+main loop the <code class="classname">MotherNode</code> waits
+for new messages until it's time to handle a new event. Then it pops the
+event off the event queue and calls <code class="methodname">HandleEvent()</code> with it.
+</p><p>
+Subclasses of the <code class="classname">MotherNode</code> will implement
+<code class="methodname">MessageReceived()</code> and other
+time-related <code class="classname">BMediaNode</code> subclass hook functions (like
+<code class="methodname">BBufferConsumer::ProducerDataStatus()</code>) to push events onto the event queue.
+The subclass will also implement <code class="methodname">HandleEvent()</code> to do the actual work
+required to make sure the event is handled properly (i.e., the real work
+of the node).
+</p><p>
+You'll find the <code class="classname">MotherNode</code> class at
+</p><p>
+ftp://ftp.be.com/pub/samples/media_kit/MotherNode.zip
+</p><p>
+This code is only of use to people with access to the current beta CD.
+</p><p>
+Finally, it is certain that the <code class="classname">MotherNode</code>'s functionality will find its
+way into the final release under another name. However, the API should
+stay pretty similar, so only minor code changes will be needed.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Support4-15"></a>Technical Support and Your Bottom Line</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dave</span> <span class="surname">Brown</span></span></div></div></div><p>
+"I can't print."
+</p><p>
+These are words that strike fear in the hearts of many good men and women
+in call centers all over the world, including some who are reading this
+article right now. We are the knowledgeable and somewhat strained voices
+on the far end of "the help line." We need a vacation and a fresh look at
+humanity. We are tech support. Let's look at how the user got to us.
+</p><p>
+Some time in the past, your company—which consists of three developers
+respectively titled VP of Development 1, VP of Development 2, and King --
+encountered a situation they were not entirely prepared for. The company
+just released Product, the coolest thing on the block, and made its first
+sales. Finally! There is great rejoicing.
+</p><p>
+Then, John Q. Pedestrian, famous for not knowing the difference between
+WALK and DON'T WALK, decides to buy your product. He pays his money,
+takes home your software, and installs it. OK, so far. But then something
+fails to happen exactly how, when, where, or why John expected. He sends
+e-mail to your company:
+</p><div class="blockquote"><blockquote class="blockquote"><p>
+From:John Q. Pedestrian<br />
+To:King@Product.com
+</p><p>
+I can't print.
+</p></blockquote></div><p>
+The person who read the mail thinks, "What do you MEAN you can't print? I
+spent weeks, months on this! It works fine here! We proved it! All our
+testing works fine! What could possibly be wrong?"
+</p><p>
+Let me stop here and say that it's easy to blame the user. But remember,
+John is a real person with family, friends, loved ones, a mortgage, a
+driver's license *shudder*, and a job. John can balance a checkbook.
+Sometimes he does his own taxes. He's had some college education. He's
+not stupid. He may or may not know the available resources. He may not
+speak your language. He may or may not have good communication skills.
+He's stuck.
+</p><p>
+Your development team has suddenly become its own tech support. This is a
+problem. It has to figure out what the company's users need, as well as
+what they expect—and what the company expects of them. It must
+determine what resources are available to meet users' needs and how to
+deploy those resources.
+</p><p>
+As Be's Customer Technical Support (CTS) manager, figuring these things
+out is my job. I make sure you can find the answers you need, and that
+someone is there to supply the answers you can't find. And if other
+support people can't help you, I'm the answer guy of last resort. My
+experience for that role comes from having worked for the world's largest
+supplier of outsourced technical support, on a variety of subcontracts
+ranging from hardware and software to operating systems and appliances. I
+know my share and have all the funny stories to prove it.
+</p><p>
+If you're interested in some background on technical support, one of the
+best articles I've read was written for "MacWorld" magazine, by David
+Pogue. He spent a day with Apple's support group just after it had
+changed from free to fee-based support. Based on the kind of service
+people were getting for the fee charged, he concluded that "... [Apple]
+should charge twice that [amount]." (See
+http://macworld.zdnet.com/pages/october.98/Column.4493.html.
+</p><p>
+So, why is support a problem?
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id779549"></a>Needs, Wants and, Expectations</h3></div></div></div><p>
+What the user wants from a product is often unrealistic. For example,
+that the product should work immediately and unconditionally, right out
+of the box, without having to *gasp* read the manuals and instructions.
+And should something fail, the guy on the other end of the phone should
+be the one who wrote it, and can wave his magic wand and make it work
+while releasing daily free updates. He wants unlimited free support on a
+toll-free call. The developer wants people to buy the product and
+register it, so they can be solicited to buy Product updates, and leave
+the developer alone so he can write Product 2.0.
+</p><p>
+User expectations are a more realistic versions of wants: competent,
+bug-free software; a warm, skilled body at the other end of the support
+line; bug fixes as necessary; a route to request new features; and so on.
+These can be tuned up or down depending on the cost of the product and
+the size of the company.
+</p><p>
+Needs are an acceptable compromise between user wants and expectations,
+and developer resources.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id779575"></a>Determining the Needs of Your Users</h3></div></div></div><p>
+The easiest way to measure a company's support staffing needs is to see
+how long it takes to respond to each contact. If a company is a week
+behind on the support e-mail, or if it knows that users are getting busy
+signals or 20-minute hold times, it's time to get some help. To decide
+how to handles users' needs, let's look at common BeOS developer-sized
+situations.
+</p><p>
+Joe Developer runs the Small Shareware Group Co. Your company is you, or
+maybe you and a couple of friends. People want support for freeware; they
+don't generally expect it, and they're happy to get it. If you have a
+shareware or commercial product, you need at least one person responsible
+for responding to users. Here are some tips:
+</p><ul class="itemizedlist"><li><p>
+Set a target turnaround time for your responses, like 1-2 days.
+</p></li><li><p>
+Send an auto reply to let users know you got their mail and you'll
+get back to them within this time. The most damaging thing to your
+company is to have an e-mail disappear into the void unanswered. It
+happens, but do all you can to eliminate the possibility.
+</p></li><li><p>
+Notify users that you have an auto reply; if they don't get it, that
+means you didn't receive their mail.
+</p></li><li><p>
+Set up a separate e-mail account or alias for the support mail, so
+when someone goes on vacation or gets sick, another person can step in.
+</p></li><li><p>
+If you provide phone support, specify the hours.
+</p></li><li><p>
+Accustom people to contacting the support address rather than a
+specific person, since a specific person may change jobs within the
+company, or leave.
+</p></li></ul><p>
+Customers expect little when no money is involved, and are generally
+forgiving. Once you charge however, expectations shift. Customers expect
+support, updates, and other commercial software services, including
+daytime phone support, e-mail support, and FAQs on a web site. People
+want the ability to document requested features and report bugs. They
+want updates to cure bugs and possibly add features, but they don't
+usually expect them to come instantly.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id779658"></a>Mid-sized CommercialSoft</h3></div></div></div><p>
+This situation postulates a loosely defined group of developers, support,
+and operations people. Support technicians generally aren't the best paid
+group; they'll often take the next best thing on short notice, and burn
+out regularly, costing you time to find and train a new technician, time
+away from other work, etc. You should consider getting quotes from
+outsource support companies to see if it will better accommodate growth,
+both in your support team and in your development team. If Product 3.0
+takes off as you think it will, having a flexible support team in place
+can make all the difference. Ask for some estimates on outsourced
+support, so you can look at your current costs and make an informed
+choice.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id779669"></a>Supplying Users' Needs</h3></div></div></div><p>
+Once you've looked at where your needs and your customers' needs meet,
+you have the options of indirect and direct support to supply them.
+</p><p>
+Indirect support includes <acronym class="acronym">FAQ</acronym>s, tips, manuals, faxback lines, etc. These
+are directly available to the user, with no human contact required. This
+is cheap, takes little time to put together, and any number of people can
+use it at no additional cost to you. The more you spend here, the less
+your other costs will be. Some general tips:
+</p><ul class="itemizedlist"><li><p>
+A good, responsive manual and FAQ will attract people who want
+answers, and they'll look here before contacting a support person,
+which is expensive. Build and regularly update your FAQs based on the
+problems or questions you're most often contacted about.
+</p></li><li><p>
+Interactive troubleshooters or help files and symptom- to-problem
+charts can be very useful.
+</p></li><li><p>
+Track all your customer contacts. By looking at the reasons users
+call, you can use indirect support that will decrease the things you
+hear about most, cutting your biggest support costs.
+</p></li></ul><p>
+Direct support can be by e-mail or phone. Consider that an average 20
+minute phone call can cost about US $10-30; e-mail costs between 25% and
+50% of that amount. On average, a technician can respond to three times
+as much e-mail as phone calls. However, some people insist on using
+phones, or are too impatient for e-mail. Depending on your needs, you can
+decide what combination is best for your company. Miscommunications and
+slow interaction times in e-mail can be a problem, but questions that
+call for the same reply are much easier and cheaper for both the
+developer and the user via e-mail than on the phone.
+</p><p>
+Who does the support also affects costs. There are generally three
+possibilities here:
+</p><ul class="itemizedlist"><li><p>
+Development team. Currently most BeOS developers do this. It is the
+most costly—not in dollars but in resource consumption. Time spent
+dealing with customers takes away from time spent on development. It's
+a necessary cost, however, since the alternative ultimately costs the
+company more in public opinion.
+</p></li><li><p>
+In-house support. This is when a person/group inside the company is
+dedicated to handling customers. Many companies do this because it
+gives them tight control of information, quality, and staffing. This is
+a lot of work and is generally expensive. It's important that in-house
+support staff be both competent and dedicated, so that it's unnecessary
+to replace and train people often. The technicians are generally well
+paid and have quick access to the information they need. They stay with
+the company a long time and are generally happy, which is apparent to
+users. It's expensive if you have to constantly pay to train, hire, and
+fire technicians to accommodate the swings of more and less user
+contact, like updates versus the holidays.
+</p></li><li><p>
+Outsource support. In this case person/group outside the compan,
+handles tech support. This is convenient and can be inexpensive,
+especially when used in mass. For example, an in-house employee costs
+the company a given amount of money per day no matter how many people
+contact support. An outsource company that shares many resources with
+other companies (phone lines, Internet connections, etc.) can offer
+support at a discount, sometimes as much as 33% off. An outsource
+service can provide many types of staffing, including dedicated
+technicians, shared technicians (techs that answer many types of calls
+each day), and dedicated groups of flexible size.
+</p></li></ul><p>
+The most common is a dedicated group on a pay-per-contact price. In this
+situation, if there are a lot of questions in one month, the outsourcer
+moves more people in (and trains them) as needed. If the calls drop by
+50% the next month, the outsourcer moves people to other
+responsibilities, until they're needed again. This cuts costs
+considerably, though quality control and employee retention can still be
+problem areas.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id779764"></a>Making a Choice</h3></div></div></div><p>
+The best way to decide what you should do is by assessing your needs and
+their potential costs. Tech support providers will be glad to write a
+quote for you. If you're looking at in-house support, remember to include
+computers, benefits, training time, phone lines and charges, office
+space, etc. in the costs. If you have other questions, contact me and
+I'll try to answer them.
+</p><p>
+But to get back to John Q. Pedestrian, his printing problem was a
+proprietary software driven printer switchbox without BeOS equivalent
+software, and he can now print. He got his answer within two days, and
+he's happy as a clam. He disconnects the old 386 he stopped using and
+buys future updates of your product and mentions how cool your company is
+to his friends. Meanwhile, the technician sighs wearily and opens the
+next e-mail...
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-15"></a>After the BeDC</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I always feel nervous going to a developer conference, because we're
+going to meet the people who literally make us. It may be obvious but
+nonetheless bears repeating that an operating system has little or no
+value by itself. Applications determine its value—hence the vital role
+of software developers—and of events such as the BeDC. A developer
+conference is an opportunity to give a progress report on our work. We
+get vigorous feedback from people who are committed to the platform and,
+in return, we offer them information and suggestions on how they can make
+the best use of the APIs and development tools. And, of course, there are
+the T-shirts.
+</p><p>
+That's more or less the script we followed at last weekend's event. By
+all accounts, our opening act was a little flat—I know, I was part of
+it—but the main part, the Media Kit sessions, got the good reviews,
+much to our grateful delight. For this conference, we did some things
+differently: we charged admission; and we focused on the Media Kit,
+instead of addressing all aspects of the BeOS. We highlighted the Media
+Kit because it is the key to the most important application space --
+digital media—and it provides the tools to produce "tangible" (I
+should probably say visible and audible) proofs of BeOS advantages.
+</p><p>
+The result was a happy, productive conference. Several attendees made
+unsolicited comments about the usefulness of the session and the
+productive use of their time. I even got the same feedback from a Be
+engineer who's been immersed in other parts of our work. This is not to
+say that we won't have general purpose conferences in the future, but for
+the introduction of the Media Kit—the keystone of the BeOS edifice --
+we wanted to ensure that its concepts and facilities were treated with
+the attention its role in the BeOS architecture warrants.
+</p><p>
+At the beginning, I stated I was always nervous going to a developer's
+conference, but I should have added I always enjoy these events and come
+away more motivated than ever after meeting people who take our future in
+their own hands. My thanks to them and to the Be team for making this
+conference a success—and a great time for yours truly.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-14.html">Issue 4-14, April 7, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-16.html">Issue 4-16, April 21, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-14.html" title="Issue 4-14, April 7, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-16.html" title="Issue 4-16, April 21, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

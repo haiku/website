@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-24.html" title="Issue 1-24, May 22, 1996" /><link rel="next" href="Issue1-26.html" title="Issue 1-26, June 5, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-24.html" title="Issue 1-24, May 22, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-26.html" title="Issue 1-26, June 5, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-24.html">Issue 1-24, May 22, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-26.html">Issue 1-26, June 5, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-25"></a>Issue 1-25, May 29, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-25"></a>Be Engineering Insights: We Deliver</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Peter</span> <span class="surname">Potrebic</span></span></div></div></div><p>
+In a previous column (Issue 1-13), I wrote about the various ways to send
+data on the BeBox. In another column (Issue 1-4), I talked about the
+dangers of race conditions and deadlocks, problems inherent in a
+multithreaded OS. Now I'd like to bring these two topics together and
+talk about the differences between posting messages through <code class="classname">BLooper</code>'s
+<code class="methodname">PostMessage()</code>, and sending messages through
+<code class="classname">BMessenger</code>'s <code class="methodname">SendMessage()</code>.
+</p><p>
+Posting a message is simple. Given a pointer to a <code class="classname">BLooper</code> object, you
+simply invoke <code class="methodname">PostMessage()</code> upon that object, passing a
+<code class="classname">BMessage</code> object
+as an argument. A subtlety here is that this implies that you're holding
+onto a pointer: Most programmers remember learning about the dangers of
+pointers. Once you have a pointer to an object, you're tempted to do
+other things with that pointer, like dereference it to access a data
+member, or call some virtual function. Unless the code properly locks and
+unlocks the object, either of these actions can lead to an immediate,
+abrupt, and unpleasant suspension of further computation! (Check out the
+"Be Newsletter," Issue 1-4, for more details.)
+</p><p>
+An alternative is to use <code class="classname">BMessenger</code>'s <code class="methodname">SendMessage()</code> function. Prior to
+DR7, <code class="classname">BMessenger</code> objects could only refer to <code class="classname">BApplication</code> objects. In DR7,
+a <code class="classname">BMessenger</code> can refer to any <code class="classname">BHandler</code> (in other words, any object that
+can receive a message). This is an obvious boon to interapplication
+communication and, interestingly enough, it also provides a new way to do
+intra-application messaging. Instead of saving a pointer to a <code class="classname">BHandler</code>,
+you can create a <code class="classname">BMessenger</code> that represents that object. Using
+<code class="methodname">SendMessage()</code> to communicate with a <code class="classname">BHandler</code> is completely safe. Plus,
+there are no pointers involved so the temptations are minimized.
+</p><p>
+Now let's consider "safe locking": The safe locking of pointers is pretty
+safe, but it does contain a hole. Suppose you have a pointer to a <code class="classname">BWindow</code>
+and you call <code class="methodname">Lock()</code>. <code class="methodname">Lock()</code>
+will return <code class="constant">FALSE</code> if the object no longer
+exists. Now suppose just before calling <code class="methodname">Lock()</code> the <code class="classname">BWindow</code> was destroyed
+and a new <code class="classname">BWindow</code> was created and, furthermore, suppose the new object is
+allocated at the same memory location as the old object. In this case
+<code class="methodname">Lock()</code> will return <code class="constant">TRUE</code>.
+The new window will be locked, even though, in
+the semantics of the code, the old window was the target of the <code class="methodname">Lock()</code>
+call. What happens after this is anyone's guess.
+</p><p>
+With <code class="classname">BMessenger</code>s this can't happen. A <code class="classname">BMessenger</code> to an object is unique
+for the life of the application. Memory addresses or pointers, on the
+other hand, can be recycled. This makes using <code class="classname">BMessenger</code>s and avoiding
+pointers the safest way to go. The style of coding that I'm suggesting
+might look something like this:
+</p><pre class="programlisting cpp">
+<code class="classname">TMyApp</code>::<code class="methodname">TMyApp</code>()
+{
+   <span class="type"><code class="classname">TMyWindow</code> *</span><code class="varname">w</code> = new <code class="classname">TMyWindow</code>(...);
+
+   <span class="comment">// Instead of saving the window pointer,</span>
+   <span class="comment">// you save a messenger to the window:</span>
+   <code class="varname">fWindowM</code> = <code class="classname">BMessenger</code>(<code class="varname">w</code>);
+
+   <code class="classname">TMainView</code> *<code class="varname">main_view</code> = new <code class="classname">TMainView</code>(...);
+
+   <span class="comment">// Similarly for the view:</span>
+   <code class="varname">fMainViewM</code> = <code class="classname">BMessenger</code>(<code class="varname">main_view</code>);
+
+   <code class="varname">w</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">main_view</code>);
+
+   ...
+}
+</pre><p>
+In the example the application object uses the <code class="classname">BMessenger</code>s to communicate
+with the <code class="classname">BWindow</code> and <code class="classname">BView</code>.
+If one of these objects (the <code class="classname">BWindow</code> or
+<code class="classname">BView</code>) is deleted, the corresponding
+<code class="classname">BMessenger</code> will report an error the
+next time it's used. In this way the holder of the messenger is safely
+informed of its cohort's demise.
+</p><p>
+Another benefit of <code class="classname">BMessenger</code>s is that they have built-in support for
+replies. If you post a message to another object in your application,
+there's no way that you can reply to that post. However, with every
+<code class="methodname">SendMessage</code> comes an automatic return address. So for every message
+that's sent, the receiver can do a <code class="methodname">SendReply()</code>. This can be a useful tool.
+</p><p>
+The downside to <code class="classname">BMessenger</code>s is that they're more expensive than pointers:
+A pointer is only 4 bytes, a <code class="classname">BMessenger</code> is 16.
+Also, <code class="methodname">PostMessage()</code> is
+currently faster than <code class="methodname">SendMessage()</code>. And of course, sending a message is
+significantly more expensive than simply accessing some data or calling a
+function. If some set of objects is tightly coupled, then using
+<code class="classname">BMessenger</code>s might not be the right solution given the performance penalty.
+</p><p>
+Here's another programming tip that makes use of the messaging system.
+We've received some feedback indicating that our framework forces
+frequent subclassing in order to extend functionality. I'm not denying
+that the framework is so oriented, but there are some nice ways to avoid
+this problem. One example is when one window (let's call it the "document
+window") wants to open a dialog box asking the user for some input. Let's
+say this dialog has two views: An input text field and a "Do It" button.
+</p><p>
+At first glance it seems like you have to subclass <code class="classname">BWindow</code> to process the
+message posted by the "Do It" button. However, there's another way that
+doesn't require any subclassing. The document window creates the dialog
+window and adds the two views. The document then calls
+<code class="methodname">BControl::SetTarget()</code> on the button, making itself the target of the
+button. Even though the button lives in the dialog box, the message it
+sends when clicked will go to the document window. Finally the dialog is
+displayed and the document window goes on its merry way. Now, when the
+user clicks the "Do It" button a message is sent to the document window.
+From this message the document can get the button, dialog, and any other
+information in the dialog. So once it extracts all necessary information,
+it tells the dialog to close. End of story. You get a nice little dialog
+without any subclassing (except, of course, for the document window
+itself, which must be a subclass of <code class="classname">BWindow</code>).
+</p><p>
+The <code class="methodname">SetTarget()</code> functions in <code class="classname">BControl</code>,
+<code class="classname">BMenuItem</code>, and <code class="classname">BListView</code> are very
+useful—give them a try.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-25"></a>Be Developer Profile: Infant Software</h2></div></div></div><p>
+From the day he first read about the BeBox, Sean Allen, partner and
+programmer at Infant Software, was hooked. “<span class="quote">I wrote to Be and asked if
+the $1,500 price tag was a typo—they said no. That price, that power,
+a built-in database, multithreaded, preemptive multitasking: Geek love!</span>”
+Sean thought it was rather fitting that his BeBox arrived on Valentine's
+Day.
+</p><p>
+“<span class="quote">With the right marketing, the BeBox can explode. I expect the machine to
+grab large chunks of market share over the next few years. It will gobble
+up the NeXT and Amiga camps, video and MIDI markets look ripe too, and it
+would make a killer DTP machine. Once people experience a BeBox and see
+the price, converts are easy.</span>”
+</p><p>
+Not only does Sean see market potential for the BeBox, Infant Software, a
+four-person company that develops custom CGIs (Common Gateway
+Interfaces), databases, and free/shareware, is betting its future on Be:
+“<span class="quote">We've decided to forgo our current platforms (Macintosh and UNIX) and be
+a Be-only company. We want to carve out our ground now and be there with
+one of the tractor application when the BeBox explodes.</span>”
+</p><p>
+Sean and his partners are working on a modular suite of Web tools, which
+use the <span class="trademark">Be OS</span>™ database to share information. Modules include a web
+server, a visitor tracker, an API for CGI-type work, and game modules.
+They plan to publish their messaging API so anyone can write a module
+that will work with their tools.
+</p><p>
+“<span class="quote">We believe everybody has the right to the basic tools to make their
+computers useful, so we'll make our core tools available for free. We'll
+only charge for add-ons, like the visitor tracker.</span>” They anticipate
+releasing the first tools in the first quarter of 1997, followed by
+additional modules, such as a software metering API, various distributed
+network applications (including games), and "agent" software.
+</p><p>
+Unlike other platforms he's developed for, Sean says, “<span class="quote">I feel like I
+really have a chance to put my stamp on the Be OS—to help shape it, to
+help it grow. Developers really matter to Be, and that's a refreshing
+change.</span>”
+</p><p>
+What's more, the BeBox is fun to program: The Be OS is 100 times easier
+to program than the Mac OS, 500 times easier than Windows, and 75 times
+easier than UNIX. That means shorter development times, better products,
+fewer bugs, and more time to dream, design, and build incredible software.
+</p><p>
+“<span class="quote">I am, quite simply, in love with this machine.</span>”
+</p><p>
+For more information on Infant Software, send e-mail to runt@inch.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-25"></a>Working at Be</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+We get many inquiries concerning employment opportunities at Be. With
+these inquiries come questions regarding the company's style and
+philosophy in such matters: What's it like working at a start-up such as
+Be? What sort of individuals are we looking for? We'll skip the usual
+meaningless platitudes: Honest, hard-working, creative, intelligent...
+(Of course we admire these qualities—but when was the last time you
+saw a resume that extolled the candidate's exemplary uncreativeness,
+sloth, and dishonesty?)
+</p><p>
+Let's proceed by comparison, then. In many large companies, the
+"product," at the work-a-day level, is broken down into "projects."
+Individual projects get sliced and diced into manageable components, and
+the components are parceled out to individuals according to their
+specialized training and experience. To coordinate the project
+components, you need project management; a premium is placed on
+management's ability to orchestrate, adjudicate, and focus the blindered
+energy that emanates from a line of wall-facing cubicles. A significant
+amount of time, money, and emotion are spent not in crafting the project
+itself, but in crafting the crafting of the project: In the careful
+placement of the walls between the compartments, and the minutiae of
+passing data over these walls. And this is just to mention the lowest
+level of management.
+</p><p>
+At Be, we hire people, not projects. Of course, we have certain tasks
+that we want to accomplish, and we have, at times, targeted prospective
+employees because of very specific talents. But, in general, we want
+individuals whose personalities and training make them comfortable with
+an environment where they're expected to grasp the whole concept, find a
+niche (or a canyon) that needs filling, and then start digging. We want
+to create an environment where the biggest chunk of any particular
+problem (be it engineering, marketing, manufacturing, finance...) resides
+inside a single human head. No turf wars, no miscommunication, and no
+layers of management.
+</p><p>
+This is an approach that only a small company can take—and if Be is
+going to win, we must take this approach in order to turn our size to our
+advantage. To the other guys, we look like ants; but from our
+perspective, they look like lumbering, graceless dinosaurs.
+</p><p>
+Another important trait that we expect in our employees is that they have
+a clear sense of the business purpose of their own actions. It's not
+enough that they think that they're providing a valuable service, or,
+worse, that they simply take marketing's word for it—they must know
+why it's important. In most cases, they should even know the names of the
+developers that their work will benefit most. At Be, "because marketing
+asked for it" is simply not an acceptable answer.
+</p><p>
+We want engineers to act upon their own estimation of what their clients
+will want, like, and pay for. We expect a similar understanding of the
+business across the entire organization. Now, what kind of Human
+Resources organization do we have to ensure this shared awareness of and
+commitment to the common purpose? None.
+</p><p>
+Most of us have observed the damage caused by addictive HR organizations.
+In the beginning, they relieve stress. Soon, they insinuate themselves
+into every aspect of corporate life and withdrawal pain becomes
+impossible to bear. Not unlike some welfare programs, HR becomes an end
+unto itself, a means of existence for a group of individuals whose
+sustenance depends upon their clients' problems. Decisions are laden with
+their intervention. Straight- forward processes are gummed up with their
+arbitration.
+</p><p>
+In a way, HR is a protection racket. A process must be put in place, a
+study must be made, a task force must be set up; thus management is
+protected and absolved of political responsibility, and HR gains power.
+</p><p>
+One of the benefits we offer at Be is that there's no HR and there won't
+be any. Personnel, yes. Forms, benefits, insurance, 401K—these are all
+healthy and regular paperwork movements. If we ever need HR work, we'll
+bring consultants to help. And then they'll leave. Just as we want our
+employees to own their work, so do we want an unobfuscated (and minimal)
+management to be fully responsible for its actions.
+</p><p>
+As for turnover: On a small sample size such as ours (population 30)
+statistics don't tell much. We've consistently lost two or three people
+every year. Our goal is to detect an ill-fit between the individual and
+the mission as early as possible. One of the benefits of early detection
+is a more amiable parting of the ways before frustration and bitterness
+set in. So far, it seems to have worked: One ex-engineer even treated the
+entire company to (good) pizza to help celebrate the BeBox intro. Another
+helped us recruit a new employee at a crucial juncture. But enough syrup;
+the bottom line is that we can only succeed if we continue to attract and
+hire a (small) number of mature, broad-minded, self-reliant individuals.
+</p><p>
+To be an efficient guerilla-type company, we need the kind of
+professionals who seek and will contribute to maintain such an
+environment. You can come from a large company, or be straight out of
+college: It doesn't really matter as long as you fit the environment
+you're in charge of creating.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-24.html">Issue 1-24, May 22, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-26.html">Issue 1-26, June 5, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-24.html" title="Issue 1-24, May 22, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-26.html" title="Issue 1-26, June 5, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

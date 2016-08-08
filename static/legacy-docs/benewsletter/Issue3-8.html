@@ -1,0 +1,767 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-7.html" title="Issue 3-7, February 18, 1998" /><link rel="next" href="Issue3-9.html" title="Issue 3-9, March 4, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-7.html" title="Issue 3-7, February 18, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-9.html" title="Issue 3-9, March 4, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-7.html">Issue 3-7, February 18, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-9.html">Issue 3-9, March 4, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-8"></a>Issue 3-8, February 25, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-8"></a>Be Engineering Insights: Be Inc.'s "Swapping Bytes, Part III"</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Peter</span> <span class="surname">Potrebic</span></span></div></div></div><p>
+Seems as if every other week the Engineer Insight article discusses byte
+swapping. Must be that time because that's my topic today. Up until now
+we've always written about what one should do, in theory. Finishing up
+the first Intel release has given us all more practical experience and
+I'd like to share some of it with you.
+</p><p>
+There are several sections of the API, including the <code class="classname">BMessage</code> class and
+file attributes, where dealing with endian issues might effect your
+coding habits. I'll discuss the <code class="classname">BMessage</code> class in this article and leave
+the file attributes case for a later article.
+</p><p>
+The <code class="classname">BMessage</code> class does lots of work for you in terms of byte ordering.
+If you are just reading and writing standard data types to <code class="classname">BMessage</code>s then
+you needn't fret about byte ordering. By "standard" I mean all the data
+types (with three exceptions) defined in
+<code class="filename">support/TypeConstants.h</code>.
+</p><p>
+For example, if you have code like the following:
+</p><pre class="programlisting cpp">
+<span class="comment">// code that writes your data into a message</span>
+<code class="varname">msg</code>-&gt;<code class="methodname">AddString</code>("label", <code class="varname">text</code>);
+<code class="varname">msg</code>-&gt;<code class="methodname">AddInt32</code>("weight", <code class="varname">weight</code>);
+<code class="varname">msg</code>-&gt;<code class="methodname">AddMessenger</code>("return_ref", <code class="varname">some_messenger</code>);
+
+<span class="comment">// let's save this message to a file</span>
+<code class="varname">msg</code>-&gt;<code class="methodname">Flatten</code>(&amp;<code class="varname">some_file</code>);
+
+...
+<span class="comment">// That file can now be moved to another platform. What</span>
+<span class="comment">// happens isn't under your program's control.</span>
+...
+
+<span class="comment">// let's read that message out of a file</span>
+<code class="varname">msg</code>-&gt;<code class="methodname">Unflatten</code>(&amp;<code class="varname">some_file</code>);
+
+<span class="comment">// code that reads your data out of a message</span>
+<code class="varname">msg</code>-&gt;<code class="methodname">FindString</code>("label", &amp;<code class="varname">text</code>);
+<code class="varname">msg</code>-&gt;<code class="methodname">FindInt32</code>("weight", &amp;<code class="varname">weight</code>);
+<code class="varname">msg</code>-&gt;<code class="methodname">FindMessenger</code>("return_ref", &amp;<code class="varname">some_messenger</code>);
+</pre><p>
+In the above code you don't have to worry about byte ordering. If the
+file is moved across platforms the system (the
+<code class="methodname">Flatten</code>/<code class="methodname">Unflatten</code> calls
+themselves) will handle any byte ordering issues. The same is true if the
+message is flattened into any sort of buffer and then moved to another
+platform. An example of this would be if you flattened a message and
+saved it in an attribute of some file.
+</p><p>
+The three exceptions mentioned above are <code class="constant">B_ANY_TYPE</code>,
+<code class="constant">B_RAW_TYPE</code>, and
+<code class="constant">B_OBJECT_TYPE</code>. The first type, <code class="constant">B_ANY_TYPE</code>, isn't really a type. The
+latter two types have arbitrary and undefined formats. They can be
+anything, so there is no way that the system can properly swap bytes
+between Intel and PPC platforms.
+</p><p>
+Also, it is the developers responsibility to swap any custom data types
+that you add to a message. Here's an example:
+</p><pre class="programlisting cpp">
+struct <span class="type">my_info</span> {
+    <span class="type">int32</span>  <code class="varname">weight</code>;
+    <span class="type">char</span>   <code class="varname">bx</code>[2];
+    <span class="type">float</span>  <code class="varname">percent_done</code>;
+};
+
+...
+<span class="type">my_info</span>  <code class="varname">info</code>;
+<span class="comment">// info gets filled in with data</span>
+
+<span class="comment">// now you add data of this type to a message</span>
+<code class="varname">msg</code>-&gt;<code class="methodname">AddData</code>("data", 'myin', &amp;<code class="varname">info</code>, <code class="function">sizeof</code>(<code class="varname">my_info</code>));
+</pre><p>
+Now if <code class="varname">msg</code> is flattened and moved to platform with differing endianness
+you'll have to deal with byte swapping:
+</p><pre class="programlisting cpp">
+<span class="type">my_info</span>  <code class="varname">info</code>;
+<span class="type">void</span>     *<code class="varname">raw</code>;
+<span class="type">ssize_t</span>  <code class="varname">size</code>;
+
+<code class="varname">msg</code>-&gt;<code class="methodname">FindData</code>("data", 'myin', &amp;<code class="varname">raw</code>, &amp;<code class="varname">size</code>);
+<span class="comment">// raw points to raw/unswapped data, not necessarily a</span>
+<span class="comment">// valid my_info structure. If endianness of this platform</span>
+<span class="comment">// differs from source platform then work needs to be done.</span>
+</pre><p>
+One option is to add a field to the <span class="type">my_info</span> struct specifying the
+endianness of the data as written. The other option is to redo the data
+structure so that it is endian insensitive. For more details on dealing
+with vanilla C structures such as <span class="type">my_info</span> see Brad Taylor's Engineering
+Insights articles in
+<a class="link" href="">issue 2-#9</a> and
+<a class="link" href="">issue 2-#45</a> of the Newsletter:
+</p><p>
+Another alternative that I'll discuss in detail is using the <code class="classname">BFlattenable</code>
+class. Using this class can make handling custom data structures somewhat
+easier. Let's redo the above example of a C structure (<span class="type">my_info</span>) using the
+<code class="classname">BFlattenable</code> class:
+</p><pre class="programlisting cpp">
+struct <code class="classname">TMyData</code> : public <code class="classname">BFlattenable</code> {
+    <span class="comment">// here's my data</span>
+    <span class="type">int32</span>  <code class="varname">weight</code>;
+    <span class="type">char</span>   <code class="varname">bx</code>[2];
+    <span class="type">float</span>  <code class="varname">percent_done</code>;
+
+virtual <span class="type">status_t</span> <code class="methodname">Flatten</code>(<span class="type">void *</span><code class="parameter">buffer</code>, <span class="type">ssize_t</span> <code class="parameter">size</code>) const;
+virtual <span class="type">status_t</span> <code class="methodname">Unflatten</code>(<span class="type">type_code</span> <code class="parameter">c</code>, <span class="type">constvoid *</span><code class="parameter">buf</code>,
+                           <span class="type">ssize_t</span> <code class="parameter">size</code>);
+
+<span class="comment">// overrides for other functions are omitted to keep example small</span>
+};
+</pre><p>
+The <code class="classname">BFlattenable</code> class gives you nice bottlenecks for moving data in and
+out of <code class="classname">BMessages</code>, files, or file attributes. These bottlenecks give you a
+framework for dealing with byte ordering. As always you have two options
+for dealing with this issue:
+</p><ul class="itemizedlist"><li><p>
+Write out data in natural order and swap when needed on read.
+</p></li><li><p>
+Write out data in canonical format and swap when needed on read.
+</p></li></ul><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id665402"></a>Write out data in natural order</h3></div></div></div><p>
+In this scenario the flatten code will save the flag indicating the
+endianness of the source platform. The unflatten code will compare that
+against the current platform's endianness and swap when necessary.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">TMyData</code>::<code class="methodname">Flatten</code>(<span class="type">void *</span><code class="parameter">buffer</code>, <span class="type">ssize_t</span> <code class="parameter">size</code>) const
+{
+  <span class="type">char *</span><code class="varname">p</code> = (<span class="type">char *</span>) buffer;
+  <span class="comment">// need to save a flag indicating the current platform. So</span>
+  <span class="comment">// we remember if this platform is little endian. The</span>
+  <span class="comment">// FlattenSize function must account for this extra space.</span>
+  *<code class="varname">p</code>++ = <code class="constant">B_HOST_IS_LENDIAN</code>;
+
+  <span class="comment">// now save the rest of the data in natural format</span>
+  *((<span class="type">int32 *</span>)<code class="varname">p</code>) = <code class="varname">weight</code>;
+  <code class="varname">p</code> += <code class="function">sizeof</code>(<span class="type">int32</span>);
+
+  *<code class="varname">p</code>++ = <code class="varname">bx</code>[0];
+  *<code class="varname">p</code>++ = <code class="varname">bx</code>[1];
+
+  *((<span class="type">float *</span>)<code class="varname">p</code>) = <code class="varname">percent_done</code>;
+
+  return <code class="constant">B_OK</code>;
+}
+
+<span class="type">status_t</span> <code class="classname">TMyData</code>::<code class="methodname">Unflatten</code>(<span class="type">type_code</span> <code class="parameter">c</code>, <span class="type">constvoid *</span><code class="parameter">buf</code>,
+  <span class="type">ssize_t</span> <code class="parameter">size</code>)
+{
+  <span class="type">const char  *</span><code class="varname">p</code> = (<span class="type">const char *</span>) <code class="parameter">buf</code>;
+  <span class="type">uint8</span>       <code class="varname">endian</code>;
+  <span class="type">bool</span>        <code class="varname">must_swap</code>;
+
+  <span class="comment">// read the endian flag saved by the Flatten call</span>
+  <code class="varname">endian</code> = *((<span class="type">uint8 *</span>) <code class="varname">p</code>++);
+
+  <span class="comment">// compared the saved value with current value</span>
+  <code class="varname">must_swap</code> = (<code class="varname">endian</code> == <code class="constant">B_HOST_IS_LENDIAN</code>);
+
+  <span class="comment">// must_swap will only be true in the source and</span>
+  <span class="comment">// destination have different byte ordering</span>
+
+  <span class="comment">// now simply read out the data</span>
+  <code class="varname">weight</code> = *((<span class="type">int32 *</span>) <code class="varname">p</code>);
+  <code class="varname">p</code> += <code class="function">sizeof</code>(<span class="type">int32</span>);
+
+  <code class="varname">bx</code>[0] = *<code class="varname">p</code>++;
+  <code class="varname">bx</code>[1] = *<code class="varname">p</code>++;
+
+  <code class="varname">percent_done</code> = *((<span class="type">float *</span>) <code class="varname">p</code>);
+
+  <span class="comment">// now swap the data if needed</span>
+  if (<code class="varname">must_swap</code>) {
+    <code class="varname">weight</code> = <code class="function">B_SWAP_INT32</code>(<code class="varname">weight</code>);
+    <code class="varname">percent_done</code> = <code class="function">B_SWAP_FLOAT</code>(<code class="varname">percent_done</code>);
+    <span class="comment">// don't need to swap the bx chars.</span>
+  }
+  return <code class="constant">B_OK</code>;
+}
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id665751"></a>Write out data in canonical format</h3></div></div></div><p>
+In this scenario the code always writes out the data in little endian
+format (choosing between big or little endian is up to the developer). In
+this case an extra <code class="varname">flag</code> field isn't needed.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">TMyData</code>::<code class="methodname">Flatten</code>(<span class="type">void *</span><code class="parameter">buffer</code>, <span class="type">ssize_t</span> <code class="parameter">size</code>) const
+{
+  <span class="type">char *</span><code class="varname">p</code> = (<span class="type">char *</span>) <code class="parameter">buffer</code>;
+
+  <span class="comment">// Decided to always write the data in little endian</span>
+  <span class="comment">// format. So we'll write data using the HOST_TO_LENDIAN</span>
+  <span class="comment">// macros.</span>
+
+  *((<span class="type">int32 *</span>)<code class="varname">p</code>) = <code class="function">B_HOST_TO_LENDIAN_INT32</code>(<code class="varname">weight</code>);
+  <code class="varname">p</code> += <code class="function">sizeof</code>(<span class="type">int32</span>);
+
+  *<code class="varname">p</code>++ = <code class="varname">bx</code>[0];
+  *<code class="varname">p</code>++ = <code class="varname">bx</code>[1];
+
+  *((<span class="type">float *</span>)<code class="varname">p</code>) = <code class="function">B_HOST_TO_LENDIAN_FLOAT</code>(<code class="varname">percent_done</code>);
+
+  return <code class="constant">B_OK</code>;
+}
+
+<span class="type">status_t</span> <code class="classname">TMyData</code>::<code class="methodname">Unflatten</code>(<span class="type">type_code</span> <code class="parameter">c</code>, <span class="type">constvoid *</span><code class="parameter">buf</code>,
+  <span class="type">ssize_t</span> <code class="parameter">size</code>)
+{
+  <span class="type">const char  *</span><code class="varname">p</code> = (<span class="type">const char *</span>) <code class="parameter">buf</code>;
+  <span class="type">uint8</span>      <code class="varname">endian</code>;
+  <span class="type">bool</span>        <code class="varname">must_swap</code>;
+
+  <span class="comment">// We know that the data was saved in little endian</span>
+  <span class="comment">// format. So read in the data using the appropriate</span>
+  <span class="comment">// macros from support/ByteOrder.h</span>
+
+  <code class="varname">weight</code> = <code class="function">B_LENDIAN_TO_HOST_INT32</code>(*((<span class="type">int32 *</span>) <code class="varname">p</code>));
+  <code class="varname">p</code> += <code class="function">sizeof</code>(<span class="type">int32</span>);
+
+  <code class="varname">bx</code>[0] = *<code class="varname">p</code>++;
+  <code class="varname">bx</code>[1] = *<code class="varname">p</code>++;
+
+  <code class="varname">percent_done</code> = <code class="function">B_LENDIAN_TO_HOST_INT32</code>(*((<span class="type">float *</span>) <code class="varname">p</code>));
+  return <code class="constant">B_OK</code>;
+}
+</pre></div><p>
+And there you have it. Hopefully this helps clarify how to use <code class="classname">BMessage</code>s
+in a multi-endian world. It's the PC thing to do.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-8"></a>Developers' Workshop: Of Indexes And entry_refs</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+One of the great features of the BeOS is the ability to query information
+about files' attributes. This is both useful in programming and for the
+general user wanting to find files that meet certain criteria. The
+mechanism behind queries is a series of attribute indices that list the
+files that can be searched given a particular attribute and value.
+</p><p>
+Indices are volume-specific, meaning that different volumes connected to
+your machine can have different indexed attributes. Furthermore, an
+attribute index is only updated whenever a matching attribute is written.
+So any files on the volume before the index is created are not listed.
+The BeOS does not step through and examine all of the files on the volume
+every time an index is created (that could be a lengthy process on a
+large volume.)
+</p><p>
+This week's sample code allows you to selectively re-index files to make
+sure that all of their attributes are up-to-date in the attribute
+indices. Indexer is comprised of a <code class="classname">BApplication</code> class that examines
+<span class="type">entry_ref</span>s, various <code class="classname">InfoView</code> classes
+that process and display information
+about these refs, and some global indexing functions. There is an
+<code class="classname">InfoView</code> for each type of entry: File, SymLink, Directory and Volume.
+These classes combine to give you detailed information about each dropped
+ref in addition to re-indexing any referenced files that need it.
+</p><p>
+When a reference to a file, directory, symbolic link, or volume enters
+<span class="application">Indexer</span>, more often than not it arrives in the form of an <span class="type">entry_ref</span>. Full
+details about <span class="type">entry_ref</span>s can be found in
+<code class="filename">Entry.h</code>, but quickly an
+<span class="type">entry_ref</span> specifies the location of a potential file on disk by
+specifying a device number, a directory number, and a name. Paths also
+specify location in a similar manner, and throughout Indexer you will see
+various translations between these two entry formats. One thing to note,
+however, is that <span class="type">entry_ref</span>s should not be stored on disk, as the device
+number can change between boots. <span class="type">entry_ref</span>s saved to disk, and then
+copied in a file to another disk will just not work when unpacked on the
+other side. Use paths if you need to save the location of an entry to
+disk.
+</p><p>
+When items are selected and dropped on <span class="application">Indexer</span>'s icon or one of its
+windows from the <span class="application">Tracker</span>, the refs come bundled in either a
+<code class="constant">B_REFS_RECEIVED</code> or <code class="constant">B_SIMPLE_DATA</code> message. Both of these messages are
+similar: The real meat of the message is bundled into the "refs" members.
+Parsing the message to get the references is the first task.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">Indexer</code>::<code class="methodname">RefsReceived</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>)
+{
+  <span class="type">uint32</span>     <code class="varname">type</code>;
+  <span class="type">int32</span>      <code class="varname">count</code>;
+  <span class="type">entry_ref</span>  <code class="varname">ref</code>;
+
+  <code class="parameter">msg</code>-&gt;<code class="methodname">GetInfo</code>("refs", &amp;<code class="varname">type</code>, &amp;<code class="varname">count</code>);
+  if (<code class="varname">type</code> != <code class="constant">B_REF_TYPE</code>)
+    return;
+  for (<span class="type">int32</span> <code class="varname">i</code> = --<code class="varname">count</code>; <code class="varname">i</code> &gt;= 0; <code class="varname">i</code>--) {
+    if (<code class="parameter">msg</code>-&gt;<code class="methodname">FindRef</code>("refs", <code class="varname">i</code>, &amp;<code class="varname">ref</code>) == <code class="constant">B_OK</code>) {
+      <code class="methodname">EvaluateRef</code>(<code class="varname">ref</code>);
+    }
+  }
+}
+</pre><p>
+Each <span class="type">entry_ref</span> pulled out of the message is passed
+along to <code class="methodname">EvaluateRef()</code>
+to start our real work. <span class="application">Indexer</span> also accepts arguments from the
+command-line which are processed in its <code class="methodname">ArgvReceived()</code> function. Any
+paths present are translated into <span class="type">entry_ref</span>s with the
+<code class="function">get_ref_for_path()</code>
+function, and the resulting refs are also passed to <code class="methodname">EvaluateRef()</code>.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">Indexer</code>::<code class="methodname">EvaluateRef</code>(<span class="type">entry_ref</span> &amp;<code class="parameter">ref</code>)
+{
+  struct <span class="type">stat</span> <code class="varname">st</code>;
+  <code class="classname">BEntry</code> <code class="varname">entry</code>;
+
+  if (<code class="varname">entry</code>.<code class="methodname">SetTo</code>(&amp;<code class="parameter">ref</code>, <code class="constant">false</code>) != <code class="constant">B_OK</code>)
+    return <code class="constant">B_ERROR</code>;
+  if (<code class="varname">entry</code>.<code class="methodname">GetStat</code>(&amp;<code class="varname">st</code>) != <code class="constant">B_OK</code>)
+    return <code class="constant">B_ERROR</code>;
+  if (<code class="function">S_ISLNK</code>(<code class="varname">st</code>.<code class="varname">st_mode</code>))
+    return <code class="methodname">HandleLink</code>(<code class="parameter">ref</code>, <code class="varname">st</code>);
+  else if (<code class="function">S_ISREG</code>(<code class="varname">st</code>.<code class="varname">st_mode</code>))
+    return <code class="methodname">HandleFile</code>(<code class="parameter">ref</code>, <code class="varname">st</code>);
+  else if (<code class="function">S_ISDIR</code>(<code class="varname">st</code>.<code class="varname">st_mode</code>)) {
+    <code class="classname">BDirectory</code> <code class="varname">dir</code>;
+    if (<code class="varname">dir</code>.<code class="methodname">SetTo</code>(&amp;<code class="parameter">ref</code>) != <code class="constant">B_OK</code>)
+      return <code class="constant">B_ERROR</code>;
+    if (<code class="varname">dir</code>.<code class="methodname">IsRootDirectory</code>())
+      return <code class="methodname">HandleVolume</code>(<code class="parameter">ref</code>, <code class="varname">st</code>, <code class="varname">dir</code>);
+    else
+      return <code class="methodname">HandleDirectory</code>(<code class="parameter">ref</code>, <code class="varname">st</code>, <code class="varname">dir</code>);
+  }
+}
+</pre><p>
+The first thing we want to do is determine exactly what type of <span class="type">entry_ref</span>
+we have gotten. To do this we need to get a <span class="type">stat</span> structure. The <span class="type">stat</span>
+structure provides a host of information about entries, including the
+flavor of the node, and creation and modification times. To get the <span class="type">stat</span>
+we need an instance of the <code class="classname">BStatable</code> class, and
+<code class="classname">BEntry</code> is an easy one to
+get. As we want to be able to tell if we have a symbolic link, we inform
+<code class="classname">BEntry</code>::<code class="methodname">SetTo()</code> to not traverse any links it finds.
+</p><p>
+We can then proceed to get the stat and discover what type of entry we
+have. If we discover a file or a symlink, we simple start to handle them.
+If we find a directory we need to do a little bit more examination to
+determine whether we have a normal directory or a volume. Volumes are
+represented as directories that live in the root of the file system. To
+determine which type we have we create a BDirectory and ask it if it is a
+root directory. If it is, we handle it as a volume, if not we handle it
+as a directory.
+</p><p>
+As <span class="application">Indexer</span> is a fairly large bit of sample code, I won't go into all of
+the details of processing each entry type. Instead I'll simply point out
+some of the more interesting bits, and leave you to examine the rest of
+the sample code in more depth later.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id666594"></a>Volumes</h3></div></div></div><p>
+As I mentioned above, I determine that I have a volume when I receive a
+reference to a root directory. The next step is to discover exactly what
+volume I am supposed to examine.
+</p><p>
+This is trickier than you might think, as there is not a convenient
+<code class="methodname">GetVolume()</code> function in the <code class="classname">BDirectory</code>
+class. My first thoughts were to
+use the device ID contained in the <span class="type">entry_ref</span>. While this might seem to be
+a good idea, it doesn't actually work. The problem is that root is a
+virtual device, and the device ID listed corresponds to it, and not to
+the volume I want to explore. So I turned to the <code class="classname">BVolumeRoster</code> class so I
+could step through each mounted volume and see if I can find a root
+directory that matches mine. The code looks like this:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">Indexer</code>::<code class="methodname">HandleVolume</code>(<span class="type">entry_ref</span> &amp;<code class="parameter">ref</code>,
+  struct <span class="type">stat</span> &amp;<code class="parameter">st</code>, <code class="classname">BDirectory</code> &amp;<code class="parameter">dir</code>)
+{
+  <code class="classname">BVolumeRoster</code> <code class="varname">vol_roster</code>;
+  <code class="classname">BVolume</code>       <code class="varname">vol</code>;
+  <code class="classname">BDirectory</code>    <code class="varname">root_dir</code>;
+  <span class="type">dev_t</span>         <code class="varname">device</code>;
+
+  while (<code class="varname">vol_roster</code>.<code class="methodname">GetNextVolume</code>(&amp;<code class="varname">vol</code>) == <code class="constant">B_NO_ERROR</code>) {
+    <code class="varname">vol</code>.<code class="methodname">GetRootDirectory</code>(&amp;<code class="varname">root_dir</code>);
+    if (<code class="varname">root_dir</code> == <code class="parameter">dir</code>)
+      break;
+  }
+    <span class="comment">// build the info window and the like</span>
+  ...
+}
+</pre><p>
+I then proceed to create my <code class="classname">InfoView</code>, with gathers up a ton of
+information about the volume (essentially every detail that the <code class="classname">BVolume</code>
+class can muster) and displays it the user. Among the information
+presented is a list of all of the indexed attributes on the volume. I
+collected this with a global function I defined called
+<code class="function">get_attribute_indices()</code>.
+</p><pre class="programlisting c">
+extern <span class="type">status_t</span>
+  <code class="function">get_attribute_indices</code>(<span class="type">dev_t</span> <code class="parameter">device</code>, <code class="classname">BList</code> &amp;<code class="parameter">index_list</code>)
+{
+  <span class="type">DIR           *</span><code class="varname">index_dir</code>;
+  struct <span class="type">dirent *</span><code class="varname">index_ent</code>;
+
+  <code class="varname">index_dir</code> = <code class="function">fs_open_index_dir</code>(<code class="parameter">device</code>);
+  if (!<code class="varname">index_dir</code>)
+    return <code class="constant">B_ERROR</code>;
+  while (<code class="varname">index_ent</code> = <code class="function">fs_read_index_dir</code>(<code class="varname">index_dir</code>)) {
+    <span class="type">char *</span><code class="varname">text</code> = <code class="function">strdup</code>(<code class="varname">index_ent</code>-&gt;<code class="varname">d_name</code>);
+    <code class="parameter">index_list</code>.<code class="methodname">AddItem</code>(<code class="varname">text</code>);
+  }
+  <code class="function">fs_close_index_dir</code>(<code class="varname">index_dir</code>);
+  return <code class="constant">B_OK</code>;
+}
+</pre><p>
+This function opens the volume's index directory, gets the name of every
+attribute found there, adds them to the list, and then closes the
+directory. Note that it is very important to close the index directory,
+or you will be unable to unmount its volume.
+</p><p>
+You might also notice that I did not traverse the entire volume indexing
+every file. I could easily do this, but I figured that it made more sense
+to just display a list of all of the indexed attributes instead. The code
+could easily be modified to do so by borrowing the appropriate functions
+from <code class="classname">dInfoView</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id666896"></a>Directories</h3></div></div></div><p>
+I do traverse directories and re-index all of the files found there, as
+well as collect a bunch of information about the contents of the
+directory. The two functions of most interest in the dInfoView class are
+the <code class="methodname">TraverseDirectory()</code> and
+<code class="methodname">EvaluateRef()</code> functions. <code class="methodname">TraverseDirectory()</code>
+is a very standard way to step through all of the items in a directory.
+It gets an entry_ref for each item found in the directory and calls
+<code class="methodname">EvaluateRef()</code> on it. I could also achieve the same result by iterating
+through the directory with <code class="methodname">GetNextEntry()</code>
+(or <code class="methodname">GetNextDirent()</code> for that
+matter), I simply chose to use <span class="type">entry_ref</span>s.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">dInfoView</code>::<code class="methodname">TraverseDirectory</code>(<code class="classname">BDirectory</code> &amp;<code class="parameter">dir</code>)
+{
+  <span class="type">entry_ref</span> <code class="varname">ref</code>;
+
+  while(<code class="parameter">dir</code>.<code class="methodname">GetNextRef</code>(&amp;<code class="varname">ref</code>) != <code class="constant">B_ENTRY_NOT_FOUND</code>) {
+    <code class="methodname">EvaluateRef</code>(<code class="varname">ref</code>);
+  }
+}
+</pre><p>
+<code class="methodname">EvaluateRef()</code> is called for every item found in the directory. The type
+of entry is discovered and processed accordingly: sub-directories are
+traversed, files are indexed, and symlinks are noted. Statistics are kept
+for each type of item, including a count of how successfully a file was
+re-indexed. I'll get to the <code class="function">reindex_node()</code> call when I discuss files a
+little later.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">dInfoView</code>::<code class="methodname">EvaluateRef</code>(<span class="type">entry_ref</span> &amp;<code class="parameter">ref</code>)
+{
+  struct <span class="type">stat</span> <code class="varname">st</code>;
+  <code class="classname">BEntry</code> <code class="varname">entry</code>;
+
+  if (<code class="varname">entry</code>.<code class="methodname">SetTo</code>(&amp;<code class="parameter">ref</code>, <code class="constant">false</code>) != <code class="constant">B_OK</code>)
+    return;
+  <code class="varname">fEntryCount</code>++;
+  <code class="varname">entry</code>.<code class="methodname">GetStat</code>(&amp;<code class="varname">st</code>);
+  if (<code class="function">S_ISLNK</code>(<code class="varname">st</code>.<code class="varname">st_mode</code>))
+    <code class="varname">fLinkCount</code>++;
+  else if (<code class="function">S_ISREG</code>(<code class="varname">st</code>.<code class="varname">st_mode</code>)) {
+    if (<code class="parameter">ref</code>.<code class="varname">device</code> != <code class="varname">fRef</code>.<code class="varname">device</code>) {
+      <code class="varname">fInvalidCount</code>++;
+      return;
+    }
+    <code class="varname">fFileCount</code>++;
+    <code class="classname">BNode</code> <code class="varname">node</code>;
+    if (<code class="varname">node</code>.<code class="methodname">SetTo</code>(&amp;<code class="parameter">ref</code>) != <code class="constant">B_NO_ERROR</code>) {
+      <code class="varname">fInvalidCount</code>++;
+      return;
+    }
+    <span class="type">status_t</span> <code class="varname">status</code> = <code class="constant">B_OK</code>;
+    <code class="varname">status</code> = <code class="function">reindex_node</code>(<code class="varname">node</code>, *<code class="varname">fIndexList</code>);
+    if (<code class="varname">status</code> == <code class="constant">INDEXED</code>)
+      <code class="varname">fIndexed</code>++;
+    else if (<code class="varname">status</code> == <code class="constant">PARTIAL_INDEXED</code>)
+      <code class="varname">fPartialIndexed</code>++;
+    else
+      <code class="varname">fNotIndexed</code>++;
+  }
+  else if (<code class="function">S_ISDIR</code>(<code class="varname">st</code>.<code class="varname">st_mode</code>)) {
+    <code class="classname">BDirectory</code> <code class="varname">dir</code>;
+    if (<code class="varname">dir</code>.<code class="methodname">SetTo</code>(&amp;<code class="parameter">ref</code>) != <code class="constant">B_OK</code>) {
+      <code class="varname">fInvalidCount</code>++;
+      return;
+    }
+    if (<code class="varname">dir</code>.<code class="methodname">IsRootDirectory</code>())
+      <code class="varname">fInvalidCount</code>++;
+    else {
+      <code class="varname">fSubDirCount</code>++;
+      <code class="methodname">TraverseDirectory</code>(<code class="varname">dir</code>);
+    }
+  }
+}
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id667275"></a>Symbolic Links</h3></div></div></div><p>
+Symlinks are by far the easiest class to deal with. A <code class="classname">BSymLink</code> is created
+and information about it is displayed. The main bit of information is
+whether the link is relative or absolute, and the actual path to the
+linked to node. This information is retrieved with the <code class="methodname">ReadLink()</code>
+function.
+</p><p>
+I'll also note that all of the <code class="classname">InfoView</code>s collect some generic information
+about the entries they receive, namely the creation and modification time
+of the entry, its path, and its name.
+</p><p>
+Finally I'll note some peculiarities about processing links. When the
+<span class="application">Tracker</span> bundles up a <code class="constant">B_SIMPLE_DATA</code>
+message to drop on the window of an
+application, it simply gets the <span class="type">entry_ref</span> of all of the items selected.
+</p><p>
+When dropping onto the icon of an application, however, the <span class="application">Tracker</span> looks
+at a lot of information about the file, in an attempt to discover whether
+the application knows how to handle that type. In the process of doing
+this, the <span class="type">entry_ref</span> for a link is traversed. This means that to get an
+<code class="classname">lInfoView</code> in <span class="application">Indexer</span>
+you need to reference the link through the command
+line, or to drop the link onto a window. The current behavior is being
+looked at internally, and we hope to have some sort of resolution for
+Release 4.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id667352"></a>Files</h3></div></div></div><p>
+Finally we come to the heart of the original program design, the
+re-indexing of a file. To complete this action we need to get a list of
+the attributes that are indexed on the volume (the <code class="function">get_volume_indices()</code>
+function described above). We then create a <code class="classname">BNode</code> from the ref in order
+to have access to the node's attributes, and pass it to the global
+<code class="function">reindex_node()</code> function.
+</p><pre class="programlisting cpp">
+extern <span class="type">status_t</span> <code class="function">reindex_node</code>(<code class="classname">BNode</code> &amp;<code class="parameter">node</code>, <code class="classname">BList</code> &amp;<span class="type">index_list</span>)
+{
+  <span class="type">attr_info</span> <code class="varname">info</code>;
+  <span class="type">status_t</span>  <code class="varname">status</code> = <code class="constant">B_OK</code>;
+  <span class="type">int32</span>     <code class="varname">to_be_indexed</code> = 0;
+  <span class="type">int32</span>     <code class="varname">indexed</code> = 0;
+  <span class="type">int32</span>     <code class="varname">not_indexed</code> = 0;
+  <span class="type">int32</span>     <code class="varname">size</code> = 1024;
+  <span class="type">char      *</span>value = (<span class="type">char *</span>) <code class="function">malloc</code>(<code class="varname">size</code> * <code class="function">sizeof</code>(<span class="type">char</span>));
+
+  <span class="comment">//rewrite all of the appropriate attributes</span>
+  for (<span class="type">int32</span> <code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="parameter">index_list</code>.<code class="methodname">CountItems</code>(); <code class="varname">i</code>++) {
+    <span class="type">char *</span><code class="varname">attr</code> = (<span class="type">char *</span>) <code class="parameter">index_list</code>.<code class="methodname">ItemAt</code>(<code class="varname">i</code>);
+    if (<code class="varname">node</code>.<code class="methodname">GetAttrInfo</code>(<code class="varname">attr</code>, &amp;<code class="varname">info</code>) == <code class="constant">B_OK</code>) {
+      <code class="varname">to_be_indexed</code>++;
+
+      <span class="comment">// adjust the size of our static buffer if necessary</span>
+      if (<code class="varname">info</code>.<code class="varname">size</code> &gt; <code class="varname">size</code>) {
+        <code class="varname">value</code> = (<span class="type">char *</span>) <code class="function">realloc</code>(<code class="varname">value</code>, <code class="varname">info</code>.<code class="varname">size</code>);
+        <code class="varname">size</code> = <code class="varname">info</code>.<code class="varname">size</code>;
+      }
+
+      if (<code class="parameter">node</code>.<code class="methodname">ReadAttr</code>(<code class="varname">attr</code>, <code class="varname">info</code>.<code class="varname">type</code>, 0,
+                        <code class="varname">value</code>, <code class="varname">info</code>.<code class="varname">size</code>) &gt; 0) {
+        if (<code class="parameter">node</code>.<code class="methodname">WriteAttr</code>(<code class="varname">attr</code>, <code class="varname">info</code>.<code class="varname">type</code>, 0,
+                           <code class="varname">value</code>, <code class="varname">info</code>.<code class="varname">size</code>) &gt; 0)
+          <code class="varname">indexed</code>++;
+        else <code class="varname">not_indexed</code>++;
+      }
+      else <code class="varname">not_indexed</code>++;
+    }
+  }
+
+  <code class="function">free</code>(<code class="varname">value</code>);
+  <code class="varname">value</code> = <code class="constant">NULL</code>;
+
+  if (<code class="varname">to_be_indexed</code> &gt; 0) {
+    if (<code class="varname">indexed</code> &gt; 0) {
+      if (<code class="varname">not_indexed</code> &gt; 0)
+        return <code class="constant">PARTIAL_INDEXED</code>;
+      else
+        return <code class="constant">INDEXED</code>;
+    }
+    else return <code class="constant">NOT_INDEXED</code>;
+  }
+  else return <code class="constant">NOT_INDEXED</code>;
+}
+</pre><p>
+<code class="function">reindex_node()</code> steps through the list of indexed attributes and calls
+<code class="classname">BNode</code>::<code class="methodname">GetAttrInfo()</code> to see if the node has a matching attribute. If so,
+<code class="methodname">ReadAttr()</code> is used to read the value into the buffer, and if successful,
+the same value is written back with <code class="methodname">WriteAttr()</code>. Simply rewriting the
+attribute will cause it to be added to the index if not already present.
+</p><p>
+A running count of the matching attributes and whether they were
+successfully rewritten is kept, and the function returns a status
+detailing whether the file was indexed successfully, partially, or not at
+all.
+</p><p>
+The <code class="classname">fInfoView</code> also compiles a list of all of the file's attributes for
+display purposes. <code class="methodname">GetAttributes()</code> steps through the file's attribute
+directory and adds the name of each attribute to a list.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">fInfoView</code>::<code class="methodname">GetAttributes</code>(<code class="classname">BNode</code> &amp;<code class="parameter">node</code>, <code class="classname">BList</code> &amp;<code class="parameter">list</code>)
+{
+  <span class="type">char</span> <code class="varname">attr_buf</code>[<code class="constant">B_ATTR_NAME_LENGTH</code>];
+
+  <code class="parameter">node</code>.<code class="methodname">RewindAttrs</code>();
+  while (<code class="parameter">node</code>.<code class="methodname">GetNextAttrName</code>(<code class="varname">attr_buf</code>) == <code class="constant">B_NO_ERROR</code>) {
+    <span class="type">char *</span><code class="varname">string</code> = <code class="function">strdup</code>(<code class="varname">attr_buf</code>);
+    <code class="parameter">list</code>.<code class="methodname">AddItem</code>(<code class="varname">string</code>);
+  }
+}
+</pre><p>
+As a last note on files, the <code class="classname">fInfoView</code> also discovers the MIME-type of
+the file through use of <code class="classname">BNodeInfo</code>::<code class="methodname">GetMimeType()</code>.
+</p></div><p>
+Finally, some last notes, suggestions, caveats and plans. There are a
+series of volumes that cannot be accessed through the <span class="application">Tracker</span> (such as
+<code class="filename">/dev</code> or
+<code class="filename">/pipe</code>) that information can be gotten about through the
+command-line. Take a look at a couple of them and see what can be seen
+(although not much will be seen in the virtual file systems in the way of
+files, the info windows usually fail.)
+</p><p>
+I also want to note that the code for displaying the information is
+probably not how the interface guys would want to see it done. Use the
+sample code to look at the Storage Kit classes, not as a pristine example
+of Interface Kit code.
+</p><p>
+I'll continue to update <span class="application">Indexer</span> in the future, and I would love to hear
+of any improvements you make. Upcoming features might include code to
+remove and create indexes, as well as a look into whether passing <code class="classname">BEntry</code>s
+or <span class="type">entry_ref</span>s is more efficient.
+</p><p>
+In the meantime, <span class="application">Indexer</span> can be found at:
+ftp://ftp.be.com/pub/samples/storage_kit/obsolete/Indexer.zip.
+</p><p>
+I'll be back next week with Victor Tsou from the Doc Team. We'll be
+filling you in on many of the things you'll want to know about the
+upcoming Release 3 release of the BeOS for Intel. Until then...
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-8"></a>Driver Education</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This isn't about my college-bound son and the education of our auto
+insurance company. It's an attempt to put some thoughts on electronic
+paper concerning the sea of driver trouble ahead of us.
+</p><p>
+Once upon a time, we had totally proprietary hardware. This was at the
+very beginning of the company, when multiprocessor hardware was the
+province of high-end servers and workstations, not down to the
+$2000-$3000 level as it is today (see the Ming specials at
+http://www.be.com/support/guides/ming-specials.html).
+</p><p>
+In the beginning, we were in the position of having to design I/O cards
+and write the drivers. Now though, we are in the retroactively obvious
+situation where we can benefit from other people's investment in
+chipsets, motherboards, and I/O devices, and focus our efforts on the OS.
+</p><p>
+But the abundance of riches comes at a price: how can we get drivers to
+support this wonderful wacky world of PC add-ons? Put another way, some
+observers have attributed OS/2's failure to a paucity of drivers.
+Customers eager for an alternative to Windows were disappointed to find
+that their interface cards and peripherals weren't always supported by
+IBM or by the hardware add-on manufacturer. Are we going to disappoint
+hopeful BeOS users in the same way? Are we going to bleed to death
+attempting to write drivers or cajoling vendors for support?
+</p><p>
+The hidden pivot in the argument is the comparison to OS/2. If indeed, we
+come out of nowhere representing ourselves as a general-purpose OS ready
+for mainstream consumption, then we face an impossible challenge. Put
+another way, OS/2 positioned itself as an alternative to Windows and
+failed to deliver what turned out to be an impossible proposition, better
+DOS than DOS, better Windows than Windows.
+</p><p>
+The BeOS is not a general-purpose OS, it is a complement or a supplement
+to Windows. The BeOS coexists with the general-purpose Windows as a
+specialized OS, just as Linux does. Fine, but what does it mean for the
+sea of drivers issue?
+</p><p>
+First, it means we have to keep setting expectations, just as we did in
+earlier days with tongue-in-cheek but serious surgeon general warnings:
+this product is unfit for consumption by normal humans. It still is and,
+just like Linux, will be for a long time—if not for ever.
+</p><p>
+As an industry such as ours mature, it will diversify, segment and
+specialize, and the thought that any OS has to be or do "everything"
+doesn't have to apply. More specifically, as we represent ourselves as
+the media OS, best fit for real-time WYSIWYG, the reality-based
+positioning, a Be, Inc. exclusive, translates into a focus set of
+hardware targets. This, in turn, translates into a finite set of drivers.
+That's what we have to define, that's what we have to communicate.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk3-8"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>
+To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id668065"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id668072"></a>Subject: 128 file descriptors</h4></div></div></div><p>
+The file descriptor limit (128) was less controversial than the "how many
+threads should I spawn?" subtopic. A statement by Dominic Giampaolo...
+</p><p>
+“<span class="quote">Unless you know what you're doing, creating more threads than there are
+CPUs in the system is probably not wise.</span>”
+</p><p>
+...was jumped on (and, despite Sander Stoks plea for caution) taken out
+of context. The specifics of an app (what it's doing, how fast it needs
+to do it) will temper Dominic's rule of thumb. For example (from Peter
+Mogensen)...
+</p><p>
+“<span class="quote">The reason I have to use lots of threads is that I have a lot of
+identical objects and I *need* one 'concurrency context' per object.
+...and for now I do *not* care about performance.</span>”
+</p><p>
+Client management (one thread per client) was also cited as a legitimate
+use of "too many" threads.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id668118"></a>Subject: Interface issues</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: /File menu</h5></div></div></div><p>
+More menu talk: Should all documents have a main menu bar, and should
+that bar have a reliable set of submenus? (And should those submenus have
+submenus? etc.) Should the user be able to choose the menu style as an
+emulation of some other OS (gimme Mac menus... gimme Windows menus...
+gimme Amiga menus)? Taken out of context, Tyler Riti supplied the quote
+of the week:
+</p><p>
+“<span class="quote">People think that if they can't see something, then it isn't there.</span>”
+</p><p>
+(Is this not so?)
+</p><p>
+The discussion teetered on the verge of the old Dionysian/Apollonian
+argument that pits GUI customizability against consistency. Despite the
+high noise level, a number of valid suggestions were made, some of them
+bordering on the interesting.
+</p><p>
+“<span class="quote">The global be_app variable could return a pointer to a <code class="classname">BMenu</code> or
+<code class="classname">BMenuItem</code> allowing the programmer to add application menu items or
+submenus to it's Icon/Label in the DeskBar.</span>” (Scott Ahten)
+</p><p>
+“<span class="quote">Somebody should create a set of standard translations [OK, Cancel, Open,
+etc.] that everyone can put in their apps to provide at least _some_
+internationality.</span>” (Sean Gies)
+</p><p>
+“<span class="quote">A floating app-level menu is not a terrible idea...we could have
+application level menus that are only visible when the application is in
+the foreground.</span>” (Claude I. Denton)
+</p><p>
+“<span class="quote">Make every toolbar dockable. If it's floating, all of the app's windows
+use the floating toolbar; if it's docked to a part of the window, each
+window has its own copy.</span>” (Andi Payn)
+</p><p>
+And so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id668211"></a>Subject: How can I add icons to resources?</h4></div></div></div><p>
+You make an icon-sized image in IconWorld and add the image file to your
+BeIDE project expecting to be able to access the data as a resource of
+the app. But you can't. What's wrong? Brian Stern offered the following
+IDE guidelines:
+</p><p>
+“You need the resource to be in a file whose target info indicates that
+it has resources. The default is for any file with an extension of .rsrc
+to have its resources copied into the executable during link. Just add
+the resource files to the project and make. You can add as many resource
+files as you like to a project.
+</p><p>
+If that didn't work then either the target info in the Target prefs panel
+doesn't indicate that that file kind has resources, or there are no
+resources in the files.”
+</p><p>
+But, as Wendell Beckwith pointed out, IconWorld saves images as
+attributes, not resources. Mr. Beckwith has created an Attribute
+Convertor app that converts attributes to resources for just such
+situations.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id668249"></a>Subject: FTP</h4></div></div></div><p>
+<code class="constant">SO_REUSEADDR</code>—is it necessary? What is it? Scott Andrew says...
+</p><p>
+“<span class="quote">[<code class="constant">SO_REUSEADDR</code>]... is what allows many users to connect the same IP. It's
+not necessary for FTP... [but is for a server].</span>”
+</p><p>
+The right spirit, but, according to Howard Berkey, the wrong letter:
+</p><p>
+“<span class="quote">You can still have many clients <code class="function">connect()</code> to the same IP address/port
+without using <code class="constant">SO_REUSEADDR</code> by using
+<code class="function">accept()</code> and <code class="function">listen()</code>.</span>”
+</p><p>
+Agreement all around.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id668310"></a>Subject: Be Newsletter Volume 2, Issue 7—February 18, 1998</h4></div></div></div><p>
+Pixel/coordinate confusion. Remember: 0+1 == 2. A rectangle that has a
+top left at pixel (0,0) and a bottom right at (1,1) touches 2 pixels on
+each side—but, nonetheless, it's a 1x1 rectangle. We've seen this
+discussion before, but never without some objection to the status quo
+coordination. You're all getting soft.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-7.html">Issue 3-7, February 18, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-9.html">Issue 3-9, March 4, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-7.html" title="Issue 3-7, February 18, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-9.html" title="Issue 3-9, March 4, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

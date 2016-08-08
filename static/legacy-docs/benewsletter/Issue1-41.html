@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-40.html" title="Issue 1-40, September 11, 1996" /><link rel="next" href="Issue1-42.html" title="Issue 1-42, September 25, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-40.html" title="Issue 1-40, September 11, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-42.html" title="Issue 1-42, September 25, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-40.html">Issue 1-40, September 11, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-42.html">Issue 1-42, September 25, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-41"></a>Issue 1-41, September 18, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-41"></a>Be Engineering Insights: Fast(), Faster(), Fasterest()</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+In a previous newsletter, I described ways to improve drawing performance
+by avoiding synchronous calls. In Developer Release 8 of the <span class="trademark">BeOS</span>™, we
+implement our own advice with <code class="classname">BView</code>'s new
+<code class="methodname">DrawBitmapAsync()</code> function.
+</p><p>
+As the name implies, <code class="methodname">DrawBitmapAsync()</code> issues an order to draw (it sends
+the request to the app server) and then immediately returns—it doesn't
+wait for the drawing to finish the way the regular <code class="methodname">DrawBitmap()</code> function
+does. The advantage of the asynchronous call is obvious: Your thread can
+do something useful instead of waiting around for the server to get done.
+However, with the advantage comes a responsibility: After calling
+<code class="methodname">DrawBitmapSync()</code>, you have to make sure that the drawing is completed
+before you modify or delete the bitmap.
+</p><p>
+How can you do that?
+</p><p>
+The most obvious way would be to (explicitly) call <code class="classname">BView</code>'s <code class="methodname">Sync()</code>
+function after calling <code class="methodname">DrawBitmapAsync()</code>. This approach only makes sense,
+of course, if you perform some other operations between the draw and the
+sync—otherwise you lose your no-waiting advantage. In other words,
+calling <code class="methodname">Sync()</code> immediately after calling <code class="methodname">DrawBitmapAsync()</code> is essentially
+the same as calling <code class="methodname">DrawBitmap()</code>—which is exactly what we're trying to
+avoid.
+</p><p>
+One situation in which <code class="methodname">Sync()</code> can be of use is if you want to draw a
+number of bitmaps. You call <code class="methodname">DrawBitmapAsync()</code> for each bitmap placement,
+and THEN you call <code class="methodname">Sync()</code>:
+</p><pre class="programlisting cpp">
+<span class="comment">/* Issue some drawing commands. */</span>
+<code class="methodname">DrawBitmapAsync</code>(<code class="varname">bmapA</code>, <code class="classname">BPoint</code>(0,0));
+<code class="methodname">DrawBitmapAsync</code>(<code class="varname">bmapB</code>, <code class="classname">BPoint</code>(50,0));
+<code class="methodname">DrawBitmapAsync</code>(<code class="varname">bmapC</code>, <code class="classname">BPoint</code>(100,0));
+<code class="methodname">DrawBitmapAsync</code>(<code class="varname">bmapB</code>, <code class="classname">BPoint</code>(150,0));
+
+<span class="comment">/* Now wait for ALL of them to complete... */</span>
+<code class="methodname">Sync</code>();
+
+<span class="comment">/* ...before changing one of the bitmaps and redrawing. */</span>
+<code class="methodname">ChangeBitmap</code>(<code class="varname">bmapA</code>):
+<code class="methodname">DrawBitmapAsync</code>(<code class="varname">bmapA</code>, <code class="classname">BPoint</code>(200,0));
+</pre><p>
+How much faster is the asynchronous method? It depends on the size of the
+bitmap. For small, icon-sized bitmaps, you'll find that your bitmap
+drawing can be as much as 4 times faster! The Minesweeper application
+makes good use of asynchronous drawing; so does the Browser (which plays
+a fun game of knowing which bitmap has been drawn out of its icon cache).
+</p><p>
+One last thing...
+</p><p>
+I've noticed that many applications make heavy use of the <code class="methodname">Bounds()</code> call.
+I ran some benchmarks on my 66 MHz machine that show how expensive that
+kind of synchronous request can be: A single, round-trip ticket to
+<code class="methodname">Bounds()</code> costs 480 microseconds, whereas a single, asynchronous gallop
+through <code class="methodname">MovePenTo()</code> costs only 12 microseconds!
+</p><p>
+The moral: If you know that the bounds haven't changed, don't call
+<code class="methodname">Bounds()</code>.
+</p><p>
+One more last thing...
+</p><p>
+If you know that your application's window and view code is carefully
+<code class="methodname">Lock()</code>'ed and thoroughly re-entrant, try disabling the window discipline
+(through <code class="varname">window</code>-&gt;<code class="methodname">Discipline</code>(<code class="constant">FALSE</code>)). For simple operations, you might see
+a 50 percent speedup. As an example, calling <code class="methodname">SetHighColor()</code> with
+discipline enabled takes 19 microseconds; it's only 10 microseconds with
+the discipline turned off.
+</p><p>
+And if you REALLY want to fly:
+</p><p>
+I've never seen a cop on the stretch of Interstate 280 between Alpine
+Road and Page Mill after 2 AM. Disable your discipline and don't call
+<code class="methodname">Bounds()</code>.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-41-2"></a>Be Engineering Insights: "Mr. Palmer... 8 of your 15 minutes are up"</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Joseph</span> <span class="surname">Palmer</span></span></div></div></div><p>
+Deep in the bowels of San Francisco (City Motto: Parking? Who needs
+parking?) sulks a less fashionable block of Multimedia Gulch where the
+MSNBC/ZDTV studio makes its home. There, on August 7, 1996, I made a
+public appearance on behalf of Be, Inc.
+</p><p>
+The timing of the request for an on-camera demo was interesting: Be had
+just announced the demonstration of the BeOS on PowerMac hardware, so
+suddenly a story about Be, the BeOS, and the BeBox was an urgent topical
+news priority. ...Yes, it has to happen TOMORROW... Yes, we know that all
+of the company principals are at Macworld in Boston... Yes, we know that
+Macworld is a big event, but no, we didn't send a crew there. Yes, we
+still want something for tonight, and no, next week when everyone is back
+won't do... Because by then the emergence of a new OS and hardware
+platform just won't be news.
+</p><p>
+Sigh.
+</p><p>
+So, the next morning I drove off to the city with a BeBox and a full demo
+kit of speakers, a MIDI synthesizer, 17" monitor, keyboard, mouse,
+cables, power strips... all scrounged from home because the Be demo kits
+were busy 3000 miles away in Boston (City Motto: Parking? Try San
+Francisco).
+</p><p>
+I arrived to find the studio well-appointed with sound systems, and
+monitors, and curious three-legged tables. So most of the stuff I brought
+wasn't really needed anyway. After several layers of pancake to cover the
+sweat of jogging three blocks from the nearest open parking spot (oh
+never mind, I've beat that joke into the ground), the ZDTV talking head
+and I talked about the demo:
+</p><p>
+Me: We've got symmetric multiprocessing... virtual memory...protected
+memory...C++...the <span class="trademark">GeekPort</span>™...
+</p><p>
+T. Head: Umm, what we're looking for is something a bit less technical...
+</p><p>
+Me: Oh. OK. Something my mother might understand, right?
+</p><p>
+T. Head: Exactly! That's it.
+</p><p>
+Me: (Sigh.)
+</p><p>
+We wrapped the demo in two continuous takes, using ultra- hip,
+low-altitude, hand-held camera angles, over-the- shoulder boom shots, and
+cock-eyed, off-center roving pans. They did a fine job of intercutting
+the two takes, leaving in the really important points, while leaving out
+some flawed (yet colorful) metaphors.
+</p><p>
+The distortions of analog video distribution mercifully softened the
+picture like an episode of Moonlighting, so my recently acquired gray
+hairs weren't that evident. But not even 10 mm of Vaseline smeared on the
+lens could have covered up the look I gave the talking head after a
+severely misguided opening question. It's a look I usually reserve for
+computer salespeople who make uninformed claims that imply that _this_
+product is _not_ bound by the same laws of physics as the rest of the
+universe.
+</p><p>
+Overall, I think it was a very positive exposure for Be, and it was, for
+me, a great experience.
+</p><p>
+Other thoughts:
+</p><p>
+As you all know, Be has achieved a level of newsworthiness due the
+announcement of the PowerMac port. As the hardware guy at Be, there was
+some parental sadness at seeing our OS take its first steps outside the
+hardware home I've made for it, but that feeling is overcome by parental
+pride in the potential this child has shown. Be assured there will always
+be a place at home for the BeOS, but I'm afraid that I won't promise that
+I will keep your room just the way you left it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DR8FAQ1-41"></a>DR8/BeIDE FAQ</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="othername">The Be Team at Metrowerks</span></span></div></div></div><p>
+DR8 is out, and so is the new and improved CodeWarrior IDE. A lot of
+things changed about the way you build Be applications, and although we
+tried to document all the needed changes, there are still some questions
+that we see over and over again. To try and calm the flood, here's a
+DR8/BeIDE FAQ:
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id498386"></a><a id="id498389"></a>Q:</td><td><p>
+Every time I open my project, I get an error about not finding
+libbe.so.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+libbe.so is in the /system/lib folder. You have to make sure that the
+system access paths for your project include /system/lib. Go into
+Settings, press Access Paths, and add it if it's not.
+</p></td></tr><tr class="question"><td><a id="id498404"></a><a id="id498406"></a>Q:</td><td><p>
+I can't compile anything; it says 'inherited' is undefined.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+You have to turn OFF the ANSI Keywords Only option in the C++ Language
+Preferences for 'inherited' to work.
+</p></td></tr><tr class="question"><td><a id="id498419"></a><a id="id498422"></a>Q:</td><td><p>
+I compile my app, but it won't run or it crashes on startup.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+You have to turn ON both the RTTI and C++ Exceptions options in the
+C++ Language Preferences.
+</p></td></tr><tr class="question"><td><a id="id498435"></a><a id="id498437"></a>Q:</td><td><p>
+I'm building my application, but its icon goes away and isn't shown.
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+First, make sure that the .rsrc file for your application is added to
+the project window.
+</p><p>
+Second, make sure that the application creator code you set in IconWorld
+matches the one set in Project preferences in the IDE.
+Third, there exists a bug where the icon can be temporarily disabled when
+the output file name in the Project preferences is a path (contains a
+slash). We're working on fixing this bug.
+</p></td></tr></tbody></table></div><p>
+You may wish to do the settings changes mentioned above not only for each
+of your projects, but for the "New Projects" target as well, so your
+defaults for new projects are correct.
+</p><p>
+Following these easy steps will ensure that your transition from DR7 to
+DR8 is as effortless as possible. Of course, you still have to update all
+those places in the API that changed, but we can't help you there.
+</p><p>
+Good luck!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-41"></a>Be Developer Talk: John R. Ashmun of Aspen Technology</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">John R.</span> <span class="surname">Ashmun</span></span></div></div></div><p>
+My web page, which is unlikely to appeal to anyone but me for a while:
+http://www.nwlink.com/~jrashmun
+</p><p>
+After fourteen years at Industrial Systems, Inc. (now part of the
+Manufacturing Systems Division of Aspen Tech), I took a year-long leave
+of absence, bought a Macintosh, began surfing the Internet, looked up
+CodeWarrior (on John Norstad's recommendation), and thereby discovered
+the existence of Be. Now I work (almost) full time getting to know the
+BeOS, and developing a CORBA-style Object Request Broker (ORB)
+implementation.
+</p><p>
+My favorite computer had been my Amiga 1000. I always regretted that I
+couldn't afford to spend what it would have required to be a full-time
+Amiga developer. The BeBox gives me a second chance at designing software
+for a platform that supports the type of development that I find
+gratifying: I like working on the layers of software that help higher-
+level applications get their job done. In the two years before my leave,
+I developed a multithreaded server in C++ on UNIX—and enjoyed every
+moment of it. I love making some little thing work, and then using it to
+make some bigger thing work. I love anticipating unexpected uses, so that
+when someone says, "It's great... but could you please make it do &lt;XXX&gt;
+next time?" I can say, "It's already in there!"
+</p><p>
+The BeBox is the right platform at the right time. It's fun because it
+uses some of the best software ideas in the industry, but isn't burdened
+by not-so-good subsystems. Of course, it's not perfect: The OS needs to
+have a few more things implemented, and the BeBox crashes fairly often.
+Also, it's hard to get the attention of Be's developer support --
+although it's always rewarding when they do respond. Please, Be, hire
+more developer support people. And, while we're at it, make the bug list
+available for review.
+</p><p>
+I plan to produce an implementation of the C++ mapping for CORBA by the
+end of January, 1997, and add support for other languages as they become
+available. For distribution, I plan to make the product available on a
+web site as Kagi shareware.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-41"></a>AMIGA96</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I have a such a license plate in my office. But before I go any further,
+a few words of apology.
+</p><p>
+First, to our readers whose mother tongue isn't English. I used the
+expression "church key" at the end of my last column and received e-mail
+from overseas readers wondering about the meaning and origin of the
+trope. Of course, as a late and not completely debugged English speaker,
+I find the metaphor pregnant. Just picture one of these large, old,
+ornate wrought iron keys. It's the end of the day, hear the hiss when the
+church beadle takes the key to the beer bottle...
+</p><p>
+Second, I'd like to apologize to developers who have suffered while we
+switched ISPs and installed a T1 line to support the growing traffic on
+our web and ftp servers. This happened at the time when we experienced
+increased activity as a result of the PowerMac port demonstrated at
+Macworld. By now, we're on our way to catching up with our backlog and
+I'd like to express my appreciation to those who contacted me to express
+their concern, thus giving me an opportunity to look into the problem and
+monitor corrective actions.
+</p><p>
+Now, to the Amiga. A recent MSNBC broadcast showed the AMIGA96 license
+plate given to me by European developers. Some viewers were curious. What
+did the license plate mean? This is probably a good opportunity to
+acknowledge our spiritual affiliation with the Amiga. In many respects,
+it guided our thinking and efforts as we formed the company and developed
+our product. In the first place, the Amiga provided an existence proof.
+As the millions of Amigas sold attested, you did not have to be
+compatible with the Mac or Windows to create a platform and to attract
+developers and customers all over the world. With its cousin the Atari
+ST, the Amiga proved the existence of an A/V market. The Video Toaster
+became the tractor for the Amiga in multimedia content creation.
+</p><p>
+I was at Apple in 1986 when David Needle and his colleagues introduced
+the Amiga, soon acquired by Commodore. We were concerned. We didn't have
+a 68020 machine yet, and we didn't have multitasking or any of the audio,
+video, graphics, and animation features offered by the Amiga. By the end
+of 1988, Bob Kottick and Howard Marks, both Commodore developers,
+approached me. Howard had been an intern at Apple France. Investors
+wanted to buy Commodore from Irving Gould, its chairman, an avid consumer
+of cigars and CEOs. Paul Rainwater, who, if memory serves, managed money
+for the Bass family, and Mort Meyerson, Ross Perot ex-number-two at EDS,
+showed up at my house in Portola Valley.
+</p><p>
+Allan Loren, one of my colleagues at Apple, once told me that Ross Perot
+had chided him at a job interview for wearing loafers, very proper ones
+perhaps, "but at EDS we wear proper shoes with shoelaces, you
+understand?" I thought Allan was exaggerating a little. I asked Mort
+about his very elegant loafers. He didn't miss a beat and replied, “<span class="quote">I
+don't work for Ross anymore.</span>” These well-heeled investors wanted a CEO
+for their acquisition. In the end it went nowhere, Irwin wouldn't sell.
+Perhaps he remembered my name, though. When I left Apple, he tried to
+convince me to run Commodore's R&amp;D. I, in turn, tried to convince him to
+let me run the company for 2 or 3 years and to compensate me with 20
+percent of the increase in valuation, no salary. That conversation didn't
+go anywhere either, but my interest was piqued and, with Steve Sakoman,
+we started a company with one goal: Make a 1990s Amiga. We don't know yet
+if we've succeeded, but we're happy to acknowledge our debt to a product
+that continues to inspire us in many ways.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-41"></a>BeDevTalk Summary</h2></div></div></div><p>
+BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail. To subscribe to BeDevTalk,
+visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498683"></a>WEEK 3</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498689"></a>Subject: How are we suppose to do this?</h4></div></div></div><p>
+In this thread (which disappeared for a week), game designers discuss
+the proper ratios for a game's polling/physics/drawing frequencies.
+Fairness entered the equation: If you're playing a networked game,
+should consideration be made for slower machines? If so, which
+frequencies do you alter?
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498707"></a>WEEK 2</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498713"></a>Subject: Clicks, doubles n' drags</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: You're pushing my buttons (but how many?)<br />
+AKA: ctrl-meta-popsicle-click
+</h5></div></div></div><p>
+How many buttons should the developer assume the user's mouse to have?
+At least one, certainly, and the consensus is (slightly) in favor of
+limiting assumptions to no more than one, but there are some "two is
+standard" and "you can't emulate two with one" holdouts. Despite the
+dispute, the tenet that a developer should make sure that functionality
+isn't lost for lack of a second (or third) button is widely accepted.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498738"></a>Subject: Floats just don't add up</h4></div></div></div><p>
+Are floats imprecise? Yes—with examples to prove it. But, as one
+contributor noted, you need to talk binary (rather than decimal) if you
+want to speak in a float's native tongue.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498754"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498761"></a>Subject: Missing Last Minute Note</h4></div></div></div><p>
+What was the "Last Minute Note" that was mentioned in the DR8 bill of
+materials? It seemed to be missing from many developers' upgrade
+packages.
+</p><p>
+THE BE LINE: The bug was in the bill of materials—there was no "Last
+Minute Note" for DR8.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498780"></a>Subject: Developer ID and password AKA: BeBox Dual603-133 upgrade program</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Okay, who broke the P/W file???</h5></div></div></div><p>
+Many developers pointed out that they couldn't use their passwords to
+get into the Developer's Only section of the Be web site.
+</p><p>
+THE BE LINE: When our web server is down (which it was quite often last
+weekend), the developer passwords are refused in a manner that makes it
+look like the password was unrecognized. We'll try to fix this so the
+reason for the refusal is clear.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498806"></a>Subject: 133 Mother boards</h4></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id498815"></a><a id="id498817"></a>Q:</td><td><p>
+Are the CPUs on the new motherboards socketed?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+No, they're soldered.
+</p></td></tr></tbody></table></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498832"></a>Subject: AppModeler, PPP, and RunFileSaveAsPanel</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Help with PPPlease!</h5></div></div></div><p>
+These threads reviewed the DR8 improvements (or, as some contend,
+stasis) of PPP, PAP/Chap authentication, the ANSI terminal (some folks
+want real vt100 emulation), serial port support (see the new Connect
+application), and the like.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498852"></a>Subject: Be Newsletter Issue 1-40, September 11, 1996</h4></div></div></div><p>
+Pierre Raynaud-Richard's fictionalized account of implementing a
+graphics driver (in last week's 'Engineering Insights') tickled some
+fancies. A few folks stepped forward to ratify the nightmarish scenario
+presented in the story.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id498868"></a>Subject: NetPositive again</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Generating additional windows in NetPositive</h5></div></div></div><p>
+Comments, questions, and suggestions regarding NetPositive (the web
+browser that's new in DR8). The verdict so far: The app is missing some
+features, but it's usable, attractive, and a welcome addition.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-40.html">Issue 1-40, September 11, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-42.html">Issue 1-42, September 25, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-40.html" title="Issue 1-40, September 11, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-42.html" title="Issue 1-42, September 25, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

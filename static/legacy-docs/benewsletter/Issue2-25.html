@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-24.html" title="Issue 2-24, June 18, 1997" /><link rel="next" href="Issue2-26.html" title="Issue 2-26, July 2, 1997" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-24.html" title="Issue 2-24, June 18, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue2-26.html" title="Issue 2-26, July 2, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-24.html">Issue 2-24, June 18, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-26.html">Issue 2-26, July 2, 1997</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-25"></a>Issue 2-25, June 25, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-25"></a>Be Engineering Insights: What's the Fragile Base Class (FBC) Problem?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Peter</span> <span class="surname">Potrebic</span></span></div></div></div><p>
+Try as we might to separate and hide our implementation of the BeOS,
+certain dependencies are created the moment a developer compiles and
+links against our dynamically loaded libraries. These dependencies
+include:
+</p><ul class="itemizedlist"><li><p>
+The size of objects (i.e. structs or classes)
+</p></li><li><p>
+The offsets to "visible" (public or protected) data
+</p></li><li><p>
+The existence and size of the vtable
+</p></li><li><p>
+The offsets to the virtual functions in the vtable
+</p></li></ul><p>
+When your app is compiled and linked, it records all these statistics. If
+any of these things changes in the library, the compiled app will no
+longer run. This is the "Fragile Base Class" problem.
+</p><p>
+With the almost-in-your-hands Preview Release, we're putting a stake in
+the ground: The Preview Release will be forward- compatible with
+subsequent releases of the BeOS. How far into the future will this
+compatibility last? Frankly, we don't know—we'll run it out as far as
+we can, but if we hit a brick wall we'll reassess our position.
+</p><p>
+To archive the goal of forward-compatibility, we had to take certain
+steps. If you're designing your own library, and if you want to be able
+re-release your library without breaking your client's code, you may want
+to follow similar steps.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id568962"></a>The Bright Side</h3></div></div></div><p>
+Before we look at our FBC solution, let's look at what CAN change without
+breaking compatibility:
+</p><ul class="itemizedlist"><li><p>
+Non-virtual functions. A class can adopt as many new non-virtuals as
+it wants. Old code won't be able to take advantage of the new
+functions, of course, but you won't break anything.
+</p></li><li><p>
+New classes. New classes are permitted as long as they don't change
+the inheritance hierarchy of the existing classes.
+</p></li><li><p>
+Implementation. The way that existing functions are implemented is
+allowed to change. Re-implementing old functions is obviously not
+something to be done lightly, but it's not going to tickle the FBC
+problem.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id569001"></a>The Dark Side</h3></div></div></div><p>
+Here are the matters that affect the FBC problem, and our solution for
+each:
+</p><ul class="itemizedlist"><li><p>
+The Size of Objects Cannot Change
+</p><p>
+The "size of an object" means the cumulative size of its data members. If
+more data members are added, the class will break compatibility. In the
+Preview Release, we've reserved an "appropriate" amount of data in each
+class:
+</p><pre class="programlisting c">
+<span class="type">uint32</span> <code class="varname">_reserved</code>[X];
+</pre><p>
+Where "X" is determined on a class-by-class basis. If we anticipate that
+the class won't ever change (<code class="classname">BRect</code>, for example), then we didn't add any
+padding. If the object is small but it might grow, then we added a little
+—maybe 25-50% of the current size. For example, the <code class="classname">BMessenger</code> object
+has 13 bytes of real data; we've padded it with 7 extra bytes. Large
+classes get even more.
+</p><p>
+So what happens three months from now when the "right amount" ends up
+being too little? The final "_reserved" value can be used to point to
+another structure that accommodates the new data (taking into account
+that a pointer and a <span class="type">int32</span> might not be the same size).
+</p></li><li><p>
+Offsets of Publicly Visible Data Members Cannot Change
+</p><p>
+When thinking about the FBC problem realize that the "protected" C++
+keyword really means "public." Anything that is "protected" is publicly
+visible. Any "public" or "protected" data members are fixed in stone:
+Their offsets and sizes can never change.
+</p><p>
+There isn't a "solution" to this because it really isn't a problem; it's
+just something you must be aware of if you're making your own library.
+</p></li><li><p>
+Be Wary of <code class="code">inline</code> Functions
+</p><p>
+If an <code class="code">inline</code> function exposes the size/offset of a private data member
+then that private member is actually public: Its size and offset can
+never change. We've removed all such inlines from the kits. Unless
+there's some overriding performance issue I'd recommend you do the same
+in your libraries. Remember: The only safe inlines are those that only
+reference public members (data or functions) or non-virtual private
+member functions.
+</p></li><li><p>
+VTable Now for the Future
+</p><p>
+If a class/struct is *ever* going to have a vtable it better have one
+now. Adding that first virtual function changes the size of the class,
+and possibly the offsets of every single data member.
+</p><p>
+Add a dummy virtual (or a few) now or forever hold your peace. If a class
+doesn't need virtual functions, then you don't need to do anything.
+</p><p>
+Even if a class already has virtual functions, you may want to add more
+—do it now or never. In the Be kits, most classes have additional
+reserved virtual functions; look at the beginning of any private section
+in a Be header file and you'll see them:
+</p><pre class="programlisting cpp">
+class <code class="classname">BWhatAPain</code> {
+  public:
+      ...
+  private:
+      virtual <span class="type">void</span>  <code class="function">_ReservedWhatAPain1</code>();
+      virtual <span class="type">void</span>  <code class="function">_ReservedWhatAPain2</code>();
+      virtual <span class="type">void</span>  <code class="function">_ReservedWhatAPain3</code>();
+      ...
+};
+</pre></li><li><p>
+The Ugly Safety Net
+</p><p>
+For some classes, it's difficult to estimate the correct number of extra
+virtuals. Too many is okay, but too few can be bad.
+</p><p>
+To solve this problem, an additional "ioctl"-like virtual function can be
+added to the class hierarchy for unlimited (but ugly) extensibility.
+"Perform" is the name of choice for this type of function. As an example,
+look in the <code class="classname">BArchivable</code> class:
+</p><pre class="programlisting cpp">
+class <code class="classname">BArchivable</code> {
+  public:
+      ...
+      virtual <span class="type">status_t</span>    <code class="methodname">Perform</code>(<span class="type">uint32</span> <code class="parameter">d</code>, <span class="type">void *</span><code class="parameter">arg</code>);
+};
+</pre><p>
+If the function is needed, we can define "selector codes" and use the
+Perform function like so:
+</p><pre class="programlisting cpp">
+<code class="varname">ptr</code>-&gt;<code class="methodname">Perform</code>(<code class="constant">B_SOME_ACTION</code>, <code class="varname">data</code>);
+</pre><p>
+It's not pretty, but it gives us room if a class runs out of dummy
+virtuals.
+</p></li><li><p>
+Public Virtual Function Order Cannot Change
+</p><p>
+The order that public virtual functions appear in the header file is set
+in concrete. The Metrowerks compiler orders vtable entries based on the
+order in which they appear. Virtual function order can not be shuffled
+later on. (We're lucky that entries aren't alphabetized! Think about it.)
+</p><p>
+private virtuals, on the other hand, *can* be reordered. But that's only
+because in the kits we don't define any private virtuals that can be (or
+should be) overridden.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id569280"></a>A Dilemma</h3></div></div></div><p>
+Looking at the last two items leads to an unfortunate problem. Let's say
+that in a subsequent BeOS release, we want to use one of the dummy
+virtuals. We can't simply move it to another part of the header file --
+vtable order is set in stone. But a function CAN be moved from private to
+public. As we (at Be) need a dummy virtual, we'll simply "peel" the
+topmost private function up into the public section.
+</p><p>
+For example:
+</p><pre class="programlisting cpp">
+class <code class="classname">BWhatAPain</code> {
+  public:
+      ...
+      virtual <span class="type">int32</span>  <code class="methodname">NewDR10Function</code>(... arglist ...);
+  private:
+      virtual <span class="type">void</span>  <code class="methodname">_ReservedWhatAPain2</code>();
+      virtual <span class="type">void</span>  <code class="methodname">_ReservedWhatAPain3</code>();
+      ...
+};
+</pre><p>
+This is why we chose to stick the dummy virtuals at the top of the
+private section.
+</p><p>
+But what if the class has a protected section that contains virtual
+functions? Remember, you can't reorder your virtuals, but you can
+"interleave" sections. It's not pretty...
+</p><pre class="programlisting cpp">
+class <code class="classname">BAreWeHavingFunYet</code> {
+  public:
+      ...
+  protected:
+      ...
+      virtual <span class="type">int32</span>  <code class="methodname">SomeOldProtectedVirtual</code>();
+
+  public:
+      virtual <span class="type">int32</span>  <code class="methodname">NewDR10Function</code>(... arglist ...);
+
+  private:
+      virtual <span class="type">void</span>  <code class="methodname">_ReservedAreWeHavingFunYet2</code>();
+      virtual <span class="type">void</span>  <code class="methodname">_ReservedAreWeHavingFunYet3</code>();
+      ...
+};
+</pre><p>
+...but it works.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id569394"></a>Another Dilemma</h3></div></div></div><p>
+There's another subtle issue dealing with overriding a virtual function.
+I'll explain the problem in a moment, but first the solution: If a class
+might ever need to override an inherited virtual function it's much
+better and simpler to override that function *now*.
+</p><p>
+Here's the problem. Let's say a kit declares a couple of classes thus:
+</p><pre class="programlisting cpp">
+class <code class="classname">A</code> {
+  public:
+      virtual <code class="methodname">X</code>();
+};
+
+class <code class="classname">B</code> : public <code class="classname">A</code>
+  { ... };  <span class="comment">// i.e. B *doesn't* override A::X()</span>
+</pre><p>
+Now a developer creates their own class (<code class="classname">C</code>) that
+inherits from <code class="classname">B</code>, and
+overrides the <code class="methodname">X()</code> function as follows:
+</p><pre class="programlisting cpp">
+<code class="classname">C</code>::<code class="methodname">X</code>() {
+  ...
+     inherited::<code class="methodname">X</code>(); <span class="comment">// OUCH! statically resolved</span>
+                        call to A::X()
+  ...
+}
+</pre><p>
+The call to inherited isn't <code class="code">virtual</code>. It's a statically resolved call to
+the "closest" override; in this case, it resolves to <code class="methodname">A::X()</code>. That's okay
+as far as it goes—but what if, in a subsequent release, class <code class="classname">B</code> *does*
+override <code class="methodname">X()</code>? The developer's code will *still* resolve
+<code class="methodname">inherited::X()</code> as
+<code class="methodname">A::X()</code>—in other words, the developer will skip right over
+<code class="methodname">B::X()</code>.
+</p><p>
+The solution that covers all cases is to fully override all inherited
+virtuals (where the implementation simply calls inherited). But that's
+overkill; it could impact performance and would complicate our API. So we
+applied some discretion in the kits; some classes override some
+functions, others don't.
+</p><p>
+But let's say it's getting close to DR10, and we now realize that a
+couple of our do-we-need-to-override guesses were wrong. There's a
+solution, but it's complex, *very* ugly, and too much trouble to explain
+here.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id569532"></a>Other Miscellaneous Items</h3></div></div></div><ul class="itemizedlist"><li><p>
+Never put an object that contains a vtable into shared memory. The
+vtable contains addresses that are only valid for a particular address
+space.
+</p></li><li><p>
+You can't override the new/delete operators after the fact. It's now
+or never.
+</p></li></ul><p>
+That's all there is to it!
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News2-25"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>
+Requiem for a BeBox
+</p><p>
+A moment of silence please for my recently departed BeBox...
+</p><p>
+I take my BeBox "portable" home almost every night because I simply can't
+get enough. If you are one of the programmers such as myself who has had
+the privilege of programming on one of these machines, you have come to
+appreciate a fun and enjoyable experience. Just the thought of dual
+processors makes you feel like you have something no one else does and
+are therefore on the cutting edge.
+</p><p>
+I have another BeBox at home, but my wife is now a BeBox programmer as
+well, so I can't simply use that machine. So I cart the one from my desk
+back and forth. The weight isn't too much because I know the reward on
+the other end will be a few more hours of programming this beautiful OS.
+</p><p>
+Last night I carted my machine home as usual. In my machine I have two
+hard disks, each with a couple of partitions, a FireWire card, a
+Hauppauge board, a Matrox Millennium board, and a Jaz drive, and the
+usual chunk of memory.
+</p><p>
+After Yasmin was well asleep, I thought I'd sit down for a little evening
+news. I hooked up the box in the office, and went to sit on the couch. A
+few minutes later I was thinking to myself, "my that grass fire smells
+strange." There was a fire in the local hills earlier in the day, so I
+thought nothing of it. Then a couple minutes later I thought, wait a
+minute, I live in Silicon Valley and that smells strangely like silicon
+frying!! I dashed into the room. There were no visuals of smoke, but
+something was definitely frying. The LEDs were pegged so I reached for
+the switch. Upon inspection, I found that the disk drive that I had
+unsecured was pressing against a part of the motherboard that it
+shouldn't have been touching. Result, fried disk or motherboard. I'm
+afraid to turn it on to check.
+</p><p>
+Your mind races in such situations. I wasn't too bent out of shape
+though. I have that Jaz drive for a reason, and I do use it. The only
+thing lost was the latest modifications to the /dev/wacom driver. I can
+reproduce that and be back in business. The one thing I really lament is
+that this was an excellent opportunity to use:
+</p><pre class="programlisting cpp">
+<code class="function">is_computer_on_fire</code>()
+</pre><p>
+and I missed it.
+</p><p>
+DARN, DARN, DARN, DARN!!!
+</p><p>
+So, it's been asked enough times, what's the difference between Datatypes
+and Rraster codecs. And I've answered enough times, "Use Datatypes."
+Rraster exists by necessity. Datatypes didn't go out with the Advanced
+Access release, and we wanted to have an image viewer. The codecs were
+written quite a few months ago. Rraster codecs only do reading, Datatypes
+are for reading and writing. Datatypes will also translate between any
+format, Rraster will only do images. Datatypes is a nice solid framework
+for the inclusion of data in any format including movies, sound, still
+images, text, and whatever else can be thought up in the future.
+</p><p>
+The Datatypes library will be included in the upcoming Preview Release.
+It is based on the 1.52 release from Jon Watte. It is not quite as
+Be-ified as it could be, that will be a future exercise, but it's there
+and you can create those codecs as freely as you like. This library has
+found great usefulness in many apps to date. We are not quite giving it
+our full support, but merely including it as a matter of convenience. You
+should expect that in the future it will move more into the Be fold and
+be a more integrated part of the system. The primary benefit for the
+future might be that we start to utilize it, or similar functionality
+within our own applications such as Rraster.
+</p><p>
+One benefit I did see about the recent histrionics on this topic is that
+a couple more Datatypes aware applications have been written, once again
+proving the worth and ease of this framework. That can't be bad.
+</p><p>
+A side discussion of this whole Datatypes thing has been this question:
+How do I get my application's "launch" directory. Well, the
+<code class="classname">BApplication</code>
+object doesn't provide a method directly, but you can do this:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="function">HomeDirectory</code>(<span class="type">char *</span><code class="parameter">dir</code>, <span class="type">constint</span> <code class="parameter">buffLen</code>)
+{
+  <span class="type">app_info</span> <code class="varname">info</code>;
+  <code class="varname">be_app</code>-&gt;<code class="methodname">GetAppInfo</code>(&amp;<code class="varname">info</code>);
+
+  <code class="classname">BEntry</code> <code class="varname">appentry</code>;
+  <code class="varname">appentry</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">info</code>.<code class="varname">ref</code>);
+
+  <code class="classname">BPath</code> <code class="varname">path</code>;
+  <code class="varname">appentry</code>.<code class="methodname">GetPath</code>(&amp;<code class="varname">path</code>);
+  <code class="function">strncpy</code>(<code class="parameter">dir</code>, <code class="varname">path</code>.<code class="methodname">Path</code>(),<code class="parameter">buffLen</code>);
+  <code class="parameter">dir</code>[<code class="parameter">buffLen</code>] = '\0';
+
+  return <code class="constant">B_NO_ERROR</code>;
+};
+</pre><p>
+Or variations on the theme to return a <code class="classname">BDirectory</code> object instead. From
+there you can locate resources that might be located within your launch
+directory. Of course if you're writing a POSIX application, you'll
+probably just use the <code class="function">getcwd()</code> function, or argv[0].
+</p><p>
+Have you ever in your career participated in the final days of a major
+software release, prepared for developer conferences on two continents,
+written interesting sample code and commentary for one of those
+conferences, taken care of your fire ball two year old because her nanny
+is on vacation, all within the space of a couple of weeks? Thank goodness
+it's all for the BeOS. Just one more compile ought to do it!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-25"></a>Persistent Ideas and Culture</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+CompuServe occupies a special place in my affections.
+</p><p>
+Once upon a time they were the model on-line service, reliable, available
+everywhere, full of "good stuff." Sixteen years ago, when we started
+Apple France, we suffered from CompuServe envy. It hadn't absorbed The
+Source yet, a wonderful name, and wasn't easily accessible overseas. To
+make the Apple II more attractive, we decided it needed its own, local,
+on-line service. So, with the help of The American College in Paris, we
+paid homage to CompuServe and started Calvados, a word play on apple
+jack. Calvados went through several transformations and is now
+essentially a French ISP.
+</p><p>
+The idea endured. In the early versions of our business plans, as
+recounted in a previous newsletter, we intended to build a BBS in order
+to wire together the Be community, developers, customers and ourselves.
+The Web mercifully freed us—and our shareholders—from having to
+build and debug such an infrastructure.
+</p><p>
+There are more ties to CompuServe. Before starting Be, as I was leaving
+Apple, I looked at several business opportunities; one of them was buying
+CompuServe and modernizing it. At the time, I was of the opinion there
+was much "unexpressed" value in CompuServe and I thought of ways to make
+it more visible to customers and, as a result, to shareholders.
+Negotiations didn't even start when we heard H&amp;R Block, the owners,
+thought the business was worth about $900 Million on the basis of $125
+million revenue, while NYC investment bankers felt they could justify
+$400 million.
+</p><p>
+Later, around 1992-1993, we tried to build a CompuServe client into the
+BeOS. We still wanted to wire the Be-ers together and we felt we could do
+a nice job of it by neatly integrating CompuServe's HMI (Host Micro
+Interface) protocol into our product, thus creating a better user
+experience.
+</p><p>
+CompuServe was reluctant to work with us; the stated reason revolved
+around the support headaches our HMI implementation would create. In one
+guise or another, the old ideas are alive and well as we debug the
+Preview Release version of our NetPositive browser.
+</p><p>
+I re-signed with CompuServe as I prepared for a trip to several European
+locations. I had canceled my subscription a while ago, preferring an
+Internet account with a local ISP. This time, I wanted the convenience
+and reliability of access to e-mail on the road without spending a
+fortune in international calls. CompuServe came to mind with local access
+in many European locations.
+</p><p>
+The sign-up was painless and I thought I had secured an easy solution to
+my problem. In a way, I had, but there were glitches reminding me of the
+differences between old style on-line services and Internet ways. First,
+I received several urgent messages advising me of unspecified problems
+with my sign-up data and requesting resubmission "using the enclosed
+form."
+</p><p>
+The form refused to be filled out. Fearing cut-off, I e-mailed fully
+restated data, including the billing address I thought was the source of
+the problem. When I logged in from Paris, I found my reply to customer
+service had been rejected because their mailbox was full. No complaints
+yet, I'm still connected as I write this.
+</p><p>
+The worse news is the custom browser used as the standard CompuServe 3.0
+client. The mail part can't reliably open attached files and is much less
+flexible than either Eudora or the mail function of Microsoft's or
+Netscape's browsers. The better news is you can forget the client
+altogether, dial up CompuServe and use a "standard" browser and e-mail
+package.
+</p><p>
+From that perspective the site is just another site, nice but
+unremarkable. And, with a local call, I can connect to my Silicon Valley
+ISP, retrieve mail and browse my favorite Web pages—which is what I
+wanted most. I should be happy.
+</p><p>
+Yet, I feel a little sad as I see CompuServe struggle with its conversion
+to the Internet. Its contents and user interface remind me of the good
+old days, but no longer feel competitive. And making money as an ISP,
+even an international one, looks like a hard road back to financial
+health. Company cultures are mysterious, how they're born, how they
+evolve, how they can or can't be changed once they've become a liability.
+Something to fear, something to admire.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-24.html">Issue 2-24, June 18, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="Issue2-26.html">Issue 2-26, July 2, 1997</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-24.html" title="Issue 2-24, June 18, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue2-26.html" title="Issue 2-26, July 2, 1997"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 2: 1997</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume2.html" title="Volume 2: 1997" /><link rel="prev" href="Issue2-50.html" title="Issue 2-50, December 17, 1997" /><link rel="next" href="volume3.html" title="Volume 3: 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue2-50.html" title="Issue 2-50, December 17, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 2: 1997</div></div><div id="headerB">Prev: <a href="Issue2-50.html">Issue 2-50, December 17, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="volume3.html">Volume 3: 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue2-51"></a>Issue 2-51, December 24, 1997</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id612869"></a>Editorial Note</h2></div></div></div><p>
+The Be Newsletter will take a well-deserved holiday next Wednesday:
+December 31. Look for the next issue of the Newsletter in the new year:
+January 7,1998!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-51"></a>Be Engineering Insights: Loading An Image, One Photon At a Time...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+When I go home in the evening, I sometimes use my BeOS machine for some
+of my hobbies. I thought it would be fun to describe some of the things I
+do, and why the BeOS works so well for them.
+</p><p>
+Recently, I became interested in extremely low-light imaging. There's a
+device called an "image intensifier," which has the wonderful ability to
+amplify any incoming light by a huge factor—up to 30,000 times,
+without adding much noise. These devices are great, but often there's so
+little light to work with (to take pictures of galaxies for instance)
+that a single image appears "snowy." The snow is actually individual
+photons detected by the system.
+</p><p>
+This is where a computer can work its magic. The intensifier tube is
+re-imaged by a black and white video rate camera, its signal digitized by
+a Hauppauge frame grabber ($129 at Fry's Electronics). The resulting data
+is transferred by DMA using the Bt848 driver—and then the fun begins!
+</p><p>
+The first problem to deal with is the huge amount of data you get: One
+second of recording gives you 9 megabytes of data! That kind of stream is
+enough to keep even a 225 MHz system pretty busy. The second problem is
+that a lot of processing needs to be done on the individual frames before
+you can accumulate them.
+</p><p>
+The first step after grabbing a frame is to remove any systematic bias of
+the camera and intensifier tube. You can do this by using some
+calibration data that determines the fix bias and sensitivity of every
+pixel.
+</p><p>
+In C you'd use:
+</p><pre class="programlisting c">
+*<code class="varname">clean_pixel</code> = (*<code class="varname">src_pixel</code> - *<code class="varname">bias_map</code>) * (*<code class="varname">response_map</code>);
+</pre><p>
+After that, if you're imaging galaxies, you need to account for
+atmospheric effects. Just like the heat rising over a road in summer, the
+image you see through a telescope moves all the time, because of minute
+temperature differences in the different layers of the atmosphere. To
+compensate for that motion, you use a reference object in the image. You
+measure the position of the object with a centroiding algorithm, which
+measures the "center of gravity" of an area of the frame:
+</p><pre class="programlisting c">
+<span class="type">void</span>    <code class="function">centroid</code>(<span class="type">float *</span><code class="parameter">x</code>, <span class="type">float *</span><code class="parameter">y</code>)
+{
+    <span class="type">int</span>     <code class="varname">x</code>;
+    <span class="type">int</span>     <code class="varname">y</code>;
+    <span class="type">float</span>   <code class="varname">sum_x</code>;
+    <span class="type">float</span>   <code class="varname">sum_y</code>;
+    <span class="type">float</span>   <code class="varname">total_count</code>;
+
+    <code class="varname">sum_x</code> = 0;
+    <code class="varname">sum_y</code> = 0;
+    <code class="varname">total_count</code> = 0;
+
+    for (<code class="varname">y</code> = 0; <code class="varname">y</code> &lt; <code class="constant">FRAME_Y_SIZE</code>; <code class="varname">y</code>++)
+        for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; <code class="constant">FRAME_X_SIZE</code>; <code class="varname">x</code>++) {
+            if (<code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code>] &gt; <code class="constant">THRESHOLD</code>) {
+                <code class="varname">sum_x</code> += <code class="varname">x</code> * <code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code>];
+                <code class="varname">sum_y</code> += <code class="varname">y</code> * <code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code>];
+                <code class="varname">total_count</code> += <code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code>];
+        }
+
+    if (<code class="varname">total_count</code> == 0) {
+        *<code class="varname">x</code> = 0;
+        *<code class="varname">y</code> = 0;
+    }
+    else {
+        *<code class="varname">x</code> = (<code class="varname">sum_x</code> / <code class="varname">total_count</code>) + 0.5;
+        *<code class="varname">y</code> = (<code class="varname">sum_y</code> / <code class="varname">total_count</code>) + 0.5;
+    }
+}
+</pre><p>
+This great for tracking bright areas, and is accurate down to a fraction
+of a pixel!
+</p><p>
+Now that you can stack individual frames after recentering them, you can
+decide which frames to add to the image, and which to reject. Once again,
+the atmosphere can degrade the sharpness of some frames but leave others
+nice and clean. Therefore, you need to measure the sharpness of every
+frame before adding it to the final image.
+</p><p>
+One easy way to measure the sharpness is to measure the amount of high
+frequency in the current image. You could use a 2D FFT, but it's pretty
+slow. Instead, you can measure only the very high frequencies by
+computing:
+</p><pre class="programlisting c">
+<span class="type">float</span>   <code class="function">sharpness</code>()
+{
+    <span class="type">int</span>     <code class="varname">x</code>;
+    <span class="type">int</span>     <code class="varname">y</code>;
+    <span class="type">float</span>   <code class="varname">sum</code>;
+    <span class="type">float</span>   <code class="varname">delta</code>;
+
+    <code class="varname">sum</code> = 0;
+
+    for (<code class="varname">y</code> = 0; <code class="varname">y</code> &lt; <code class="constant">FRAME_Y_SIZE</code> - 1; <code class="varname">y</code>++)
+        for (<code class="varname">x</code> = 0; <code class="varname">x</code> &lt; <code class="constant">FRAME_X_SIZE</code> - 1; <code class="varname">x</code>++) {
+            <code class="varname">delta</code> = <code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code>] - <code class="varname">pixel</code>[<code class="varname">y</code> + 1][<code class="varname">x</code>];
+            <code class="varname">sum</code> += <code class="varname">delta</code> * <code class="varname">delta</code>;
+            <code class="varname">delta</code> = <code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code>] - <code class="varname">pixel</code>[<code class="varname">y</code>][<code class="varname">x</code> + 1];
+            <code class="varname">sum</code> += <code class="varname">delta</code> * <code class="varname">delta</code>;
+        }
+    <code class="varname">sum</code> = <code class="varname">sum</code> / ((<code class="constant">FRAME_Y_SIZE</code> - 1) * (<code class="constant">FRAME_X_SIZE</code> - 1));
+    <code class="varname">sum</code> = <code class="function">sqrt</code>(<code class="varname">sum</code>);
+
+    return <code class="varname">sum</code>;
+}
+</pre><p>
+After all that image processing, my 225 MHz BeOS system can handle only
+25 frames per second. But since you reject part of the 30 frames per
+second produced by the camera using the sharpness criteria, this is not a
+problem. However, sharp frames seem to arrive in group, so you need to
+decouple the image production from the image stacking process.
+</p><p>
+The program has a bunch of buffers that store images to be processed. A
+producer thread receives the data from the frame grabber and measures the
+image's sharpness. If the sharpness is better than the worst frame
+currently in the buffers, that frame replaces the one stored in the
+"offending" buffer. A second thread takes images out of the buffer pool
+and processes them, and a final thread is responsible for displaying the
+current stack of images.
+</p><p>
+I will bring this camera to the next developer conference, and show how
+an image appears on the screen in near total darkness. The glow of a
+watch is enough to illuminate a large room—and my BeOS machine is
+happily crunching 9 millions pixels every second!
+</p><p>
+For people with little cameras like the QuickCam, many of the same
+techniques can be used. One common QuickCam problem, for example, is that
+some bright pixels overlay the image. The technique of measuring the fix
+bias of the camera works well to remove them. Just take a few images in
+the dark with the QuickCam and subtract their average from the images you
+take in full light, and you'll get a much nicer result. If you have
+questions about tricks you can do with CCD cameras, please e-mail me at
+benoit@be.com.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering2-51-2"></a>Be Engineering Insights: Bugger Off</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Melissa</span> <span class="surname">Rogers</span></span></div></div></div><p>
+I would like to put a plug in for the people at Be who support you, the
+developer. The best way I can come up with to do this is by using
+statistics.
+</p><p>
+But first, some typical questions we get from developers:
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id613485"></a><a id="id613488"></a>Q:</td><td><p>
+Why can't you review my bug faster?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+There are three QA and one DTS engineers who look at
+incoming developer bugs. Don't make the assumption that
+this is all they do. Doug, our DTS guy, spends his days
+answering e-mail and most of his nights writing source
+code. The QA guys spend their days writing evil tests and
+running them on unsuspecting machines. They also spend a
+lot of time fixing broken hardware.
+</p><p>
+Here is where I poke you, the developer, to write better
+bug reports. If you did, it wouldn't take us an average of
+one hour to review a bug and we could look at more of
+them.
+</p></td></tr><tr class="question"><td><a id="id613512"></a><a id="id613514"></a>Q:</td><td><p>
+How come my bug took a month to be reviewed?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+At nine bugs a day, each taking about an hour to review
+and approve, we would need to dedicate one full-time
+engineer to this process. We'd rather take a little longer
+and save the money.
+</p></td></tr><tr class="question"><td><a id="id613529"></a><a id="id613531"></a>Q:</td><td><p>
+Why don't you fix my bug?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We do. See the statistics below.
+</p></td></tr><tr class="question"><td><a id="id613543"></a><a id="id613545"></a>Q:</td><td><p>
+Why don't you implement my feature?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We have implemented 44 feature requests. This is not
+the greatest number, but remember that we are still
+working on the basic functionality of the BeOS. We believe
+that fixing crashing bugs and moving to other hardware
+platforms is more important than implementing features. Be
+patient. We are running out of hardware platforms and we
+will get to your features in another couple of releases or
+so.
+</p></td></tr><tr class="question"><td><a id="id613563"></a><a id="id613566"></a>Q:</td><td><p>
+Why isn't there more documentation?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+We have two technical writers. In ten months they wrote
+the 1000-page "Be Developers Guide" that O'Reilly
+published in November 1997. As they finish documenting
+more of the BeOS core functions, you will see more
+documentation.
+</p></td></tr><tr class="question"><td><a id="id613581"></a><a id="id613583"></a>Q:</td><td><p>
+Why can't the bug database do everything?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+It is a work in progress. As soon as the bug database
+guy, Ron, gets out of web hell (anticipated to be in about
+5 months) he may have time to implement some of your
+requests. (That's assuming more work doesn't come up.) Of
+course, if all you developers want to donate about
+$100,000 for a full-time bug database person, we wouldn't
+say no.
+</p></td></tr></tbody></table></div><p>
+Now for the statistics:
+</p><p>
+These numbers are all from developer reported bugs. They do not reflect
+internal bugs (which we also find and fix).
+</p><pre class="screen">
+Average number of bugs reported by developers      9/day
+
+Total number of developer bugs reported            2801
+Number of actual, unique bugs reported             1456
+
+Current number of bugs to be investigated          156
+Current number of open feature requests            396
+Current number of open bugs                        329
+
+Total number of fixed bugs to date                 575
+Total number of dev bugs fixed for PR1             391
+Total number of dev bugs fixed for PR2             146
+
+Average time for a bug to move
+  from "incoming" to "reviewing"                   5 days
+Average time for a bug to move
+  from reviewing to acknowledged                   4 weeks
+
+Percentage of developer bugs fixed for PR1         45%
+Percentage of developer bugs fixed for Pr2         38%
+
+Average release length (history of Be)             4 months
+</pre><p>
+Let's summarize: We have one DTS engineer, three QA engineers, and
+twenty-two development engineers working on the whole system. At this
+very moment, the development engineers each have an average of 78 bugs or
+features assigned to them. They also have to finish Intel, do their own
+engineering work, and fix/find bugs. The reality is that we have to
+prioritize things. Some bugs (those that affect a large number of people)
+win, and some bugs (those that only affect one or two or even ten people)
+lose.
+</p><p>
+Next time you're thinking about writing that flame-O-gram, ask yourself
+if you have a workload like this and if so, what are your turn-around
+times and percentages? Have empathy friends, we all are in this together!
+</p><p>
+Oh, and just for grins, why don't you ask Microsoft and Apple what their
+statistics are?
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop2-51"></a>Developers' Workshop: The Information Revolution</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Wright</span></span></div></div></div><p>
+"Developers' Workshop" is a new weekly feature that provides answers to
+our developers' questions. Each week, a Be technical support or
+documentation professional will choose a question (or two) sent in by an
+actual developer and provide an answer.
+</p><p>
+We've created a new section on our website. Please send us your
+Newsletter topic suggestions by visiting the website at:
+http://www.be.com/developers/suggestion_box.html.
+</p><p>
+Two weeks ago I said I'd let you in on who the newest addition to
+Developer Technical Support is. DRUMROLL...The new DTS Engineer
+is...DRUMROLL...Stephen Beaulieu, formerly of Purity Software. Stephen,
+take it away...
+</p><p>
+...Greetings all! I'm glad to be fighting the good fight here at
+devsupport. As a long-time Be Developer I have personal experience of
+what devsupport has done, right and wrong, in the past. Doug, Brian, and
+I are looking forward to revamping devsupport to better meet your needs.
+If you have concerns, problems, or (best yet) development questions,
+please drop us a line through the online form in the Registered
+Developers Area. If you've got questions, we've got answers (or will try
+and find them for you). Stephen Beaulieu
+</p><p>
+...And now on with the show! This week I'm going to tell you more about
+how to find information on programming for the BeOS. We've been busy
+organizing all the information and sources available to developers from
+our web site. In the next couple of weeks, you will see the fruits of our
+labors appear in the developers section of the site.
+</p><p>
+Each of the BeOS programming sources is explained in detail below...
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id613703"></a>The BeBook</h3></div></div></div><p>
+http://www.be.com/documentation/be_book/index.html
+</p><p>
+The BeBook is the complete programmer's reference to the BeOS API. It is
+available on-line on BeOS CDs or in print as the "Be Developer's Guide,"
+from O'Reilly and Associates. Currently, chapters on the Application Kit,
+Storage Kit, Interface Kit, Kernel Kit, Device Kit, and Support Kit are
+updated for PR1 and PR2. DR8 versions of the other kits are still
+available, but are out of date. Our documentation team is hard at work
+finishing the BeBook. As chapters are written they will be posted, and
+O'Reilly will publish the complete book as the "Be Developer's Guide,
+Volume 2."
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id613718"></a>The Be Headers</h3></div></div></div><p>
+The Be header files are included on all BeOS CDs and downloads. They are
+the ultimate guide to programming for the BeOS. The easiest way to find
+out exactly how to call a function or create a class is to check out the
+header file. The headers are divided into the same Kits as the BeBook,
+and are always up to date for the release with which they shipped. Find
+them on your CD or HD in /boot/develop/headers/be. Header files for C++,
+gnu, and POSIX are also in the /headers directory.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id613738"></a>Sample Code</h3></div></div></div><p>
+http://www.be.com/developers/sample_code/index.html<br />
+ftp://ftp.be.com/pub/samples/preview/
+</p><p>
+The web site's sample code section contains projects you can download or
+view on a per file basis. There's also a search engine for checking all
+the source and header files on-line. Keep in mind that not all our sample
+code is up on the web site yet. You can find additional code on the ftp
+site in /pub/samples/preview/.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id613762"></a>Tutorials</h3></div></div></div><p>
+http://www.be.com/developers/tutorials/index.html
+</p><p>
+The tutorials section of the web site contains detailed articles on
+certain aspects of programming the BeOS, like setting up icons and
+resources for your application.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id613780"></a>The Be Newsletter</h3></div></div></div><p>
+http://www.be.com/aboutbe/benewsletter/article_index.html
+</p><p>
+The Be Newsletter is the most valuable source of hard core programming
+information and inside jokes that Be has to offer. Each week a Be
+engineer or two takes up a subject they know and care about deeply. This
+information is often not yet available anywhere else. Past issues of the
+Newsletter are available on-line, but it can be hard to find information.
+That is why we're going back through every issue and indexing them by
+topic. This is part of the work we are doing to enhance the Be Developer
+web site.
+</p><p>
+Also each week, there's this column, the Developers' Workshop. It is
+intended to help developers get up to speed with more basic BeOS
+programming information, which isn't always easy. Your suggestions on the
+information you need will help us deliver it to you in the Developers'
+Workshop.
+;-)
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id613804"></a>Be Developer Conference Transcripts</h3></div></div></div><p>
+http://www.be.com/developers/may_dev_conf/transcripts/index.html<br />
+http://www.be.com/developers/aug_dev_conf/index.html
+</p><p>
+The proceedings of the BeDC in May and August '97 were transcribed and
+posted to the web soon after the conference. All the sessions have the
+presenter's complete dialog and include slides. Sample code for some
+sessions is available from the ftp site.
+</p><p>
+That's our complete source list of development information. In addition,
+there are some third-party tutorials and sample code out there on the
+web. We're trying to index as much of this as possible, so we can provide
+links &gt;from the Be site. If you know of a third-party site or have one of
+your own that provides sample code or tutorials, please let us know by
+sending the URL to devservices@be.com.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee2-51"></a>Best Wishes...</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+I write this from a house in a Paris suburb, as I struggle to connect to
+the 'Net and get my mail. It's supposed to work "seamlessly," but it's
+broken. Be's office modems are busy, but I have a fallback position,
+Compuserve, with POPs all over the world.
+</p><p>
+It does get me on the 'Net, but many California sites appear to be dead.
+I ping be.com, best.com, sun.com, apple.com, sony.com and even
+gassee.com. Only sun.com responds. Consumers can't conceive of a
+telephone that doesn't give a dial tone when you lift the receiver, or a
+TV that crashes. Imagine a media culture where, when you turn the set on,
+you're not sure if the scheduled show or game will appear on screen.
+</p><p>
+This stuff isn't for my mother. Even a well-designed appliance such as
+WebTV won't spare her some of these indignities because their source is
+in the infrastructure. In a more positive light, we're still in the
+pioneer years, with much fun and grief ahead of us, much experimentation,
+many surprises, before the so-called "commoditization" sets in.
+</p><p>
+A year ago, we were looking with mixed feelings at an undone deal. Had we
+missed an opportunity to be acquired by Apple, get broad distribution for
+our work, and make our shareholders liquid, or were we saved from
+joining, or re-joining, a company in trouble? Time will tell.
+</p><p>
+The best scenario is one where Apple goes on to recover a leadership
+role, by innovation if not by size—and one where we gain critical mass
+in the Intel space as a specialized media OS, coexisting with the
+general-purpose OS, Windows.
+</p><p>
+After shipping several PowerPC releases in 1997, we are now distributing
+a very small number copies of an Intel pre-release to BeOS developers.
+The idea is to provide them with a test vehicle for moving their
+applications to Pentium II hardware in preparation for MacWorld, held in
+the first week of January 1998 in San Francisco. We'll have a broader
+developer conference a little later, and PC Expo and Comdex for likely
+milestones and coinciding release dates, with all the usual caveats
+stipulated.
+</p><p>
+There is much work ahead of us in a space where we have to assume our
+prior experience is of unknown value. Yes, we have a product, the PowerPC
+releases have helped its maturing process, but the Intel playing field
+isn't just bigger—we have to learn new rules. Fortunately, we have
+already found supporters willing to guide us and, if the daily flow of
+e-mail is to be believed, many users seem willing to give us a try --
+which is all we ask. We need good word-of-mouth from bleeding edge users,
+the opinion shapers.
+</p><p>
+Our old supporters have been very good to us in a year that started with
+questions about our future. Be employees voted with their dedicated work,
+shareholders with their funds, BeOS developers with a growing number of
+applications and users with field reports showing they actually used the
+product. To all, our heartfelt thanks and our best wishes for an exciting
+New Year.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue2-50.html">Issue 2-50, December 17, 1997</a>  Up: <a href="volume2.html">Volume 2: 1997</a>  Next: <a href="volume3.html">Volume 3: 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue2-50.html" title="Issue 2-50, December 17, 1997"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume2.html" title="Volume 2: 1997"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

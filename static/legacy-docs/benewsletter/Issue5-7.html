@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 5: 2000</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume5.html" title="Volume 5: 2000" /><link rel="prev" href="Issue5-6.html" title="Issue 5-6, February 9, 2000" /><link rel="next" href="Issue5-8.html" title="Issue 5-8, February 23, 2000" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue5-6.html" title="Issue 5-6, February 9, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue5-8.html" title="Issue 5-8, February 23, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 5: 2000</div></div><div id="headerB">Prev: <a href="Issue5-6.html">Issue 5-6, February 9, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-8.html">Issue 5-8, February 23, 2000</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue5-7"></a>Issue 5-7, February 16, 2000</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering5-7"></a>Be Engineering Insights: B_MULTIPLE_LAUNCH and the Command Line</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Baptiste</span> <span class="surname">Queru</span></span></div></div></div><p>
+Think about it: the day before the newsletter comes out, you get an
+e-mail that says, "Please write an article, I need it last week." There's
+only one solution—write about what I'm currently doing. OK, I
+exaggerate. Michelle isn't the slave driver I've depicted her as, and I'm
+actually happy to write an article. Also, the article isn't about what
+I'm doing right now, but about something I did last week.
+</p><p>
+There's a small detail in the application kit that's a useful feature but
+also something that you often have to work around—the "single launch"
+launch mode.
+</p><p>
+When you try to launch a second copy of a <code class="constant">B_SINGLE_LAUNCH</code> application
+that's already running, constructing the <code class="classname">BApplication</code> object for the
+second copy fails, and the first copy gets notified (see your favorite
+BeBook for details on that notification mechanism). The problem is that
+the second copy you try to launch gets terminated instantly, which can be
+annoying if you launched it from a shell script (or, for that matter, any
+environment where the termination of an application and/or its return
+code has a meaning, such as a makefile or a perforce command (check
+perforce at <a class="ulink" href="http://www.perforce.com/">http://www.perforce.com/</a> they have a BeOS client).
+</p><p>
+There's a reasonably easy solution that doesn't involve using a separate
+binary (Hi, Pavel!), but detects that another copy is already running,
+sends this other copy a message, and waits for a synchronous reply.
+Here's a code snippet that shows how to do it:
+</p><pre class="programlisting cpp">
+#include &lt;Application.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+class <code class="classname">App</code>:public <code class="classname">BApplication</code> {
+public:
+    <code class="methodname">App</code>(<span class="type">status_t*</span>);
+    <span class="type">void</span> <code class="methodname">ArgvReceived</code>(<span class="type">int32</span>,<span class="type">char**</span>);
+    <span class="type">void</span> <code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code>*</span>);
+};
+
+<code class="classname">App</code>::<code class="methodname">App</code>(<span class="type">status_t*</span><code class="parameter">r</code>)
+    :<code class="classname">BApplication</code>("application/x-vnd.be.mul2",<code class="parameter">r</code>) {}
+
+<span class="type">int32</span> <code class="methodname">DoSomething</code>(<span class="type">const char*</span><code class="parameter">c</code>) {
+    return 2*strtol(<code class="parameter">c</code>,<code class="constant">NULL</code>,0);
+}
+
+<span class="type">void</span> <code class="classname">App</code>::<code class="methodname">ArgvReceived</code>(<span class="type">int32</span> <code class="parameter">argc</code>,<span class="type">char**</span><code class="parameter">argv</code>) {
+    if (<code class="methodname">IsLaunching()</code>) {
+        printf("%ld\n",<code class="methodname">DoSomething</code>(<code class="parameter">argv</code>[1]));
+        <code class="methodname">Quit()</code>;
+    }
+}
+
+<span class="type">void</span> <code class="classname">App</code>::<code class="methodname">MessageReceived</code>(<span class="type"><code class="classname">BMessage</code>*</span><code class="parameter">m</code>) {
+    switch(<code class="parameter">m</code>-&gt;<code class="varname">what</code>) {
+        case ' mul' : {
+            <code class="classname">BMessage</code> <code class="varname">r</code>;
+            <code class="varname">r</code>.<code class="methodname">AddInt32</code>("result",
+                    <code class="methodname">DoSomething</code>(<code class="parameter">m</code>-&gt;<code class="methodname">FindString</code>("data")));
+            <code class="parameter">m</code>-&gt;<code class="methodname">SendReply</code>(&amp;<code class="varname">r</code>);
+        }
+        default : {
+            <code class="classname">BApplication</code>::<code class="methodname">MessageReceived</code>(<code class="parameter">m</code>);
+            break;
+        }
+    }
+}
+
+<span class="type">int</span> main(<span class="type">int</span> <code class="parameter">argc</code>, <span class="type">char**</span> <code class="parameter">argv</code>) {
+    <span class="type">status_t</span> <code class="varname">ret</code>;
+    <code class="classname">App</code> <code class="varname">app</code>(&amp;<code class="varname">ret</code>);
+    if (<code class="varname">ret</code>==<code class="constant">B_ALREADY_RUNNING</code>) {
+        if (<code class="parameter">argc</code>&gt;1) {
+            <code class="classname">BMessenger</code> <code class="varname">msgr</code>("application/x-vnd.be.mul2");
+            <code class="classname">BMessage</code> <code class="varname">m</code>(' mul');
+            <code class="classname">BMessage</code> <code class="varname">r</code>;
+            <code class="varname">m</code>.<code class="methodname">AddString</code>("data",<code class="parameter">argv</code>[1]);
+            <code class="varname">msgr</code>.<code class="methodname">SendMessage</code>(&amp;<code class="varname">m</code>,&amp;<code class="varname">r</code>);
+            printf("%ld\n",<code class="varname">r</code>.<code class="methodname">FindInt32</code>("result"));
+        }
+    } else {
+        <code class="varname">app</code>.<code class="methodname">Run()</code>;
+    }
+    exit(0);
+}
+</pre><p>
+The core of this technique is to check whether there's already another
+app with the same signature. The best way is to try to create a
+<code class="classname">BApplication</code>, and check whether it fails. That avoids a number of race
+conditions. When it fails, get a <code class="classname">BMessenger</code> to the existing application
+and use it to communicate with the application that's already running.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop5-7"></a>Developers' Workshop: Previewing Audio Files</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Todd</span> <span class="surname">Thomas</span></span></div></div></div><p>
+Here's a quick little sample code ditty about bending a <code class="classname">BFilePanel</code> to
+suit your (I hope not evil) needs. We've covered this subject in past
+articles, but never in combination with (drum roll, please) The Game Kit!
+</p><p>
+Get the thrilling sample code for this article at
+&lt;ftp://ftp.be.com/pub/samples/game_kit/SndFilePanel.zip&gt;.
+</p><p>
+I've tried to comment the source extensively, but feel free to e-mail me
+if you have any questions.
+</p><p>
+Submitted for your approval is the <code class="classname">SndFilePanel</code> class, which lets you
+peruse your file system for sound files as well as preview them, using
+the super-easy <code class="classname">BFileGameSound</code> class.
+<code class="classname">BFileGameSound</code> is the ticket if you
+need to play a sound file quickly and painlessly. I've also provided a
+simple <code class="classname">BApplication</code>-based test harness to let you try out
+<code class="classname">SndFilePanel</code>.
+</p><p>
+Class <code class="classname">SndFilePanel</code> is mostly a standard
+derivation of <code class="classname">BFilePanel</code>. I've
+mixed in <code class="classname">BHandler</code> via multiple inheritance so I can implement
+<code class="methodname">MessageReceived()</code>. In <code class="methodname">MessageReceived</code>,
+I handle events generated by the
+<code class="classname">BButton</code> added to the file panel to allow playing and stopping the
+<code class="classname">BFileGameSound</code>. For more info on fiddling with
+<code class="classname">BFilePanel</code> derivatives,
+consult <a class="xref" href="Issue4-38.html#DevWorkshop4-38" title="Developers' Workshop: Translation Kit Part 1: File Panel Fun">Developers' Workshop: Translation Kit Part 1: File Panel Fun</a>.
+</p><p>
+Using <code class="classname">BFileGameSound</code> is easy, as I hope you can see from the source. A
+<code class="classname">BFileGameSound</code> instance is created in
+<code class="methodname">SndFilePanel::SelectionChanged()</code>,
+upon finding a suitable file to preview. Playing and stopping the sound
+is handled in response to the appropriate message in
+<code class="methodname">SndFilePanel::MessageReceived()</code>. For more info on using
+<code class="classname">BFileGameSound</code>,
+consult <a class="xref" href="Issue4-29.html#Engineering4-29-2" title="Be Engineering Insights: Farewell BSound and BSoundFile (All Hail BGameSound and BMediaFile)">Be Engineering Insights: Farewell BSound and BSoundFile (All Hail
+BGameSound and BMediaFile)</a>
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee5-7"></a>An Exemplary Appliance Application</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+This is the column I wanted to write before we went to Palm Springs for
+Demo 2000. Demo is an industry conference with the theme of "more demo,
+less talk." This could be a reaction to the talking heads and PowerPoint
+slides of other venues, or it may be just marketing 101: distinguish
+yourself from the pack. In any event, we were allotted eight minutes of
+fame to demonstrate four appliances. Two of them, the Clipper and the
+WebPad, are in imminent danger of shipping in the short term. The other
+two, the music center and the touch pad kitchen appliance, represent the
+more distant future. Our eight minutes stretched to ten, as the producers
+must have foreseen, but the audience didn't object to the overtime and
+rewarded us with warm applause. I should mention that a major theme of
+the conference was the emergence of appliances, evidence that the
+Internet is no longer viewed solely through the lens of the PC.
+</p><p>
+That was last week. This week, I'll sketch out a home entertainment
+application developed by Steve Sakoman, one of our founders, for his
+family's use. It begins with a DSL connection and a wireless home network
+based on Proxim devices. Using a 2.4 GHz carrier, one gets a wireless
+Ethernet at 1.6 Mbits/s. One PC on the network acts as a dedicated
+device, taking tracks from CDs to make a compilation of 5,000 songs
+stored as MP3 files. Then, any client on the network, wireless in this
+case, can stream songs from the server, anywhere in the house. This
+sounds fairly simple and in fact it is. The reward is music on demand --
+no more fiddling with CDs or losing them.
+</p><p>
+One interesting point is that you can do this with PCs and only PCs on
+the network, or you can do it without any PC at all. You could do it with
+WebPads and Clippers, or a mixture of both, and be able to browse the Web
+to your heart's content, do your e-mail, while playing your favorite
+songs or downloading new ones. In other words, this isn't an either/or
+situation.
+</p><p>
+I won't play the "peaceful coexistence" song again but the question of
+whether a PC or an appliance better suits your needs has only one clear,
+unambiguous answer: it depends. It depends who's using it and for what.
+The PC offers the charm of "everything on it" generality, with the
+attending burdens of complexity and fragility. The appliance does fewer
+things, but in a better, simpler, more agile, and often less expensive
+way. These days, when I see a receiver on the shelves at Fry's, I imagine
+the next generation model, with an Ethernet connector in the back and a
+small touch screen in front.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue5-6.html">Issue 5-6, February 9, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-8.html">Issue 5-8, February 23, 2000</a> </div><div id="footerB"><div id="footerBL"><a href="Issue5-6.html" title="Issue 5-6, February 9, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue5-8.html" title="Issue 5-8, February 23, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navigho

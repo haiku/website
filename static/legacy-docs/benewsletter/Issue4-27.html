@@ -1,0 +1,1043 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-26.html" title="Issue 4-26, June 30, 1999" /><link rel="next" href="Issue4-28.html" title="Issue 4-28, July 14, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-26.html" title="Issue 4-26, June 30, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-28.html" title="Issue 4-28, July 14, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-26.html">Issue 4-26, June 30, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-28.html">Issue 4-28, July 14, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-27"></a>Issue 4-27, July 7, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-27"></a>Be Engineering Insights: Device Drivers</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Rico</span> <span class="surname">Tudor</span></span></div></div></div><p>
+This article describes the structure of BeOS device drivers, with sample
+code showing the more popular kernel services. The PC serial port serves
+quite well as an example: ubiquitous, interrupt-capable, straightforward.
+And should you adopt the sample "qq" driver code as a testbed, there is
+no danger that your bugs will reformat the hard drive!
+</p><p>
+A driver is a kind of module, and can be loaded and unloaded from memory
+on demand. Unlike other types of modules, it can be accessed directly by
+user programs. To be reachable, a driver must "publish" a name in
+<code class="filename">/dev</code> --
+this is done when the system boots. Once loaded, it has access to all
+hardware. Memory mapping is in effect in kernel mode, so the driver's
+access to memory is limited to kernel data and to user data of the
+current thread.
+</p><p>
+In keeping with BeOS practice, the driver operates in a multi- processing
+and multi-threaded environment. For example, while an interrupt is being
+serviced by CPU 0, background processing by CPU 1 may be underway for the
+same device. Attention to detail is recommended.
+</p><p>
+The first step is supplying code that initializes the driver when it is
+loaded. <code class="varname">api_version</code> is used to notify the kernel loader that we are
+using the latest driver API. The <code class="varname">device</code> struct contains private info
+for operating the serial port.
+</p><pre class="programlisting c">
+#include    &lt;Drivers.h&gt;
+#include    &lt;ISA.h&gt;
+#include    &lt;KernelExport.h&gt;
+
+<span class="type">int32</span>   <code class="varname">api_version</code>     = <code class="constant">B_CUR_DRIVER_API_VERSION</code>;
+
+struct <span class="type">device</span> {
+    <span class="type">char    *</span><code class="varname">name</code>;
+    <span class="type">uint</span>    <code class="varname">ioport</code>,
+            <code class="varname">irq</code>,
+            <code class="varname">divisor</code>,
+            <code class="varname">nopen</code>;
+    <span class="type">bool</span>    <code class="varname">exists</code>;
+    <span class="type">sem_id</span>  <code class="varname">ocsem</code>,
+            <code class="varname">wbsem</code>,
+            <code class="varname">wfsem</code>;
+    <span class="type">uchar</span>   <code class="varname">wbuf</code>[100];
+    <span class="type">uint</span>    <code class="varname">wcur</code>,
+            <code class="varname">wmax</code>;
+};
+
+#define <code class="constant">NDEV</code>    ((sizeof <code class="varname">devices</code>) / (sizeof *<code class="varname">devices</code>))
+<span class="type">static struct device</span> <code class="varname">devices</code>[] = {
+    { "qq1", 0x03F8, 4, 6 },
+    { "qq2", 0x02F8, 3, 6 },
+    { "qq3", 0x03E8, 4, 6 },
+    { "qq4", 0x02E8, 3, 6 },
+};
+
+<span class="type">static isa_module_info  *</span><code class="varname">isa</code>;
+
+<span class="type">static status_t</span>
+    <code class="function">qq_open</code>( <span class="type">const char *</span>, <span class="type">uint32</span>, <span class="type">void **</span>),
+    <code class="function">qq_close</code>( <span class="type">void *</span>),
+    <code class="function">qq_free</code>( <span class="type">void *</span>),
+    <code class="function">qq_read</code>( <span class="type">void *</span>, <span class="type">off_t</span>, <span class="type">void *</span>, <span class="type">size_t *</span>),
+    <code class="function">qq_write</code>( <span class="type">void *</span>, <span class="type">off_t</span>, <span class="type">const void *</span>, <span class="type">size_t *</span>),
+    <code class="function">qq_control</code>( <span class="type">void *</span>, <span class="type">uint32</span>, <span class="type">void *</span>, <span class="type">size_t</span>);
+
+<span class="type">status_t</span> <code class="function">init_driver</code>( )
+{
+    <span class="type">status_t</span> <code class="varname">s</code> = <code class="function">get_module</code>( <code class="constant">B_ISA_MODULE_NAME</code>,
+                                    (<span class="type">module_info **</span>) &amp;<code class="varname">isa</code>);
+    if (<code class="varname">s</code> == <code class="constant">B_OK</code>) {
+        <span class="type">struct device *</span><code class="varname">d</code>;
+        for (<code class="varname">d</code>=<code class="varname">devices</code>; <code class="varname">d</code>&lt;<code class="varname">devices</code>+<code class="constant">NDEV</code>; ++<code class="varname">d</code>) {
+            <code class="varname">d</code>-&gt;<code class="varname">exists</code> = <code class="constant">TRUE</code>;
+            <code class="varname">d</code>-&gt;<code class="varname">ocsem</code> = <code class="function">create_sem</code>( 1, "qqoc");
+            <code class="varname">d</code>-&gt;<code class="varname">wbsem</code> = <code class="function">create_sem</code>( 1, "qqwb");
+            <code class="varname">d</code>-&gt;<code class="varname">wfsem</code> = <code class="function">create_sem</code>( 0, "qqwf");
+        }
+    }
+    return (<code class="varname">s</code>);
+}
+
+<span class="type">void</span> <code class="function">uninit_driver</code>( )
+{
+    <span class="type">struct device *</span><code class="varname">d</code>;
+    for (<code class="varname">d</code>=<code class="varname">devices</code>; <code class="varname">d</code>&lt;<code class="varname">devices</code>+<code class="constant">NDEV</code>; ++<code class="varname">d</code>) {
+        <code class="function">delete_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+        <code class="function">delete_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">wbsem</code>);
+        <code class="function">delete_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">wfsem</code>);
+    }
+    <code class="function">put_module</code>( <code class="constant">B_ISA_MODULE_NAME</code>);
+}
+</pre><p>
+The kernel loader looks for the <code class="function">init_driver</code>
+and <code class="function">uninit_driver</code>
+symbols, and will call them just after loading and just before unloading,
+respectively. This code is guaranteed to execute single-threaded, and is
+a good place to prepare your synchronizing method. This driver uses three
+semaphores for each device. Note the matching calls to load and unload
+the ISA bus module: This was discussed by Ficus in last week's article.
+</p><p>
+At load time, the system will query for device names by calling the
+<code class="function">publish_devices()</code> function. If you cannot supply the names yet, this
+step can be deferred using a method shown later. Finally, <code class="function">find_device()</code>
+is called to get the general entry points into your driver. Note that the
+semantic meanings of the entry points are defined by their position in
+the <code class="varname">device_hooks</code> structure, eg. the
+<code class="function">open</code> function entry point is
+always the first element of the structure. You can choose whatever names
+you want for these functions.
+</p><pre class="programlisting c">
+<span class="type">const char **</span><code class="function">publish_devices</code>( )
+{
+    <span class="type">const static char *</span><code class="varname">list</code>[<code class="constant">NDEV</code>+1];
+    <span class="type">uint</span> <code class="varname">i</code>;
+    <span class="type">uint</span> <code class="varname">j</code> = 0;
+    for (<code class="varname">i</code>=0; <code class="varname">i</code>&lt;<code class="constant">NDEV</code>; ++<code class="varname">i</code>)
+        if (<code class="varname">devices</code>[<code class="varname">i</code>].<code class="varname">exists</code>)
+            <code class="varname">list</code>[<code class="varname">j</code>++] = <code class="varname">devices</code>[<code class="varname">i</code>].<code class="varname">name</code>;
+    <code class="varname">list</code>[<code class="varname">j</code>] = 0;
+    return (<code class="varname">list</code>);
+}
+
+<span class="type">device_hooks *</span><code class="function">find_device</code>( <span class="type">const char *</span><code class="parameter">dev</code>)
+{
+    <span class="type">static device_hooks</span> <code class="varname">dh</code> = {
+        <code class="function">qq_open</code>, <code class="function">qq_close</code>, <code class="function">qq_free</code>,
+        <code class="function">qq_control</code>, <code class="function">qq_read</code>, <code class="function">qq_write</code>
+    };
+    return (&amp;<code class="varname">dh</code>);
+}
+</pre><p>
+To use a device, the application invokes the <code class="function">open()</code> system call, which
+ultimately results in a call on the device open function (<code class="function">qq_open()</code> in
+the code below). The driver, having published the device names, must now
+map them to an internal form. This internal form is combined with the
+<code class="parameter">flags</code> arg, creating a <code class="parameter">cookie</code> which will be used in subsequent I/O.
+The cookie is handed back to the kernel through the <code class="parameter">v</code> arg. A device can
+be open for multiple clients; if not already open, an interrupt handler
+is installed and the hardware is activated.
+</p><pre class="programlisting c">
+<span class="comment">/* PC serial port (16550A UART) */</span>
+#define <code class="constant">THR</code> 0
+#define <code class="constant">DLL</code> 0
+#define <code class="constant">DLH</code> 1
+#define <code class="constant">IER</code> 1
+#define <code class="constant">FCR</code> 2
+#define <code class="constant">IIR</code> 2
+#define <code class="constant">LCR</code> 3
+#define <code class="constant">MCR</code> 4
+#define <code class="constant">LCR_8BIT</code>        0x03
+#define <code class="constant">LCR_DLAB</code>        (1 &lt;&lt; 7)
+#define <code class="constant">IER_THRE</code>        (1 &lt;&lt; 1)
+#define <code class="constant">MCR_DTR</code>         (1 &lt;&lt; 0)
+#define <code class="constant">MCR_RTS</code>         (1 &lt;&lt; 1)
+#define <code class="constant">MCR_IRQ_ENABLE</code>  (1 &lt;&lt; 3)
+#define <code class="function">have_int</code>( <code class="parameter">iir</code>)  (((<code class="parameter">iir</code>)&amp;0x01) == 0)
+#define <code class="function">THRE_int</code>( <code class="parameter">iir</code>)  (((<code class="parameter">iir</code>)&amp;0x0F) == 0x02)
+
+struct <span class="type">client</span> {
+    <span class="type">uint</span>            <code class="varname">flags</code>;
+    <span class="type">struct device   *</span><code class="varname">d</code>;
+};
+
+<span class="type">static int32</span>    <code class="function">qq_int</code>( <span class="type">void *</span>);
+<span class="type">static void</span>     <code class="function">setmode</code>( <span class="type">struct device *</span>);
+<span class="type">void            *</span><code class="function">malloc</code>( );
+
+<span class="type">static status_t</span>
+<code class="function">qq_open</code>( <span class="type">const char *</span><code class="parameter">name</code>, <span class="type">uint32</span> <code class="parameter">flags</code>, <span class="type">void **</span><code class="parameter">v</code>)
+{
+    <span class="type">struct client *</span><code class="varname">c</code>;
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="varname">devices</code>;
+    while (<code class="function">strcmp</code>( <code class="parameter">name</code>, <code class="varname">d</code>-&gt;<code class="varname">name</code>) != 0)
+        if (++<code class="varname">d</code> == <code class="varname">devices</code>+<code class="constant">NDEV</code>)
+            return (<code class="varname">B_ERROR</code>);
+    <code class="varname">c</code> = <code class="function">malloc</code>( sizeof *<code class="varname">c</code>);
+    if (<code class="varname">c</code> == 0)
+        return (<code class="constant">ENOMEM</code>);
+    *<code class="parameter">v</code> = <code class="varname">c</code>;
+    <code class="varname">c</code>-&gt;<code class="varname">flags</code> = <code class="parameter">flags</code>;
+    <code class="varname">c</code>-&gt;<code class="varname">d</code> = <code class="varname">d</code>;
+    <code class="function">acquire_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+    if (<code class="varname">d</code>-&gt;<code class="varname">nopen</code> == 0) {
+        <code class="function">setmode</code>( <code class="varname">d</code>);
+        <code class="function">install_io_interrupt_handler</code>( <code class="varname">d</code>-&gt;<code class="varname">irq</code>, <code class="function">qq_int</code>, <code class="varname">d</code>, 0);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">FCR</code>, 0);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">MCR</code>,
+                            <code class="constant">MCR_DTR</code>|<code class="constant">MCR_RTS</code>|<code class="constant">MCR_IRQ_ENABLE</code>);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IER</code>, 0);
+    }
+    ++<code class="varname">d</code>-&gt;<code class="varname">nopen</code>;
+    <code class="function">release_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+    return (<code class="constant">B_OK</code>);
+}
+</pre><p>
+The application concludes device use with the <code class="function">close</code> system call, or by
+exiting. This triggers the device close function which, for the last
+client, entails hardware shutdown and removal of the interrupt handler.
+The kernel is also aware when the last close occurs, and will commence
+driver unloading.
+</p><p>
+Note the use of the open/close semaphore. In a multi-processor machine,
+the device may be opening and closing simultaneously. <code class="varname">ocsem</code> prevents a
+potential desktop firework display. (Awww!)
+</p><p>
+Bear in mind that the driver is subject to visitation by multiple
+threads, even if you adopt a "single open" policy. This is because the
+file descriptors returned by the <code class="function">open()</code> system call are inherited by
+child processes (created by the <code class="function">fork()</code> system call).
+</p><p>
+The device <code class="function">free()</code> function simply frees the cookies, if you are using them.
+</p><pre class="programlisting c">
+<span class="type">static status_t</span>
+<code class="function">qq_close</code>( <span class="type">void *</span><code class="parameter">v</code>)
+{
+    <span class="type">struct client *</span><code class="varname">c</code> = <code class="parameter">v</code>;
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="varname">c</code>-&gt;<code class="varname">d</code>;
+    <code class="function">acquire_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+    if (--<code class="varname">d</code>-&gt;<code class="varname">nopen</code> == 0) {
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">MCR</code>, 0);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IER</code>, 0);
+        <code class="function">remove_io_interrupt_handler</code>( <code class="varname">d</code>-&gt;<code class="varname">irq</code>, <code class="function">qq_int</code>, <code class="varname">d</code>);
+    }
+    <code class="function">release_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">ocsem</code>);
+    return (<code class="constant">B_OK</code>);
+}
+
+<span class="type">static status_t</span>
+<code class="function">qq_free</code>( <span class="type">void *</span><code class="parameter">v</code>)
+{
+    <code class="function">free</code>( <code class="parameter">v</code>);
+    return (<code class="constant">B_OK</code>);
+}
+</pre><p>
+For brevity, this "qq" device read simply returns <code class="constant">EOF</code>. It does
+demonstrate the use of the <code class="parameter">flags</code> arg, as originally passed in
+<code class="function">qq_open()</code>. The only flag currently is
+<code class="constant">O_NONBLOCK</code>: when clear, the driver
+may block the thread to wait for I/O completion. Otherwise, the driver
+must return immediately with a short byte count, or with the
+<code class="constant">B_WOULD_BLOCK</code> error. Formally, <code class="constant">O_NONBLOCK</code>
+applies to device <code class="function">read</code>, <code class="function">write</code>,
+<code class="function">open</code>, and <code class="function">close</code>.
+</p><pre class="programlisting c">
+<span class="type">static status_t</span>
+<code class="function">qq_read</code>( <span class="type">void *</span><code class="parameter">v</code>, <span class="type">off_t</span> <code class="parameter">o</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">nbyte</code>)
+{
+    <span class="type">struct client *</span><code class="varname">c</code> = <code class="parameter">v</code>;
+    *<code class="varname">nbyte</code> = 0;
+    return ((<code class="varname">c</code>-&gt;<code class="varname">flags</code> &amp; <code class="constant">O_NONBLOCK</code>)? <code class="constant">B_WOULD_BLOCK</code>: <code class="constant">B_OK</code>);
+}
+</pre><p>
+Here is a table of permissible read returns:
+</p><pre class="screen">
+full read:      *<code class="varname">byte</code> = *<code class="varname">byte</code>;      return (<code class="constant">B_OK</code>);
+partial read:   *<code class="varname">nbyte</code> = *<code class="varname">nbyte</code>/2;  return (<code class="constant">B_OK</code>);
+null read:      *<code class="varname">nbyte</code> = 0;         return (<code class="constant">B_OK</code>);
+error:          *<code class="varname">nbyte</code> = 0;         return (<code class="constant">B_OUCH</code>);
+</pre><p>
+When writing a device write routine, the first decision to make is: How
+is data to be fetched from user space? Schematically (the four lines
+below show possible data flow—they are NOT C++ code), the four possible
+flows are:
+</p><pre class="screen">
+u -&gt; kb -&gt; hw
+u -&gt; kb -&gt; ikb -&gt; hw
+u -&gt; ikb -&gt; hw          <span class="comment">// use lock_memory</span>
+u -&gt; hw                 <span class="comment">// dma</span>
+</pre><p>
+<code class="literal">u</code> is user space, <code class="literal">kb</code> is a kernel
+buffer, <code class="literal">ikb</code> is a kernel buffer
+accessed concurrently with the interrupt handler, and <code class="literal">hw</code> is the
+hardware. DMA gets into many complications, and usually involves writing
+for a BeOS subsystem (e.g. SCSI CAM), so I'll ignore that class. The code
+below uses <code class="literal">u-&gt;kb-&gt;hw</code>.
+</p><p>
+Data is copied by the thread into the <code class="varname">wbuf</code> kernel buffer. No
+data-structure contention exists because the interrupt handler is
+quiescent (interrupts are disabled), and <code class="varname">wbsem</code> locks out other writers.
+Interrupts are enabled after the copying, and the write synchronizes on
+<code class="varname">wfsem</code>. As a side feature, signals can terminate the write.
+</p><pre class="programlisting c">
+<span class="type">static status_t</span>
+<code class="function">qq_write</code>( <span class="type">void *</span><code class="parameter">v</code>, <span class="type">off_t</span> <code class="parameter">o</code>, <span class="type">const void *</span><code class="parameter">buf</code>, <span class="type">size_t *</span><code class="parameter">nbyte</code>)
+{
+    <span class="type">cpu_status</span> <code class="varname">cs</code>;
+    <span class="type">struct client *</span><code class="varname">c</code> = <code class="parameter">v</code>;
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="varname">c</code>-&gt;<code class="varname">d</code>;
+    <span class="type">uint</span> <code class="varname">n</code> = 0;
+    while (<code class="varname">n</code> &lt; *<code class="parameter">nbyte</code>) {
+        <code class="function">acquire_sem_etc</code>( <code class="varname">d</code>-&gt;<code class="varname">wbsem</code>, 1, <code class="constant">B_CAN_INTERRUPT</code>, 0);
+        if (<code class="function">has_signals_pending</code>( 0)) {
+            *<code class="parameter">nbyte</code> = <code class="varname">n</code>;
+            return (<code class="constant">B_INTERRUPTED</code>);
+        }
+        <code class="varname">d</code>-&gt;<code class="varname">wcur</code> = 0;
+        <code class="varname">d</code>-&gt;<code class="varname">wmax</code> = <code class="function">min</code>( *<code class="parameter">nbyte</code>-<code class="varname">n</code>, <code class="function">sizeof</code>( <code class="varname">d</code>-&gt;<code class="varname">wbuf</code>));
+        <code class="function">memcpy</code>( <code class="varname">d</code>-&gt;<code class="varname">wbuf</code>, (<span class="type">uchar *</span>)<code class="parameter">buf</code>+<code class="varname">n</code>, <code class="varname">d</code>-&gt;<code class="varname">wmax</code>);
+        (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IER</code>, <code class="constant">IER_THRE</code>);
+        <code class="function">acquire_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">wfsem</code>);
+        <code class="varname">n</code> += <code class="varname">d</code>-&gt;<code class="varname">wmax</code>;
+        <code class="function">release_sem</code>( <code class="varname">d</code>-&gt;<code class="varname">wbsem</code>);
+    }
+    return (<code class="constant">B_OK</code>);
+}
+</pre><p>
+Code to implement the flow <code class="literal">u-&gt;kb-&gt;ikb-&gt;hw</code> yields smoother data flow, but
+is harder to write. You must use a semaphore, spinlock and bool to
+synchronize with live interrupts while accessing <code class="literal">ikb</code>.
+</p><p>
+For the efficiency fiend, only <code class="literal">u-&gt;ikb-&gt;hw</code> will do: include the above
+mechanisms, and <code class="function">lock_memory()</code> as well. The latter ensures the user buffer
+is resident (not swapped to disk). Otherwise, while filling <code class="varname">ikb</code>, your
+may page-fault with a spinlock set. This invites deadlocks and reset
+buttons. Watch for our exciting article on BeOS Synchronization, coming
+soon.
+</p><p>
+The permissible <code class="function">write</code> returns are the same
+as those for <code class="function">read</code>. However,
+avoid the null <code class="function">write</code>, since it causes some apps to loop forever.
+</p><p>
+The interrupt handler, if you install one, is called with the argument of
+your choice: often it's the cookie, but "qq" passes the device struct.
+Since "qq" only does output, you can match this code with the device
+write routine. Briefly, the hardware is fed data until none remains: then
+interrupts are disabled and <code class="varname">wfsem</code> is used to unblock the background.
+</p><div class="admonition warning"><div class="title">Warning</div><div class="graphic"><img class="icon" alt="Warning" width="32" src="./images/admonitions/Stop_32.png" /><div class="text"><p>
+The handler interrupts whatever thread is running, and the
+memory map varies correspondingly. Therefore, all accesses to user space
+by the handler are strictly forbidden. That is why the device write
+routine is committed to the user/kernel data shuffle.
+</p></div></div></div><p>
+Since multiple devices may share the same IRQ, return
+<code class="constant">B_UNHANDLED_INTERRUPT</code> if your hardware was not the interrupt cause.
+Otherwise, return <code class="constant">B_HANDLED_INTERRUPT</code>, or
+<code class="constant">B_INVOKE_SCHEDULER</code> for
+immediate scheduling.
+</p><pre class="programlisting c">
+<span class="type">static int32</span>
+<code class="function">qq_int</code>( <span class="type">void *</span><code class="parameter">v</code>)
+{
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="parameter">v</code>;
+    <span class="type">uint</span> <code class="varname">h</code> = <code class="constant">B_UNHANDLED_INTERRUPT</code>;
+    while (<code class="constant">TRUE</code>) {
+        <span class="type">uint</span> <code class="varname">iir</code> = (*<code class="varname">isa</code>-&gt;<code class="varname">read_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IIR</code>);
+        if (<code class="function">have_int</code>( <code class="varname">iir</code>) == 0)
+            return (<code class="varname">h</code>);
+        <code class="varname">h</code> = <code class="constant">B_HANDLED_INTERRUPT</code>;
+        if (<code class="function">THRE_int</code>( <code class="varname">iir</code>)) {
+            if (<code class="varname">d</code>-&gt;<code class="varname">wcur</code> &lt; <code class="varname">d</code>-&gt;<code class="varname">wmax</code>)
+                (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">THR</code>,
+                                        <code class="varname">d</code>-&gt;<code class="varname">wbuf</code>[<code class="varname">d</code>-&gt;<code class="varname">wcur</code>++]);
+            else {
+                (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="varname">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">IER</code>, 0);
+                <code class="function">release_sem_etc</code>( <code class="varname">d</code>-&gt;<code class="varname">wfsem</code>, 1,
+                                    <code class="constant">B_DO_NOT_RESCHEDULE</code>);
+            }
+        }
+        else
+            <code class="function">debugger</code>( "we never make mistakes");
+    }
+}
+</pre><p>
+Next, we have the catch-all function, device control. Unlike the other
+entrypoints, you need to range check the user addresses. This is achieved
+with <code class="function">is_valid_range()</code>. The
+<code class="parameter">com</code>, <code class="parameter">buf</code> and
+<code class="parameter">len</code> args are yours to
+interpret, although BeOS defines some standard cases. One pair of
+commands, <code class="constant">B_SET_NONBLOCKING_IO</code> and
+<code class="constant">B_SET_BLOCKING_IO</code>, allows changing our
+friend <code class="constant">O_NONBLOCK</code>. Oddly, the relevant system call is
+<code class="function">fcntl()</code>.
+</p><p>
+For other commands, use the <code class="function">ioctl()</code> system call to reach this routine.
+'getd' and 'setd' allow the baud rate divisor (19200 baud by default) to
+be controlled by an app: set it to 1 to go really fast.
+</p><pre class="programlisting c">
+#define <code class="constant">PROT_URD</code>    0x00000004  <span class="comment">/* user read */</span>
+#define <code class="constant">PROT_UWR</code>    0x00000008  <span class="comment">/* user write */</span>
+
+<span class="type">static status_t</span>
+<code class="function">qq_control</code>( <span class="type">void *</span><code class="parameter">v</code>, <span class="type">uint32</span> <code class="parameter">com</code>, <span class="type">void *</span><code class="parameter">buf</code>, <span class="type">size_t</span> <code class="parameter">len</code>)
+{
+    <span class="type">struct client *</span><code class="varname">c</code> = <code class="parameter">v</code>;
+    <span class="type">struct device *</span><code class="varname">d</code> = <code class="varname">c</code>-&gt;<code class="varname">d</code>;
+    switch (<code class="parameter">com</code>) {
+    case 'getd':
+        if (<code class="function">is_valid_range</code>( <code class="parameter">buf</code>, <code class="function">sizeof</code>( <span class="type">int</span>), <code class="constant">PROT_UWR</code>)) {
+            *(<span class="type">int *</span>)<code class="parameter">buf</code> = <code class="varname">d</code>-&gt;<code class="varname">divisor</code>;
+            return (<code class="constant">B_OK</code>);
+        }
+        return (<code class="constant">B_BAD_ADDRESS</code>);
+    case 'setd':
+        if (<code class="function">is_valid_range</code>( <code class="parameter">buf</code>, <code class="function">sizeof</code>( <span class="type">int</span>), <code class="constant">PROT_URD</code>)) {
+            <code class="varname">d</code>-&gt;<code class="varname">divisor</code> = *(<span class="type">int *</span>)<code class="parameter">buf</code>;
+            <code class="function">setmode</code>( <code class="varname">d</code>);
+            return (<code class="constant">B_OK</code>);
+        }
+        return (<code class="constant">B_BAD_ADDRESS</code>);
+    case <code class="constant">B_SET_NONBLOCKING_IO</code>:
+        <code class="varname">c</code>-&gt;<code class="varname">flags</code> |= <code class="constant">O_NONBLOCK</code>;
+        return (<code class="constant">B_OK</code>);
+    case <code class="constant">B_SET_BLOCKING_IO</code>:
+        <code class="varname">c</code>-&gt;<code class="varname">flags</code> &amp;= ~ <code class="constant">O_NONBLOCK</code>;
+        return (<code class="constant">B_OK</code>);
+    }
+    return (<code class="constant">B_DEV_INVALID_IOCTL</code>);
+}
+
+<span class="type">static void</span> <code class="function">setmode</code>( <span class="type">struct device *</span><code class="parameter">d</code>)
+{
+    <span class="type">uint</span> <code class="varname">div</code> = <code class="parameter">d</code>-&gt;<code class="varname">divisor</code>;
+    (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="parameter">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">LCR</code>, <code class="constant">LCR_DLAB</code>);
+    (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="parameter">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">DLL</code>, <code class="varname">div</code> &amp; 0x00ff);
+    (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="parameter">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">DLH</code>, <code class="varname">div</code> &gt;&gt; 8);
+    (*<code class="varname">isa</code>-&gt;<code class="varname">write_io_8</code>)( <code class="parameter">d</code>-&gt;<code class="varname">ioport</code>+<code class="constant">LCR</code>, <code class="constant">LCR_8BIT</code>);
+}
+</pre><p>
+To republish your device names, execute the following code fragment:
+</p><pre class="programlisting c">
+<span class="type">int</span> <code class="varname">fd</code> = <code class="function">open</code>( "/dev", <code class="constant">O_WRONLY</code>);
+<code class="function">write</code>( <code class="varname">fd</code>, "qq", <code class="function">strlen</code>( "qq"));
+<code class="function">close</code>( <code class="varname">fd</code>);
+</pre><p>
+This will work in your driver, or in an app. This is a handy feature for
+hot-swapping, or decommissioning faulty equipment.
+</p><p>
+Finally, to bring your driver creation to life, you need to compile and
+install. Here are the commands for the "qq" driver:
+</p><pre class="screen">
+gcc -O -c qq.c
+gcc -o qq qq.o -nostdlib /system/kernel_intel
+mv qq /system/add-ons/kernel/drivers/bin/qq
+cd /system/add-ons/kernel/drivers/dev
+ln -s ../bin/qq
+</pre><p>
+After republishing or rebooting, your devices will appear in
+<code class="filename">/dev</code>.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-27-2"></a>Be Engineering Insights: Locking Tricks</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pavel</span> <span class="surname">Cisler</span></span></div></div></div><p>
+Understanding locking in BeOS kits is necessary for writing code that
+doesn't crash in subtle and hard-to-reproduce ways, deadlock or otherwise
+oddly misbehave. Here are a few techniques you can use when dealing with
+locking in the BeOS kits.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id796903"></a>Using the BAutolock Class</h3></div></div></div><p>
+When locking, it is necessary to balance calls to Lock() and Unlock().
+The <code class="classname">BAutolock</code> class is a convenient way of taking care of this. Instead
+of using the usual lock sequence:
+</p><pre class="programlisting cpp">
+{
+    if (!<code class="varname">window</code>-&gt;<code class="methodname">Lock</code>())
+        <span class="comment">// failed to lock</span>
+        return;
+
+
+    <span class="comment">// access the window</span>
+    if (<code class="varname">window</code>-&gt;<code class="methodname">IsHidden</code>()) {
+        <code class="varname">window</code>-&gt;<code class="methodname">Unlock</code>();
+        return;
+    }
+
+
+    <code class="varname">window</code>-&gt;<code class="methodname">MoveTo</code>(20, 20);
+    <span class="comment">// ... more stuff here</span>
+
+
+    <code class="varname">window</code>-&gt;<code class="methodname">Unlock</code>();
+}
+</pre><p>
+you can use:
+</p><pre class="programlisting cpp">
+{
+    <code class="classname">BAutolock</code> <code class="varname">lock</code>(<code class="varname">window</code>);
+    if (!<code class="varname">lock</code>.<code class="methodname">IsLocked</code>())
+        <span class="comment">// failed to lock</span>
+        return;
+
+
+    <span class="comment">// access the window</span>
+    if (<code class="varname">window</code>-&gt;<code class="methodname">IsHidden</code>())
+        <span class="comment">// Unlock automatically called here</span>
+        return;
+
+
+    <code class="varname">window</code>-&gt;<code class="methodname">MoveTo</code>(20, 20);
+    <span class="comment">// ... more stuff here</span>
+
+
+    <span class="comment">// Unlock automatically called here</span>
+}
+</pre><p>
+<code class="classname">BAutolock</code> works much like <code class="classname">auto_ptr</code>,
+which you might be familiar with as a
+part of the standard C++ library. When the object constructed by
+<code class="classname">BAutoLock()</code> goes out of scope, its destructor is called and unlocks the
+locked target automatically. This makes for simpler and better organized
+code, particularly in cases where there are several paths out of the code
+block—it's easy to forget to put an <code class="methodname">Unlock()</code> immediately before every
+return statement, but impossible to mess up with <code class="classname">BAutolock</code>. When your
+code exits, the <code class="classname">BAutolock</code> object will unlock the target.
+</p><p>
+Another advantage of using autolocks is that when used properly, they
+perform a correct cleanup even when an exception is thrown. (Did you say
+you don't use exceptions in your code? Do you ever allocate any objects
+with 'new'? If you do, you are using exceptions—new throws 'bad alloc'
+when you run out of memory). In our example, if any of the code that
+accesses the window throws an exception, the traditional coding using
+calls to <code class="methodname">Lock()</code> and <code class="methodname">Unlock()</code>
+will either allow the exception to leave the
+code with the window locked, or will have to include an explicit
+try-catch clause, to unlock the window and rethrow the exception. The
+example with autolock works without any additional code—the exception
+will cause all destructors for objects in scope to be called and so the
+window will correctly get unlocked.
+</p><p>
+You may use <code class="classname">BAutolock</code> from
+<code class="filename">Autolock.h</code>, or it's easy to write your own
+version. Since autolocks are usually fully inlined, you won't incur a
+performance penalty by writing your own version. Here's a quick example
+of a custom Autolock:
+</p><pre class="programlisting cpp">
+template&lt;class <code class="classname">T</code>&gt;
+class <code class="classname">AutoLock</code>
+{
+public:
+    <code class="methodname">AutoLock</code>(<span class="type"><code class="classname">T</code> *</span><code class="parameter">target</code>, <span class="type">bool</span> <code class="parameter">lockNow</code> = <span class="type">true</span>)
+        :   <code class="varname">target</code>(<code class="parameter">target</code>),
+            <code class="varname">hasLock</code>(<code class="constant">false</code>)
+        {
+            if (<code class="varname">lockNow</code>)
+                <code class="varname">hasLock</code> = <code class="parameter">target</code>-&gt;<code class="methodname">Lock</code>();
+        }
+
+    <code class="methodname">~AutoLock</code>()
+        {
+            if (<code class="varname">hasLock</code>)
+                <code class="varname">target</code>-&gt;<code class="methodname">Unlock</code>();
+        }
+
+    <code class="methodname">operator!</code>() const
+        { return !<code class="varname">hasLock</code>; }
+
+    <span class="type">bool</span> <code class="methodname">IsLocked</code>() const
+        { return <code class="varname">hasLock</code>; }
+
+    <span class="type">bool</span> <code class="methodname">Lock</code>()
+        {
+            if (!<code class="varname">hasLock</code>)
+                <code class="varname">hasLock</code> = <code class="varname">target</code>-&gt;<code class="methodname">Lock</code>();
+
+            return <code class="varname">hasLock</code>;
+        }
+
+    <span class="type">void</span> <code class="methodname">Unlock</code>()
+        {
+            if (<code class="varname">hasLock</code>) {
+                <code class="varname">target</code>-&gt;<code class="methodname">Unlock</code>();
+                <code class="varname">hasLock</code> = <code class="constant">false</code>;
+            }
+        }
+
+private:
+    <span class="type"><code class="classname">T</code> *</span><code class="varname">target</code>;
+    <span class="type">bool</span> <code class="varname">hasLock</code>;
+};
+</pre><p>
+This <code class="classname">Autolock</code> class permits "lazy locking"—if the boolean argument to
+the <code class="classname">Autolock</code> constructor is <code class="constant">false</code>,
+the <code class="classname">Autolock</code> object will be created
+but the target object will not be locked. You can then lock the target
+only if it become necessary, by using the <code class="methodname">Lock()</code> member function. As with
+the <code class="classname">BAutolock</code> class, the above class handles unlocking of the target
+automatically, when its destructor is invoked.
+</p><p>
+As an added benefit, <code class="classname">Autolock</code> above is a template class, so it will work
+on <code class="classname">BLooper</code>s, <code class="classname">BLocker</code>s,
+<code class="classname">BBitmap</code>s or any other classes that implement the
+three member functions <code class="methodname">Lock()</code>,
+<code class="methodname">Unlock()</code> and <code class="methodname">IsLocked()</code>.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id797369"></a>The Mechanics of a BLooper Lock</h3></div></div></div><p>
+When you lock a <code class="classname">BWindow</code> or any other
+<code class="classname">BLooper</code>, you need to check the
+result of the lock operation. For example:
+</p><pre class="programlisting cpp">
+<code class="classname">AutoLock</code>&lt;<code class="classname">BLooper</code>&gt; <code class="varname">lock</code>(<code class="varname">window</code>);
+if (!<code class="varname">lock</code>)
+    <span class="comment">// failed to lock the window</span>
+    return ...
+</pre><p>
+What exactly does it mean when the lock fails? Most likely the window is
+no longer around, it has been deleted. Wait a minute, if the window is
+deleted, that means the window pointer points to some random memory, how
+come the call <code class="code"><code class="varname">window</code>-&gt;<code class="methodname">Lock()</code></code>
+doesn't crash? The answer is because <code class="methodname">Lock()</code>
+is designed to work correctly on any random value of object pointer.
+Either <code class="varname">window</code> above is a valid pointer to a <code class="classname">BLooper</code>
+and <code class="methodname">Lock()</code> will
+succeed (leaving the target locked), or <code class="varname">window</code> is not a valid pointer
+to a <code class="classname">BLooper</code> and <code class="methodname">Lock()</code>
+will return <code class="constant">false</code>. You could do the following:
+</p><pre class="programlisting cpp">
+((<span class="type"><code class="classname">BLooper</code> *</span>)0xdeadbeef)-&gt;<code class="methodname">Lock</code>()
+</pre><p>
+in your code and it will still not crash (it is very unlikely that any
+<code class="classname">BLooper</code> will get locked, though).
+<code class="methodname">Lock()</code> actually accesses a list of all
+the live <code class="classname">BLooper</code>s in a team and when it is asked to lock one, it does a
+lookup in the list to see if the looper is valid. Note that in order for
+this to work, <code class="methodname">Lock()</code> must not be a virtual function—when calling a
+virtual function, a dispatch is performed during which the object's
+'this' pointer is used to access the vtable. If 'this' were garbage, the
+dispatch would crash.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id797511"></a>When to Lock with a BMessenger</h3></div></div></div><p>
+Locking a <code class="classname">BLooper</code> with <code class="methodname">Lock()</code>
+is guaranteed to give you a valid, locked
+<code class="classname">BLooper</code> if the lock succeeds, but there is still an issue you need to be
+aware of. Consider the following scenario:
+</p><div class="orderedlist"><ol><li><p>
+You create a <code class="classname">BWindow</code>, and store a pointer to it, intending to use
+the window at some point.
+</p></li><li><p>
+At some point, the window gets deleted.
+</p></li><li><p>
+Then, a new <code class="classname">BLooper</code> is created, and it just happens to reuse the
+heap space that was formerly occupied by the window.
+</p></li><li><p>
+Finally, your code that has stored a pointer to what was once the
+original window calls <code class="methodname">Lock()</code> on that pointer. The lock will succeed,
+since the pointer is to a valid <code class="classname">BLooper</code>—but it will be a lock on the
+wrong object. This may lead to some very subtle, hard to reproduce
+bugs.
+</p></li></ol></div><p>
+Unless the code that does the locking has a clear knowledge about the
+lifetime of the object it is trying to lock, you should use an even safer
+locking technique, using a <code class="classname">BMessenger</code> To
+do this, create a <code class="classname">BMessenger</code>
+associated with the target <code class="classname">BLooper</code> (a window, in the code below), and
+hold on to the instance of the <code class="classname">BMessenger</code>:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessenger</code> <code class="varname">windowMessenger</code>;
+
+...
+<span class="comment">// window creation code</span>
+<span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code> = new <code class="classname">BWindow</code> ...
+<code class="classname">BMessenger</code> <code class="varname">tmp</code>(<code class="varname">window</code>);
+<code class="varname">windowMessenger</code> = <code class="varname">tmp</code>;
+...
+</pre><p>
+Now, you can use the <code class="classname">BMessenger</code>'s
+<code class="methodname">LockTarget()</code> member function to obtain
+a lock on the targeted <code class="classname">BLooper</code>:
+</p><pre class="programlisting cpp">
+{
+    if (!<code class="varname">windowMessenger</code>.<code class="methodname">LockTarget</code>())
+        <span class="comment">// failed to lock</span>
+        return;
+
+    <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code>;
+    <code class="varname">windowMessenger</code>.<code class="methodname">Target</code>(&amp;<code class="varname">window</code>);
+
+    <span class="comment">// access the window</span>
+    if (<code class="varname">window</code>-&gt;<code class="methodname">IsHidden</code>()) {
+        <code class="varname">window</code>-&gt;<code class="methodname">Unlock</code>();
+        return;
+    }
+
+    <code class="varname">window</code>-&gt;<code class="methodname">MoveTo</code>(20, 20);
+    <span class="comment">// ... more stuff here</span>
+
+    <code class="varname">window</code>-&gt;<code class="methodname">Unlock</code>();
+}
+</pre><p>
+Note that the <code class="classname">BMessenger</code> <code class="varname">windowMessenger</code>
+is initialized as a <code class="classname">BMessenger</code>
+for 'window' immediately after window is created.
+<code class="classname">BMessenger</code>::<code class="methodname">LockTarget()</code> is guaranteed to return <code class="constant">false</code> when the
+messenger's target is no longer valid.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id797780"></a>So How About a BMessenger Autolock?</h3></div></div></div><pre class="programlisting cpp">
+class <code class="classname">MessengerAutoLocker</code> {
+public:
+    <code class="classname">MessengerAutoLocker</code>(<span class="type"><code class="classname">BMessenger</code> *</span><code class="parameter">messenger</code>)
+        :   <code class="varname">messenger</code>(<code class="parameter">messenger</code>),
+            <code class="varname">hasLock</code>(<code class="parameter">messenger</code>-&gt;<code class="methodname">LockTarget</code>())
+        { }
+
+    <code class="methodname">~MessengerAutoLocker</code>()
+        { <code class="methodname">Unlock</code>(); }
+
+    <code class="methodname">operator!</code>() const
+        { return !<code class="varname">hasLock</code>; }
+
+    <span class="type">bool</span> <code class="methodname">IsLocked</code>() const
+        { return <code class="varname">hasLock</code>; }
+
+    <span class="type">void</span> <code class="methodname">Unlock</code>()
+        {
+            if (<code class="varname">hasLock</code>) {
+                <span class="type"><code class="classname">BLooper</code> *</span><code class="varname">looper</code>;
+                <code class="varname">messenger</code>-&gt;<code class="methodname">Target</code>(&amp;<code class="varname">looper</code>);
+                if (<code class="varname">looper</code>)
+                    <code class="varname">looper</code>-&gt;<code class="methodname">Unlock</code>();
+                <code class="varname">hasLock</code> = <code class="constant">false</code>;
+            }
+        }
+
+private:
+    <span class="type"><code class="classname">BMessenger</code> *</span><code class="varname">messenger</code>;
+    <span class="type">bool</span> <code class="varname">hasLock</code>;
+};
+</pre><p>
+Using the <code class="classname">MessengerAutoLocker</code> class, we can rewrite our example:
+</p><pre class="programlisting cpp">
+<code class="classname">BMessenger</code> <code class="varname">windowMessenger</code>;
+    ...
+<span class="comment">// window creation code</span>
+<span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code> = new <code class="classname">BWindow</code> ...
+<code class="classname">BMessenger</code> <code class="varname">tmp</code>(<code class="varname">window</code>);
+<code class="varname">windowMessenger</code> = <code class="varname">tmp</code>;
+...
+
+{
+    <code class="classname">MessengerAutoLocker</code> <code class="varname">lock</code>(&amp;<code class="varname">windowMessenger</code>);
+    if (!<code class="varname">lock</code>)
+        <span class="comment">// failed to lock</span>
+        return;
+
+    <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code>;
+    <code class="varname">windowMessenger</code>.<code class="methodname">Target</code>(&amp;<code class="varname">window</code>);
+
+    <span class="comment">// access the window</span>
+    if (<code class="varname">window</code>-&gt;<code class="methodname">IsHidden</code>())
+        return;
+
+    <code class="varname">window</code>-&gt;<code class="methodname">MoveTo</code>(20, 20);
+    <span class="comment">// ... more stuff here</span>
+}
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id798052"></a>Finally, the BHandler::LockLooper() Member Function</h3></div></div></div><p>
+This lock call handles a race condition where a <code class="classname">BHandler</code>'s looper may be
+changed while you are trying to lock it—you may end up having locked the
+old looper right before the new looper is set. If the call returns with
+success, you are guaranteed that you locked the <code class="classname">BLooper</code> that is identical
+to the handler's looper.
+</p><p>
+Note that this call may still crash if the handler you are trying to
+access (and lock it's owner) is deleted. When you are calling this
+locking call, you need to be sure that the <code class="classname">BHandler</code> is still alive. This
+limits this locking call to a pretty narrow set of uses.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-27"></a>Developers' Workshop: Stepping Up To the Deskbar</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Eric</span> <span class="surname">Shepherd</span></span></div></div></div><p>
+The new <code class="classname">BDeskbar</code> class in BeOS Release 4.5 has made it easier than ever
+to add replicants to the Deskbar's replicant tray. You know, that little
+area next to the time where the mailbox replicant shows up.
+</p><p>
+Replicant tray items are typically used for services that don't have any
+other user interface, or to add quick access to features that exist
+elsewhere in a more complex environment. For instance, the Media
+preferences panel lets you control sound volume, but you can optionally
+add a replicant to the tray that lets you control the volume quickly and
+easily, without having to open the Media panel. Talk about convenience!
+</p><p>
+Any running application can add replicants to the tray, and the best part
+is that items can remain in the tray even after the application that
+installed them quits (thanks to the magic of replicants).
+</p><p>
+Let's consider an application that adds an item to the tray while it's
+running but will remove the item when the application is shut down; maybe
+it's a utility that doesn't need any user interface beyond a single menu
+for selecting options to control it, including a Quit option. Let's take
+a look at how this application would create, manage, and delete its
+Deskbar tray item.
+</p><p>
+As is the case with any replicant, a Deskbar tray item requires an
+archivable <code class="classname">BView</code>, like this one:
+</p><pre class="programlisting cpp">
+class _EXPORT <code class="classname">MyUtilDeskbarView</code> : public <code class="classname">BView</code> {
+public:
+    <code class="methodname">MyUtilDeskbarView</code>();
+    <code class="methodname">MyUtilDeskbarView</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>);
+    <code class="methodname">~MyUtilDeskbarView</code>();
+    <span class="type">status_t</span> <code class="methodname">Archive</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">data</code>, <span class="type">bool</span> <code class="parameter">deep</code>) const;
+    <span class="type">static <code class="classname">BArchivable</code> *</span><code class="methodname">Instantiate</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">data</code>);
+    <span class="type">void</span> <code class="methodname">Draw</code>(<code class="classname">BRect</code> <code class="parameter">updateRect</code>);
+    <span class="type">void</span> <code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">where</code>);
+    <span class="type">void</span> <code class="methodname">AttachedToWindow</code>();
+    <span class="type">void</span> <code class="methodname">DetachedFromWindow</code>();
+    <span class="type">void</span> <code class="methodname">Init</code>(<span class="type">void</span>);
+
+private:
+    <span class="type"><code class="classname">BBitmap</code> *</span><code class="varname">bitmap</code>;
+    <span class="type">entry_ref</span> <code class="varname">app_ref</code>;
+};
+</pre><p>
+Note that the declaration of the class exports the class; this is
+necessary so the Deskbar can have access to the class when it tries to
+instantiate it.
+</p><p>
+There are two versions of the constructor. The first is used when
+instantiating the view within our application:
+</p><pre class="programlisting cpp">
+<code class="classname">MyUtilDeskbarView</code>::<code class="methodname">MyUtilDeskbarView</code>() :
+    <code class="classname">BView</code>(<code class="classname">BRect</code>(0,0,<code class="constant">B_MINI_ICON</code>-1,<code class="constant">B_MINI_ICON</code>-1),
+    "MyUtility Control", <code class="constant">B_FOLLOW_LEFT</code> | <code class="constant">B_FOLLOW_TOP</code>,
+    <code class="constant">B_WILL_DRAW</code>) {
+    <span class="type">app_info</span> <code class="varname">info</code>;
+    <code class="varname">be_app</code>-&gt;<code class="methodname">GetAppInfo</code>(&amp;<code class="varname">info</code>);
+    <code class="varname">app_ref</code> = <code class="varname">info</code>.<code class="varname">ref</code>;
+    <code class="methodname">Init</code>();
+}
+</pre><p>
+This configures the replicant's size, flags, and resizing mode, just like
+you normally do with <code class="classname">BView</code>s. It does do one interesting thing: in this
+example class, the icon displayed in the Deskbar tray will be the
+application's icon. Because the icon will be drawn from within the
+Deskbar, we need to obtain an <span class="type">entry_ref</span> to the application in advance so
+the replicant can get access to our icon from the Deskbar.
+</p><p>
+So we use the <code class="methodname">BApplication::GetAppInfo()</code> function to get information
+about the running application; this includes the needed <span class="type">entry_ref</span>, which
+is then stored in a private field in the object.
+</p><p>
+The <code class="methodname">Init()</code> function is called next; this function (we'll see it in a
+moment) performs any initialization common to the two forms of the
+constructor.
+</p><p>
+The second constructor looks like this:
+</p><pre class="programlisting cpp">
+<code class="classname">MyUtilDeskbarView</code>::<code class="methodname">MyUtilDeskbarView</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>) : <code class="classname">BView</code>(<code class="varname">msg</code>) {
+    <code class="varname">msg</code>-&gt;<code class="methodname">FindRef</code>("app_ref", &amp;<code class="varname">app_ref</code>);
+    <code class="methodname">Init</code>();
+}
+</pre><p>
+This one is used to instantiate the object as a replicant, using a
+<code class="classname">BMessage</code> representing a dehydrated
+<code class="classname">MyUtilDeskbarView</code> object. The application's
+<span class="type">entry_ref</span> has been added to the
+<code class="classname">BMessage</code> by the <code class="methodname">Archive()</code>
+implementation, so we extract it and then call
+<code class="methodname">Init()</code> to complete initialization.
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MyUtilDeskbarView</code>::<code class="methodname">Init</code>(<span class="type">void</span>) {
+    <code class="varname">bitmap</code> = <code class="constant">NULL</code>;
+}
+</pre><p>
+The <code class="methodname">Init()</code> function should handle any common initialization; in this
+case, all we do is make the bitmap pointer <code class="constant">NULL</code> so we know it hasn't been
+loaded yet.
+</p><p>
+The <code class="methodname">Archive()</code> function's job is to wrap up the
+data that describes the <code class="classname">MyUtilDeskbarView</code> object
+into a <code class="classname">BMessage</code>; this information is then used by
+the <code class="methodname">Instantiate()</code> function to reconstitute a copy
+of the object by the Deskbar.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="classname">MyUtilDeskbarView</code>::<code class="methodname">Archive</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>,
+<span class="type">bool</span> <code class="parameter">deep</code>) const {
+    <span class="type">status_t</span> <code class="varname">err</code>;
+    <span class="type">app_info</span> <code class="varname">info</code>;
+
+    <code class="varname">err</code> = <code class="classname">BView</code>::<code class="methodname">Archive</code>(<code class="parameter">msg</code>, <code class="parameter">deep</code>);
+    <code class="varname">be_app</code>-&gt;<code class="methodname">GetAppInfo</code>(&amp;<code class="varname">info</code>);
+    <code class="parameter">msg</code>-&gt;<code class="methodname">AddRef</code>("app_ref", &amp;<code class="varname">info</code>.<code class="varname">ref</code>);
+    <code class="parameter">msg</code>-&gt;<code class="methodname">AddString</code>("add_on", <code class="constant">APP_SIGNATURE</code>);
+    return <code class="varname">err</code>;
+}
+</pre><p>
+For the most part, this is done by simply calling through to
+<code class="classname">BView</code>::<code class="methodname">Archive()</code>, but we do also add two more
+fields to the archive <code class="classname">BMessage</code>.
+<code class="varname">app_ref</code> contains the <span class="type">entry_ref</span> to the
+application so we can track it down later to load our icon.
+</p><p>
+The <code class="varname">add_on</code> field contains our application's signature. This is very
+important, and is required; without it, the archive can't be
+reconstituted because in order for the object's code to run, the BeOS
+needs to know what application file its code resides in. The signature is
+used to figure this out. We could probably use this information instead
+of an <span class="type">entry_ref</span> to get our application's icon, but adding the <span class="type">entry_ref</span>
+to the object is good practice in creating archives.
+</p><p>
+The static <code class="methodname">Instantiate()</code> function is called by the Deskbar to construct a
+copy of your application's <code class="classname">MyUtilDeskbarView</code> object. It's static so it
+can be called without first instantiating an <code class="classname">MyUtilDeskbarView</code> object
+(can you see the chicken-or-egg scenario there?). This function's primary
+mission is to simply return a new object, constructed from the passed-in
+<code class="classname">BMessage</code> archive.
+</p><pre class="programlisting cpp">
+<span class="type"><code class="classname">BArchivable</code> *</span><code class="classname">MyUtilDeskbarView</code>::<code class="methodname">Instantiate</code>(<span class="type"><code class="classname">BMessage</code> *</span><code class="parameter">msg</code>) {
+    if (!<code class="function">validate_instantiation</code>(<code class="parameter">msg</code>, "MyUtilDeskbarView")) {
+        return <code class="constant">NULL</code>;
+    }
+    return new <code class="classname">MyUtilDeskbarView</code>(<code class="parameter">msg</code>);
+}
+</pre><p>
+The <code class="function">validate_instantiation()</code> function is used to confirm that the message
+does in fact represent an archived <code class="classname">MyUtilDeskbarView</code> object; if it
+doesn't, we return <code class="constant">NULL</code>, thereby indicating an error.
+</p><p>
+The <code class="methodname">AttachedToWindow()</code> function handles loading and preparing the icon
+for display in the view:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MyUtilDeskbarView</code>::<code class="methodname">AttachedToWindow</code>() {
+    <code class="classname">BAppFileInfo</code> <code class="varname">appInfo</code>;
+    <code class="classname">BFile</code> <code class="varname">file</code>;
+
+    <code class="varname">file</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">app_ref</code>, <code class="constant">B_READ_ONLY</code>);
+    <code class="varname">appInfo</code>.<code class="methodname">SetTo</code>(&amp;<code class="varname">file</code>);
+    <code class="varname">bitmap</code> = new
+    <code class="classname">BBitmap</code>(<code class="classname">BRect</code>(0,0,<code class="constant">B_MINI_ICON</code>-1,<code class="constant">B_MINI_ICON</code>-1), <code class="constant">B_CMAP8</code>,
+    <code class="constant">false</code>, <code class="constant">false</code>);
+    if (<code class="varname">appInfo</code>.<code class="methodname">GetIcon</code>(<code class="varname">bitmap</code>, <code class="constant">B_MINI_ICON</code>) != <code class="constant">B_OK</code>) {
+        delete <code class="varname">bitmap</code>;
+        <code class="varname">bitmap</code> = <code class="constant">NULL</code>;
+    }
+
+    if (<code class="methodname">Parent</code>()) {
+        <code class="methodname">SetViewColor</code>(<code class="methodname">Parent</code>()-&gt;<code class="methodname">ViewColor</code>());
+    }
+}
+</pre><p>
+A <code class="classname">BFile</code> is created, referring to the application
+file whose <span class="type">entry_ref</span> we've already obtained from the archive
+message. This is used to prepare a <code class="classname">BAppFileInfo</code>
+object, whose <code class="methodname">GetIcon()</code> function we call to obtain
+the application's icon. This is read into a bitmap of the appropriate size
+to contain the application's small (16x16) icon.
+</p><p>
+We also set the view's background color to match the Deskbar's replicant
+tray color by looking at the <code class="methodname">Parent()</code> view's color.
+</p><p>
+<code class="methodname">DetachedFromWIndow()</code> is called by the application server just after the
+replicant view is removed from the Deskbar tray. We can use this to clean
+up after ourselves:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MyUtilDeskbarView</code>::<code class="methodname">DetachedFromWindow</code>() {
+    delete <code class="varname">bitmap</code>;
+}
+</pre><p>
+In this case we just dispose of the bitmap containing the application's
+icon.
+</p><p>
+The <code class="methodname">Draw()</code> function draws the replicant view; this can draw anything you
+want, but in our case we'll just draw the application's icon from our
+<code class="classname">BBitmap</code>:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MyUtilDeskbarView</code>::<code class="methodname">Draw</code>(<code class="classname">BRect</code> <code class="parameter">updateRect</code>) {
+    if (<code class="varname">bitmap</code>) {
+        <code class="methodname">SetDrawingMode</code>(<code class="constant">B_OP_OVER</code>);
+        <code class="methodname">DrawBitmap</code>(<code class="varname">bitmap</code>, <code class="classname">BPoint</code>(0,0));
+    }
+}
+</pre><p>
+To be safe, we make sure we don't draw if the bitmap is <code class="constant">NULL</code>; this
+prevents us from dying if the icon wasn't loaded for some reason. You
+could add code here to alter the appearance of the icon under certain
+conditions; the mail replicant for example would draw the mailbox full if
+there was mail waiting, or empty if no mail has been received.
+</p><p>
+The only remaining thing is to implement <code class="methodname">MouseDown()</code> to handle clicks in
+the view. You could pop up a menu, or you could create a window, or run
+an application, or do anything you want to:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">MyUtilDeskbarView</code>::<code class="methodname">MouseDown</code>(<code class="classname">BPoint</code> <code class="parameter">where</code>) {
+    <span class="type"><code class="classname">BWindow</code> *</span><code class="varname">window</code> = <code class="methodname">Window</code>();
+    if (!<code class="varname">window</code>) {
+        return;
+    }
+
+    <span class="type"><code class="classname">BMessage</code> *</span>current = <code class="varname">window</code>-&gt;<code class="methodname">CurrentMessage</code>();
+    if (!<code class="varname">current</code>) {
+        return;
+    }
+
+    if (<code class="varname">current</code>-&gt;<code class="varname">what</code> == <code class="constant">B_MOUSE_DOWN</code>) {
+        <span class="type">uint32</span> <code class="varname">buttons</code> = 0;
+        <span class="type">uint32</span> <code class="varname">modifiers</code> = 0;
+
+        <code class="varname">current</code>-&gt;<code class="methodname">FindInt32</code>("buttons", (<span class="type">int32 *</span>) &amp;<code class="varname">buttons</code>);
+        <code class="varname">current</code>-&gt;<code class="methodname">FindInt32</code>("modifiers", (<span class="type">int32 *</span>)
+        &amp;<code class="varname">modifiers</code>);
+
+        switch(<code class="varname">buttons</code>) {
+            case <code class="constant">B_PRIMARY_MOUSE_BUTTON</code>:
+                <code class="function">beep</code>();
+                break;
+            case <code class="constant">B_SECONDARY_MOUSE_BUTTON</code>:
+                <code class="function">beep</code>();
+                <code class="function">snooze</code>(1000000);
+                <code class="function">beep</code>();
+                break;
+        }
+    }
+}
+</pre><p>
+In this case, the sample code demonstrates how to use
+<code class="methodname">BWindow::CurrentMessage()</code> to get at the
+<code class="constant">B_MOUSE_DOWN</code> message and peel out
+information on which buttons on the mouse were pressed and the modifier
+keys that were down at the time. This information can then be used to
+alter the response to the click depending on what the user did. For
+example, the volume control replicant brings up a volume slider control
+if you click normally, but a popup menu if you click with the secondary
+mouse button.
+</p><p>
+Installing the item into the Deskbar is as simple as:
+</p><pre class="programlisting cpp">
+<code class="classname">BDeskbar</code> <code class="varname">db</code>;
+<code class="varname">db</code>.<code class="methodname">AddItem</code>(new <code class="classname">MyUtilDeskbarView</code>);
+</pre><p>
+And you can remove the item by doing:
+</p><pre class="programlisting cpp">
+<code class="classname">BDeskbar</code> <code class="varname">db</code>;
+<code class="varname">db</code>.<code class="methodname">Removeitem</code>("MyUtility Control");
+</pre><p>
+If you plan to remove your Deskbar item by name, be sure the name is
+unique—use your application's name and possibly other text to make it
+as unlikely as possible that some other replicant might use the same
+name. You can avoid this risk by using the replicant's ID number, like
+this:
+</p><pre class="programlisting cpp">
+<code class="classname">BDeskbar</code> <code class="varname">db</code>;
+<span class="type">int32</span> <code class="varname">id</code>;
+<code class="varname">db</code>.<code class="methodname">AddItem</code>(new <code class="classname">MyUtilDeskbarView</code>, &amp;<code class="varname">id</code>);
+</pre><p>
+And you can remove it like this:
+</p><pre class="programlisting cpp">
+<code class="classname">BDeskbar</code> <code class="varname">db</code>;
+<code class="varname">db</code>.<code class="methodname">RemoveItem</code>(<code class="varname">id</code>);
+</pre><p>
+Now you're armed with all the ammunition you need to create a great
+add-on and slide it into the Deskbar for all to see.
+</p><p>
+One last point: think carefully about whether or not a Deskbar tray item
+is really necessary for your application to be useful. Dropping
+replicants into the tray from every application you write is just going
+to clutter up the tray and render it useless—only critical or
+often-used items belong in the tray. When in doubt, make it a user
+preference whether the tray item should be installed or not.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-26.html">Issue 4-26, June 30, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-28.html">Issue 4-28, July 14, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-26.html" title="Issue 4-26, June 30, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-28.html" title="Issue 4-28, July 14, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,2150 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="Ja">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<title>Art of BeOS Programming</title>
+	<link href="../css/format.css" rel="stylesheet" type="text/css">
+	<link href="../css/layout.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<div id="pagewidth">
+
+<div id="main">
+
+<br/>
+
+<h1>第8章 伝えたいメッセージ</h1>
+<br/>
+
+この章では、他のアプリケーションとメッセージ通信を行います。つまり、題材として以下のものをとりあげます。<br/>
+
+<br/>
+
+ ◇他のアプリケーションにメッセージを送る<br/>
+
+ ◇現在動作しているアプリケーションの一覧表示情報を取得する<br/>
+
+ ◇他のアプリケーションのウィンドウやボタンを遠隔操作する<br/>
+
+<br/>
+
+これらの題材をプログラミングするために、BeOSのAPIが提供しているクラスのうち、主に以下のものを利用します。<br/>
+
+<br/>
+
+ ●BMessenger(Application Kit)<br/>
+
+ ●BMessage(Application Kit)<br/>
+
+ ●BRoster(Application Kit)<br/>
+
+ ●BListView(Interface Kit)<br/>
+
+ ●BPopUpMenu(Interface Kit)<br/>
+
+ ●BRadioButton(Interface Kit)<br/>
+
+ ●BTextControl(Interface Kit)<br/>
+
+<br/>
+
+これらのクラスの間の階層関係を、図8.1に示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.01.jpg" alt="図 第8章で主に扱うクラス間の階層図"/><div>図[8.1]  第8章で主に扱うクラス間の階層図</div>
+</div>
+
+<br/>
+
+プログラミングの説明に使うサンプルアプリケーションは、全部で二つ用意しています。8.1節では、現在動作しているアプリケーションを一覧表示し、指定したものにメッセージを送るアプリケーションを作ります。また、8.3節ではBeOSのスクリプティング機構を利用したアプリケーションを作ります。このアプリケーションは、単に他のアプリケーションにメッセージを送るだけではなく、相手からウィンドウやボタンの情報を取得し、それらのウィンドウやボタンに対して直接メッセージを送ることができます。<br/>
+
+<br/>
+
+どちらのアプリケーションも、ごく基本的な機能しか持っていません。しかし、この章の説明を参考にしてBeOSのアプリケーション間通信機構を理解すれば、高度な機能を持つアプリケーションを作ることができるでしょう。<br/>
+
+<br/>
+
+<br/>
+<a name="8.1"></a>
+<h2>8.1&nbsp;&nbsp;メッセージが届くまで</h2>
+この節では、他のアプリケーションに対してメッセージを送る機能を持った“Messenger”というサンプルアプリケーションを使って、アプリケーション間通信のプログラミングを説明します。サンプルコードを読んでみれば、非常に簡単なプログラミングで済んでしまうことが分かるはずです。<br/>
+
+<br/>
+
+<br/>
+<a name="8.1.1"></a>
+<h3>8.1.1&nbsp;&nbsp;Messengerアプリケーションの機能と構造</h3>
+まず、サンプルアプリケーションについて見ておきましょう。図8.2が、この節で使う“Messenger”という名前のサンプルを動かした様子です。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.02.jpg" alt="図 Messengerのスクリーンショット"/><div>図[8.2]  Messengerのスクリーンショット</div>
+</div>
+
+<br/>
+
+次に、このアプリケーションの機能、つまりMessengerの外部仕様を述べます。<br/>
+
+<br/>
+
+ ・起動するとウィンドウを一枚開き、現在動作しているアプリケーションのシグネチャをリストボックスに一覧表示する。<br/>
+
+<br/>
+
+ ・一覧表示されたアプリケーションのうち、選択したものに対してメッセージを送信する。<br/>
+
+<br/>
+
+ ・送信するメッセージは、アバウトダイアログの表示要求(B_ABOUT_REQUESTED)または終了要求(B_QUIT_REQUESTED)の二つであり、どちらにするかをポップアップメニューで指定できる。<br/>
+
+<br/>
+
+上に書いた外部仕様と図8.2のスクリーンショットだけでは実際の動きが分からない場合は、自分で動かしてみて下さい。Messengerアプリケーションのソースファイルは、付録に付けたサンプルコード集の“8.1_Messenger”というフォルダに入っています。なお、第5章で最初に使ったサンプルアプリケーション(EmptyApp)を作って動かした人なら、その時にMessengerを使っているはずです。EmptyAppは何もウィンドウを開かないのでそのままでは終了できないため、Messengerを使って終了要求メッセージを送って終了するように説明したのですが、憶えていますか?<br/>
+
+<br/>
+
+Messengerアプリケーションの操作方法は、5.1.1で説明しました。使い方が分からない人は、5.1.1の説明を読み返して下さい。使い方が分かったら、リストに表示されているアプリケーションのうち“application/x-vnd.Be-TRAK”というシグネチャのものを選んでB_ABOUT_REQUESTEDメッセージを送ってみて下さい。アバウトダイアログには何と表示されているでしょうか?その次は、“application/x-vnd.FtGUN-Messenger”を選んでB_QUIT_REQUESTEDメッセージを送って下さい。何が起こるでしょうか。<br/>
+
+<br/>
+
+Messengerアプリケーションの動きが分かったら、次はその内部を見てみましょう。図8.3に、Messengerのモジュール構成を示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.03.jpg" alt="図 Messengerのモジュール構成図"/><div>図[8.3]  Messengerのモジュール構成図</div>
+</div>
+
+<br/>
+
+図8.3に示したモジュールのうち、中心的な役割を果たすのがMessengerViewクラスです。MessengerViewはBViewのサブクラスで、アプリケーションの一覧表示や、選択されたアプリケーションにメッセージを送る機能を持っています。図8.3に示したそれぞれのクラスの概要を、以下に述べます。<br/>
+
+<br/>
+
+ ■MessengerAppクラス<br/>
+
+  Messengerのアプリケーションクラス。BApplicationクラスのメソッドのうち、フック関数として提供されているReadyToRun()とAboutRequested()を再定義しています。ウィンドウを生成し、MessengerViewを貼りつけて表示してくれます。<br/>
+
+<br/>
+
+ ■MonoWindowクラス<br/>
+
+  ウィンドウクラスです。前の第7章の説明で使ったRegularWindowのサブクラスで、自分が終了する時にアプリケーションへ終了要求メッセージ(B_QUIT_REQUESTED)を送ります。また、ウィンドウが閉じられようとした時に、アプリケーションを終了してもよいかどうかをユーザに確認してくれます。なお、RegularWindowクラスと同様、これ以降に登場するサンプルアプリケーションでも利用していますので、サンプルコード集ではライブラリ用のフォルダ(“MyLib/GUI”)に収録しています。<br/>
+
+<br/>
+
+ ■MessengerViewクラス<br/>
+
+  ビュークラスです。動作中のアプリケーションを一覧表示し、また“Send”ボタンがクリックされると、選択されているアプリケーションにメッセージを送信します。リストボックスやボタンなど、他のビュー部品をサブビューとして持ち、それらを適切にレイアウトします。<br/>
+
+<br/>
+
+<br/>
+<a name="8.1.2"></a>
+<h3>8.1.2&nbsp;&nbsp;Messengerアプリケーションのソースコード</h3>
+前述した、Messengerアプリケーションを構成するクラスのうち、MessengerAppクラスとMessengerViewクラスのソースをリスト8.1～8.3に示します。ただし、ページ数の都合上、MessengerAppクラスは実装部の掲載を省略しました。また、MessengerViewクラスも、実装部を載せたリスト8.3には重要なメソッドしか入れていません。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.1] MessengerApp.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _MESSENGER_APP_H_
+<b><font color="#000080">#define</font></b> _MESSENGER_APP_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;app/Application.h&gt;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * MessengerAppクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> MessengerApp <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BApplication <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">MessengerApp</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">MessengerApp</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 起動と終了</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">ReadyToRun</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メニュー応答</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">AboutRequested</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _MESSENGER_APP_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.2] MessengerView.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _MESSENGER_VIEW_H_
+<b><font color="#000080">#define</font></b> _MESSENGER_VIEW_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;interface/View.h&gt;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * MessengerViewクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> MessengerView <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BView <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">MessengerView</font></b><font color="#990000">(</font>BRect frame<font color="#990000">,</font> uint32 resizeMask<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">MessengerView</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 描画処理</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">AttachedToWindow</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">MakeContent</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AdjustContent</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メッセージ処理</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">Pulse</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AppSelected</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> アプリケーションの一覧表示</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">CheckApps</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">UpdateAppList</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BList<font color="#990000">*</font> newList<font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    BList<font color="#990000">*</font>	fAppList<font color="#990000">;</font>	<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 動作中のアプリケーション群 </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _MESSENGER_VIEW_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.3] MessengerView.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * メッセージ処理; MessengerView</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+MessengerView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">switch</font></b> <font color="#990000">(</font>message<font color="#990000">-</font><font color="#990000">&gt;</font>what<font color="#990000">)</font> <font color="#FF0000">{</font>
+    <b><font color="#0000FF">case</font></b> APP_SELECTED<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AppSelected</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> SEND_MESSAGE<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">default</font></b><font color="#990000">:</font>
+        BView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MessengerView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Pulse </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CheckApps</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MessengerView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">AppSelected </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BButton<font color="#990000">*</font>    theButton <font color="#990000">=</font> <font color="#990000">(</font>BButton<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kSendButton<font color="#990000">)</font><font color="#990000">;</font>
+    BListView<font color="#990000">*</font>  theList   <font color="#990000">=</font> <font color="#990000">(</font>BListView<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kListView<font color="#990000">)</font><font color="#990000">;</font>
+
+    theButton<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">SetEnabled</font></b><font color="#990000">(</font>theList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CurrentSelection</font></b><font color="#990000">(</font><font color="#990000">)</font> <font color="#990000">&gt;</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MessengerView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">SendMessage </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t     sts<font color="#990000">;</font>
+    team_id      theTeam<font color="#990000">;</font>
+    app_info     theInfo<font color="#990000">;</font>
+    BListView<font color="#990000">*</font>   theList      <font color="#990000">=</font> <font color="#990000">(</font>BListView<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kListView<font color="#990000">)</font><font color="#990000">;</font>
+    BMenuField<font color="#990000">*</font>  theMenuField <font color="#990000">=</font> <font color="#990000">(</font>BMenuField<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kPopupMenu<font color="#990000">)</font><font color="#990000">;</font>
+    BMenuItem<font color="#990000">*</font>   theMenuItem<font color="#990000">;</font>
+    uint32       theCommand<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 選択中のアプリケーションに対するBMessengerオブジェクトを生成 </font></i><i><font color="#9A1900">*/</font></i>
+    theTeam <font color="#990000">=</font> <font color="#990000">(</font>team_id<font color="#990000">)</font>fAppList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ItemAt</font></b><font color="#990000">(</font>theList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CurrentSelection</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font><font color="#990000">;</font>
+    be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRunningAppInfo</font></b><font color="#990000">(</font>theTeam<font color="#990000">,</font> <font color="#990000">&amp;</font>theInfo<font color="#990000">)</font><font color="#990000">;</font>
+    BMessenger	<b><font color="#000000">theMessenger</font></b><font color="#990000">(</font>theInfo<font color="#990000">.</font>signature<font color="#990000">,</font> theTeam<font color="#990000">,</font> <font color="#990000">&amp;</font>sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ポップアップメニューで指定されたコマンドを取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theMenuItem <font color="#990000">=</font> theMenuField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Menu</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindMarked</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theMenuItem<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Label</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> kAboutLabel<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+        theCommand <font color="#990000">=</font> B_ABOUT_REQUESTED<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theMenuItem<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Label</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> kQuitLabel<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font>
+        theCommand <font color="#990000">=</font> B_QUIT_REQUESTED<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> B_ERROR<font color="#990000">;</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メッセージを送る </font></i><i><font color="#9A1900">*/</font></i>
+    theMessenger<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font>theCommand<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"MessengerView::SendMessage"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * アプリケーションの一覧表示; MessengerView</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+MessengerView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">CheckApps </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BList	tmpList<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 動作中のアプリケーションリストを取得 </font></i><i><font color="#9A1900">*/</font></i>
+    be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetAppList</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>tmpList<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 現在表示しているものと違っていたら表示を更新 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>tmpList<font color="#990000">.</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> fAppList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">UpdateAppList</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>tmpList<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>
+        <b><font color="#0000FF">for</font></b> <font color="#990000">(</font>int32 i <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">,</font> n <font color="#990000">=</font> tmpList<font color="#990000">.</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font> i <font color="#990000">&lt;</font> n<font color="#990000">;</font> <font color="#990000">+</font><font color="#990000">+</font>i<font color="#990000">)</font> <font color="#FF0000">{</font>
+            team_id	theTeam <font color="#990000">=</font> <font color="#990000">(</font>team_id<font color="#990000">)</font>tmpList<font color="#990000">.</font><b><font color="#000000">ItemAt</font></b><font color="#990000">(</font>i<font color="#990000">)</font><font color="#990000">;</font>
+			
+            <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theTeam <font color="#990000">!</font><font color="#990000">=</font> <font color="#990000">(</font>team_id<font color="#990000">)</font>fAppList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ItemAt</font></b><font color="#990000">(</font>i<font color="#990000">)</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+                <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">UpdateAppList</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>tmpList<font color="#990000">)</font><font color="#990000">;</font>
+                <b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+            <font color="#FF0000">}</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+MessengerView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">UpdateAppList </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BList<font color="#990000">*</font> newList<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BListView<font color="#990000">*</font> theListView <font color="#990000">=</font> <font color="#990000">(</font>BListView<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kListView<font color="#990000">)</font><font color="#990000">;</font>
+    BListItem<font color="#990000">*</font> aListItem<font color="#990000">;</font>
+    app_info   anInfo<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> アプリケーションリストを更新 </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#990000">*</font>fAppList <font color="#990000">=</font> <font color="#990000">*</font>newList<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 表示リストをクリア </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">while</font></b> <font color="#990000">(</font><font color="#990000">(</font>aListItem <font color="#990000">=</font> theListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">RemoveItem</font></b><font color="#990000">(</font><font color="#990000">(</font>int32<font color="#990000">)</font><font color="#993399">0</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> NULL<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <b><font color="#0000FF">delete</font></b> aListItem<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 各アプリケーションのシグネチャを表示リストに挿入 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">for</font></b> <font color="#990000">(</font>int32 i <font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">,</font> n <font color="#990000">=</font> newList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">CountItems</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font> i <font color="#990000">&lt;</font> n<font color="#990000">;</font> <font color="#990000">+</font><font color="#990000">+</font>i<font color="#990000">)</font> <font color="#FF0000">{</font>
+        team_id      theTeam <font color="#990000">=</font> <font color="#990000">(</font>team_id<font color="#990000">)</font>newList<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ItemAt</font></b><font color="#990000">(</font>i<font color="#990000">)</font><font color="#990000">;</font>
+        BStringItem<font color="#990000">*</font> newItem<font color="#990000">;</font>
+		
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRunningAppInfo</font></b><font color="#990000">(</font>theTeam<font color="#990000">,</font> <font color="#990000">&amp;</font>anInfo<font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+            newItem <font color="#990000">=</font> <b><font color="#0000FF">new</font></b> <b><font color="#000000">BStringItem</font></b><font color="#990000">(</font>anInfo<font color="#990000">.</font>signature<font color="#990000">)</font><font color="#990000">;</font>
+            theListView<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddItem</font></b><font color="#990000">(</font>newItem<font color="#990000">)</font><font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 選択状態の解除 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AppSelected</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+最初はアプリケーションクラスです。前の章の説明で使ったClockworkWaveAppクラス(リスト7.1, 7.2)と大体同じで、むしろ簡単になっています。データメンバを持たないのでコンストラクタもデストラクタも空ですし、AboutRequested()メソッドの内容はClockworkWaveAppと同じです。また、ReadyToRun()メソッドの内容は、ウィンドウが一枚しかないぶん単純です。ウィンドウのSetSizeLimits()メソッドを呼び出して、リサイズ可能な最小サイズを設定しているくらいしか違いはありません。<br/>
+
+<br/>
+
+<span id="warning">校正時に掲載リストを減らしたため、以下の記述には若干の食い違いがある。('98. 5/19, koga@ftgun.co.jp)</span><br/>
+<br/>
+
+次に、中心となっているMessengerViewクラスを見てみましょう。このクラスのソースファイル(MessengerView.cp)は、リスト8.4とリスト8.5の二つに分けて掲載しています。リスト8.4には、リストボックスやボタンなど、ビュー部品の生成とレイアウトを行うメソッド、および#include文や各種定数の定義が入っています。一方、リスト8.5には、MessengerViewクラスの中でも重要なメソッドだけを抜き出して入れました。<br/>
+
+<br/>
+
+順番通り、先に8.4の方を説明しましょう。MessengerViewクラスでは、コンストラクタの中でビュー部品を生成して自分のサブビューに設定し、ウィンドウに貼りつけられたときにサブビューのレイアウトを行います。それぞれの処理は、次の二つのメソッドで行います。<br/>
+
+<br/>
+
+ ■MakeContent()<br/>
+
+  MessengerViewのコンストラクタから呼び出されます。リストボックスやボタンなど、ビュー部品を生成した後、AddChild()メソッドを使って自身のサブビューに設定します。なお、各ビュー部品のサイズと位置はレイアウト時に調節するため、生成する時に指定するフレーム矩型は、適当なものを与えています。<br/>
+
+<br/>
+
+ ■AdjustContent()<br/>
+
+  MessengerViewのAttachedToWindow()メソッドから呼び出されます。AttachedToWindow()は、前の章のサンプル(ClockworkWave)でも説明したようにBViewクラスが提供しているフック関数であり、ビューオブジェクトがウィンドウに貼りつけられた時に呼び出されます。AdjustContent()メソッドでは、各ビュー部品に対してResizeTo()メソッドやResizeBy()メソッドを呼び出してサイズを調節し、それからMoveTo()メソッドを呼び出して適切な位置に移動しています。<br/>
+
+<br/>
+
+リスト8.4でAdjustContent()メソッドの内容を見ると、レイアウトに使うサイズや位置のパラメータの値を、ソースコードの中で直接指定してしまっているのが分かるでしょう。本当は、定数として定義したものを使うようにして後で変更が必要になった時の対処を楽にすべきなのですが、ここでは簡単のために省略しています。ビュー部品のレイアウト処理は、4.1節で紹介したようなビューエディタを使えばプログラミングしなくても済む部分ですから、本書ではあまり重用視していません。かなり適当なプログラミングをしていますので、あらかじめご了承下さい。<br/>
+
+<br/>
+
+さて、Messengerアプリケーションでは、これまでのサンプルで使ったことのないビュー部品のクラスを、四つ使っています。以下に、それぞれのクラスの役割を示します。なお、本書執筆時点で利用できるビュークラスの説明は、6.2節でまとめて行っています。したがって、ここでは6.2節で述べた概要では書き切れなかったことのうち、本章のサンプルコードを読むうえで参考になることだけを述べます。リスト8.4と8.5の他に、Messengerアプリケーションのスクリーンショット(図8.2)を一緒に見ながら説明を読むと、わかりやすいでしょう。<br/>
+
+<br/>
+
+ ■BListViewクラス<br/>
+
+  アプリケーションのシグネチャをリスト表示するのに使っています。リスト項目を複数選択できるようにするかどうかを、コンストラクタの第三引数で指定できます。リスト8.4では“B_SINGLE_SELECTION_LIST”を渡し、一時に一つのリスト項目しか選択できないようにしています。また、リスト項目が選択された時に送られる通知メッセージをSetSelectionMessage()でセットします。<br/>
+
+<br/>
+
+  なお、BListViewクラスだけではリスト表示は行えません。リスト要素のオブジェクトを生成し、これをBListViewクラスのAddItem()メソッドを使ってリストに追加して、はじめてリスト項目が表示されるのです。リスト要素のためにBListItemクラスが提供されており、MessengerViewでは“BStringItem”というサブクラスを使ってシグネチャの文字列を表示しています。BStringItemクラスのインスタンスを生成してリストに追加する手順は、リスト8.5のMessengerView::UpdateAppList()メソッドを参照して下さい。<br/>
+
+<br/>
+
+ ■BScrollViewクラス<br/>
+
+  他のビューをサブビューにして、スクロール表示してくれます。スクロール表示するビューは、コンストラクタの第二引数で指定します。リスト8.4では、リスト表示ビュー(BListView)を渡して、リストを垂直方向にスクロール表示できるようにしています。<br/>
+
+<br/>
+
+  なお、スクローラを付けるかどうかは、コンストラクタの第五および第六引数で指定します。リスト8.4では、水平方向のスクローラを付けず、垂直方向のスクローラのみを付けるように指定しています。その他の引数の詳細については、APIリファレンスを参照して下さい。次の第9章では、水平方向のスクローラを付ける場合の例を示します。<br/>
+
+<br/>
+
+ ■BPopUpMenuクラス<br/>
+
+  ポップアップメニューを表示して、複数の選択項目の中から一つだけを選ばせる場合に利用するクラスです。MessengerViewでは、次に述べるBMenuFieldクラスと組み合わせ、他のアプリケーションに送るメッセージを指定するのに使っています。このクラスはBMenuのサブクラスであり、メニュー項目の追加手順は同じです。<br/>
+
+<br/>
+
+  なお、BMenuクラスには、現在選択されている項目を返してくれるFindMarked()というメソッドがあり、BMessengerViewではこのメソッドを呼び出して他のアプリケーションへ送るべきメッセージを調べています。したがって、メニューの選択項目が変わってもそれを知る必要はありません。このため、リスト8.4ではそれぞれのメニュー項目(BMenuItem)を生成する際、コンストラクタの第二引数にNULLを渡し、メニュー項目の選択通知が送られないようにしています。<br/>
+
+  <br/>
+
+ ■BMenuFieldクラス<br/>
+
+  ポップアップメニュー表示用のボタンとして振る舞うクラスです。現在選択されているメニュー項目のラベルを表示します。コンストラクタの第四引数に渡したメニューオブジェクトを内部に持ち、クリックされるとメニューの内容を表示してくれます。<br/>
+
+<br/>
+
+以上のクラスのうち、MessengerアプリケーションではBListViewクラスからメッセージを受け取ります。つまり、メッセージを送るアプリケーションをリストから選択すると、その選択通知をBListViewから受け取り、“Send”ボタンがディム化(注8-1)されていればそれを解除するのです。これを行っているのが、リスト8.5のMessengerView::AppSelected()メソッドです。リストビュー(BListView)のCurrentSelection()メソッドを呼び出して選択要素を調べ(注8-2)、選択要素があるかどうかでボタンをディム化するかどうかを決めています。ボタン(BButton)のSetEnabled()メソッドは、falseを渡すとディム化し、trueを渡すとディム化を解除するものです。<br/>
+
+<br/>
+
+ボタンをクリックした時のメッセージと同様に、リストビューの選択通知メッセージの送り先はデフォルトだと所属するウィンドウですが、SetTarget()メソッドで変更できます。リスト8.4では、AdjustContent()メソッドの中でSetTarget()メソッドを呼び出し、MessengerViewオブジェクトを選択通知メッセージの送り先に設定しています。なお、SetTarget()メソッドを呼び出すタイミングには注意して下さい。このメソッドは、メッセージの送り先、つまりターゲットに指定するビューオブジェクトがウィンドウに関連づけられた後でないと有効に働きません。ですから、たとえばMessengerViewクラスのMakeContent()メソッド内でSetTarget()を呼び出しても正しく働かず、MessengerViewをターゲットに設定することができないのです(注8-3)。AdjustContent()メソッドは、MessengerViewがウィンドウに貼りつけられた時に呼び出されるフック関数のAttacheToWindow()の中で呼び出されます。したがって、このメソッドでSetTarget()を呼び出せば、正しくターゲットを設定することができるのです。<br/>
+
+<br/>
+
+次に、リスト8.5の内容について説明します。このリストにはMessengerViewクラスの中心的なメソッド、つまりユーザ入力に対する応答処理と、アプリケーション情報の取得やアプリケーション間通信を行うものが載っています。図8.4に、各ビュー部品の操作に対するメッセージの流れと応答動作を示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.04.jpg" alt="図 MessengerViewクラスの応答動作"/><div>図[8.4]  MessengerViewクラスの応答動作</div>
+</div>
+
+<br/>
+
+リスト8.5に載っているMessengerViewクラスの六つのメソッドについて、それぞれの働きを以下に述べます。図8.4と見比べながら読んでみて下さい。<br/>
+
+<br/>
+
+ ■MessageReceived()<br/>
+
+  これまでの章の説明でも何度か出てきましたが、ビュークラス(BView)が継承しているBHandlerクラスのフック関数です。受け取ったメッセージのうち、MessengerViewクラスで定義している“APP_SELECTED”と“SEND_MESSAGE”以外のものは全て親クラスのBViewに渡しています。<br/>
+
+<br/>
+
+  MessengerViewで定義している二つのメッセージは、それぞれ“APP_SELECTED”がリストボックスでアプリケーションが選択されたことを知らせるもの、そして“SEND_MESSAGE”はアプリケーションにメッセージを送る指示を伝えるものです。“APP_SELECTED”はリストビュー(BListView)の選択通知メッセージ、そして“SEND_MESSAGE”は、“Send”というラベルの送信ボタンをクリックした時に送られてくるメッセージです。それぞれのメッセージに対する応答動作として、“APP_SELECTED”を受け取ったらAppSelected()メソッドを呼び出し、“SEND_MESSAGE”を受け取ったらSendMessage()メソッドを呼び出します。<br/>
+
+<br/>
+
+ ■Pulse()<br/>
+
+  第7章のサンプルでもアニメーション表示に利用しましたが、BViewクラスのフック関数です。現在動作しているアプリケーションを定期的に監視し、リストの表示内容に反映させるために実装しています。CheckApps()メソッドを呼び出しています。<br/>
+
+<br/>
+
+  なお、ウィンドウオブジェクトによってPulse()メソッドが呼び出されるように、MessengerViewクラスのコンストラクタではBViewクラスのコンストラクタの第四引数に“B_PULSE_NEEDED”を渡しています。リスト8.4で確認してみて下さい。<br/>
+
+<br/>
+
+<br/>
+
+ ■AppSelected()<br/>
+
+  アプリケーションの一覧表示リストがクリックされた時に呼び出されます。リストビュー(BListView)のCurrentSelection()メソッドを使って選択されているアプリケーションがあるかどうかを調べ、ない場合には送信ボタンをディム化します。<br/>
+
+<br/>
+
+ ■SendMessage()<br/>
+
+  送信ボタンがクリックされた時に呼び出されます。一覧表示リストで選択されているアプリケーンを調べ、ポップアップメニューで指定されているメッセージを送信します。選択されているアプリケーションは、リストビュー(BListView)のCurrentSelection()メソッドで調べます。また、指定されたメッセージを調べるのには、ポップアップメニュー(BPopUpMenu)のFindMarked()メソッドを使っています。<br/>
+
+<br/>
+
+  次に述べるCheckApps()メソッドで説明するように、MessengerViewクラスでは、現在動作しているアプリケーションのチームIDを格納するリストをデータメンバとして持っています。このデータメンバは“fAppList”という名前のBListオブジェクトですが、このリスト内での順番と一覧表示リストでの表示順が同じになるようにしています。したがって、リストビューのCurrentSelection()メソッドの戻り値、つまり選択されている項目のインデックスを引数にしてfAppListのItemAt()メソッドを呼び出せば、対応するアプリケーションのチームIDを取得できるのです。<br/>
+
+<br/>
+
+  また、ポップアップメニューのFindMarked()メソッドが返す、選択されているメニュー項目(BMenuItem)に対してLabel()メソッドを呼び出して項目名を取得し、それを使って送るべきメッセージを判定しています。<br/>
+
+<br/>
+
+  なお、他のアプリケーションにメッセージを送る手順については、この後の8.1.3で説明します。<br/>
+
+<br/>
+
+ ■CheckApps()<br/>
+
+  Pulse()メソッドの働きによって、定期的に呼び出されます。BRosterオブジェクトに対してGetAppList()メソッドを呼び出し、現在動作中のアプリケーションのチームIDリストを取得します。リスト8.5では“be_roster”という変数にアクセスしていますが、これはBRosterオブジェクトを指す大域変数です。なお、BRosterクラスについては、この後の8.1.3でBMessengerクラスと一緒に説明します。<br/>
+
+<br/>
+
+  CheckApps()メソッドでは、取得したアプリケーションの一覧とデータメンバのfAppListの内容に違いがある場合、次に述べるUpdateAppList()メソッドを呼び出して表示を更新します。リスト8.5では、まず二つのリストの要素数を調べ、要素数に違いがなかった場合は全要素を比較しています。最初に要素数だけを比較することで多少の最適化を図っているのですが、これは省略してしまって構いません。<br/>
+
+<br/>
+
+ ■UpdateAppList()<br/>
+
+  アプリケーションの一覧表示リストの内容を更新する必要が生じた場合に、CheckApps()メソッドから呼び出されます。このメソッドでは、まずリストビューから全ての項目を取り除いて解放し、それから動作中のアプリケーションに対する項目を追加し直しています。BRosterクラスのGetRunningAppInfo()メソッドを使って各アプリケーションのシグネチャを取得し、文字列表示用のリスト項目(BStringItem)を生成します。生成した項目は、リストビューのAddItem()メソッドを使ってリストに追加します。<br/>
+
+<br/>
+
+  なお、リストをクリアする際に、RemoveItem()メソッドを使って項目を一つずつ取り除いた後、それを解放していることに注意して下さい。RemoveItem()メソッドでは取り除いた項目を解放しないため、自分で解放する必要があるのです。リストビュー(BListView)にはMakeEmpty()という、リストを空にするメソッドがありますが、これも、全ての項目をリストから取り除くだけで解放処理は行いません。したがって、MakeEmpty()メソッドを使ってリストをクリアすると、無駄なメモリ領域を消費していくことになるのです。取り除いた項目を解放することを忘れないようにして下さい。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-1</dt><dd>ボタン全体が薄い色で表示され、クリックに応答しない状態になっていることを指して「ディム化」しているといいます。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-2</dt><dd>BListViewクラスのCurrentSelection()メソッドは、現在選択されているリスト項目を調べ、最初に見つかったもののインデックスを返します。リスト項目のインデックスは0から始まり、負の値が返された場合は、選択された項目がないことを意味しています。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-3</dt><dd>SetTarget()は、BListViewクラスやBControlクラスが継承しているBInvokerクラスのメソッドです。BInvokerはApplication Kitに所属しており、ユーザの操作などに対するアクションとして、SetTarget()メソッドで設定された送り先にメッセージを送るための機能を持つクラスです。SetTarget()には、BHandlerまたそのサブクラスのオブジェクトを渡して送り先に設定します。送り先に設定するオブジェクトは、ウィンドウなどBLooperクラスのオブジェクトに関連づけられていなければなりません。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="8.1.3"></a>
+<h3>8.1.3&nbsp;&nbsp;他のチームに届けるときは</h3>
+この節の最後として、他のアプリケーションとメッセージ通信する際に大きな役割を果たす二つのクラス、BRosterクラスとBMessengerクラスについて説明します。以下に、これら二つのクラスの役割を示します。<br/>
+
+<br/>
+
+ ■BRosterクラス<br/>
+
+  アプリケーション情報を管理し、動作中のアプリケーションに対する情報を与えてくれます。2.3で説明したサーバモジュールのうち、“registrar”にアクセスして必要な処理を行います。BRosterクラスのインスタンスはAPI側で自動的に生成されるので、アプリケーション側で生成してはいけません。BRosterのインスタンスを指した“be_roster”という大域変数が定義されており、この変数を使ってBRosterオブジェクトにアクセスします。<br/>
+
+<br/>
+
+  リスト8.5では、BRosterクラスのメソッドのうちGetAppList()とGetRunningAppInfo()を使っています。GetAppList()は、現在動作しているアプリケーション全てのチームIDをリストにして返すもので、MessengerViewクラスのCheckApp()メソッドで使っています。一方、GetRunningAppInfo()はチームIDで指定したアプリケーションの情報を返すもので、MessengerViewクラスのSendMessage()メソッドとUpdateAppList()メソッドで使っています。<br/>
+
+<br/>
+
+ ■BMessengerクラス<br/>
+
+  他のアプリケーションとの間でメッセージ通信する際、代理オブジェクト(proxy)として働くクラスです。リスト8.5でMessengerView::SendMessage()を見ると分かるように、BMessengerクラスのコンストラクタには、相手側のアプリケーションのシグネチャとチームIDを渡します。また、メッセージを送るにはSendMessage()メソッドを使います。<br/>
+
+<br/>
+
+  SendMessage()はBLooperクラスのPostMessage()メソッドと似ており、同じような働きをします。つまり、BeOSのマイクロカーネルが提供するスレッド間通信機構(ポート)を使って、他のスレッドにメッセージを送ってくれます(注8-4)。なお、BLooperの場合とは違い、BMessengerクラスのSendMessage()では同期式のメッセージ通信を行うことが可能です。8.3節でサンプルを使って説明するように、SendMessage()メソッドの第二引数に返答メッセージ用のBMessageオブジェクトを渡すと、メッセージを送った相手から返事が届くのを待ち、受け取った返答メッセージをBMessageに書き込んで返してくれるのです。<br/>
+
+<br/>
+
+このように、BRosterクラスとBMessengerクラスを組み合わせて使えば、他のアプリケーションへメッセージを送ることができます。まずBRosterのメソッドを使って相手側アプリケーションの情報を取得し、それからアプリケーション情報を使ってBMessengerオブジェクトを初期化します。そして、BMessengerオブジェクトに対してSendMessage()メソッドを呼び出し、メッセージを送るのです。<br/>
+
+<br/>
+
+さて、この節を終わる前に、BMessengerクラスについてもう少し説明しておきます。実は、BMessengerは他のアプリケーション以外との通信にも利用することができます。たとえば、同じアプリケーション内のBLooperオブジェクトや、それに所属するBHandlerオブジェクトに対してBMessengerオブジェクトを関連づけ、BMessengerを通してメッセージを送ることができます。その場合、BLooperクラスのPostMessage()を使うのと基本的に同じ流れでメッセージで送られるのです。唯一の違いは、上で述べたようにBMessengerを通すと同期式のメッセージ通信を行うことが可能だということだけです。<br/>
+
+<br/>
+
+BMessengerとBLooper、そしてBHandlerの間の関係を整理するために、それを図にまとめてみました。図8.5を見て下さい。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.05.jpg" alt="図 BMessengerとBLooper/BHandlerの関係"/><div>図[8.5]  BMessengerとBLooper/BHandlerの関係</div>
+</div>
+
+<br/>
+
+最初の説明では、BMessengerクラスは他のアプリケーションとメッセージ通信するための代理オブジェクトだと書きました。しかし、正確にいうとそうではなく、BMessengerクラスはBHandler一般に対する代理オブジェクトなのです。つまり、相手はアプリケーション(BApplication)であっても構いませんし、それからウィンドウ(BWindow)、またビューオブジェクト(BView)でも構いません。一番重要なのは、相手のBHandlerオブジェクトが自分と同じアプリケーション、すなわち同じチームに所属していようが、あるいは他のチームに所属していようが変わりなく通信できるということです。<br/>
+
+<br/>
+
+BLooperクラスのPostMessage()とBMessengerクラスのSendMessage()は似ていると書きましたが、他のチームに所属しているBLooperオブジェクトに対してPostMessage()を呼び出すことはできません。第3章で説明したように、チームはそれぞれ独立したアドレス空間を持っていますから、他のチームに所属しているオブジェクトにアクセスしてメソッド呼び出しを行うことはできないのです。BMessengerは、この「壁」を越えて、他のチームに所属するBLooperオブジェクトやBHandlerオブジェクトにメッセージを送るための仕組を提供しているのです。<br/>
+
+<br/>
+
+<div id="column">
+<a href="./column8.1.html" target="new"><span id="column_t">囲みコラム</span><br/>「プロセス境界と遠隔オブジェクト」
+</a></div>
+
+第3章(3.3.2)で説明したように、BeOSのマイクロカーネルが提供しているスレッド間通信機構を利用すれば、同じチームのスレッドが相手でも他のチームに所属するスレッドが相手でも、変わりなく通信することができます。BMessengerクラスも、このスレッド間通信機構を内部で利用しています。ですから、マイクロカーネル(Kernel Kit)のスレッドAPIを直接使っても同じようなことはできるのですが、Application Kitが提供している、BMessengerクラスなどの高機能なAPIを利用することによって、より簡単にスレッド間通信のプログラミングを行えるのです。次の節では、他のチームに所属するBHandlerオブジェクト情報を取り出し、より高度なメッセージ通信を行えるようにBeOSのAPIが提供している仕組について説明します。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-4</dt><dd>「ポート」など、BeOSのマイクロカーネルが提供しているスレッド間通信機構については、第3章の説明(3.3節)を参照して下さい。</dd></dl></span>
+<br/>
+
+<br/>
+
+<br/>
+<a name="8.2"></a>
+<h2>8.2&nbsp;&nbsp;伝える相手を探すには</h2>
+この節では、他のアプリケーションを遠隔操作するための仕組、つまりスクリプティングのフレームワークについて説明します。次の8.3節ではサンプルアプリケーションを使って実例を示しますが、その前に、スクリプティングに関する基本事項を見ておきましょう。<br/>
+
+<br/>
+
+<br/>
+<a name="8.2.1"></a>
+<h3>8.2.1&nbsp;&nbsp;誰に何を伝えるの</h3>
+他のアプリケーションを遠隔操作するといっても、どうすればよいのでしょうか?前の節では、動作中のアプリケーションの中から一つを選び、それに対してアバウトダイアログの表示要求メッセージや終了要求メッセージを送りました。これは、単に他のアプリケーションの中のアプリケーションオブジェクト(BApplication)へ命令を一つ送っているだけで、それほど面白くはありません。遠隔操作というからには、他のアプリケーションのウィンドウを動かしたり、ボタンのクリックをシミュレートさせたりすることができるべきです。<br/>
+
+<br/>
+
+このような、アプリケーションの遠隔操作を行うためには、相手のアプリケーションに対して次の情報を伝える必要があります。<br/>
+
+<br/>
+
+ a.)操作する対象<br/>
+
+ b.)操作の内容<br/>
+
+<br/>
+
+相手のアプリケーションに何をして欲しいのかを伝えるには、操作の対象と内容を指定しないといけません。たとえばウィンドウを動かすのであれば、「動かす」という操作を「ウィンドウ」という対象に適用して欲しいと伝えます。また、ボタンのクリックをシミュレートするのであれば対象は「ボタン」であり、操作の対象は「クリックのシミュレート」です。<br/>
+
+<br/>
+
+では、他のアプリケーションに操作の対象と内容を伝えるには、どうすればよいでしょうか。単に「ウィンドウ」や「ボタン」といっても、複数枚のウィンドウを持ち、それぞれにボタンが付いているのであれば、どれを指すのか伝えられた方では分からないはずです。また、「動かす」や「クリックのシミュレート」という操作内容についても、具体的に何をすればよいのかを表現しないと、これも伝えられた方では分かりません。<br/>
+
+<br/>
+
+このように、アプリケーションを遠隔操作するためには、操作の対象を指定する方法と操作の内容を表現する形式が定められ、すべてのアプリケーションの間で了解がとれている必要があります。BeOSでは、これらの仕組をApplication Kitが提供するフレームワークの中に組み込み、特に工夫しなくてもアプリケーションが遠隔操作可能になるようにしています。この仕組について、次に説明しましょう。<br/>
+
+<br/>
+
+なお、他のアプリケーションにメッセージを送って遠隔操作することを指して、BeOSでは「スクリプティング(scripting)」と呼んでいます(注8-5)。そして、スクリプティング機構を実現しているフレームワークのことを、ここではスクリプティングのフレームワークと呼ぶことにします。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-5</dt><dd>一般的には、スクリプティングと言った場合は何らかのスクリプト言語でスクリプトをプログラミングし、それを動かしてアプリケーションを制御することを指します。しかし、スクリプト言語の実行システム内部ではスクリプトの内容をアプリケーション間通信用のメッセージ列に変換し、それを送ってアプリケーションを制御しているのが普通です。ですから、BeOSの語用が間違っているのかといえば、そうではありません。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="8.2.2"></a>
+<h3>8.2.2&nbsp;&nbsp;スクリプティングの基本要素</h3>
+BeOSのAPI(Application Kit)では、スクリプティング機構の基本構成要素として、以下の三つを提供しています。これら三つは、他のアプリケーションを遠隔操作する際に、操作の内容と対象を伝えるための標準化された表現形式を与えるものです。<br/>
+
+<br/>
+
+ ■コマンド<br/>
+
+  操作内容を表現するメッセージコードです。すべての操作は次に述べる「プロパティ」に対して行われます。Be社では以下の六種類の操作内容を規定しており、それらだけを使うように推奨しています。つまり、下の六つ以外のメッセージコードを定義してスクリプティングに使うことは、標準化の観点から好ましくありません。<br/>
+
+<br/>
+
+  a.)個数を返す(B_COUNT_PROPERTIES)<br/>
+
+  b.)新規に作る(B_CREATE_PROPERY)<br/>
+
+  c.)削除する(B_DELETE_PROPERTY)<br/>
+
+  d.)実行する(B_EXECUTE_PROPERTY)<br/>
+
+  e.)値を返す(B_GET_PROPERTY)<br/>
+
+  d.)値を設定する(B_SET_PROPERTY)<br/>
+
+<br/>
+
+  アプリケーションを遠隔操作する際は、BMessageオブジェクトのメッセージコードとして上の六つのどれかをセットし、それからメッセージを送ります。もちろん、メッセージコードだけでは操作内容しか伝えられませんので、メッセージの付随データとして操作対象の指定情報を追加することが必要です。メッセージに操作対象の指定情報を追加するには、BMessageクラスのAddSpecifier()メソッドを使います。<br/>
+
+  <br/>
+
+ ■プロパティ<br/>
+
+  操作対象となるものです。BeOSのスクリプティング・フレームワークでは、スクリプトによる操作対象はメッセージを受け取るオブジェクトのプロパティです。プロパティは、次に述べるスペシファイアを使って指定されます。なお、オブジェクト自体を別のオブジェクトのプロパティとして扱うことも可能です。たとえば、ボタンはウィンドウのプロパティですし、またウィンドウはアプリケーションのプロパティです。<br/>
+
+<br/>
+
+  なお、ウィンドウを動かす場合の例でいうと、操作対象はウィンドウのフレーム矩型、つまり“Frame”という名前のプロパティになります。<br/>
+
+<br/>
+
+ ■スペシファイア<br/>
+
+  操作対象を指定する情報で、BMessageオブジェクトを使って受け渡しを行います。指定の仕方を表わす定数をメッセージコードとして持たせ、対象とするプロパティの名前、およびプロパティを特定するためのデータを、メッセージの付随データとして持たせます。Be社では、スペシファイア用の定数として次の七つを定義しています(注8-6)。<br/>
+
+<br/>
+
+  a.)直接指定(B_DIRECT_SPECIFIER)<br/>
+
+  b.)名前指定(B_NAME_SPECIFIER)<br/>
+
+  c.)ID指定(B_ID_SPECIFIER)<br/>
+
+  d.)インデックス指定(B_INDEX_SPECIFIER)<br/>
+
+  e.)逆順のインデックス指定(B_REVERSE_INDEX_SPECIFIER)<br/>
+
+  f.)インデックス範囲指定(B_RANGE_SPECIFIER)<br/>
+
+  g.)逆順のインデックス範囲指定(B_REVERSE_RANGE_SPECIFIER)<br/>
+
+<br/>
+
+  ウィンドウを指定する例でいうと、「一番目のウィンドウ」を操作対象にする場合は、BMessageオブジェクトのメッセージコードに“B_INDEX_SPECIFIER”をセットします。そして、"property"という名前で“Window”という文字列データを追加し、さらに"index"という名前の数値データとして1を追加します。このようにして操作対象の指定情報をセットしたBMessageオブジェクトは、AddSpecifer()メソッドの引数として、スクリプティング用のメッセージに渡すことができます。<br/>
+
+<br/>
+
+  なお、Be社で定義している七つのスペシファイア定数に加え、自分でスペシファイアを定義して利用することも可能です(注8-7)。<br/>
+
+<br/>
+
+コマンドとプロパティ、そしてスペシファイアの関係を整理すると、次のようになります。<br/>
+
+<br/>
+
+ ・スクリプティングとは、他のアプリケーション内部のオブジェクトが持つプロパティに対し、何らかの操作を行って制御することである。<br/>
+
+<br/>
+
+ ・スクリプティングを行うには、対象とするプロパティとプロパティに対する操作の内容を伝えるメッセージを、相手のアプリケーションへ送る。<br/>
+
+<br/>
+
+ ・プロパティに対して行う操作の内容を表わすのがコマンドであり、スクリプティング用メッセージのメッセージコードにセットされる。<br/>
+
+<br/>
+
+ ・対象とするプロパティを指定するのがスペシファイアであり、スクリプティング用メッセージの付随データとして渡される。<br/>
+
+<br/>
+
+このように、操作の内容と操作対象、そして操作対象の指定情報という三つの要素を用いて、遠隔操作、つまりスクリプティングのための情報伝達を行うのです。遠隔操作される側のアプリケーションでは、これらの情報をスクリプティング用のメッセージとして受け取り、操作対象となっているプロパティの持ち主であるオブジェクトにメッセージを届けます。メッセージを受け取ったオブジェクトは、コマンドに従ってプロパティに対する操作を行い、結果を入れた返答メッセージを返すのです。オブジェクトの割り出しは、操作対象の指定情報、つまりスペシファイアを解析することによって行います。<br/>
+
+<br/>
+
+なお、スクリプティング用のメッセージを受け取るオブジェクトは、BHandlerまたはそのサブクラスに所属します。BHandlerはメッセージ応答機能を定義した基底クラスですから、スクリプティング・フレームワークもBHandlerクラスによって定義されているのです。アプリケーションやウィンドウ、またビューのクラスは全てBHandlerを継承していますので、BeOSのAPIを使えば、他に何もしなくてもスクリプティング対応したアプリケーションを作ることができるのです。<br/>
+
+<br/>
+
+次は、どのようにして宛先のBHandlerオブジェクトにスクリプティング用のメッセージが届けられるのかを説明します。これを理解してしまえば、BeOSのスクリプティング機構を利用したアプリケーションを簡単に作れるようになるでしょう。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-6</dt><dd>コマンドとスペシファイア定数は、Application Kitのインタフェースファイル(AppDefs.hとMessage.h)で定義されています。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-7</dt><dd>スペシファイアだけではなく、アプリケーション独自のコマンドを定義して使うことも可能です。しかし、独自定義によるアプリケーション側での拡張を、Be社が公式に認めているかどうかという点で、スペシファイアとコマンドの扱いが異なっているのです。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="8.2.3"></a>
+<h3>8.2.3&nbsp;&nbsp;スクリプティング・フレームワーク</h3>
+図8.6に、アプリケーションが受け取ったスクリプティング・メッセージが、宛先に指定されたBHandlerオブジェクトに届けられるまでの流れを示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.06.jpg" alt="図 スクリプティング・メッセージの配送経路"/><div>図[8.6]  スクリプティング・メッセージの配送経路</div>
+</div>
+
+<br/>
+
+上の図に示したように、スクリプティング・メッセージに対する応答では、BHandlerクラスのResolveSpecifier()メソッドが重要な役割を果たします。このメソッドでは、受け取ったメッセージに格納されたスペシファイアを解析し、メッセージを受け取るべきオブジェクトを割り出します。図の例では「一番目のウィンドウの“hide button”という名前のボタンの“Value”プロパティ」という指定をされていますが、この場合メッセージの届け先はボタンオブジェクトになります。最初にメッセージを受け取るのはアプリケーションオブジェクトですが、そこからウィンドウオブジェクトにメッセージが転送され、さらにウィンドウオブジェクトからボタンオブジェクトにメッセージが渡され、最後はボタンオブジェクトによって処理されます。<br/>
+
+<br/>
+
+ここで、アプリケーションに送られたメッセージには合計三つのスペシファイアが格納されていることに注意して下さい。つまり、(1)「一番目のウィンドウ」、(2)「“hide button”という名前のボタン」、(3)「“Value”」、の三つです(注8-8)。このように、一つのメッセージに格納された複数のスペシファイアを「スペシファイア・スタック」と呼びます。「スタック」と呼ぶのは、スペシファイアを追加する時の順番と取り出す時の順番が逆だからです。メッセージに対するスペシファイアの追加や取り出しは、BMessageクラスのAddSpecifier()メソッドとGetCurrentSpecifier()メソッド、そしてPopSpecifier()メソッドで行います。以下に、これら三つのメソッドの説明を示します。<br/>
+
+<br/>
+
+ ■BMessage::AddSpecifier()<br/>
+
+  引数に受け取ったスペシファイアを、BMessageオブジェクトに追加します。このメソッドは多重定義されており、スペシファイア・メッセージを引数にとるバージョンに加えて、プロパティ名とプロパティを特定するデータを受け取る四つのバージョンがあり、以下の通り合計五つのバージョンがあります。<br/>
+
+<br/>
+
+  ◇AddSpecifier(const BMessage *message)<br/>
+
+   基本バージョンのメソッド。引数に受け取ったスペシファイア・メッセージを、メッセージに追加します。残りの四つのバージョンは、すべてこのバージョン内部で呼び出しています。<br/>
+
+<br/>
+
+  ◇AddSpecifier(const char *property)<br/>
+
+   プロパティを直接指定します。“B_DIRECT_SPECIFIER”をメッセージコードに持つスペシファイア・メッセージを内部で生成し、メッセージに追加します。<br/>
+
+<br/>
+
+  ◇AddSpecifier(const char *property, int32 index)<br/>
+
+   プロパティをインデックス指定します。“B_INDEX_SPECIFIER”をメッセージコードに持つスペシファイア・メッセージを内部で生成し、メッセージに追加します。<br/>
+
+<br/>
+
+  ◇AddSpecifier(const char *property, int32 index, int32 range)<br/>
+
+   プロパティをインデックス範囲指定します。“B_RANGE_SPECIFIER”をメッセージコードに持つスペシファイア・メッセージを内部で生成し、メッセージに追加します。<br/>
+
+<br/>
+
+  ◇AddSpecifier(const char *property, const char *name)<br/>
+
+   プロパティを名前指定します。“B_NAME_SPECIFIER”をメッセージコードに持つスペシファイア・メッセージを内部で生成し、メッセージに追加します。<br/>
+
+<br/>
+
+  AddSpecifier()メソッドを使って追加されたスペシファイアは、スタックを構成します。BMessageオブジェクトは、このスタックの要素の一つを指すインデックスを内部に持っているのですが、AddSpecifier()を使ってスペシファイアを追加すると、そのインデックスは追加されたスペシファイアを指すように更新されるのです。<br/>
+
+<br/>
+
+ ■BMessage::GetCurrentSpecifier()<br/>
+
+  スペシファイア・スタックの中から、「現在の」スペシファイアに対する情報を返します。現在のスペシファイアとは、BMessageオブジェクト内部のインデックスによって指される、スペシファイア・スタック要素です。次に述べるPopSpecifier()によって、このスペシファイア・スタックのインデックスを更新しない限り、GetCurrentSpecifier()が返すスペシファイア情報は変わりません。このメソッドは、次の四つの引数を受け取ります。<br/>
+
+<br/>
+
+  ◇第一引数(int32*)<br/>
+
+   現在のスペシファイアに対するインデックスを返してもらうためのバッファです。返されたインデックスは、BMessageクラスのFindMessage()メソッドまたはFindData()メソッドに渡す引数として利用します。<br/>
+
+<br/>
+
+  ◇第二引数(BMessage*)<br/>
+
+   現在のスペシファイアを返してもらうためのバッファです。引数に渡されたBMessageオブジェクトには、現在のスペシファイア・メッセージの内容がコピーされます。引数にNULLを渡した場合は、無視されます。<br/>
+
+<br/>
+
+  ◇第三引数(int32*)<br/>
+
+   現在のスペシファイアのメッセージコードを返してもらうためのバッファです。引数にNULLを渡した場合は、無視されます。<br/>
+
+<br/>
+
+  ◇第四引数(const char**)<br/>
+
+   現在のスペシファイアのプロパティ名を返してもらうためのバッファです。引数にNULLを渡した場合は、無視されます。<br/>
+
+<br/>
+
+  このメソッドの第一引数以外はオプションであり、何も指定しない場合は全てNULLが渡されます。<br/>
+
+<br/>
+
+ ■BMessage::PopSpecifier()<br/>
+
+  BMessageオブジェクト内部の、スペシファイア・スタックに対するインデックスを一減らします。このメソッドが呼び出されるまで、インデックスは最後に追加されたスペシファイアを指しており、呼び出しを一回行うごとにスタックの先頭が一つ前の要素を指すように更新されます。このメソッドは、何も引数を受け取りません。<br/>
+
+<br/>
+
+上に述べた三つのメソッドのうち、AddSpecifier()はスクリプティング・メッセージの送り手が使うメソッドであり、残りの二つを受け手が使います。つまり、GetCurrentSpecifier()とPopSpecifier()は、BHandlerまたはそのサブクラスのResolveSpecifier()メソッドの中で利用されます。そして、ResolveSpecifier()メソッドこそが、スクリプティング・フレームワークの中心を成すメソッドです。<br/>
+
+<br/>
+
+ResolveSpecifer()メソッドはBHandlerクラスが提供しているフック関数であり、BLooperクラスの働きによって呼び出されます。6.1節(6.1.2)では、BLooperが受け取ったメッセージはDispatchMessage()メソッドによって届け先を決定されると述べました。しかし、スクリプティング用のメッセージは例外で、DispatchMessage()より先にResolveSpecifier()メソッドが呼び出され、その結果によって届け先が変更されるのです。たとえば図8.6では、もともとアプリケーションオブジェクトが受け取ったメッセージが、最終的にはボタンオブジェクトに届けられています。図8.7に、BLooperクラスがスクリプティング・メッセージを処理する際の流れを示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.07.jpg" alt="図 ResolveSpecifier()によるスクリプティング・メッセージの転送"/><div>図[8.7]  ResolveSpecifier()によるスクリプティング・メッセージの転送</div>
+</div>
+
+ BLooperがメッセージキューからメッセージを取り出す<br/>
+
+ →メッセージがHasSpecifiers()に真を返せば、転送処理を開始<br/>
+
+  →GetCurrentSpecifier()が0を返すか、またはResolveSpecifer()の戻り値が<br/>
+
+   NULLになるまで、繰り返しResolveSpecifier()を呼び出す<br/>
+
+   →最終的に非NULLのオブジェクトが得られたら、それを引数として<br/>
+
+    DispatchMessage()を呼び出す。<br/>
+
+<br/>
+
+<span id="warning">本当にDispatchMessage()が呼び出されるのか確認。直接MessageReceived()が呼び出される可能性あり。('98. 4/27, koga@ftgun.co.jp)</span><br/>
+<br/>
+
+ ResolveSpecifier()を呼び出されたBHandlerクラス<br/>
+
+ →スタックの一番上にあるスペシファイア、つまり現在のスペシファイアが指す<br/>
+
+  プロパティによって分岐<br/>
+
+  →自分で操作できるプロパティを指したものであれば、自身を返す。<br/>
+
+  →他のBHandlerオブジェクトを指しており、それが同じBLooperに所属している<br/>
+
+   場合はそのオブジェクトを返す。<br/>
+
+  →他のBHandlerオブジェクトを指しており、それが違うBLooperに所属している<br/>
+
+   場合は、そのBLooperにメッセージを転送してNULLを返す。<br/>
+
+  →スペシファイアを解析できない場合は、親クラスのメソッドを呼び出す。<br/>
+
+<br/>
+
+図のように、スペシファイア.スタックの要素を一つずつ取り出しながら、スペシファイアによって指定されたオブジェクトの間をメッセージが転送されていきます。これらのオブジェクトは「アプリケーション→ウィンドウ→ボタン」のように、木構造を成しています。スペシファイア・スタックは、最終的なメッセージの届け先となるオブジェクトから、最初にメッセージを受け取るオブジェクトに至るまでの各スペシファイアを、順に積み上げたものなのです。メッセージを受け取った側では、このスタックに従って木構造を辿り、末端のオブジェクトにメッセージを届け、処理させます。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.08.jpg" alt="図 スペシファイア・スタックの作成と解析"/><div>図[8.8]  スペシファイア・スタックの作成と解析</div>
+</div>
+
+ ※AddSpecifier()によるスタックの積み上げと、ResolveSpecifier()による木構造のトラバース<br/>
+
+<br/>
+
+さて、8.2.2で述べたように、それぞれのスペシファイアはオブジェクトのプロパティを指定するものです。そして、ResolveSpecifier()は、スペシファイアの指定内容を解析し、指定されたプロパティを操作するオブジェクトを返すメソッドです。それぞれのオブジェクトが持つプロパティはクラスごとに決まっており、解析不能なスペシファイアを受け取った場合は、メッセージの送り主に対してエラー(“B_MESSAGE_NOT_UNDERSTOOD”)を告げる返答メッセージが返されます。以下に、BHandlerのサブクラスのうちBApplicationとBWindow、そしてBViewとBControlクラスについて、独自のプロパティを示します。これらのクラスは、それぞれResolveSpecifier()メソッドを再定義して、自分独自のプロパティを指定された場合に応答できるようになっています。<br/>
+
+<br/>
+
+ ■BApplication<br/>
+
+  “Name”プロパティと“Window”プロパティを持ちます。このうち8.3節のサンプルで扱うのは“Window”プロパティで、これはそれぞれのウィンドウオブジェクトを表わすものです。<br/>
+
+<br/>
+
+ ■BWindow<br/>
+
+  “Flags”, “Look”, “Feel”, “Hidden”, “Minimize”, “Workspace”,“Title”, “Frame”, “MenuBar”, “View”プロパティを持ちます。このうち8.3節のサンプルで扱うのは“Frame”プロパティと“View”プロパティの二つです。“Frame”プロパティはウィンドウのフレーム矩型を表わすもので、“View”プロパティは、ウィンドウに貼りつけられたビューオブジェクトを表わします。<br/>
+
+<br/>
+
+ ■BView<br/>
+
+  “Hidden”, “Frame”, “View”, “Shelf”プロパティを持ちます。8.3節のサンプルでは、BViewクラスのプロパティは特に扱いません。<br/>
+
+<br/>
+
+ ■BControl<br/>
+
+  “Enabled”, “Label”, “Value”プロパティを持ちます。8.3節のサンプルでは、ボタンのクリックをシミュレートするのに“Value”プロパティを扱います。このプロパティは、ボタンなどのコントロール部品が持つ値を表わします。なお、BControlクラスはBViewクラスを継承していますので、BViewクラスが持つプロパティも合わせ持ちます。<br/>
+
+<br/>
+
+上に挙げた各プロパティの詳細については、APIリファレンスを参照して下さい。リファレンスには、各プロパティに対して適用できる操作(コマンド)を表わすメッセージコード、およびスペシファイアに利用できるスペシファイア定数が示されています。また、BHandlerのサブクラスのうち、これら以外のものについてもAPIリファレンスを参照して下さい。独自のプロパティを持つクラスでは、クラスの概要説明の節に“Scripting Support”という項が設けられています。<br/>
+
+<br/>
+
+BHandlerのサブクラスで独自のプロパティを定義した場合、それぞれのプロパティに対して適用できるコマンドとスペシファイア定数の組は、一種のプロトコルを構成します。そのプロトコルに適合したスクリプティング・メッセージだけが、そのクラスによって受け付けられるのです。この「プロトコル」のことを、「スイート(Suite)」と呼びます。スクリプティング・フレームワークでは、スイートを問い合わせるための仕組も提供しています。この仕組は、BHandlerクラスの“Suites”プロパティと、それからBHandlerクラスがフック関数として提供しているGetSupportedSuites()メソッドによって実現されています。以下に、これら二つの説明を示します。<br/>
+
+<br/>
+
+ ■Suitesプロパティ<br/>
+
+  BHandlerクラスが持つプロパティであり、したがってスクリプティング・メッセージに応答可能な全てのクラスが備えるプロパティです。そのクラスがサポートしているスイートの集合を表わします。このプロパティに対して“B_GET_PROPERTY”コマンドが渡されると、次に述べるGetSupportedSuites()によって取得したスイート情報がコマンドの送り主に返送されます。<br/>
+
+<br/>
+
+ ■GetSupporteSuites()メソッド<br/>
+
+  そのクラスがサポートしているスイートの情報を返します。親クラスのスイートはサブクラスに受け継がれるため、そのクラス独自のスイートに、親クラスのスイートを合わせたものが返されます。各スイートにはMIME形式の名前が付けられ、たとえばBHandlerクラスであれば“suite/vnd.Be-handler”という名前のスイート名を持っています。また、プロパティと、それに対して適用可能なコマンドとスペシファイア定数の組を表わすproperty_infoという構造体が定義されており、この構造体の配列によってスイートの内容を表現します。<br/>
+
+<br/>
+
+あるオブジェクトの“Suites”プロパティに対する“B_GET_PROPERTY”コマンドを送ると、そのオブジェクトが所属するクラス、およびBHandlerにいたるまでの全てのサブクラスが持つスイート情報を格納したメッセージが返送されます。そのメッセージには、そのクラスがサポートする全てのスイート名が"suites"という名前のデータ項目として格納され、また各スイートの内容が"messages"という名前で格納されます。“Suites”プロパティ、つまりスイート情報を問い合わせることにより、相手のオブジェクトが受け付け可能なスクリプティング・メッセージのプロトコルを入手することができるのです。<br/>
+
+<br/>
+
+独自のプロパティを定義したクラスでは、ResolveSpecifier()に加えてGetSupportedSuites()メソッドを再定義する必要があります。スクリプティング・フレームワークは、BLooperクラスとBHandlerクラスによるメッセージ応答機構に加え、BHandlerクラスのResolveSpecifier()メソッドとGetSupportedSuites()メソッドを導入することで実現されています。以下に、スクリプティング・フレームワークに従ってオブジェクトをスクリプト対応させる手順を示します。<br/>
+
+<br/>
+
+ 1.)スクリプト対応させるオブジェクトのクラスを、BHandlerのサブクラスにする。<br/>
+
+ 2.)そのクラス独自のスイートを定義する。<br/>
+
+ 3.)GetSupportedSuites()メソッドを再定義し、親クラスが持つスイートの情報に加え、独自に定義したスイートの情報を返すようにする。<br/>
+
+ 4.)ResolveSpecifier()メソッドを再定義し、独自に定義したプロパティに対するスペシファイアの解析処理を実装する。<br/>
+
+ 5.)MessageReceived()メソッドを再定義し、スクリプティングメッセージに対する応答処理を実装する。<br/>
+
+<br/>
+
+本書のサンプルアプリケーションでは、独自のスイートを定義する例は扱いません。しかし、練習問題で取り上げましたので、それを題材にして考えてみて下さい。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-8</dt><dd>この後の説明で述べるように、「ボタン」を表わすプロパティは存在しません。8.3節のサンプルではスクリプティングによってボタンのクリック動作をシミュレートしますが、ボタンオブジェクトの指定は“View”プロパティを使っており、ボタンに対する厳密な指定を行っていません。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="8.2.4"></a>
+<h3>8.2.4&nbsp;&nbsp;汎用スイートと遠隔オブジェクト</h3>
+スクリプティング・フレームワークに関する長い説明が続きましたが、サンプルアプリケーションの説明へ移る前に、もう一つだけスクリプティング機構の話しをします。BHandlerが提供するスイートと、それを利用して他のアプリケーション内のオブジェクトに直接メッセージを送る方法です。<br/>
+
+<br/>
+
+まず、BHandlerのスイートについて紹介しましょう。BHandlerクラスのスイート名は“suite/vnd.Be-handler”で、以下の三つのプロパティを持ちます。なお、これら三つのプロパティに対して適用可能なコマンドは、“B_GET_PROPERTY”だけです。<br/>
+
+<br/>
+
+ ■"InternalName"プロパティ<br/>
+
+  オブジェクトの名前を表わします。<br/>
+
+<br/>
+
+ ■"Messenger"プロパティ<br/>
+
+  そのオブジェクトに関連づけられたBMessengerオブジェクトを表わします。<br/>
+
+<br/>
+
+ ■"Suites"プロパティ<br/>
+
+  そのオブジェクトがサポートする全てのスイートを表わします。<br/>
+
+<br/>
+
+BHandlerのスイートは、全てのスクリプト対応オブジェクトが備えるスイートですから、「汎用スイート(Universal Suite)」とも呼ばれます。汎用スイートで定義された三つのプロパティのうち、次の節のサンプルを理解するうえで最も重要なのが、“Messenger”プロパティです。このプロパティに対する“B_GET_PROPERTY”コマンドを送ると、そのBHandlerオブジェクトと関連づけたBMessengerオブジェクトを返してくれるのです。8.1節の最後で、BMessengerオブジェクトを利用すると、他のチーム、すなわち他のアプリケーションに所属するBHandlerオブジェクトへメッセージを送ることができると説明しました。したがって、“Messenger”プロパティを利用すれば、他のアプリケーション内のBHandlerオブジェクトのうち、スペシファイアで指定可能なものに対してBMessengerオブジェクトを取得し、各BHandlerオブジェクトに対して直接メッセージを送ることができるのです。<br/>
+
+<br/>
+
+汎用スイートの“Messenger”プロパティを利用しない場合、メッセージの届け先となるBHandlerオブジェクトを指定するスペシファイア・スタックを、送信の度にメッセージへ埋め込んでやらなければいけません。これに対し、BMessengerオブジェクトを利用して各BHandlerオブジェクトへ直接メッセージを送ることができれば、メッセージを受け取る側のアプリケーションでスペシファイア・スタックの解析処理を行う必要がなくなり、それだけ処理の効率が良くなります。次の節で説明するサンプルアプリケーションでは、他のアプリケーションのウィンドウオブジェクトやボタンオブジェクトに対してMessengerプロパティを要求し、その結果返されるBMessengerオブジェクトを利用して、直接それらの「遠隔オブジェクト」へメッセージを送る例を示します。<br/>
+
+<br/>
+
+<br/>
+<a name="8.3"></a>
+<h2>8.3&nbsp;&nbsp;メッセージばかりじゃ物足りない</h2>
+この節では、“Scriptor”というサンプルアプリケーションを使ってスクリプティングの例を示します。このアプリケーションは、他のアプリケーションに対してスクリプティング用メッセージを送る機能を持っており、汎用スイートのMessengerプロパティを利用して遠隔オブジェクトと直接メッセージ通信します。<br/>
+
+<br/>
+
+<br/>
+<a name="8.3.1"></a>
+<h3>8.3.1&nbsp;&nbsp;Scriptorアプリケーションの機能と構造</h3>
+まず、“Scriptor”アプリケーションを動かした様子を見てみましょう。図8.9が、Scriptorを撮ったスクリーンショットです。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.09.jpg" alt="図 Scriptorのスクリーンショット"/><div>図[8.9]  Scriptorのスクリーンショット</div>
+</div>
+
+<br/>
+
+次に、Scriptorアプリケーションの外部仕様を述べます。<br/>
+
+<br/>
+
+ ・シグネチャで指定されたアプリケーションに対し、メッセージを送る。アプリケーションが起動していない場合は、起動した後メッセージを送る。<br/>
+
+<br/>
+
+ ・メッセージを送る先のアプリケーションが持つウィンドウのうち、インデックスで指定したものに対してスクリプティング・メッセージを送り、ウィンドウの位置を移動する。<br/>
+
+<br/>
+
+ ・メッセージを送る先のウィンドウが持つボタンのうち、指定した名前を持つものに対してスクリプティング・メッセージを送り、ボタンのクリック操作をシミュレートする。<br/>
+
+<br/>
+
+上に書いた外部仕様と図8.9のスクリーンショットだけでは実際の動きが分からない場合、自分で動かしてみて下さい。Scriptorアプリケーションのソースファイルは、付録に付けたサンプルコード集の“8.3_Scriptor”というフォルダに入っています。Scriptorアプリケーションを使って、第6章の最後に使ったサンプルアプリケーション(TinyApp)を制御する手順を以下に示します。Scriptorアプリケーションの操作方法を理解するための参考にして下さい。<br/>
+
+<br/>
+
+(1)アプリケーションに対するメッセージ送信<br/>
+
+ 1.)Scriptorのアイコンをダブルクリックして起動して下さい。図8.9のようなウィンドウが開かれます。<br/>
+
+<br/>
+
+ 2.)TinyAppのアイコンをダブルクリックして起動して下さい。TinyAppを動かしたことがない場合は、6.3節の説明を参考にして動かして下さい。TinyAppが起動すると、図6.9のようなウィンドウが開かれます。<br/>
+
+<br/>
+
+ 3.)Scriptorのウィンドウで、“application:”というラベルの付いた入力フィールドに“x-vnd.FtGUN-Scriptor”と入力して下さい。これは、TinyAppアプリケーションのシグネチャ(“application/x-vnd.FtGUN-Scriptor”)のうちMIMEのサブタイプ部分だけを取り出したものです。<br/>
+
+<br/>
+
+ 4.)Scriptorウィンドウの右下隅にある“Exec”というボタンをクリックして下さい。TinyAppアプリケーションのアバウトダイアログが開かれる筈です。これは、Scriptorウィンドウの“action”ボックスの中にあるラジオボタンの設定に従ってアバウトダイアログの表示要求メッセージが送られたせいです。<br/>
+
+<br/>
+
+ 5.)Scriptorウィンドウの“action”ボックスで、“Quit”というラベルのラジオボタンをオンにして下さい。それから“Exec”ボタンをクリックすると、TinyAppアプリケーションが終了するはずです。これは、ラジオボタンの指示に従って終了要求メッセージが送られたからです。<br/>
+
+<br/>
+
+実は、上に述べた手順ではスクリプティング・メッセージを送っていません。次の二つの手順で、スクリプティング・メッセージによる制御を行います。<br/>
+
+<br/>
+
+(2)スクリプティングによるウィンドウの移動<br/>
+
+ 1.)Scriptorウィンドウで、“window:”というラベルの付いた入力フィールドに“#0”と入力して下さい。これは、アプリケーションのウィンドウのうち先頭のものに対する指定です。なお、“application:”というラベルの入力フィールドには、TinyAppのシグネチャを指定する“x-vnd.FtGUN-Scriptor”を入力しておいて下さい。<br/>
+
+<br/>
+
+ 2.)Scriptorウィンドウの“action”ボックスで、“Move Window”というラベルのラジオボタンをオンにして下さい。そして、その右隣にある“to:”というラベルの入力フィールドに移動先の位置を“<x座標>,<y座標>”の形式で入力して下さい。たとえば、x座標が200でy座標が300の位置に移動する場合は、“200, 300”と入力します。<br/>
+
+<br/>
+
+ 3.)以上の入力操作が終わったら、“Exec”ボタンをクリックして下さい。指定した位置にTinyAppアプリケーションのウィンドウが移動します。また、TinyAppが起動していなかった場合には、自動的に起動されるはずです。<br/>
+
+<br/>
+
+(3)スクリプティングによるボタンクリックのシミュレート<br/>
+
+ 1.)Scriptorウィンドウで、“window:”というラベルの付いた入力フィールドに“#0”と入力して下さい。これは、アプリケーションのウィンドウのうち先頭のものに対する指定です。なお、“application:”というラベルの入力フィールドには、TinyAppのシグネチャを指定する“x-vnd.FtGUN-Scriptor”を入力しておいて下さい。<br/>
+
+<br/>
+
+ 2.)Scriptorウィンドウの“action”ボックスで、“Push Button”というラベルのラジオボタンをオンにして下さい。そして、その右隣にある“which:”というラベルの入力フィールドにクリック動作をさせるボタンの名前を入力して下さい。たとえば、TinyAppアプリケーションの“Hide”ボタンであれば、このボタンの名前は“hide button”ですから、それを入力します(注8-9)。<br/>
+
+<br/>
+
+ 3.)以上の入力操作が終わったら、“Exec”ボタンをクリックして下さい。TinyAppアプリケーションのウィンドウに付いている“Hide”ボタンに対するクリック動作がシミュレートされ、ウィンドウが最小化されて隠されるはずです。<br/>
+
+<br/>
+
+Scriptorアプリケーションの動きが分かったら、次はその内部を見てみましょう。図8.10に、Scriptorのモジュール構成を示します。<br/>
+
+<br/>
+
+<div id="imagebox">
+<img src="img/8.10.jpg" alt="図 Scriptorのモジュール構成図"/><div>図[8.10]  Scriptorのモジュール構成図</div>
+</div>
+
+<br/>
+
+図8.10に示したモジュールのうち、中心的な役割を果たすのがScriptEngineクラスです。このクラスは、スクリプティング操作するアプリケーションの起動と、スクリプティング用メッセージの送信機能を持っています。図8.10に示したそれぞれのクラスの概要を、以下に述べます。<br/>
+
+<br/>
+
+ ■ScriptorAppクラス<br/>
+
+  Scriptorのアプリケーションクラス。BApplicationクラスのメソッドのうち、フック関数として提供されているReadyToRun()とAboutRequested()、それからMessageReceived()を再定義しています。8.1節のMessengerAppクラスと同様に、ウィンドウを生成し、ビューオブジェクト(ScriptorView)を貼りつけて表示してくれます。<br/>
+
+<br/>
+
+ ■MonoWindowクラス<br/>
+
+  ウィンドウクラスです。8.1節のMessengerアプリケーションが使っているのと同じものです。<br/>
+
+<br/>
+
+ ■ScriptorViewクラス<br/>
+
+  ビュークラスです。入力フィールドやラジオボタンなど、入力部品をサブビューとして持ち、それらを適切にレイアウトします。また、“Exec”ボタンがクリックされると、入力部品から入力された内容を取得し、ScriptEngineオブジェクトにそれを伝えます。<br/>
+
+<br/>
+
+ ■ScriptEngineクラス<br/>
+
+  スクリプティングによって遠隔操作するアプリケーションの起動、およびスクリプティング用メッセージの作成と送信機能を提供します。また、他のアプリケーションのウィンドウやボタンなどに対するBMessengerオブジェクトを取得し、それら遠隔オブジェクトへ直接メッセージを送れるようにしてくれます。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-9</dt><dd>Scriptorアプリケーションで指定するのは、ボタンのラベルではなく、ボタンオブジェクトを生成する時に付けた名前です。例で使っているTinyAppアプリケーションのボタン名は、6.3節のリスト6.14で確認して下さい。</dd></dl></span>
+<br/>
+
+入力するのはボタンのラベルではなく、ボタンオブジェクトを生成する時に付けた名前であること、およびTinyAppのソースリスト番号を補足。<br/>
+
+<br/>
+
+<br/>
+<a name="8.3.2"></a>
+<h3>8.3.2&nbsp;&nbsp;Scriptorアプリケーションのソースコード</h3>
+前述した、Scriptorアプリケーションを構成するクラスのうち、ScriptorAppとScriptorView、およびScriptEngineのソースをリスト8.4～8.8に示します。ただし、ページ数の都合上、ScriptorAppクラスは実装部の掲載を省略しました。また、ScriptorViewクラスも、実装部を載せたリスト8.6には重要なメソッドしか入れていません。<br/>
+
+<br/>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.4] ScriptorApp.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _SCRIPTOR_APP_H_
+<b><font color="#000080">#define</font></b> _SCRIPTOR_APP_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;app/Application.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	BAlert<font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * ScriptorAppクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> ScriptorApp <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BApplication <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">ScriptorApp</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">ScriptorApp</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 起動と終了</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">ReadyToRun</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メニュー応答</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AboutRequested</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    BAlert<font color="#990000">*</font>	fAboutBox<font color="#990000">;</font>	<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> アバウトダイアログ </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _SCRIPTOR_APP_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.5] ScriptorView.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _SCRIPTOR_VIEW_H_
+<b><font color="#000080">#define</font></b> _SCRIPTOR_VIEW_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;interface/View.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	ScriptEngine<font color="#990000">;</font>
+<b><font color="#0000FF">class</font></b>	BBox<font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * ScriptorViewクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> ScriptorView <font color="#990000">:</font> <b><font color="#0000FF">public</font></b> BView <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">ScriptorView</font></b><font color="#990000">(</font>BRect frame<font color="#990000">,</font> uint32 resizeMask<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">ScriptorView</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 描画処理</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">AttachedToWindow</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">MakeContent</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">MakeActionBox</font></b><font color="#990000">(</font>BBox<font color="#990000">*</font> inBox<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AdjustContent</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">AdjustActionBox</font></b><font color="#990000">(</font>BBox<font color="#990000">*</font> inBox<font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メッセージ処理</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">MouseDown</font></b><font color="#990000">(</font>BPoint where<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">ExecScript</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> スクリプト実行</font></i>
+    <font color="#009900">void</font>	<b><font color="#000000">DoShowAbout</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">DoQuit</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">DoMoveWindow</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">DoPushButton</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>	<b><font color="#000000">SendCommonMessage</font></b><font color="#990000">(</font>uint32 theCommand<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>	<b><font color="#000000">GetWindowInfo</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    uint32        fCurrAction<font color="#990000">;</font> <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 現在選択中のアクション </font></i><i><font color="#9A1900">*/</font></i>
+    ScriptEngine<font color="#990000">*</font> fEngine<font color="#990000">;</font>     <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> スクリプトの実行用 </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _SCRIPTOR_VIEW_H_ </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.6] ScriptorView.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * メッセージ処理; ScriptorView</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived </font></b><font color="#990000">(</font>BMessage<font color="#990000">*</font> message<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">switch</font></b> <font color="#990000">(</font>message<font color="#990000">-</font><font color="#990000">&gt;</font>what<font color="#990000">)</font> <font color="#FF0000">{</font>
+    <b><font color="#0000FF">case</font></b> SEL_SHOW_ABOUT<font color="#990000">:</font>
+    <b><font color="#0000FF">case</font></b> SEL_QUIT<font color="#990000">:</font>
+    <b><font color="#0000FF">case</font></b> SEL_MOVE_WIN<font color="#990000">:</font>
+    <b><font color="#0000FF">case</font></b> SEL_PUSH_BTN<font color="#990000">:</font>
+        fCurrAction <font color="#990000">=</font> message<font color="#990000">-</font><font color="#990000">&gt;</font>what<font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> EXEC_SCRIPT<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">ExecScript</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>				<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">default</font></b><font color="#990000">:</font>
+        BView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MessageReceived</font></b><font color="#990000">(</font>message<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MouseDown </font></b><font color="#990000">(</font>BPoint <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> where </font></i><i><font color="#9A1900">*/</font></i><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">MakeFocus</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">ExecScript </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    BTextControl<font color="#990000">*</font>	theAppFileField<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> アプリケーションの操作を開始 </font></i><i><font color="#9A1900">*/</font></i>
+    theAppFileField <font color="#990000">=</font> <font color="#990000">(</font>BTextControl<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kEditAppFile<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">TellApplication</font></b><font color="#990000">(</font>theAppFileField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Text</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font> <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 開始できない </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> スクリプトを実行 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">switch</font></b> <font color="#990000">(</font>fCurrAction<font color="#990000">)</font> <font color="#FF0000">{</font>
+    <b><font color="#0000FF">case</font></b> SEL_SHOW_ABOUT<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DoShowAbout</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> SEL_QUIT<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DoQuit</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>			<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> SEL_MOVE_WIN<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DoMoveWindow</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <b><font color="#0000FF">case</font></b> SEL_PUSH_BTN<font color="#990000">:</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">DoPushButton</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>	<b><font color="#0000FF">break</font></b><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> アプリケーションの操作を終了 </font></i><i><font color="#9A1900">*/</font></i>
+    fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">EndTell</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * スクリプト実行; ScriptorView</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">DoShowAbout </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">SendCommonMessage</font></b><font color="#990000">(</font>B_ABOUT_REQUESTED<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">DoQuit </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">SendCommonMessage</font></b><font color="#990000">(</font>B_QUIT_REQUESTED<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">DoMoveWindow </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t      sts<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theWinStr<font color="#990000">;</font>
+    BTextControl<font color="#990000">*</font> thePointField<font color="#990000">;</font>
+    <font color="#009900">char</font>          strBuf<font color="#990000">[</font><font color="#993399">32</font><font color="#990000">+</font><font color="#993399">1</font><font color="#990000">]</font><font color="#990000">;</font>
+    <font color="#009900">char</font><font color="#990000">*</font>         commaPos<font color="#990000">;</font>
+    BPoint        thePoint<font color="#990000">;</font>
+    BMessenger    theMessenger<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 送り先のウィンドウ指定文字列を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theWinStr <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetWindowInfo</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theWinStr <font color="#990000">=</font><font color="#990000">=</font> NULL<font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 取得できない </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 移動先の座標位置を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    thePointField <font color="#990000">=</font> <font color="#990000">(</font>BTextControl<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kEditPoint<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#000000">strncpy</font></b><font color="#990000">(</font>strBuf<font color="#990000">,</font> thePointField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Text</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">,</font> <b><font color="#0000FF">sizeof</font></b><font color="#990000">(</font>strBuf<font color="#990000">)</font> <font color="#990000">-</font> <font color="#993399">1</font><font color="#990000">)</font><font color="#990000">;</font>
+    strBuf<font color="#990000">[</font><b><font color="#0000FF">sizeof</font></b><font color="#990000">(</font>strBuf<font color="#990000">)</font> <font color="#990000">-</font> <font color="#993399">1</font><font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">;</font>
+    commaPos <font color="#990000">=</font> <b><font color="#000000">strchr</font></b><font color="#990000">(</font>strBuf<font color="#990000">,</font> <font color="#FF0000">','</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>commaPos <font color="#990000">=</font><font color="#990000">=</font> NULL<font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> B_ERROR<font color="#990000">;</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+    <font color="#990000">*</font>commaPos <font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">;</font>
+    thePoint<font color="#990000">.</font>x <font color="#990000">=</font> <b><font color="#000000">atol</font></b><font color="#990000">(</font>strBuf<font color="#990000">)</font><font color="#990000">;</font>
+    thePoint<font color="#990000">.</font>y <font color="#990000">=</font> <b><font color="#000000">atol</font></b><font color="#990000">(</font>commaPos <font color="#990000">+</font> <font color="#993399">1</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 移動操作を実行 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtWindow</font></b><font color="#990000">(</font>theWinStr<font color="#990000">,</font> <font color="#990000">&amp;</font>theMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> theMessenger<font color="#990000">.</font><b><font color="#000000">IsValid</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 遠隔ウィンドウが見つからない </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MoveWindow</font></b><font color="#990000">(</font>theMessenger<font color="#990000">,</font> thePoint<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptorView::DoMoveWindow"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">DoPushButton </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t      sts<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theWinStr<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theButtonStr<font color="#990000">;</font>
+    BTextControl<font color="#990000">*</font> theButtonField<font color="#990000">;</font>
+    BMessenger    theMessenger<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 送り先のウィンドウ指定文字列を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theWinStr <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetWindowInfo</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theWinStr <font color="#990000">=</font><font color="#990000">=</font> NULL<font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 取得できない </font></i><i><font color="#9A1900">*/</font></i>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 送り先のコントロール指定文字列を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theButtonField <font color="#990000">=</font> <font color="#990000">(</font>BTextControl<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kEditButton<font color="#990000">)</font><font color="#990000">;</font>
+    theButtonStr <font color="#990000">=</font> theButtonField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Text</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theButtonStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#FF0000">'\0'</font> <font color="#990000">|</font><font color="#990000">|</font> theButtonStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#FF0000">'#'</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+         sts <font color="#990000">=</font> B_ERROR<font color="#990000">;</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 名前指定されていない </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#FF0000">}</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ボタンクリック操作を実行 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtControl</font></b><font color="#990000">(</font>theWinStr<font color="#990000">,</font> theButtonStr<font color="#990000">,</font> <font color="#990000">&amp;</font>theMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> theMessenger<font color="#990000">.</font><b><font color="#000000">IsValid</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 遠隔ボタンが見つからない </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">PushButton</font></b><font color="#990000">(</font>theMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptorView::DoPushButton"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">SendCommonMessage </font></b><font color="#990000">(</font>uint32 theCommand<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t      sts<font color="#990000">;</font>
+    BTextControl<font color="#990000">*</font> theWindowField<font color="#990000">;</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>   theWinStr<font color="#990000">;</font>
+    BMessenger    theMessenger<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウの指定文字列を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theWindowField <font color="#990000">=</font> <font color="#990000">(</font>BTextControl<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kEditWindow<font color="#990000">)</font><font color="#990000">;</font>
+    theWinStr <font color="#990000">=</font> theWindowField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Text</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theWinStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">!</font><font color="#990000">=</font> <font color="#FF0000">'\0'</font> <font color="#990000">&amp;</font><font color="#990000">&amp;</font> theWinStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">!</font><font color="#990000">=</font> <font color="#FF0000">'#'</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>kInvalWinMsg<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インデックス指定されていない </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 自分自身に送ろうとする場合は拒否 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theWinStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">!</font><font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        BMessenger	appAgent<font color="#990000">;</font>
+		
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtApplication</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>appAgent<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>appAgent<font color="#990000">.</font><b><font color="#000000">IsTargetLocal</font></b><font color="#990000">(</font><font color="#990000">)</font> <font color="#990000">&amp;</font><font color="#990000">&amp;</font> <b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theWinStr<font color="#990000">,</font> <font color="#FF0000">"#0"</font><font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+            <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>kSameLooperMsg<font color="#990000">)</font><font color="#990000">;</font>
+            <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウ指定の有無に応じて送り先を決定 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theWinStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">)</font>
+        sts <font color="#990000">=</font> fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtApplication</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b>
+        sts <font color="#990000">=</font> fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtWindow</font></b><font color="#990000">(</font>theWinStr<font color="#990000">,</font> <font color="#990000">&amp;</font>theMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> theMessenger<font color="#990000">.</font><b><font color="#000000">IsValid</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 遠隔オブジェクトが見つからない </font></i><i><font color="#9A1900">*/</font></i>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 指定されたコマンドを送付 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theMessenger<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font>theCommand<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptorView::SendCommonMessage"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>
+ScriptorView<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">GetWindowInfo </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font><font color="#990000">*</font>		theStr<font color="#990000">;</font>
+    BTextControl<font color="#990000">*</font>	theWindowField<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウ指定文字列を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theWindowField <font color="#990000">=</font> <font color="#990000">(</font>BTextControl<font color="#990000">*</font><font color="#990000">)</font><b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">FindView</font></b><font color="#990000">(</font>kEditWindow<font color="#990000">)</font><font color="#990000">;</font>
+    theStr <font color="#990000">=</font> theWindowField<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Text</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 指定内容が妥当かチェック </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#FF0000">'\0'</font><font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>      <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウが指定されていない </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>theStr<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">!</font><font color="#990000">=</font> <font color="#FF0000">'#'</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>kInvalWinMsg<font color="#990000">)</font><font color="#990000">;</font>
+        theStr <font color="#990000">=</font> NULL<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インデックス指定されていない </font></i><i><font color="#9A1900">*/</font></i>
+    <font color="#FF0000">}</font> <b><font color="#0000FF">else</font></b> <font color="#FF0000">{</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 自分自身に送ろうとする場合は拒否 </font></i><i><font color="#9A1900">*/</font></i>
+        BMessenger		appAgent<font color="#990000">;</font>
+
+        <font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>fEngine<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtApplication</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>appAgent<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>appAgent<font color="#990000">.</font><b><font color="#000000">IsTargetLocal</font></b><font color="#990000">(</font><font color="#990000">)</font> <font color="#990000">&amp;</font><font color="#990000">&amp;</font> <b><font color="#000000">strcmp</font></b><font color="#990000">(</font>theStr<font color="#990000">,</font> <font color="#FF0000">"#0"</font><font color="#990000">)</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+            <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>kSameLooperMsg<font color="#990000">)</font><font color="#990000">;</font>
+            theStr <font color="#990000">=</font> NULL<font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> theStr<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptorView::GetWindowInfo"</font><font color="#990000">,</font> B_ERROR<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> NULL<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.7] ScriptEngine.h</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#ifndef</font></b> _SCRIPT_ENGINE_H_
+<b><font color="#000080">#define</font></b> _SCRIPT_ENGINE_H_
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;kernel/OS.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 関連クラス・構造体 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b>	BMessage<font color="#990000">;</font>
+<b><font color="#0000FF">class</font></b>	BMessenger<font color="#990000">;</font>
+<b><font color="#0000FF">class</font></b>	BPoint<font color="#990000">;</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * ScriptEngineクラスの定義</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">class</font></b> ScriptEngine <font color="#FF0000">{</font>
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メソッド</font></i>
+<b><font color="#0000FF">public</font></b><font color="#990000">:</font>
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> 初期化と解放</font></i>
+    <b><font color="#000000">ScriptEngine</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">~</font><b><font color="#000000">ScriptEngine</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> アプリケーション操作の開始と終了</font></i>
+    status_t	<b><font color="#000000">TellApplication</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inAppSig<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#009900">void</font>		<b><font color="#000000">EndTell</font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> メッセージ送信オブジェクトの生成</font></i>
+    status_t	<b><font color="#000000">GetRmtApplication</font></b><font color="#990000">(</font>BMessenger<font color="#990000">*</font> outMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    status_t	<b><font color="#000000">GetRmtWindow</font></b><font color="#990000">(</font>
+        <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inWindowInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font> BMessenger<font color="#990000">*</font> outMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    status_t	<b><font color="#000000">GetRmtControl</font></b><font color="#990000">(</font>
+        <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inWindowInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font>
+        <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inControlInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font> BMessenger<font color="#990000">*</font> outMessenger<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">//</font></i><i><font color="#9A1900"> ユーティリティ</font></i>
+    <b><font color="#0000FF">static</font></b> status_t	<b><font color="#000000">AddSpecifierTo</font></b><font color="#990000">(</font>
+        <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inPropertyName<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font>
+        <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inPropertyInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font> BMessage<font color="#990000">*</font> ioMessage<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> status_t	<b><font color="#000000">MoveWindow</font></b><font color="#990000">(</font>
+        <b><font color="#0000FF">const</font></b> BMessenger<font color="#990000">&amp;</font> inRmtWindow<font color="#990000">,</font> BPoint inNewPoint<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">static</font></b> status_t	<b><font color="#000000">PushButton</font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BMessenger<font color="#990000">&amp;</font> inRmtControl<font color="#990000">)</font><font color="#990000">;</font>
+
+<i><font color="#9A1900">//</font></i><i><font color="#9A1900"> データメンバ</font></i>
+<b><font color="#0000FF">private</font></b><font color="#990000">:</font>
+    team_id	fTargetApp<font color="#990000">;</font>	<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 操作対象のアプリケーション </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font><font color="#990000">;</font>
+
+
+<b><font color="#000080">#endif</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> _SCRIPT_ENGINE_H_ </font></i><i><font color="#9A1900">*/</font></i>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * End of File</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+</tt></pre>
+</code>
+</div>
+
+<div id="listbox">
+<code>
+<span id="sourceH">[リスト8.8] ScriptEngine.cp</span><br/><!-- Generator: GNU source-highlight 2.1.2
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><b><font color="#000080">#include</font></b> <font color="#FF0000">"ScriptEngine.h"</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">"KGUtility/kgAlert.h"</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">"KGUtility/kgDebug.h"</font>
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;app/Roster.h&gt;</font>
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;support/Debug.h&gt;</font>
+
+<b><font color="#000080">#include</font></b> <font color="#FF0000">&lt;stdlib.h&gt;</font>
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 文字列定数 </font></i><i><font color="#9A1900">*/</font></i>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kData<font color="#990000">[</font><font color="#990000">]</font>   <font color="#990000">=</font> <font color="#FF0000">"data"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kFrame<font color="#990000">[</font><font color="#990000">]</font>  <font color="#990000">=</font> <font color="#FF0000">"Frame"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kResult<font color="#990000">[</font><font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">"result"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kValue<font color="#990000">[</font><font color="#990000">]</font>  <font color="#990000">=</font> <font color="#FF0000">"Value"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kView<font color="#990000">[</font><font color="#990000">]</font>   <font color="#990000">=</font> <font color="#FF0000">"View"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kWindow<font color="#990000">[</font><font color="#990000">]</font> <font color="#990000">=</font> <font color="#FF0000">"Window"</font><font color="#990000">;</font>
+<b><font color="#0000FF">const</font></b> <font color="#009900">char</font>	kMsngr<font color="#990000">[</font><font color="#990000">]</font>  <font color="#990000">=</font> <font color="#FF0000">"Messenger"</font><font color="#990000">;</font>
+
+
+<i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ScriptEngineクラスの公開メソッド </font></i><i><font color="#9A1900">*/</font></i>
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * 初期化と解放; ScriptEngine</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">ScriptEngine </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    fTargetApp <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 無効値 </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><font color="#990000">~</font><b><font color="#000000">ScriptEngine </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+<b><font color="#000080">#if</font></b> DEBUG
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>fTargetApp <font color="#990000">&gt;</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptEngine::~ScriptEngine"</font><font color="#990000">,</font> B_ERROR<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">EndTell</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+<b><font color="#000080">#endif</font></b>
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> do nothing </font></i><i><font color="#9A1900">*/</font></i>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * アプリケーション操作の開始と終了; ScriptEngine</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">TellApplication </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inAppSig<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>fTargetApp <font color="#990000">&lt;</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    status_t	sts<font color="#990000">;</font>
+    <font color="#009900">char</font>		theAppMimeType<font color="#990000">[</font>B_MIME_TYPE_LENGTH<font color="#990000">]</font><font color="#990000">;</font>
+    app_info	theAppInfo<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> アプリケーション情報を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#000000">sprintf</font></b><font color="#990000">(</font>theAppMimeType<font color="#990000">,</font> <font color="#FF0000">"application/%s"</font><font color="#990000">,</font> inAppSig<font color="#990000">)</font><font color="#990000">;</font>
+    sts <font color="#990000">=</font> be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetAppInfo</font></b><font color="#990000">(</font>theAppMimeType<font color="#990000">,</font> <font color="#990000">&amp;</font>theAppInfo<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 動作していなければ起動する </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+        sts <font color="#990000">=</font> be_roster<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">Launch</font></b><font color="#990000">(</font>
+            theAppMimeType<font color="#990000">,</font> <font color="#990000">(</font>BMessage<font color="#990000">*</font><font color="#990000">)</font>NULL<font color="#990000">,</font> <font color="#990000">&amp;</font>theAppInfo<font color="#990000">.</font>team<font color="#990000">)</font><font color="#990000">;</font>
+        <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+            <font color="#009900">char</font>	theMsg<font color="#990000">[</font><font color="#993399">256</font><font color="#990000">]</font><font color="#990000">;</font>
+			
+            <b><font color="#000000">sprintf</font></b><font color="#990000">(</font>theMsg<font color="#990000">,</font>
+                <font color="#FF0000">"Sorry, but there are no such app '%s'"</font><font color="#990000">,</font> inAppSig<font color="#990000">)</font><font color="#990000">;</font>
+            <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>theMsg<font color="#990000">)</font><font color="#990000">;</font>
+        <font color="#FF0000">}</font>
+    <font color="#FF0000">}</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> チームIDを記録 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        fTargetApp <font color="#990000">=</font> theAppInfo<font color="#990000">.</font>team<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<font color="#009900">void</font>
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">EndTell </font></b><font color="#990000">(</font><font color="#009900">void</font><font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>fTargetApp <font color="#990000">&gt;</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    fTargetApp <font color="#990000">=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b><font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * メッセージ送信オブジェクトの生成; ScriptEngine</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">GetRmtApplication </font></b><font color="#990000">(</font>BMessenger<font color="#990000">*</font> outMessenger<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>fTargetApp <font color="#990000">&gt;</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    status_t	sts<font color="#990000">;</font>
+    BMessenger	<b><font color="#000000">theRmtApp</font></b><font color="#990000">(</font>NULL<font color="#990000">,</font> fTargetApp<font color="#990000">,</font> <font color="#990000">&amp;</font>sts<font color="#990000">)</font><font color="#990000">;</font>
+	
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">=</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <font color="#990000">*</font>outMessenger <font color="#990000">=</font> theRmtApp<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">GetRmtWindow </font></b><font color="#990000">(</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inWindowInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font> BMessenger<font color="#990000">*</font> outMessenger<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>fTargetApp <font color="#990000">&gt;</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+
+    status_t	sts<font color="#990000">;</font>
+    BMessage	<b><font color="#000000">theRequest</font></b><font color="#990000">(</font>B_GET_PROPERTY<font color="#990000">)</font><font color="#990000">,</font> reply<font color="#990000">;</font>
+    BMessenger	appAgent<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウのスペシファイアを作成 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">AddSpecifier</font></b><font color="#990000">(</font>kMsngr<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> <b><font color="#000000">AddSpecifierTo</font></b><font color="#990000">(</font>kWindow<font color="#990000">,</font> inWindowInfo<font color="#990000">,</font> <font color="#990000">&amp;</font>theRequest<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> Messengerを返すようにアプリケーションへ要求 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtApplication</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>appAgent<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> アプリケーションが見つからない </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> appAgent<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theRequest<font color="#990000">,</font> <font color="#990000">&amp;</font>reply<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 成功したら出力バッファにセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> reply<font color="#990000">.</font><b><font color="#000000">FindMessenger</font></b><font color="#990000">(</font>kResult<font color="#990000">,</font> outMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#009900">char</font>	theMsg<font color="#990000">[</font><font color="#993399">256</font><font color="#990000">]</font><font color="#990000">;</font>
+		
+        <b><font color="#000000">sprintf</font></b><font color="#990000">(</font>theMsg<font color="#990000">,</font>
+            <font color="#FF0000">"Sorry, but there are no such window '%s'"</font><font color="#990000">,</font> inWindowInfo
+        <font color="#990000">)</font><font color="#990000">;</font>
+        <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>theMsg<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptEngine::GetRmtWindow"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">GetRmtControl </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inWindowInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inControlInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font> BMessenger<font color="#990000">*</font> outMessenger<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    <b><font color="#000000">ASSERT</font></b><font color="#990000">(</font>fTargetApp <font color="#990000">&gt;</font><font color="#990000">=</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+	
+    status_t	sts<font color="#990000">;</font>
+    BMessage	<b><font color="#000000">theRequest</font></b><font color="#990000">(</font>B_GET_PROPERTY<font color="#990000">)</font><font color="#990000">,</font> reply<font color="#990000">;</font>
+    BMessenger	winAgent<font color="#990000">;</font>
+	
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> コントロールのスペシファイアを作成 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">AddSpecifier</font></b><font color="#990000">(</font>kMsngr<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> <b><font color="#000000">AddSpecifierTo</font></b><font color="#990000">(</font>kView<font color="#990000">,</font> inControlInfo<font color="#990000">,</font> <font color="#990000">&amp;</font>theRequest<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> Messengerを返すようにウィンドウへ要求 </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> <b><font color="#0000FF">this</font></b><font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">GetRmtWindow</font></b><font color="#990000">(</font>inWindowInfo<font color="#990000">,</font> <font color="#990000">&amp;</font>winAgent<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウの取得に失敗 </font></i><i><font color="#9A1900">*/</font></i>
+    <b><font color="#0000FF">else</font></b> <b><font color="#0000FF">if</font></b> <font color="#990000">(</font><font color="#990000">!</font> winAgent<font color="#990000">.</font><b><font color="#000000">IsValid</font></b><font color="#990000">(</font><font color="#990000">)</font><font color="#990000">)</font>
+        <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 遠隔ウィンドウが見つからない </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> winAgent<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theRequest<font color="#990000">,</font> <font color="#990000">&amp;</font>reply<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 成功したら出力バッファにセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> reply<font color="#990000">.</font><b><font color="#000000">FindMessenger</font></b><font color="#990000">(</font>kResult<font color="#990000">,</font> outMessenger<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font> <font color="#FF0000">{</font>
+        <font color="#009900">char</font>	theMsg<font color="#990000">[</font><font color="#993399">256</font><font color="#990000">]</font><font color="#990000">;</font>
+		
+        <b><font color="#000000">sprintf</font></b><font color="#990000">(</font>theMsg<font color="#990000">,</font>
+            <font color="#FF0000">"Sorry, but there are no such view '%s'"</font><font color="#990000">,</font> inControlInfo
+        <font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">KGAlert</font></b><font color="#990000">(</font>theMsg<font color="#990000">)</font><font color="#990000">;</font>
+    <font color="#FF0000">}</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptEngine::GetRmtControl"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+<i><font color="#9A1900">/*</font></i>
+<i><font color="#9A1900"> * ユーティリティ; ScriptEngine</font></i>
+<i><font color="#9A1900"> </font></i><i><font color="#9A1900">*/</font></i>
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">AddSpecifierTo </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inPropertyName<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font>
+    <b><font color="#0000FF">const</font></b> <font color="#009900">char</font> inPropertyInfo<font color="#990000">[</font><font color="#990000">]</font><font color="#990000">,</font> BMessage<font color="#990000">*</font> ioMessage<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t	sts <font color="#990000">=</font> B_ERROR<font color="#990000">;</font>
+
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>inPropertyInfo<font color="#990000">[</font><font color="#993399">0</font><font color="#990000">]</font> <font color="#990000">=</font><font color="#990000">=</font> <font color="#FF0000">'#'</font><font color="#990000">)</font>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> インデックス指定 </font></i><i><font color="#9A1900">*/</font></i>
+        sts <font color="#990000">=</font> ioMessage<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddSpecifier</font></b><font color="#990000">(</font>
+            inPropertyName<font color="#990000">,</font> <b><font color="#000000">atol</font></b><font color="#990000">(</font>inPropertyInfo <font color="#990000">+</font> <font color="#993399">1</font><font color="#990000">)</font>
+        <font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">else</font></b>  <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> 名前指定 </font></i><i><font color="#9A1900">*/</font></i>
+        sts <font color="#990000">=</font> ioMessage<font color="#990000">-</font><font color="#990000">&gt;</font><b><font color="#000000">AddSpecifier</font></b><font color="#990000">(</font>inPropertyName<font color="#990000">,</font> inPropertyInfo<font color="#990000">)</font><font color="#990000">;</font>
+
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">MoveWindow </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BMessenger<font color="#990000">&amp;</font> inRmtWindow<font color="#990000">,</font> BPoint inNewPoint<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t sts<font color="#990000">;</font>
+    BMessage theRequest<font color="#990000">,</font> reply<font color="#990000">;</font>
+    BRect    theFrame<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> ウィンドウのフレーム矩型を取得 </font></i><i><font color="#9A1900">*/</font></i>
+    theRequest<font color="#990000">.</font>what <font color="#990000">=</font> B_GET_PROPERTY<font color="#990000">;</font>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">AddSpecifier</font></b><font color="#990000">(</font>kFrame<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> inRmtWindow<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theRequest<font color="#990000">,</font> <font color="#990000">&amp;</font>reply<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> reply<font color="#990000">.</font><b><font color="#000000">FindRect</font></b><font color="#990000">(</font>kResult<font color="#990000">,</font> <font color="#990000">&amp;</font>theFrame<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> inNewPointに始点を合わせてフレーム矩型を変更 </font></i><i><font color="#9A1900">*/</font></i>
+    theFrame<font color="#990000">.</font><b><font color="#000000">OffsetTo</font></b><font color="#990000">(</font>inNewPoint<font color="#990000">)</font><font color="#990000">;</font>
+    theRequest<font color="#990000">.</font>what <font color="#990000">=</font> B_SET_PROPERTY<font color="#990000">;</font>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">AddRect</font></b><font color="#990000">(</font>kData<font color="#990000">,</font> theFrame<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> inRmtWindow<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theRequest<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptEngine::MoveWindow"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+
+status_t
+ScriptEngine<font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">PushButton </font></b><font color="#990000">(</font><b><font color="#0000FF">const</font></b> BMessenger<font color="#990000">&amp;</font> inRmtControl<font color="#990000">)</font>
+<font color="#FF0000">{</font>
+    status_t	sts<font color="#990000">;</font>
+    BMessage	<b><font color="#000000">theRequest</font></b><font color="#990000">(</font>B_SET_PROPERTY<font color="#990000">)</font><font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> メッセージのスペシファイアをセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">AddSpecifier</font></b><font color="#990000">(</font>kValue<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> コントロールの値を1にセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">AddInt32</font></b><font color="#990000">(</font>kData<font color="#990000">,</font> <font color="#993399">1</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> inRmtControl<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theRequest<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+
+    <i><font color="#9A1900">/*</font></i><i><font color="#9A1900"> コントロールの値を0にセット </font></i><i><font color="#9A1900">*/</font></i>
+    sts <font color="#990000">=</font> theRequest<font color="#990000">.</font><b><font color="#000000">ReplaceInt32</font></b><font color="#990000">(</font>kData<font color="#990000">,</font> <font color="#993399">0</font><font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+    sts <font color="#990000">=</font> inRmtControl<font color="#990000">.</font><b><font color="#000000">SendMessage</font></b><font color="#990000">(</font><font color="#990000">&amp;</font>theRequest<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">if</font></b> <font color="#990000">(</font>sts <font color="#990000">!</font><font color="#990000">=</font> B_OK<font color="#990000">)</font>
+        <b><font color="#0000FF">goto</font></b> err<font color="#990000">;</font>
+	
+    <b><font color="#0000FF">return</font></b> B_OK<font color="#990000">;</font>
+err<font color="#990000">:</font>
+    <font color="#990000">:</font><font color="#990000">:</font><b><font color="#000000">Error</font></b><font color="#990000">(</font><font color="#FF0000">"ScriptEngine::PushButton"</font><font color="#990000">,</font> sts<font color="#990000">)</font><font color="#990000">;</font>
+    <b><font color="#0000FF">return</font></b> sts<font color="#990000">;</font>
+<font color="#FF0000">}</font>
+</tt></pre>
+</code>
+</div>
+
+<br/>
+
+以下、これらのソースについて順番に説明します。最初はアプリケーションクラスです。8.1節の説明で使ったMessengerAppクラスと大体同じですが、フック関数のMessageReceived()メソッドを再定義している点が違います。実は、これまで示してきたアプリケーションクラスの実装では、アバウトダイアログの表示要求メッセージ(B_ABOUT_REQUESTED)を続けて送ると、送った数だけアバウトダイアログが開かれてしまうため、それを防ぐ工夫を追加しました。<br/>
+
+<br/>
+
+<span id="warning">校正時に掲載リストを減らしたため、以下の記述には若干の食い違いがある。('98. 5/19, koga@ftgun.co.jp)</span><br/>
+<br/>
+
+リスト8.6のクラス定義を見ると分かるように、ScriptorAppではアバウトダイアログを指す“fAboutBox”というデータメンバを持っており、その値を使って、現在アバウトダイアログを開いているかどうかを判定します。AboutRequested()メソッドでは、fAboutBoxの値がNULLでない、つまり既にアバウトダイアログを開いている場合には何もしません。これにより、B_ABOUT_REQUESTEDメッセージを続けて送っても一枚しかダイアログが開かれないのです(注8-10)。また、アバウトダイアログが閉じられた時にそれを検出できるように、BAlertクラスのGo()メソッドを呼び出してダイアログを表示する際、Go()メソッドの引数にBInvokerオブジェクトを生成して渡しています。BInvokerオブジェクトのコンストラクタには“ABOUT_CLOSED”メッセージと自分へのポインタを渡していますので、ダイアログが閉じられた時は、このメッセージが自身に送られます。送られてきたメッセージはMessageReceived()で検出し、fAboutBoxの値をNULLにセットします。なお、“ABOUT_CLOSED”はScriptorAppクラスで独自に定義したメッセージコードです。詳細は付録のソースファイルを参照して下さい。<br/>
+
+<br/>
+
+次に、ScriptorViewクラスを見てみましょう。8.1節のMessengerViewクラスと同様、ソースファイルの内容を二つのリストに分けて掲載しています。まず、リスト8.9にはビュー部品の生成とレイアウト処理を行うメソッド、および#include文や各種定数の定義が入っています。ビュー部品の生成とレイアウトは、MessengerViewクラスの場合と同様MakeContent()メソッドとAdjustContent()メソッドで行っています。これらに関する説明は省略しますので、詳細はソースコードを参照して下さい。リスト8.10には、ビュー部品の操作に対するメッセージ応答処理を行うメソッドが入っています。<br/>
+
+<br/>
+
+リスト8.10の説明をする前に、Scriptorアプリケーションで使っているビュー部品のクラスのうち、これまでのサンプルで使ったことのないものについて説明を加えておきます。6.2節の概要説明と合わせて読んでみて下さい。<br/>
+
+<br/>
+
+ ■BBoxクラス<br/>
+
+  “action”ボックスの表示に使っています。ボックスに付けるラベルは、SetLabel()メソッドで設定します。<br/>
+
+<br/>
+
+ ■BRadioButtonクラス<br/>
+
+  コンストラクタに渡す引数は、BButtonクラスと同じです。同じスーパービューに所属するBRadioButtonオブジェクトはグループを形成し、その中の一つしかオンにできません。Scriptorアプリケーションでは、送信するメッセージの種類を指定するのに使っています。<br/>
+
+<br/>
+
+  一つのウィンドウの中でラジオボタンのグループを複数作りたい場合は、それぞれのグループ用にスーパービューを作成し、それをウィンドウに貼りつけます。<br/>
+
+<br/>
+
+ ■BTextControlクラス<br/>
+
+  入力フィールド部品です。入力内容が確定した時に、それを知らせるメッセージを送る機能を持ちますが、Scriptorアプリケーションでは利用していません。入力された文字列を取得するには、Text()メソッドを使います。<br/>
+
+<br/>
+
+以上のクラスのうち、ScriptorアプリケーションではBRadioButtonクラスからメッセージを受け取ります。つまり、送信するメッセージの種類を示すラジオボタンをクリックすると、コンストラクタで設定したメッセージが送られます。ScriptorViewクラスでは、このメッセージを受け取るとデータメンバの“fCurrAction”にメッセージコードを記録しておき、“Exec”ボタンがクリックされた時に利用します。これを行っているのが、リスト8.10のScriptorView::MessageReceived()メソッドです。このメソッドでは、ラジオボタンにセットしたメッセージを受け取った時はfCurrActionの値を更新します。また、“Exec”ボタンからのメッセージを受け取ると、ExecScript()メソッドを呼び出してスクリプティング・メッセージの送信処理を実行します。ExecScript()の中では、fCurrActionの値を見て送信するメッセージ種類を決定し、適切なメソッドへ分岐するのです。<br/>
+
+<br/>
+
+<div id="column">
+<a href="./column8.2.html" target="new"><span id="column_t">囲みコラム</span><br/>「ScriptorViewクラスのMouseDown()メソッド」
+</a></div>
+
+ScriptorViewクラスのExecScript()メソッドから分岐して呼び出されるメソッドについて、それぞれの役割を以下に示します。<br/>
+
+<br/>
+
+ ■DoShowAbout()メソッド<br/>
+
+  指定されたアプリケーションまたはウィンドウに対し、アバウトダイアログの表示要求メッセージを送ります。実際のメッセージ送信処理はSendCommonMessage()メソッドで行い、次に述べるDoQuit()メソッドと共通化しています(注8-11)。<br/>
+
+<br/>
+
+ ■DoQuit()メソッド<br/>
+
+  指定されたアプリケーションまたはウィンドウに対し、終了要求メッセージを送ります。実際のメッセージ送信処理はSendCommonMessage()メソッドで行い、DoShowAbout()メソッドと共通化しています。<br/>
+
+<br/>
+
+ ■DoMoveWindow()メソッド<br/>
+
+  ScriptEngineオブジェクトに対してGetRmtWindow()メソッドを呼び出し、“window:”入力フィールドで指定されたウィンドウオブジェクトに対応するBMessengerオブジェクトを取得します。それから、ScriptEngineクラスのMoveWindow()メソッドを呼び出し、ウィンドウの移動処理を実行します。<br/>
+
+<br/>
+
+ ■DoPushButton()メソッド<br/>
+
+  ScriptEngineオブジェクトに対してGetRmtControl()メソッドを呼び出し、“window:”と“which:”の二つの入力フィールドで指定されたボタンオブジェクトに対応するBMessengerオブジェクトを取得します。それから、ScriptEngineクラスのPushButton()メソッドを呼び出し、ボタンクリックのシミュレート処理を実行します。<br/>
+
+<br/>
+
+  なお、ScriptEngineクラスのGetRmtControl()メソッドは、実際にはボタンオブジェクトに対応するBMessengerオブジェクトを返してくれるわけではありません。このメソッドでは、単にBWindowクラスの“View”プロパティの名前指定を行っているだけなので、指定した名前のビューオブジェクトに対応するBMessengerを取得している、というのが真相です。<br/>
+
+<br/>
+
+上に挙げたメソッドが利用している、ScriptorViewクラスのSendCommonMessage()、およびGetWindowInfo()について一つ補足しておきます。これらのメソッドでは、“window:”入力フィールドに対する不適切な入力をチェックすると同時に、指定されたウィンドウが自分自身ではないかどうかのチェックを行っています。これは、自分自身に対してメッセージを送った結果、返答メッセージを受け取る時に無限待ちを引き起こす場合があるからです。<br/>
+
+<br/>
+
+<div id="column">
+<a href="./column8.3.html" target="new"><span id="column_t">囲みコラム</span><br/>「自分自身との同期通信」
+</a></div>
+
+最後に、リスト8.11と8.12に載せたScriptEngineクラスについて説明します。リスト8.11のクラス定義を見ると分かるように、このクラスは、スクリプティングによって遠隔操作するアプリケーションのチームIDをデータメンバに持ちます。このチームIDはTellApplication()メソッドによって初期化され、EndTell()メソッドによって無効値にリセットされます。つまり、ScriptEngineオブジェクトを使ってスクリプティングを行う場合、まずTellApplication()メソッドを呼び出してアプリケーション情報を初期化しないといけません。また、スクリプティング処理が終わったら、EndTell()メソッドを呼び出してリセットします。リスト8.10に載せたScriptorView::ExecScript()メソッドの内容を見て、このことを確認して下さい。<br/>
+
+<br/>
+
+以下に、ScriptorEngineクラスの主なメソッドのについて、その役割を示します。できれば、リスト8.12と見比べながら読んでみて下さい。<br/>
+
+<br/>
+
+ ■TellApplication()メソッド<br/>
+
+  BRosterオブジェクトに対してGetAppInfo()メソッドを呼び出し、引数で指定されたアプリケーションの情報を取得します。アプリケーションが動作していない場合、BRosterのLaunch()メソッドを使ってアプリケーションを起動します。ScriptorViewクラスのExecScript()メソッドが利用しています。<br/>
+
+<br/>
+
+ ■GetRmtApplication()メソッド<br/>
+
+  TellApplication()メソッドの中で記録した、スクリプティングによる遠隔操作対象のアプリケーションのチームIDでBMessengerオブジェクトを初期化し、呼び出し側に返します。ScriptorViewクラスのSendCommonMessage()メソッドとGetWindowInfo()メソッドが利用しています。<br/>
+
+<br/>
+
+ ■GetRmtWindow()メソッド<br/>
+
+  引数で指定された遠隔ウィンドウオブジェクトに対するBMessengerオブジェクトを取得し、呼び出し側に返します。GetRmtApplication()メソッドを使って得た遠隔アプリケーション(BMessenger)に対して“Window”プロパティを要求するスクリプティング用メッセージを送り、その結果としてBMessengerオブジェクトを受け取ります。ScriptorViewクラスのSendCommonMessage()メソッドとDoMoveWindow()メソッドが利用しています。<br/>
+
+<br/>
+
+ ■GetRmtControl()メソッド<br/>
+
+  引数で指定された遠隔コントロール(実際にはビュー)オブジェクトに対するBMessengerオブジェクトを取得し、呼び出し側に返します。GetRmtWindow()メソッドを使って得た遠隔ウィンドウ(BMessenger)に対して“View”プロパティを要求するスクリプティング・メッセージを送り、その結果としてBMessengerオブジェクトを受け取ります。ScriptorViewクラスのDoPushButton()メソッドが利用しています。<br/>
+
+<br/>
+
+ ■MoveWindow()メソッド<br/>
+
+  引数に渡された遠隔ウィンドウに対してスクリプティング・メッセージを送り、ウィンドウを移動します。ウィンドウの“Frame”プロパティに対する“B_GET_PROPERTY”コマンドを送ってフレーム矩型を取得し、移動位置に合わせてそれを変更します。それから“B_SET_PROPERTY”コマンドを送り、変更後のフレーム矩型を遠隔ウィンドウにセットします。ScriptorViewクラスのDoMoveWindow()メソッドが利用しています。<br/>
+
+<br/>
+
+ ■PushButton()メソッド<br/>
+
+  引数に渡された遠隔コントロールに対してスクリプティング・メッセージを送り、ボタンのクリック動作をシミュレートします。コントロールの“Value”プロパティに対する“B_SET_PROPERTY”コマンドを使い、まず値を1にセットした後、続けて値を0にセットします。ScriptorViewクラスのDoPushButton()メソッドが利用しています。<br/>
+
+<br/>
+
+上に挙げたメソッドのうち、GetRmtWindow()とGetRmtControl()が利用しているAddSpecifierTo()メソッドについて補足しておきます。これはScriptEngineクラスのメソッドですが、ウィンドウやコントロールが名前指定されているのかインデックス指定されているのかを判定し、それによってBMessageクラスのAddSpecifier()メソッド呼び出しを制御しています。ウィンドウやコントロールを指定する文字列の先頭文字を調べ、それが'#'であった場合はインデックス指定であるとみなし、インデックス指定を行うバージョンのAddSpecifier()メソッドを呼び出すのです。<br/>
+
+<br/>
+
+以上で、Scriptorアプリケーションのソースコードに関する説明を終わります。スクリプティング機構を利用することで、他のアプリケーション内のオブジェクトに関連づけられたBMessengerオブジェクトを取得できることが分かったでしょうか。特に、ScriptEngineクラスのMoveWindow()メソッドやPushButton()メソッドでは、取得したBMessengerオブジェクトを使って他のアプリケーション内のオブジェクトと直接メッセージ通信していることに注目して下さい。<br/>
+
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-10</dt><dd>アプリケーションごとの振る舞いの違いを見るために、8.1節の説明に使ったMessengerアプリケーションでB_ABOUT_REQUESTEDメッセージを送ってみると良いでしょう。</dd></dl></span>
+<br/>
+
+<span id="annotate"><dl><dt>(注)8-11</dt><dd>ウィンドウに対してアバウトダイアログの表示要求メッセージを送っても、応答することはありません。しかし、ここではDoQuit()メソッドと実装を共通化するために、送り先にウィンドウが指定されても構わないことにしています。</dd></dl></span>
+<br/>
+
+<br/>
+<a name="8.3.3"></a>
+<h3>8.3.3&nbsp;&nbsp;スクリプトを書いて動かすには</h3>
+この章の説明を終わる前に、スクリプティングについてもう少しだけ考えてみましょう。ここまでの説明で、スクリプティング・メッセージを使えば他のアプリケーションを遠隔制御できることは分かりました。しかし、普通「スクリプティング」といえば、MacOSのAppleScriptやWindowsのVisualBasicのように、スクリプト言語を使ってスクリプトをプログラミングし、それを動かすことを指すのではないでしょうか?この章のサンプルで見たように、メッセージを送る処理を一々C++でプログラミングしなければいけないのでは、スクリプティングと言えるほど便利なものではないと思いませんか?<br/>
+
+<br/>
+
+もしあなたがそう思うのでしたら、半分だけ当たっています。半分というのは、未だBeOSには標準のスクリプト言語が備わっていないということです。つまり、スクリプト言語さえ備われば、MacOSやWindowsと同じように、スクリプトを書いてアプリケーションを制御できるようになるのです。実際、たとえばMacOSのAppleScriptでも、スクリプトの内容はアプリケーション間通信用のメッセージ(AppleEvent)の並びに変換され、それがアプリケーションへ送られているだけなのです。<br/>
+
+<br/>
+
+ですから、将来BeOSが標準のスクリプト言語を備える日が来る時のために、あなたが開発するアプリケーションをスクリプト対応させておくのは良い考えです。もちろん、この章の説明で見たように、BeOSのAPIを使っていればアプリケーションは自然とスクリプト対応します。また、独自の「スイート」を定義してスクリプト機能を拡張する手順についても、8.2.3で述べました。章末の練習問題の中には、第7章のサンプルで使ったイベントスケジューラをスクリプト対応させるというものがあります。それを題材として、より高度なスクリプト対応アプリケーションの設計について考えてみるのも面白いでしょう。<br/>
+
+<br/>
+
+<br/>
+<a name="8.4"></a>
+<h2>8.4&nbsp;&nbsp;まとめと練習問題</h2>
+この章では、最初に挙げた題材をプログラミングするために、次のような解決手段を用いました:<br/>
+
+<br/>
+
+ ■他のアプリケーションにメッセージを送る<br/>
+
+  →BMessengerオブジェクトにアプリケーションのチームID(team_id)を渡して初期化し、SendMessage()メソッドを呼び出す。<br/>
+
+<br/>
+
+ ■現在動作しているアプリケーションの一覧表示情報を取得する<br/>
+
+  →BRosterオブジェクトのGetAppList()メソッドを呼び出してチームIDのリストを取得する。それから、リスト中の各チームIDを引数としてGetRunningAppInfo()メソッドを呼び出し、それぞれのアプリケーション情報を取得する。<br/>
+
+<br/>
+
+ ■他のアプリケーションのウィンドウやボタンを遠隔操作する<br/>
+
+  →スクリプティング・メッセージを利用する。“B_GET_PROPERTY”メッセージを送って遠隔ウィンドウやボタンと関連づけられたBMessengerオブジェクトを取得し、それに対してSendMessage()メソッドを呼び出す。<br/>
+
+<br/>
+
+<br/>
+
+この章で説明したことや、説明に使ったサンプルアプリケーションに対する理解を深めるために、以下の練習問題について考えてみて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 1</div>
+
+  8.1節の説明に使ったMessengerアプリケーションでは、新しくアプリケーションを起動すると、アプリケーションの一覧表示リストで項目を選択していても選択が解除されてしまいます。一覧表示の内容に変更が起きても選択が解除されないように、MessengerView::UpdateAppList()メソッドを変更してみて下さい。このメソッドは、リスト8.5に載っています。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 2</div>
+
+  8.3節の説明に使ったScriptorアプリケーションを改変し、ボタンオブジェクトの“Value”プロパティではなく“Enabled”プロパティの値を操作するようにして下さい。また、ウィンドウオブジェクトの“Minimze”プロパティを操作して、ウィンドウを最小化して隠したり、隠れたウィンドウを元に戻せるようにしてみて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 3</div>
+
+  Scriptorアプリケーションを改変し、アプリケーションやウィンドウ、それからボタンなどのオブジェクトから“Suites”プロパティの値を取得できるようにして下さい。返答メッセージの内容を調べて、それぞれのオブジェクトがサポートしているスイートの名前や内容を確認して下さい。Scriptorアプリケーションをシェル端末(Terminal)から起動し、BMessageクラスのPrintToStream()を利用してメッセージ内容を表示するとよいでしょう。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 4</div>
+
+  BWindowクラスが定義しているスイート(suite/vnd.Be-window)の“MenuBar”プロパティについてAPIリファレンスで調べ、スクリプティング・メッセージによってアプリケーションのメニューを制御する手順を考えて下さい。手順が分かったら、Scriptorアプリケーションを改変するか、または自分でアプリケーションを作って実際にプログラミングを行い、それが正しいかどうかを確認してみて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 5</div>
+
+  Scriptorアプリケーションでは、クリック動作をシミュレートさせるボタンを指定するのにボタンの名前を使います。しかし、TinyAppのようにソースコードがあるのでない限り、ボタンの名前を知るのは難しいことです。ボタンの名前ではなく、ラベルを使って指定するための手順を考えて下さい。手順が分かったら、Scriptorアプリケーションを改変するか、または自分でアプリケーションを作って実際にプログラミングを行い、それが正しいかどうかを確認してみて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 6</div>
+
+  第7章の練習問題10で作った汎用のイベントスケジューラに対し、イベントを表わすプロパティと、そのプロパティに対して許すコマンドを決め、専用のスイートを定義して下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 7</div>
+
+  練習問題6のスイート定義ができたら、イベントスケジューラのクラスでResolveSpecifier()メソッドとGetSupportedSuite()メソッドを再定義し、スクリプト対応させて下さい。<br/>
+
+<br/>
+
+ <div id="practice">練習問題 8</div>
+
+  8.3.2の説明の最後で、BMessengerを使えば他のアプリケーション内のオブジェクトと直接メッセージ通信を行えると書きました。しかし、厳密にいうとこれは正しくありません。BeOSでは、メッセージ通信はマイクロカーネルが提供するスレッド間通信機構(ポート)によって行われることを思い出して下さい。このことと、BLooperクラスとBHandlerクラスによるメッセージ通信のフレームワークの働きを考え合わせ、BMessengerを使ったメッセージが、どのようにして他のアプリケーション内のBHandlerオブジェクトへ送られるのかを想像してみて下さい。<br/>
+
+(ヒント:実は、BHandlerオブジェクトにはBLooperオブジェクトだけが知ることのできる特殊なIDが付いており、BLooperはそれを使ってBHandlerを特定できるのです。)<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
+
+<hr>
+<address>
+Art of BeOS Programming<br/>
+koga@stprec.co.jp
+</address>
+
+
+</div><!-- End of main -->
+
+</div><!-- End of pagewidth -->
+
+</body>
+
+</html>
+

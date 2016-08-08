@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 5: 2000</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume5.html" title="Volume 5: 2000" /><link rel="prev" href="Issue5-10.html" title="Issue 5-10, March 8, 2000" /><link rel="next" href="Issue5-12.html" title="Issue 5-12, March 22, 2000" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue5-10.html" title="Issue 5-10, March 8, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue5-12.html" title="Issue 5-12, March 22, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 5: 2000</div></div><div id="headerB">Prev: <a href="Issue5-10.html">Issue 5-10, March 8, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-12.html">Issue 5-12, March 22, 2000</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue5-11"></a>Issue 5-11, March 15, 2000</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop5-11"></a>Developers' Workshop: Writing a USB Video Camera Driver, Part 1</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Todd</span> <span class="surname">Thomas</span></span></div></div></div><p>
+This week and in my next article, I'm going to show you, function by
+function, how to write a BeOS driver for a USB Video camera—or at
+least how I wrote one. Before you get too excited, let me say that the
+cameras this driver supports are getting a bit long in the tooth, and may
+be hard to find in retail stores these days. Also, this driver requires
+support for isochronous transactions in the USB stack, so it will only
+work with the upcoming BeOS 5 release.
+</p><p>
+Vision VLSI Ltd. <a class="ulink" href="http://www.vvl.co.uk">http://www.vvl.co.uk</a> makes their Colour Processor
+Interface ASIC (CPiA) documentation available for those who want to write
+drivers for it. This documentation has been used to create a CpiA driver
+for Linux; links to the docs we'll use to write the BeOS driver are at
+<a class="ulink" href="http://webcam.sourceforge.net/#info">http://webcam.sourceforge.net/#info</a>. The most important document is the
+Software Developer's Guide for CPiA Cameras
+<a class="ulink" href="http://webcam.sourceforge.net/docs/developer.pdf">http://webcam.sourceforge.net/docs/developer.pdf</a>. You can also find a
+list of supported cameras at <a class="ulink" href="http://webcam.sourceforge.net/#cams">http://webcam.sourceforge.net/#cams</a>. I'm
+using the Ezonics EZCam USB (not the Pro or Plus version), which I picked
+up at a local store about a month ago. I'm not sure about the
+availability of the other cameras. Vision VLSI Ltd. is still around,
+still making ASICs that appear to use some version of the CPiA command
+set, so there may be some new cameras this driver could support with
+little or no modification. We'll see.
+</p><p>
+In this first article, I'll discuss implementing basic driver
+functionality, and how to send CPiA commands to the camera so its various
+parameters and modes can be set. I'll cover some material that's been
+covered before, because hearing the same thing two different ways can be
+helpful. To quote our esteemed QA Manager
+<a class="ulink" href="http://www.catastropherecords.com/StThomas.mp3">http://www.catastropherecords.com/StThomas.mp3</a>, "This is the long
+boring part." In my next article, I'll tackle getting and processing
+video data from the camera. You can find the code for this week's
+incarnation of the driver at
+&lt;ftp://ftp.be.com/pub/samples/drivers/CPiA.zip&gt;. Grab it and follow along.
+</p><p>
+The driver comprises three source files: <code class="filename">CPiA.c</code> contains all function
+implementations; <code class="filename">CPiA.h</code>
+contains definitions the public clients of the
+driver will require, such as opcode constants and a parameter struct for
+<code class="function">ioctl()</code>; and <code class="filename">CPiA_priv.h</code>
+contains typedefs and constants used privately
+by <code class="filename">CPiA.c</code>. Since there's only one source file, it's not strictly
+necessary for <code class="filename">CPiA_priv.h</code>
+to be a separate file, but it keeps things
+organized.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id450293"></a>Exported Symbols</h3></div></div></div><p>
+All BeOS drivers—USB or not—must export certain functions and
+values so the kernel can load and interact with them. I'll refer to these
+as the exported symbols. They've been discussed several times before, but
+let's review them in the context of USB drivers and the CPiA driver in
+particular.
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id450308"></a>api_version</h4></div></div></div><p>
+The first exported symbol is the easiest to implement: it's the <span class="type">int32</span>
+value <code class="varname">api_version</code>, and a driver simply needs to include the line
+</p><pre class="programlisting cpp">
+<span class="type">int32</span> <code class="varname">api_version</code> = <code class="constant">B_CUR_DRIVER_API_VERSION</code>;
+</pre><p>
+to fulfill its obligation. <code class="constant">B_CUR_DRIVER_API_VERSION</code> is defined in
+<code class="filename">Drivers.h</code>, and as you might guess, it lets the kernel know which
+version of the driver API a driver uses.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id450361"></a>init_hardware()</h4></div></div></div><p>
+<code class="function">init_hardware()</code> is called only once in a particular runtime session
+(i.e., from boot to shutdown). For devices that remain connected to the
+computer for an entire runtime session—such as ISA and PCI cards—it
+may make sense to use <code class="function">init_hardware()</code> to see if the device is indeed
+connected and put it into a known initial state. However, it's not too
+useful in drivers for devices that can be hot-plugged while BeOS is
+running— such as USB devices—because the device may not be plugged
+until after the first time the kernel loads its driver. Therefore, if
+you're one of those short attention span types who's been looking for
+<code class="function">init_hardware()</code> in <code class="filename">CPiA.c</code>,
+stop—it's not there. Implementing it is
+optional, and I chose not to for this driver.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id450398"></a>init_driver()</h4></div></div></div><p>
+<code class="function">init_driver()</code>, on the other hand, is called every time a driver is loaded
+by the kernel, and must be implemented by all drivers. <code class="function">init_driver()</code>
+should allocate resources that will be needed as long as the driver
+remains loaded. USB drivers should take this opportunity to introduce
+themselves to the USB (Bus) Manager like so:
+</p><pre class="programlisting c">
+<span class="comment">/* declare these globally */</span>
+static <span class="type">char*</span> <code class="varname">usb_name</code> = <code class="constant">B_USB_MODULE_NAME</code>;
+static <span class="type">usb_module_info *</span><code class="varname">usb</code>;
+
+<span class="type">usb_support_descriptor</span> <code class="varname">supported_devices</code>[] =
+{
+    0, 0, 0, <code class="constant">VENDOR_ID</code>, <code class="constant">PRODUCT_ID</code> }
+};
+
+...
+
+<span class="comment">/* do this in init_driver() */</span>
+if (<code class="function">get_module</code>(<code class="varname">usb_name</code>,(<span class="type">module_info**</span>)&amp;<code class="varname">usb</code>) != <code class="constant">B_OK</code>) {
+    <code class="function">dprintf</code>(ID "cannot get module \"%s\"\n", <code class="varname">usb_name</code>);
+    return <code class="constant">B_ERROR</code>;
+}
+<code class="function">dprintf</code>(ID "usb module at %p\n", <code class="varname">usb</code>);
+
+<code class="varname">usb</code>-&gt;<code class="function">register_driver</code>(<code class="constant">DEVICE_NAME</code>, <code class="varname">supported_devices</code>, 1,
+    <code class="constant">NULL</code>);
+<code class="varname">usb</code>-&gt;<code class="function">install_notify</code>(<code class="constant">DEVICE_NAME</code>, &amp;<code class="varname">notify_hooks</code>);
+</pre><p>
+(Okay, you don't have to use <code class="function">dprintf()</code> so gratuitously, but I like to. To
+review, <code class="function">dprintf()</code> works just like good 'ol <code class="function">printf()</code>, but it spews its
+bits to COM 1 so you can catch them on another computer using a null
+modem cable and a terminal program set to 19200 baud, 8 data bits, no
+parity, 1 stop bit, and no flow control. This is serial debugging, and
+it's pretty much indispensable for driver development. You can turn on
+serial debugging by hitting the delete key as soon as the BeOS boot
+screen comes up, or during runtime by hitting
+<span class="keysym">alt</span>+<span class="keysym">printscreen</span>+<span class="keycap">d</span> to jump
+into the kernel debugger, then typing <span class="keycap">c</span> to continue.)
+</p><p>
+The code above gets a pointer to the USB Manager module by calling
+<code class="function">get_module()</code> with the name <code class="constant">B_USB_MODULE_NAME</code>. Then it calls the USB
+Manager's <code class="function">register_driver()</code> function to tell the Manager which devices it
+would like to receive notifications about. For CPiA, I specify the vendor
+and product fields of the usb_support_descriptor explicitly; for more
+generic drivers, you can specify something other than the wildcard 0 for
+<code class="varname">dev_class</code>, <code class="varname">dev_subclass</code>,
+and/or <code class="varname">dev_protocol</code> fields. How can you find out
+what the vendor and product IDs of some random USB device are? It's as
+simple as plugging the device in with serial debugging turned on. Among
+lots of other useful output, you'll see a line like
+</p><pre class="screen">
+vendor/product id: 0x0553 / 0x0002
+</pre><p>
+Next, the USB Manager's <code class="function">install_notify()</code> function is called. This
+provides addresses of the hook functions that will be called when various
+events occur on the USB bus. Currently only two hooks are defined:
+</p><pre class="programlisting c">
+typedef struct <span class="type">usb_notify_hooks</span> {
+    <span class="type">status_t</span> (*<code class="varname">device_added</code>)(<span class="type">constusb_device</span> *<code class="parameter">device</code>,
+        <span class="type">void</span> **<code class="parameter">cookie</code>);
+    <span class="type">status_t</span> (*<code class="varname">device_removed</code>)(<span class="type">void</span> *<code class="parameter">cookie</code>);
+} <span class="type">usb_notify_hooks</span>;
+</pre><p>
+As you may have guessed, <code class="function">device_added()</code> is called whenever a device
+matching the <span class="type">usb_support_descriptor</span> provided in <code class="function">register_driver()</code> is
+added to the USB, and <code class="function">device_removed()</code> is called when it is removed. You
+may not have guessed that <code class="function">device_added()</code> is also called after you call
+<code class="function">install_notify()</code>, and <code class="function">device_removed()</code> is called after you call
+<code class="function">uninstall_notify()</code>, if the device is connected at those times.
+</p><p>
+Lastly, CPiA's implementation of <code class="function">init_driver()</code> creates a semaphore to
+synchronize access to the information about the currently connected
+camera (remember that multiple threads can be executing a driver's code,
+so protect that global data!). The semaphore name refers to a "table" of
+devices, but currently the CPiA driver only supports one camera as a
+simplification. However, next week's version may support more than one
+camera, and some code in this version is designed for that possibility.
+The number of devices a driver may support has no artificial limit in
+BeOS, but there are some practical concerns specific to each device that
+should be considered. For example, USB bandwidth is theoretically 12Mbps,
+so supporting two 10Mbps USB devices may not work out well.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id442313"></a>publish_devices()</h4></div></div></div><p>
+The kernel calls <code class="function">publish_devices()</code> after <code class="function">init_driver()</code> to get the names
+by which the driver wishes to be known in the
+<code class="filename">/dev</code> hierarchy. CPiA is a
+USB video device, so it returns <code class="filename">video/usb/CPiA/0</code> from this function if
+there is a device connected at the time it's called. If the driver
+supported more than one device, it would be published as
+<code class="filename">/dev/video/usb/CPiA/0</code>, <code class="filename">/dev/video/usb/CPiA/1</code>, and so on. Furthermore, a
+single driver can publish multiple logical devices of different
+functionality if the physical device has such capabilities. For example,
+many sound cards also have a MIDI port; a driver for such a card might
+publish devices in both <code class="filename">/dev/audio/</code>
+and <code class="filename">/dev/midi/</code>.
+</p><p>
+Before the dev_names string array is filled out, though, it is freed if
+it remains filled out from a previous call. The only safe times to free
+this array are in <code class="function">publish_devices()</code> after the first time it is called,
+and in <code class="function">uninit_driver()</code>. At any other time the array may still be in use.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id442386"></a>find_device()</h4></div></div></div><p>
+<code class="function">find_device()</code> is called by the kernel when a potential client calls the
+POSIX function <code class="function">open()</code> on a driver, so the driver can provide its
+implementation of <code class="function">open()</code> and its friends
+<code class="function">close()</code>, <code class="function">ioctl()</code>, <code class="function">read()</code>
+<code class="function">write()</code>, etc. It does this by returning a <span class="type">device_hooks</span> structure filled
+out with the addresses of its implementations of those functions. If a
+device supports multiple logical devices of different functionality as
+described above, it should check the argument of <code class="function">find_device()</code> to see
+which logical device is being opened, and provide the corresponding set
+of hooks. More on the implementation of these hook functions in my next
+article.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id442929"></a>uninit_driver()</h4></div></div></div><p>
+<code class="function">uninit_driver()</code> is called just before a driver is unloaded by the kernel.
+It's the last chance to free resources allocated in <code class="function">init_driver()</code> and
+elsewhere. In the CPiA implementation, the <code class="varname">dev_names</code> string array used in
+<code class="function">publish_devices()</code> is freed, the USB Manager function
+<code class="function">uninstall_notify()</code>
+is called to inform the Manager that the driver will no longer be
+requiring notifications, the <code class="varname">dev_table_lock</code> semaphore is recycled, and --
+lastly—the "connection" to the USB Manager is severed. At this point,
+that certain lady has finished singing for the CPiA driver.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id442972"></a>USB Notification Hooks</h3></div></div></div><p>
+As introduced in <code class="function">init_driver()</code> above, USB drivers must implement a set of
+hook functions that are called when certain events occur on the USB.
+</p><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id442988"></a>device_added()</h4></div></div></div><p>
+The main tasks to accomplish in <code class="function">device_added()</code> are creating and
+initializing a cookie that contains device state information and
+resources, and verifying that the device has the capabilities we expect
+and that it is working properly.
+</p><p>
+The CPiA device cookie is defined in
+<code class="filename">CPiA_priv.h</code> and looks like so:
+</p><pre class="programlisting c">
+typedef struct <span class="type">device</span> <span class="type">device</span>;
+struct <span class="type">device</span> {
+    <span class="type">usb_device*</span> <code class="varname">dev</code>; <span class="comment">/* opaque handle */</span>
+    <span class="type">bool</span>     <code class="varname">connected</code>; <span class="comment">/* is the device plugged into the
+                         ** USB? */</span>
+    <span class="type">int32</span>     <code class="varname">open_count</code>; <span class="comment">/* number of clients of the
+                         ** device */</span>
+    <span class="type">int32</span>     <code class="varname">num</code>; <span class="comment">/* instance number of the device */</span>
+    <span class="type">uchar</span>     <code class="varname">vers</code>[4]; <span class="comment">/* data returned from
+                         ** GetCPIAVersion command */</span>
+    <span class="type">sem_id</span>     <code class="varname">lock</code>; <span class="comment">/* synchronize access to the device */</span>
+    <span class="type">sem_id</span>     <code class="varname">cmd_complete</code>; <span class="comment">/* available on completion
+                         ** of CPiA command */</span>
+    <span class="type">area_id</span>     <code class="varname">buf_id</code>; <span class="comment">/* ID of buffer for data returned
+                         ** from CPiA command */</span>
+    <span class="type">void*</span>         <code class="varname">buf</code>; <span class="comment">/* data returned from CPiA command */</span>
+    <span class="type">size_t</span>         <code class="varname">actual_len</code>; <span class="comment">/* length of data returned by
+                         ** CPiA command */</span>
+    <span class="type">status_t</span>     <code class="varname">cmd_status</code>; <span class="comment">/* result of command */</span>
+    <span class="comment">/* temp */</span>
+    <span class="type">usb_pipe*</span>     <code class="varname">video_in</code>;
+    <span class="type">uint16</span>     <code class="varname">max_packet_size</code>;
+};
+</pre><p>
+The comments should give you a rudimentary idea what each field is used
+for. Perhaps the most important field is dev, which is the handle to the
+USB stack's notion of the device. It's opaque to clients of the stack,
+but must be passed to any USB Manager functions that need to know which
+device you'd like to operate on. The fields after <span class="comment">/* temp */ will most</span>
+likely be moved to another cookie next week.
+</p><p>
+For CPiA, I've broken out the cookie creation and initialization process
+into two additional functions. <code class="function">add_device()</code> allocates memory for a device
+structure and adds it to the device "table," which is currently a single
+pointer named connected_device. Again, only one connected device is
+supported right now for simplicity. <code class="function">add_device()</code> in turn calls
+<code class="function">init_device()</code>, which sets the fields to sane values and allocates the
+resources they represent.
+</p><p>
+If <code class="function">add_device()</code> succeeds, <code class="function">device_added()</code>'s cookie parameter is set to
+point to the newly created device structure. This pointer is passed to
+the <code class="function">device_removed()</code> USB notification hook so its resources can be
+properly reclaimed. It will also be passed to each of the device hooks
+described below. Any device-specific data that needs to persist between
+USB notification hook calls and device hook calls must live in the cookie.
+</p><p>
+After successfully setting up the cookie, the CPiA driver issues two CPiA
+commands to the camera, to get its version information and to check it
+for any errors that may have been discovered during its Power On Self
+Test (POST). The workings of <code class="function">issue_cpia_command()</code> will be discussed in
+the next section.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id443281"></a>device_removed()</h4></div></div></div><p>
+<code class="function">device_removed()</code> marks the device as being removed. If the device's ref
+count (<code class="code"><code class="varname">dev</code>-&gt;<code class="varname">open_count</code></code>)
+is zero, no clients have the device open, so its
+cookie is freed by calling <code class="function">remove_device()</code>,
+which calls <code class="function">deinit_device()</code>
+to free the cookie's dynamically allocated resources.
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id518677"></a>Issuing CPiA Commands</h3></div></div></div><p>
+Vision VLSI thoughtfully gave CPiA commands the same format as USB SETUP
+packets, which means it's a cinch to issue them to the camera using the
+USB Manager's <code class="function">queue_request()</code> function.
+</p><p>
+First some terminology. USB is completely host-centric and
+host-controlled, where "host" means the USB controller to which USB
+devices are connected. All movement of data is described with reference
+to the host. OUT always means movement from the host to a device on the
+bus; IN always means movement from a device to the host. Devices can't
+initiate data transfer on their own, nor communicate directly with each
+other. All data transfer is initiated by the host.
+</p><p>
+There are four types of USB data transfers: bulk, interrupt, isochronous,
+and control. All USB devices support control transfers and have an
+endpoint (a data sink and/or source) dedicated to them. A control
+transfer begins with the host sending an 8-byte SETUP packet to the
+device. The device may then respond with a DATA IN packet.
+</p><p>
+As documented in the Software Developer's Guide for CPiA Cameras, each
+CPiA command consists of 8 bytes in the SETUP packet format. The first
+byte indicates the type of command (whether or not a DATA IN packet will
+follow the SETUP packet). The second byte uniquely identifies the CPiA
+command. The next 4 bytes can be used individually or in various
+aggregations as parameters to the command. The last 2 bytes give the size
+of the following DATA IN packet, if any.
+</p><p>
+The function <code class="function">issue_cpia_command()</code> in
+<code class="filename">CPiA.c</code> makes it convenient to issue
+a command exactly as it is presented in the Developer's Guide, because it
+takes each of the 8 bytes of the command as a separate parameter. It's
+really just a wrapper for the USB Manager's <code class="function">queue_request()</code> function.
+<code class="function">queue_request()</code> takes the same 8 bytes as parameters, although it
+slightly complicates matters by combining the latter 6 bytes into 3
+shorts.
+</p><p>
+The "queue" in its name is a clue that <code class="function">queue_request()</code> operates
+asynchronously; consequently, it also takes as a parameter a function to
+be called when the transaction is complete. To wait for that completion
+before returning, <code class="function">issue_cpia_command()</code> immediately tries to acquire a
+semaphore in the device cookie that has been initialized to 0—thus the
+call to <code class="function">acquire_sem()</code> blocks. That semaphore is only released in the
+completion routine <code class="function">cpia_command_callback()</code>, after the requested data (if
+any) has been copied into the cookie's buffer.
+</p><p>
+The strategy of using a zero-initialized semaphore to wait for completion
+of an asynchronous function will come in handy again next week when we
+start streaming video data from the camera. The CPiA uses isochronous
+transfers to do that, and the USB manager has a <code class="function">queue_isochronous()</code>
+function we'll use to fill our buffers with pixels.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id540387"></a>Device Hooks</h3></div></div></div><p>
+In addition to the exported symbols, all BeOS drivers must also implement
+certain functions that provide the functionality of the familiar POSIX
+functions <code class="function">open()</code>, <code class="function">close()</code>,
+<code class="function">ioctl()</code>, <code class="function">read()</code>, <code class="function">write()</code>, etc. I'll call these
+functions the device hook functions. As they are accessed through the
+function pointers in the <span class="type">device_hooks</span> structure returned by
+<code class="function">find_device()</code>, you can name them anything you want (unlike the exported
+functions), but it is customary to name them &lt;logical device&gt;_&lt;hook
+name&gt;. For example, the hook functions for the MIDI part of a sound card
+driver might be named <code class="function">midi_open()</code>, <code class="function">midi_write()</code>, etc. Since CPiA only
+publishes one kind of logical device, I'll just use <code class="function">device_open()</code>, etc.
+</p><p>
+Our time's almost up for this article, however, so we'll discuss the
+implementation of the device hook functions in my next article.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id540450"></a>So What?</h3></div></div></div><p>
+The CPiA driver is not very exciting yet. Well, there's a bit more
+implemented in the sample code than what I've covered so far, including the
+device hooks. Feel free to explore those, especially <code class="function">device_control()</code>,
+where you may find some more interesting stuff. The file <code class="filename">test.cpp</code> also
+contains the beginnings of a basic test harness we'll use to exercise the
+driver. 'Til next time...
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee5-11"></a>What About the X-Box?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+After Microsoft's announcement, last week, I received mail regarding the
+availability of BeOS on the X-Box. As one correspondent noted, it would
+be good, mischievous fun to imagine the effect of BeOS—a true media OS
+-- on a dream media platform such as the X-Box. The suggestion gives me
+an opportunity to clarify our position, to restate what our focus really
+is.
+</p><p>
+First, though, let's see what we think we know about the X-Box: 600 Mhz
+Pentium, 64 Mb of RAM, 8 Gb for the hard disk, DVD player, high-speed
+rendering chip from nVidia, 3D audio processor, and I/O for Ethernet,
+game controllers, and the like. The X-Box site makes a generic reference
+to an x-86 processor, but Intel appears to have won the last round in the
+beauty contest (it would be interesting to know the quid pro quo).
+</p><p>
+As for the software engine, the Wall Street Journal, in its account of
+the "rebel" project inside Microsoft, refers to "the core of Windows
+2000," or words to that effect. The price wasn't specified, but rumors
+peg it around $300, or less. Game developers will have more details soon,
+and the product is slated to be available in about 18 months, in time for
+the 2001 Xmas season.
+</p><p>
+At first glance, it looks more like a PC than a game console. Everything
+comes from the PC-clone organ bank: the hardware, the software, and this
+being Microsoft, the world view. This leads some critics to predict
+failure, for cultural reasons. One local wag calls the X-Box Game Bob;
+others say that 18 months is a long time, the X-Box is too big, too
+expensive.
+</p><p>
+By contrast they say that the Play Station is a dedicated machine, not a
+tricked-up PC. This rehashes an old argument about the advantages of
+dedicated hardware versus the benefits of the PC-clone organ bank. The
+latter might not always be the prettiest, but the volume and competition
+in the PC world make the ecosystem brilliantly efficient. On the other
+hand, on a game console, the real CPU is the graphics engine and the
+"classical" microprocessor is more an ancillary unit passing display
+lists to the graphics chip, an ASIC doing the "real work" of high-speed
+rendering.
+</p><p>
+Back to the question. The X-Box looks pretty close to a PC and promises
+exciting multimedia hardware, so isn't it a "natural" for BeOS? For
+argument's sake, let's explore the "how" of this. First, we would need
+Microsoft's blessing to get the hardware specs, when available. That's
+not likely—the blessing, that is, not the availability. This would put
+us in the position of doing some kind of reverse- engineering. No thanks.
+Life is fun in the Internet Appliance space, where Microsoft doesn't
+control much of anything—at least for now, so let's enjoy it.
+</p><p>
+Of course, one could speculate about Microsoft's motive with this
+announcement. Is it offensive strategy to conquer territory, or is it a
+defensive maneuver against Sony, Nintendo, and Sega invading the home and
+becoming players in Internet access? I'd bet on the latter. By 2001, game
+consoles will all offer high-speed, always-on Internet access; there will
+be lots of content to view and sell. This would further diminish
+Microsoft's efforts to establish MSN as a premier portal for the
+Internet. Conversely, a Microsoft game console with high-speed Internet
+access is a great vehicle for MSN, for attracting gamers, multiplayer
+games, selling music—to name but a few possibilities.
+</p><p>
+I also noticed another line of speculation. Who will hack into the X-Box,
+write drivers, and make it run Windows and Windows applications? I didn't
+ask why, but who. In any case, it will be interesting to watch what
+happens to the X-Box. Will it be CE'd by Sony, Nintendo, and others? Will
+it really give rise to a new industry segment? Or is it just another
+paper tiger like the Zero Administration PC, the Net-PC, and the Simple
+PC?
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue5-10.html">Issue 5-10, March 8, 2000</a>  Up: <a href="volume5.html">Volume 5: 2000</a>  Next: <a href="Issue5-12.html">Issue 5-12, March 22, 2000</a> </div><div id="footerB"><div id="footerBL"><a href="Issue5-10.html" title="Issue 5-10, March 8, 2000"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume5.html" title="Volume 5: 2000"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue5-12.html" title="Issue 5-12, March 22, 2000"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

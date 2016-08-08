@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-15.html" title="Issue 1-15, March 20, 1996" /><link rel="next" href="Issue1-17.html" title="Issue 1-17, April 3, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-15.html" title="Issue 1-15, March 20, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-17.html" title="Issue 1-17, April 3, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-15.html">Issue 1-15, March 20, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-17.html">Issue 1-17, April 3, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-16"></a>Issue 1-16, March 27, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-16"></a>Be Engineering Insights: A Recipe for Smooth Animation</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Robert</span> <span class="surname">Polic</span></span></div></div></div><p>
+There are two ways to do animation on the BeBox: Animate directly to the
+screen or animate to an off-screen bitmap and render the results to the
+screen.
+</p><p>
+The "direct-to-screen" approach may seem easier at first, and may even be
+acceptable for rastered images, but for vectored images or images made up
+of multiple rastered images, it usually results in flickery animation.
+</p><p>
+The "off-screen" approach is easy to implement and results in very smooth
+animation, since the user only sees new frames when they're completed --
+not the steps required to draw each new frame. Of course there's no free
+lunch: The off-screen approach does involve writing about 10 more lines
+of code and there's a memory requirement for each off-screen bitmap.
+</p><p>
+The purpose of this article is to show how easy it is to use the
+off-screen approach, using example code for creating a slider that's made
+up of two parts: A background and a knob. The example draws the
+background from scratch each time, since it's a simple object. The knob
+is a canned graphic that we've created elsewhere (see Steve Horowitz's
+excellent article in last week's newsletter, "Be Engineering Insights:
+craw, shex, and script: Excuse Me?").
+</p><p>
+(Of course we could draw the slider directly to the screen, but every
+time the knob moved, the user would see the background redraw over the
+knob and then see the knob drawn onto the new background—not very
+pretty.)
+</p><p>
+The first step is to create the on-screen view that we'll render into in
+the window that we've already created:
+</p><pre class="programlisting cpp">
+<code class="classname">BRect</code> <code class="varname">r</code>.<code class="methodname">Set</code>(<code class="constant">SLIDER_L</code>,
+            <code class="constant">SLIDER_T</code>,
+            <code class="constant">SLIDER_L</code> + <code class="constant">SLIDER_WIDTH</code>,
+            <code class="constant">SLIDER_T</code> + <code class="constant">SLIDER_HEIGHT</code>);
+
+<code class="classname">TSliderView</code> <code class="varname">slider_view</code> = new <code class="classname">TSliderView</code>(<code class="varname">r</code>, "slider");
+<code class="methodname">AddChild</code>(<code class="varname">slider_view</code>);
+</pre><p>
+Since we're using a canned graphic for the knob, we might as well create
+a bitmap for it in the constructor for <code class="classname">TSliderView</code>:
+</p><pre class="programlisting cpp">
+<code class="classname">BRect</code> <code class="varname">r</code>.<code class="methodname">Set</code>(0, 0, <code class="constant">KNOB_WIDTH</code>, <code class="constant">KNOB_HEIGHT</code>);
+<span class="type">unsigned char*</span> <code class="varname">knob</code> = new <code class="classname">BBitmap</code>(<code class="varname">r</code>, <code class="constant">B_COLOR_8_BIT</code>);
+
+<code class="varname">knob</code>-&gt;<code class="methodname">SetBits</code>(<code class="varname">slider_bits</code>,
+              <code class="varname">knob-&gt;</code><code class="methodname">BitsLength()</code>, 0,
+              <code class="constant">B_COLOR_8_BIT</code>);
+</pre><p>
+(If the original graphic is a 24-bit bitmap, replace <code class="constant">B_COLOR_8_BIT</code> with
+<code class="constant">B_RGB_32_BIT</code>.)
+</p><p>
+The next step is to create the off-screen bitmap that has the same
+dimensions as our on-screen view, and an off-screen view that we'll draw
+into:
+</p><pre class="programlisting cpp">
+<code class="varname">r</code> = <code class="methodname">Bounds()</code>;
+<span class="type">unsigned char*</span> <code class="varname">offscreen</code> = new <code class="classname">BBitmap</code>(<code class="varname">r</code>,
+                                       <code class="constant">B_COLOR_8_BIT</code>,
+                                       <code class="constant">true</code>);
+
+<code class="constant">BView</code> <code class="varname">offview</code> = new <code class="classname">BView</code>(<code class="varname">r</code>,
+                          "off",
+                          <code class="constant">B_FOLLOW_ALL</code>,
+                          <code class="constant">B_WILL_DRAW</code>);
+
+<code class="varname">offscreen</code>-&gt;<code class="methodname">AddChild</code>(<code class="varname">offview</code>);
+</pre><p>
+Note: When you're creating a bitmap that you intend to attach a view to,
+the left and top values for the bounds must be 0.0.
+</p><p>
+That's it for creating an off-screen drawing environment. Now we need to
+draw into it. First we lock the view's parent to prevent anyone else from
+accessing it:
+</p><pre class="programlisting cpp">
+<code class="varname">offscreen-&gt;</code><code class="methodname">Lock()</code>;
+</pre><p>
+Next, start drawing:
+</p><pre class="programlisting cpp">
+<code class="varname">r</code> = <code class="varname">offview</code>-&gt;<code class="methodname">Bounds()</code>; <span class="comment">// get view's bounds</span>
+<code class="varname">offview</code>-&gt;<code class="methodname">SetHighColor</code>(R, G, B); <span class="comment">// set view's high color</span>
+<span class="comment">// same as on screen</span>
+<code class="varname">offview</code>-&gt;<code class="methodname">FillRect</code>(<code class="varname">r</code>); <span class="comment">// fill bitmap with color</span>
+
+<span class="comment">// draw the slider background...</span>
+<code class="varname">offview</code>-&gt;<code class="methodname">SetHighColor</code>(0, 0, 0); <span class="comment">// set pen to black</span>
+<code class="varname">offview</code>-&gt;<code class="methodname">StrokeLine</code>(<code class="classname">BPoint</code>(x, y), <code class="classname">BPoint</code>(x1, y1));
+.
+.
+.
+
+<span class="comment">// copy the knob</span>
+<code class="varname">r</code>.<code class="methodname">Set</code>(<code class="varname">knob_x</code>,
+<code class="varname">knob_y</code>,
+<code class="varname">knob_x</code> + <code class="constant">KNOB_WIDTH</code>,
+<code class="varname">knob_y</code> + <code class="constant">KNOB_HEIGHT</code>);
+<code class="varname">offview</code>-&gt;<code class="methodname">DrawBitmap</code>(<code class="varname">knob</code>, <code class="varname">knob</code>-&gt;<code class="methodname">Bounds()</code>, <code class="varname">r</code>);
+</pre><p>
+The last step is to render the result to the screen and unlock the view's
+parent:
+</p><pre class="programlisting cpp">
+<code class="varname">offview</code>-&gt;<code class="methodname">Sync()</code>; <span class="comment">// make sure rendering is done</span>
+<code class="methodname">DrawBitmap</code>(<code class="varname">offscreen</code>, <code class="classname">BPoint</code>(0, 0));
+<code class="varname">offscreen</code>-&gt;<code class="methodname">Unlock()</code>;
+</pre><p>
+That's all there is to it. Of course, don't forget to delete the bitmaps
+that were created in the <code class="classname">SliderView</code>'s destructor. Look for the full
+source example of this slider on our FTP site:
+ftp.be.com/pub/Samples/Slider.tar.Z (the file is also available in .zip
+and .sea.hqx formats).
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id478521"></a>Be Developer Profile: Stairways Software Pty. Ltd.</h2></div></div></div><p>
+Last week, Peter N. Lewis of Stairways Software Pty. Ltd. voyaged all the
+way to the U.S. from Perth, Australia, just to visit us at Be. Well, OK,
+so he also came to spend some time with our friends at Metrowerks in
+Texas, but we're pretty sure hitting up Jean-Louis for another BeBox was
+his real mission.
+</p><p>
+Peter N. Lewis may be a familiar name to many of you. A well-respected,
+long-time Macintosh developer, he's a thriving shareware and freeware
+developer with a long list of Internet applications to his credit. Among
+them: Anarchie, an FTP and Archie client, which you can use to browse FTP
+sites and upload and download files, and NetPresenz (previously called
+FTPd), which you can use to turn your system into an FTP, WWW, or Gopher
+server.
+</p><p>
+As a communications developer running up against the proverbial
+performance walls of traditional PC architectures, Lewis believes "The
+BeBox has a lot of potential for the future. It's a simple, clean system
+—something lots of developers would like to get back to. With its
+multiprocessor design, it's also Internet-capable and fast!"
+</p><p>
+The modern <span class="trademark">Be OS</span>™ is also a big draw with its preemptive multitasking
+and memory protection. "I write mostly Macintosh communication programs,
+and not having preemptive multitasking is a real problem." In addition,
+one of the most attractive aspects from a technology adoption viewpoint
+is that "the framework is built right into the box, so you don't have to
+wait for the framework to catch up in order to take advantage of new
+capabilities."
+</p><p>
+As a shareware developer, Lewis admits that the BeBox isn't a financially
+viable platform for him yet. Typically, he finds that only 2 to 20
+percent of shareware users take the time to send in shareware fees (he
+thinks "about the price of a paperback book"—or $10—is reasonable).
+This means a platform needs a large installed base before a shareware
+developer like him begins to see black on the bottom line. Even so, he
+believes in the BeBox's potential so much that he's already written a web
+server for it. And he's feeling "a little guilty" that he can't be doing
+more for the BeBox right now, as he embarks on a few-months break from
+his work in Australia.
+</p><p>
+"I hope the BeBox picks up enough users so that I can start to develop
+seriously for it. It's certainly a lot easier to program for than the
+Macintosh, despite using C++," he says. "And if we get some good
+languages on the BeBox, then it will be even more pleasant. I wonder how
+hard it would be to build a Java interpreter straight into the OS?"
+</p><p>
+Why would he recommend other developers consider the BeBox? "Because it
+gives you an opportunity to get in on the ground floor. Because it's much
+easier than developing for other machines. Because there's no
+competition. And because it's fun!"
+</p><p>
+"As a Macintosh developer, I've heard all the reasons why I should
+develop for the PC, but I'm still writing for the Macintosh."
+</p><p>
+And now, the BeBox.
+</p><p>
+For more information on Stairways Software Pty. Ltd.'s Internet
+solutions, visit their web site at:
+http://www.share.com/share/peterlewis/.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-16"></a>Forward Motion</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+"All right," they say, "your OS offers some advantages, we'll concede
+that. But just you wait, the moment The Big Guys wake up and realize you
+have some interesting advantage, they'll unleash their immense technical
+and marketing resources. In no time, they'll catch up with you, meet or
+beat all your differentiating features. Add their marketing might and
+you'll be reduced to a footnote." Thank you, may we go quietly now?
+</p><p>
+Fortunately for all of us having one kind of stake or another in Be's
+future, it's not quite like that. On the contrary, even if it appears a
+little counter intuitive, we're more likely to increase our technical
+lead than to see our noble and worthy elders catch up with us. This, of
+course, makes all sorts of assumptions about us staying focused,
+vigilant, hungry, and mindful of our station in life. We have a lot to
+prove. With this cautious frame of mind, let's turn to life inside the
+sausage factories, to building system software. Call it entropy, call it
+politics, but any piece of software inevitably reflects the age, the
+mores, the size of the organization that built it. Your coefficients may
+vary, but the formula stays the same. And it will apply to us,
+eventually. For The Big Guys, large incremental projects need more and
+more time between major releases.
+</p><p>
+Even the best-run company in the business, Microsoft, needed about five
+years between Windows 3.0 and Windows 4.0 (as your hard disk knows it --
+Windows 95 for us humans). Apple will need a similar amount of time to
+move from System 7 to System 8 (a/k/a Copland). For the previous
+iteration, the time interval was 2 to 3 years. The same phenomenon
+applied to major releases of mini and mainframe operating system
+software. After an exuberant youth, software settles down and the
+interval between major releases increases. Put another way, the more
+mature PC operating systems are entering a phase of diminishing returns,
+while we're still on the early, ascending part of the curve.
+</p><p>
+Invoking "Skunk Works" might sound both pretentious and overused. Still,
+Ben Rich's and Leo Janos' book (now in paperback at $14.95, unfortunately
+defaced by a Tom Clancy quote...) is a wonderful read—a rich source of
+inspiration and analogies. They offer good models when contemplating what
+a small, focused organization of engineering demigods can accomplish: The
+U-2, the SR-71, the Stealth fighter no less. They also offer sad models,
+such as when the immune system built by the founding father, Kelly
+Johnson, and carefully maintained by his successor, Ben Rich, was finally
+overwhelmed by the corporate and Pentagon lymphocytes. Warehouses filled
+with government paperwork for a single project.
+</p><p>
+Lesser mortals such as ourselves can still enjoy the advantages of a
+small organization, happily focused on a product in the early part of its
+life cycle—at a time when we can make bigger and faster strides than
+our elders. Our developer software release 1.1d7, shipping next month,
+will be a test of this statement.
+</p><p>
+Still, what about Windows catching up with the Macintosh? Doesn't this
+destroy our thesis? Au contraire, Microsoft was the smaller company in
+those days, while Apple was the big rich target. Admittedly, Microsoft
+enjoyed an unfair advantage: Stable management, the same leader for 20
+years. This continuity is reflected in the product strategy: Continuous
+improvements from QDOS to Windows 95. Apple, on the other hand, had
+discontinuous leadership. This wasn't always bad. Jumping from the Apple
+II to the Macintosh, while unpopular with some, started what has become a
+$12 billion company. But today, Apple is in the uncomfortable position of
+playing the continuity game against the best player in the field.
+</p><p>
+Meanwhile, having sinned and learned in another life, we're committed to
+making the best of our discontinuity, of our lack of organizational and
+architectural past and baggage.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-15.html">Issue 1-15, March 20, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-17.html">Issue 1-17, April 3, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-15.html" title="Issue 1-15, March 20, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-17.html" title="Issue 1-17, April 3, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

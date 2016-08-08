@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-7.html" title="Issue 1-7, January 24, 1996" /><link rel="next" href="Issue1-9.html" title="Issue 1-9, February 7, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-7.html" title="Issue 1-7, January 24, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-9.html" title="Issue 1-9, February 7, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-7.html">Issue 1-7, January 24, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-9.html">Issue 1-9, February 7, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-8"></a>Issue 1-8, January 31, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-8"></a>Be Engineering Insights: The Be OS from a UNIX Perspective!</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Dominic</span> <span class="surname">Giampaolo</span></span></div></div></div><p>
+If you come from a heavy UNIX background like I do, you may be wondering
+just what the Be OS looks like under the hood and how it compares to the
+legendary heavy-weight of big-boy operating systems.
+</p><p>
+As a starting point, let me say right off the bat: The Be OS is not UNIX
+nor is it intended to be a UNIX clone. That's not to say that there is no
+UNIX compatibility, as we do have a Posix library that's intended to make
+it easy to port UNIX application code (and release 1.1d7 will offer a big
+leap forward in that area). However, the fundamental abstractions
+provided by UNIX and the Be OS are different.
+</p><p>
+Let's begin with the model of a program. Both the Be OS and UNIX offer
+separate address spaces for each "team" ("process" in UNIX-speak). Each
+program runs in its own 2-gigabyte memory space and can use as much or as
+little of that space as it needs, since the Be OS (like UNIX) offers
+virtual memory. Separate address spaces of course mean that each program
+is isolated and cannot accidentally rampage through memory.
+</p><p>
+Unlike most versions of UNIX, the Be OS offers multiple threads of
+execution within each team (address space). To create a thread, the Be OS
+provides
+<a class="link bebook" href="../BeBook/TheKernelKit_ThreadsAndTeams.html#spawn_thread"><code class="function">spawn_thread()</code></a>.
+To create a new team, there's the function
+load_executable() (which also creates a default thread to run in that
+team). The Be OS has no concept of <code class="function">fork()</code> or <code class="function">exec()</code>, they're instead
+implemented in our Posix library.
+</p><p>
+System calls from a user program are made in the traditional UNIX way of
+trapping into the kernel and then jumping to the real code. Since the
+only way a user program can get into the kernel is via a trap, our kernel
+is more robust because an errant or malicious program can't just jump
+into random kernel code and cause damage. The overhead to make a simple
+system call is quite low, coming in at just over three microseconds.
+</p><p>
+The mechanism for IPC in UNIX is traditionally through a pipe or the
+System V shared memory and message routines. The main mechanism for IPC
+under the Be OS is through named message ports that have a queue for
+incoming messages. Be message ports are unidirectional, and the incoming
+queue is limited in size to prevent run-away processes from gobbling all
+of system memory. We also support shared memory through the
+<a class="link bebook" href="../BeBook/TheKernelKit_Areas.html#create_area"><code class="function">create_area()</code></a>
+and
+<a class="link bebook" href="../BeBook/TheKernelKit_Areas.html#clone_area"><code class="function">clone_area()</code></a>
+system calls, which allow one process to create an area
+and another to obtain a mapping to that area. The higher-level library
+code uses both message ports and shared memory to enable communication
+between threads in different teams.
+</p><p>
+Another area that the Be OS differs significantly from the traditional
+UNIX model is in how it handles files. The Be OS attempts to avoid the
+issue of handling path names of arbitrary length by presenting a concept
+of a file "ref". A file ref is a unique reference to a file on a given
+volume and is independent of the file's path. This avoids dealing with
+arbitrarily long pathname and eliminates hard- coded constants, such as
+<code class="constant">PATH_MAX</code>, that limit how long a file path can be. Of course the standard
+C library and Posix server cooperate to provide a standard pathname-style
+interface, so existing code doesn't have to be aware of this.
+</p><p>
+There are other differences between the Be OS and UNIX, but these are a
+few of the highlights. The Be OS is different from UNIX, but that doesn't
+imply incompatibility, since our Posix library works to cover the
+differences. The features that the Be OS does provide offer a rich base
+for building new applications that use multithreading and messaging in a
+real <acronym class="acronym">SMP<span style="color: red">&lt;title&gt;Symmetric Multi-Processing&lt;/title&gt;</span></acronym>
+environment.
+</p><p>
+There are still many areas we're working on in the Be OS, and we plan on
+enhancing it significantly over time. Release 1.1d7 will contain a number
+of enhancements and we'll continue to improve the Be OS as we get more
+feedback from developers as to what they need to write even better, more
+sophisticated applications.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-8"></a>Market Outlook: Who the Heck Wants a New Platform?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Mark</span> <span class="surname">Gonzales</span></span></div></div></div><p>
+Here, at Be, we talk to people every day about the Be System—the BeBox
+and the Be OS. These people include developers, customers, press, and
+resellers, all interested in the potential of the Be System. They have
+plenty of questions, and we provide lots of answers. But simmering just
+below the surface is always one question: "Are you guys crazy? Who the
+heck wants a new computing platform?"
+</p><p>
+Well, let's get this one out in the open. Conventional wisdom in the
+computing industry says that the world has moved towards a few standards
+on a limited number platforms (read: one). No company can stand against
+the tide, it's a better strategy to ride with it—and that means being
+100 percent compatible. To suggest something different is to create
+astonishment in your audience. Be was called "renegade" in one recent
+article.
+</p><p>
+If the question is "Who wants a new computing platform?", I'll concede
+right now that conventional wisdom is absolutely correct. The answer to
+this question is "No one wants a new platform." But before you e-mail me
+in agreement or disgust (markg@be.com), please allow me to place another
+thought on the table: "Is this the right question to be asking?"
+</p><p>
+Jean-Louis is fond of saying that the source of product gold mines is
+user frustration. And frustration with today's personal computer systems
+is growing—among both users and developers. This isn't surprising
+since current computer architectures are well over a decade old, and many
+of the capabilities users and developers are demanding today simply
+weren't considered when these architectures were designed. Further, many
+changes have occurred in the industry since these legacy systems first
+appeared. A few examples:
+</p><ul class="itemizedlist"><li><p>
+Users are increasingly driven by a desire to integrate audio, video,
+3-D graphics, and other media types into final publishable works. In
+this area, interactivity is the key performance factor—you want to
+see the results as you manipulate the data. This requires
+high-bandwidth, real-time data throughput and high computational speed.
+</p></li><li><p>
+The Internet has burst onto the scene, increasing the demand for
+communications capabilities in PCs. But more important, the world-wide
+web has created a new avenue for publishing interactive information.
+Combined with the rise of the CD-ROM and Digital Video Disk (DVD),
+we're witnessing the first large-scale change in publishing capability
+since the printing press, involving a richer data set than static text
+and images. This is increasing the demand for computing power from
+those creating the new published works—power to design and serve
+web-based material.
+</p></li><li><p>
+When current architectures were designed, microprocessors were
+expensive. The concept of one processor per person was revolutionary.
+Thus the software architectures were designed to make the best use of a
+single processor in each system. This design philosophy stands today,
+even though today's processors are low-priced commodities.
+</p></li><li><p>
+Collectively we've learned much about software design in the last
+decade. Yet this knowledge cannot be fully utilized within the legacy
+architectures. The result is a "muting" effect—much of the
+performance delivered by new hardware is lost in the overhead inherent
+in the legacy systems.
+</p></li></ul><p>
+A growing class of personal computer users are reaching, and often
+surpassing, the limits of today's personal computer architectures.
+They're purchasing high-end PCs and then equipping them with expensive
+high-performance graphics cards, video I/O cards, accelerators, and other
+add-ons, in order to achieve minimally acceptable performance. In
+essence, these users are paying extra because of the overhead created by
+legacy system design, while receiving systems that are underpowered for
+the same reason. These users would purchase high-end workstations if they
+could afford them, but most can't. All of this leads to an understandable
+level of frustration.
+</p><p>
+For an industry that has always applauded itself for delivering
+ever-increasing processor power, it can be a sobering conclusion: A
+growing portion of the personal computing audience is consuming
+processing power faster than it's being introduced into the market.
+</p><p>
+Dataquest estimates that 68 million personal computers will be sold in
+1996, in addition to roughly 1 million workstations. And growing at 4.5
+times the rate of the overall market is a class of machines Dataquest
+calls "PC workstations." These personal computers—delivering
+workstation performance at PC prices—will be flying out the door at a
+6-million-unit annual click within the next few years. This class of PC
+will have tremendous influence on the entire computing market --
+impacting workstation design as well as the look and feel of the average
+PC.
+</p><p>
+What will a PC workstation look like? Without a doubt it will implement a
+level of processing power above what can be obtained by straight-lining
+today's uniprocessor designs. Most analysts project that these machines
+will need to be based on multiprocessor designs. The PC workstation will
+innately handle high-bandwidth media types such as video and audio and
+will be at home on the Internet. In order to maximize the capability and
+performance of these systems, many analysts concede that the overhead
+within today's legacy operating systems and applications will need to be
+reduced. Tomorrow's operating systems will be significantly different
+than today's, whether the products have familiar brand names or not. And
+these PC workstations will have simplified, modern, object-oriented
+programming models allowing developers to concentrate more on their value
+added than on system interfaces.
+</p><p>
+Sound familiar? It should—we've just described the Be System.
+</p><p>
+Will these PC workstations quickly appear on every user's desk? Not
+immediately. Let's be frank, content consumers—including most in the
+office automation markets—are not the ones pushing the architectural
+limits of PCs today. It's the content creators who are running into
+performance barriers. And they're the users to whom performance matters
+most—where getting a job done in an hour rather than a day translates
+directly into improvement in the bottom line. How many of these people
+are out there? Literally millions. We'll talk about some of these types
+of customers in future Be Newsletters, but you can probably already guess
+some of the potential groups.
+</p><p>
+Who wants a new platform? No one. But this is an industry-oriented
+question. We must think in terms customers' desires and expectations.
+Customers think in terms of capabilities, of interactivity, of getting
+the job done in the best way possible—as fast as possible. It's better
+to ask, "Are there customers whose desires currently exceed the maximum
+potential of today's PCs?" and "Do these customers want to wait for
+today's PCs to slowly evolve these desired capabilities?" These questions
+are more customer-focused, and the answers are more straightforward.
+</p><p>
+Conventional wisdom states that no company can stand against the tide.
+That tide is made up of customer desires and expectations, not product
+specs. Where customers demand, companies must go. We at Be don't intend
+to stand against the tide, we plan to ride with it. Because riding with
+the tide, conventional wisdom tells us, is the best strategy.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevProfile1-8"></a>Be Developer Profile: Acorde Corporation</h2></div></div></div><p>
+To some developers, the BeBox's business potential is still kind of
+murky. That comes as no surprise for a platform that's only a few months
+old. But other developers look at the BeBox's multiprocessor architecture
+and the features of its operating system and find it hard to resist.
+</p><p>
+Acorde Corporation of Provo, Utah, is an example. Acorde is working on
+Apple's CyberDog product—a version of Open Doc for the Internet.
+They're also interested in graphics and presentation applications.
+</p><p>
+But when Acorde looks at the Mac and other operating systems, they see
+the past. Indeed, Apple is promising multitasking, multithreading
+operating systems with Copland and Gershwin, but they're not here yet. Be
+has already delivered.
+</p><p>
+"We know that the capabilities of the other machines out there are being
+stretched," says Stephen Humphrey, Acorde's president. "The Mac is in a
+transition to a more modern operating system for the future. But Be gives
+us a chance to prototype and work with a platform that has those
+capabilities now. And if Be takes off as a multimedia platform, then
+we'll be there early."
+</p><p>
+Humphrey says he and his two associates at Acorde are considering a port
+of Open Doc to the Be OS, because the current lack of a component
+architecture is a hole in Be's offering. But he's also impressed with
+Be's multimedia and Internet capabilities. He considers the Internet to
+be the next great publishing platform, and he thinks that Be's hefty
+graphics and sound capabilities will present a good opportunity there.
+</p><p>
+Humphrey started Acorde last October after working on Open Doc at Novell.
+He's committed to the idea of a "cottage" company, where people can work
+together over the Internet from remote locations.
+</p><p>
+"The key is that we want to design for the future, rather than the past,
+and this is the only way to do it," he says. "It's an opportunity to
+architect applications from the ground up that take advantage of
+threading capabilities. The more advantage we can get by being on a
+cutting-edge OS like Be, the better off we'll be."
+</p><p>
+Humphrey says he's hoping he can start playing with a BeBox in the near
+future and have a prototype product ready by the end of the year. Then
+he'll look to see whether there's a market for it.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id473805"></a>The Electronic Newsletter</h2></div></div></div><p>
+More and more people want to know about Be Inc. and the BeBox. Every day
+we receive new subscription requests. We're really glad to see this
+enthusiasm and interest. In order to please everybody—and because of
+our weekly schedule—we have had to find a way to save time, paper, and
+money and to be more flexible in updating our subscription database.
+</p><p>
+Therefore, starting with the next issue, we're going to send the weekly
+Be Newsletter electronically—this issue is the last paper one.
+</p><p>
+To subscribe to this newsletter, subscribe to one of the Be mailing
+lists, as described on the Be Mailing Lists page on this web site.
+</p><p>
+(Remember, if you're already receiving this newsletter, you're already on
+the mailing list. You don't need to subscribe again.)
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-7.html">Issue 1-7, January 24, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-9.html">Issue 1-9, February 7, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-7.html" title="Issue 1-7, January 24, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-9.html" title="Issue 1-9, February 7, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 1: 1995–1996</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume1.html" title="Volume 1: 1995–1996" /><link rel="prev" href="Issue1-49.html" title="Issue 1-49, November 13, 1996" /><link rel="next" href="Issue1-51.html" title="Issue 1-51, November 27, 1996" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue1-49.html" title="Issue 1-49, November 13, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue1-51.html" title="Issue 1-51, November 27, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 1: 1995–1996</div></div><div id="headerB">Prev: <a href="Issue1-49.html">Issue 1-49, November 13, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-51.html">Issue 1-51, November 27, 1996</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue1-50"></a>Issue 1-50, November 20, 1996</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering1-50"></a>Be Engineering Insights: A Typical Multithreaded Game Architecture</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Pierre</span> <span class="surname">Raynaud-Richard</span></span></div></div></div><p>DR8 included the first version of the Game Kit, a pretty small kit with
+one lonely class, the <code class="classname">BWindowScreen</code>. This class has two main purposes:
+</p><ul class="itemizedlist"><li><p>It provides a clean API for getting direct access to a graphics card
+frame buffer (in full-screen mode).
+</p></li><li><p>It provides a simple means for switching between <code class="classname">BWindowScreen</code> and
+"normal" application workspaces.
+</p></li></ul><p>(As a bonus, the class can use multiple buffers and also lets you get at
+most of the accelerated functions of the graphics card add-ons—the
+blit is usually quite interesting.)
+</p><p>As we all know, one of the stanchions of the BeOS is its
+multiprocessor/multithreaded design. I hope there are already many
+creative developers busily working on full- screen, multithreaded games
+using the GameKit. To transform this hope into reality, I thought I would
+describe a typical multithreaded game architecture—perhaps this will
+help some of you find your marks.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id506920"></a>How Shall We Thread?</h3></div></div></div><p>To figure out how many threads we need, and what each will be doing, we
+need to break the game into its various disciplines:
+</p><div class="orderedlist"><ol><li><p>At the highest level, we have to get the user input and translate it
+into an interaction with the program (the game proper, and its menus).
+</p></li><li><p>We have to provide some general game management: Moving the monster,
+detecting collisions, and so on.
+</p></li><li><p>We have to provide three-dimensional graphic preprocessing. This
+includes figuring out which objects are visible, which ones are closest
+to the "camera," calculating the perspective, and so on.
+</p></li><li><p>Once we've performed our preprocessing, we have to actually render
+the scene—we have to do some drawing (texture mapping, mainly).
+</p></li><li><p>Finally, there are the bells and whistles—literally. For what's a
+game without music and sound effects?
+</p></li></ol></div><p>Now, let's look at the timing requirements and CPU intensity of these
+tasks:
+</p><p>(A), (B), and (C) are very closely linked (logically) and use
+considerably less CPU than (D), so it's reasonable to keep these three
+tasks in the same thread.
+</p><p>(D) is extremely CPU intensive—it can be interesting to try to break
+it into many pieces.
+</p><p>(E) *must* stay in real time—sound must never stand still. Therefore,
+it should get its own thread.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id506995"></a>The Four-Thread Model</h3></div></div></div><p>Using the Innerstrike game as an example, we can distribute these tasks
+across four threads (plus one):
+</p><ul class="itemizedlist"><li><p>The "game controller" thread covers tasks (A), (B), and (C): It gets
+input from the user and does all the 3D geometry (but not the
+rendering). This thread takes 30% to 50% of one of the CPUs.
+</p></li><li><p>The music and sound mixer thread (E) plays four tracks of music and
+mixes in individual sound effects. It takes a small chunk of one CPU.
+</p></li><li><p>Two "graphic server" threads (D) do the rendering. They operate from
+a list of "rendering orders" as they draw to and from the frame buffer
+(or off-screen window). The first server is responsible for drawing the
+"common" interface and everything generated by player one; the second
+thread is responsible for player two. These threads pretty much eat up
+whatever cycles are left (on both CPUs).
+</p></li></ul><p>(The "plus one" thread mentioned above is the default <code class="classname">BWindowScreen</code>
+window thread, which provides the interface to the App Server; this
+thread takes almost no CPU time and isn't really part of the architecture
+of the game.)
+</p><p>Note that if the game is being played in single-player mode, only one
+server thread is used. Thus, in this mode, a dual- CPU machine isn't used
+to its full potential. But I decided that for Innerstrike, splitting the
+rendering of a single view into two threads (to take advantage of both
+CPUs, regardless of the number of players) was too much trouble, and may
+have produced unreliable results.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id507059"></a>The Master/Slave Relationship</h3></div></div></div><p>If we look at the most important parts of Innerstrike, we see that the
+game controller thread (the "master") controls the two graphic server
+threads (the "slaves"). The master communicates with its slaves through
+two multibuffer channels. Each channel is protected by two semaphores:
+</p><ul class="itemizedlist"><li><p><code class="varname">BUFFER_EMPTY</code> indicates how many buffers are ready to be filled (by
+the master) with rendering orders.
+</p></li><li><p><code class="varname">BUFFER_WAITING</code> indicates how many buffers are waiting to be rendered
+by the slaves.
+</p></li></ul><p>The buffers are always used in the same order, so we don't need an
+explicit list of empty (or waiting) buffers—we just need to know which
+one is the next. So each channel also has two indices,
+<code class="varname">CURRENT_EMPTY_BUFFER</code> and <code class="varname">CURRENT_WAITING_BUFFER</code>.
+</p><p>Each time the master wants to send rendering orders to a slave, it asks
+the specific channel for a new empty buffer by acquiring the BUFFER_EMPTY
+semaphore. When a buffer becomes available, the master fills it and
+releases the <code class="varname">BUFFER_WAITING</code> semaphore, and then increments (modulo the
+number of buffers in the channel) the <code class="varname">CURRENT_EMPTY_BUFFER</code> index.
+</p><p>The slave side is even simpler. A slave tries to get new rendering orders
+by acquiring the <code class="varname">BUFFER_WAITING</code> semaphore. When the buffer becomes
+available, the slave executes the orders in the buffer and then releases
+the <code class="varname">BUFFER_EMPTY</code> semaphore and increments the
+<code class="varname">CURRENT_WAITING_BUFFER</code>
+index. Then it starts all over again.
+</p><p>Here's a generic implementation (potentially not bug free!):
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">master</code>() {
+  ...
+  for  (<code class="varname">i</code>=0;<code class="varname">i</code>&lt;2;<code class="varname">i</code>++)  {
+    <code class="varname">BUFFER_EMPTY</code>[<code class="varname">i</code>]  =  <code class="function">create_sem</code>(0,  "Ready  to  go");
+    <code class="varname">BUFFER_WAITING</code>[<code class="varname">i</code>]  =  <code class="function">create_sem</code>(0,  "Don't  disturb");
+    <code class="varname">CURRENT_EMPTY_BUFFER</code>[<code class="varname">i</code>]  =  0;
+    <code class="varname">CURRENT_WAITING_BUFFER</code>[<code class="varname">i</code>]  =  0;
+  }
+  ...
+  while  (<code class="varname">game_running</code>)  {
+    switch  (<code class="varname">what_happening</code>)  {
+    ...
+    case  <code class="constant">DRAW_WITH_ONE_SLAVE</code>  :
+      <code class="function">acquire_sem</code>(<code class="varname">BUFFER_EMPTY</code>[0]);
+
+      {  <span class="comment">/*  get  the  buffer  indexed  */</span>  }
+      {  <span class="comment">/*  by  CURRENT_EMPTY_BUFFER[0]  */</span>  }
+      {  <span class="comment">/*  fill  the  buffer  with  rendering  orders  */</span>}
+
+      <code class="function">release_sem</code>(<code class="varname">BUFFER_WAITING</code>[0]);
+      <code class="varname">CURRENT_EMPTY_BUFFER</code>[0]  =
+        (<code class="varname">CURRENT_EMPTY_BUFFER</code>[0]+1)  %  <code class="varname">BUFFER_COUNT</code>;
+      break;
+
+    case  <code class="constant">DRAW_WITH_TWO_SLAVES</code>  :
+      <code class="function">acquire_sem</code>(<code class="varname">BUFFER_EMPTY</code>[0]);
+
+      {  <span class="comment">/*  get  the  buffer  indexed  */</span>  }
+      {  <span class="comment">/*  by  CURRENT_EMPTY_BUFFER[0]  */</span>  }
+      {  <span class="comment">/*  fill  the  buffer  with  rendering  orders  */</span>}
+
+      <code class="function">release_sem</code>(<code class="varname">BUFFER_WAITING</code>[0]);
+      <code class="varname">CURRENT_EMPTY_BUFFER</code>[0]  =
+        (<code class="varname">CURRENT_EMPTY_BUFFER</code>[0]+1)  %  <code class="varname">BUFFER_COUNT</code>;
+
+      <code class="function">acquire_sem</code>(<code class="varname">BUFFER_EMPTY</code>[1]);
+
+      {  <span class="comment">/*  get  the  buffer  indexed  */</span>  }
+      {  <span class="comment">/*  by  CURRENT_EMPTY_BUFFER[0]  */</span>  }
+      {  <span class="comment">/*  fill  the  buffer  with  rendering  orders  */</span>}
+
+      <code class="function">release_sem</code>(<code class="varname">BUFFER_WAITING</code>[1]);
+      <code class="varname">CURRENT_EMPTY_BUFFER</code>[1]  =
+        (<code class="varname">CURRENT_EMPTY_BUFFER</code>[1]+1) % <code class="varname">BUFFER_COUNT</code>;
+      break;
+    ...
+    }
+  }
+}
+
+<span class="type">void</span>  <code class="function">slave</code>(<span class="type">int</span>  <code class="parameter">index</code>)  {
+  ...
+  while  (<code class="constant">TRUE</code>)  {
+    <code class="function">acquire_sem</code>(<code class="varname">BUFFER_WAITING</code>[<code class="varname">index</code>]);
+
+    {  <span class="comment">/*  get the buffer indexed  */</span>  }
+    {  <span class="comment">/*  by CURRENT_WAITING_BUFFER[index]  */</span>  }
+    {  <span class="comment">/*  execute the rendering orders in the buffer  */</span>  }
+
+    <code class="function">release_sem</code>(<code class="varname">BUFFER_EMPTY</code>[<code class="varname">index</code>]);
+      <code class="varname">CURRENT_WAITING_BUFFER</code>[<code class="varname">index</code>]  =
+    (<code class="varname">CURRENT_WAITING_BUFFER</code>[<code class="varname">index</code>]+1)  %  <code class="varname">BUFFER_COUNT</code>;
+  }
+}
+</pre><p>Since semaphores, context switching, and memory allocation aren't free, I
+recommend that you use a small number of big buffers. In Innerstrike I
+use a <code class="varname">BUFFER_COUNT</code> of 2, enough to have the master working on the next
+frame as the slaves are drawing the previous one. Using more than two
+buffers increases the game's latency (the delay between the user's action
+and the reaction on-screen) without any real speed improvement.
+</p><p>With regard to the size of the buffers, I allocate enough memory (per
+buffer) to store the full description of a single frame. However, you
+don't have to be so precise. You can allocate significantly larger
+buffers without worrying about the entire buffer being swapped into
+physical memory: Individual pages are loaded into RAM *only* as they are
+touched.
+</p><p>To avoid paging as the game starts running, you should walk through your
+buffers (as your application is launching) and touch the first few pages
+that you know you will be using. Here, again, you don't have to be
+terribly precise—if your game eats up more pages as it's running, keep
+in mind that the master will touch these pages before the slaves get to
+them, so the delay incurred by swapping the pages in will be partly
+absorbed by the latency of the game (since the master is running at least
+one frame ahead of the slaves).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id507478"></a>Plugging Into BWindowScreen</h3></div></div></div><p>Plugging all of this into <code class="classname">BWindowScreen</code>'s
+<code class="methodname">ScreenConnected()</code> function
+(which toggles the game's access to the screen) is trivial. Just make
+sure that...
+</p><p>...nobody accesses the frame buffer before a
+<code class="code"><code class="methodname">ScreenConnected</code>(<code class="constant">TRUE</code></code>) or
+after a
+<code class="code"><code class="methodname">ScreenConnected</code>(<code class="constant">FALSE</code></code>).
+</p><p>...the game does nothing while the screen is disconnected.
+</p><p>...you update the frame buffer description each time
+<code class="code"><code class="methodname">ScreenConnected</code>(<code class="constant">TRUE</code>)</code>
+is called, and make sure nobody uses a value that's
+not up to date.
+</p><p>Following these rules shouldn't present any problems. We just need to get
+control of all the buffers in both channels to be sure that...
+</p><p>...the slaves aren't operating on the buffers and there aren't any old
+buffers left.
+</p><p>...the master isn't using the current value of the frame_buffer
+description, since it doesn't own any buffers (the master is supposed to
+use the frame_buffer description only to describe rendering orders in a
+buffer).
+</p><p>So here's a generic implementation of <code class="methodname">ScreenConnected()</code>:
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="classname">BWindowScreen</code>::<code class="methodname">ScreenConnected</code>(<span class="type">bool</span> <code class="parameter">active</code>)
+{
+  <span class="type">int</span>   <code class="varname">i</code>;
+
+  if (!<code class="parameter">active</code>) {
+    for (<code class="varname">i</code>=0;<code class="varname">i</code>&lt;<code class="constant">BUFFER_COUNT</code>;<code class="varname">i</code>++) {
+      <code class="function">acquire_sem</code>(<code class="varname">BUFFER_EMPTY</code>[0]);
+      <code class="function">acquire_sem</code>(<code class="varname">BUFFER_EMPTY</code>[1]);
+    }
+
+    { <span class="comment">/* optional: save the frame_buffer */</span> }
+  }
+  else {
+    { <span class="comment">/* optional: restore the frame_buffer */</span> }
+
+    { <span class="comment">/* Get a new description of the frame_buffer /*</span> };
+    for (<code class="varname">i</code>=0;<code class="varname">i</code>&lt;<code class="constant">BUFFER_COUNT</code>;i++) {
+      <code class="function">release_sem</code>(<code class="varname">BUFFER_EMPTY</code>[0]);
+      <code class="function">release_sem</code>(<code class="varname">BUFFER_EMPTY</code>[1]);
+    }
+  }
+}
+</pre><p>Now you should understand why we initialized the semaphores to 0—the
+first
+<code class="code"><code class="methodname">ScreenConnected</code>(<code class="constant">TRUE</code>)</code>
+will release all the buffers and start the
+game running. Just be careful to create all the semaphores before the
+<code class="classname">BWindowScreen</code>, as there's currently a race condition bug in the Game Kit
+between the completion of the <code class="classname">BWindowScreen</code> constructor and the first
+call to
+<code class="code"><code class="methodname">ScreenConnected</code>(<code class="constant">TRUE</code>)</code>.
+(This bug should be fixed in DR9).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id507714"></a>Some Closing Remarks</h3></div></div></div><ul class="itemizedlist"><li><p>Using a double buffer between the master and the slaves (between the
+controller and the renderer) *does* increase the game's latency. You
+might assume that the game will, therefore, feel slow and unresponsive.
+But this isn't really the case. The delay between the user's decision
+to act, and the delivery of the event to the computer is *already*
+significant: All the way from the brain's decision, through the nerves,
+then the activation of the muscle, and the move itself (let's say with
+a joystick). This is a long time from the computer's point of view --
+usually more than one second. Adding a twentieth of a second (the
+typical cost of the double buffer) isn't all that significant—the
+user will never feel it.
+</p><p>If a user feels that a game is sluggish, it's probably because the game
+isn't generating enough frames per second—the brain is extremely
+sensitive to this rate—or because the input device/driver is slow or
+insensitive.
+</p></li><li><p>Each time you give up control of the screen (through
+<code class="code"><code class="methodname">ScreenConnected</code>(<code class="constant">FALSE</code>)</code>),
+the frame buffer will be reset and
+reconfigured for another application (or the application server). When
+you get control back, you may need to restore your previous frame
+buffer content (everything else is managed by the Game Kit).
+</p><p>In the above sample, I suggest a very simple solution: Explicitly save
+and restore the frame buffer. In most cases, you can redraw the full
+screen just by calling a "refresh_screen" function, which you can
+implement to redraw everything from scratch (this is what I do in the
+Dominos sample application).
+</p></li><li><p>The speed of the communication between the master and its slaves
+depends on the amount of data you're sending: To make this as fast as
+possible, you should try to pass as little data as possible. For
+example, the Innerstrike game stores all the texture maps in a shared
+area, so only a pointer to them needs to be passed.
+</p><p>Also, Innerstrike allows many faces to share the same texture map
+descriptor. So you can say "I want to map my texture onto *this*
+projection...," and then say "...and apply it to all *these* faces."
+</p><p>You might also try reducing the number of vertices by using big faces
+(I use up to 6 points in Innerstrike), or by using triangle- and
+quadrangle-faced strips.
+</p></li><li><p>It's usually easier to debug your program if you can put it in
+"single thread" mode. If you look at the previous sample, you'll see I
+always write only in one buffer of any channel at a time. Thus I can
+store the currently used buffer descriptor in a global variable, and so
+easily switch between direct calls and the buffered multithreaded
+architecture. To do this, you just need a few C-macros (or inline C++
+functions):
+</p><p>-&gt; <code class="function">OpenChannel</code>(<code class="parameter">channel_index</code>); -&gt;
+<code class="function">CloseChannel</code>(<code class="parameter">channel_index</code>); -&gt;
+<code class="function">RenderingOrder</code>(<code class="parameter">my_parameters</code>); <span class="comment">// one macro for each distinct rendering</span>
+order
+</p><p>In "direct" mode, you just map <code class="function">OpenChannel</code>() and <code class="function">CloseChannel</code>() to
+nothing ( <code class="code">{;}</code> for example) and call the <code class="function">RenderingOrder</code>() functions
+directly.
+</p><p>In buffered mode, you map <code class="function">OpenChannel</code>() and <code class="function">CloseChannel</code>() to...
+</p><pre class="programlisting cpp">
+<span class="type">void</span> <code class="function">OpenChannel</code>(<span class="type">int</span> <code class="parameter">index</code>)
+{
+  <code class="function">acquire_sem</code>(<code class="varname">BUFFER_EMPTY</code>[<code class="parameter">index</code>]);
+
+  { <span class="comment">/* set the global buffer to the buffer indexed by
+    * CURRENT_EMPTY_BUFFER[index]
+    */</span>
+  }
+}
+
+<span class="type">void</span> <code class="function">CloseChannel</code>(<span class="type">int</span> <code class="parameter">index</code>)
+{
+  <code class="function">release_sem</code>(<code class="varname">BUFFER_WAITING</code>[<code class="parameter">index</code>]);
+  <code class="varname">CURRENT_EMPTY_BUFFER</code>[<code class="parameter">index</code>] =
+    (<code class="varname">CURRENT_EMPTY_BUFFER</code>[<code class="parameter">index</code>]+1) % <code class="constant">BUFFER_COUNT</code>;
+}
+</pre><p>...and then map all your <code class="function">RenderingOrder()</code> macros to a function that
+simply pushes the ID of the desired rendering order (and its
+parameters) into the current global buffer. When the slave receives the
+buffer, it gets the rendering order ID and reads the parameters. This
+leaves the problem of actually invoking the rendering order: A simple
+method is to use a <code class="code">switch()</code> based on the order ID. If you're really
+clever, you can pretend the buffer is a stack, push a function pointer
+and parameters onto this pseudo-stack, and then "execute" it. Fast --
+but not terribly portable. By enabling or disabling your function
+mappings, you can switch between a straightforward single-threaded
+implementation (the code generated in that case will not include
+anything useless) and your multithreaded one. This is definitely useful
+for debugging and testing.
+</p></li></ul></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="News1-50"></a>News From The Front</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">William</span> <span class="surname">Adams</span></span></div></div></div><p>I was paid last week! Can you believe it: "Hey honey, look... They
+actually pay me to have this much fun!"
+</p><p>That's what I was saying to my wife last week, to which she responded,
+"I'm glad they pay you to play dear, can you take out the trash." And,
+"If you can teach developers to cook, why can't you fix dinner?"
+</p><p>Anyway. Last week we had our first developer's kitchen. As far as I'm
+concerned it was a success. It was a small showing, but allowed us to
+work out a process. One of our new developers was so excited they decided
+to stay through this week to get their whole product ported! Once this is
+done, I'll share it with you all because it's pretty exciting.
+</p><p>One thing that small ventures must rely heavily on is the enthusiasm of
+their community. It's the collective knowledge and experience of these
+enthusiasts that make our platform interesting and the production of
+killer apps possible. We don't stand alone in our efforts. You would all
+be proud to sit in on one of our developer discussions and hear Steve
+Horowitz say "What do you guys want to see in the next release?" and
+actually work towards producing it. Or "I'll have that feature in there
+before you leave the building." This dedication from our engineers simply
+isn't found everywhere.
+</p><p>All great things are built by collectives. Even when there is a striking
+advancement, such as anything Nikola Tesla invented, they're built from
+standing atop strong principles and past actions. This week I am proud to
+hatch upon the Be community such an effort.
+</p><p>Before joining Be I hacked at a QuickCam driver. I released it
+unceremoniously upon the world without real support or comment. Well last
+week I gave my camera and driver to George (our OpenGL® porting intern).
+Understand this, George is a good programmer, he programs a lot... I
+mean... he actually lives in his cubicle. By the way, OpenGL® is looking
+quite fine, he did a very good job. Anyway, he made short work of my
+driver and fixed a couple of bugs that I had left for him to find. The
+result: We have a /dev/quickcam that works for the BeOS! You just put the
+qcam file in your /boot/system/drivers directory and fire up the QCamView
+application and suddenly you're watching yourself on the screen! This
+only works with the grayscale camera plugged into the parallel port. I
+think it only works with DR8.2, so if you haven't upgraded, you should.
+</p><p>ftp://ftp.be.com/pub/Samples/qcam.tgz
+</p><p>Is this something to get excited about? For certain people it is. We now
+have a ready source of live media to play with. I would expect a
+videophone any day now, perhaps as a networking tutorial? Other than
+being a ready source for information on how to write a device driver,
+this code also shows that a lot of work can be done quickly when done by
+a collective. I started the driver, George finished it and wrote the
+viewer. Some other developer will pick up the ball and we'll have
+videophone and MPEG recording. Someone else will make an acquisition
+module for their video editing suite and we'll be cooking with gas!
+</p><p>This type of work is what excites me about being at Be. Individuals
+making small contributions will have their efforts amplified into major
+works of engineering. I don't want to praise the collective too much
+though. Hard working individuals with a fire in the belly to make their
+dreams come true are what fuel most innovations. And as we say,
+"Resistance Is Not Futile!"
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508061"></a>From The Pit</h3></div></div></div><p>Heard in the halls:
+</p><p>"Could you take over Pulse and make it a little better"<br />
+"Sure, here it is... Oh you meant for DR9?"
+</p><p>So, this week's source is a modified version of the Pulse application.
+It's a little cleaned up and will work with one or two processors in the
+machine (don't click that button). With the exception of one UI flaw,
+it's visually the same as what comes with the machine.
+</p><p>I'll warn you now that there are a couple of low-level system calls in
+there that aren't documented and probably never will be, but here's the
+code for your perusal.
+</p><p>ftp://ftp.be.com/pub/Samples/pulse.tgz
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508098"></a>From Your Bench</h3></div></div></div><p>Titles: BeZap<br />
+Location: ftp://ftp.be.com/pub/contrib/util/bezap.install<br />
+Author: blue dot software &lt;bluedot@68k.org&gt;
+</p><p>Speaking of resource viewers such as Pulse, BeZap does an excellent job
+of not just showing system resources, but acting as a thread/team manager
+as well. It looks like wherever the BeOS has left a hole, developers have
+rushed in with very good alternatives. I really like this tool. It makes
+killing off those errant processes that much easier. Make sure you look
+at the about box animation as well.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508126"></a>Cheerleading</h3></div></div></div><p>Macworld is rapidly approaching. So it's time for me to start acting like
+a cheerleader. There are no logistics to make available yet, but I want
+to start pounding the drum early to get developers to think of what
+they'll want to show at Macworld. We would prefer our booth to be filled
+with applications written by our developers, not by us. So start thinking
+about polishing that killer app by Macworld time. If you're ready to go,
+then we'll be ready to show! Over the next few weeks I'll pound the drum
+louder and louder until it's so deafening you can do nothing but complete
+those apps and help us show off your wares.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing1-50"></a>Be Marketing Mutterings: So, What'S Next?</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alex</span> <span class="surname">Osadzinski</span></span></div></div></div><p>I need hardly say that it's quite an exciting time at Be. So exciting
+actually, that we might be forgiven a little euphoria, and one could even
+speculate that we're all thumping each other soundly on the back
+proclaiming that the BeOS' future is assured.
+</p><p>That would be a mistake, and our backs remain unthumped at this time.
+</p><p>It's wonderful to be receiving so much attention for the company and its
+products. We're particularly encouraged by detailed product reviews, such
+as the one gracing the cover of January's MacUser magazine. And although,
+to paraphrase our fearless CEO, all rumors are UNtrue, it's also nice to
+see our company's name linked with one of the giants of the computer
+industry. If you're a Mac user or developer, the chances are that you've
+read about us in the press recently. If you're not (and, we never forget,
+half our developers are not Mac people, and just as valuable to us as the
+half that are), there's still a chance that you've heard the brouhaha
+surrounding Be these past few weeks.
+</p><p>But let's get real. Our corporate foot continues to mash the pedal
+thoroughly to the metal in pursuit of our continuing goal: To make the
+BeOS successful in its target markets by making it the platform of choice
+for applications written by our developers. It's been said many times
+before, but I make no apologies for saying it again: We will succeed only
+if we make it possible for our application developers to ship profitable,
+successful, useful products on the BeOS. Those products need to be easier
+to develop and maintain and more stable, more functional, faster, or
+simply better than applications on other platforms.
+</p><p>New operating systems take a while to get established. Developers want a
+high-volume platform, and volume is driven by applications. Priming this
+circle takes time, money, and determination. The early developers take a
+higher risk, with potentially higher reward. We're working hard to
+generate significant volume for the BeOS in 1997; watch our web site for
+announcements. If you've followed Be for a while, you'll have come to
+expect a few curveballs now and again, and we'd like to continue to
+surprise you occasionally.
+</p><p>So, what do we REALLY think will happen next? The answer is simple: The
+snowball that we're pushing down the hill isn't big enough yet to roll on
+its own. 1997 is the year when we expect to give it a big enough push
+that it will begin to gather its own momentum. Our goals for market share
+are modest: We would rather be doing excellently a few things, such as
+digital content design, than try to become a replacement, or new,
+general-purpose operating environment. Our plans are to continue to
+enhance the product, to ship it in volume on PowerMac platforms, and to
+help and encourage our developers to generate applications that a
+targeted set of end users will want to buy (rather than just download for
+free). Past experience with new computer platforms has taught me that the
+only useful strategy is to stay the course; progress that one day seems
+slow has a habit of suddenly accelerating, and it's all based on the
+availability of a few early applications. Check out the BeWare section of
+our web site; if you've been following it for a while, you'll have seen
+it grow from a few interesting demo, to applets, to now a few genuinely
+useful applications. The snowball just gained some mass.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee1-50"></a>The Rebirth of the PDA</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>Some clichs are easier to fall into than others. Comdex certainly
+provided an opportunity for one: The rebirth of the PDA category. From
+Casio to Compaq, NEC to Hitachi and Philips, Windows CE devices were
+everywhere. Nice, light, small (HP 200 LX palmtop size), functional,
+well-connected to the web, well-integrated with your favorite Windows
+desktop, supported by "90 developers worldwide," the new HPC (hand-held
+PC) standard seems like a potential winner. I only write "potential"
+because I haven't purchased and used one—yet. For a while, the
+category had been given up for if not dead at least fractured, small, and
+not really interesting. HP was selling the LX and the Omnigo, Sharp their
+Zaurus, Psion their Series 3. Only Sharp was really spending marketing
+dollars, the other brands relying mostly on word of mouth.
+</p><p>That state of affairs changed with the Pilot. Palm Computing had a false
+start with their previous pen-based PDA sold by Sharp and Casio. They
+regrouped, provided a solid financial foundation by selling the company
+to US Robotics, and came out with a smaller device: It fits easily in a
+shirt pocket and is much better synchronized to your PC. The latter
+meaning the Pilot integrated really well with your Windows desktop (and
+your Mac Real Soon Now), it automatically updated appointments and other
+data files. Donna Dubinsky, Palm Computing's CEO, used both the armored
+infantry divisions provided by the adopting company and the guerrilla
+tactics of a start-up. US Robotics provided the low-cost manufacturing
+and the aggressive marketing and distribution that enabled US Robotics to
+dominate the modem market. And at the Agenda industry conference last
+month in Phoenix, Donna had the mothers of the founders peddle Pilots to
+startled industry executives. The point: So easy to use your mother would
+love it. It worked. First, because the product is really pleasant to use.
+And second, it gave a personal object a very personal touch.
+</p><p>Now the game has changed again. By all accounts, the infantry divisions
+under Microsoft's command have successfully created a new standard. At
+the risk of repeating some Erich Ringewald's comments in his column last
+week, Microsoft earned that market by learning from others and from its
+mistakes and finally delivering a good execution of the
+PDA-as-a-companion-to-your-PC concept. After fiascoes such as PenWindows
+and WinPad and observing the travails of Go, General Magic, and the
+Newton, Microsoft really did their homework. When I received a detailed
+e-mail questionnaire from Microsoft inquiring about the daily uses of my
+Psion, I responded with two questions: How did they find me, and what was
+in it for me in helping them compete against Psion? Their answer to the
+first question was clear: They monitored the Psion newsgroup. As for the
+second question, they seemed puzzled. I let go of the thread and of the
+questionnaire.
+</p><p>With Windows CE on the scene, if a third-party hardware or software
+vendor thinks of entering the PDA or HPC market, which platform will they
+support? There is only one product line meeting the platform definition.
+</p><p>The beauty of the situation is breathtaking. Consider some of the larger
+companies on the planet: NEC, Hitachi, who supplied the SH RISC processor
+for these devices—this is not a Wintel product—as well as their own
+HPCs, Philips, Compaq... These companies are sweating the capital
+investments to make and distribute these miniaturized devices. And
+Microsoft is getting royalties on the software and will sell applications
+on both sides of the PC-HPC connection. One HPC per PC user, that's all
+they ask.
+</p><p>Does this mean "game over" for the other products? If they're too close
+in features, size, and price to the CE devices, the long-term prospects
+aren't too good, especially with Microsoft supplying both Windows and
+Windows CE and therefore being able to parlay various aspects of the
+resulting better integration into competitive advantages.
+</p><p>The Pilot is a good example of a product different enough. Unlike the CE
+devices, it doesn't have a keyboard and it connects more easily to the PC
+thanks to a nicely deigned cradle. It's smaller, more focused in its
+applications than the more general-purpose HPC, and it's less expensive
+by several hundred dollars. We'll see what HP does with its LX family.
+</p><p>We should be thankful for a few reminders from Microsoft. Don't play
+where they master both sides of an interface or a transaction. Initial
+success, or failure, doesn't mean much; relentless pursuit and execution
+of an idea does.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="BeDevTalk1-50"></a>BeDevTalk Summary</h2></div></div></div><p>BeDevTalk is an unmonitored discussion group in which technical
+information is shared by Be developers and interested parties. In this
+column, we summarize some of the active threads, listed by their subject
+lines as they appear, verbatim, in the mail.
+</p><p>To subscribe to BeDevTalk, visit the mailing list page on our web site:
+http://www.be.com/aboutbe/mailinglists.html.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508305"></a>WEEK 3</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508311"></a>Subject: Fresh Programs</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: Scripting examples<br />
+AKA: Scripting Architecture<br />
+AKA: [HEY BE] Please license ARexx!<br />
+AKA: [HEY BE] Please don't license ARexx!
+</h5></div></div></div><p>The debate over whether Be should settle on a single scripting language
+(or scripting interface) continues. This week's new angle: Scripting is
+really only interesting when more than one application is involved
+(this includes bidirectional communication), thus there MUST be a
+common language or interface layer.
+</p><p>Perpendicularly, the content of the "common interface layer" was
+discussed. One correspondent argued that Be shouldn't define the
+messages that are delivered between apps, it should only define how the
+messages are delivered.
+</p><p>The thread also discussed the issue of third-party competition: How far
+should Be go with its "scripting solution" before it unfairly competes
+with its own developers?
+</p><p>In related threads, the various scripting languages were described.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508359"></a>Subject: Injecting input into the app_server stream</h4></div></div></div><p>Methods for polling and calibrating joysticks were discussed.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508372"></a>Subject: 603e vs DSP</h4></div></div></div><p>More performance comparisons between the PPC family (the 603e,
+specifically) and dedicated DSP chips.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508385"></a>Subject: 3D GUI talk</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">
+AKA: 3D SPACE<br />
+AKA: GUI
+</h5></div></div></div><p>More discussion of the possibility of a three-dimensional desktop. The
+score so far: Everyone pretty much hates messy overlapping windows --
+anything that can improve this fact of life is appreciated. 3D,
+obviously, holds promise in this area, but most correspondents are a
+bit skeptical of the intuitiveness of a full 3D workspace. The provicts
+argue that we live in a 3D world, so intuition should be on the side of
+a 3D GUI; convicts grant this point, but then score a right to the jaw
+by reminding us that our input devices aren't designed for 3D. (Now, if
+we had e-gloves...)
+</p><p>A number of counterproposals and fine-tunings were also offered: "2.5"
+dimensions, a torus desktop, multiple (networked) computers connected
+to the same three- dimensional workspace, and so on.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508409"></a>Subject: BeAPI design flaw? BControl.Invoke() and</h4></div></div></div><p>A discussion of methods for getting mouse events: Is polling for mouse
+movement acceptable? What about blocking in the main loop while waiting
+for a mouse move event?
+</p></div></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508425"></a>NEW</h3></div></div></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508431"></a>Subject: A must Read Article for All</h4></div></div></div><p>A recent article by Simson Garfinkle in which Mr. Garfinkle critiqued
+the Be GUI was met with some beg-to-differism. After the initial "who
+does he think he is?" bent, the thread itself became a constructive
+criticism of certain aspects of the GUI.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508447"></a>Subject: Newsletter #48</h4></div><div xmlns:d="http://docbook.org/ns/docbook"><h5 xmlns="http://www.w3.org/1999/xhtml" class="subtitle">AKA: Asynch IO</h5></div></div></div><p>Last week, JLG pointed readers to a couple of articles that spoke to
+the Be/Apple rumors. Many correspondents took issue with the content of
+one of the articles, in which Gil Amelio portrayed the BeOS as
+less-than-real-time and I/O- challenged. This led to a broader
+discussion of threads vs asynchronous I/O.
+</p></div><div class="sect3"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h4 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id508467"></a>Subject: DR9 Filesystem Features</h4></div></div></div><p>Many contributors pleaded for an overview of DR9 file system features.
+Dominic Giampaolo, the Italian half of Be's international file system
+team, complied.
+</p></div></div></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue1-49.html">Issue 1-49, November 13, 1996</a>  Up: <a href="volume1.html">Volume 1: 1995–1996</a>  Next: <a href="Issue1-51.html">Issue 1-51, November 27, 1996</a> </div><div id="footerB"><div id="footerBL"><a href="Issue1-49.html" title="Issue 1-49, November 13, 1996"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume1.html" title="Volume 1: 1995–1996"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue1-51.html" title="Issue 1-51, November 27, 1996"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>The Be Book - System Overview - The Storage Kit</title><link rel="stylesheet" href="be_book.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_book_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><meta name="keywords" content="Access, BeOS, BeBook, API" /><link rel="start" href="index.html" title="The Be Book" /><link rel="up" href="TheStorageKit_Overview.html" title="The Storage Kit" /><link rel="prev" href="AttributeFunctions_Overview.html" title="Attribute Functions" /><link rel="next" href="QueryFunctions_Overview.html" title="Query Functions" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="AttributeFunctions_Overview.html" title="Attribute Functions"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="TheStorageKit_Overview.html" title="The Storage Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="QueryFunctions_Overview.html" title="Query Functions"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="navigindex"><a accesskey="i" href="ClassIndex.html" title="Index">I</a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">The Be Book - System Overview - The Storage Kit</div></div><div id="headerB">Prev: <a href="AttributeFunctions_Overview.html">Attribute Functions</a>  Up: <a href="TheStorageKit_Overview.html">The Storage Kit</a>  Next: <a href="QueryFunctions_Overview.html">Query Functions</a></div><hr /></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="IndexFunctions_Overview"></a>Index Functions</h2></div></div></div><p>
+Before a query can be performed on a file system, indices need to be
+established in which to search. An index contains a list of files that
+can be searched given a particular attribute and the desired value.
+</p><p>
+An index directory is, essentially, a list of the indices on a particular
+disk; it keeps track of the attributes that can be searched upon. Each
+disk has its own index directory. For instance, a disk might have the
+following indices in its index directory:
+</p><ul class="itemizedlist"><li><p>
+MAIL:subject
+</p></li><li><p>
+MAIL:from
+</p></li><li><p>
+MAIL:to
+</p></li><li><p>
+MAIL:priority
+</p></li></ul><p>
+Each of these is the name of an index that can be queried using either
+the <code class="function">fs_query</code> API or the
+<a class="link" href="BQuery.html" title="BQuery"><code class="classname">BQuery</code></a> class.
+</p><p>
+For example, if an e-mail program wishes to allow searching on the name
+of the sender of a message, it needs to create an index for the "sender"
+attribute. Once this index is established, any file that has the "sender"
+attribute added to it will be added to the "sender" index.
+</p><p>
+Files which had the "sender" attribute attached before the "sender" index
+was created, however, will not be in the index until their "sender"
+attribute is updated, at which time they will be added to the index. For
+this reason, you should consider installing your indices when your
+application is installed, or when it is initially launched.
+</p><p>
+Since each disk has its own index directory, if you want all disks to
+have your indices available, you need to create them on each device. You
+can do this by using the functions described here in conjunction with the
+<code class="function">fs_info</code> functions.
+</p><p>
+There are three indices that are present on every disk:
+</p><div class="informaltable"><table border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Index</th><th>Description</th></tr></thead><tbody><tr><td>name</td><td>The name of the file.</td></tr><tr><td>size</td><td>The size, in bytes, of the file.</td></tr><tr><td>last_modified</td><td>The date the file was last changed.</td></tr></tbody></table></div><p>
+You can always perform queries in these indices. Their names are
+reserved; you can't create or remove indices by these names.
+</p><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="IndexFunctions_The_Index_Directory"></a>The Index Directory</h3></div></div></div><p>
+The following sample function opens the index directory for a specified
+device and, in a loop, reads every entry, printing their names to
+standard output. This presents a list of each index available on the disk.
+</p><pre class="programlisting example c"><span class="type">void</span> <code class="function">ListIndex</code>(<span class="type">int32</span> <code class="parameter">device</code>)
+{
+   <span class="type">DIR *</span>d;
+   <span class="type">index_info</span> info;
+   <span class="type">struct dirent *</span>ent;
+
+   <code class="varname">d</code> = <code class="function">fs_open_index_dir</code>(<code class="parameter">device</code>);
+   if (!<code class="varname">d</code>) {
+      <code class="function">fprintf</code>(<code class="varname">stderr</code>, "Unable to open index.n");
+      return;
+   }
+
+   while (<code class="varname">ent</code> = <code class="function">fs_read_index_dir</code>(<code class="varname">d</code>)) {
+      printf("%sn", <code class="varname">ent</code>-&gt;<code class="varname">d_name</code>);
+   }
+   <code class="function">fs_close_index_dir</code>(<code class="varname">d</code>);
+}</pre><p>
+After calling
+<a class="link" href="TheStorageKit_Functions.html#fs_open_index_dir" title="fs_open_index_dir()"><code class="function">fs_open_index_dir()</code></a>
+to open the index directory for the
+device passed into the function (and handling the error that might occur
+if that function fails), a while loop iterates through all the entries in
+the directory, calling
+<a class="link" href="TheStorageKit_Functions.html#fs_read_index_dir" title="fs_read_index_dir()"><code class="function">fs_read_index_dir()</code></a> to obtain the desired
+information, then printing that information to standard output.
+</p><p>
+When there are no indices left,
+<a class="link" href="TheStorageKit_Functions.html#fs_read_index_dir" title="fs_read_index_dir()"><code class="function">fs_read_index_dir()</code></a>
+returns <code class="constant">NULL</code> and the while loop exits. At this point,
+<a class="link" href="TheStorageKit_Functions.html#fs_close_index_dir" title="fs_close_index_dir()"><code class="function">fs_close_index_dir()</code></a>
+is called to close the index directory.
+</p></div><div class="section"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><hr /><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="IndexFunctions_Installing_And_Removing_Indices"></a>Installing and Removing Indices</h3></div></div></div><p>
+To install a new index, use the
+<a class="link" href="TheStorageKit_Functions.html#fs_create_index" title="fs_create_index()"><code class="function">fs_create_index()</code></a>
+function. For example,
+to create an index for the attribute "GOLF:Handicap" on device 4 you
+would do this:
+</p><pre class="programlisting example c"><code class="function">fs_create_index</code>(4, "GOLF:Handicap", <code class="constant">B_INT16_TYPE</code>, 0);</pre><p>
+This creates an empty index for the golf handicap attribute, which is
+stored as a 16-bit integer. Once the index has been created, any file
+that gets a "GOLF:Handicap" attribute added or changed will be indexed.
+</p><p>
+(You usually shouldn't hard-code a device number, of course; you can
+obtain a device number for a specific disk by using the <code class="function">fs_info</code> functions
+or <code class="function">stat()</code>.)
+</p><p>
+If you later need to remove the index, you can do so by calling
+<a class="link" href="TheStorageKit_Functions.html#fs_remove_index" title="fs_remove_index()"><code class="function">fs_remove_index()</code></a>, like this:
+</p><pre class="programlisting example c"><code class="function">fs_remove_index</code>(4, "GOLF:Handicap");</pre><p>
+You should be careful when deciding to delete an index. If the user still
+has files around that contain indexed attributes that they want to be
+able to search for—using the Find panel in the <span class="application">Tracker</span>, for
+example—they will not be able to do so after the index has been
+removed. So you need to decide when it is appropriate to remove indices;
+the choice is yours, but choose wisely, or you might annoy users.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="AttributeFunctions_Overview.html">Attribute Functions</a>  Up: <a href="TheStorageKit_Overview.html">The Storage Kit</a>  Next: <a href="QueryFunctions_Overview.html">Query Functions</a> </div><div id="footerB"><div id="footerBL"><a href="AttributeFunctions_Overview.html" title="Attribute Functions"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="TheStorageKit_Overview.html" title="The Storage Kit"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="QueryFunctions_Overview.html" title="Query Functions"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 3: 1998</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume3.html" title="Volume 3: 1998" /><link rel="prev" href="Issue3-16.html" title="Issue 3-16, April 22, 1998" /><link rel="next" href="Issue3-18.html" title="Issue 3-18, May 6, 1998" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue3-16.html" title="Issue 3-16, April 22, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue3-18.html" title="Issue 3-18, May 6, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 3: 1998</div></div><div id="headerB">Prev: <a href="Issue3-16.html">Issue 3-16, April 22, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-18.html">Issue 3-18, May 6, 1998</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue3-17"></a>Issue 3-17, April 28, 1998</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering3-17"></a>Be Engineering Insights: Three More Tips</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Hiroshi</span> <span class="surname">Lockheimer</span></span></div></div></div><p>
+In my last article, http://www.be.com/aboutbe/benewsletter/Issue104.html,
+I presented you with three unrelated tips. I have three more tips, this
+time, all pertaining to <code class="classname">BTextView</code>.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id685813"></a>Tip 1</h3></div></div></div><p>
+A number of people have asked how to get <code class="classname">BTextView</code> to reflow its text
+dynamically when resized (take a look at <span class="application">BeMail</span> or
+<span class="application">Expander</span> for an
+example). Although there is no way to tell <code class="classname">BTextView</code> to do this for you
+automatically, it's easy to implement this feature in your own TextView-
+derived class.
+</p><p>
+The basic idea is to resize the <code class="classname">BTextView</code>'s "text rect" whenever the
+window's frame is resized. The text rect is <code class="classname">BTextView</code>'s own coordinate
+system in which it draws its text. <code class="classname">BTextView</code> wraps its text according to
+the width of the text rect. (The text rect's height is dynamic—it is
+always in sync with the total height of the text.) So, to reflow the text
+whenever the view is resized, implement your own
+<code class="methodname">FrameResized()</code> method:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">MyTextView</code>::<code class="methodname">FrameResized</code>(
+  <span class="type">float</span> <code class="parameter">width</code>,
+  <span class="type">float</span> <code class="parameter">height</code>)
+{
+  <code class="classname">BTextView</code>::<code class="methodname">FrameResized</code>(<code class="parameter">width</code>, <code class="parameter">height</code>);
+
+  if (<code class="methodname">DoesWordWrap</code>()) {
+    <span class="comment">// this gets the new bounds of the view</span>
+    <code class="classname">BRect</code> <code class="varname">textRect</code> = <code class="methodname">Bounds</code>();
+
+    <span class="comment">// make sure we are in the view's coordinate system</span>
+    <code class="varname">textRect</code>.<code class="methodname">OffsetTo</code>(<code class="constant">B_ORIGIN</code>);
+
+    <span class="comment">// inset the text rect by 3 pixels so that the text doesn't</span>
+    <span class="comment">// touch the frame of the view: this is the text rect</span>
+    <code class="varname">textRect</code>.<code class="methodname">InsetBy</code>(3.0, 3.0);
+
+    <span class="comment">// tell TextView to reflow itself</span>
+    <code class="methodname">SetTextRect</code>(<code class="varname">textRect</code>);
+  }
+}
+</pre><p>
+In order for this to work properly, make sure your <code class="classname">BTextView</code> class has the
+<code class="constant">B_FRAME_EVENTS</code> view flag set; otherwise, it will not be continuously
+notified of frame resize events.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id686002"></a>Tip 2</h3></div></div></div><p>
+An easy way to spruce up your editor is to support some sort of syntax
+styling feature. For example, <span class="application">BeMail</span> displays
+<acronym class="acronym" title="Uniform Resource Locator">URL</acronym>s embedded in e-mail
+messages in blue, and everything else is in black. It's simple to
+implement this feature using <code class="classname">BTextView</code>'s
+<span class="type">text_run_array</span> structure.
+<code class="classname">BTextView</code> delimits its style runs using a structure called
+<span class="type">text_run</span>. A <span class="type">text_run</span> associates a specific offset within the
+<code class="classname">BTextView</code>'s text buffer with a <code class="classname">BFont</code>
+and a <span class="type">rgb_color</span>. So, a
+<span class="type">text_run</span> like this
+</p><pre class="programlisting cpp">
+<span class="type">text_run</span> <code class="varname">theRun</code>;
+<code class="varname">theRun</code>.<code class="varname">offset</code> = 10;
+<code class="varname">theRun</code>.<code class="varname">font</code> = <code class="varname">be_fixed_font</code>;
+<code class="varname">theRun</code>.<code class="varname">color</code>.<code class="varname">red</code> = 255;
+<code class="varname">theRun</code>.<code class="varname">color</code>.<code class="varname">green</code> = 0;
+<code class="varname">theRun</code>.<code class="varname">color</code>.<code class="varname">blue</code> = 0;
+<code class="varname">theRun</code>.<code class="varname">color</code>.<code class="varname">alpha</code> = 255;
+</pre><p>
+would tell <code class="classname">BTextView</code> that, starting at offset 10, it should start
+displaying its text in red <code class="varname">be_fixed_font</code>.
+</p><p>
+A <span class="type">text_run_array</span> is simply a variable-length array of <span class="type">text_run</span>s. So, to
+continue with our <acronym class="acronym">URL</acronym> example, every <acronym class="acronym">URL</acronym>
+will have two <span class="type">text_run</span>s
+delimiting it, one at the start of the <acronym class="acronym">URL</acronym> to start a blue run, and one
+at the end of the <acronym class="acronym">URL</acronym> to restore the text to black.
+</p><p>
+Assuming that the e-mail message has been parsed and you have the offsets
+of the <acronym class="acronym">URL</acronym>s, you could use something like this:
+</p><pre class="programlisting cpp">
+<span class="comment">// allocate some room for the text_run_array</span>
+<span class="type">int32</span> <code class="varname">number_of_runs</code> = <code class="varname">number_of_urls</code> * 2;
+<span class="type">text_run_array *</span><code class="varname">theTRA</code> = (<span class="type">text_run_array *</span>)<code class="function">malloc</code>(<code class="function">sizeof</code>(<span class="type">text_run_array</span>) +
+ (<code class="function">sizeof</code>(<span class="type">int32</span>) * (<code class="varname">number_of_runs</code> - 1)));
+
+<span class="comment">// fill in the individual text_runs</span>
+<code class="varname">theTRA</code>-&gt;<code class="varname">count</code> = <code class="varname">number_of_runs</code>;
+for (<span class="type">int32</span> <code class="varname">i</code> = 0; <code class="varname">i</code> &lt; <code class="varname">theTRA</code>-&gt;<code class="varname">count</code>; <code class="varname">i</code> += 2) {
+  <span class="comment">// start the URL run</span>
+  <code class="varname">theTRA</code>-&gt;<code class="varname">runs</code>[<code class="varname">i</code>].<code class="varname">offset</code> = <code class="varname">url_start_offsets</code>[<code class="varname">i</code>];
+  <code class="varname">theTRA</code>-&gt;<code class="varname">runs</code>[i].<code class="varname">font</code> = <code class="constant">kURLFont</code>;
+  <code class="varname">theTRA</code>-&gt;<code class="varname">runs</code>[i].<code class="varname">color</code> = <code class="constant">kURLColor</code>;
+
+  <span class="comment">// end the URL run</span>
+  <code class="varname">theTRA</code>-&gt;<code class="varname">runs</code>[i + 1].<code class="varname">offset</code> = <code class="varname">url_end_offsets</code>[<code class="varname">i</code>];
+  <code class="varname">theTRA</code>-&gt;<code class="varname">runs</code>[i + 1].<code class="varname">font</code> = <code class="constant">kNormalFont</code>;
+  <code class="varname">theTRA</code>-&gt;<code class="varname">runs</code>[i + 1].<code class="varname">color</code> = <code class="constant">kNormalColor</code>;
+}
+</pre><p>
+When you're done constructing your <span class="type">text_run_array</span>, simply pass it on to
+<code class="classname">BTextView</code> as part of a call to
+<code class="methodname">SetText()</code>, <code class="methodname">Insert()</code>, or more explicitly,
+<code class="methodname">SetRunArray()</code>. Note that the offsets are always relative to the point
+where you set/insert the text, or to the starting offset that you pass
+into <code class="methodname">SetRunArray()</code>.
+</p><p>
+Now that you've successfully parsed for and displayed a <acronym class="acronym">URL</acronym> in blue,
+wouldn't it be nice if clicking on it did something?
+</p><p>
+Click-detection of a specific range of text in <code class="classname">BTextView</code> is pretty simple.
+You already know the offsets of the <acronym class="acronym">URL</acronym>s, so in your <code class="methodname">MouseDown()</code>
+function, look at the offset of the click, and compare with the <acronym class="acronym">URL</acronym>
+offsets:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>
+<code class="classname">MyTextView</code>::<code class="methodname">MouseDown</code>(
+  <code class="classname">BPoint</code>  <code class="parameter">where</code>)
+{
+  <span class="comment">// this tells you the text offset of the click</span>
+  <span class="type">int32</span> <code class="varname">clickOffset</code> = <code class="methodname">OffsetAt</code>(<code class="parameter">where</code>);
+
+  <span class="comment">// assume that FindURL() returns the URL of the click</span>
+  <span class="comment">// or NULL if there wasn't a URL there</span>
+  <span class="type">const char *</span><code class="varname">theURL</code> = <code class="methodname">FindURL</code>(<code class="varname">clickOffset</code>);
+
+  if (<code class="varname">theURL</code> != <code class="constant">NULL</code>)
+    <span class="comment">// while we're at it, send the user's preferred</span>
+    <span class="comment">// HTML handler a message to open the URL</span>
+    <code class="varname">be_roster</code>-&gt;<code class="methodname">Launch</code>("text/html", 1, &amp;<code class="varname">theURL</code>);
+  else
+    <span class="comment">// don't forget to call the original implementation!</span>
+    <code class="classname">BTextView</code>::<code class="methodname">MouseDown</code>(<code class="parameter">where</code>);
+}
+</pre></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id686589"></a>Tip 3</h3></div></div></div><p>
+My final tip is about <code class="classname">BTextView</code>'s text buffer's performance. In order
+to reduce the number of calls to <code class="function">realloc()</code>,
+<code class="classname">BTextView</code> employs a "gapped"
+text buffer. The buffer always allocates more memory than is currently
+needed so that <code class="function">realloc()</code> doesn't have to be
+called per <code class="methodname">KeyDown()</code>. The gap
+is always after the insertion point, which means that it is often
+somewhere in the middle of the buffer.
+</p><p>
+<code class="classname">BTextView</code>'s <code class="methodname">Text()</code>
+function returns a <span class="type">const char*</span> to the buffer.
+Consequently, it moves the gap to the end of the buffer, so that you may
+index the pointer without any knowledge of the whereabouts and the size
+of the gap. Therefore, calling <code class="methodname">Text()</code>
+often on a <code class="classname">BTextView</code> (from within
+<code class="methodname">InsertText()</code>, for example) is not desirable. If you need to peek at the
+contents of the buffer, consider using <code class="methodname">ByteAt()</code>,
+or <code class="methodname">GetText()</code>. Use <code class="methodname">Text()</code>
+sparingly, preferably only for rare events such as writing the text into
+a file.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-17"></a>You Give Me Trade Show Fever</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Scott</span> <span class="surname">Paterson</span></span></div></div></div><p>
+One of Scott Adams' best Dilbert strips pokes fun at the standard
+components of trade show booths: magic tricks, special effects, raffles,
+and booth babes. "For the best result, combine all four: Create the
+illusion that you're raffling off the booth babes." I'd add race cars to
+the list. It stuns me to see a company pay $50K for prime trade show real
+estate, plop down a Porsche Boxster that takes up half the space, and
+then cram the actual product into the remainder.
+</p><p>
+Be has done a number of trade shows over the past few years, mostly
+MacWorld and Fall Comdex, and recently in joint participation with
+Adamation at NAB. We take pains to avoid an affliction known as "Trade
+Show Fever"—the assumption that trade shows are a natural part of
+doing business.
+</p><p>
+The costs associated with these extravaganzas are incredible, not only in
+dollars but also in people resources. We've got a lot of work to do and
+when we're at a trade show, for the most part, we're not getting other
+work done. So you can expect to see us at PC Expo in June and Comdex in
+November. We'll consider a couple of other shows, but before we sign up
+we'll need to see extremely compelling reasons and clear paths to the
+goals we desire to achieve by participating.
+</p><p>
+From our experience, here are a few tips to help you plan for your own
+future trade show participation.
+</p><div class="orderedlist"><ol><li><p>
+Alex's Law: Don't Suck. No explanation required. All suggestions
+that follow will help you not to suck.
+</p></li><li><p>
+Pre-stage Equipment: If it works at home and you bring all the same
+stuff, the odds of it working at the show are pretty good. With the
+exception of one large demo machine, we rented machines for NAB
+locally and brought hard disks. This led to hours of frustration as we
+swapped video cards and hard disks, recreated partitions, and coaxed
+uncooperative hardware into performing properly. There is a definite
+tradeoff of time versus money, but often at a trade show, your
+deadlines are your least flexible concern.
+</p></li><li><p>
+Bring an Extra System: I've never set up a trade show where every
+piece of hardware worked properly. We always bring an extra system
+along with us and pilfer parts to replace failed components.
+</p></li><li><p>
+People Are Responsible, Groups Are Not: Never assign any important
+trade show task (like pre-staging the equipment) to a group of people;
+there's a good chance it won't get done. Assign tasks to specific
+individuals who are responsible for completing them. If the task
+requires the help of others, that individual can delegate sub-tasks,
+keep track of overall progress, and deal with problems that arise as
+they happen.
+</p></li><li><p>
+Schedules Work: Set a booth schedule and stick to it. Make sure
+your booth staff understands that the schedule is rigid. Remember,
+though, that we are all human. Scheduling someone for 8 hours of demos
+is shortsighted. They may have still be standing at a demo station at
+the end of the day, but they won't be delivering demos that achieve
+the desired effect.
+</p><p>
+I've found that people can give the large demo (the demo we do on two
+large TV screens to attract people into the booth) effectively for two
+hours at a time before their delivery goes slack. Alternating through
+the main demo staff solves that problem. At the less demanding
+(although no less important) one-on-one demo stations, four hours
+seems to be the limit for effective delivery. After some food, a trip
+to the bathroom, and a short walk, you can be ready to deliver again.
+</p></li><li><p>
+The Demo: I wrote an article in Newsletter #87
+(http://www.be.com/aboutbe/benewsletter/Issue87.html) about how to
+give a great demo. For a trade show, there are three basic demos you
+should be prepared to do:
+</p><ul class="itemizedlist"><li><p>
+The main demo.
+</p></li><li><p>
+The one-on-one demo.
+</p></li><li><p>
+The "I don't have time for a demo" demo.
+</p></li></ul></li></ol></div><p>
+The main demo is the most important part of your trade show presentation,
+apart from the spinning sign on top of the booth. This demo attracts
+people into your booth to learn more about your product. This demo should
+make the most of everything that's eye-catching about your product.
+You've got to literally stop people in their tracks and make them pay
+attention to you. Here's a tip for doing it: Any static image on a TV
+screen is boring; any moving image, no matter how boring it is, is not
+boring, and immediately attracts the eye.
+</p><p>
+This is generally how I begin to attract a crowd. I leave the system up
+with a few movies playing, along with some other visual candy. I also
+think it's important to let people know when the next demo will start so
+they can decide to stay (FontDemo cycling through fonts is a good "Next
+Demo at" tool).
+</p><p>
+Once you have a couple of people waiting, start your demo. People attract
+people, so you'll build a crowd during the performance. Yes, this is a
+performance, so it needs to be scripted in advance and taught to your
+main demo staff—with enough time to practice. As for length, unless
+your demo is capable of winning awards, you won't keep a crowd standing
+around for more than 10 minutes. Show the highlights and invite them into
+the booth for more in-depth one-on-one demos.
+</p><p>
+The one-on-one demo is more loosely organized and should be tailored to
+each individual depending upon their area of interest. We don't show a
+video developer support for printing to AppleTalk devices. One-on-one
+demo staff must be comfortable showing off most aspects of the product
+and able to customize their demo on the fly. If someone with no specific
+area of interest is looking for a one-on-one demo, use an extended
+version of the "I don't have time for a demo" demo.
+</p><p>
+The "I don't have time for a demo" demo is for people who want to see a
+demo but only have 30 seconds. Be prepared to show them the three most
+impressive aspects of your product. It matters less that they are the
+most important or useful features, than that they can make someone say,
+"Wow, show me more."
+</p><p>
+Finally, everyone in the booth should be able to give a demo. It never
+fails that, with everyone busy giving demos, someone will walk up to you,
+point to the one empty station, and ask for a demo.
+</p><p>
+Look good, be prepared, have fun. There are few things more immediately
+gratifying than giving good demo. Oh, if you're in Vegas for Comdex, only
+play the single decks and always SPLIT aces and 8's, never 10's, 5's, and
+4's.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Marketing3-17-2"></a>Guest Columnist: Seed Financing for Your BeOS Project</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Keith</span> <span class="surname">Bates</span></span></div></div></div><p>
+So you think you have an amazing idea for the BeOS? It's potent.
+Compelling. Promises jaw-dropping capabilities. You can't sleep anymore
+because you're dreaming about it and you're coding every red-eyed moment
+you're awake and you're drinking way too much coffee and every chance you
+get you call your best friend to dream and scheme. There's only one small
+problem: Where do you find the capital?
+</p><p>
+You could start with a venture capital seed fund. In venture parlance, a
+"seed" fund is a capital pool aimed at small, very early stage and high
+risk investments. Seed-stage companies are still in the process of
+technology and product development; they have little or no revenue; they
+are not yet engaged in marketing. This article will give you some
+suggestions on what to think about and cover in your seed-stage business
+plan. There are also a number of useful resources available on the Web
+and in better booksellers that will be helpful to you in creating a plan
+for your prospective investors.
+</p><p>
+The Eastern Technology Seed Investment Fund (ETSIF) is a C$25 million
+(Canadian) venture capital fund created to provide financing and
+management support for early stage technology projects in Eastern Canada
+(Ontario and the Atlantic Provinces). ETSIF is distinguished by its very
+early stage focus and its ability to bring both equity funding and
+management support to technology opportunities. Most of ETSIF's initial
+investments are made in opportunities which do not have revenue and which
+are likely to require a number of rounds of venture financing before
+becoming cash self-sufficient. ETSIF's initial commitment is generally in
+the range of C$100,000 to C$500,000 but investments outside this range
+will be considered.
+</p><p>
+We usually expect that our seed investment will be enough to get a
+company started towards its first "milestone" achievement. Seed stage
+generally is preparatory to a full-blown startup round of financing
+(which may be in the several millions of dollars). During seed stage
+several important objectives are tackled. First, the technology or
+application is brought to prototype or beta stage. Second, the company's
+management team is rounded out. Third, a comprehensive business plan is
+researched and written, suitable for the raising of second round
+financing. At the end of seed stage—typically an eight or ten month
+period, perhaps shorter—companies will be able to move towards the
+second round of financing.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id686940"></a>Key Criteria: Technology, People, Customers</h3></div></div></div><p>
+At ETSIF we look for three essentials in any seed funding application:
+technology, people, and customers. The inability of an applicant to
+satisfy us on all of these points usually means we will not proceed
+further. What follows is intended to give you a sense of how we typically
+approach each of these three qualities, and what sorts of questions you
+should ask yourself in devising your plan.
+</p><p>
+First, the technology must be powerful, compelling, unique. It should
+generally either (a) give the user a power to do things that were
+previously not possible, or (b) allow the user to save significant time
+and money over their existing solution. Small increments will not do
+here. It is no use saying that your solution is 20% better than the
+software that is available today: Your real competition is the software
+that is under development today. What will your advantage be when you
+actually begin to sell your product? How long will it last? How deep and
+wide will the moat be around your technology?
+</p><p>
+The second factor is the quality of the people. At seed stage the
+fundamental focus is on the development team. We like to see a team
+comprised of people who have the training and experience necessary to
+extend and deepen the technology over time; who possess passion and vigor
+and commitment and integrity; who can lay the right architectural
+foundation; who can plan in detail and with wisdom; who can build with
+discipline; who know the value and place of development tools and best
+practices. Be sure to detail the backgrounds and individual
+responsibilities of your team's members. Identify any gaps in the group,
+and explain how you intend to fill them.
+</p><p>
+The last major criterion is a simple one, but too often overlooked:
+customers. Who in the real flesh-and-blood world will pay hard money for
+your product? How many of them are out there today? Next year? Don't
+spend too much time dwelling on "markets," at least to begin with. Who
+are your customers going to be? Who will beg to test your beta? Who will
+buy your product? Better yet, who will pester their boss to buy your
+product for them? Whose heart will pound the most? That's your customer.
+Working backwards from that will help you see your markets. And sometimes
+by going through this exercise you will discover all kinds of new
+markets. If you know your customers, understand their needs and wants and
+methods and fears and similarities and differences, then you will know
+your market. And your knowledge will be of a kind that is meaningful,
+deep, and practical.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id686969"></a>The Seed Plan: Contents and Style Notes</h3></div></div></div><p>
+Your seed plan should discuss, in reasonable detail, the three key
+elements of technology, people, and customers.
+</p><p>
+Explain the technology development plan. Discuss architecture, design,
+construction. We know the difficulties in scheduling complex projects
+reliably; that's why we look for developers who understand "best
+practices," and who have the iron discipline necessary to make excellent
+use of a few useful control and quality tools. Define the key work
+packages as far as you can. Sketch the real decision points and the rough
+schedule. Outline the people and equipment that you will need. Divide
+responsibility for development among your team. Explain the various
+practices (daily builds, version controls, reviews, etc.) that you will
+rely on to ensure that the development process is as controlled as
+possible. Talk about the risks that worry you the most, and how you plan
+to confront those risks.
+</p><p>
+If you can, make a basic budget. Here are some tips:
+</p><div class="orderedlist"><ol><li><p>
+"Get the money on the screen," as they say in the movie business;
+don't fill out the budget with "lifestyle" salaries and hefty fringe
+benefits and perks.
+</p></li><li><p>
+If you choose to forecast financial statements, then think cash
+flow, not accounting profits.
+</p></li></ol></div><p>
+As to style: Avoid business jargon as much as possible. Jargon clouds
+thinking and obscures meaning. It gives even original ideas a hackneyed,
+worn feel. Think clearly. Build your case in logical steps. Write
+crisply, decisively, on the things you truly understand. As Hemingway
+said: "...write when you know something; and not before; and not too
+damned much after."
+</p><p>
+Your business plan at the seed stage shouldn't be a book. Truly exciting
+ideas need only a few pages to sell themselves; the bad ones cannot be
+sold even with hundreds of pages. While every investor has different
+requirements and tastes, the following suggestions may also prove useful
+to you:
+</p><ul class="itemizedlist"><li><p>
+Forget mission statements. Your mission should be clear from your
+plan.
+</p></li><li><p>
+Never gloss over or omit any risks, shortcomings, or unpleasant
+truths.
+</p></li><li><p>
+Don't waste ink on pie charts, or on pretty graphs that show
+limitless year-over-year growth in profits. Instead, use operational
+diagrams of the sort that you would use inside a functioning
+development company: Gantt charts, organizational and architectural
+charts, clear tables, simple drawings, and so forth.
+</p></li><li><p>
+While with seed applicants we don't need or want a full-fledged
+marketing plan, we do appreciate being given the rundown on the
+existing product solutions that your customers are using, even if they
+are not direct competition to your technology.
+</p></li><li><p>
+Footnotes are helpful. Include a glossary of technical terms used.
+Directions to Web resources are also good. Append any particularly
+relevant background articles from magazines or journals.
+</p></li><li><p>
+Always check spelling and grammar and make sure you understand the
+specific requirements of your audience. Sloppiness hurts credibility.
+</p></li></ul></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id687075"></a>Resources</h3></div></div></div><p>
+Take the time to learn how investors think. Read the "Red Herring"
+http://www.redherring.com/ and "Upside" http://www.upside.com/ on a
+regular basis, or skim back issues. Spend time carefully reviewing the
+literature available on the investment funds you intend to apply to, so
+that you accurately grasp the criteria of each. Pick up a copy of
+Geoffrey Moore's Crossing the Chasm, (HarperBusiness, 1991). There are a
+number of good books available on the writing of business plans; one very
+good choice for technology startups is Gordon Bell's High Tech Ventures,
+(Addison Wesley, 1991).
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id687086"></a>Conclusion</h3></div></div></div><p>
+The BeOS platform affords numerous possibilities to build fast-growing
+software companies. The great chance is to create software that couples
+your own powerful insights with the explosive muscle of the BeOS, for
+irresistible results.
+</p><p>
+We are interested in meeting Canadian BeOS developers who have truly
+exciting software ideas, but who lack the capital and management support
+to get properly underway. Canada is home to thousands of developers who
+have spectacular strengths in digital media and animation. If you are in
+Canada and want to discuss your own BeOS project, you are invited to
+contact Keith Bates by telephone (416-861-2282) or e-mail
+kbates@easternseed.com.
+</p><p>
+If you are thinking about applying to ETSIF, you should visit our site at
+http://www.easternseed.com/, which authoritatively describes current
+ETSIF criteria and guidelines, or request a copy of ETSIF's brochure.
+</p><p>
+For developers located in Western Canada, you can visit
+http://www.westernseed.com/ for information on the Western Technology
+Seed Investment Fund.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop3-17"></a>Developers' Workshop: addattr, catattr, listattr, rmattr....</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Doug</span> <span class="surname">Fulton</span></span></div></div></div><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id687161"></a><a id="id687163"></a>Q:</td><td><p>
+What's a catattr?—Alfred Jarry, Fin-de-Siecle, Ohio
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+About three days and a box. Seriously, Mr. Jarry has stumbled over one
+of our undocumented command line tools (in /beos/bin). We'll officially
+document them someday, but until then, regard...
+</p></td></tr></tbody></table></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id687180"></a>addattr, catattr, listattr, rmattr</h3></div></div></div><p>
+These tools perform attribute tricks, and are great for attribute
+debugging. Almost anything that can be done programmatically (through the
+BNode attribute functions) can be done from the command line with these
+tools. All four of these tools return 0 upon success, and non-zero
+otherwise (but with a caveat, as described in rmattr).
+</p><ul class="itemizedlist"><li><p>
+<code class="command">addattr</code> writes an attribute
+(a name/value pair) into an existing file:
+</p><div class="cmdsynopsis"><p><code class="command">addattr</code> [-t type]  attr   value   file1  [file2 ...]</p></div><p>
+"type" is one of:
+</p><p>
+<span class="type">string</span> (the default; 'text' and 'ascii' are synonyms)<br />
+<span class="type">mime</span> (for MIME types)<br />
+<span class="type">int</span> (for <span class="type">int32</span>)<br />
+<span class="type">llong</span> (for <span class="type">int64</span>)<br />
+<span class="type"><span class="type">float</span></span><br />
+<span class="type"><span class="type">double</span></span>
+</p><p>
+If the attribute ("attr") already exists, it's replaced by the new
+value—even if the new attribute is a different type.
+</p></li><li><p>
+<code class="command">catattr</code> displays the value of a named attribute:
+</p><div class="cmdsynopsis"><p><code class="command">catattr</code>  attr   file1  [file2 ...]</p></div><p>
+Each attribute is displayed in the form
+</p><pre class="screen">
+file : type : value
+</pre><p>
+The possible "type" values here are:
+</p><p>
+<span class="type">string</span> (all strings, including MIME types)<br />
+<span class="type">int32</span><br />
+<span class="type">int64</span><br />
+<span class="type"><span class="type">float</span></span><br />
+<span class="type"><span class="type">double</span></span><br />
+<span class="type">raw_data</span> (all other types)
+</p><p>
+Notice that the types that are displayed by <code class="command">catattr</code> are slightly
+different from those expected by <code class="command">addattr</code>. This endearing quirk may be
+kicked into line someday.
+</p><p>
+The data for a <span class="type">raw_data</span> type attributes is displayed in a hexdump (hd)
+style byte table.
+</p><p>
+Also, note that the "attr" argument isn't a wildcard; for example, you
+can't dump all the attributes in a file by commanding "catattr * file".
+</p></li><li><p>
+<code class="command">listattr</code> dumps the names, types, and sizes—but not the values --
+of the attributes in a file:
+</p><div class="cmdsynopsis"><p><code class="command">listattr</code>  file1  [file2 ...]</p></div><p>
+For each file, a three-column table ("Type", "Size", "Name") is
+displayed. The values in the "Type" column are—surprise—different
+from those used by <code class="command">addattr</code> and <code class="command">catattr</code>:
+</p><p>
+Text<br />
+MIME str<br />
+Int-32<br />
+Int-64<br />
+Float<br />
+Double
+</p><p>
+Unrecognized attribute types (constants) are printed in hex. The "Size"
+column gives the size of the attribute in bytes; "Name" is the name of
+the attribute.
+</p><p>
+Keep in mind that directories can have attributes themselves. <code class="command">listattr</code>
+. lists the attributes in the current directory. If you want to list
+the attributes in all the files in a directory, call <code class="command">listattr *</code>.
+</p></li><li><p>
+<code class="command">rmattr</code> removes a named attribute from a file:
+</p><div class="cmdsynopsis"><p><code class="command">rmattr</code>  attr   file1  [file2 ...]</p></div><p>
+<code class="command">rmattr</code>'s return value shouldn't be trusted. It (properly) returns non-
+zero if the arguments are invalid, but it (improperly) returns 0 if
+something goes wrong while removing an attribute.
+</p></li><li><p>
+<code class="command">copyattr</code> also plays with attributes, but it's a much more involved
+program. It copies the attributes and, optionally, data from one file
+to another:
+</p><div class="cmdsynopsis"><p><code class="command">copyattr</code> [options]  from_file1  [from_file2 ...]  to_file </p></div><p>
+In its simplest use, copyattr copies all the attributes (names, types,
+and values) from a source file (A) to a destination file (B):
+copyattr A B
+</p><p>
+Destination attributes are clobbered in the case of duplicate attribute
+names. When copying attributes only (i.e. not data), the destination
+file must already exist.
+</p><p>
+To select a particular attribute (or set of attributes) use the -n or
+-t options:
+</p><p>
+-n  The name of the attribute to copy<br />
+-t  The type of attributes to copy
+</p><p>
+You can only specify one name or one type. The recognized types are:
+</p><p>
+<span class="type">string</span><br />
+<span class="type">mimestr</span> (for MIME types)<br />
+<span class="type">int64</span> (or "llong")<br />
+<span class="type">int32</span> (or "int")<br />
+<span class="type">int16</span><br />
+<span class="type">int8</span><br />
+<span class="type">boolean</span><br />
+<span class="type"><span class="type">float</span></span>
+</p><p>
+The real power of <code class="command">copyattr</code> is as an attribute-aware replacement for
+<code class="command">cp</code>. To tell <code class="command">copyattr</code> to copy data AND
+attributes, you pass it the -d
+option:
+</p><pre class="screen">
+copyattr -d A B
+</pre><p>
+When you're copying data as well as attributes, the destination file
+needn't exist.
+</p><p>
+To recursively copy an entire directory, add the -r (recursive) switch:
+</p><pre class="screen">
+copyattr -d -r ADIR BDIR
+</pre><p>
+To move a directory, use '-d -r' as above, and then throw in the -m
+(remove source) switch:
+</p><pre class="screen">
+copyattr -d -r -m ADIR BDIR
+</pre><p>
+Note that the copyattr command line switches can't be combined. You
+have to use '-d -r -m', not '-drm'.
+</p><p>
+As with the other attribute programs, copyattr returns 0 if successful
+and non-zero otherwise.
+</p></li></ul></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee3-17"></a>Just For Fun</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+It's amazing what you find looking through archives on the Web. In this
+case, obscure mutterings written in another time and another language.
+Originally published on March 3rd, 1995 in the Parisian (and Leftist)
+newspaper Libération, some parts have aged well—while others now
+look decidedly bizarre.
+</p><p>
+Francophones can read the original at:
+http://www.liberation.com/chroniques/ga950303.html
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id687755"></a>Whither Bill Gates? [March 1995]</h3></div></div></div><p>
+A hundred dollars per year per computer—for now. Is this a new fund
+raising idea from the government, a toll on the information highway, or
+perhaps the PC equivalent of the TV license [the French pay a yearly
+license for the use of a TV—supposedly for the "free" state
+channels]? No, it's Microsoft's strategy, a very simple core idea
+hidden behind multiple products, campaigns and announcements.
+</p><p>
+From the purchase of DOS in 1980 from a small company in Seattle
+(before its adoption by IBM), to the announcement of Windows 95, Bill
+Gates has worked from the same plan: develop, cajole, and ferociously
+protect a worldwide installed base of 90 million PCs. Once control is
+established, tax the installed base in the form of new or revised
+software. Average "obligatory" expenditure: A hundred dollars a year.
+</p><p>
+Operating system. In French, "systéme d'exploitation"—"exploitation
+system". We are warned.
+</p><p>
+An exaggeration? Let's look at the facts. Today, Microsoft controls
+about 90% of the market for PC operating systems, more than 70% of
+office automation applications under Windows, and more than 80% on the
+Macintosh. As if this wasn't enough, the latest generation of its
+systems—Windows NT and, soon, Windows 95—will strengthen
+Microsoft's share of an entire spectrum of markets, from office
+computers to large systems. In the meantime, Gates will have spread
+himself to databases and programming languages. He'll have closed the
+1.6 billion dollar acquisition of Quicken, the champion of the very
+American hobby of home accounting; and he'll have leveraged this
+investment through an agreement with Visa that will combine Quicken
+with their credit card services.
+</p><p>
+At home or at the office, Microsoft is the toll gate: Whether in
+entertainment or education, Microsoft's CD-ROMs dominate the market and
+Gates is hard at work developing multimedia products with his Hollywood
+connections. In the enterprise market, he wants to federate telephones,
+fax machines, and copiers.
+</p><p>
+And that's not the end of it as Bill Gates feverishly works on projects
+such as Microsoft Network, which targets CompuServe, Calvacom [a French
+service] and the Internet, or its Tiger standard intended for the
+domination of interactive TV, or Teledesic, the satellite
+telecommunication project set up with billionaire Craig McCaw, the king
+of cellular telephony in the US.
+</p><p>
+Never has a company incarnated the spectre of dominant position as
+fully as Microsoft does—not even IBM at the height of its antitrust
+troubles. Bill Gates denies all this with admirable chutzpah: think of
+the gigantic investments! the ferocious competition! the fragility of
+being on top!... Microsoft is merely a small ship on the threatening
+oceans of a competitive marketplace.
+</p><p>
+This doesn't amuse the industry brethren.
+</p><p>
+Jim Manzi, president of Lotus, would like to know how to compete in the
+office market against an opponent that develops both the operating
+system and the applications, a conjunction that gives Microsoft's word
+processor and spreadsheet a crushing advantage. Microsoft Office is
+designed from within to work with Windows while Lotus must content
+itself with Microsoft's technical documentation—and trust
+Microsoft's word.
+</p><p>
+Such striking success generates bitter accusations of Microsoft's
+misuse of their dominant position, of ethical as well as legal breaches.
+</p><p>
+The success of Microsoft owes much to Bill Gates' intelligence, his
+energy, and his ability to see and willingness to seize opportunities.
+These were many over the years, as his opponents, weakened by
+incompetence and internecine struggles, tremulously clung to the good
+old ways. Gates plays all positions well, his authority is
+unquestioned, he's been at the helm for twenty years and, if he wants,
+he'll be in charge for another twenty or more. In his defense of the
+Microsoft system, he claims that without the standard he created and
+ferociously evangelized, the industry wouldn't have enjoyed the rapid
+and "harmonious" growth leading to its incredible prosperity. So go the
+arguments of enlightened despots. But when they succeed too well and
+for too long, they overshoot the point of optimal service to the
+community and end up doing harm to their own ecological niche. For
+Microsoft, the question is posed in these political terms. The time has
+come to acknowledge that the industry can no longer render unto
+Microsoft.
+</p><p>
+Bill Gates has the means to elegantly transmutate his image from
+wealthy despot into benevolent visionary: All he has to do is put
+Windows in the public domain, provide the source code and documentation
+through the Internet. Entrepreneurs would be free to modify and improve
+upon the standard, customers would be free to pick the best product.
+</p><p>
+This might cost Bill Gates one or two billion dollars of the five or
+six of his personal fortune today. But that's a rather abstract price
+for a very real place in history. Freed from suspicion, Bill Gates
+would become a legend, and would be able to throw himself into the
+boundless enjoyment of competition in the applications market.
+</p><p>
+One can dream.
+</p></div><p>
+It's three years and an (almost) automatic translation program later.
+As with all reminiscence, the views expressed here don't necessarily
+represent those of the author (any more). But...
+</p><p>
+The hand-wringing over the Quicken and Teledesic deals was premature;
+but the Microsoft strategy and the poor little rich kid attitude is
+still with us. Recall their words when they entered the Internet market
+in 1996:
+</p><div class="blockquote"><blockquote class="blockquote"><p>
+“<span class="quote">What you're seeing here is competition, which is good and
+healthy. Now we have Netscape's Navigator and Sun's
+Javasoft as our new competitors.</span>”
+</p></blockquote></div><p>
+More importantly, the events of the last year have again proven that
+the palace isn't safe when there's discontent in the village. Is it too
+late for Louis '98 to open the gates to Versailles?
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue3-16.html">Issue 3-16, April 22, 1998</a>  Up: <a href="volume3.html">Volume 3: 1998</a>  Next: <a href="Issue3-18.html">Issue 3-18, May 6, 1998</a> </div><div id="footerB"><div id="footerBL"><a href="Issue3-16.html" title="Issue 3-16, April 22, 1998"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume3.html" title="Volume 3: 1998"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue3-18.html" title="Issue 3-18, May 6, 1998"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

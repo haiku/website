@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-19.html" title="Issue 4-19, May 12, 1999" /><link rel="next" href="Issue4-21.html" title="Issue 4-21, May 26, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-19.html" title="Issue 4-19, May 12, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-21.html" title="Issue 4-21, May 26, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-19.html">Issue 4-19, May 12, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-21.html">Issue 4-21, May 26, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-20"></a>Issue 4-20, May 19, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-20"></a>Be Engineering Insights: Network File Systems for BeOS—The Art of
+Being Paranoid</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Alfred</span> <span class="surname">Landrum</span></span></div></div></div><p>
+Writing a network file system for the BeOS is an interesting challenge.
+Our network stack is in user space, and file systems are handled in
+kernel space. This will change in the as-yet uncode-named Release 5, when
+the network stack will go into the kernel. But until then, you must
+straddle this fence between kernel and user space. How do you do this?
+Since you'll have code in both places, you'll need a way to communicate
+between them. One way to do this is with ports, which I'll use as an
+illustration. With your code separated, you must pay special attention to
+various types of failures and be able to handle them.
+</p><p>
+I've written a trivial network file system to show how to make network
+calls from the kernel (or anywhere, as you'll see). This file system, the
+"one file network file system" (OFNFS), consists of one file. The OFNFS
+listens to a specified UDP port for broadcasts, and changes its name and
+modification time. OFNFS is just simple enough for me to write quickly
+(and get back to writing CIFS—more later), and just complex enough to
+show the extra worries that network file systems bring. Oh, and I'd also
+like to say that the communication package OFNFS uses is from one of our
+Be developers, Andreas Huber. Andreas has just made his NFS source code
+available on Beware, so grab that as well if you're into networked file
+systems.
+</p><p>
+So, download the source code from
+&lt;ftp://ftp.be.com/pub/samples/add-ons/ofnfs.tgz&gt;, and follow along --
+I've tried to make copious comments in all the right places. Notice that
+the file system consists of two programs: the file system add-on and the
+user-level stub that makes socket calls. The user level stub is called
+ksocketd, and it must be running for the file system to communicate with
+the network. A named port is used to transfer data between the add-on and
+ksocketd. The add-on makes calls like 'ksocket' and 'krecvfrom', which
+behave functionally identically to 'socket' and 'recvfrom'. We use the
+'param' parameter with the mount system call to pass in the port to use.
+We start up our network connection, and then spawn a kernel thread that
+will listen for packets on our UDP port. When we get a packet, we rename
+our file to whatever string we find in the packet. When we're told to
+unmount, we signal our listening thread to die, and then exit.
+</p><p>
+Simple, eh? Ah grasshopper, but what do you do when things go wrong? The
+number one priority of a net fs developer should be handling error
+conditions. So—what could go wrong? Well, in the case of OFNFS, a
+great deal. Surprised? Let me count the ways: What happens if you get a
+packet that contains '\\\\\\'? This is definitely not a legal file name.
+What happens if the net server (our blessed network stack) gets
+restarted? You'd need to recreate your socket, and rebind to it. Hmm --
+what happens if it crashes? You'll have to be prepared for your socket
+calls to start returning error messages. And what if ksocketd gets
+killed? In that case, you're effectively cut off from communicating with
+the network. No problem for OFNFS, you just don't get name changes
+anymore. But what if you're a not-so trivial file system, like... CIFS!
+</p><p>
+Allow me tell you about the current work on CIFS. In case you don't know,
+CIFS stands for "Common Internet File System." It's the fancy name for
+the protocol that Microsoft products use to share files, locate network
+resources, and other things. You may also know that a software package
+called Samba allows Unix machines to communicate with Microsoft boxes.
+(The name "Samba" comes from the fact that the protocol has traditionally
+been known as SMB, or "Server Message Block.") There will be a CIFS
+add-on in the experimental folder of Genki, which will let you use files
+from Microsoft or Samba-enhanced Unix machines. Use and abuse.
+</p><p>
+Getting back to the point, how do you handle errors in a "real" network
+file system? In short, "as gracefully as possible." Let's start with a
+specific example. Say your NT box dies a horrible, bluishly tinted death
+while you're in the middle of transferring a file. First off, how do you
+know when the server has crashed? You'll to need to set some timeouts on
+all your network transactions, so that you'll notice when your file
+server isn't responding. Meanwhile, you can start passing out errors as
+if they were fruitcakes. The user-level application should close all file
+descriptors to you, allowing the user to unmount your now worthless file
+system. Maybe you're optimistic; you'll think about reconnecting to the
+server. You'll have to log in again, so you need to whatever
+authentication info you were given at mount time. You also need to think
+about a reconnect policy—do you want to try to reconnect every time
+you think there's a serious error? Since reconnections have large
+latencies, this could prove extremely aggravating to the user. Think
+about limiting your number of retries, or limiting the number of retries
+you'll make in some limited time frame. (That is, you can retry three
+times in a 10-second period, then wait ten seconds. Insert your heuristic
+here.)
+</p><p>
+In conclusion, here are some tips on network file systems:
+</p><div class="orderedlist"><ol><li><p>
+Since you'll probably cache some kind of information on the server,
+keep an eye on your memory usage. The kernel exports some useful
+memory calls: <code class="function">smalloc</code>, <code class="function">sfree</code>,
+<code class="function">scalloc</code>, etc. The extra "s" here is for
+"swappable"; normally, memory allocated in the kernel is locked down
+and never paged out. Memory returned by these calls can be swapped out.
+</p></li><li><p>
+The kernel debugger is your friend. If you write a network file
+system (or any file system for that matter), you'll develop a very
+intimate relationship with it. For info on the kernel debugger, please
+read "<a class="xref" href="Issue3-21.html#Engineering3-21" title="Be Engineering Insights: Windows 95 Experience on BeOS—Or How to Hack on BeOS">Be Engineering Insights: Windows 95 Experience on BeOS—Or How to Hack
+on BeOS</a>", by Victor Tsou.
+</p></li><li><p>
+Be careful reading in packets. Perform sanity checks on data you
+receive. (Example: I had a bug in
+<acronym class="acronym">CIFS</acronym>,
+caused by reading data from
+the wrong place in a packet, that led to attempts to malloc huge
+pieces of memory. It is unwise to blindly malloc 2GB.)
+</p></li><li><p>
+Be militantly paranoid about reading strings. Do not use any of the
+normal string functions; always use the number-limited versions (i.e.,
+<code class="function">strncpy</code>, <code class="function">strncat</code>...). If you walk past the end of your string, you
+will crash the kernel. <code class="constant">B_DONT_DO_THAT</code>.
+</p></li><li><p>
+Be prepared for everything to die. ksocketd could die. The net
+server could restart, or it could just up and quit. If you end up
+waiting for a response from the network without having some kind of
+timeout, you will block forever in the kernel. This is a
+<span class="trademark">Bad Thing</span>™. Your file server could die, and never get back to you. Or,
+it could die, and come back on-line, and start claiming it doesn't
+know you. You'll have to reauthenticate to it. Your cache information
+is probably stale now.
+</p></li><li><p>
+Think ahead about what kind of failure policy you want to enforce;
+a little bit of design here goes a long way.
+</p></li></ol></div><p>
+Since this is my first newsletter article, I'd appreciate it if you'd
+drop me a line telling me if it was at all helpful to you. Thinking about
+writing a network file system? Let me know. (Please understand that time
+is a precious commodity between now and golden master day, though.)
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-20"></a>Developers' Workshop: Big Bad Voodoo Teapot</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Mikol</span> <span class="surname">Ryon</span></span></div></div></div><p>
+One of the questions most asked often of
+<acronym class="acronym" title="Developer Technical Support">DTS</acronym> lately is, "How do I make my
+<span class="trademark">OpenGL</span>™ app use hardware acceleration?"—or some variation thereof. OK,
+here's how. If you're running Genki 5 or 6, with your trusty Voodoo2 card
+installed, along with the glide2 package from the optional folder of the
+Genki CD, you're ready to get started.
+</p><p>
+I have a pair of simple examples here, which allow you to test your setup
+and which show you the basics of hardware acceleration. To do this, I've
+taken the GLTeapot example code straight off the Release 4 CD and made
+minimal changes, accelerating from ~40 fps to ~200 fps. That's cool.
+You'll find the code at &lt;ftp://ftp.be.com/pub/samples/open
+gl/GLTeapot-Voodoo.zip&gt;. All changes are labeled "voodoo" for easy
+viewing.
+</p><p>
+The two big alterations to GLTeapot are adding full screen mode for
+hardware acceleration and changing the resize mode of our view from
+<code class="constant">B_FOLLOW_ALL</code> to <code class="constant">B_FOLLOW_NONE</code>.
+This is so that our view resizes to the size
+of the window. With Voodoo hardware, we must be in 800x600 or less to get
+hardware acceleration. You'll see that most of the code changes simply
+involve my adding the fancy
+<span class="keysym">Alt</span>+<span class="keycap">F</span> switch and menu option to go from
+window mode to full screen mode and back.
+</p><p>
+Another quick example is converting Michael Morrissey's 3DLife
+<a class="xref" href="Issue3-34.html#DevWorkshop3-34" title="Developers Workshop: Life in Three Dimensions">Developers Workshop: Life in Three Dimensions</a> to make
+use of Voodoo hardware. The code for this is at
+&lt;ftp://ftp.be.com/pub/samples/open_gl/3Dlife-Voodoo.zip&gt;. The changes
+here are a bit more extensive, but they're still relatively minor. In
+lifeView.cpp, we again change the resize mode of our view to
+<code class="constant">B_FOLLOW_NONE</code>. In <code class="filename">lifeWin.cpp</code> we change our main window
+to a <code class="classname">BDirectWindow</code>, and
+enable DirectMode with <code class="code"><code class="varname">mv</code>-&gt;<code class="varname">EnableDirectMode</code>(<code class="constant">true</code></code>).
+Also in <code class="filename">lifeWin.cpp</code> we
+implement <code class="methodname">lifeWin::DirectConnected()</code> and pass them along to our view's
+implementation of <code class="methodname">DirectConnected()</code>.
+</p><p>
+The only other changes are adding the menu option and hot switch to
+switch between full screen and window mode.
+</p><p>
+This has been a short article, but I hope it answers one of DTS's most
+frequently asked questions.
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-20"></a>PC Expo in Five Weeks</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+A quick look at my calendar tells me that PC Expo opens in less than five
+weeks. I love trade shows—they're tiring, expensive, and, at times,
+bewildering. But how else can we get to see so many customers,
+developers, business partners, members of the commentariat, and
+competitors large and nimble in so little time? Combine all that with New
+York City and its robust culture, and you realize how unreal life can be
+in Silicon Valley.
+</p><p>
+For us, though, the main point of PC Expo will be to show how the BeOS
+incarnates the MediaOS concept. The classical trade show booth usually
+revolves around one larger-than-life demo, plus some smaller stations for
+showing particular products or aspects of what the company offers to
+individuals and smaller groups. For this PC Expo we have more and more
+spectacular demos of new applications from noted and soon-to-be-notable
+developers, along with some new twists (perhaps literally) on our own
+apps.
+</p><p>
+I still remember what an executive of a respected microprocessor company
+said when seeing a BeOS demo for the first time: I didn't know my PC
+could do that. That's one of the messages we want to broadcast as loud
+and on as large a screen as show regulations and our budget will permit
+-- within the limits of good taste, of course. As our departed Sales and
+Marketing VP Alex Osadzinski used to say: No objectified humans and no
+race cars. I quote him with both license and prudence.
+</p><p>
+Moving to the rest of the booth, we want to broadcast another message:
+Here is what you can do. From one station to another you'll be able to
+use applications to actually create, edit, produce, post-produce, merge,
+fold, staple, and mutilate digital media. We hope that at the end of the
+tour you'll go home with a sample of your work using tools made by BeOS
+developers. Work and fun rolled into one. Speaking of the latter, we'll
+also have the latest games available on the BeOS.
+</p><p>
+So, please come along. If you're a developer, we'd love to hear from you
+and see how we can show off your work. If you're already a BeOS user,
+please join us in celebrating what's happened since we first demonstrated
+the x86 version of the BeOS. And if you're not a BeOS user yet, let us
+give you some good reasons to make room on your hard disk for the Media
+OS.
+</p><p>
+Watch our web site for details and/or e-mail us. We look forward to
+seeing you in NYC.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-19.html">Issue 4-19, May 12, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-21.html">Issue 4-21, May 26, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-19.html" title="Issue 4-19, May 12, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-21.html" title="Issue 4-21, May 26, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

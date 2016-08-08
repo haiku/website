@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-20.html" title="Issue 4-20, May 19, 1999" /><link rel="next" href="Issue4-22.html" title="Issue 4-22, June 2, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-20.html" title="Issue 4-20, May 19, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-22.html" title="Issue 4-22, June 2, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-20.html">Issue 4-20, May 19, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-22.html">Issue 4-22, June 2, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-21"></a>Issue 4-21, May 26, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-21"></a>Be Engineering Insights: Kernel Programming on the BeOS: Part 1</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Mani</span> <span class="surname">Varadarajan</span></span></div></div></div><p>
+The kernel team is planning to document several aspects of kernel-level
+programming in a series of Newsletter articles. This will be useful to
+anyone who ever intends to write or directly use a driver, and will also
+be of general interest to those who are simply interested in knowing how
+the pieces of the kernel fit together.
+</p><p>
+This article provides an overview of the entire series. Future articles
+will focus on the various components a developer can contribute—user-
+and kernel-level drivers, modules, bus managers, busses, etc., and will
+contain helpful suggestions as to how to properly and safely integrate
+these pieces into the system.
+</p><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id787699"></a>Introduction</h3></div></div></div><p>
+As most of you know, the BeOS kernel itself consists only of core
+functionality, sufficient to start the boot process and manage memory and
+threads. Also built into the kernel are the ISA bus manager, the PCI bus
+manager, the device file system (devfs) which manages
+<code class="filename">/dev</code>, the root file
+system (rootfs) which handles things in
+<code class="filename">/</code>, and a few other odds and ends.
+</p><p>
+Since this is nowhere near enough to do anything useful, as early as the
+boot process the kernel uses add-ons to extend its functionality. File
+systems, device and bus drivers, for example, are all add-ons that are
+loaded by the kernel.
+</p><p>
+These kernel add-ons can be broadly classified into three categories:
+</p><div class="orderedlist"><ol><li><p>
+device drivers—code that communicates directly with a device
+</p></li><li><p>
+modules—add-ons that export an API for use by other modules or
+drivers, all within kernel space
+</p></li><li><p>
+file systems—BFS, dosfs, hfs, etc. These will not be covered in
+this series.
+</p></li></ol></div><p>
+Device drivers and file systems, while they add functionality to the
+kernel, are accessible from user space, in the sense that you can open
+them and address them via file descriptors. Modules, however, are
+kernel-only extensions, since they provide functionality for drivers and
+other modules. The raison d'etre of modules will become clearer below.
+</p><p>
+Note: some of this has been covered before in some detail in an article
+by Arve Hjønnevåg. See "<a class="xref" href="Issue3-20.html#Engineering3-20" title="Be Engineering Insights: Splitting Device Drivers and Bus Managers">Be Engineering Insights: Splitting Device Drivers and Bus Managers</a>".
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id787781"></a>What exactly is a device driver?</h3></div></div></div><p>
+A device driver is something that actually talks to a specific device or
+class of devices. The communication usually involves some device-specific
+protocol—for example, code that specifically addresses a graphics
+card, an Ethernet card, or serial port is a device driver. Similarly,
+each piece of code that speaks to a class of devices such as SCSI disks,
+ATAPI devices, ATA devices, etc., is also a device driver. This code
+actually understands the device itself and manages it.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id787801"></a>What is a module?</h3></div></div></div><p>
+As explained above, modules present a uniform API for use by other
+modules or drivers. This is a useful way of separating out commonly used
+functionality from a driver.
+</p><p>
+Take the example of a SCSI device driver talking to a SCSI device. The
+device hangs off a SCSI bus, which in turn may be one of many busses on
+the system. All SCSI devices speak a common command set that is
+independent of the controller used to send the commands. Rather than have
+each SCSI driver (SCSI disk, SCSI CD, SCSI scanner, etc.) know how to
+deal with each of the possible types of SCSI cards, it would be nice if
+there were a generic interface to a SCSI card for each driver to use.
+This is accomplished by having one module implement each SCSI card, which
+then presents a generic API.
+</p><p>
+These modules are further managed by a SCSI "bus manager" module, which
+knows how to deal with multiple busses and present them in an
+encapsulated format to each driver. The bus manager's API is what the
+driver has to deal with, reducing its complexity a great deal. We also
+have USB, IDE and PCMCIA bus managers.
+</p><p>
+Another example of the use of the module architecture is a sound driver
+which publishes a MIDI device. MIDI functionality can be encapsulated in
+a module so that all sound drivers can access it, avoiding duplication in
+each driver.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id787835"></a>How do these relate to the Kernel?</h3></div></div></div><p>
+The kernel provides basic services so that drivers and modules can
+function. Typically these are
+</p><ul class="itemizedlist"><li><p>
+Enabling and disabling interrupts.
+</p></li><li><p>
+Setting up memory for DMA, etc.
+</p></li><li><p>
+Access to other devices and modules.
+</p></li></ul><p>
+The kernel also provides access at user level to devices using a "Posixy"
+API. Devices can be opened by user programs through Posix calls such as
+<code class="function">open</code>, <code class="function">read</code>,
+<code class="function">write</code>, and <code class="function">ioctl</code>, which address the devices through file
+descriptors. These calls turn into system calls in the kernel, and are
+passed by devfs to the appropriate device driver, which then performs the
+specified operation.
+</p></div><div class="sect2"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h3 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="id787892"></a>User- or Kernel-level Driver?</h3></div></div></div><p>
+If you want to write a driver for a device, one of the first decisions
+you need to make is whether it should be at user or kernel level. A
+kernel-level driver was described above; a user-level driver does the
+same task by using an extant "raw" driver that knows how to handle that
+class of device. For example, if you wanted to write a driver for a <acronym class="acronym">SCSI</acronym>
+scanner, you could write an add-on at user level that opens up the scsi
+raw device and send commands through scsi raw to the scanner. The
+alternative would be to write a conventional kernel-level driver to
+directly speak to the scanner.
+</p><p>
+The main advantage of operating at kernel level is speed. In this case,
+one less context switch is required for command completion, so the
+latency is lower compared to user level. In addition, if your driver
+needs access to some peculiar hardware, it's rather difficult to do this
+using a raw driver from user space.
+</p><p>
+The trade off is that it's much easier to debug at user level. You can
+use conventional debugging techniques and there's less chance of taking
+down the entire system in the process.
+</p><p>
+The above is merely a brief introduction to the topic. Stay tuned for
+more in-depth pieces from various members of the kernel team.
+</p></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-21"></a>Developers' Workshop: The High Cost of Memory: Using <code class="function">rtm_alloc()</code></h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Owen</span> <span class="surname">Smith</span></span></div></div></div><p>
+The following transcript comes from a recent interview between myself and
+Morgan le Be, the editor of SQUONK! Magazine. [NOTE: any resemblance to
+other magazines, either real or imagined, is entirely coincidental.]
+</p><div class="qandaset"><table border="0" summary="Q and A Set"><col align="left" width="1%" /><tbody><tr class="question"><td><a id="id787984"></a><a id="id787986"></a>Q:</td><td><p>
+What is this <code class="function">rtm_alloc()</code>, anyway?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="function">rtm_alloc()</code> is part of a high-performance memory management system that
+the BeOS genki/6 Media Kit provides.
+</p></td></tr><tr class="question"><td><a id="id788006"></a><a id="id788009"></a>Q:</td><td><p>
+Who uses <code class="function">rtm_alloc()</code>?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="function">rtm_alloc()</code> is primarily used in critical portions of the Media Kit.
+Media node writers can also take advantage of <code class="function">rtm_alloc()</code> in the
+time-sensitive portions of their code.
+</p></td></tr><tr class="question"><td><a id="id788033"></a><a id="id788035"></a>Q:</td><td><p>
+But why wouldn't you just use <code class="function">malloc</code> like everybody else?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+To answer this, it's important to understand how <code class="function">malloc</code>
+works. <code class="function">malloc</code>
+first tries to reserve memory in <acronym class="acronym">RAM</acronym> to give you what you need. If there
+isn't enough room in <acronym class="acronym">RAM</acronym>, the kernel's virtual memory system takes over.
+The kernel then swaps out pages of memory from <acronym class="acronym">RAM</acronym> to your hard drive to
+make room for your request. In addition, memory created by <code class="function">malloc</code> can be
+swapped to disk to make room for other memory that needs to be used. For
+most applications, the overhead incurred by <code class="function">malloc</code> and virtual memory is
+negligible compared to other performance factors that affect your code,
+and the advantages offered by virtual memory far outweigh the cost.
+</p><p>
+For media nodes that must run in real time, however, <code class="function">malloc</code> is not good
+enough. Why? Because the virtual memory management system costs you time,
+not only from pushing blocks of memory around, but also from switching
+between your thread and the kernel. And if this isn't heinous enough,
+there's always the chance that your memory will be swapped out to disk
+later on, resulting in possible additional overhead whenever you try to
+access the memory. For time-sensitive media nodes, this overhead can be
+crippling, causing audio glitches or other undesirable performance
+artifacts.
+</p></td></tr><tr class="question"><td><a id="id788094"></a><a id="id788097"></a>Q:</td><td><p>
+How does <code class="function">rtm_alloc()</code> solve this problem?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+<code class="function">rtm_alloc()</code> is a mechanism which bypasses virtual memory and its vices.
+As memory management systems go, <code class="function">rtm_alloc()</code> is almost painfully simple.
+You use it by creating a pool of memory ahead of time. <code class="function">rtm_alloc()</code> then
+assigns chunks of memory from this pool. In this case, allocating and
+freeing memory are trivial operations on already extant memory. So, as
+long the pool has enough available memory to deliver to you, no trip to
+the kernel is necessary. In addition, the media real-time allocator will
+lock this pool of memory into <acronym class="acronym">RAM</acronym>, meaning that the memory cannot be
+paged out by the virtual memory engine. In short, allocating and freeing
+memory doesn't trigger <acronym class="acronym">VM</acronym>, and the memory you get will stick around in
+RAM, so there's no <acronym class="acronym">VM</acronym> overhead there.
+</p></td></tr><tr class="question"><td><a id="id788145"></a><a id="id788148"></a>Q:</td><td><p>
+What are the drawbacks to using <code class="function">rtm_alloc()</code>?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+The power of <code class="function">rtm_alloc()</code> is also its major drawback. Because you're
+creating and locking a pool of memory for your application to use, that
+memory is completely dedicated to your application—which means that
+the effective amount of <acronym class="acronym">RAM</acronym> available for other applications is reduced,
+and their performance will suffer. Another potential problem you might
+run into is memory fragmentation, as <code class="function">rtm_alloc()</code> does almost nothing to
+deal with this issue. For these reasons, we recommend that you only use
+<code class="function">rtm_alloc()</code> when you absolutely need it.
+</p><p>
+Although memory is cheap, we realize that not everybody may want to
+devote a significant chunk of their <acronym class="acronym">RAM</acronym> exclusively to media applications
+at the expense of the rest of their system. For this reason, the media
+real-time allocator will only lock its memory pools into <acronym class="acronym">RAM</acronym> if either
+Real-Time Audio or Real-Time Video is enabled. These two options are set
+by the user by check boxes in the Media Preferences panel.
+</p></td></tr><tr class="question"><td><a id="id788203"></a><a id="id788206"></a>Q:</td><td><p>
+So, how do I use <code class="function">rtm_alloc()</code>?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Here's how it basically works. See the header file
+<code class="filename">RealtimeAlloc.h</code> in
+the Media Kit for more details.
+</p><p>
+First, use <code class="function">rtm_create_pool</code> to create the memory pool you wish to use.
+Because this creates an area, which involves the <acronym class="acronym">VM</acronym> system, you should do
+this before the real-time madness starts. You give it the size of the
+pool and the name (which should be <code class="constant">B_OS_NAME_LENGTH</code> bytes or less). You
+get back an opaque pointer, <span class="type">rtm_pool*</span>, that uniquely identifies your pool.
+</p><p>
+Keep in mind that, when creating pools, you should try to specify the
+minimum amount of memory that you'll need. Also note that there is some
+overhead for every pool that you create, and the number of pools you can
+have is limited, so it's better to create one pool for your purposes
+rather than several smaller ones.
+</p><p>
+Another important note about pools: there is always one pool available
+for use called the "default pool." This is the pool used by the Media Kit
+for its own real-time allocation needs. I will forego subtlety and say:
+don't use the default pool! Create your own pool instead, so that you
+don't starve the Media Kit and associated classes.
+</p><pre class="programlisting c">
+<span class="type">rtm_pool*</span> <code class="varname">my_pool</code>;
+<span class="type">status_t</span> <code class="varname">err</code> = <code class="function">rtm_create_pool</code>(&amp;<code class="varname">my_pool</code>, 0x1000,
+  "My Real-Time Pool");
+if (<code class="varname">err</code> != <code class="constant">B_OK</code>) {
+  <span class="comment">// there's probably no <acronym class="acronym">RAM</acronym> left for you to lock down:
+  // the system is seriously stressed!</span>
+  ...
+}
+</pre><p>
+Now, once you have a pool, use <code class="function">rtm_alloc()</code> to get the memory you need. You
+identify the pool and the amount of memory to reserve. If this pool
+doesn't have enough memory left, not all is lost! <code class="function">rtm_alloc()</code> will try to
+"grow" the pool by creating a new area big enough to hold the memory,
+before failing. (Doing this could potentially involve <acronym class="acronym">VM</acronym>, though, so this
+will cost you.)
+</p><pre class="programlisting c">
+<span class="type">size_t</span> <code class="varname">size</code> = ...;
+<span class="type">void*</span> <code class="varname">ptr</code> = <code class="function">rtm_alloc</code>(<code class="varname">my_pool</code>, <code class="varname">size</code>);
+if (! <code class="varname">ptr</code>) {
+  <span class="comment">// Bad news, Buck: we're out of memory!</span>
+  ...
+}
+</pre><p>
+Once you're done with the memory, simply free it by using
+<code class="function">rtm_free()</code>:
+</p><pre class="programlisting c">
+<span class="type">status_t</span> <code class="varname">err</code> = <code class="function">rtm_free</code>(<code class="varname">ptr</code>);
+if (<code class="varname">err</code> != <code class="constant">B_OK</code>) {
+  <span class="comment">// ptr was probably NULL</span>
+  ...
+}
+</pre><p>
+As soon as you're done using the memory pool, be sure to delete it, so
+that the system can reclaim your <acronym class="acronym">RAM</acronym> for others to use.
+</p><pre class="programlisting c">
+<span class="type">status_t</span> <code class="varname">err</code> = <code class="function">rtm_delete_pool</code>(<code class="varname">my_pool</code>);
+if (<code class="varname">err</code> != <code class="constant">B_OK</code>) {
+  <span class="comment">// my pool was probably already deleted</span>
+  ...
+}
+</pre><p>
+For an example of the real-time allocator in action, and how you can
+redefine the C++ operators new and delete to use real-time allocation,
+check out the sample code:
+</p><p>
+&lt;ftp://ftp.be.com/pub/samples/media kit/rtm_test.zip&gt;
+</p><p>
+This provides a couple of super-simple tests you can run on either
+regularly allocated objects or <code class="function">rtm_alloc()</code>'ed objects. Hopefully, this code
+will demonstrate just how significant the performance savings can be,
+though of course, your actual mileage will vary.
+</p></td></tr><tr class="question"><td><a id="id788489"></a><a id="id788491"></a>Q:</td><td><p>
+Can I use <code class="function">rtm_alloc()</code> in other situations than media nodes?
+</p></td></tr><tr class="answer"><td align="left" valign="top">A:</td><td align="left" valign="top"><p>
+Because <code class="function">rtm_alloc()</code> memory locking is controlled by the "Enable
+Real-Time Audio/Video" check boxes in the Media Preferences panel, this
+facility is not really appropriate for non-media applications. Any
+application can, however, create a pool of memory that is locked into RAM
+by using areas:
+</p><pre class="programlisting c">
+<span class="type">size_t</span> <code class="varname">size</code> = ...;
+
+<span class="comment">// round up to a multiple of the page size
+// this works because B_PAGE_SIZE is a power of 2</span>
+<code class="varname">size</code> = (<code class="varname">size</code> + <code class="constant">B_PAGE_SIZE</code> - 1) &amp; ~(<code class="constant">B_PAGE_SIZE</code> - 1);
+<span class="type">void*</span> <code class="varname">my_pool</code>;
+
+ <span class="type">area_id</span> <code class="varname">area</code> = <code class="function">create_area</code>("My Pool", &amp;<code class="varname">my_pool</code>,
+  <code class="constant">B_ANY_ADDRESS</code>, <code class="varname">size</code>, <code class="constant">B_FULL_LOCK</code>,
+  <code class="constant">B_READ_AREA</code> | <code class="constant">B_WRITE_AREA</code>);
+
+ if (<code class="varname">area</code> &lt; 0) {
+  <span class="comment">// some error occurred</span>
+  ...
+}
+</pre><p>
+Doing memory allocation from this pool (perhaps as a C++ allocator
+template?) is left as an exercise for the reader.
+</p></td></tr></tbody></table></div></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-21"></a>Once More, With Feeling: Life after the PC</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+A popular topic. Like the flu, it vanishes for a while, then returns as a
+newer, more virulent strain. But far from me to complain—I like it
+when Business Week and Newsweek stir up the pot. When Newsweek describes
+a brave new Ether in which everyday objects swim in an ocean of IP
+packets, I'm happy. That's because I look forward to using wireless PDAs
+and to programming my VCR with a mouse click from a NetPositive page
+somewhere in the house—or in the world. I'm happy because I see more
+and more opportunities for the BeOS as the mutltimedia engine in these
+connected applications.
+</p><p>
+Unsurprisingly, Bill Gates has views to share on the matter. He argues in
+the same issue of Newsweek that the PC is with us forever, the center and
+nexus of this brave new connected world (I paraphrase here, with no
+warranties expressed or implied). Apparently, his statements are in
+reaction to predictions that the PC will disappear, giving way to
+specialized, task-specific devices that do a better job for less money
+and less aggravation. Part of Chairman Bill's argument is that PCs will
+become easier to understand, with a simpler user interface. They'll
+provide the simplicity of a task-specific device, combined with the
+protean permutations we've come to love in our computers.
+</p><p>
+Yes, I like personal computers. They're useful, fun, and if you really
+invest enough time into making them work just right, you'll grow hair on
+your chest. If I understand correctly, The Chairman is promising chest
+alopecia some time in our future. Other people agree with him and believe
+that a collaboration between Intel and Microsoft will deliver us to the
+Promised Land of The Simple PC. From there, with a careful application of
+Moore's Law, The Simple PC will become The Free PC, with the marginal
+cost of the physical device absorbed by a service provider. Just like
+free cell phones.
+</p><p>
+This is a seductive strategy. But last weekend, while cleaning the
+shelves in my home office, I came across a Bob CD-ROM. It promised in the
+early 90s what The SimplePC promises now—a simple, friendly interface.
+The fact that it didn't work then doesn't necessarily predict that it
+won't work in the future. Actually, I find Windows offers a well-designed
+UI. But it does little to hide the growing complexity underneath. The
+idea that you can put an interface layer above the gas refinery, and the
+foul-smelling problems beneath it will never percolate to the surface is
+just that—an idea—a seductive one without foundation in observed
+behavior. This is an instance of a well-known sophism: It'll work because
+it would be cool if it did. That's what we thought of handwriting
+recognition.
+</p><p>
+I like PCs for what they do well; I agree with Microsoft's Chairman that
+they're irreplaceable. But they can be complemented. This isn't an
+either/or proposition. The Post-PC world is a misnomer—it makes good
+headlines, but it masks a more complex reality. Just as automobiles
+differentiated into all sorts of vehicles—some of which General Motors
+refused to acknowledge for years—everyday computing devices will
+continue to differentiate. In the twilight of the PC-centric era, we are
+moving toward a Web-centric stage and our dear PC will be one of many
+devices happily swimming in the ocean of IP packets.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-20.html">Issue 4-20, May 19, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-22.html">Issue 4-22, June 2, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-20.html" title="Issue 4-20, May 19, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-22.html" title="Issue 4-22, June 2, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>

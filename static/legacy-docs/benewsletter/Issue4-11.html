@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Be Newsletters - Volume 4: 1999</title><link rel="stylesheet" href="be_newsletter.css" type="text/css" media="all" /><link rel="shortcut icon" type="image/vnd.microsoft.icon" href="./images/favicon.ico" /><!--[if IE]>
+    <link rel="stylesheet" type="text/css" href="be_newsletter_ie.css" />
+    <![endif]--><meta name="generator" content="DocBook XSL Stylesheets V1.73.2" /><link rel="start" href="index.html" title="Be Newsletters" /><link rel="up" href="volume4.html" title="Volume 4: 1999" /><link rel="prev" href="Issue4-10.html" title="Issue 4-10, March 10, 1999" /><link rel="next" href="Issue4-12.html" title="Issue 4-12, March 24, 1999" /></head><body><div id="header"><div id="headerT"><div id="headerTL"><a accesskey="p" href="Issue4-10.html" title="Issue 4-10, March 10, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a accesskey="u" href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a accesskey="n" href="Issue4-12.html" title="Issue 4-12, March 24, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="headerTR"><div id="navigpeople"><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div><div class="navigboxed" id="naviglang" title="English">en</div></div><div id="headerTC">Be Newsletters - Volume 4: 1999</div></div><div id="headerB">Prev: <a href="Issue4-10.html">Issue 4-10, March 10, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-12.html">Issue 4-12, March 24, 1999</a></div><hr /></div><div class="article"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Issue4-11"></a>Issue 4-11, March 17, 1999</h2></div></div></div><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Engineering4-11"></a>Be Engineering Insights: Nicer Lines</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Benoît</span> <span class="surname">Schillings</span></span></div></div></div><p>
+Even though standard line drawing looks good for horizontal, vertical,
+and 45 degree lines, it's sometimes useful to be able to draw at other
+angles without having the problem of "jaggies" on the lines. The solution
+to this problem has been known for at least 500 years—it's called
+anti-aliasing.
+</p><p>
+A common misconception is that anti-aliasing is expensive and will slow
+your critical application down to a crawl. So here's a little routine
+which shows you how to avoid the speed problem. It's actually only
+slightly slower than regular line drawing and still lets you have that
+nice anti-aliased look!
+</p><p>
+The idea is to use a modification of the
+<a class="ulink" href="http://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm">Bresenham algorithm</a>, in which
+the error term is used to compute the relative brightness of two pixels.
+The parameters that compute the error term are pre-scaled, so they give
+an index directly into a color table.
+</p><p>
+The current code is designed for an 8-bit bitmap, but it's a trivial
+exercise (which I leave to you) to convert it to 32-bit graphics. Note
+that in this simple implementation, there is not clipping code—so be
+careful.
+</p><p>
+Another simplification in the code is that the routine will not blend the
+color of the line with the existing background. In many cases, this
+approximation is OK, but you may need to read the old pixel and blend it
+with the new color before writing it back. If you do that, performance
+will suffer.
+</p><p>
+The last parameter of the function (<code class="parameter">mp</code>) is a pointer to a table of 32
+char containing the palette to be used. An example of a palette could be
+a simple gray ramp:
+</p><pre class="programlisting cpp">
+<span class="type">void</span>    <code class="function">main</code>()
+{
+    <span class="type">uchar</span>       <code class="varname">palette</code>[32];
+    <code class="classname">BScreen</code>     <code class="varname">s</code>;
+    <span class="type">rgb_color</span>   <code class="varname">c</code>;
+    <span class="type">long</span>        <code class="varname">entry</code>;
+
+    for (<code class="varname">i</code> = 0;<code class="varname">i</code> &lt; 32; <code class="varname">i</code>++) {
+        <code class="varname">c</code>.<code class="varname">red</code> = <code class="varname">i</code> * 8;
+        <code class="varname">c</code>.<code class="varname">green</code> = <code class="varname">i</code> * 8;
+        <code class="varname">c</code>.<code class="varname">blue</code> = <code class="varname">i</code> * 8;
+        <code class="varname">entry</code> = <code class="varname">s</code>.<code class="methodname">IndexForColor</code>(<code class="varname">c</code>);
+        <code class="varname">palette</code>[<code class="varname">i</code>] = <code class="varname">entry</code>;
+    }
+}
+</pre><p>
+And now the code...
+</p><pre class="programlisting cpp">
+<span class="type">void</span>    <code class="function">anti_fline</code>(<span class="type"><code class="classname">BBitmap</code> *</span><code class="parameter">b</code>, <span class="type">long</span> <code class="parameter">x1</code>,<span class="type">long</span> <code class="parameter">y1</code>,<span class="type">long</span> <code class="parameter">x2</code>,
+                   <span class="type">long</span> <code class="parameter">y2</code>, <span class="type">uchar *</span><code class="parameter">mp</code>)
+{
+    <span class="type">long</span>    <code class="varname">dx</code>,<code class="varname">dy</code>;
+    <span class="type">long</span>    <code class="varname">sy</code>;
+    <span class="type">long</span>    <code class="varname">rowbyte</code>;
+    <span class="type">long</span>    <code class="varname">error</code>;
+    <span class="type">long</span>    <code class="varname">cpt</code>;
+    <span class="type">uchar   *</span><code class="varname">base</code>;
+    <span class="type">float</span>   <code class="varname">k</code>;
+
+    <code class="varname">base</code> = (<span class="type">char *</span>)<code class="parameter">b</code>-&gt;<code class="methodname">Bits</code>();
+    <span class="comment">//get bitmap base</span>
+    <code class="varname">rowbyte</code> = <code class="parameter">b</code>-&gt;<code class="methodname">BytesPerRow</code>();
+    <span class="comment">//number of byte per row</span>
+
+    <code class="varname">dx</code> = <code class="parameter">x2</code>-<code class="parameter">x1</code>;
+    <span class="comment">// delta x</span>
+    <code class="varname">dy</code> = <code class="parameter">y2</code>-<code class="parameter">y1</code>;
+    <span class="comment">// delta y</span>
+
+    <code class="varname">base</code> = <code class="varname">base</code> + <code class="parameter">y1</code>*<code class="varname">rowbyte</code>+<code class="parameter">x1</code>;
+    <span class="comment">//compute start point address</span>
+
+    if (<code class="varname">dx</code>==0 &amp;&amp; <code class="varname">dy</code>==0) {
+    <span class="comment">//single pixel case optimisation</span>
+        *<code class="varname">base</code> = *<code class="parameter">mp</code>;
+        return;
+    }
+
+
+
+    if (<code class="varname">dy</code>&lt;0) {
+    <span class="comment">//if the line goes up</span>
+        <code class="varname">sy</code> = -1;
+        <span class="comment">//step up</span>
+        <code class="varname">dy</code> = -<code class="varname">dy</code>;
+        <span class="comment">//get dy positive again</span>
+        <code class="varname">rowbyte</code> = -<code class="varname">rowbyte</code>;
+        <span class="comment">//invert rowbyte to go up</span>
+    }
+    else
+        <code class="varname">sy</code> = 1;
+
+    if (<code class="varname">dx</code> &gt; 0) {
+    <span class="comment">//if going right</span>
+        if (<code class="varname">dx</code> &gt; <code class="varname">dy</code>) {
+        <span class="comment">//select case, is it more horizontal than vertical?</span>
+            <code class="varname">cpt</code> = <code class="parameter">x2</code> - <code class="parameter">x1</code>;
+            <span class="comment">//how many pixels do we draw</span>
+            <code class="varname">k</code> = (31*65536)/(<code class="varname">dx</code>);
+            <span class="comment">//init the error</span>
+            <code class="varname">dy</code> = (<span class="type">int</span>)(<code class="varname">dy</code>*<code class="varname">k</code>);
+            <span class="comment">//scale the dithered variables</span>
+            <code class="varname">dx</code> = (<span class="type">int</span>)(<code class="varname">dx</code>*<code class="varname">k</code>);
+            <code class="varname">error</code> = <code class="varname">dx</code> &gt;&gt; 1;
+            <span class="comment">//init the error at half the delta x</span>
+
+            while(<code class="varname">cpt</code>&gt;=0) {
+                *<code class="varname">base</code> = <code class="parameter">mp</code>[31 - (<code class="varname">error</code>&gt;&gt;16)];
+                <span class="comment">//write a pixel</span>
+                <code class="varname">cpt</code>--;
+                *(<code class="varname">base</code>+<code class="varname">rowbyte</code>) = <code class="parameter">mp</code>[(<code class="varname">error</code>&gt;&gt;16)];
+                <span class="comment">//and its complement one line up or down</span>
+                <code class="varname">base</code>++;
+                <span class="comment">//go right one pixel</span>
+                <code class="varname">error</code> += <code class="varname">dy</code>;
+                <span class="comment">//update the error dither</span>
+                if (<code class="varname">error</code> &gt;= <code class="varname">dx</code>) {
+                    <code class="varname">base</code> += <code class="varname">rowbyte</code>;
+                    <span class="comment">//go up or down one line if the error is greater than dx</span>
+                    <code class="varname">error</code> -= <code class="varname">dx</code>;
+                }
+            }
+        }
+        else {
+        <span class="comment">//second case, more horizontal than vertical</span>
+            <code class="varname">cpt</code> = <code class="varname">dy</code>;
+            <span class="comment">//how many pixels to draw</span>
+            <code class="varname">k</code> = (31*65536)/(<code class="varname">dy</code>);
+
+            <code class="varname">dy</code> = (<span class="type">int</span>)(<code class="varname">dy</code>*<code class="varname">k</code>);
+            <code class="varname">dx</code> = (<span class="type">int</span>)(<code class="varname">dx</code>*<code class="varname">k</code>);
+            <span class="comment">//scale and init the dithered variables</span>
+            <code class="varname">error</code> = <code class="varname">dy</code>&gt;&gt;1;
+
+            while(<code class="varname">cpt</code> &gt;= 0) {
+                *<code class="varname">base</code> =  <code class="parameter">mp</code>[31 - (<code class="varname">error</code>&gt;&gt;16)];
+                <span class="comment">//write a pixel</span>
+                <code class="varname">cpt</code>--;
+                *(<code class="varname">base</code>+1) =  <code class="parameter">mp</code>[(<code class="varname">error</code>&gt;&gt;16)];
+                <span class="comment">//and its complement one to the right</span>
+                <code class="varname">base</code> += <code class="varname">rowbyte</code>;
+                <span class="comment">//go one line down (or up).</span>
+                <code class="varname">error</code> += <code class="varname">dx</code>;
+                <span class="comment">//update the error</span>
+                if (<code class="varname">error</code> &gt;= <code class="varname">dy</code>) {
+                    <code class="varname">base</code>++;
+                    <span class="comment">//go one right if necessary</span>
+                    <code class="varname">error</code> -= <code class="varname">dy</code>;
+                }
+            }
+        }
+    }
+    else {
+    <span class="comment">//basically the same code by going left</span>
+        <code class="varname">dx</code> = -<code class="varname">dx</code>;
+        <span class="comment">//instead of right</span>
+        if (<code class="varname">dx</code> &gt; <code class="varname">dy</code>) {
+            <code class="varname">error</code> = <code class="varname">dx</code> &gt;&gt; 1;
+            <span class="comment">//the code could be compacted by using</span>
+            <code class="varname">cpt</code> = <code class="varname">dx</code>;
+            <span class="comment">//a positive or negative value for the</span>
+            <code class="varname">k</code> = (31*65536)/(<code class="varname">dx</code>);
+            <span class="comment">//horizontal direction, but there is a</span>
+            <code class="varname">dy</code> = (<span class="type">int</span>)(<code class="varname">dy</code>*<code class="varname">k</code>);
+            <span class="comment">//small performance advantage into writing</span>
+            <code class="varname">dx</code> = (<span class="type">int</span>)(<code class="varname">dx</code>*<code class="varname">k</code>);
+            <span class="comment">//the explicit code.</span>
+
+            while(<code class="varname">cpt</code>&gt;=0) {
+                *<code class="varname">base</code> = <code class="parameter">mp</code>[31 - (<code class="varname">error</code>&gt;&gt;16)];
+                <code class="varname">cpt</code>--;
+                *(<code class="varname">base</code>+<code class="varname">rowbyte</code>) = <code class="parameter">mp</code>[(<code class="varname">error</code>&gt;&gt;16)];
+                <code class="varname">base</code>--;
+                <code class="varname">error</code> += <code class="varname">dy</code>;
+                if (<code class="varname">error</code> &gt;= <code class="varname">dx</code>) {
+                    <code class="varname">base</code> += <code class="varname">rowbyte</code>;
+                    <code class="varname">error</code> -= <code class="varname">dx</code>;
+                }
+            }
+        }
+        else {
+            <code class="varname">error</code> = <code class="varname">dy</code>&gt;&gt;1;
+            <code class="varname">cpt</code> = <code class="varname">dy</code>;
+            <code class="varname">k</code> = (31*65536)/(<code class="varname">dy</code>);
+            <code class="varname">dy</code> = (<span class="type">int</span>)(<code class="varname">dy</code>*<code class="varname">k</code>);
+            <code class="varname">dx</code> = (<span class="type">int</span>)(<code class="varname">dx</code>*<code class="varname">k</code>);
+
+            while(<code class="varname">cpt</code> &gt;= 0) {
+                *<code class="varname">base</code> =  <code class="parameter">mp</code>[31 - (<code class="varname">error</code>&gt;&gt;16)];
+                <code class="varname">cpt</code>--;
+                *(<code class="varname">base</code>-1) =  <code class="parameter">mp</code>[(<code class="varname">error</code>&gt;&gt;16)];
+                <code class="varname">base</code> += <code class="varname">rowbyte</code>;
+                <code class="varname">error</code> += <code class="varname">dx</code>;
+                if (<code class="varname">error</code> &gt;= <code class="varname">dy</code>) {
+                    <code class="varname">base</code>--;
+                    <code class="varname">error</code> -= <code class="varname">dy</code>;
+                }
+            }
+        }
+    }
+}
+</pre></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="DevWorkshop4-11"></a>Developers' Workshop: Simplifying Media Nodes</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Stephen</span> <span class="surname">Beaulieu</span></span></div></div></div><p>
+Working with media and processing it in real time is inherently
+complicated. That's why the new BeOS Media Kit is complex, and requires
+greater attention to detail than other BeOS programming. In preparation
+for next month's Be Developer's Conference (BeDC), we've created a series
+of convenience and utility classes to make programming Media Kit nodes
+easier.
+</p><p>
+In this article I'll give you a sneak preview of one of these utility
+classes, and show you the direction we're heading in for some of our
+convenience nodes. Note that while the functionality of these classes
+will remain fairly consistent, their interface is still a work in
+progress, and may change in the final release.
+</p><p>
+A fundamental concept of the Media Kit is that the media being played or
+manipulated has the notion of time associated with it. The job of a node
+is to handle this media data at the right time, to make sure the end user
+sees the correct information. All basic Media Kit control messages also
+have associated times; a node is responsible for properly managing all of
+these timed events.
+</p><p>
+Enter the new <code class="classname">BTimedEventQueue</code> utility class. The idea is that data
+representing a specific event is pushed to the queue along with a time
+when that event needs to occur (as seen by the user). The queue is sorted
+by the event time, so a node can pop the appropriate event off the queue
+and handle it at the right time and in the proper order.
+</p><p>
+Now, a quick look at the main functions of the class.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">PushEvent</code>( <span class="type">bigtime_t</span> <code class="parameter">time</code>, <span class="type">int32</span> <code class="parameter">what</code>,
+     <span class="type">void *</span><code class="parameter">pointer</code>, <span class="type">uint32</span> <code class="parameter">pointer_cleanup</code>, <span class="type">int64</span> <code class="parameter">data</code>);
+</pre><p>
+Here, an event is represented by a performance <code class="parameter">time</code>, a <code class="parameter">what</code> value, some
+<code class="parameter">pointer</code> data, a flag denoting how the pointer should be cleaned up, and
+an <span class="type">int64</span> worth of additional storage.
+</p><p>
+Events are usually pushed on to the queue in a node hook function, for
+example:
+</p><pre class="programlisting cpp">
+<code class="classname">MyBufferConsumer</code>::<code class="methodname">BufferReceived</code>(<span class="type"><code class="classname">BBuffer</code> *</span><code class="parameter">buffer</code>)
+{
+  if (!<code class="varname">fRunning</code>)
+     <code class="varname">buffer</code>-&gt;<code class="methodname">Recycle</code>();
+     return;
+
+  <span class="comment">// add the event to the queue</span>
+  <span class="type">status_t</span> <code class="varname">error</code> = <code class="constant">B_OK</code>;
+  <code class="varname">error</code> = <code class="varname">fEvents</code>-&gt;<code class="methodname">PushEvent</code>(
+     <code class="parameter">buffer</code>-&gt;<code class="methodname">Header</code>()-&gt;<code class="varname">start_time</code>,
+     <code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>,
+     <code class="parameter">buffer</code>,
+     <code class="classname">BTimedEventQueue</code>::<code class="constant">B_RECYCLE</code>,
+     0);
+
+  if (<code class="varname">error</code> != <code class="constant">B_OK</code>)
+     <code class="parameter">buffer</code>-&gt;<code class="methodname">Recycle</code>();
+}
+</pre><p>
+Here the pointer keeps track of the buffer to work with, the cleanup
+specifies that the buffer should be recycled during cleanup (if not sent
+correctly), and the data field is not used.
+</p><p>
+The <code class="methodname">PopEvent()</code> function, which takes pointers to the data members of the
+event, retrieves events from the queue:
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">PopEvent</code>(<span class="type">bigtime_t *</span><code class="parameter">time</code>, <span class="type">int32 *</span><code class="parameter">what</code>,
+     <span class="type">void **</span><code class="parameter">pointer</code>, <span class="type">uint32 *</span><code class="parameter">pointer_cleanup</code>, <span class="type">int64 *</span><code class="parameter">data</code>);
+</pre><p>
+When an event is popped off the queue it is usually handed to a
+<code class="methodname">HandleEvent()</code> function. In <code class="methodname">HandleEvent()</code> the node should look at the
+'what' member and decide what action to take. Whoever handles the event
+is responsible for cleaning up anything stored in the pointer field,
+based on the <code class="parameter">pointer_cleanup</code> information.
+</p><p>
+If you need to clear a large number of items out of the queue without
+handling them, <code class="methodname">FlushEvents()</code> lets you specify which events to clear.
+</p><pre class="programlisting cpp">
+<span class="type">status_t</span> <code class="methodname">FlushEvents</code>(<span class="type">bigtime_t</span> <code class="parameter">time</code>,
+     <span class="type">time_direction</span> <code class="parameter">direction</code>, <span class="type">bool</span> <code class="parameter">inclusive</code> = <code class="constant">true</code>,
+     <span class="type">int32</span> <code class="parameter">event</code> = <code class="constant">B_ANY_EVENT</code>);
+</pre><p>
+When flushing events you can specify a time from which to base your
+decision, a direction in time, whether to include the specified time in
+the flush, and the event type to clear out. The function is very
+flexible, allowing you to remove all items with a given event type
+<code class="parameter">what</code> like this:
+</p><pre class="programlisting cpp">
+<code class="varname">fEvents</code>-&gt;<code class="methodname">FlushEvents</code>(<code class="constant">B_INFINITE_TIMEOUT</code>,
+     <code class="classname">BTimedEventQueue</code>::<code class="constant">B_BEFORE</code>,
+     <code class="constant">true</code>, <code class="classname">BTimedEventQueue</code>::<code class="constant">B_HANDLE_BUFFER</code>);
+</pre><p>
+Or, you can clear out all types within a given range in time:
+</p><pre class="programlisting cpp">
+<code class="varname">fEvents</code>-&gt;<code class="methodname">FlushEvents</code>(<code class="varname">someTime</code>, <code class="classname">BTimedEventQueue</code>::<code class="constant">B_AFTER</code>);
+</pre><p>
+In either case, when events are flushed from the queue, the
+<code class="methodname">CleanUpEvent()</code> function of the queue is called. It looks at the event and
+cleans up the pointer data appropriately. If you add your own cleanup
+type, you'll need to subclass the event queue to provide the appropriate
+cleanup functionality.
+</p><p>
+There are also two functions for investigating the contents of the queue:
+</p><pre class="programlisting cpp">
+<span class="type">bool</span> <code class="methodname">HasEvents</code>();
+<span class="type">bigtime_t</span> <code class="methodname">NextEvent</code>(<span class="type">int32 *</span><code class="parameter">what</code>);
+</pre><p>
+<code class="methodname">HasEvents()</code> returns a boolean and is fairly
+self-explanatory. <code class="methodname">NextEvent()</code>
+gives information about the next event that needs to occur. It returns
+the time the event needs to occur, and if passed an <span class="type">int32</span> pointer, it
+will fill in the 'what' value of the next event. If there are no events
+in the queue, <code class="methodname">NextEvent()</code> returns
+<code class="constant">B_INFINITE_TIMEOUT</code> for the time and
+<code class="constant">B_NO_EVENT</code> for the event type.
+</p><p>
+The real advantage of this class is that it simplifies the main loop of a
+node. A main loop with an event queue now looks something like this in
+psuedo-code:
+</p><pre class="programlisting cpp">
+<code class="classname">MyMediaNode</code>::<code class="methodname">MainLoop</code>()
+{
+  while (!<code class="varname">timeToQuit</code>) {
+     while (<code class="varname">noEventsInQueue</code> || <code class="varname">notTimeForNextEvent</code>) {
+       <code class="varname">timedOut</code> = <code class="methodname">WaitForMessages</code>(<code class="varname">untilNextEventInRealTime</code>);
+       if (<code class="varname">timedOut</code>) break;
+     }
+     <code class="methodname">PopEventFromQueue</code>();
+     <code class="methodname">HandleEvent</code>();
+  }
+}
+</pre><p>
+If the queue does not have any events, or if it's not time for the next
+event, the node loops over the <code class="methodname">WaitForMessages()</code> call until it is time
+for the next event.
+</p><pre class="programlisting cpp">
+status_t
+<code class="classname">MyMediaNode</code>::<code class="methodname">WaitForMessages</code>(<span class="type">bigtime_t</span> <code class="parameter">waitUntil</code>)
+{
+  <span class="type">status_t</span> <code class="varname">err</code> = <code class="function">read_port_etc</code>(<code class="varname">port</code>, <code class="varname">code</code>, <code class="varname">message</code>,
+     <code class="varname">message_size</code>, <code class="constant">B_ABSOLUTE_TIMEOUT</code>, <code class="parameter">waitUntil</code>);
+   if (<code class="varname">err</code> = <code class="constant">B_TIMED_OUT</code>)
+     return err;
+   <span class="comment">/* handle the incoming message */</span>
+   <code class="methodname">HandleMessage</code>(<code class="varname">code</code>, <code class="varname">message</code>, <code class="varname">message_size</code>);
+   return <code class="constant">B_OK</code>;
+}
+</pre><p>
+<code class="methodname">WaitForMessages()</code> services the control loop and handles all messages that
+come in. After a message arrives, something is usually added to the
+queue, and the next event time is evaluated.
+</p><p>
+When it's finally time to handle an event, the first event is popped off
+the queue and <code class="methodname">HandleEvent()</code> is called.
+</p><p>
+This is a much easier to understand main loop, and as such should be
+easier to get right.
+</p><p>
+I've packaged up the <code class="classname">BTimedEventQueue</code> class and a sample node that uses
+it. The ChromeVideo node is derived from a first pass at a filter node
+that uses a main loop similar to the one above. It's a simple video
+filter that takes 32-bit color video and outputs somewhat freaky 8-bit
+gray video (using an algorithm that takes the red value of a pixel and
+bitshifts it down by 3, then puts the resulting value in the outgoing
+buffer). The ChromeVideo and the underlying <code class="classname">BBufferFilter</code> are works in
+progress and don't yet do everything they should. The purpose of
+distributing them now is to let you see the event queue in action.
+</p><p>
+You can find ChromeVideo at:
+</p><p>
+ftp://ftp.be.com/pub/samples/media_kit/ChromeVideo.zip
+</p><p>
+Don't miss the ReadMe, so you understand the contents of the package.
+</p><p>
+To see the class in action you need a supported video card and the
+corresponding capture and display nodes. You can find an alpha version of
+the Bt848 nodes and supporting application for R4 at Steve Sakoman's site:
+</p><p>
+http://www.sakoman.com/
+</p><p>
+These nodes are part of the upcoming 4.1 upgrade.
+</p><p>
+This has been a first look at how we're trying to simplify the writing of
+Media Nodes. If you want to know more, register for the upcoming BeDC --
+Programming with the Media Kit:
+</p><p>
+http://www.be.com/developers/developer_conference/BeDC_info.html
+</p><p>
+See you there!
+</p></div><hr class="pagebreak" /><div class="sect1"><div xmlns="" xmlns:d="http://docbook.org/ns/docbook" class="titlepage"><div><div xmlns:d="http://docbook.org/ns/docbook"><h2 xmlns="http://www.w3.org/1999/xhtml" class="title"><a id="Gassee4-11"></a>Browser Integration: Methods and Motives</h2></div><div xmlns:d="http://docbook.org/ns/docbook"><span xmlns="http://www.w3.org/1999/xhtml" class="author">By <span class="firstname">Jean-Louis</span> <span class="surname">Gassée</span></span></div></div></div><p>
+Keeping our past newsletters on line has many advantages. One of these is
+that they give readers a sense of the history of our little company.
+Sometimes, sharp-eyed readers kindly give us an opportunity to shed the
+light of logic, or apology, on apparent contradictions. For instance, I
+wrote a column titled "The War of Two Browsers" on August 28th, 1996. In
+it, I wrote "In the meantime, we happen to agree with Microsoft: the
+browser ought to be integrated in the system and presented to application
+programmers as an API, a class library. After all, several years ago, we
+didn't call our 'user shell' a Finder or a File Manager, we called it a
+browser."
+</p><p>
+How does this square with our subsequent criticism of Microsoft's
+integration of the Explorer Web browser in Windows in subsequent columns:
+On February 3rd, 1999, and on February 10th, 1999? Are we contradicting
+ourselves? Did I even remember our August 1996 position when I wrote my
+February 1999 columns? No and Yes.
+</p><p>
+Let's start with two premises. First, the "border" issue, and second,
+what you can no longer do once you've become a monopoly. The "border"
+issue invoked here refers to the difficulty of setting up a clean,
+well-lighted fence between what we imprecisely call the operating system
+and the applications. Today, it appears extremely difficult, some say
+impossible, to write a usable English sentence as a test of which is
+which. If the code meets condition A, it belongs to the OS. We have
+trouble describing what "condition A" would be. I don't know if the
+trouble lies more with the speed of technological evolution making
+definitions obsolete, or with the very protean nature of software. I
+guess that it's more the latter than the former.
+</p><p>
+In any event, how does one write laws or regulations governing borders
+that are imprecise at any given moment—and that move very fast once
+you unfreeze the clock. This would seem to support Microsoft's right to
+put whatever they please in Windows—a spreadsheet, a word processor
+(there's a decent one already, WinPad), or a Web browser whose
+capabilities would help many other system modules or applications—if
+we stick to a common-sense but imprecise definition for these two.
+</p><p>
+Turning to the second issue: Things that change once you become a
+monopoly. In a market where no player dominates, common-sense and, it
+seems, the law both say that exclusionary incentives can be offered. What
+I have in mind is offering a retailer an incentive to distribute your
+brand of yogurt and only your brand of yogurt. For instance, a
+supplementary discount above the normal wholesale price. Retailers who
+offer several brands of yogurt pay wholesale, but the retailer who offers
+brand X exclusively gets a supplementary rebate.
+</p><p>
+In a truly competitive market, this is legit. Other retailers exist who
+might bet customers will prefer a choice of yogurt. Smaller margins on
+brand X might be compensated by more volume, or more store traffic and
+the opportunity to sell fidgets, bidgets and ridgets, not just an
+assortment of yogurt. Once you become a monopolist, things change.
+Retailers effectively offer only one brand, brand X. In addition to the
+wholesale price, the retailer gets a substantial supplementary discount
+based on not offering and/or advertising any emerging new brand. If he
+does, he loses a sizeable amount of money. Sales from the emerging brand
+Y cannot make up for the loss, and his competitors who didn't budge pay a
+lower price for the monopoly product. The market is locked.
+</p><p>
+This is but one example of what happens when you become a monopoly:
+Behavior that's acceptable when the market is truly competitive must be
+rejected once a monopoly situation sets in. With this in mind, let's
+consider the manner and the motives for Microsoft's integration of the
+Explorer browser into Windows. They could have done it "fair and square,"
+one module (or a small number of modules) somewhere in the system, a sort
+of Web driver (I realize the metaphor is crude, but the point is valid
+nonetheless). Today, you can update or replace a driver and, if the
+driver works as intended or better, the user benefits, applications get
+better performance, the system is improved.
+</p><p>
+Even if a browser is more complicated that a dial-up module, it features
+a finite list of pipes for information to come in and go out of. One way
+of integrating the browser makes it easy to disconnect and reconnect the
+pipes, another way makes it deliberately difficult. Did Microsoft make
+the disconnection and reconnection deliberately difficult and, if they
+did, why? As a monopolist, are they free to make it arbitrarily difficult
+to remove Explorer? Did they have an anti-competitive motive for doing
+so? Did they leverage their monopoly? Did they fear that another Web
+browser might prevent them from gaining control of the HTML dialect
+mostly spoken on the Web?
+</p><p>
+In our case, we found we could offer a browser and make it easily
+removable. In other words our browser is integrated in the sense that
+it's "in the box" when you install the BeOS, it's in the system. But if,
+in the future, you want to install a competitive browser, it's a simple
+drag and drop move. Integration doesn't have to be anti-competitive.
+</p></div></div><div id="footer"><hr /><div id="footerT">Prev: <a href="Issue4-10.html">Issue 4-10, March 10, 1999</a>  Up: <a href="volume4.html">Volume 4: 1999</a>  Next: <a href="Issue4-12.html">Issue 4-12, March 24, 1999</a> </div><div id="footerB"><div id="footerBL"><a href="Issue4-10.html" title="Issue 4-10, March 10, 1999"><img src="./images/navigation/prev.png" alt="Prev" /></a> <a href="volume4.html" title="Volume 4: 1999"><img src="./images/navigation/up.png" alt="Up" /></a> <a href="Issue4-12.html" title="Issue 4-12, March 24, 1999"><img src="./images/navigation/next.png" alt="Next" /></a></div><div id="footerBR"><div><a href="http://www.haiku-os.org"><img src="./images/People_24.png" alt="haiku-os.org" title="Visit The Haiku Website" /></a></div><div class="navighome" title="Home"><a accesskey="h" href="index.html"><img src="./images/navigation/home.png" alt="Home" /></a></div></div><div id="footerBC"><a href="http://www.access-company.com/home.html" title="ACCESS Co."><img alt="Access Company" src="./images/access_logo.png" /></a></div></div></div><div id="licenseFooter"><div id="licenseFooterBL"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/" title="Creative Commons License"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a></div><div id="licenseFooterBR"><a href="./LegalNotice.html">Legal Notice</a></div><div id="licenseFooterBC"><span id="licenseText">This work is licensed under a
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative
+          Commons Attribution-Non commercial-No Derivative Works 3.0 License</a>.</span></div></div></body></html>
