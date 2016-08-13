@@ -5,7 +5,7 @@ date = "2011-06-13T16:07:27.000Z"
 tags = []
 +++
 
-<span class="right"><img src='/sites/haiku-os.org/themes/shijin/haiku-icons/archive_64.png'></span>
+<span class="right"><img src='/images/archive_64.png'></span>
 
 <p>
 Haiku's source code is currently being hosted in a <a href="http://git-scm.com/" target="_blank">Git based repository</a>. Anonymous access will allow anyone to download Haiku's source code; However, only Haiku contributors with commit access should use the authenticated (non-anonymous) method.
