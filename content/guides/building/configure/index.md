@@ -68,7 +68,7 @@ This is a very useful option. It instructs the build system to pass some informa
 </li>
 
 <li><h4>--update</h4>
-In <a href="http://dev.haiku-os.org/changeset/34867">changeset 34867</a>, the ability to re-run configure with the options from a previous run was implemented.
+In <a href="https://dev.haiku-os.org/changeset/34867">changeset 34867</a>, the ability to re-run configure with the options from a previous run was implemented.
 
 <li><h4>-j&lt;n&gt;</h4>
 This option allows the cross-tools to be built with similar jobs. Currently this only works when the GCC 4.x cross-tools are being built. See this <a href="http://www.freelists.org/post/haiku-development/Haikus-configure-jn-and-emulated-attributes,1">haiku-development mailing list post</a> for more information.

@@ -60,6 +60,6 @@ BLayoutBuilder::Menu<>(menu)
 Screenshot of the resulting pop-up menu: <a href="http://sil2100.vexillium.org/content/menubuilder.png" title="Pop-up menu">here</a>.
 
 After creating the containing menu object (here, the BPopUpMenu), we can build the menu item hierarchy by using Haiku layout API-like specific calls. For these purposes we have the following methods available: AddItem(), AddMenu() and AddSeparator(). Each adds respectively: a new menu item, a new sub-menu and separator object to the menu structure. The base AddItem() method accepts the same arguments as a BMenuItem constructor, with an additional variant accepting a BMessage command constant instead of a BMessage object.
-You can read more details here about available methods here: <a href="http://api.haiku-os.org/classBLayoutBuilder_1_1Menu.html" title="The Haiku Book">The Haiku Book</a>.
+You can read more details here about available methods here: <a href="https://api.haiku-os.org/classBLayoutBuilder_1_1Menu.html" title="The Haiku Book">The Haiku Book</a>.
 
 As I said, these things might be obvious to some and unimportant to others. Or even inaccurate. It was just nice seeing new things in the Haiku API.

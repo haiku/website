@@ -29,7 +29,7 @@ Ryan Leavengood is working on porting WebKit to Haiku and received advice on ali
 
 A guy called Duane Ryan introduced himself to the list too. He seems excellently qualified (OK, so he's still a high school student, but has already written his own operating system!). Welcome to the community Duane, I hope you find something of interest here.
 
-<h3><a href="http://dev.haiku-os.org">Bug Tracker</a></h3>
+<h3><a href="https://dev.haiku-os.org">Bug Tracker</a></h3>
 A lot of the bug activity is covered in the commits section, but I will just mention a few bugs of particular note this week.
 
 Bug <a href="https://dev.haiku-os.org/ticket/1338">#1338</a> was closed - the reporter's machine would lock up within a couple of minutes after booting Haiku, but they now report uptime of 10 hours. That's a great demonstration of the huge strides in stability that have been made recently.

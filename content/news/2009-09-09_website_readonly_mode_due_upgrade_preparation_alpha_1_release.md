@@ -15,4 +15,4 @@ tags = ["website", "maintenance", "upgrade"]
  <li>Posting new comments or editing existing ones</li>
 </ul>
 
-<p>The upgraded website is scheduled to be fully operational in time for the Alpha 1 release date. Until then, please use the <a href="/community/ml" title="Haiku Mailing Lists">mailing lists</a> or our <a href="/community/irc" title="Haiku IRC channels">IRC channels</a> as means of communication with the community. Our bug reporting tool <a href="http://dev.haiku-os.org" title="Haiku bug tracking toll">http://dev.haiku-os.org</a> is unaffected, and will continue to operate as usual.</p>
+<p>The upgraded website is scheduled to be fully operational in time for the Alpha 1 release date. Until then, please use the <a href="/community/ml" title="Haiku Mailing Lists">mailing lists</a> or our <a href="/community/irc" title="Haiku IRC channels">IRC channels</a> as means of communication with the community. Our bug reporting tool <a href="https://dev.haiku-os.org" title="Haiku bug tracking toll">https://dev.haiku-os.org</a> is unaffected, and will continue to operate as usual.</p>

@@ -102,5 +102,5 @@ tags = ["usb", "USBKit"]
 			</ul>
 			<h3>Problems and Bugs</h3>
 			<p>
-				If you encounter problems with the Haiku USB stack please open a bug report at <a href="http://dev.haiku-os.org">our bug tracker</a>. When making a bug report please try to be as specific as possible and include syslog output, hardware configuration and other information that might be relevant for finding the problem at hand.
+				If you encounter problems with the Haiku USB stack please open a bug report at <a href="https://dev.haiku-os.org">our bug tracker</a>. When making a bug report please try to be as specific as possible and include syslog output, hardware configuration and other information that might be relevant for finding the problem at hand.
 			</p>

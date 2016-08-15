@@ -54,7 +54,7 @@ An advantage of a hybrid image is it would be possible to have Haiku application
 
 Christof Lutteroth introduced a paper he had written on a new way of specifying the layout of controls in windows, leading to some discussion of different types of layout managers. Christof's uses a generalised tabular approach (aligning controls to x and y "tabs") and a constraint solver that enables it to use multiple potentially conflicting constraints to evaluate the layout. It's an interesting approach to the problem but I'm not sure how likely it is to be taken up by Haiku.
 
-<h3><a href="http://dev.haiku-os.org">Bug Tracker</a></h3>
+<h3><a href="https://dev.haiku-os.org">Bug Tracker</a></h3>
 Perhaps next week I'll start a bugs opened/bugs closed count to stick in this section too. I generally find I've covered most of the interesting bits already.
 
 One enhancement request that caught my attention: <a href="https://dev.haiku-os.org/ticket/1420">#1420</a> deals with changing Tracker's behaviour moving or copying files to match that of other systems - in other words merging the contents of the source folder with whatever is there already. Actually I quite like the BeOS way of doing it but I can see how it could lead to data loss for people used to the behaviour of other systems.

@@ -21,7 +21,7 @@ Once you have found a class that you want to document create a file in the forma
 
 For example let's say that you want to document the BPath class which is in the storage kit -- create a file named Path.dox under <code>docs/user/storage</code> (don't include the leading B in the filename).
 
-The <a href="http://api.haiku-os.org/apidoc.html" title="Documenting the API">Documenting the API</a> page in the Haiku Book gives a really good overview of how to fill out the file with documentation but here is the basic process:
+The <a href="https://api.haiku-os.org/apidoc.html" title="Documenting the API">Documenting the API</a> page in the Haiku Book gives a really good overview of how to fill out the file with documentation but here is the basic process:
 
 Open up the documentation file that you created (Path.dox) in an editor as well as the corresponding source file (src/kits/storage/Path.cpp) and header file (headers/os/storage/Path.cpp) for reference.
 

@@ -66,7 +66,7 @@ cd /path/haiku/
 git diff build/jam/OptionalPackages > ~/OptionalPackage-&lt;new-pkg&gt;.patch
 </pre>
 From the above OpenSSL example, "&lt;new-pkg&gt;" could be "openssl-0.9.8k". 
-Submit this patch to Haiku's <a href="http://dev.haiku-os.org">Bug Tracker</a> as a new enhancement ticket. It is advisable to have a subject similar to <br> "[patch] OptionalPackages - Updated &lt;new-pkg&gt;" 
+Submit this patch to Haiku's <a href="https://dev.haiku-os.org">Bug Tracker</a> as a new enhancement ticket. It is advisable to have a subject similar to <br> "[patch] OptionalPackages - Updated &lt;new-pkg&gt;" 
 
 <h3>Notes</h3>
 <p>

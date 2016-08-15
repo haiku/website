@@ -25,7 +25,7 @@ tags = []
 <p>Using the Jam compilation tool to effectively and efficiently build Haiku</p>
 
 <h4>Compiling Haiku</h4>
-<div class="alert alert-info"><p>Haiku being still in sometimes heavy development, libraries and other tools needed to build an image may change and are then outdated or not available in your installed Haiku. If you encounter such build failures, try to use a newer <a href="http://download.haiku-os.org/nightly-images/x86_gcc2_hybrid/">nightly image</a>.</p>
+<div class="alert alert-info"><p>Haiku being still in sometimes heavy development, libraries and other tools needed to build an image may change and are then outdated or not available in your installed Haiku. If you encounter such build failures, try to use a newer <a href="https://download.haiku-os.org/nightly-images/x86_gcc2_hybrid/">nightly image</a>.</p>
 </div>
 <ul>
 <li><a href="/guides/building/compiling-x86">Compiling for x86</a></li>

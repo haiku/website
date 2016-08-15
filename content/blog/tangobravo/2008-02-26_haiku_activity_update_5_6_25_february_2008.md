@@ -74,7 +74,7 @@ Fredrik Holmqvist reported success in building Firefox for GCC4-Haiku so people 
 <h3><a href="https://www.freelists.org/archives/haiku-development/">Development List</a></h3>
 The development list saw a discussion on how to co-ordinate porting efforts for standard tools such as perl and autoconf. Urias pointed out the BePorts project that I had not seen before, but seems a useful place for this co-ordination to happen: <a href="http://tools.assembla.com/BePorts">http://tools.assembla.com/BePorts</a>. Axel explained that as Haiku is much more POSIX compliant than BeOS, old ports should be checked through in order to remove any workarounds which are no longer necessary and make the port simpler.
 
-The <a href="http://dev.haiku-os.org">http://dev.haiku-os.org</a> section of the website was moved to a new server which should improve the performance of the bug tracker. The move triggered a bug preventing us lowly users from commenting on tickets, but Niels managed to track that down and fix it.
+The <a href="https://dev.haiku-os.org">https://dev.haiku-os.org</a> section of the website was moved to a new server which should improve the performance of the bug tracker. The move triggered a bug preventing us lowly users from commenting on tickets, but Niels managed to track that down and fix it.
 
 Gerald Zajac announced he'd completed a driver for some S3 graphics chips in the Trio and Virge families.
 

@@ -77,7 +77,7 @@ There was a question from Ilya Pavlenkov about the possibility of porting Java t
 
 Continuing the thread on layout managers I mentioned <a href="/blog/tangobravo/2007-08-30/haiku_activity_update_2">last time</a>, Christof Lutteroth set up <a href="http://www.cs.auckland.ac.nz/~lutteroth/projects/alm/">a website</a> for the .NET implementation of the Auckland Layout Model he has been working on, including some example layouts to show the engine in action. Fredrik Holmqvist (who definitely is aka tqh, now I've worked out my Fredrik confusion) has expressed an interest in porting the c# examples to BeOS C++, so something might yet happen on this for future Haiku. [Insert standard forward-looking-statement disclaimer here :D]
 
-<h3><a href="http://dev.haiku-os.org">Bug Stats</a></h3>
+<h3><a href="https://dev.haiku-os.org">Bug Stats</a></h3>
 
 The bug list is the hardest to read through and summarise and any major fixes will be reported in the commits section, so I've decided to retire this section. It's pretty easy to do a simple count though just to give a sense of activity - although don't read too much into this (sometimes a new bug is immediately closed as invalid, for example).
 

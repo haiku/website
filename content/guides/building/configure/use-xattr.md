@@ -122,7 +122,7 @@ Under BeOS incompatible platforms that cannot make use of xattr, the build syste
 </li>
 
 <li>
-<p>From <a href="http://dev.haiku-os.org/ticket/2772#comment:1">Ticket #2772</a>,
+<p>From <a href="https://dev.haiku-os.org/ticket/2772#comment:1">Ticket #2772</a>,
 Attribute mixups are known to happen when building without xattr support (i.e. configuring without --use-xattr) and when not building from the scratch (i.e. after deleting generated/objects and generated/attributes).
 </p>
 </li>

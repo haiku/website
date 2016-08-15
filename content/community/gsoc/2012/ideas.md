@@ -157,7 +157,7 @@ Integrate our PPP implementation
 <p>Port the PPP implementation to our new network stack. Add phone-line modem support, including HDLC framing and VJC compression (porting both algorithms is sufficient, but make sure the license is compatible to MIT). Implement CHAP authentication. Find and fix bugs.</p>
 
 <ul>
-<li>Tickets: <a href="http://dev.haiku-os.org/ticket/812">#812</a>, <a href="http://dev.haiku-os.org/ticket/869">#869</a>, <a href="http://dev.haiku-os.org/ticket/873">#873</a>, <a href="http://dev.haiku-os.org/ticket/922">#922</a>, <a href="http://dev.haiku-os.org/ticket/923">#923</a>, <a href="http://dev.haiku-os.org/ticket/1059">#1059</a>, maybe: <a href="http://dev.haiku-os.org/ticket/1057">#1057</a>, <a href="http://dev.haiku-os.org/ticket/1058">#1058</a></li>
+<li>Tickets: <a href="https://dev.haiku-os.org/ticket/812">#812</a>, <a href="https://dev.haiku-os.org/ticket/869">#869</a>, <a href="https://dev.haiku-os.org/ticket/873">#873</a>, <a href="https://dev.haiku-os.org/ticket/922">#922</a>, <a href="https://dev.haiku-os.org/ticket/923">#923</a>, <a href="https://dev.haiku-os.org/ticket/1059">#1059</a>, maybe: <a href="https://dev.haiku-os.org/ticket/1057">#1057</a>, <a href="https://dev.haiku-os.org/ticket/1058">#1058</a></li>
 <li>Skill set: multi-threading basics, maybe network protocols and some kernel/drivers development, maybe UI development</li>
 </ul>
 <h4 class="icon-app-medium">
@@ -168,12 +168,12 @@ The base framework for IPv6 support was implemented as a Google Summer of Code 2
 <ul>
 <li>Tickets: 
 <ul>
-<li><a href="http://dev.haiku-os.org/ticket/8293>#8293</a> -- BNetworkAddress needs to check if there is an available IPv6 connection.</li>
-<li><a href="http://dev.haiku-os.org/ticket/7228>#7228</a> -- RFC: BNetworkInterfaceAddress needs to store auto-configuration flags</li>
-<li><a href="http://dev.haiku-os.org/ticket/6489>#6489</a> -- ifconfig needs to validate availability of ipv6 module prior to utilization</li>
-<li><a href="http://dev.haiku-os.org/ticket/2632>#2632</a> -- Possible redefinition for struct sockaddr_in, related to IPv6</li>
-<li><a href="http://dev.haiku-os.org/ticket/8319>#8319</a> -- Haiku needs IPv6 duplicate address detection during link scope ip configuration.</li>
-<li><a href="http://dev.haiku-os.org/ticket/8317>#8317</a> -- Haiku needs IPv6 global scope Auto Configuration (router advertisement + DHCPv6)</li>
+<li><a href="https://dev.haiku-os.org/ticket/8293>#8293</a> -- BNetworkAddress needs to check if there is an available IPv6 connection.</li>
+<li><a href="https://dev.haiku-os.org/ticket/7228>#7228</a> -- RFC: BNetworkInterfaceAddress needs to store auto-configuration flags</li>
+<li><a href="https://dev.haiku-os.org/ticket/6489>#6489</a> -- ifconfig needs to validate availability of ipv6 module prior to utilization</li>
+<li><a href="https://dev.haiku-os.org/ticket/2632>#2632</a> -- Possible redefinition for struct sockaddr_in, related to IPv6</li>
+<li><a href="https://dev.haiku-os.org/ticket/8319>#8319</a> -- Haiku needs IPv6 duplicate address detection during link scope ip configuration.</li>
+<li><a href="https://dev.haiku-os.org/ticket/8317>#8317</a> -- Haiku needs IPv6 global scope Auto Configuration (router advertisement + DHCPv6)</li>
 </ul>
 </li>
 <li>Skill set: IPv4 and IPv6 protocols, kernel and network stack development
@@ -189,8 +189,8 @@ Several preference applications (aka preflets) could be redesigned. This include
 <ol>
 <li>combining Keymap and Keyboard</li>
 <li>combining Mouse and Touchpad</li>
-<li><a href="http://dev.haiku-os.org/ticket/6983">#6983</a>Printer</li>
-<li><a href="http://dev.haiku-os.org/ticket/6206">#6206</a>integrate scrollbar options into a new Appearance preflet</li>
+<li><a href="https://dev.haiku-os.org/ticket/6983">#6983</a>Printer</li>
+<li><a href="https://dev.haiku-os.org/ticket/6206">#6206</a>integrate scrollbar options into a new Appearance preflet</li>
 <li>Shortcuts</li>
 <li>Notifications</li>
 </ol>

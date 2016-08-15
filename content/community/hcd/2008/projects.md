@@ -17,7 +17,7 @@ tags = []
 
 <ul>
 <li>Porting <a href="http://www.coker.com.au/bonnie++/">Bonnie++</a> to Haiku, which is a benchmark suite that is aimed at performing a number of simple tests of hard drive and file system performance.</li>
-<li>The porting would require to implement XSI semaphore and IPC API, that is <a href="http://dev.haiku-os.org/ticket/1980">ticket 1980</a></li>
+<li>The porting would require to implement XSI semaphore and IPC API, that is <a href="https://dev.haiku-os.org/ticket/1980">ticket 1980</a></li>
 <li>Once this is all done and working, bug hunting would be next along with fixes.</li>
 </ul>
 

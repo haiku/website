@@ -7,7 +7,7 @@ tags = ["gsoc", "CIFS", "gsoc2009", "cifs client"]
 +++
 
 Greetings one and all!
-I am Obaro Ogbo, one of the students selected for GSoC 2009. I also use the name nastee on irc and on <a href=http://dev.haiku-os.org>Haiku Bug Tracker</a>. I am a 3rd year student of Computer Science and Technology at Bells University of Technology Ota, Nigeria, and it appears I'm the first ever Nigerian GSoC student :-).
+I am Obaro Ogbo, one of the students selected for GSoC 2009. I also use the name nastee on irc and on <a href=https://dev.haiku-os.org>Haiku Bug Tracker</a>. I am a 3rd year student of Computer Science and Technology at Bells University of Technology Ota, Nigeria, and it appears I'm the first ever Nigerian GSoC student :-).
 
 I began programming with Java, then learnt C before studying C++. I've done little PHP and Perl coding, however I'm learning Lisp presently. I participated in the Nigerian ACM/ICPC in 2007 and 2008 where my team came 3rd and 2nd respectively.
 
