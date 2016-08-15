@@ -8,7 +8,7 @@ tags = ["contract work", "cdda", "cd", "AHCI", "atapi", "userlandfs"]
 
 Hi!
 
-After a great week-end at the Capitole du Libre showing Haiku to other people in the free software community (read <a href="https://www.haiku-os.org/blog/mmu_man/2014-11-17_report_french_farwest_2">François' report</a> for more details - video of my talk should be available "soon"), I'm back to work on the code.
+After a great week-end at the Capitole du Libre showing Haiku to other people in the free software community (read <a href="/blog/mmu_man/2014-11-17_report_french_farwest_2">François' report</a> for more details - video of my talk should be available "soon"), I'm back to work on the code.
 <!--break-->
 <h3>More work on reading CDs</h3>
 

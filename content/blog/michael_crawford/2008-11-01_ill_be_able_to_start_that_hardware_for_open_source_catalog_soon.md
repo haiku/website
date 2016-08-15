@@ -6,7 +6,7 @@ date = "2008-11-01T11:04:19.000Z"
 tags = ["hardware", "Recycling", "Device Drivers", "Testing", "SPARE", "Quality Assurance", "QA"]
 +++
 
-I have some happy news: I'll be able to start coding <a href="http://www.haiku-os.org/blog/michael_crawford/2008-10-26/cheap_hardware_for_open_source_developers">the cheap hardware for Open Source catalog soon</a>, I expect by the middle of the coming week.
+I have some happy news: I'll be able to start coding <a href="/blog/michael_crawford/2008-10-26/cheap_hardware_for_open_source_developers">the cheap hardware for Open Source catalog soon</a>, I expect by the middle of the coming week.
 
 For reasons of personal preferences as well as sharpening a salable job skill, I'll be doing it in Python.  I have <a href="http://www.thomasleavitt.org/">a friend who is an expert web programmer</a> who could advise me on the design of the database schema.
 

@@ -16,7 +16,7 @@ The commit range this month is hrev48952-hrev49106. I got bored of doing the sta
 
 Rather sad news this month: after years of service, bebits.com was put offline. This is another piece of the BeOS history disappearing from the web. However, there are some backups, and we'll see what can be done with them.
 
-Another thing to mention is the analysis of Haiku sources by PVS-Studio. This is a static source analysis system similar to Coverity. It is commercial software, but they ran one analysis for free on the Haiku source (they did a similar thing for the Linux kernel already). They sent us the results, and the developers will be fixing the many stupid mistakes the tool detected. You can read more about it in <a href="https://www.haiku-os.org/news/2015-04-22_analysis_haiku_operating_system_beos_family_pvsstudio">a separate news article</a>.
+Another thing to mention is the analysis of Haiku sources by PVS-Studio. This is a static source analysis system similar to Coverity. It is commercial software, but they ran one analysis for free on the Haiku source (they did a similar thing for the Linux kernel already). They sent us the results, and the developers will be fixing the many stupid mistakes the tool detected. You can read more about it in <a href="/news/2015-04-22_analysis_haiku_operating_system_beos_family_pvsstudio">a separate news article</a>.
 
 <h3>Outside the tree</h3>
 

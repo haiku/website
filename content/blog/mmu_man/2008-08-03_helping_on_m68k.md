@@ -21,7 +21,7 @@ There are some other 68k platforms around, like <a href="http://en.wikipedia.org
 
 
 <h3>Making a build</h3>
-It's not much different from a regular x86 build, the only difference being the target architecture. To get the required tools, just follow the <a href="http://www.haiku-os.org/documents/dev/building_haiku_on_ubuntu_linux_step_by_step">Linux guide</a>, then when comes the time of configuring, instead we'll do a
+It's not much different from a regular x86 build, the only difference being the target architecture. To get the required tools, just follow the <a href="/documents/dev/building_haiku_on_ubuntu_linux_step_by_step">Linux guide</a>, then when comes the time of configuring, instead we'll do a
 <pre>./configure  --build-cross-tools-gcc4 m68k ../buildtools/</pre>
 This should build the cross compiler and set everything up.
 Then just go forward with a

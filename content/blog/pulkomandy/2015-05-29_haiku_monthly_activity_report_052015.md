@@ -34,7 +34,7 @@ Waddlesplash continued his work on fixing Tracker regressions and cleaning up th
 
 Zip-O-Matic will now warn if "zip" is not installed (it was moved to a package, so it can be uninstalled now).
 
-Rene continues work on Debugger. This month we get support for more CPU registers for the x86 architecture (SIMD), and on CPUs lacking some of the registers, they will be completely hidden. He also added memory write support (see his separate <a href="https://www.haiku-os.org/blog/anevilyak/2015-05-26_debugger_editing_memory">blog post</a> about this).
+Rene continues work on Debugger. This month we get support for more CPU registers for the x86 architecture (SIMD), and on CPUs lacking some of the registers, they will be completely hidden. He also added memory write support (see his separate <a href="/blog/anevilyak/2015-05-26_debugger_editing_memory">blog post</a> about this).
 
 Janus worked on adding support for configurable colors (through Appearance) in a few place where it wasn't handled correctly. He also fixed PoorMan to autosize its window.
 

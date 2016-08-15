@@ -6,7 +6,7 @@ date = "2014-11-17T00:29:00.000Z"
 tags = ["undefined", "FLOSS", "event"]
 +++
 
-<a href="https://www.haiku-os.org/images/capitole_du_libre_haiku_booth_1"><img src="/files/screenshots/Capitole_du_libre_2014_DSCN2119.thumbnail.jpg" align="right"></a>I'm heading back home from <a href="http://2014.capitoledulibre.org/" title="Capitole du libre">Capitole du libre</a>, held this week-end in Toulouse, where I helped Adrien on the Haiku booth. I even just distributed two more flyers, since I've gone car-sharing for a change for both ways. I decided quite late, but Adrien kindly offered his sofa so I couldn't resist.
+<a href="/images/capitole_du_libre_haiku_booth_1"><img src="/files/screenshots/Capitole_du_libre_2014_DSCN2119.thumbnail.jpg" align="right"></a>I'm heading back home from <a href="http://2014.capitoledulibre.org/" title="Capitole du libre">Capitole du libre</a>, held this week-end in Toulouse, where I helped Adrien on the Haiku booth. I even just distributed two more flyers, since I've gone car-sharing for a change for both ways. I decided quite late, but Adrien kindly offered his sofa so I couldn't resist.
 <!--break-->
 I arrived on friday evening, and after spending five hours in a car had one more hour and a half with the metro and tram. It was raining almost all along.
 
@@ -32,7 +32,7 @@ We stayed a little while at the buffet, then we went to the birthday dinner of t
 
 On sunday we didn't have to walk as Adrien had the on-demand shuttle booked the day before. Some more people asked about Haiku at the booth, often starting with "is it a Linux distro ?".
 
-<a href="https://www.haiku-os.org/images/capitole_du_libre_haiku_booth_2"><img src="/files/screenshots/Capitole_du_libre_2014_DSCN2121.thumbnail.jpg"></a>
+<a href="/images/capitole_du_libre_haiku_booth_2"><img src="/files/screenshots/Capitole_du_libre_2014_DSCN2121.thumbnail.jpg"></a>
 
 <a href="http://2014.capitoledulibre.org/programme/presentation/7/" title="Monnaies libres">One of the talks</a> I saw was about Free Moneys (like <a href="http://www.openudc.org/" title="OpenUDC">OpenUDC</a> and uCoin), as I've been involved into the creation of a <a href="http://en.wikipedia.org/wiki/Complementary_currency" title="Complementary currency on Wikipedia">local complementary currency</a> in my town, and ended up looking at those as well. I already started porting the dependencies for OpenUDC. ;-)
 

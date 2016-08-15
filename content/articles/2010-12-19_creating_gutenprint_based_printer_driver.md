@@ -70,7 +70,7 @@ At runtime Gutenprint needs some data files that are part of Gutenprint source c
 
 <h3>Writing the printer driver</h3>
 <p>
-Since I had written native Haiku printer <a href="http://www.haiku-os.org/documents/dev/how_to_write_a_printer_driver">drivers</a> using libprint in the past I am familiar with the printer driver framework. The driver was implemented step by step. After each step the added functionality could be tested. The steps outlined here might not be in chronological order.
+Since I had written native Haiku printer <a href="/documents/dev/how_to_write_a_printer_driver">drivers</a> using libprint in the past I am familiar with the printer driver framework. The driver was implemented step by step. After each step the added functionality could be tested. The steps outlined here might not be in chronological order.
 </p>
 <p>
 I started with a printer driver skeleton by copying an existing driver and the removing the printer driver specific source code. The driver could be built soon but did not generate any output yet.

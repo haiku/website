@@ -12,7 +12,7 @@ This week was the BeGeistert coding sprint. I assume you already read the great 
 <h3>ARM Port - Ithamar Adema, René Gollent, Adrien Destugues</h3>
 Ithamar was holding the keyboard on this one. He's working on low-level Android stuff as his paid job, so he has a good understanding of the hardware and the Linux kernel that serves as a reference.
 
-The ARM port was started as a Google Summer of Code project <a href="https://www.haiku-os.org/tags/arm">back in 2009</a>. The project got the kernel compiling, and the bootloader working. Things more or less stayed there after that. However, with the recent release of the Raspberry Pi and some other cheap ARM-based hardware, there is interest for ARM again.
+The ARM port was started as a Google Summer of Code project <a href="/tags/arm">back in 2009</a>. The project got the kernel compiling, and the bootloader working. Things more or less stayed there after that. However, with the recent release of the Raspberry Pi and some other cheap ARM-based hardware, there is interest for ARM again.
 
 Ithamar is working with the Gumstix Verdex board. This is what was used for the work in 2009. That board is quite old by now, but it has a complete emulation in QEmu which is very useful for debugging the kernel.
 
@@ -30,7 +30,7 @@ The code in BMenu is one of the most messy parts of the interface kit. Each menu
 
 <h3>WebPositive service kit network backend - Alexandre Deckner</h3>
 
-The <a href="https://www.haiku-os.org/tags/services_kit">Services Kit</a> is another of our past GSoC projects (2010). The plan is to have a full-featured http API for getting information from web services more easily. The kit has been merged into Haiku but is completely undocumented, so it's not seeing much use.
+The <a href="/tags/services_kit">Services Kit</a> is another of our past GSoC projects (2010). The plan is to have a full-featured http API for getting information from web services more easily. The kit has been merged into Haiku but is completely undocumented, so it's not seeing much use.
 
 Alexandre started by merging some patches for better https support. He then tested the kit by writing a weather deskbar replicant that makes use of it.
 

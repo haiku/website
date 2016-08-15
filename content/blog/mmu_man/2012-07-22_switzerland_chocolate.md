@@ -6,7 +6,7 @@ date = "2012-07-22T01:51:20.000Z"
 tags = ["rmll"]
 +++
 
-Last week <a href="https://www.haiku-os.org/user/oco">Olivier</a> and I had the difficult task of handling the booth at <a href="http://2012.rmll.info/">RMLL</a> and showing off Haiku in the land of gruyère, chocolate and banks.
+Last week <a href="/user/oco">Olivier</a> and I had the difficult task of handling the booth at <a href="http://2012.rmll.info/">RMLL</a> and showing off Haiku in the land of gruyère, chocolate and banks.
 <!--break-->
 I arrived on saturday, after chatting in the train with some other attendant (tshirts help a lot to recognize your peers), and it didn't start very well since I pinched a finger under my luggage. I had some medecine at hand luckily, and after some tram we arrived and I asked for a glass of water and ice cubes. At least the week-end was for the general public and we didn't have to care about a booth yet, so I spent some time talking with others to avoid thinking about the flattened finger.
 

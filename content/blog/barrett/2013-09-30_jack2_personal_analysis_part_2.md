@@ -8,7 +8,7 @@ tags = ["jack2", "media_kit", "libjackcompat"]
 
 Hello, it has been passed some time from the Part 1 of this article, I've continued my investigations as well, and I have finally some more clear plans for such a hypotetic Jack2 port. Unfortunately i had not enough time to research a bit more in the latency differences between the media_kit and jack, sorry, this should be post-poned until i have precise emphyrical measuring methods.
 
-To better understand this article i suggest you to read the first <a href="https://www.haiku-os.org/blog/barrett/2013-07-02_jack2_personal_analysis_part_1"> part. </a>
+To better understand this article i suggest you to read the first <a href="/blog/barrett/2013-07-02_jack2_personal_analysis_part_1"> part. </a>
 
 <strong>The Wrapper</strong>
 

@@ -7,9 +7,9 @@ tags = ["scheduler", "gsoc", "scheduling algorithm", "algorithm", "O(1)", "compl
 +++
 
 <i>(Or: rose-coloured glasses are both the blessing and the curse of being in love)</i>
-<blockquote>But first, the obligatory <a href="http://haiku-os.org/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#disclaimer">disclaimer</a>, in case you missed it. Thanks.</blockquote>
+<blockquote>But first, the obligatory <a href="/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#disclaimer">disclaimer</a>, in case you missed it. Thanks.</blockquote>
 
-Remember where I left <a href="http://haiku-os.org/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#bench">on the previous post</a>? Now, with greater confidence, I set myself to improve my original algorithm's performance even further. But that's just because I <b>knew</b> it sucked. It was extremely inefficient as far as implementation goes; it looked great in the benchmarks because it was being compared to O(n) (<i>n</i> being the number of threads in the system) algorithms, while it had O(1) complexity, so I already had a head-start, so to speak. Still, I knew the algorithm very well and understood that there were plenty of bottlenecks to fix. I wrote it, after all.
+Remember where I left <a href="/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#bench">on the previous post</a>? Now, with greater confidence, I set myself to improve my original algorithm's performance even further. But that's just because I <b>knew</b> it sucked. It was extremely inefficient as far as implementation goes; it looked great in the benchmarks because it was being compared to O(n) (<i>n</i> being the number of threads in the system) algorithms, while it had O(1) complexity, so I already had a head-start, so to speak. Still, I knew the algorithm very well and understood that there were plenty of bottlenecks to fix. I wrote it, after all.
 
 [/pride mode=off]
 <!--break-->
@@ -43,4 +43,4 @@ Notes:
 </ol>
 
 <br><br>
-<blockquote>Don't miss the next chapter in the Scheduler saga! Tomorrow (hopefully), same bat time... Same <a href="http://haiku-os.org/blog/meianoite">bat channel</a> (powered by <a href="http://haiku-os.org/blog/1164/feed">RSS feeds</a>!)... <a href="http://haiku-os.org/blog/meianoite">Right here</a>. Stay tuned.</blockquote>
+<blockquote>Don't miss the next chapter in the Scheduler saga! Tomorrow (hopefully), same bat time... Same <a href="/blog/meianoite">bat channel</a> (powered by <a href="/blog/1164/feed">RSS feeds</a>!)... <a href="/blog/meianoite">Right here</a>. Stay tuned.</blockquote>

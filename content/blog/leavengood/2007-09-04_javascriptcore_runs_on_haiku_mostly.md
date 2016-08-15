@@ -8,7 +8,7 @@ tags = ["development", "porting", "WebKit"]
 
 So after a few frustrating weeks of very little progress on my WebKit port, I have finally gotten JavaScriptCore running on Haiku!
 <!--break-->
-As described <a href="http://haiku-os.org/blog/leavengood/2007-08-20/webkit_port_complications">in my last blog entry</a>, the main show stopper was getting the ICU library compiled with the Haiku GCC 4.1.2 cross compiler.
+As described <a href="/blog/leavengood/2007-08-20/webkit_port_complications">in my last blog entry</a>, the main show stopper was getting the ICU library compiled with the Haiku GCC 4.1.2 cross compiler.
 
 After reading some documentation and a lot of trial and error, I finally got Haiku's GCC 4.1.2 to compile code outside of the Haiku build environment. I will document how to do this within the next week, as there are a few gotchas.
 

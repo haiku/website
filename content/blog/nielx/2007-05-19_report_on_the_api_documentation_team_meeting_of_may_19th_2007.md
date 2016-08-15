@@ -31,7 +31,7 @@ tags = ["documentation", "meeting"]
 
 <h3>2. Getting Started Information</h3>
 
-<p><tt>nielx</tt> refers to the <a href="http://haiku-os.org/documents/dev/haiku_documentation_team_how_to">Getting Started</a> document <tt>AJS</tt> wrote. He asks who has used this document and what the experiences were. Both <tt>sardaukar</tt> and <tt>ddew</tt> used that document to set up their environment in windows. They both claim that it is sufficient. <tt>Thom_Holwerda</tt> notes that it looks good and clear.</p>
+<p><tt>nielx</tt> refers to the <a href="/documents/dev/haiku_documentation_team_how_to">Getting Started</a> document <tt>AJS</tt> wrote. He asks who has used this document and what the experiences were. Both <tt>sardaukar</tt> and <tt>ddew</tt> used that document to set up their environment in windows. They both claim that it is sufficient. <tt>Thom_Holwerda</tt> notes that it looks good and clear.</p>
 
 <p><tt>sardauker</tt> says that he misses some examples of good and bad documentation practises. <tt>AJS</tt> thinks that this subject belongs to the API documentation guidelines. <tt>nielx</tt> agrees.</p>
 

@@ -12,7 +12,7 @@ The new text tool will address some of the shortcommings of the one in the origi
 
 But progress on WonderBrush comes also from another direction. Ingo is on bord again :-). He recently picked up a lot of experience coding in the Qt framework, and is working on a port of WonderBrush to the tool kit. To keep the effort of this undertaking in check, he is often directly importing public Haiku classes into the port. The majority of the WonderBrush code stays unmodified, targeting the Haiku API only. Some of that API may just be implemented on top of Qt where it is necessary for the port. It's a very practical approach that is already showing good results, although the Qt port is still far behind the Haiku version.
 
-During the <a href="https://www.haiku-os.org/conference/2012_begeistert_026_marathon">upcoming BeGeistert event</a> in Düsseldorf, I plan to demonstrate the progress on the WonderBrush rewrite and the Qt port.
+During the <a href="/conference/2012_begeistert_026_marathon">upcoming BeGeistert event</a> in Düsseldorf, I plan to demonstrate the progress on the WonderBrush rewrite and the Qt port.
 
 Unfortunately, at the current rate of development, it will still be a while before the new WonderBruch can replace the old one. But when it does, it will offer some cool professional features that are lacking from a lot of graphics tools for other platforms:
 <ul>

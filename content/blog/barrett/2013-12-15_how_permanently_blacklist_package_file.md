@@ -8,7 +8,7 @@ tags = ["remove driver", "hpkg", "blacklist", "packagefs", "packages"]
 
 With the advent of package management and hrev46391, it has become possible to prevent a package from being extracted at boot time.From a suggestion of Matt, and with the contribution of Luroh (thanks!), i would like to explain you how to blacklist a package file in Haiku.
 
-In Haiku's <a href="https://www.haiku-os.org/docs/userguide/en/bootloader.html"> boot menu </a>, there is a 'Blacklist entries' option available. This method will only let you disable system packages, and only until the next time you reboot.
+In Haiku's <a href="/docs/userguide/en/bootloader.html"> boot menu </a>, there is a 'Blacklist entries' option available. This method will only let you disable system packages, and only until the next time you reboot.
 
 You may know, since the package manager has been added to Haiku, some directories are read only, so unlike the past, isn't possible to just delete the driver. The Blacklist functionality addresses the issue that it may be necessary to remove a problematic file such as a library or a bugged driver, which would otherwise require editing the containing package file.
 

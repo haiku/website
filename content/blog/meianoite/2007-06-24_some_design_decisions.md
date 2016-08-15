@@ -7,11 +7,11 @@ tags = ["scheduler", "gsoc", "scheduling algorithm", "algorithm", "O(1)", "compl
 +++
 
 <i>(Or: knitting a delicate fabric, part I: the wool<a href="#note1">[1]</a>)</i>
-<blockquote>I sincerely hope you've read <a href="http://haiku-os.org/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#disclaimer">the disclaimer</a> by now, but I guess I'd better link to it anyway :) Thanks.</blockquote>
+<blockquote>I sincerely hope you've read <a href="/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#disclaimer">the disclaimer</a> by now, but I guess I'd better link to it anyway :) Thanks.</blockquote>
 
-I spent <a href="http://haiku-os.org/blog/meianoite/2007-06-22/going_back_to_the_basics_kinda">the better part of the last post</a> explaining how simple strides would <a href="http://en.wikipedia.org/wiki/Heuristic_%28computer_science%29#Heuristic_algorithms">yield an approximation</a> of the ideal shuffling of tickets. What I didn't explain, however, was why the hell am I insisting on using tickets when strides/passes <a href="http://haiku-os.org/blog/meianoite/2007-06-22/going_back_to_the_basics_kinda#stride">avoids those issues</a> completely.
+I spent <a href="/blog/meianoite/2007-06-22/going_back_to_the_basics_kinda">the better part of the last post</a> explaining how simple strides would <a href="http://en.wikipedia.org/wiki/Heuristic_%28computer_science%29#Heuristic_algorithms">yield an approximation</a> of the ideal shuffling of tickets. What I didn't explain, however, was why the hell am I insisting on using tickets when strides/passes <a href="/blog/meianoite/2007-06-22/going_back_to_the_basics_kinda#stride">avoids those issues</a> completely.
 
-Well, the thing is, I didn't ditch my previous attempt completely. It <a href="http://haiku-os.org/blog/meianoite/2007-06-17/the_first_or_nth_even_attempt_a_cautionary_tale#flaw">had flaws</a>, but there were some gems there as well. I don't know a single programmer who can't recognise it's possible to find sound ideas and really clever excerpts of code even when, on the whole, the code was crap.
+Well, the thing is, I didn't ditch my previous attempt completely. It <a href="/blog/meianoite/2007-06-17/the_first_or_nth_even_attempt_a_cautionary_tale#flaw">had flaws</a>, but there were some gems there as well. I don't know a single programmer who can't recognise it's possible to find sound ideas and really clever excerpts of code even when, on the whole, the code was crap.
 
 (Yes, programmers and software architects are a proud bunch of people.)
 
@@ -25,7 +25,7 @@ We would have several <i>thread queues</i>, one per priority, and one of these p
 
 Let's make a little differentiation here: 20 out of those 120 are reserved to real-time threads. The other 100 are for non-RT threads. So, for now, let's separate the scheduling jobs in two "realms": <b>RT</b> and <b>non-RT</b>.
 
-For the sake of simplicity, <a href="http://haiku-os.org/blog/meianoite/2007-06-17/the_first_or_nth_even_attempt_a_cautionary_tale#note2">whenever <b>RT</b> threads are ready, they're chosen, priority order</a>. <i>That simple</i>.
+For the sake of simplicity, <a href="/blog/meianoite/2007-06-17/the_first_or_nth_even_attempt_a_cautionary_tale#note2">whenever <b>RT</b> threads are ready, they're chosen, priority order</a>. <i>That simple</i>.
 
 Now let's take care of the non-RT realm:
 
@@ -145,4 +145,4 @@ Notes:
 </ol>
 
 <br><br>
-<blockquote>Don't miss the next chapter in the Scheduler saga! Tomorrow (hopefully), same bat time... Same <a href="http://haiku-os.org/blog/meianoite">bat channel</a> (powered by <a href="http://haiku-os.org/blog/1164/feed">RSS feeds</a>!)... <a href="http://haiku-os.org/blog/meianoite">Right here</a>. Stay tuned.</blockquote>
+<blockquote>Don't miss the next chapter in the Scheduler saga! Tomorrow (hopefully), same bat time... Same <a href="/blog/meianoite">bat channel</a> (powered by <a href="/blog/1164/feed">RSS feeds</a>!)... <a href="/blog/meianoite">Right here</a>. Stay tuned.</blockquote>

@@ -9,11 +9,11 @@ The very first thing you need to do is install Doxygen and git onto your system 
 
 Next grab the Haiku source from git by running: <code>git clone git://git.haiku-os.org/haiku</code> in the directory you wish to work (note it will automatically create a <code>haiku/</code> sub-directory for you.)
 
-If you just want to write documentation then you don't need to worry about building the operating system and running it so you don't have to go through the steps of getting the buildtools running or the prerequisite software. However, if you also want to build the OS follow the guide here: <a href="http://haiku-os.org/guides/building" title="Haiku Building Guide">http://haiku-os.org/guides/building</a> to learn how to get started building Haiku.
+If you just want to write documentation then you don't need to worry about building the operating system and running it so you don't have to go through the steps of getting the buildtools running or the prerequisite software. However, if you also want to build the OS follow the guide here: <a href="/guides/building" title="Haiku Building Guide">/guides/building</a> to learn how to get started building Haiku.
 
 The existing documentation can be found in the <code>docs/user/</code> directory in the source tree. There are a number of directories located there for each kit and topic such as <code>interface/</code>, <code>app/</code>, <code>storage/</code>, etc. The documentation is not written directly in the source files in Haiku, instead it is separated out into separate files in the <code>docs/user</code> directory. You can look at the .dox files located there to get a feel for what the documentation files should look like.
 
-Next decide which class you wish to document. You can look at the <a href="http://haiku-os.org/legacy-docs/bebook/ClassIndex.html" title="BeBook Class Reference">BeBook</a> to get a list of classes from BeOS R5, most of which are also in Haiku or you can browse through the source tree in <code>src/kits/kitname</code> (for the cpp files) and <code>headers/os/kitname</code> (for the header files) to find the list of classes in Haiku.
+Next decide which class you wish to document. You can look at the <a href="/legacy-docs/bebook/ClassIndex.html" title="BeBook Class Reference">BeBook</a> to get a list of classes from BeOS R5, most of which are also in Haiku or you can browse through the source tree in <code>src/kits/kitname</code> (for the cpp files) and <code>headers/os/kitname</code> (for the header files) to find the list of classes in Haiku.
 
 Note, do NOT copy from the BeBook. We do not have the legal rights to create modified versions of the BeBook so use it for reference only! Copying from the BeBook is plagiarism.
 

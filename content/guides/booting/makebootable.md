@@ -27,7 +27,7 @@ tags = []
 <li>makebootable</li>
 <li><a href="#makebootabletiny">makebootabletiny</a>  <a href="http://tinyurl.com/echelog-makebootablytiny">IRC Logs search for 'makebootabletiny'</li>
 <li><a href="#zbeos_hack">zbeos hack</a></li>
-<li><a href="http://www.haiku-os.org/node/2398#manually">manual manipulation</a></li>
+<li><a href="/node/2398#manually">manual manipulation</a></li>
 </ul>
 </ul>
 <a name="makebootabletiny"></a>

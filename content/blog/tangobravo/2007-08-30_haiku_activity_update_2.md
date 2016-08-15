@@ -38,7 +38,7 @@ Samuel Rodriguez Perez provided a patch, slightly modified by Ingo, which allows
 
 <h3><a href="http://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
 
-There was some discussion on the networking support under various Virtual Machines. Virtual PC is now supposedly available for free from Microsoft and networking is supported by the tulip driver from BeOS. Personally I use VMWare Server (also available for free) which has networking supported through the ipro1000 driver (just make sure the device is set to e1000 in your .vmx file as I mentioned <a href="http://haiku-os.org/blog/tangobravo/2007-08-29/haiku_activity_update_1">last time</a>) and also supports booting from physical partitions.
+There was some discussion on the networking support under various Virtual Machines. Virtual PC is now supposedly available for free from Microsoft and networking is supported by the tulip driver from BeOS. Personally I use VMWare Server (also available for free) which has networking supported through the ipro1000 driver (just make sure the device is set to e1000 in your .vmx file as I mentioned <a href="/blog/tangobravo/2007-08-29/haiku_activity_update_1">last time</a>) and also supports booting from physical partitions.
 
 Jorge aka Koki (that's his full name now, I think :)) posted a link to a poster in case people want to set up a presence at a conference or other meeting. On a related note he announced he is organising a presence at the Kansai Open Source conference on 9-10 November in Osaka, Japan. 
 

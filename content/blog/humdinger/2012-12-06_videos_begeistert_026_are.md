@@ -15,7 +15,7 @@ Now, on to the videos. All hosted on youtube, you can watch them with a few apps
 
 <ul>
 <li><p><a href="http://www.youtube.com/watch?v=NPPz1OJwICA&list=PL2KiE-VO9zk-5S738gXgLm9B6Dsicru_C">BG026 - The Auckland Layout Editor (ALE)</a><br />
-Clemens Zeidler presents his new <a href="http://www.haiku-os.org/blog/czeidler/2012-09-03_ale_auckland_layout_editor">ALE</a>, a GUI editor that helps building constraint based layouts.</p></li>
+Clemens Zeidler presents his new <a href="/blog/czeidler/2012-09-03_ale_auckland_layout_editor">ALE</a>, a GUI editor that helps building constraint based layouts.</p></li>
 
 <li><p><a href="http://www.youtube.com/watch?v=n-NDFwtmQcI&list=PL2KiE-VO9zk-9XPmfusEDaOFd_7AiVKzz">BG026 - Haiku Debugging Tools</a><br />
 Ingo Weinhold demonstrates the state of the new graphical Debugger and shows other interesting tools like the profiler to hunt down those bottlenecks.</p></li>

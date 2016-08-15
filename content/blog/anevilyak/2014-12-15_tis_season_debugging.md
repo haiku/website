@@ -6,7 +6,7 @@ date = "2014-12-15T14:05:16.000Z"
 tags = ["debugger", "expressions", "syntax highlighting"]
 +++
 
-Since the last <a href="https://www.haiku-os.org/blog/anevilyak/2014-10-30_code_sprint_2014_debugger">time</a>, I've put a bit more work into improving the expression evaluator that was started as part of the sprint. Since some of its new capabilities are likely to be useful to others, and might not necessarily be obvious from simply reading the commit list, I thought I'd elaborate on them a bit here.
+Since the last <a href="/blog/anevilyak/2014-10-30_code_sprint_2014_debugger">time</a>, I've put a bit more work into improving the expression evaluator that was started as part of the sprint. Since some of its new capabilities are likely to be useful to others, and might not necessarily be obvious from simply reading the commit list, I thought I'd elaborate on them a bit here.
 <!--break-->
 <h3>Expression improvements</h3>
 

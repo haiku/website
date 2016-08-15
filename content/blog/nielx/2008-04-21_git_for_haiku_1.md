@@ -41,7 +41,7 @@ tar xvfj <i>path-to-download</i>
 
 <h3>Getting and Building the Source</h3>
 
-<p>After installing the binaries, you can get and update the source from the repository. To build the source, you need Haiku's development tools, including perl. You can add them when you are building Haiku. Look at the section on the development tools in the <a href="http://www.haiku-os.org/blog/nielx/2008-03-31/haiku_alpha_1_status_update_2">second alpha newsletter.</a></p>
+<p>After installing the binaries, you can get and update the source from the repository. To build the source, you need Haiku's development tools, including perl. You can add them when you are building Haiku. Look at the section on the development tools in the <a href="/blog/nielx/2008-03-31/haiku_alpha_1_status_update_2">second alpha newsletter.</a></p>
 
 <pre>
 # to get the 'hack' branch

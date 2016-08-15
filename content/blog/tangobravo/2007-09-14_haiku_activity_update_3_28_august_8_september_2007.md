@@ -17,7 +17,7 @@ Read on for more on those, updates on mailing list discussions, and to find out 
 <h3><a href="https://lists.berlios.de/pipermail/haiku-commits/">SVN Commit List</a></h3>
 
 <em>Firewire</em>
-JiSheng Zhang's Google Summer of Code work on a firewire implementation for Haiku was checked in. Some of the code for the modules has come from FreeBSD current. As JiSheng reported in <a href="http://haiku-os.org/blog/absabs/2007-08-30/my_feelings_about_gsoc_and_firewire_status">a blog post</a> the implementation works with his DV camera and he intends to continue the work to support storage devices too. Great work, JiSheng!
+JiSheng Zhang's Google Summer of Code work on a firewire implementation for Haiku was checked in. Some of the code for the modules has come from FreeBSD current. As JiSheng reported in <a href="/blog/absabs/2007-08-30/my_feelings_about_gsoc_and_firewire_status">a blog post</a> the implementation works with his DV camera and he intends to continue the work to support storage devices too. Great work, JiSheng!
 
 <em>Open Sound</em>
 François integrated the current version of his OpenSound media node to the tree and the build. This work should greatly increase Haiku's sound card support.
@@ -61,7 +61,7 @@ Humdinger suggested some improvements to trac, including a mandatory field for t
 
 Jorge continued his recent theme of encouraging community advocacy events. During this period he announced his <a href="http://myhaiku.org/haiku-related-artwork">Haiku Artwork Page</a> initially offering Haiku logos, a generic flyer, and a poster for download, and later adding a simple and elegant wallpaper set. The large 35"x23" poster is also available at the <a href="http://www.cafepress.com/haiku_os/">Haiku CafePress store</a> ($18). Koki encourages derivative work or translations - more details on the page.
 
-Phil Greenway (aka Sikosis) attended HUMBUG - Brisbane's Unix User Group on September 8th. The plan was to record an episode of the <a href="http://www.pageflakes.com/HaikuPodcast">Haiku Podcast</a> from there. He wrote a <a href="http://haiku-os.org/blog/sikosis/2007-09-12/haiku_at_humbug">blog entry</a> on how it went - sounds like a success!
+Phil Greenway (aka Sikosis) attended HUMBUG - Brisbane's Unix User Group on September 8th. The plan was to record an episode of the <a href="http://www.pageflakes.com/HaikuPodcast">Haiku Podcast</a> from there. He wrote a <a href="/blog/sikosis/2007-09-12/haiku_at_humbug">blog entry</a> on how it went - sounds like a success!
 
 
 <h3><a href="http://www.freelists.org/archives/haiku-development/">Development List</a></h3>
@@ -75,7 +75,7 @@ There was a question from Ilya Pavlenkov about the possibility of porting Java t
 
 <h3><a href="http://www.bug-br.org.br/pipermail/glasselevator-talk/">Glass Elevator</a></h3>
 
-Continuing the thread on layout managers I mentioned <a href="http://haiku-os.org/blog/tangobravo/2007-08-30/haiku_activity_update_2">last time</a>, Christof Lutteroth set up <a href="http://www.cs.auckland.ac.nz/~lutteroth/projects/alm/">a website</a> for the .NET implementation of the Auckland Layout Model he has been working on, including some example layouts to show the engine in action. Fredrik Holmqvist (who definitely is aka tqh, now I've worked out my Fredrik confusion) has expressed an interest in porting the c# examples to BeOS C++, so something might yet happen on this for future Haiku. [Insert standard forward-looking-statement disclaimer here :D]
+Continuing the thread on layout managers I mentioned <a href="/blog/tangobravo/2007-08-30/haiku_activity_update_2">last time</a>, Christof Lutteroth set up <a href="http://www.cs.auckland.ac.nz/~lutteroth/projects/alm/">a website</a> for the .NET implementation of the Auckland Layout Model he has been working on, including some example layouts to show the engine in action. Fredrik Holmqvist (who definitely is aka tqh, now I've worked out my Fredrik confusion) has expressed an interest in porting the c# examples to BeOS C++, so something might yet happen on this for future Haiku. [Insert standard forward-looking-statement disclaimer here :D]
 
 <h3><a href="http://dev.haiku-os.org">Bug Stats</a></h3>
 
@@ -87,9 +87,9 @@ The bug list is the hardest to read through and summarise and any major fixes wi
 
 To make up for the sad demise of the bug section, I'll add one on the website. I won't promise to keep track of the forums - it's not something I do regularly - but if something there catches my eye I might mention it. What I definitely will mention is new and interesting blog posts and documentation updates.
 
-Stephan has started an informative series about multithreaded programming, specifically aimed at people wishing to develop on Haiku, although the concepts discussed are applicable to any system. The <a href="http://haiku-os.org/documents/dev/understanding_the_design_and_requirements_of_multithreaded_applications">first post</a> examines why locking is needed and how messaging can avoid deadlock situations, and <a href="http://haiku-os.org/documents/dev/using_snapshots_for_short_locking_times">the second</a> looks at using "snapshots" to reduce the time locks need to be held for. They're both well worth a read if you're interested in programming in the modern multi-core world.
+Stephan has started an informative series about multithreaded programming, specifically aimed at people wishing to develop on Haiku, although the concepts discussed are applicable to any system. The <a href="/documents/dev/understanding_the_design_and_requirements_of_multithreaded_applications">first post</a> examines why locking is needed and how messaging can avoid deadlock situations, and <a href="/documents/dev/using_snapshots_for_short_locking_times">the second</a> looks at using "snapshots" to reduce the time locks need to be held for. They're both well worth a read if you're interested in programming in the modern multi-core world.
 
-Other things of interests are Ryan's <a href="http://haiku-os.org/blog/leavengood/2007-09-04/javascriptcore_runs_on_haiku_mostly">report of success</a> with JavaScriptCore on Haiku (mostly!) and a report from Salvatore Benedetto about <a href="http://haiku-os.org/blog/emitrax/2007-09-05/impression_about_my_gsoc_with_haiku_and_usb_isochronous_support_status">the status of his GSoC project</a> about extending Haiku's USB support.
+Other things of interests are Ryan's <a href="/blog/leavengood/2007-09-04/javascriptcore_runs_on_haiku_mostly">report of success</a> with JavaScriptCore on Haiku (mostly!) and a report from Salvatore Benedetto about <a href="/blog/emitrax/2007-09-05/impression_about_my_gsoc_with_haiku_and_usb_isochronous_support_status">the status of his GSoC project</a> about extending Haiku's USB support.
 
 <h3>The End</h3>
 That's it for another update. This post came at the transition between my original weekly idea and the new fortnightly plan, meaning that the next one really will be shorter!

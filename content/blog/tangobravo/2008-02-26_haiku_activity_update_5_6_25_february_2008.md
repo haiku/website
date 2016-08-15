@@ -84,7 +84,7 @@ There was a discussion about adding a menu item to open Email Preferences direct
 Craig Magina introduced himself to the kernel mailing list - he's found some free time and wants to help out with Haiku. Welcome to the project Craig, I hope you find something interesting to work on in the kernel - if only to add a bit of variety to that section of my update posts (not that Axel, Ingo and Michael aren't doing a great job)!
 
 <h3><a href="http://www.haiku-os.org">Website</a></h3>
-Haiku has been exhibited at a couple of events recently - have a look at <a href="http://www.haiku-os.org/blog/koki/2008-02-11/haiku_at_scale_6x_overall_impressions">Koki's report</a> on the SCaLE conference in Los Angeles, and <a href="http://www.haiku-os.org/blog/mmu_man/2008-02-25/hello_from_fosdem">François' report</a> on the Haiku presence at FOSDEM in Brussels.
+Haiku has been exhibited at a couple of events recently - have a look at <a href="/blog/koki/2008-02-11/haiku_at_scale_6x_overall_impressions">Koki's report</a> on the SCaLE conference in Los Angeles, and <a href="/blog/mmu_man/2008-02-25/hello_from_fosdem">François' report</a> on the Haiku presence at FOSDEM in Brussels.
 
 <h3>The End</h3>
 That's it for another update. Feel free to point out any errors you notice and I'll correct the post.

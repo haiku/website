@@ -5,7 +5,7 @@ date = "2012-12-22T21:28:31.000Z"
 tags = ["developer", "python", "php", "drupal", "volunteer"]
 +++
 
-<p>The Haiku project is supported by various websites and web services, such as the <a href="https://www.haiku-os.org/>main website</a>, the <a href="https://dev.haiku-os.org/">development tracker</a> and the <a href="http://i18n.haiku-os.org/pootle">translation tools</a>. For all these services we have various short and long term goals and objectives, and we are looking for help to realize our plans.</p>
+<p>The Haiku project is supported by various websites and web services, such as the <a href="/>main website</a>, the <a href="https://dev.haiku-os.org/">development tracker</a> and the <a href="http://i18n.haiku-os.org/pootle">translation tools</a>. For all these services we have various short and long term goals and objectives, and we are looking for help to realize our plans.</p>
 
 <p>Helping out means that you are contributing to the continued development of Haiku! We are looking for people with Drupal/PHP skills and people with Python experience.</p>
 <!--break-->

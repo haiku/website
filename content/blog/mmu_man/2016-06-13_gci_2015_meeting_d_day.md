@@ -27,4 +27,4 @@ And then most people left to have a long sleep as tomorrow will be a long day. S
 
 Btw, my camera has depleted its battery and I forgot the proprietary cable, so I used my tablet but it doesn't looks as nice. But Scott took <a href="https://goo.gl/photos/8CqhvpMxrJ9u22jF8">some photos too</a>.
 
-<a href="https://www.haiku-os.org/blog/mmu_man/2016-06-14_gci_2015_meeting_d1">Next day...</a>
+<a href="/blog/mmu_man/2016-06-14_gci_2015_meeting_d1">Next day...</a>

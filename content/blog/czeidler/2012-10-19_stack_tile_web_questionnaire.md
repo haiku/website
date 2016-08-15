@@ -24,4 +24,4 @@ To participate click:
 Thank you for your help!
 	Clemens
 
-*) <a href="http://www.haiku-os.org/docs/userguide/en/gui.html#stack-tile">Haiku user guide (S&T)</a>
+*) <a href="/docs/userguide/en/gui.html#stack-tile">Haiku user guide (S&T)</a>
