@@ -5,7 +5,7 @@ date = "2015-10-10T15:40:25.000Z"
 tags = []
 +++
 
-    <p>Building Haiku from sources is a surprisingly simple process which allows developers to get started quickly developing on Haiku and allowing end users to experiment with the latest Haiku sources.</p>
+<p>Building Haiku from sources is a surprisingly simple process which allows developers to get started quickly developing on Haiku and allowing end users to experiment with the latest Haiku sources.</p>
 
 <h4><a href="/guides/building/port_status">Port Status</a></h4>
 <p>An overview of the platforms Haiku is designed to run on</p>
@@ -32,11 +32,4 @@ tags = []
 <li><a href="/guides/building/compiling-x86_64">Compiling for x86_64</a></li>
 <li><a href="/guides/building/compiling-arm">Compiling for ARM</a></li>
 <li><a href="/guides/building/compiling-powerpc">Compiling for PowerPC</a></li>
-</ul>
-  <div id="book-navigation-2808" class="book-navigation">
-    <ul class="menu"><li class="leaf first"><a href="https://www.haiku-os.org/guides/building/pre-reqs">Pre-requisite Software</a></li>
-<li class="leaf"><a href="/guides/building/get-source-git">Getting the source code</a></li>
-<li class="collapsed"><a href="/guides/building/configure">Configure Options</a></li>
-<li class="leaf"><a href="/guides/building/gcc-hybrid">Haiku Hybrids</a></li>
-<li class="leaf last"><a href="/guides/building/jam">Using Jam</a></li>
 </ul>
