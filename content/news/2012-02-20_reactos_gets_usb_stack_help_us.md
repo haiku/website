@@ -11,6 +11,6 @@ The current ReactOS USB stack was started by Michael Martin, with Johannes Ander
 <!--break-->
 Many of the definitions and data structures that represent USB protocols were borrowed directly from Haiku, though the differing operating system design necessitated a great deal of glue to be written to make use of the code. Johannes also referenced Haiku’s USB stack to better understand the behavior of USB devices and subtleties that might not be entirely clear in the USB specifications, and also provided feedback to Haiku as he worked through the code.
 
-<p><a href="http://www.haiku-os.org/files/images/rosusb.png"><img src="http://www.haiku-os.org/files/images/rosusb.png" alt="ReactOS installed into an USB stick" width="50%" height="50%"></a><br/><em>ReactOS installed into an USB stick</em></p>
+<p><a href="/files/images/rosusb.png"><img src="/files/images/rosusb.png" alt="ReactOS installed into an USB stick" width="50%" height="50%"></a><br/><em>ReactOS installed into an USB stick</em></p>
 
 Due to the similar goals and constraints both projects have worked under for much of our histories, we have a fair understanding of the difficulties the other faces. Both the ReactOS and Haiku projects hope that this is merely another chapter in a long line of collaborations yet to come.

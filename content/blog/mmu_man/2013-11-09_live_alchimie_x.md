@@ -12,5 +12,5 @@ Slides are <a href="http://revolf.free.fr/Alchimie/2013/FR_AlchimieX_Haiku_met_l
 
 Lots of fun here !
 
-<img src="https://www.haiku-os.org/files/820605833.jpg" />
+<img src="/files/820605833.jpg" />
 <a href="http://twitpic.com/dkkfih/full">Photo</a> by <a href="http://twitpic.com/photos/amigaimpact">@AmigaImpact</a>.

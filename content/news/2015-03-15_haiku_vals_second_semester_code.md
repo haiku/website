@@ -5,7 +5,7 @@ date = "2015-03-15T15:46:52.000Z"
 tags = ["SoC2015", "students", "VALS"]
 +++
 
-<span class="inline right"><a href="http://vps2.semesterofcode.com/"><img src="https://www.haiku-os.org/files/cropped-vals-07_web_smaller.png" alt="VALS" title="VALS" class="image image-_original " width="250" height="234" /></a></span>
+<span class="inline right"><a href="http://vps2.semesterofcode.com/"><img src="/files/cropped-vals-07_web_smaller.png" alt="VALS" title="VALS" class="image image-_original " width="250" height="234" /></a></span>
 <p>The Haiku project is participating again in this year's "Semester of Code" (SoC) of the European <a href="http://vps2.semesterofcode.com/">VALS</a> project. The SoC is similar to Google's GSoC, but without the financial incentive and more emphasis on the educational side.<br />
 This is the second installment of "SoC", the objective is still the same:</p>
 

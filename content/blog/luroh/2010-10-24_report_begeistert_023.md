@@ -34,4 +34,4 @@ Lastly, Andre Meissner of the BG orga-team threw out the idea of making BG an an
 
 Big thanks to the BeGeistert 023 orga-team for doing an excellent job with such things as reservations, Internet access, drinks and snacks!
 
-And finally four pictures from my craptastic cell phone cam for your viewing pleasure: <a href="http://www.haiku-os.org/files/images/BG023-01.jpg">1</a>, <a href="http://www.haiku-os.org/files/images/BG023-02.jpg">2</a>, <a href="http://www.haiku-os.org/files/images/BG023-03.jpg">3</a>, <a href="http://www.haiku-os.org/files/images/BG023-04.jpg">4</a>.
+And finally four pictures from my craptastic cell phone cam for your viewing pleasure: <a href="/files/images/BG023-01.jpg">1</a>, <a href="/files/images/BG023-02.jpg">2</a>, <a href="/files/images/BG023-03.jpg">3</a>, <a href="/files/images/BG023-04.jpg">4</a>.

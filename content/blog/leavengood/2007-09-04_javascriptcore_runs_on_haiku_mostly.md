@@ -20,6 +20,6 @@ But when I went to test, there was some odd error about a missing symbol in one 
 
 The end result was I could finally run "testkjs" (the JavaScriptCore test program) on Haiku! Now some of you may have noticed that "(mostly)" on the title of this blog entry. Well since this was the first time running testkjs I got a segment violation related to the garbage collection in JavaScriptCore, so I still have some work to do before JSC is fully usable. But just getting the bugger to run is definitely a good milestone! And I'm only a month behind on my (clearly too ambitious) schedule :)
 
-See the <a href="http://haiku-os.org/files/screenshots/testkjs_working.png">attached screenshot</a> for some exciting textual output.
+See the <a href="/files/screenshots/testkjs_working.png">attached screenshot</a> for some exciting textual output.
 
-<a href="http://haiku-os.org/files/testkjs_crash.png">Here is the crash :-D</a>
+<a href="/files/testkjs_crash.png">Here is the crash :-D</a>

@@ -11,7 +11,7 @@ After a nice short walk through the light drizzle of the slowly condensing mist 
 While setting up my notebook and mouse was naturally done quite quickly, I wondered about the madman, that provided a scene I haven't seen since BeGeisterts form over ten years ago: Someone brought a bloody desktop tower with not one, but two LCD!
 
 <div align="center">
-<p><img src="http://www.haiku-os.org/files/BeGeistert028-1.jpg" title="Left to right - Stephan, Oliver, Ingo, Axel, Ithamar, Puck"></p>
+<p><img src="/files/BeGeistert028-1.jpg" title="Left to right - Stephan, Oliver, Ingo, Axel, Ithamar, Puck"></p>
 </div>
 
 Turns out, the maniac was Colin Günther. Another one I haven't seen at BeGeistert for some time. In his deranged mind it all made sense of course: He's working on DVB-T and has some PCI cards to work with. One more of those was donated by Mark Erben who had one in storage since the BeOS days. So, maybe not so deranged after all...

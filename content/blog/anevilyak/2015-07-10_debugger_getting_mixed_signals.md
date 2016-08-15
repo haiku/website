@@ -20,7 +20,7 @@ In such a case, the debugger would previously have been blissfully unaware of an
 
 The newly added support allows the debugger to be notified of signals prior to them being handed off to the application, consequently making such situations much more straightforward to analyze. This support is customizable, since not all signals are necessarily of interest. To go with the additional UI to handle the aforementioned configuration, some rearranging has been done to make things more accessible. Some of the advanced options that were previously hidden behind the "Configure break conditions" button in the Breakpoints tab have now been relocated to a general team-wide settings window, accessible from the Teams menu, along with the newly added UI for signals, as can be seen below:
 <br/>
-<img src="https://www.haiku-os.org/files/settings_main.png" />
+<img src="/files/settings_main.png" />
 <br/>
 Three possible dispositions can be configured for how a signal is dealt with by the debugger:
 

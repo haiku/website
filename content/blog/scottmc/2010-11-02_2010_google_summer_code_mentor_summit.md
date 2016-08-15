@@ -8,8 +8,8 @@ tags = ["gsoc _2010", "gsoc", "gsoc2010"]
 
 This year's Google Summer of Code Mentor Summit again fell on the same weekend as BeGeistert.  This year Niels was able to make the trip.  Niels and I attended the summit representing Haiku.  We attended some of the same sessions but split up for others.  As was the case last year we met a lot of developers from the other orgs, some I had met either at last years summit or other open source events.  I talked with the VLC, FFMpeg and BeagleBoard guys on Friday night.  One (or more) of the beagleboard.org guys works for TI in Community Development, and was exited to hear that Haiku was working on an Arm port and suggested he may be able to hook us up with Free Hardware.  We may just have to cover the taxes to get such hardware to a developer in Europe is all.  I have contacted him and will post an update on this when we get a response.
 
-<img src="http://www.haiku-os.org/files/screenshots/DSC_2139-1024.JPG" width="480" /><br />
-Here's the group picture.  <a href="http://www.haiku-os.org/files/screenshots/DSC_2139-1024.JPG">click to see larger view</a>
+<img src="/files/screenshots/DSC_2139-1024.JPG" width="480" /><br />
+Here's the group picture.  <a href="/files/screenshots/DSC_2139-1024.JPG">click to see larger view</a>
 <!--break-->
 Here are the sessions I attended:
 

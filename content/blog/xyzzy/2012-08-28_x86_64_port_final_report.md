@@ -9,8 +9,8 @@ tags = ["gsoc", "gsoc2012", "x86_64"]
 Since the three-quarter term report, I have continued porting userland servers and apps. The app server is fully functional, as are Deskbar and Tracker and a few other apps. I also cross-compiled all of the basic development optional packages (GCC/Binutils, autotools, make, etc.) for x86_64. Another screenshot showing the current state of things is below:
 <!--break-->
 <div align="center">
-<a href="http://www.haiku-os.org/files/images/x86_64-final.png"><br />
-<img src="http://www.haiku-os.org/files/images/x86_64-final.png" width="640px" height="519px" />
+<a href="/files/images/x86_64-final.png"><br />
+<img src="/files/images/x86_64-final.png" width="640px" height="519px" />
 <br /></a>
 </div>
 

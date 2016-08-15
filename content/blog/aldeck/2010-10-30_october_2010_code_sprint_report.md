@@ -6,7 +6,7 @@ date = "2010-10-30T01:08:56.000Z"
 tags = ["code sprint", "coding sprint", "begeistert", "october", "2010"]
 +++
 
-<span class="inline inline-right"><img src="http://www.haiku-os.org/files/screenshots/66585_163601566992429_100000277599018_458760_6787768_n_0.jpg" alt="Fernsehturm Düsseldorf" title="Haiku coders bending the gravity field." class="image image-thumbnail" width="300" height="400"></a>
+<span class="inline inline-right"><img src="/files/screenshots/66585_163601566992429_100000277599018_458760_6787768_n_0.jpg" alt="Fernsehturm Düsseldorf" title="Haiku coders bending the gravity field." class="image image-thumbnail" width="300" height="400"></a>
 <span class="caption" style="width: 198px;"><strong>Düsseldorf</strong></span></span>
 
 Preceding the BeGeistert 023 weekend was the usual weeklong Code Sprint (18.-22. of October 2010). Present to this year's coding sprint were (from left to right on the photo below):
@@ -29,7 +29,7 @@ After arriving in the youth hostel on Sunday eve, I handed out Rene the notebook
 
 Well, I managed to port another WiFi-driver. It is for the ralink 2860 WiFi-chipsets, that are commonly found in the Eee PC 901 series. Besides that I was looking into a nasty bug in BTextView, where the text-caret gets out of sync with the displayed text. After getting nowhere near to a solution I involved Oliver and Rene into the search and finally Stephan. Though we didn't found a solution for it, we believe to know what the reason is.
 
-<span class="inline inline-left"><img src="http://www.haiku-os.org/files/screenshots/coding_sprint_october2010_small.JPG" alt="Haiku coders bending the gravity field." title="Haiku coders bending the gravity field." class="image image-thumbnail" width="300" height="400"></a>
+<span class="inline inline-left"><img src="/files/screenshots/coding_sprint_october2010_small.JPG" alt="Haiku coders bending the gravity field." title="Haiku coders bending the gravity field." class="image image-thumbnail" width="300" height="400"></a>
 <span class="caption" style="width: 198px;"><strong>Haiku coders bending the gravity field.</strong></span></span>
 
 <strong>Rene:</strong>

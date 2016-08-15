@@ -5,7 +5,7 @@ date = "2015-04-22T07:30:50.000Z"
 tags = ["PVS-Studio"]
 +++
 
-<span class="inline right"><a href="http://www.viva64.com/en/b/0317//"><img src="http://www.haiku-os.org/files/PVS-Studio.png" alt="PVS studio" title="PVS-Studio" width="60%"/></a></span>
+<span class="inline right"><a href="http://www.viva64.com/en/b/0317//"><img src="/files/PVS-Studio.png" alt="PVS studio" title="PVS-Studio" width="60%"/></a></span>
 
 Development team of proprietary PVS-Studio C/C++ static analyzer presents their report on the source code of Haiku project in the article, which contains the review of the most suspicious code fragments they discovered.
 

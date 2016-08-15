@@ -165,6 +165,6 @@ git push
 After your changes are complete, the push command will push your local tree to the remote Haiku repository.
 </li>
 <li><h4>Example git workflow</h4>
-<img src='http://www.haiku-os.org/files/gitProcess_0.png'>
+<img src='/files/gitProcess_0.png'>
 </li>
 </ul>

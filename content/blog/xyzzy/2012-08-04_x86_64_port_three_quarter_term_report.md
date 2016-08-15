@@ -11,8 +11,8 @@ I have continued to make good progress since my midterm report. All the kernel f
 I have also made some progress in porting userland to x86_64. I currently have libroot, libbe, bash, and most of the command line utilities ported. I have got an interactive bash shell running on top of consoled (which is usually used to run gdb on if app_server crashes).
 <!--break-->
 <div align="center">
-<a href="http://www.haiku-os.org/files/images/x86_64-threequarter.png"><br />
-<img src="http://www.haiku-os.org/files/images/x86_64-threequarter.png" width="640px" height="519px" />
+<a href="/files/images/x86_64-threequarter.png"><br />
+<img src="/files/images/x86_64-threequarter.png" width="640px" height="519px" />
 <br /></a>
 </div>
 

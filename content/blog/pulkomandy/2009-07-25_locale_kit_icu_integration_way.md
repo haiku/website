@@ -6,7 +6,7 @@ date = "2009-07-25T14:46:56.000Z"
 tags = ["gsoc", "localekit", "gsoc2009"]
 +++
 
-<span class="inline inline-left"><a href="/images/locale_kit_interfacing_icu"><img src="http://www.haiku-os.org/files/screenshots/ICU_Interfacing.thumbnail.png" alt="Locale Kit Interfacing with ICU" title="Locale Kit Interfacing with ICU"  class="image image-thumbnail " width="200" height="171" /></a><span class="caption" style="width: 198px;"><strong>Locale Kit Interfacing with ICU</strong></span></span>
+<span class="inline inline-left"><a href="/images/locale_kit_interfacing_icu"><img src="/files/screenshots/ICU_Interfacing.thumbnail.png" alt="Locale Kit Interfacing with ICU" title="Locale Kit Interfacing with ICU"  class="image image-thumbnail " width="200" height="171" /></a><span class="caption" style="width: 198px;"><strong>Locale Kit Interfacing with ICU</strong></span></span>
 
 This week two important things happened for my GSoC project: I got commit access to Haiku and I finished working on the catalog part. This mean I can now work more efficiently without having to send my patches trough the GSoC mailing list (you may have noticed I still need my code to be reviewed, however :/).
 

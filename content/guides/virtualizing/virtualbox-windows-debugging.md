@@ -60,7 +60,7 @@ When you start your VM, it will now be debugging onto HyperTerminal.
 
 A simpler way is to use PuTTY Telnet, which can read VirtualBox's fake serial port pipe directly without the need for vmwaregateway.exe. You can get Putty from the author's site at http://www.chiark.greenend.org.uk/~sgtatham/putty/
 
-<br /><img style="padding:12px" src="http://www.haiku-os.org/files/PuttySerialPipeSettings.png" alt="[PuTTY Settings for displaying a Pipe as a Serial Port]"><br />
+<br /><img style="padding:12px" src="/files/PuttySerialPipeSettings.png" alt="[PuTTY Settings for displaying a Pipe as a Serial Port]"><br />
 
 The trick is to use Serial mode, and replace the COM1 with \\.\pipe\vmwaredebug or whatever you called the pipe in the VirtualBox serial settings.  There are additional serial settings near the end of the preferences where you can set the baud rate to 115200, turn off handshaking and use 8N1 bits.
 

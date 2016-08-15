@@ -11,7 +11,7 @@ This time around, we only have one or two new features to cover as such, since m
 <h4>Output capture</h4>
 A capability that was requested some time ago was viewing/capturing the console output of the debugged program. This can be handy since, depending on how the program was launched this might not necessarily be available on a terminal, or it might generally be a bit unwieldy to have to keep switching windows between the app, debugger and terminal in question. This feature has now been implemented:
 <p>
-<a href="https://www.haiku-os.org/files/output_capture.png"><img width="640" height="401" src="https://www.haiku-os.org/files/output_capture.png" /></a>
+<a href="/files/output_capture.png"><img width="640" height="401" src="/files/output_capture.png" /></a>
 <p>
 As can be seen here, the feature supports selectively capturing only one or the other of the possible console outputs, or it can be disabled entirely and the output view hidden via the splitter.
 
@@ -19,7 +19,7 @@ As can be seen here, the feature supports selectively capturing only one or the 
 
 Another recently requested feature was having the debugger stop when a new executable image is loaded. The most common use case for this is if your program relies on add-ons, in which case one most likely wants the debugger to stop when one of said add-ons is loaded, in order to be able to set breakpoints in it before it begins execution. This feature has now been added, with some nuances. First of all, it can be accessed from the Breakpoints tab along with exception settings, via the renamed "Configure break conditions" button:
 <p>
-<a href="https://www.haiku-os.org/files/stop_0.png"><img width="640" height="512" src="https://www.haiku-os.org/files/stop_0.png" /></a>
+<a href="/files/stop_0.png"><img width="640" height="512" src="/files/stop_0.png" /></a>
 <p>
 The feature allows one to unconditionally stop when every single image is loaded, or if one desires it can be fine-tuned to only stop on particular image matches. The latter can be handy if the program in question loads a large number of add-ons, such as a program that makes use of translators, but those aren't necessarily the point of interest debugging-wise.
 

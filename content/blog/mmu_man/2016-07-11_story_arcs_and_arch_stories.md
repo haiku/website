@@ -8,7 +8,7 @@ tags = ["m68k", "porting", "powerpc", "ppc", "sam460ex", "amiga", "arm", "atari"
 
 This week I just received a blue box.
 
-<img src="https://www.haiku-os.org/files/Misc_TARDIS.png" />
+<img src="/files/Misc_TARDIS.png" />
 
 No, not this kind of blue box!
 
@@ -19,10 +19,10 @@ No, not this kind of blue box!
 
 Actually, some time ago, Finn Bastiansen mailed me, asking if I was interested in getting a BeBox he didn't use anymore. He thought about auctioning it first and giving the money to Haiku, Inc. but he thought it'd be interesting to see if it could boot Haiku. It might take some time but should be quite doable.
 
-<img src="https://www.haiku-os.org/files/BeBox_DSCN4982_0.jpg" width="50%" height="50%" align="left" alt="Unboxing the blue box" title="Unboxing the blue box" /><img src="https://www.haiku-os.org/files/BeBox_DSCN4983_0.jpg" width="50%" height="50%" align="left" alt="Unboxing the blue box" title="Unboxing the blue box" />
+<img src="/files/BeBox_DSCN4982_0.jpg" width="50%" height="50%" align="left" alt="Unboxing the blue box" title="Unboxing the blue box" /><img src="/files/BeBox_DSCN4983_0.jpg" width="50%" height="50%" align="left" alt="Unboxing the blue box" title="Unboxing the blue box" />
 It's a weird feeling opening the thing…
 
-<img src="https://www.haiku-os.org/files/BeBox_DSCN4984_0.jpg" width="50%" height="50%" align="left" alt="Beeeeee Box!" title="Beeeeee Box!" />It's in pretty good condition for such an old lady. The two top plastic caps are left alone, they have broken clips but I should be able to fix that. The gray facade has yellowed a bit, but not too much.
+<img src="/files/BeBox_DSCN4984_0.jpg" width="50%" height="50%" align="left" alt="Beeeeee Box!" title="Beeeeee Box!" />It's in pretty good condition for such an old lady. The two top plastic caps are left alone, they have broken clips but I should be able to fix that. The gray facade has yellowed a bit, but not too much.
 
 Now, I just notice we don't have an HVIF icon for it yet.
 
@@ -37,11 +37,11 @@ Now, I just notice we don't have an HVIF icon for it yet.
 Let's see what's inside…
 
 
-<img src="https://www.haiku-os.org/files/BeBox_DSCN4985_0.jpg" width="50%" height="50%" align="left" alt="" title="" /><img src="https://www.haiku-os.org/files/BeBox_DSCN4986_0.jpg" width="50%" height="50%" align="left" alt="" title="" />
+<img src="/files/BeBox_DSCN4985_0.jpg" width="50%" height="50%" align="left" alt="" title="" /><img src="/files/BeBox_DSCN4986_0.jpg" width="50%" height="50%" align="left" alt="" title="" />
 
 Other than the CD audio connector (I managed to straighten it back enough to plug it back) which is not really well placed, the inside looks good as well.
 
-<img src="https://www.haiku-os.org/files/BeBox_DSCN4995.jpg" width="50%" height="50%" align="left" alt="Blinkenlights!" title="Blinkenlights!" />
+<img src="/files/BeBox_DSCN4995.jpg" width="50%" height="50%" align="left" alt="Blinkenlights!" title="Blinkenlights!" />
 
 The famous Blinkenlights behind the case. They work quite well ;-)
 
@@ -59,13 +59,13 @@ Hmm, where did I put my AT keyboard… oh here it is!
 
 Let's see how it boots now…
 
-<img src="https://www.haiku-os.org/files/BeBox_DSCN4988_0.jpg" width="50%" height="50%" align="left" alt="" title="" /><img src="https://www.haiku-os.org/files/BeBox_DSCN4990.jpg" width="50%" height="50%" align="left" alt="" title="" />
+<img src="/files/BeBox_DSCN4988_0.jpg" width="50%" height="50%" align="left" alt="" title="" /><img src="/files/BeBox_DSCN4990.jpg" width="50%" height="50%" align="left" alt="" title="" />
 
 At least it tries to… oh, the harddisk was plugged off! Let's fix this… much better!
 
 So what's the CPU already?
 
-<img src="https://www.haiku-os.org/files/BeBox_DSCN4992.jpg" width="50%" height="50%" align="left" alt="sysinfo output" title="sysinfo output" /><img src="https://www.haiku-os.org/files/BeBox_DSCN4994.jpg" width="50%" height="50%" align="left" alt="About box" title="About box" />
+<img src="/files/BeBox_DSCN4992.jpg" width="50%" height="50%" align="left" alt="sysinfo output" title="sysinfo output" /><img src="/files/BeBox_DSCN4994.jpg" width="50%" height="50%" align="left" alt="About box" title="About box" />
 
 So, it works. Now will it someday run Haiku? We're quite far from it, but it should be doable. The <a href="http://wiki.netbsd.org/ports/bebox/">NetBSD port</a> should provide some hints about drivers, memory mappings and such. Interestingly also, <a href="http://www.mess.org/">MESS</a> (which has now been fully integrated into MAME) has some support for BeBox emulation. There is some attempt at adding a <a href="http://wiki.qemu.org/Features/BeBox">BeBox target</a> to QEMU as well (I also started looking at it long ago). First steps should be to see how far those emulation targets work, then how to best get to haiku_loader from the BeBox nub ROM, which is much simpler than OpenFirmware. An option would be to port <a href="http://www.openfirmware.info/Welcome_to_OpenBIOS">OpenBIOS</a> and CoreBoot to it, and let it start haiku_loader. Then I'd write an FDT for the BeBox, as that's what the ARM ports now support to describe the hardware, and the PPC port on Linux as well (they even dump the OpenFirmware tree into an FDT), so I think I'll use it on PPC as well.
 
@@ -73,7 +73,7 @@ Anyway, thanks Finn for giving me more work ahead! ;-)
 
 <h3>Sam 460ex</h3>
 
-<img src="https://www.haiku-os.org/files/Sam460_DSCN4997.jpg" width="50%" height="50%" align="left" alt="" title="" /><img src="https://www.haiku-os.org/files/Sam460_DSCN4998.jpg" width="50%" height="50%" align="left" alt="" title="" />
+<img src="/files/Sam460_DSCN4997.jpg" width="50%" height="50%" align="left" alt="" title="" /><img src="/files/Sam460_DSCN4998.jpg" width="50%" height="50%" align="left" alt="" title="" />
 
 That's the Sam460ex box I'm currently porting Haiku to. Progress has been quite slow for now, mostly getting binutils and gcc fixed after each update to the buildtools, but hopefully I'll get past this point. At last <a href="http://triplea.fr/alchimie/">Alchimie demoparty</a> I showed the bootloader splashscreen, although it was hardcoded with the framebuffer address because, well U-Boot is a mess, and ACube's version is probably the messiest I've seen.
 
@@ -81,7 +81,7 @@ I started writing a QEMU target for the Sam board (there's a <a href="https://gi
 
 <h3>Raise your ARM!</h3>
 
-<img src="https://www.haiku-os.org/files/EfikaMX_DSCN4999.jpg" width="50%" height="50%" align="right" alt="" title="" />I also have some ARM hardware waiting for a usable port, but these will have to wait a bit more I guess. For example this <a href="https://genesi.company/products/efika">EfikaMX</a>, which although much older than a Raspberry Pi has a much nicer case ;-)
+<img src="/files/EfikaMX_DSCN4999.jpg" width="50%" height="50%" align="right" alt="" title="" />I also have some ARM hardware waiting for a usable port, but these will have to wait a bit more I guess. For example this <a href="https://genesi.company/products/efika">EfikaMX</a>, which although much older than a Raspberry Pi has a much nicer case ;-)
 
 &nbsp;
 

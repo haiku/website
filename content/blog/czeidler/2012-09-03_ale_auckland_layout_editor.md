@@ -8,7 +8,7 @@ tags = ["Auckland", "BALMLayout", "GUI Builder"]
 
 Recently I spend some time to develop ALE the Auckland Layout Editor and now it's getting time to release a first testing version! ALE is a tool for developers to create GUIs. These GUIs can then be loaded from an application. This first version is still very basic and I hope I can get some feedback what can be improved and which features are most needed. It mainly focus on layout creation and less on editing view properties.
 
-<a href="https://www.haiku-os.org/files/ALEScreenShot.png" target="_blank"><img src="https://www.haiku-os.org/files/ALEScreenShot.png" width="600" height="383"></a>
+<a href="/files/ALEScreenShot.png" target="_blank"><img src="/files/ALEScreenShot.png" width="600" height="383"></a>
 
 While working on user interface customization it turned out that the step to creating a GUI builder is not that big. When changing a layout at runtime the user must be able to move existing views around, insert them between other views or swap the position of two views. Furthermore, it should be possible to temporary remove unused views from the layout and add them again at a later point. It is also important that the user can't create invalid layouts. For example, views should never overlap each other and the layout must stay solvable. What is missing for a GUI builder is that new views can be created and added to a layout. Furthermore, it must be possible to save and restore a layout and access the items from within an application, i.e. get a pointer to the c++ object.
 

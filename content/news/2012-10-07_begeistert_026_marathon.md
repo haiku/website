@@ -5,7 +5,7 @@ date = "2012-10-07T15:28:29.000Z"
 tags = ["begeistert", "conference"]
 +++
 
-<span class="inline right"><img src="http://www.haiku-os.org/files/screenshots/begeistert-logo.png" alt="BeGeistert Logo" title="BeGeistert Logo" class="image image-_original " width="272" height="60" /></span>
+<span class="inline right"><img src="/files/screenshots/begeistert-logo.png" alt="BeGeistert Logo" title="BeGeistert Logo" class="image image-_original " width="272" height="60" /></span>
 Hello everyone!
 
 The <a href="http://www.haiku-support-association.org/index-eng.html">Haiku Support Association (HSA)</a> would like to invite everyone to the 26th BeGeistert on 3rd & 4th of November 2012. The location will be once again the youth hostel in Düsseldorf, Germany.
