@@ -19,7 +19,7 @@ Since nobody knows if/when this bug may have been first exploited, everyone must
 
 While I personally doubt Haiku's servers were ever maliciously exploited, it would be prudent to change any passwords you are using on our servers (and others if you re-use credentials across multiple websites). Even if our site passwords weren't snooped, it's possible that anyone using the same usernames/passwords on multiple services may have had theirs compromised by other higher-profile servers affected by the same bug.
 
-As a final note: we have not yet successfully revoked the StartCom certificate, and it seems they are making the process difficult by charging for certificate revocation. To keep track of our progress, you can follow <a href="http://dev.haiku-os.org/ticket/10742">Ticket #10742</a>.
+As a final note: we have not yet successfully revoked the StartCom certificate, and it seems they are making the process difficult by charging for certificate revocation. To keep track of our progress, you can follow <a href="https://dev.haiku-os.org/ticket/10742">Ticket #10742</a>.
 
 Thanks for your patience while we work through this issue.
 

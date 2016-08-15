@@ -114,7 +114,7 @@ Alternatively, from Gitorious:
 git clone http://git.gitorious.org/haiku/buildtools.git
 git clone http://git.gitorious.org/haiku/haiku.git
 </pre>
-Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="http://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
+Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
 </li>
 <li><h4>Updating the Sources</h4>
 <div class="alert alert-danger">

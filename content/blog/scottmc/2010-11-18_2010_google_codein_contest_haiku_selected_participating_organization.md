@@ -30,4 +30,4 @@ Students can start claiming tasks on November 22nd, 2010 with the contest contin
 For official contest rules, see the Google Code-In page.
 
 [1] http://code.google.com/opensource/gci/2010-11/index.html
-[2] http://dev.haiku-os.org/wiki/GoogleCodeInIdeas
+[2] https://dev.haiku-os.org/wiki/GoogleCodeInIdeas

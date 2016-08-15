@@ -11,7 +11,7 @@ Today^Wnight^Wmornin erh, hmm well, now, I'll try to do a live report on the iss
 <!--break-->
 
 I was at the point where it reads the 2 program segments into memory and start with digging symbols and relocation entries.
-I actually spent some time adding an hex dumper to <a href="http://dev.haiku-os.org/browser/haiku/trunk/src/system/boot/loader/elf.cpp">elf.cpp </a> to see if the loaded segments were correctly read, by diffing the debug output and the hexdump of the original binary.
+I actually spent some time adding an hex dumper to <a href="https://dev.haiku-os.org/browser/haiku/trunk/src/system/boot/loader/elf.cpp">elf.cpp </a> to see if the loaded segments were correctly read, by diffing the debug output and the hexdump of the original binary.
 Well it seems I messed up the kernel linker script once again.
 
 Here is the current kernel_m68k as per readelf -l:
@@ -36,7 +36,7 @@ Let's compare to an x86 kernel:
   DYNAMIC        0x0db400 0x800db400 0x800db400 0x00080 0x00080 RW  0x4</pre>
 The second (data) program segment overlaps the dynamic segment here (0xd5000+0x06480 = 0xdb480 = 0xdb400+0x80).
 Now I know why the .dynamic section had both :dynamic and :data segment qualifiers in linker script examples I read, it's supposed to be both declared as a separate program header and part of the data segment!
-Let's fix <a href="http://dev.haiku-os.org/changeset/26558">kernel.ld</a> again:
+Let's fix <a href="https://dev.haiku-os.org/changeset/26558">kernel.ld</a> again:
 <pre>  LOAD           0x000000 0x80000000 0x80000000 0xc62f2 0xc62f2 R E 0x2000
   LOAD           0x0c7000 0x800c7000 0x800c7000 0x0632c 0x1267b RW  0x2000
   DYNAMIC        0x0cd28c 0x800cd28c 0x800cd28c 0x000a0 0x000a0 RW  0x4</pre>

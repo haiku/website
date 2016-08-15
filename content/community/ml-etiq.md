@@ -32,7 +32,7 @@ Most any other type of file can also be hosted on a free file sharing website. T
 <h3>Message Body</h3>
 <ul>
 <li><h4>No Top Posting</h4>
-<a href="http://en.wikipedia.org/wiki/Top_posting" title="Wikipedia-Top_posting">Top posting</a> refers to clicking "reply", leaving all the text intact, and inserting your text at the top of the message body. Doing so removes the context of what you are replying to. This makes it more time consuming and difficult for everyone else as it may require them to re-read that email a few times before fully understanding the message.
+<a href="https://en.wikipedia.org/wiki/Top_posting" title="Wikipedia-Top_posting">Top posting</a> refers to clicking "reply", leaving all the text intact, and inserting your text at the top of the message body. Doing so removes the context of what you are replying to. This makes it more time consuming and difficult for everyone else as it may require them to re-read that email a few times before fully understanding the message.
 </li>
 <li><h4>Trim Unnecessary Reply Text</h4>
 In addition to not top posting, take the time to remove text that you are not directly replying to. This will help to keep your response to a short and manageable length.

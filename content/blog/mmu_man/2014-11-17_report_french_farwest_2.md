@@ -34,7 +34,7 @@ On sunday we didn't have to walk as Adrien had the on-demand shuttle booked the 
 
 <a href="/images/capitole_du_libre_haiku_booth_2"><img src="/files/screenshots/Capitole_du_libre_2014_DSCN2121.thumbnail.jpg"></a>
 
-<a href="http://2014.capitoledulibre.org/programme/presentation/7/" title="Monnaies libres">One of the talks</a> I saw was about Free Moneys (like <a href="http://www.openudc.org/" title="OpenUDC">OpenUDC</a> and uCoin), as I've been involved into the creation of a <a href="http://en.wikipedia.org/wiki/Complementary_currency" title="Complementary currency on Wikipedia">local complementary currency</a> in my town, and ended up looking at those as well. I already started porting the dependencies for OpenUDC. ;-)
+<a href="http://2014.capitoledulibre.org/programme/presentation/7/" title="Monnaies libres">One of the talks</a> I saw was about Free Moneys (like <a href="http://www.openudc.org/" title="OpenUDC">OpenUDC</a> and uCoin), as I've been involved into the creation of a <a href="https://en.wikipedia.org/wiki/Complementary_currency" title="Complementary currency on Wikipedia">local complementary currency</a> in my town, and ended up looking at those as well. I already started porting the dependencies for OpenUDC. ;-)
 
 Then I had to pack up quickly to head for the meeting place for my car. The car driver being an Apple user we started to discuss about that, Free Software and the rest. I should soon get home and have some rest, as tomorrow I'm going to talk about Free Software to some students at the local Fab-Lab.
 

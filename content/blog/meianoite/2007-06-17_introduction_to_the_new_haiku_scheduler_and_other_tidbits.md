@@ -8,7 +8,7 @@ tags = ["scheduler", "gsoc", "scheduling algorithm", "algorithm", "O(1)", "compl
 
 Hi, folks!
 
-For those who don't know me (or my GSoC assignment) already, I'm the one assigned to <a href="http://dev.haiku-os.org/ticket/1069">ticket #1069</a>, namely:
+For those who don't know me (or my GSoC assignment) already, I'm the one assigned to <a href="https://dev.haiku-os.org/ticket/1069">ticket #1069</a>, namely:
 
 <blockquote>Create an O(1) thread scheduler with CPU affinity and soft real-time support which targets desktop responsiveness.</blockquote>
 
@@ -31,6 +31,6 @@ Right after that semester finished, I contacted Axel and told him about the sche
 
 Why? Well... I burned out. <i>Back in the day</i>, I used to be quite active in BeShare and IRC, even compiled stuff on my trusty old Pentium 133 (if Fyysik is reading this, he'll remember that Pentium immediately ;))... But by then college was eating most of my energy. And I was just getting out of a troubled relationship. And it all coincided with a hard drive failure. I lost almost no valuable data, but the excitement was just... gone.
 
-Anyway, the scheduler plans were on the back burner for roughly the mentioned 3 years. And you might remember that before the Haiku project got accepted in the GSoC, I mailed the list asking about <a href="http://dev.haiku-os.org/ticket/1069">ticket #1069</a>, hoping that I could still participate. <a name="bench"></a>Then I spent some days digging up the sources for the scheduler and re-doing some benchmarks on my current computer. Things still looked nice :)
+Anyway, the scheduler plans were on the back burner for roughly the mentioned 3 years. And you might remember that before the Haiku project got accepted in the GSoC, I mailed the list asking about <a href="https://dev.haiku-os.org/ticket/1069">ticket #1069</a>, hoping that I could still participate. <a name="bench"></a>Then I spent some days digging up the sources for the scheduler and re-doing some benchmarks on my current computer. Things still looked nice :)
 <br>
 <blockquote>Don't miss the next chapter in the Scheduler saga! Tomorrow (hopefully), same bat time... Same <a href="/blog/meianoite">bat channel</a> (powered by <a href="/blog/1164/feed">RSS feeds</a>!)... <a href="/blog/meianoite">Right here</a>. Stay tuned.</blockquote>

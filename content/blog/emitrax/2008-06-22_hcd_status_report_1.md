@@ -21,7 +21,7 @@ as it would also make it more Posix compliant.
 
 The easiest part was the user space one, now I'm working on the kernel side. I also started a thread
 about this on the gsoc mailing list so you can follow it by clicking on the link below.
-http://www.freelists.org/archives/haiku-gsoc/06-2008/msg00009.html
+https://www.freelists.org/archives/haiku-gsoc/06-2008/msg00009.html
 
 Although I'm not done with the above though, I've already started running some test without bonnie++
 and hitting the first bug. See ticket #2400.
@@ -34,7 +34,7 @@ vmware, and try to unpack the almost 500MB tarball (1.5 GB unpacked) from Haiku.
 Yeah... "Good luck with that! :)"
 
 The result, which at first seemed to me as a bfs bug, turned out to be a vfs one, although we are still discussing about it in the gsoc mailing list. See the link below for more details.
-http://www.freelists.org/archives/haiku-gsoc/06-2008/msg00021.html
+https://www.freelists.org/archives/haiku-gsoc/06-2008/msg00021.html
 
 Despite the fact it has been confirmed not to be a bfs bug, as you can read from the mailing list, I'm still trying to fix it, while also finishing xsi sempahore implementation.
 

@@ -67,7 +67,7 @@ While one buffer (filled with a picture) is presented on the screen, work on sec
 
 <a name="DPMS"></a>
 <h4>DPMS</h4>
-<p><a href="http://en.wikipedia.org/wiki/DPMS" target="_blank">Display Power Management System</a> (courtesy: <a href="http://www.wikipedia.org" target="_blank">Wikipedia</a>). Power management offer two important advantages: energy saving and lengthening of the life span of the monitor. </p>
+<p><a href="https://en.wikipedia.org/wiki/DPMS" target="_blank">Display Power Management System</a> (courtesy: <a href="http://www.wikipedia.org" target="_blank">Wikipedia</a>). Power management offer two important advantages: energy saving and lengthening of the life span of the monitor. </p>
 
 
 <a name="DriverInterface"></a>

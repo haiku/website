@@ -56,4 +56,4 @@ This includes the following features, although there is probably more I forgot t
 <li>Register the launch_daemon in the kernel, so find_port() would no longer be needed at all. Furthermore, this would allow to use the respective user launch_daemons as main communication partners -- currently, the system launch_daemon is always the middle man.</li>
 </ul>
 
-Time might also reveal some conceptual shortcomings that will need to be addressed, but I think we're good for some time. I've added a <a href="http://dev.haiku-os.org/wiki/LaunchDaemon">page to our Wiki</a> that explains how the launch_daemon can be configured.
+Time might also reveal some conceptual shortcomings that will need to be addressed, but I think we're good for some time. I've added a <a href="https://dev.haiku-os.org/wiki/LaunchDaemon">page to our Wiki</a> that explains how the launch_daemon can be configured.

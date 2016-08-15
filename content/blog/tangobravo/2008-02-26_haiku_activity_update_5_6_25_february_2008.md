@@ -62,7 +62,7 @@ Stefano updated bash to 3.2.
 Julun committed a ref-counted BString implementation which makes passing copies of BStrings to functions quicker.
 Alexandre Deckner produced a patch to make Keymap draw to an offscreen bitmap to increase speed and reduce flickering.
 
-<h3><a href="http://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
+<h3><a href="https://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
 David McPaul and others successfully managed to build the latest version of nasm for BeOS.
 
 There was a fun emacs/vi flamewar (we never have real flamewars in the Haiku community, we're all far too laid back for that...) Turns out that the BeOS editor Pe is slated to be the default programming editor in BeOS, it's nice to use and is consistent with other Haiku apps, and is still maintained - the latest version of it can be found on <a href="http://developer.berlios.de/projects/pe-editor/">Berlios</a>.
@@ -71,7 +71,7 @@ There was a discussion of the philosophical impact of porting widget toolkits su
 
 Fredrik Holmqvist reported success in building Firefox for GCC4-Haiku so people using that platform can now have access to a nice modern browser in addition to people running the default GCC 2 Haiku with one of the BONE Firefox builds from BeBits.
 
-<h3><a href="http://www.freelists.org/archives/haiku-development/">Development List</a></h3>
+<h3><a href="https://www.freelists.org/archives/haiku-development/">Development List</a></h3>
 The development list saw a discussion on how to co-ordinate porting efforts for standard tools such as perl and autoconf. Urias pointed out the BePorts project that I had not seen before, but seems a useful place for this co-ordination to happen: <a href="http://tools.assembla.com/BePorts">http://tools.assembla.com/BePorts</a>. Axel explained that as Haiku is much more POSIX compliant than BeOS, old ports should be checked through in order to remove any workarounds which are no longer necessary and make the port simpler.
 
 The <a href="http://dev.haiku-os.org">http://dev.haiku-os.org</a> section of the website was moved to a new server which should improve the performance of the bug tracker. The move triggered a bug preventing us lowly users from commenting on tickets, but Niels managed to track that down and fix it.

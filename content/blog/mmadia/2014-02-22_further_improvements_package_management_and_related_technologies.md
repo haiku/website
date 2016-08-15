@@ -26,7 +26,7 @@ directory layout changes, and making other folders read-only.
 To handle the installation of BeOS Software Valet packages, Haiku has PackageInstaller.
 For a long time this application was neglected. To begin with, it never even worked properly for some software packages.
 (As an example, the only way to get Gobe Productive installed was to manually copy it from a BeOS installation.)
-However, over the past few days Stephan Aßmus (with initial help from Puck Meerburg) has been <a href="http://cgit.haiku-os.org/haiku/log/src/apps/packageinstaller">working on PackageInstaller</a>.
+However, over the past few days Stephan Aßmus (with initial help from Puck Meerburg) has been <a href="https://cgit.haiku-os.org/haiku/log/src/apps/packageinstaller">working on PackageInstaller</a>.
 This work centered around dynamically replacing the destination folders with the appropriate Haiku equivalents.
 It can now install Gobe Productive 2.0 (Trial) and reports from IRC mention many other packages working properly!
 </p>
@@ -43,7 +43,7 @@ One of the contributing factors was that more and more software moved out of Hai
 </div>
 <p>
 Removing /boot/common simplified some things, such as package dependencies between software provided by Haiku (e.g., git)
-and user-installed pacakges (e.g., git_svn). [<a href="http://www.freelists.org/post/haiku-development/Removing-bootcommon">1</a>]
+and user-installed pacakges (e.g., git_svn). [<a href="https://www.freelists.org/post/haiku-development/Removing-bootcommon">1</a>]
 </p>
 <p>
 The changes involving /boot/common mostly affected software built for Haiku R1 pre-beta.
@@ -91,7 +91,7 @@ Then manually populate "menu" however you desire. To note, this entire feature i
 Being able to easily discover, view, and (un)install HPKGs files is another concern.
 HaikuDepot has been created to manage this from within Haiku. It is functional, but not feature complete.
 For a web-centric approach, haiku-depot-web is being implemented.
-They already have a <a href="https://depot.haiku-os.org">running test installation</a> and could use feedback on the <a href="http://www.freelists.org/list/haiku-depot-web">[haiku-depot-web] mailing list</a>.
+They already have a <a href="https://depot.haiku-os.org">running test installation</a> and could use feedback on the <a href="https://www.freelists.org/list/haiku-depot-web">[haiku-depot-web] mailing list</a>.
 </p>
 <p>
 These are just some of the issues that have been resolved. Undoubtedly there are more. This is where we need you, yes YOU!

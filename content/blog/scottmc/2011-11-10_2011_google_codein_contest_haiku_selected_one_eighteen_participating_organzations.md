@@ -34,5 +34,5 @@ For official contest rules, see the Google Code-In page. [4]
 
 [1] http://google-opensource.blogspot.com/2011/11/google-code-in-2011-participating.html
 [2] http://www.google-melange.com/gci/homepage/google/gci2011
-[3] http://dev.haiku-os.org/wiki/GoogleCodeInIdeas2011
+[3] https://dev.haiku-os.org/wiki/GoogleCodeInIdeas2011
 [4] http://www.google-melange.com/gci/document/show/gci_program/google/gci2011/rules

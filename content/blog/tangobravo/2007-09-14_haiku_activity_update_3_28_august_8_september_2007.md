@@ -26,7 +26,7 @@ François integrated the current version of his OpenSound media node to the tree
 Ingo implemented the kernel support for Job Control, allowing tasks to be stopped and continued among other things.
 
 <em>AHCI SATA Driver</em>
-Marcus' work on the AHCI SATA driver has continued, with controller resetting and AHCI enabling written. He has also implemented a framework for interrupt handling and enabled interrupts in the driver. The driver work is showing up some <a href="http://dev.haiku-os.org/ticket/1434">bugs</a> in the device manager which Axel and Marcus are investigating.
+Marcus' work on the AHCI SATA driver has continued, with controller resetting and AHCI enabling written. He has also implemented a framework for interrupt handling and enabled interrupts in the driver. The driver work is showing up some <a href="https://dev.haiku-os.org/ticket/1434">bugs</a> in the device manager which Axel and Marcus are investigating.
 
 <em>Mail</em>
 Stephan checked in part of a big cleanup to the Mail application, fixed some issues with the toolbar, and some general issues with resizing menu fields. Spell checking now works too (the words file was not included in the Haiku image by default).
@@ -53,7 +53,7 @@ Ingo made bash behave the same on closing the terminal window or typing exit - b
 A crashing bug in Tracker's sorting column functions was fixed.
 
 
-<h3><a href="http://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
+<h3><a href="https://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
 
 Someone asked if anyone had the open-sourced version of SampleStudio that Xentronix released after the community paid to have the sources released. Cian replied saying that he had uploaded one of the source tarballs to Berlios, under the name BeAE. You can find the project page <a href="http://developer.berlios.de/projects/beae/">here</a>.
 
@@ -64,7 +64,7 @@ Jorge continued his recent theme of encouraging community advocacy events. Durin
 Phil Greenway (aka Sikosis) attended HUMBUG - Brisbane's Unix User Group on September 8th. The plan was to record an episode of the <a href="http://www.pageflakes.com/HaikuPodcast">Haiku Podcast</a> from there. He wrote a <a href="/blog/sikosis/2007-09-12/haiku_at_humbug">blog entry</a> on how it went - sounds like a success!
 
 
-<h3><a href="http://www.freelists.org/archives/haiku-development/">Development List</a></h3>
+<h3><a href="https://www.freelists.org/archives/haiku-development/">Development List</a></h3>
 
 I promised an update on the Hybrid Image discussion last time - but there isn't much to add to the previous discussion. No official decisions have been made, though Michael Lotz is investigating possible compatibility problems in more detail. This one's definitely to be continued...
 

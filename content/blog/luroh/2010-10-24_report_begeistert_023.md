@@ -27,7 +27,7 @@ Olivier Coursiere (oco) revealed that he has been working on a light version of 
 Jerome Duval (korli) has been extending code developed during last GSoC, providing native support for the ext3 file system.
 Axel Dörfler (axeld) talked about his work on the network stack, his hopes to tackle WPA encryption and how Coverity helped him track down the last known file system corruption bug.
 Oliver Tappe (zooey) spoke about his work on POSIX locale and the joys of testing and evaluating a bunch of distributed version control systems. He now seems to have a clear idea of what direction to recommend for the Haiku project, but I'll let him spill the beans on that himself.
-Fredrik Holmqvist (tqh) has been chipping away at improving Haiku's ACPI support, aiming at hopefully closing the infamous <a href="http://dev.haiku-os.org/ticket/5">bug #5</a> and down the road to provide neat features such as switching on/off dual-screen mode.
+Fredrik Holmqvist (tqh) has been chipping away at improving Haiku's ACPI support, aiming at hopefully closing the infamous <a href="https://dev.haiku-os.org/ticket/5">bug #5</a> and down the road to provide neat features such as switching on/off dual-screen mode.
 Alexandre Deckner (aldeck) talked about the delicate work going on in his Tracker branch, where he tries to bring order to chaos.
 Lastly, Andre Meissner of the BG orga-team threw out the idea of making BG an annual event as opposed to bi-annual, where money saved would be put towards coding sprints instead. If you want to give him a piece of your mind on this or any other BG issue, consider becoming a member of <a href="http://haiku-support-association.org/">Haiku Support Association</a> and the mailing list that comes with HSA membership.
 

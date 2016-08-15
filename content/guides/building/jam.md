@@ -6,7 +6,7 @@ tags = []
 +++
 
 <p>
-Haiku uses a custom fork of <a href="http://www.perforce.com/jam/jam.html">Perforce's Jam</a>. This <a href="http://www.freelists.org/post/haiku/New-Build-System"> mailing list thread</a> helps to explain the decision to fork jam.
+Haiku uses a custom fork of <a href="http://www.perforce.com/jam/jam.html">Perforce's Jam</a>. This <a href="https://www.freelists.org/post/haiku/New-Build-System"> mailing list thread</a> helps to explain the decision to fork jam.
 </p>
 As of December 2011, this is the current version. If a different version is reported, then you will need to build and install jam from source. 
 <pre class="terminal">
@@ -15,7 +15,7 @@ Jam 2.5-haiku-20111222. OS=LINUX. Copyright 1993-2002 Christopher Seiwald.
 </pre>
 <a name="build_jam"></a>
 <h3><a href="#build_jam">Building Jam from Source</a></h3>
-Haiku's version of jam lives inside the <a href="http://cgit.haiku-os.org/buildtools/">buildtools repository</a>. If you need to, see this page on <a href="/guides/building/get-source-git">Getting Haiku Source Code</a>.
+Haiku's version of jam lives inside the <a href="https://cgit.haiku-os.org/buildtools/">buildtools repository</a>. If you need to, see this page on <a href="/guides/building/get-source-git">Getting Haiku Source Code</a>.
 <pre class="terminal">
 cd  /path/haiku/buildtools/jam/
 make
@@ -51,7 +51,7 @@ Set variable x=y, overriding environment. One example is :
 <pre class="terminal">
     jam -sHAIKU_IGNORE_USER_BUILD_CONFIG=1 -q @release-raw
 </pre>
-This will ensure that the release-* targets are built to the exact specifications of Haiku's <a href="http://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">DefaultBuildProfiles</a>.
+This will ensure that the release-* targets are built to the exact specifications of Haiku's <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">DefaultBuildProfiles</a>.
 </li>
 <li><h4>-dX</h4>
 Enables debug output, where X can be one of the following:
@@ -73,7 +73,7 @@ Don't actually execute the updating actions. This seems to be useful for testing
 <h3><a href="#jam_targets">Possible Targets</a></h3>
 
 <h4>Official Release Targets</h4>
-<p>The following targets are defined in <a href="http://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">build/jam/DefaultBuildProfiles</a></p>
+<p>The following targets are defined in <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">build/jam/DefaultBuildProfiles</a></p>
 <ul>
 <li><h4>@release-raw</h4>
 Builds a pre-release image as a raw image. This can be written directly to disk or used with Qemu
@@ -92,7 +92,7 @@ The BFS image is simply concatenated at the end. Inside the MBR is a partition t
 </li>
 </ul>
 <h4>Non-Release Targets</h4>
-<p>In addition to looking at <a href="http://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">DefaultBuildProfiles</a>, there is also a way of finding possible targets by looking at the various <a href="http://grok.bikemonkey.org/source/search?q=NotFile&defs=&refs=&path=%2Fbuild%2Fjam&hist=&project=haiku">"NotFile" statements</a>. A "NotFile" statement is usually used to create a build target with a more user-friendly name. Targets such as these should be viewed as a minimal base.</p>
+<p>In addition to looking at <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">DefaultBuildProfiles</a>, there is also a way of finding possible targets by looking at the various <a href="http://grok.bikemonkey.org/source/search?q=NotFile&defs=&refs=&path=%2Fbuild%2Fjam&hist=&project=haiku">"NotFile" statements</a>. A "NotFile" statement is usually used to create a build target with a more user-friendly name. Targets such as these should be viewed as a minimal base.</p>
 
 <h3>Some Notes</h3>
 <ul>
@@ -137,12 +137,12 @@ jam &lt;options&gt; &lt;target&gt;
 <a href="http://www.perforce.com/jam/jam.html">Jam's Perforce Homepage</a>
 </li>
 <li class="icon-document">
-<a href="http://cgit.haiku-os.org/buildtools/plain/jam/Jam.html">The Jam Executable</a>
+<a href="https://cgit.haiku-os.org/buildtools/plain/jam/Jam.html">The Jam Executable</a>
 </li>
 <li class="icon-document">
-<a href="http://cgit.haiku-os.org/buildtools/plain/jam/Jambase.html">Jambase Reference</a>
+<a href="https://cgit.haiku-os.org/buildtools/plain/jam/Jambase.html">Jambase Reference</a>
 </li>
 <li class="icon-document">
-<a href="http://cgit.haiku-os.org/buildtools/plain/jam/Jamfile.html">Using Jamfiles and Jambase</a>
+<a href="https://cgit.haiku-os.org/buildtools/plain/jam/Jamfile.html">Using Jamfiles and Jambase</a>
 </li>
 </ul> 

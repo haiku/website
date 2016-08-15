@@ -8,7 +8,7 @@ tags = ["package management", "contract work"]
 
 The following is a first draft of how package management on Haiku could look like. I'm more than sure that there are aspects missing here, but we need to start the discussion somewhere ...
 
-Several people have already added their ideas on package management to the <a href="http://dev.haiku-os.org/wiki/PackageManagerIdeas">wiki article</a>. Additionally, many opinions have been stated in comments to my first blog entry. 
+Several people have already added their ideas on package management to the <a href="https://dev.haiku-os.org/wiki/PackageManagerIdeas">wiki article</a>. Additionally, many opinions have been stated in comments to my first blog entry. 
 
 I have tried to incorporate most ideas mentioned into this draft, but due to the sheer amount of contradicting views, some sacrifices have to be made.
 <!--break-->

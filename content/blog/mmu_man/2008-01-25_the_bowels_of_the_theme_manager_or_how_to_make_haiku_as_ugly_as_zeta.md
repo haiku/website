@@ -127,7 +127,7 @@ The following methods can be implemented by addons:
 
 There is also a C function instantiate_themes_addon(), which is re#defined by default to make a single binary.
 
-Now let's see how the <a href="http://dev.haiku-os.org/browser/haiku/trunk/3rdparty/mmu_man/themes/addons/DeskbarAddon.cpp">Deskbar addon</a> works.
+Now let's see how the <a href="https://dev.haiku-os.org/browser/haiku/trunk/3rdparty/mmu_man/themes/addons/DeskbarAddon.cpp">Deskbar addon</a> works.
 
 First, because it's part of the main binary, some global headers reference it:
 The message name is declared in UITheme.h:
@@ -259,8 +259,8 @@ Feel free to pick one or submit others.
 
 See also:
 <ul>
-<li>Use <a href="http://dev.haiku-os.org/browser/haiku/trunk/3rdparty/mmu_man/themes">the Source</a>, Luke.</li>
+<li>Use <a href="https://dev.haiku-os.org/browser/haiku/trunk/3rdparty/mmu_man/themes">the Source</a>, Luke.</li>
 <li>Some <a href="http://revolf.free.fr/z/themes/">sample themes</a> as an incentive to do better.</li>
 </ul>
 
-Now you know everyting required to help fix the <a href="http://dev.haiku-os.org/browser/haiku/trunk/3rdparty/mmu_man/themes/TODO.txt">things to do</a> !
+Now you know everyting required to help fix the <a href="https://dev.haiku-os.org/browser/haiku/trunk/3rdparty/mmu_man/themes/TODO.txt">things to do</a> !

@@ -13,10 +13,10 @@ First of all, I wanted to make it clear that I haven't started to work on my con
 <!--break-->
 Anyway, on to the work done !
 
-I'll start on the Service Kit side. By testing some websites I often use, I found that chunked http transfers were not working properly. This was tracked down to the use of a static variable in the chunked transfer code, and was solved in http://cgit.haiku-os.org/haiku/commit/src/kits/network?id=2ec188b9032a9c642a27c26819d41c8311993492 .
+I'll start on the Service Kit side. By testing some websites I often use, I found that chunked http transfers were not working properly. This was tracked down to the use of a static variable in the chunked transfer code, and was solved in https://cgit.haiku-os.org/haiku/commit/src/kits/network?id=2ec188b9032a9c642a27c26819d41c8311993492 .
 
 Next was some work on cookies, which were not working at all so I couldn't login to anything. I found out that WebKit leaves handling of cookies that come inside the http headers to the http transport (in our case, the Service Kit), and handles other cookies (set from html tags or javascript function calls) itself, forwarding them to the transport layer for storage in the cookie jar.
-So I went ahead and added support for http-header cookies in http://cgit.haiku-os.org/haiku/commit/src/kits/network?id=a8dd17c9b929dbe8e677238e6de088692a2cac27 . This solved some of the issues, but not all of them. For example I still can't log in to my google account. I guess this uses the latter kind of cookie and that part isn't working yet. I'll try to find some time.
+So I went ahead and added support for http-header cookies in https://cgit.haiku-os.org/haiku/commit/src/kits/network?id=a8dd17c9b929dbe8e677238e6de088692a2cac27 . This solved some of the issues, but not all of them. For example I still can't log in to my google account. I guess this uses the latter kind of cookie and that part isn't working yet. I'll try to find some time.
 
 On the WebKit side now, the first thing to notice is the availability of the official haiku-webkit repo at https://github.com/haiku/haiku-webkit . I will be pushing my changes there. I'm working in the <a href="https://github.com/haiku/haiku-webkit/tree/bnetapi">bnetapi branch</a>.
 

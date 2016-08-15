@@ -132,4 +132,4 @@ To build the Haiku Book run '<code>doxygen</code>' from the <code>docs/user</cod
 
 To see the html output open the <code>generated/doxygen/html/index.html</code> file in your favorite Web Browser. You should see your new class documentation there somewhere. For example click on the Storage kit link and a link to BPath should show up in the table.
 
-Once you are happy with the output and want to submit the result, create a ticket of type 'enhancement' in category 'documentation' on trac (<a href="http://dev.haiku-os.org/" title="Haiku Trac">http://dev.haiku-os.org/</a>) and attach the .dox file to it. One of the many developers interested in the documentation will take a look at the file, comment on the ticket, or if it is acceptable, commit the result.
+Once you are happy with the output and want to submit the result, create a ticket of type 'enhancement' in category 'documentation' on trac (<a href="https://dev.haiku-os.org/" title="Haiku Trac">https://dev.haiku-os.org/</a>) and attach the .dox file to it. One of the many developers interested in the documentation will take a look at the file, comment on the ticket, or if it is acceptable, commit the result.

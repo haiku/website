@@ -47,4 +47,4 @@ A base implementation of a session manager that also is able to restore Stack an
 As I have not much time to work on any of these, volunteers are welcome!
 
 *) github.com/czeidler/haiku (SessionManager branch)
-**) http://www.freelists.org/post/haiku-development/session-manager
+**) https://www.freelists.org/post/haiku-development/session-manager

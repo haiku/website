@@ -35,4 +35,4 @@ I may convert the topology data into a tree, but again, this isn't very high on 
 An OO wrapper class would be a nice touch once everything else is done.
 
 <strong>Conclusion</strong>
-Real life has a tendency to get in the way at times, and right now work on the scheduler is slow for just that reason. In a couple days it will speed back up again though and there will be more blog entries as well as patches as work is done. For patches, more information, and to follow progress check out ticket <a href="http://dev.haiku-os.org/ticket/1069">#1069</a>. I spend a reasonable amount of time in the official chatrooms on IRC so feel free to catch me there if you like!
+Real life has a tendency to get in the way at times, and right now work on the scheduler is slow for just that reason. In a couple days it will speed back up again though and there will be more blog entries as well as patches as work is done. For patches, more information, and to follow progress check out ticket <a href="https://dev.haiku-os.org/ticket/1069">#1069</a>. I spend a reasonable amount of time in the official chatrooms on IRC so feel free to catch me there if you like!

@@ -44,7 +44,7 @@ Figure 2 shows the job setup dialog. The settings inside the red rectangle are t
 <b>Figure 2:</b> Job Setup Dialog.<br>
 
 <p>
-Gutenprint categorizes settings from basic to advanced. In the printer driver only the basic settings are enabled. When the advanced settings are enabled there are so many that the setup dialog would get too large to fit on most screens because of a <a href="http://www.freelists.org/post/haiku-development/Putting-a-BGridView-inside-BScrollView,8">bug</a> in the Layout API. As soon as this bug is fixed the advanced settings can be enabled.
+Gutenprint categorizes settings from basic to advanced. In the printer driver only the basic settings are enabled. When the advanced settings are enabled there are so many that the setup dialog would get too large to fit on most screens because of a <a href="https://www.freelists.org/post/haiku-development/Putting-a-BGridView-inside-BScrollView,8">bug</a> in the Layout API. As soon as this bug is fixed the advanced settings can be enabled.
 </p>
 
 <h3>Porting Gutenprint</h3>
@@ -107,16 +107,16 @@ Also some bugs were fixed in the USB transport add-on and in libprint where the 
 
 <h3>Lines of Code</h3>
 <p>
-The following table shows the lines of codes in revision <a href="http://dev.haiku-os.org/changeset/39800">39800</a> of the header files, source files, their sum and the percentage of the sum to the total number of lines. The lines of codes includes empty lines and comments.
+The following table shows the lines of codes in revision <a href="https://dev.haiku-os.org/changeset/39800">39800</a> of the header files, source files, their sum and the percentage of the sum to the total number of lines. The lines of codes includes empty lines and comments.
 </p>
 
 <table border="1">
 <tr><td>Component                                   </td><td>.h</td>   <td>.cpp</td>  <td>.h + .cpp</td><td>Percentage</td></tr>
-<tr><td>Gutenprint (<a href="http://dev.haiku-os.org/browser/haiku/trunk/src/libs/print/libgutenprint/src/main">libgutenprint</a>)</td>
+<tr><td>Gutenprint (<a href="https://dev.haiku-os.org/browser/haiku/trunk/src/libs/print/libgutenprint/src/main">libgutenprint</a>)</td>
                                                          <td align="right">5.720</td><td align="right">45.413</td><td align="right">51.133</td>  <td align="right"> 77,7%</td></tr>
-<tr><td>Haiku printer driver framework (<a href="http://dev.haiku-os.org/browser/haiku/trunk/src/libs/print/libprint">libprint</a>)
+<tr><td>Haiku printer driver framework (<a href="https://dev.haiku-os.org/browser/haiku/trunk/src/libs/print/libprint">libprint</a>)
                                                          </td><td align="right">3.202</td><td align="right"> 8.418</td><td align="right">11.620</td>  <td align="right"> 17,7%</td></tr>
-<tr><td>Haiku Gutenprint printer driver (<a href="http://dev.haiku-os.org/browser/haiku/trunk/src/add-ons/print/drivers/gutenprint">Gutenprint</a>)</td>
+<tr><td>Haiku Gutenprint printer driver (<a href="https://dev.haiku-os.org/browser/haiku/trunk/src/add-ons/print/drivers/gutenprint">Gutenprint</a>)</td>
                                                          <td align="right">  689</td><td align="right"> 2.344</td><td align="right"> 3.033</td>  <td align="right">  4,6%</td></tr>
 <tr><td>Total                                       </td><td align="right">9.611</td><td align="right">56.175</td><td align="right">65.786</td>  <td align="right">100%</td></tr>
 </table>
@@ -125,7 +125,7 @@ The following table shows the lines of codes in revision <a href="http://dev.hai
 <p>
 For the extension of libprint about 1538 lines were added. Not all lines were new code because the code style in libprint was changed to conform to the
 Haiku coding style.<br>
-The total number of lines increased between revision <a href="http://dev.haiku-os.org/changeset/36173">36173</a> and <a href="http://dev.haiku-os.org/changeset/39800">39800</a> in libprint and Gutenprint printer driver to 4.571.
+The total number of lines increased between revision <a href="https://dev.haiku-os.org/changeset/36173">36173</a> and <a href="https://dev.haiku-os.org/changeset/39800">39800</a> in libprint and Gutenprint printer driver to 4.571.
 </p>
 
 <p>

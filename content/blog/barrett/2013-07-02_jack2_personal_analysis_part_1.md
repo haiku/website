@@ -29,8 +29,8 @@ So, a day i decided to checkout the source and i started some exploration, to se
 Unfortunately excluding for now the noticeable lack of any media_kit backend, there are some other problems to be resolved before :
 
 <ul>
- <li> The jack shm implementation is not working as should (probably due to http://dev.haiku-os.org/ticket/2657)</li>
- <li> Haiku is not supporting posix real time thread priorities (http://dev.haiku-os.org/ticket/8600)</li>
+ <li> The jack shm implementation is not working as should (probably due to https://dev.haiku-os.org/ticket/2657)</li>
+ <li> Haiku is not supporting posix real time thread priorities (https://dev.haiku-os.org/ticket/8600)</li>
  <li> I had to comment some memory locking related code, due to the lack of mlock/mlockall support.</li>
  <li> Jack warn about lots of graph reorders.</li>
  <li> jack_test is not passing some tests.</li>

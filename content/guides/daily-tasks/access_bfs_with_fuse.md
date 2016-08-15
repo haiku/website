@@ -15,7 +15,7 @@ altering the operating system's kernel to support the filesystem.
 For more information, visit the <a href="http://fuse.sourceforge.net/">FUSE project page</a>.
 
 The initial implementation of a BFS FUSE module was added in 
-<a href="http://dev.haiku-os.org/changeset/31409">r31409</a>
+<a href="https://dev.haiku-os.org/changeset/31409">r31409</a>
 
 <h3>Pre-requisites</h3>
 <a name="linux"></a>

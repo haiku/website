@@ -63,7 +63,7 @@ Program Headers:
   LOAD           0x000658 0x00002658 0x00002658 0x00134 0x00150 RW  0x2000
   DYNAMIC        0x000668 0x00002668 0x00002668 0x000a8 0x000a8 RW  0x4</pre>
 
-It seems ld doesn't like the kernel linker script much, even though it's ripped off the x86 version. Maybe it's an m68k bug in binutils, or maybe I forgot to set something in the configuration, but it's quite strange this only happens when linking the kernel. The workaround was to explicitely declare program headers in <a href="http://dev.haiku-os.org/browser/haiku/trunk/src/system/ldscripts/m68k/kernel.ld">kernel.ld</a>, and map text and data segment to them.
+It seems ld doesn't like the kernel linker script much, even though it's ripped off the x86 version. Maybe it's an m68k bug in binutils, or maybe I forgot to set something in the configuration, but it's quite strange this only happens when linking the kernel. The workaround was to explicitely declare program headers in <a href="https://dev.haiku-os.org/browser/haiku/trunk/src/system/ldscripts/m68k/kernel.ld">kernel.ld</a>, and map text and data segment to them.
 
 Now the elf code is happily finding both and tries to load them.
 
@@ -80,7 +80,7 @@ sr = 0x2008, pc = 0x00085b60
 Aregs: 98800841 000006f0 98800841 0009ffc4  0007fea0 0000026e 0007fdd4 0007fd98
 Dregs: 00000803 ffffb90f 00000000 00000800  00000000 000046f0 00000000 000c6000</pre>
 
-An hour later, I can tell you that #defining SCRATCH_SIZE to 2*4096 and declaring uint8 gScratchBuffer[4096] in <a href="http://dev.haiku-os.org/browser/haiku/trunk/src/system/boot/platform/atari_m68k/devices.cpp">devices.cpp</a> likely didn't help...
+An hour later, I can tell you that #defining SCRATCH_SIZE to 2*4096 and declaring uint8 gScratchBuffer[4096] in <a href="https://dev.haiku-os.org/browser/haiku/trunk/src/system/boot/platform/atari_m68k/devices.cpp">devices.cpp</a> likely didn't help...
 
 <pre>load segment 1 (811630 bytes)...
 load segment 2 (25388 bytes)...

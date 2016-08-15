@@ -6,7 +6,7 @@ date = "2009-09-21T13:00:16.000Z"
 tags = ["alpha 1", "press"]
 +++
 
-<p>Exactly one week ago, on a simple Monday in September, we pulled the lever. Though it had been <a href=" http://www.macgeneration.com/news/voir/136136/haiku-os-sortie-de-la-premiere-version-alpha-le-09-09">anticipated</a> in more than <a href="http://www.osnews.com/story/22001/Haiku_Schedules_First_Alpha_Release_for_September_9">one</a> language, it was a relief when suddenly a whole new <a href="http://www.haiku-os.org">website</a> appeared, and more importantly, this update had something called a <a href="/news/2009-09-13_haiku_project_announces_availability_haiku_r1alpha_1">release</a>, a thing relatively unknown in Haiku's universe. I still remember being in the IRC channel, when Michael Lotz proclaimed: "I can't believe the other devs are letting me do this" while he was <a href="http://dev.haiku-os.org/changeset/33109/haiku/tags/releases/r1alpha1">tagging</a> the source code for the final alpha build.</p>
+<p>Exactly one week ago, on a simple Monday in September, we pulled the lever. Though it had been <a href=" http://www.macgeneration.com/news/voir/136136/haiku-os-sortie-de-la-premiere-version-alpha-le-09-09">anticipated</a> in more than <a href="http://www.osnews.com/story/22001/Haiku_Schedules_First_Alpha_Release_for_September_9">one</a> language, it was a relief when suddenly a whole new <a href="http://www.haiku-os.org">website</a> appeared, and more importantly, this update had something called a <a href="/news/2009-09-13_haiku_project_announces_availability_haiku_r1alpha_1">release</a>, a thing relatively unknown in Haiku's universe. I still remember being in the IRC channel, when Michael Lotz proclaimed: "I can't believe the other devs are letting me do this" while he was <a href="https://dev.haiku-os.org/changeset/33109/haiku/tags/releases/r1alpha1">tagging</a> the source code for the final alpha build.</p>
 
 <p>So what happened after that?</p>
 <!--break-->
@@ -26,4 +26,4 @@ tags = ["alpha 1", "press"]
 
 <p>&nbsp;</p>
 
-<p>Note: there is a <a href="http://dev.haiku-os.org/wiki/R1/Alpha1Press">list</a> with more press coverage during the first week of alpha 1. We would like to thank Stoian Alexandru for maintaining the list!</p>
+<p>Note: there is a <a href="https://dev.haiku-os.org/wiki/R1/Alpha1Press">list</a> with more press coverage during the first week of alpha 1. We would like to thank Stoian Alexandru for maintaining the list!</p>

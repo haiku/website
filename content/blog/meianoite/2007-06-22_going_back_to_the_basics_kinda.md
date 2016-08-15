@@ -43,7 +43,7 @@ A possible solution to this was proposed by Waldspurger himself in 1995, when he
 
 The second problem lies in the mapping between tickets and processes. Searching for a ticket by visiting every process is very inefficient. We could use hash tables, or trees, to do this indexing. I'll tackle this in a following post.
 
-The third problem is that one of the requirements of Haiku's scheduler is that it should have constant (<a href="http://en.wikipedia.org/wiki/Big_o_notation">O(1)</a>) complexity regarding the number of processes (threads, in our case). I didn't manage to find<a href="#note3">[3]</a> whether Waldspurger's work touches this issue at all, but at least <a href="#note3">one implementation</a> used a tree to organise the threads. And there was this thing called "Hierarchical Stride Scheduling" on his thesis and the sound of those words ringed some bells here. I'll address this one right in the next post.
+The third problem is that one of the requirements of Haiku's scheduler is that it should have constant (<a href="https://en.wikipedia.org/wiki/Big_o_notation">O(1)</a>) complexity regarding the number of processes (threads, in our case). I didn't manage to find<a href="#note3">[3]</a> whether Waldspurger's work touches this issue at all, but at least <a href="#note3">one implementation</a> used a tree to organise the threads. And there was this thing called "Hierarchical Stride Scheduling" on his thesis and the sound of those words ringed some bells here. I'll address this one right in the next post.
 
 The fourth and worst problem is that both lottery- and stride-based scheduling are great for processes that want to use as much of the limited resource as possible during their time share. In the case of CPU power, those would be CPU-bound threads. BeOS and Haiku are desktop operating systems, where interactive threads are prevalent. This means that there will be plenty of threads that spend most of their time waiting for user input instead of using the CPU.
 
@@ -51,7 +51,7 @@ The fourth and worst problem is that both lottery- and stride-based scheduling a
 Uh, quite a handful of tricky problems. Kind of discouraging, no?
 <br><blockquote>But wait, all is not wasted ;) There are solutions for all those problems. I have come up with some twists that I'd like to share with you.</blockquote>
 <br>
-I'm convinced that even if the stride scheduling as expressed in Waldspurger's thesis could be less than optimal for interactive tasks (i.e., it doesn't approach the static version of <a href="http://en.wikipedia.org/wiki/Shortest_remaining_time">shortest-remaining-time scheduling</a>, which is proven to provide the best possible average response times), there's no doubt in my mind that the idea of using strides results in perfect fairness when all tasks are equal. One can actually prove this mathematically. Not necessarily his stride + pass approach, though. <a href="http://en.wikipedia.org/wiki/Stride_of_an_array">Simple strides</a> will do.
+I'm convinced that even if the stride scheduling as expressed in Waldspurger's thesis could be less than optimal for interactive tasks (i.e., it doesn't approach the static version of <a href="https://en.wikipedia.org/wiki/Shortest_remaining_time">shortest-remaining-time scheduling</a>, which is proven to provide the best possible average response times), there's no doubt in my mind that the idea of using strides results in perfect fairness when all tasks are equal. One can actually prove this mathematically. Not necessarily his stride + pass approach, though. <a href="https://en.wikipedia.org/wiki/Stride_of_an_array">Simple strides</a> will do.
 
 For example, for modeling purposes, suppose you have an array where you store a task T as many times as T's priority is (let's call this the temporal frequency property, or TFP). So let task A have priority 1, task B have priority 2, task C have priority 3. One possible array where the TFP holds is
 <b>A B B C C C</b>
@@ -70,7 +70,7 @@ Ideally, we'd like those three tasks to be run with a fixed temporal frequency, 
 <b>C B A C B C</b>
 or some slight variation of it. However, finding such permutation when the array is much bigger than this one (which would be the common situation in our case) is not a cheap operation.
 
-However, we can do some math tricks to try to approach this ideal situation. In Computer Science, those kinds of tricks are called <a href="http://en.wikipedia.org/wiki/Heuristic_%28computer_science%29#Heuristic_algorithms">heuristic algorithms</a>.
+However, we can do some math tricks to try to approach this ideal situation. In Computer Science, those kinds of tricks are called <a href="https://en.wikipedia.org/wiki/Heuristic_%28computer_science%29#Heuristic_algorithms">heuristic algorithms</a>.
 
 <a name="proportions"></a>Notice that any strided, <i>modulo</i> size of the array (which is identical to the sum of all priorities), traversal of this array, where the stride is coprime to the size of the array (let's call it Good Stride Property), will return a given task proportionally to the number of times it appears on the array, divided by the size of the array (i.e., the sum of the priorities of all tasks). (Alternatively, if we don't scale the array, it's enough to calculate the stride using the trivial array, and then scale the stride using the GCD.)
 

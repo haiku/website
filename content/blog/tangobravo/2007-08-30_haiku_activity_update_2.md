@@ -36,13 +36,13 @@ Justin O'Dell produced another patch fixing the behaviour of "Defaults" buttons 
 <em>Build System</em>
 Samuel Rodriguez Perez provided a patch, slightly modified by Ingo, which allows a 32-bit build of Haiku to be made on a host system with a 64-bit compiler.
 
-<h3><a href="http://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
+<h3><a href="https://www.freelists.org/archives/openbeos/">General Mailing List</a></h3>
 
 There was some discussion on the networking support under various Virtual Machines. Virtual PC is now supposedly available for free from Microsoft and networking is supported by the tulip driver from BeOS. Personally I use VMWare Server (also available for free) which has networking supported through the ipro1000 driver (just make sure the device is set to e1000 in your .vmx file as I mentioned <a href="/blog/tangobravo/2007-08-29/haiku_activity_update_1">last time</a>) and also supports booting from physical partitions.
 
 Jorge aka Koki (that's his full name now, I think :)) posted a link to a poster in case people want to set up a presence at a conference or other meeting. On a related note he announced he is organising a presence at the Kansai Open Source conference on 9-10 November in Osaka, Japan. 
 
-<h3><a href="http://www.freelists.org/archives/haiku-development/">Development List</a></h3>
+<h3><a href="https://www.freelists.org/archives/haiku-development/">Development List</a></h3>
 
 Ryan Leavengood's WebKit work threw up another interesting discussion - there is a non-standard macro that doesn't compile with GCC 2.95. It was suggested he produces a more standards-compliant version and provide that back to the WebKit people.
 
@@ -57,7 +57,7 @@ Christof Lutteroth introduced a paper he had written on a new way of specifying 
 <h3><a href="http://dev.haiku-os.org">Bug Tracker</a></h3>
 Perhaps next week I'll start a bugs opened/bugs closed count to stick in this section too. I generally find I've covered most of the interesting bits already.
 
-One enhancement request that caught my attention: <a href="http://dev.haiku-os.org/ticket/1420">#1420</a> deals with changing Tracker's behaviour moving or copying files to match that of other systems - in other words merging the contents of the source folder with whatever is there already. Actually I quite like the BeOS way of doing it but I can see how it could lead to data loss for people used to the behaviour of other systems.
+One enhancement request that caught my attention: <a href="https://dev.haiku-os.org/ticket/1420">#1420</a> deals with changing Tracker's behaviour moving or copying files to match that of other systems - in other words merging the contents of the source folder with whatever is there already. Actually I quite like the BeOS way of doing it but I can see how it could lead to data loss for people used to the behaviour of other systems.
 
 <h3>The End</h3>
 
