@@ -6,7 +6,7 @@ There are several methods offered to install Haiku. These include Vmdk images, R
 
 In this guide the Haiku operating system is being run under virtual circumstances using Ubuntu 12.04 LTS, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
 
-In this guide, we have used ISO and Anyboot/Raw images. The required files can be found on the Get-Haiku page of this website which is located [here](http://www.haiku-os.org/get-haiku). Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
+In this guide, we have used ISO and Anyboot/Raw images. The required files can be found on the Get-Haiku page of this website which is located [here](https://www.haiku-os.org/get-haiku). Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
 
 ### Downloading KVM on Ubuntu 10.4 and above
 
@@ -26,7 +26,7 @@ Once KVM is set up and the ISO image is downloaded, you can start the installati
 
 First, create a new virtual machine.
 
-![image1](http://www.haiku-os.org/files/image1_0.png)
+![image1](https://www.haiku-os.org/files/image1_0.png)
 
 Give a name to your Haiku virtual machine and choose the method of OS installation, which is **`Local install media`** in this case and click **`Forward`**.
 
