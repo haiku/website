@@ -55,4 +55,4 @@ You need to use the renaming workaround.
 
 #### Parallels Desktop warns that the _device still expects data transfer_
 
-When booting with ISO or Anyboot images, Parallels will hang on Disk icon. This is a bug in Haiku which can be read about [here](http://dev.haiku-os.org/ticket/4502).s
+When booting with ISO or Anyboot images, Parallels will hang on Disk icon. This is a bug in Haiku which can be read about [here](http://dev.haiku-os.org/ticket/4502)
