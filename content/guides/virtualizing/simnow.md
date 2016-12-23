@@ -1,3 +1,10 @@
++++
+type = "article"
+title = "Virtualizing Haiku in SimNow "
+date = "2016-12-23T06:09:57.000Z"
+tags = []
++++
+
 <div class="box-info">This article is aimed at developers, as AMD SimNow is both a Virtual machine and an AMD hardware emulator. If you just want to try Haiku out, you might want to use another VM that is more aimed at end users.</div>
 
 ##### Go to section:
