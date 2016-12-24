@@ -9,7 +9,6 @@ The required files can be found at on the Get-Haiku page of this website which i
 * [Additional Steps.](#user-content-additional-steps)
 * [Troubleshooting.](#user-content-troubleshooting)
 
-
 ### Running Haiku from a VM image.
 
 ##### Step 1. Downloading Haiku.
@@ -45,7 +44,6 @@ Under Virtual Machine Library, which you can use the shortcut **Shift**+**cmd**+
 ##### Step 3. Selecting the location.
 
 **TODO**
-
 
 ##### Step 4. Selecting type of Operating System.
 
@@ -93,8 +91,7 @@ Begin the installation! Reboot once you are done, you should be able to see the 
 
 ##### Step 14. You are now finished.
 
- you have successfully installed Haiku! Have fun and refer to the Haiku User Guide if you encounter any problems.
-
+You have successfully installed Haiku! Have fun and refer to the Haiku User Guide if you encounter any problems.
 
 ##### Additional Steps.
 
