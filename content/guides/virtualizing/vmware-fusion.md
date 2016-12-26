@@ -37,9 +37,9 @@ Under Virtual Machine Library, which you can use the shortcut **Shift**+**cmd**+
 
 ##### Step 2. Creating a virtual machine.
 
-![](https://www.haiku-os.org/files/new-vm-step-1.png)
-![](https://www.haiku-os.org/files/new-vm-step-2.png)
-![](https://www.haiku-os.org/files/new-vm-step-3.png)
+![](../../images/new-vm-step-1.png)
+![](../../images/new-vm-step-2.png)
+![](../../images/new-vm-step-3.png)
 
 ##### Step 3. Selecting the location.
 
