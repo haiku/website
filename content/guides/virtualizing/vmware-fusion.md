@@ -1,3 +1,5 @@
++++ type = "article" title = "VMWare Fusion" date = "2016-12-26T14:27:10.000Z" tags = [] +++
+
 There are several methods offered to install Haiku. Among those, only the vmdk and the iso methods are suitable for running Haiku easily on VMware Fusion. Basically these are the two methods that will be shown in this guide. The easiest of all is utilising the vmdk which is already properly configured.
 Running Haiku from a VM image is recommended to avoid any possible problems. Unless it does not work, or you would like to simulate an actual installation, do stick to this method.
 The required files can be found at on the Get-Haiku page of this website which is located [here](http://www.haiku-os.org/get-haiku). Both the vmdk and iso are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files. VMware Fusion is available for free on their website which can be found [here](http://www.vmware.com/products/fusion/).
