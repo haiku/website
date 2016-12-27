@@ -44,8 +44,8 @@ Under Virtual Machine Library, which you can use the shortcut **Shift**+**cmd**+
 
 ##### Step 2. Creating a virtual machine.
 
-![](../../../static/images/new-vm-step-1.png)
-![](../../../static/images/new-vm-step-2.png)
+![](/images/new-vm-step-1.png)
+![](/images/new-vm-step-2.png)
 
 ##### Step 3. Selecting the location.
 
@@ -53,7 +53,7 @@ Under Virtual Machine Library, which you can use the shortcut **Shift**+**cmd**+
 
 ##### Step 4. Selecting type of Operating System.
 
-![](../../../static/images/new-vm-step-3.png)
+![](/images/new-vm-step-3.png)
 
 ##### Step 5. Naming the virtual machine.
 
