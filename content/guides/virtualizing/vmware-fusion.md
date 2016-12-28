@@ -38,11 +38,11 @@ After downloading the ISO image, unzip the file and in the folder, you will see 
 
 ##### Step 2\. Creating a virtual machine.
 
-<img src="https://github.com/johngarbi/website/blob/d0f6e6a4c54887c27a73e92d2fece57e81b3eb33/static/files/images/new-vm-step-1.png" width="75%" height="50%"/>
+![](https://raw.githubusercontent.com/haiku/website/master/static/files/new-vm-step-1.png)
 
-<img src="https://github.com/johngarbi/website/blob/d0f6e6a4c54887c27a73e92d2fece57e81b3eb33/static/files/images/new-vm-step-2.png" width="75%" height="50%"/>
+![](https://raw.githubusercontent.com/haiku/website/master/static/files/new-vm-step-2.png)
  
- <img src="https://github.com/johngarbi/website/blob/d0f6e6a4c54887c27a73e92d2fece57e81b3eb33/static/files/images/new-vm-step-3.png" width="75%" height="50%"/>
+![](https://raw.githubusercontent.com/haiku/website/master/static/files/new-vm-step-3.png)
 
 ##### Step 3\. Selecting the location.
 
@@ -76,7 +76,7 @@ Don't worry if you see the warning saying Haiku can't find any partitions to boo
 
 Select the new space and click Partition > Create.
 
-<div class="box-warning">It is important that you tick the active partition or else your disk will not boot!</div>
+> It is important that you tick the active partition or else your disk will not boot!
 
 
 ##### Step 11\. Formatting the new partition.
