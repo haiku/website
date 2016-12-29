@@ -7,7 +7,7 @@ tags = []
 
 There are several methods offered to install Haiku. Among those, only the vmdk and the iso methods are suitable for running Haiku easily on VMware Fusion. Basically these are the two methods that will be shown in this guide. The easiest of all is utilising the vmdk which is already properly configured.
 
-> Running Haiku from a VM image is recommended to avoid any possible problems. Unless it does not work, or you would like to simulate an actual installation, do stick to this method.
+<div class="box-info">Running Haiku from a VM image is recommended to avoid any possible problems. Unless it does not work, or you would like to simulate an actual installation, do stick to this method.</div>
 
 The required files can be found at on the Get-Haiku page of this website which is located [here](http://www.haiku-os.org/get-haiku).
 
@@ -45,11 +45,11 @@ After downloading the ISO image, unzip the file and in the folder, you will see 
 
 ##### Step 2\. Creating a virtual machine.
 
-![](https://raw.githubusercontent.com/haiku/website/master/static/files/new-vm-step-1.png)
+![](/static/files/new-vm-step-1.png)
 
-![](https://raw.githubusercontent.com/haiku/website/master/static/files/new-vm-step-2.png)
+![](/static/files/new-vm-step-2.png)
  
-![](https://raw.githubusercontent.com/haiku/website/master/static/files/new-vm-step-3.png)
+![](/static/files/new-vm-step-3.png)
 
 ##### Step 3\. Selecting the location.
 
@@ -83,7 +83,7 @@ Don't worry if you see the warning saying Haiku can't find any partitions to boo
 
 Select the new space and click Partition > Create.
 
-> It is important that you tick the active partition or else your disk will not boot!
+<div class="box-info">It is important that you tick the active partition or else your disk will not boot!</div>
 
 
 ##### Step 11\. Formatting the new partition.
