@@ -1,3 +1,10 @@
++++
+type = "article"
+title = "Emulating Haiku In VMware Fusion"
+date = "2016-12-29T10:30:00.000Z"
+tags = []
++++
+
 There are several methods offered to install Haiku. Among those, only the vmdk and the iso methods are suitable for running Haiku easily on VMware Fusion. Basically these are the two methods that will be shown in this guide. The easiest of all is utilising the vmdk which is already properly configured.
 
 > Running Haiku from a VM image is recommended to avoid any possible problems. Unless it does not work, or you would like to simulate an actual installation, do stick to this method.
@@ -91,7 +98,7 @@ Close the dialog box and select the partition you just created. Ensure that the 
 
 Begin the installation! Reboot once you are done, you should be able to see the Haiku desktop after you reboot. If you are stuck at the installation screen after reboot, disconnect the iso from the virtual disk drive and try again.
 
-##### Step 14\. You are now finished.
+##### Step 15\. You are now finished.
 
 You have successfully installed Haiku! Have fun and refer to the Haiku User Guide if you encounter any problems.  
 
