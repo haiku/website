@@ -16,10 +16,10 @@ Both the vmdk and iso are available there, do select the closest mirror to enjoy
 
 ##### Go to section:
 
-*   [Running Haiku from a VM image.](#part_vmimage)
-*   [Installing and running Haiku from an ISO image.](#part_iso)
-*   [Additional Steps.](#part_additional)
-*   [Troubleshooting.](#part_trouble)
+*   [Running Haiku from a VM image](#part_vmimage)
+*   [Installing and running Haiku from an ISO image](#part_iso)
+*   [Additional Steps](#part_additional)
+*   [Troubleshooting](#part_trouble)
 
 ### Running Haiku from a VM image.
 
