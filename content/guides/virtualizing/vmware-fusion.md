@@ -23,15 +23,15 @@ Both the vmdk and iso are available there, do select the closest mirror to enjoy
 
 ### Running Haiku from a VM image.
 
-##### Step 1\. Downloading Haiku.<a name="part_vmimage"></a>
+##### Step 1. Downloading Haiku.<a name="part_vmimage"></a>
 
 After downloading the VMDK image, unzip the file and in the folder, you will see a .vmx file.
 
-##### Step 2\. Opening the file.
+##### Step 2. Opening the file.
 
 Open the .vmx file and open with VMware Fusion. VMware Fusion will prompt if you would like to upgrade this Virtual Machine, it is totally up to you if you want to as an ungraded version offers support for new features, however, cannot be used with older versions of VMware Fusion. It is possible if you want to downgrade the Virtual Machine. After selecting your choice, VMware Fusion will start to boot Haiku.
 
-##### Step 3\. Finishing Up.
+##### Step 3. Finishing Up.
 
 Wait for Haiku to boot and Haiku is now up and running! It is convenient, time-saving and easier to manage.  
 
@@ -39,11 +39,11 @@ Wait for Haiku to boot and Haiku is now up and running! It is convenient, time-s
 
 This method is pretty much similar to installing on an actual machine, but a little more tedious than running Haiku from a VM image
 
-##### Step 1\. Downloading Haiku.
+##### Step 1. Downloading Haiku.
 
 After downloading the ISO image, unzip the file and in the folder, you will see a .iso file. Under Virtual Machine Library, which you can use the shortcut <kbd>Shift</kbd>+<kbd>cmd</kbd>+<kbd>L</kbd>, click Add and then New.
 
-##### Step 2\. Creating a virtual machine.
+##### Step 2. Creating a virtual machine.
 
 ![](/static/files/new-vm-step-1.png)
 
@@ -51,54 +51,54 @@ After downloading the ISO image, unzip the file and in the folder, you will see 
  
 ![](/static/files/new-vm-step-3.png)
 
-##### Step 3\. Selecting the location.
+##### Step 3. Selecting the location.
 
 **TODO**
 
-##### Step 4\. Selecting type of Operating System.
+##### Step 4. Selecting type of Operating System.
 
 For the operating system, select Other. For version, do take note to make sure that Other is selected. Do not select Other 64-bit.
 
-##### Step 5\. Naming the virtual machine.
+##### Step 5. Naming the virtual machine.
 
 **TODO**
 
-##### Step 6\. Specifying Disk space.
+##### Step 6. Specifying Disk space.
 
 **TODO**
 
-##### Step 7\. Adjusting Memory.
+##### Step 7. Adjusting Memory.
 
 **TODO**
 
-##### Step 8\. Starting the Virtual Machine.
+##### Step 8. Starting the Virtual Machine.
 
 Save the settings and power on the virtual machine. Once Haiku has booted, you can choose whether to run as a Live-CD (which does not have any persistency through reboots) or continue with the installation.
 
-##### Step 9\. Initialising partition.
+##### Step 9. Initialising partition.
 
 Don't worry if you see the warning saying Haiku can't find any partitions to boot from. Click <kbd>OK</kbd> and we will setup the necessary partitions needed to install Haiku. Click <kbd>Set up partitions</kbd>. Before clicking on the device with the hard disk icon. Then click Disk > Initialize > Intel Partition Map…
 
-##### Step 10\. Selecting partition.
+##### Step 10. Selecting partition.
 
 Select the new space and click Partition > Create.
 
 <div class="box-info">It is important that you tick the active partition or else your disk will not boot!</div>
 
 
-##### Step 11\. Formatting the new partition.
+##### Step 11. Formatting the new partition.
 
 Format the newly created partition(s) by selecting the partition and clicking Partition > Format > Be File System… Accept the defaults and you should see something like the previous screen.
 
-##### Step 12\. Selecting your new partition.
+##### Step 12. Selecting your new partition.
 
 Close the dialog box and select the partition you just created. Ensure that the partition is correct.
 
-##### Step 14\. Installing Haiku.
+##### Step 14. Installing Haiku.
 
 Begin the installation! Reboot once you are done, you should be able to see the Haiku desktop after you reboot. If you are stuck at the installation screen after reboot, disconnect the iso from the virtual disk drive and try again.
 
-##### Step 15\. You are now finished.
+##### Step 15. You are now finished.
 
 You have successfully installed Haiku! Have fun and refer to the Haiku User Guide if you encounter any problems.  
 
