@@ -45,11 +45,11 @@ After downloading the ISO image, unzip the file and in the folder, you will see 
 
 ##### Step 2. Creating a virtual machine.
 
-![](files/new-vm-step-1.png)
+![](/files/new-vm-step-1.png)
 
-![](files/new-vm-step-2.png)
+![](/files/new-vm-step-2.png)
  
-![](files/new-vm-step-3.png)
+![](/files/new-vm-step-3.png)
 
 ##### Step 3. Selecting the location.
 
