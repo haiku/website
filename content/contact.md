@@ -15,18 +15,18 @@ tags = []
 </ul>
 </div>
 
-<form name="contact" action="contact_thank_you" netlify>
+<form name="contact" action="/contact_thanks" netlify>
   <div class="form-group">
     <label for="em_addr">Email address</label>
-    <input type="email" class="form-control" id="email" placeholder="Email">
+    <input type="email" class="form-control" id="em_addr" name="em_addr" placeholder="Email">
   </div>
   <div class="form-group">
     <label for="em_subj">Subject</label>
-    <input type="text" class="form-control" id="em_subj" placeholder="Subject">
+    <input type="text" class="form-control" id="em_subj" name="em_subj" placeholder="Subject">
   </div>
   <div class="form-group">
     <label for="em_body">Message</label>
-    <textarea id="em_body" class="form-control" style="min-height:125px;resize:vertical;" placeholder="Message"></textarea>
+    <textarea id="em_body" name="em_body" class="form-control" style="min-height:125px;resize:vertical;" placeholder="Message"></textarea>
   </div>
   <button type="submit" class="btn btn-default">Send</button>
 </form>
