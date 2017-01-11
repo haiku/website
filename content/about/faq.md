@@ -10,7 +10,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
 
   * Common Questions
     * [What is Haiku?](#what-is-haiku)
-    * [Why isn't it called HaikuOS?](#why-isnt-it-called-haikuos)
+    * [Why isn't it called HaikuOS?](#why-isn-t-it-called-haikuos)
     * [Where does the name Haiku come from?](#where-does-the-name-haiku-come-from)
     * [Is Haiku based on Linux?](#is-haiku-based-on-linux)
     * [Why not Linux?](#why-not-linux)
@@ -44,7 +44,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [This sounds cool. How do I enter Kernel Debugging Land?](#this-sounds-cool-how-do-i-enter-kernel-debugging-land)
   * Hardware
     * [What are the minimum hardware requirements to run Haiku?](#what-are-the-minimum-hardware-requirements-to-run-haiku)
-    * [Why doesn't Haiku let me use my monitor's resolution?](#why-doesnt-haiku-let-me-use-my-monitors-resolution)
+    * [Why doesn't Haiku let me use my monitor's resolution?](#why-doesn-t-haiku-let-me-use-my-monitors-resolution)
     * [How can I check which graphics driver is being used?](#how-can-i-check-which-graphics-driver-is-being-used)
     * [Haiku seems to be using VESA, what am I missing?](#haiku-seems-to-be-using-vesa-what-am-i-missing)
     * [What graphic cards are supported?](#what-graphic-cards-are-supported)
@@ -60,7 +60,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Now that I have Haiku on a USB stick, how do I install Haiku to my system?](#now-that-i-have-haiku-on-a-usb-stick-how-do-i-install-haiku-to-my-system)
     * [I have VirtualBox. Which image should I use?](#i-have-virtualbox-which-image-should-i-use)
   * Using
-    * [Why doesn't the 'tilde' key work properly?](#why-doesnt-the-tilde-key-work-properly)
+    * [Why doesn't the tilde key work properly?](#why-doesn-t-the-tilde-key-work-properly)
     * [How do I change my keyboard layout?](#how-do-i-change-my-keyboard-layout)
     * [Is there some kind of failsafe mode I can boot into? How do I get to it?](#is-there-some-kind-of-failsafe-mode-i-can-boot-into-how-do-i-get-to-it)
 
@@ -257,8 +257,8 @@ The installation CD is also a Live CD.
 Instructions for [building Haiku](/guides/building) from source are documented in our guides.
 
 ## Using
-### Why doesn't the '~' key work properly?
-The tilde key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice, or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
+### Why doesn't the tilde key work properly?
+The tilde ``~`` key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice, or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
 
 ### How do I change my keyboard layout?
 Use the Keymaps preferences. If your preferred layout is not available there yet, you can customize an existing one by drag'n'dropping the keys around.
