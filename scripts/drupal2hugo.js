@@ -9,6 +9,9 @@
  *    sudo mkdir /tmp/mysql_dump_dir/
  *    sudo chmod u=rwx,g=rwx,o=rwx /tmp/mysql_dump_dir/
  *    sudo mysqldump --fields-enclosed-by='"' --fields-terminated-by=',' --tab /tmp/mysql_dump_dir/ website_livesite
+ *
+ * NOTE: The only CSV files you need from the dump are:
+ *    node.txt, node_revisions.txt, url_alias.txt, term_data.txt, term_node.txt
  */
 
 var fs = require('fs');
@@ -75,12 +78,12 @@ function ParseCSV(csv) {
 	return rows;
 }
 
-var nodes = ParseCSV(fs.readFileSync('export/node.csv', {encoding: "UTF-8"})),
-	node_revisions = ParseCSV(fs.readFileSync('export/node_revisions.csv', {encoding: "UTF-8"})),
-	url_alias = ParseCSV(fs.readFileSync('export/url_alias.csv', {encoding: "UTF-8"}));
+var nodes = ParseCSV(fs.readFileSync('export/node.txt', {encoding: "UTF-8"})),
+	node_revisions = ParseCSV(fs.readFileSync('export/node_revisions.txt', {encoding: "UTF-8"})),
+	url_alias = ParseCSV(fs.readFileSync('export/url_alias.txt', {encoding: "UTF-8"}));
 
-var term_data = ParseCSV(fs.readFileSync('export/term_data.csv', {encoding: "UTF-8"})),
-	term_node = ParseCSV(fs.readFileSync('export/term_node.csv', {encoding: "UTF-8"})),
+var term_data = ParseCSV(fs.readFileSync('export/term_data.txt', {encoding: "UTF-8"})),
+	term_node = ParseCSV(fs.readFileSync('export/term_node.txt', {encoding: "UTF-8"})),
 	TagMap = {};
 // Create TagMap
 for (var i in term_data)
