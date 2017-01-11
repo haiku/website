@@ -14,6 +14,12 @@
  *    node.txt, node_revisions.txt, url_alias.txt, term_data.txt, term_node.txt
  */
 
+// Set this to `true` if you want to skip export of files that already exist.
+// If false, it will abort with an error if a file already exists.
+// BE VERY CAREFUL WHEN SETTING THIS TO TRUE, STRANGE THINGS MAY HAPPEN.
+// DO NOT SET TO "true" ON FIRST RUN.
+const SKIP_EXISTING_FILES = true;
+
 var fs = require('fs');
 
 function ParseCSV(csv) {
@@ -124,8 +130,13 @@ function GetSavePath(path, type, node, ext) {
 				// Check if there already is an index file.
 				ret += "/index";
 				if (fs.existsSync(ret + ".txt") || fs.existsSync(ret + ".md") || fs.existsSync(ret + ".html")) {
-					console.error("FATAL: could not find unused path for", path.join('/'), node);
-					process.exit(1);
+					if (SKIP_EXISTING_FILES) {
+						// Assume the file was created in a previous run, skip export.
+						return false;
+					} else {
+						console.error("FATAL: could not find unused path for", path.join('/'), node);
+						process.exit(1);
+					}
 				} else { // Nope, doesn't exist, so let's use it.
 					ret += ext;
 					break;
@@ -137,8 +148,13 @@ function GetSavePath(path, type, node, ext) {
 			if (i == (path.length - 1)) {
 				// This is it.
 				if (fs.existsSync(ret + ".txt") || fs.existsSync(ret + ".md") || fs.existsSync(ret + ".html")) {
-					console.error("FATAL: file already exists for", path.join('/'), node);
-					process.exit(1);
+					if (SKIP_EXISTING_FILES) {
+						// Assume the file was created in a previous run, skip export.
+						return false;
+					} else {
+						console.error("FATAL: file already exists for", path.join('/'), node);
+						process.exit(1);
+					}
 				}
 				ret += ext;
 				break;
@@ -275,10 +291,12 @@ for (var i in nodes) {
 	outfile += content;
 
 	var file = GetSavePath(url_dst, type, node, FormatMap[format]);
-	console.log("INFO: writing (nid" + nid + ")", file);
-	if (format == "2")
-		hasPhpCode.push(file);
-	fs.writeFileSync(file, outfile);
+	if (file !== false) {
+		console.log("INFO: writing (nid" + nid + ")", file);
+		if (format == "2")
+			hasPhpCode.push(file);
+		fs.writeFileSync(file, outfile);
+	}
 }
 
 console.log("");
