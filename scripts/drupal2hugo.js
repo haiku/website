@@ -1,9 +1,14 @@
 /*
  * Drupal 6 CSV dump->Hugo
- * (C) 2016 Augustin Cavalier
+ * (C) 2016 Augustin Cavalier <waddlesplash>
  *
  * NOTE: This script requires about 3GB of RAM. nodejs limits you to 1.5GB by default.
  * Override it by running this script with "node --max_old_space_size=4096 drupal2hugo.js".
+ *
+ * NOTE: CSV dumps generated using:
+ *    sudo mkdir /tmp/mysql_dump_dir/
+ *    sudo chmod u=rwx,g=rwx,o=rwx /tmp/mysql_dump_dir/
+ *    sudo mysqldump --fields-enclosed-by='"' --fields-terminated-by=',' --tab /tmp/mysql_dump_dir/ website_livesite
  */
 
 var fs = require('fs');
@@ -70,11 +75,6 @@ function ParseCSV(csv) {
 	return rows;
 }
 
-/* CSV dumps generated using:
- *    sudo mkdir /tmp/mysql_dump_dir/
- *    sudo chmod u=rwx,g=rwx,o=rwx /tmp/mysql_dump_dir/
- *    sudo mysqldump --fields-enclosed-by='"' --fields-terminated-by=',' --tab /tmp/mysql_dump_dir/ website_livesite
- */
 var nodes = ParseCSV(fs.readFileSync('export/node.csv', {encoding: "UTF-8"})),
 	node_revisions = ParseCSV(fs.readFileSync('export/node_revisions.csv', {encoding: "UTF-8"})),
 	url_alias = ParseCSV(fs.readFileSync('export/url_alias.csv', {encoding: "UTF-8"}));
