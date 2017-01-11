@@ -14,6 +14,7 @@ wget https://github.com/haiku/haiku/archive/master.zip -O master.zip -nv
 unzip master.zip 'haiku-master/docs/userguide/**'
 rm master.zip
 
+rm -rf public/
 hugo
 mv haiku-master/docs public/
 rm -rf haiku-master/
