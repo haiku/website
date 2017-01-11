@@ -17,3 +17,9 @@ A classic alert or notification div with a title and a body
   * ``{{< alert-danger "Title" "Body text here">}}``
   * ``{{< alert-warning "Title" "Body text here">}}``
   * ``{{< alert-info "Title" "Body text here">}}``
+
+### Keyboard
+A small keyboard like span. Normally used to represent pressing
+a physical key on the keyboard.
+
+  * ``{{< keyboard ALT >}}``
