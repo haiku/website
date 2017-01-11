@@ -193,7 +193,7 @@ Unfortunately, the most common way to enter the kernel debugger is on a crash of
 You can also invoke the kernel debugger manually:
 
   * You can use the ``kernel_debugger`` command from Terminal.
-  * Or you can use the special shortcut ``ALT`` + ``SysRq`` + ``d``.
+  * Or you can use the special shortcut {{< keyboard ALT >}}+{{< keyboard SysRq >}}+{{< keyboard d >}}.
 
 The SysRq key is usually the same as "print screen", but may need to press an extra function key on some laptops.
 
@@ -258,7 +258,7 @@ Instructions for [building Haiku](/guides/building) from source are documented i
 
 ## Using
 ### Why doesn't the tilde key work properly?
-The tilde ``~`` key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice, or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
+The tilde {{< keyboard "~" >}} key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice, or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
 
 ### How do I change my keyboard layout?
 Use the Keymaps preferences. If your preferred layout is not available there yet, you can customize an existing one by drag'n'dropping the keys around.
