@@ -15,6 +15,8 @@ unzip master.zip 'haiku-master/docs/userguide/**'
 rm master.zip
 
 rm -rf public/
+
 hugo
+
 mv haiku-master/docs public/
 rm -rf haiku-master/
