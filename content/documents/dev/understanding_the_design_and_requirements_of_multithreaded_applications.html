@@ -1,0 +1,391 @@
++++
+type = "article"
+title = "Understanding the Requirements of Multithreaded Applications"
+date = "2007-09-05T08:18:38.000Z"
+tags = ["multithreading", "locking", "deadlock"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <p align="justify">
+Though I am programming on BeOS since 1999, only in recent years I have slowly become more comfortable with various multithreading related issues in my programs. So I thought I'd like to share some of my experiences here for beginning programmers or programmers skeptical about multithreading. I hope to be extending this as a series of articles to help learn the benefits and pitfalls of multithreading. All with an emphasis on programming for the Haiku API.
+</p>
+
+<!--break-->
+
+<h3>Multithreading in Applications</h3>
+
+<p align="justify">
+We are frequently confronted with situations, in which an application is forced to wait for some condition. A multimedia player has to wait for the drive to spin up, a network app is stalling for data to arrive - these are just few examples for when it would be nice to have more multithreading applied to all kinds of programs. It's not nice if you can't even move a window on screen because the interface is blocking on something. Multithreading is the way to go.
+</p>
+
+<p align="justify">
+Some modern compilers will allow you to mark sections of code and have them automatically executed on all cores of the system. This is nice and useful, but is not the kind of multithreading that I am interested in. Larger applications can benefit greatly from multithreading as a design concept throughout the whole program.
+</p>
+
+<p align="justify">
+Just to give you an example of the kind of multithreading which I am interested in: Imagine you are programming a graphics application. Depending on the complexity of the graphics, it might still take some time to render the document, even on modern CPUs. Yet you want your user to be able to manipulate objects in the document fluently, while the rendering happens at it's own pace. For example, the transformation box around an object will follow the mouse movements fluently, while the object that it transforms will update at a different refresh rate, according to how expensive it is to render this area of the document. Multithreading sounds like a good solution for this problem.
+</p>
+
+<p align="justify">
+You may be aware that I am the author of <a href="http://www.yellowbites.com/wonderbrush.html">WonderBrush</a>, and if you ever used it, you might have noticed that the program <b>doesn't</b> work like I am outlining above: The pace at which you can manipulate objects in WonderBrush is painfully locked to the rendering speed. It is something that has always bothered me about WonderBrush and recently I have come up with a new prototype in which all this is fixed. As always, Ingo Weinhold was a great help in achieving this. What I learned there is also what motivated me to start a series of articles about multithreading. But first things first, so let's start with the basics.
+</p>
+
+
+<h3>What Is "Locking" and Why Do You Need It?</h3>
+
+<p align="justify">
+Multithreading means that the code paths in your application are executed in parallel. You have to be aware, that the operating system will interrupt the flow of any one thread at any time, so that another thread will get CPU time. It doesn't matter if this is happening on a single or multi core CPU. What makes multithreaded programming difficult is that multiple threads in your application might have to run through the same sections of code, accessing the same data structures. This is pretty much unavoidable at a certain degree. I will try to illustrate this. The example might not be the best use of multithreading, but I want to explain a certain problem. Imagine you have a data object which is a list. Thread A in your application might add some items to the list, while Thread B in your application might iterate over the items to do something with them. For the purpose of this excercise, let's assume it may happen at the same time.
+</p>
+
+<pre>
+Thread A:
+
+void
+add_strings(BList* list, const char** strings, int32 stringCount)
+{
+	for (int i = 0; i &lt; stringCount; i++)
+		list-&gt;AddItem(new BString(strings[i]));
+}
+
+Thread B:
+
+void
+print_strings(const BList* list)
+{
+	int32 count = list-&gt;CountItems();
+	for (int i = 0; i &lt; count; i++)
+		printf("string %ld: %s\n", i, ((BString*)list-&gt;ItemAt(i))-&gt;String());
+}
+</pre>
+
+<p>
+One thinks of the code flow like this:
+</p>
+
+<pre>
+Thread A  |--loop-i=0----loop-i=1----loop-i=2----[...]---------|
+Thread B  |--init "count"----loop-i=0----loop-i=1----loop-i=2----[...]-------|
+</pre>
+
+<p>
+What really happens though is this:
+</p>
+
+<pre>
+Thread A                              |--loop-i=0----loop-i=1--|                 
+Thread B  |--init "count"----loop-i=0-|                        |---loop-i=1---
+
+Thread A                        |--loop-i=2----[...]---------|
+Thread B  --loop-i=2----[...]---|                            |----|
+</pre>
+
+
+<p align="justify">
+Both of these functions are executed <i>in parallel</i>, which means the thread scheduler of the operating system will give each thread some time to run the function. But each thread can be interrupted at any time and then the other thread continues. For example, Thread B could be interrupted by the OS in the middle of executing the loop, and new items might be added to the list in Thread A while Thread B is put on hold. The <span class="geshifilter"><code class="cpp geshifilter-cpp">count</code></span> variable in the function of Thread B will stay the same though, because when Thread B is allowed to continue, it will pick up the work exactly where it was interrupted - in the middle of executing the loop.
+</p>
+
+<p align="justify">
+If you can already see how bad the parallel access to the list really is, you can skip to the next paragraph. On the other hand, if you think that failing to print the additional strings is not such a big deal - read on. You might be aware that the BList implementation allocates blocks of memory, whenever it needs to grow in order to hold new items. This could mean that the previous memory is copied into a new block and then freed. There is a time when the private class member which points to the old array is reassigned to the new array. But in the middle of doing that in Thread A, the operating system could reschedule the threads, and then Thread B will access invalid memory. Worse yet, other class members of the BList object, like the size of the array, might already have been changed. At this point, I hope it is clear that the code, as is, is very broken.
+</p>
+
+<p align="justify">
+What's needed is <i>synchronization</i>. This is like installing access gates which protect the data and guarantee it stays valid for the time it is needed.
+</p>
+
+<p align="justify">
+To provide this feature, the operating system has <i>synchronization primitives</i>, for example <b>semaphores</b>. The Haiku API has an easy to use object for this, the <a href="http://factory.haiku-os.org/documentation/Haiku_Book_doxygen/html/classBLocker.html"><span class="geshifilter"><code class="cpp geshifilter-cpp">BLocker</code></span></a>, which wraps the efficient use of a semaphore. Like the name implies, it <i>locks</i> a section of code: While one thread <i>holds the lock</i>, another thread will be made to wait if it wants the lock as well. It is allowed to continue when the first thread <i>releases the lock</i>.
+</p>
+
+<p>
+Let's change the code accordingly:
+</p>
+
+<pre>
+Thread A:
+
+void
+add_strings(BLocker* lock, BList* list, const char** strings, int32 stringCount)
+{
+	if (!lock-&gt;Lock())
+		return;
+
+	for (int i = 0; i &lt; stringCount; i++)
+		list-&gt;AddItem(new BString(strings[i]));
+
+	lock-&gt;Unlock();
+}
+
+
+Thread B:
+
+void
+print_strings(BLocker* lock, const BList* list)
+{
+	if (!lock-&gt;Lock())
+		return;
+
+	int32 count = list-&gt;CountItems();
+	for (int i = 0; i &lt; count; i++)
+		printf("string %ld: %s\n", i, ((BString*)list-&gt;ItemAt())-&gt;String());
+
+	lock-&gt;Unlock();
+}
+</pre>
+
+<p align="justify">
+Now the list data is <i>protected</i> by the lock. (Of course, both functions need to be passed the same <span class="geshifilter"><code class="cpp geshifilter-cpp">BLocker</code></span> object.) The operating system will enforce, that these two threads are no longer executed in parallel while one of them holds the lock. At this point, you might think "Hey wait, but I thought multithreading was all <b>about</b> running in <b>parallel</b>". Yes of course, but only the code that <b>can</b> run in parallel. You will frequently be in situations, in which two threads need to access some data one after the other. The point is to keep these sections of code as small as possible. To completely avoid them might not be possible. Once you understand more of this, you will know how to design your applications in such a way, that the <i>critical sections</i>, the code sections that need to be protected by a lock, will be as small as possible in order to allow <b>most</b> of the code to really run in parallel.
+</p>
+
+
+<h3>A Frequent Locking Headache</h3>
+
+<p align="justify">
+One problem that one will surely run into are deadlocks. Deadlocks happen, when you have not only one lock, but multiple locks in your application, and when you do not (or <i>can</i> not) enforce a certain locking strategy.
+</p>
+
+<p align="justify">
+An Example. Let's construct a frequent application design: Assume you have a data model. The same data model is represented in multiple windows. Naturally, these windows will each run in their own thread on Haiku. There is no way around this. If you design your application properly, you have separated the data from the representation of that data. You might also be using a listener-&gt;observer interface. This means that each window will have registered itself as a <i>listener</i> on the data. Don't worry if you never heard of these concepts, it will be demonstrated in code a little further below. It means whenever the data changes, each registered listener (a window in our case) will be notified. This is how the windows update on screen when the data changes. On the other hand, you will want to change the data through the user interface of each window. If you want to invalidate (cause to redraw) an interface element in Haiku, you will have to lock the window to which this interface element belongs. And here, we are at a point where frequent mistakes happen. It all depends on how the notification mechanism is designed, and in which thread the notifications happen. Assume this setup:
+</p>
+
+<ul>
+<li>Data -&gt; protected by Lock A</li>
+<li>Window 1 -&gt; protected by Lock B</li>
+<li>Window 2 -&gt; protected by Lock C</li>
+</ul>
+
+<p align="justify">
+Lock B and C are system provided, there is no way around having these. The data is really independent though, and it should have it's own lock, Lock A.
+</p>
+
+<p align="justify">
+Whenever the windows want to access the Data, be it because they want to read it for drawing the on screen representation of the data, or because they want to manipulate the data, they <b>need</b> to lock it via Lock A. Noteworthy is that whenever a window would manipulate data, it would probably do so in it's own thread. (It is ok to do so as long as you know manipulating the data is fast, and that nowhere in your application the data lock is held for a long time.) So assume the user clicked and dragged something in Window 1, Lock B will already be locked by the system, because it is processing some message from the Window 1 event queue, and then your application code will lock Lock A because it wants to manipulate the Data.
+</p>
+
+<p align="justify">
+Because we designed our application accordingly, the manipulation of the Data will <i>trigger a notification</i> so that Window 2 will update. And here it is important to understand, that the notification has to happen in a certain way, which is it needs to be <b>asynchronous</b>. Why does it need to be asynchronous and how is this achieved? To answer this question, let's look at how a <b>synchronous</b> notification could be implemented and why that will prove to cause a deadlock in certain situations.
+</p>
+
+<pre>
+class Data {
+public:
+
+	class Listener {
+		virtual void DataChanged() = 0;
+	};
+
+	...
+
+	bool Lock()
+	{
+		return fLock.Lock();
+	}
+	void Unlock()
+	{
+		fLock.Unlock();
+	}
+
+	void ManipulateData()
+	{
+		...
+		_NotifyListeners();
+	}
+
+	void AddListener(Listener* listener)
+	{
+		fListeners.AddItem(listener);
+	}
+	void RemoveListener(Listener* listener)
+	{
+		fListeners.RemoveItem(listener);
+	}
+
+private:
+	void _NotifyListeners()
+	{
+		int32 count = fListeners.CountItems();
+
+		for (int32 i = 0; i &lt; count; i++) {
+			Listener* listener = (Listener*)fListeners.ItemAt(i);
+			listener-&gt;DataChanged();
+		}
+	}
+
+	BList	fListeners;
+	BLocker	fLock;
+};
+</pre>
+
+
+<p align="justify">
+This is our <span class="geshifilter"><code class="cpp geshifilter-cpp">Data</code></span> class with a way to manipulate the data and trigger notifications when the data changes via the embedded <span class="geshifilter"><code class="cpp geshifilter-cpp">Listener</code></span> class. Just derive a class from <span class="geshifilter"><code class="cpp geshifilter-cpp">Data<span style="color: #008080;">::</span><span style="color: #007788;">Listener</span></code></span>, attach it to the Data via <span class="geshifilter"><code class="cpp geshifilter-cpp">AddListener<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> and you are ready to receive notifications. This works because the Data implementation will call the hook function <span class="geshifilter"><code class="cpp geshifilter-cpp">DataChanged<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> which you can implement to react in which ever way you see fit. Our windows will contain views to display the data. The classes could be declared like this:
+</p>
+
+
+<pre>
+class DataView : public BView, public Data::Listener {
+public:
+	DataView(Data* data)
+		: BView(...),
+		  fData(data)
+	{
+		// data is assumed to be locked
+		fData-&gt;AddListener(this);
+	}
+
+	~DataView()
+	{
+		// data is assumed to be locked
+		fData-&gt;RemoveListener(this);
+	}
+
+	...
+
+	virtual void DataChanged()
+	{
+		if (!LockLooper())
+			return;
+
+		Invalidate();
+
+		UnlockLooper();
+	}
+
+	virtual void Draw(BRect updateRect)
+	{
+		if (!fData-&gt;Lock())
+			return;
+
+		// ... render the data
+
+		fData-&gt;Unlock();
+	}
+
+	virtual void MouseMoved(...)
+	{
+		if (!fData-&gt;Lock())
+			return;
+
+		fData-&gt;ManipulateData();
+
+		fData-&gt;Unlock();
+	}
+
+private:
+	Data* fData;
+};
+</pre>
+
+
+<p align="justify">
+Notice how the <b>looper</b> (the window which contains the view) has to be locked in <span class="geshifilter"><code class="cpp geshifilter-cpp">DataChanged<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>. This is because the manipulation of the data could be happening in any thread, but the thread of the view's window needs to be locked before we can use the <span class="geshifilter"><code class="cpp geshifilter-cpp">Invalidate<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> <span class="geshifilter"><code class="cpp geshifilter-cpp">BView</code></span> method.
+</p>
+
+<p align="justify">
+And here we have produced a nice setup for a typical deadlock! Just assume that the user is manipulating the data in Window 1, but that Window 2 - for some reason - needs to render the data already, and blocks on the data lock (happens in <span class="geshifilter"><code class="cpp geshifilter-cpp">DataView<span style="color: #008080;">::</span><span style="color: #007788;">Draw</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>). The window thread is already locked (Lock C), since it reacts to an event which leads to <span class="geshifilter"><code class="cpp geshifilter-cpp">DataView<span style="color: #008080;">::</span><span style="color: #007788;">Draw</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> being called. So again, the window thread of Window 2 is locked (Lock C), and now it is trying to get the data lock (Lock A) in the <span class="geshifilter"><code class="cpp geshifilter-cpp">Draw<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> function. But Window 1 on the other hand already <b>has</b> the data lock (it was going to manipulate the data), so Window 2 is <b>blocked</b> at this point. Manipulating the data in Window thread 1 will trigger a notification, which in turn arrives in <span class="geshifilter"><code class="cpp geshifilter-cpp">DataView <span style="color: #0000dd;">2</span></code></span> in Window 2, and wants to lock Window 2 from a different thread (Window thread 1). So Window 1 blocks on the Window 2 lock (Lock C) while holding the Data lock, but Window 2 is itself already locked and blocking on the Data lock! Each thread is blocking in this situation <i>waiting for each other to release another lock</i>, no thread can continue to run and no lock is ever released. The application will freeze.
+</p>
+
+
+<p align="justify">
+There is simply no way to avoid this problem with synchronous notifications. If synchronous notifications have to be implemented in a way that eventually requires to obtain other locks which other threads are already holding, which in turn are blocking on a lock that the notifying thread already holds, then there will always eventually be a deadlock situation.
+</p>
+
+<p align="justify">
+The way out are asynchronous notifications. These are easily implemented in Haiku via messaging. Here is how the code could be extended to implement asynchronous notifications:
+</p>
+
+
+<pre>
+class DataView : public BView, public Data::Listener {
+public:
+	DataView(Data* data)
+		: BView(...),
+		  fData(data)
+	{
+		// data is assumed to be locked
+		fData-&gt;AddListener(this);
+	}
+
+	~DataView()
+	{
+		// data is assumed to be locked
+		fData-&gt;RemoveListener(this);
+	}
+
+	...
+
+	virtual void DataChanged()
+	{
+		Looper()-&gt;PostMessage(MSG_DATA_CHANGED, this);
+	}
+
+private:
+	void _DataChanged()
+	{
+		Invalidate();
+	}
+
+public:
+	virtual void MessageReceived(BMessage* message)
+	{
+		switch (message-&gt;what) {
+			case MSG_DATA_CHANGED:
+				_DataChanged();
+				break;
+
+			...
+
+			default:
+				BView::MessageReceived(message);
+				break;
+		}
+	}
+
+
+	virtual void Draw(BRect updateRect)
+	{
+		if (!fData-&gt;Lock())
+			return;
+
+		// ... render the data
+
+		fData-&gt;Unlock();
+	}
+
+	virtual void MouseMoved(...)
+	{
+		if (!fData-&gt;Lock())
+			return;
+
+		fData-&gt;ManipulateData();
+
+		fData-&gt;Unlock();
+	}
+
+private:
+	Data* fData;
+};
+</pre>
+
+
+<p align="justify">
+Notice how the DataChanged() hook function does nothing but send a message. Message sending does not require to lock the looper (the window thread) - which is the whole point. Then later (asynchronously) the window processes the message in it's own thread. If the window was already blocking at the time the notification was generated in another thread, then that's no problem, the code path for the notification will run unaffected.
+</p>
+
+<p align="justify">
+By the way, a nice method to analyze deadlocks is by using BDB, which comes with the BeOS developer tools. At anytime, if you run an application and it freezes and you think it might be a deadlock, you can simply launch BDB. In the running teams list, double click the application to have a look at the stack crawl of each thread. You can see which locks each thread is trying to grab and which ones it already holds.
+</p>
+
+
+<h3>The Next Steps</h3>
+
+<p align="justify">
+The application design I have just outlined has one problem. It only works well when the data lock is only held for short periods of time. It is no suitable solution for when some threads of the application need to make expensive computations with the data and would need to hold the data lock for the whole time. My next article on multithreading will therefor focus on the concept of making cheap snapshots of data in order to keep the times short for which the lock needs to be held. This is the concept I used to implement my new prototype of the asynchronous rendering in the eventual next WonderBrush version.
+</p>
+
+<p>Next in series: <a href="http://www.haiku-os.org/documents/dev/using_snapshots_for_short_locking_times">Using Snapshots For Short Locking Times</a></p>        </div>
+        </div>
+</div>
+  

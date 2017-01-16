@@ -1,0 +1,98 @@
++++
+type = "article"
+title = "Running UserlandFS"
+date = "2007-11-06T16:26:56.000Z"
+tags = ["Userlandfs", "filesystem", "netfs", "reiserfs"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <p>The UserlandFS is a file system wrapper for the kernel (similar to FUSE on Linux) which loads file system add-ons in userspace. In this way, it is a great tool for developing file system add-ons without unwanted trips to the Kernel Debugging Land. On top of that, several interesting test add-ons already exist for it in the Haiku source tree, including a network file system with full support for extended file attributes (meta data). The API which a file system add-on for UserlandFS has to implement is almost identical to the "real" kernel file system API, so that it is easy to migrate the add-on to the kernel once it is ready.</p>
+
+<!--break-->
+
+<h3>Building UserlandFS and it's "test" file system add-ons</h3>
+
+<p align=justify>
+The easiest way is to ask the Haiku build system to collect all the components for you. Adding the following section to your build/jam/UserBuildConfig will do that:
+</p>
+
+<pre>
+# UserlandFS installation
+local userlandFSDir = [ FDirName $(HAIKU_OUTPUT_DIR) userlandfs ] ;
+ 
+HaikuInstall install-userlandfs : $(userlandFSDir)
+	: # userlandfs
+	  &lt;test&gt;userlandfs
+	  &lt;test&gt;UserlandFSServer
+	  &lt;test&gt;ufs_mount
+ 
+	  # netfs
+	  &lt;test&gt;AuthenticationServer
+	  &lt;test&gt;netfs
+	  &lt;test&gt;netfs_config
+	  &lt;test&gt;NetFSServerPrefs
+	  &lt;test&gt;NetFSServer
+ 
+	  # ramfs
+	  &lt;test&gt;ramfs
+ 
+	  # reiserfs
+	  &lt;test&gt;reiserfs
+ 
+	: installed!userlandfs!tests
+;
+</pre>
+
+<p align=justify>
+Then you can build with...
+</p>
+
+<pre>
+TARGET_PLATFORM=r5 jam -q install-userlandfs
+</pre> 
+
+<p align=justify>
+...and everything (the userland FS itself and the netfs, ramfs, and reiserfs components) ends up in "generated/userlandfs/".
+</p>
+
+<h3>Installing the UserlandFS components</h3>
+
+<p align=justify>
+Some of the files are expected to live in special directories. You can simply symlink them there, but copying/moving works just the same. Here is a list of what goes where:
+</p>
+
+<pre> 
+userlandfs -&gt; ~/config/add-ons/kernel/file_systems/
+netfs, ramfs, reiserfs -&gt; ~/config/add-ons/userlandfs/
+</pre>
+
+
+<p align=justify>
+The other files are executables that don't care where they are located.
+</p>
+
+<p align=justify>
+Some file systems' tools require special ioctls to be passed to the file system, which the userland FS add-on cannot know without explicitely being told. This is done via the settings file 
+~/config/settings/kernel/drivers/userlandfs. There's a sample in the repository with entries for (Haiku's) BFS and netfs src/tests/add-ons/kernel/file_systems/userlandfs/r5/userlandfs.sample.
+</p>
+
+<h3>Running UserlandFSServer</h3>
+
+<p align=justify>
+userlandfs_server does not need to be run by the user anymore, the kernel will run it automatically when mounting UserlandFS file systems. To mount, one uses the regular mount command like this:
+</p>
+
+<pre>
+mount -t userlandfs -p "&lt;client FS&gt; &lt;client FS params&gt;" &lt;device&gt; &lt;mount point&gt;
+</pre>
+
+<p align=justify>
+where &lt;client FS&gt; is the add-on name of the file system (e.g. "reiserfs" or "netfs"), &lt;device&gt; the path of the device/image file to be mounted (usually some "/dev/disk/...", or "" if no device is needed (ramfs, netfs)), &lt;mount point&gt; the directory where to mount the file system, and &lt;client FS params&gt; is a file system specific parameter string, usually omitted.
+</p>
+        </div>
+        </div>
+</div>
+  

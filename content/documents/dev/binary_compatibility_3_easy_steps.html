@@ -1,0 +1,66 @@
++++
+type = "article"
+title = "Binary Compatibility in 3 Easy Steps!"
+date = "2002-02-09T11:00:00.000Z"
+tags = ["binary compatibility"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <p>In the early days of the Haiku project, a debate raged concerning one of the projects primary goals: maintaining binary compatibility with BeOS R5.  The idea was that the only way an effort to rewrite BeOS would be successful was if folks could continue running the apps they already had.</p>
+
+<p>Certainly, a lot of software available for BeOS is open source or actively maintained -- these apps could just be recompiled if necessary. Others -- PostMaster, Gobe&#39;s Productive suite and a few other crucial apps -- weren&#39;t likely to get rebuilt, either because the original author had stopped maintenance without being kind enough to release the source, or because it just wouldn&#39;t be commercially feasible.</p>
+
+<!--break-->
+
+<p>Some said that we were crazy; that it couldn&#39;t be done. Thankfully, cooler heads prevailed and we&#39;re well on our way to a binary compatible clone of R5.</p>
+
+
+<p>&quot;But wait!&quot; you cry. &quot;How did the cooler heads which prevailed know that the holy grail of binary compatibility was achievable?&quot;  I&#39;m so glad you asked!  Keeping reading and be enlightened, Grasshopper.</p>
+
+<p>There are three basic issues that have to be addressed to ensure binary compatibility:</p>
+
+<ul>
+<li><strong>Names must be identical</strong><br />
+This includes class and structure names as well as public, protected and global function and variable names.</li>
+<li><strong>Object sizes must be identical</strong><br />
+Classes must contain the same number of bytes of data; global variables must be the same size. Maybe BGlobalVar should&#39;ve been an int32 		instead of an int16, but we&#39;re stuck with it now.</li>
+<li><strong>Virtual function table layout must be identical</strong><br />
+The most cryptic and confusing aspect of maintaining binary compatibility. The issue essentially boils down to this: for any given class, there must be the same number of virtual functions, declared in the same order as the original.</li>
+</ul>
+
+<h3>The Nitty Gritty</h3>
+
+<p>&quot;Good grief!&quot; you say. &quot;How on earth do I keep all this stuff straight?&quot; Ah, Grasshopper, it is easier that you might imagine.  Just follow these steps, and you should be binary compatible in no time!</p>
+
+<ol>
+<li><strong>Make a copy of the appropriate Be header file</strong><br />
+This is now your header file. You may need to change a thing or two, but what you can (or will need to) change is quite limited, and discussed below.</li>
+<li><strong>Implement public, protected and virtual functions</strong><br />
+In the course of doing this, you may discover that there are some private non-virtual function declarations that you just don&#39;t use. Feel free to axe them! Since they&#39;re private, nobody using the class will miss them, and because they&#39;re not virtual, they don&#39;t effect the vtable layout.  Conversely, if you find a need to add some private, non-virtual functions, go right ahead (for the very same reasons).</li>
+<li><strong>Make sure you don&#39;t change the number of bytes used for data</strong><br />
+There are two situations that can make this seem difficult. First, there may be data members that you don&#39;t use in your reimplementation. You can just leave them (safe, but a little messy) or you can add the extra members&#39; bytes to the class&#39;s &quot;unused&quot; data array. An example will make this clear.<br />
+
+Let's say we have a class BFoo:<br />
+<pre>    class BFoo {<br />        public:<br />            BFoo();<br />            void SomeFunc();<br />        private:<br />            int32 fBar;<br />            int32 fQux;<br />            char  fZig;<br />            int32 fUnused[2];<br />    };<br />        </pre>
+The Be engineers that originally wrote this BFoo purposely added some data padding in the form of an array of 2 int32s (they did this with most classes in the API). Now let&#39;s suppose in your implementation, you really didn&#39;t need fQux. You can add fQux&#39;s bytes into fUnused:<br />
+<pre>    class BFoo<br />    {<br />        ...<br />        private:<br />            int32 fBar;<br />            char  fZig;<br />            int32 fUnused[3];<br />    };<br />        </pre>
+
+<p>Nothing could be easier!</p>
+
+<p>&quot;But what if I don&#39;t need fZig, either?&quot; you wonder. &quot;It&#39;s only one byte, not four like an int32!&quot; Have no fear!  Just rename it &quot;fUnusedChar&quot; and be done with it.</p>
+
+<p>The second situation that can make preserving object size tricky is if there aren&#39;t <em>enough</em> bytes of data available. Building on our cheesy BFoo example, let&#39;s suppose that rather than getting rid of fQux and fZig, you actually needed to <em>add</em> another 4 int32s worth of data: fNewData1 through fNewData4. The original implementation of BFoo has two extra int32s which we can use, but that leaves us two int32s short. What to do? The easiest thing to do is create a data structure to hold your new data and convert one of the fUnused items into a pointer to that structure:</p>
+
+
+<pre>    // Foo.h<br />    struct _BFooData_;<br />    class BFoo<br />    {<br />        public:<br />            BFoo();<br />            ~BFoo();<br />            void SomeFunc();<br />        private:<br />           int32 fBar;<br />           char  fZig;<br />           _BFooData_* fNewData;<br />           int32 fUnused[1];<br />    };<br />    // Foo.cpp<br />    struct _BFooData_<br />    {<br />        int32 fNewData1;<br />        int32 fNewData2;<br />        int32 fNewData3;<br />        int32 fNewData4;<br />    };<br />    BFoo::BFoo()<br />    {<br />        fNewData = new _BFooData_;<br />    }<br />    BFoo::~BFoo()<br />    {<br />        delete fNewData;<br />    }<br />        </pre>
+
+<p>Voila! More data without making the class bigger. Notice the added destructor; make sure you're cleaning up your new (dynamically allocated) data.</li>
+</ol>
+
+<p>And there you have it: Binary Compatibility in 3 Easy Steps! Questions, comments, or corrections? Please let me know! (erik:at:cgsoftware.com)</p>        </div>
+        </div>
+</div>
+  

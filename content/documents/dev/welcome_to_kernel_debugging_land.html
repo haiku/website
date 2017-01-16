@@ -1,0 +1,1004 @@
++++
+type = "article"
+title = "Welcome to Kernel Debugging Land..."
+date = "2008-02-04T22:01:09.000Z"
+tags = ["kernel debugger"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <p>One of the most important tools of a Haiku kernel developer is the built-in
+kernel debugger. Nevertheless also developers more comfortable with userland
+hacking should not be shy to use it, as it can greatly help with various kinds
+of bugs and problems. This document sheds some light on its basic and advanced
+features.</p>
+
+<!--break-->
+
+<h3>In and Out</h3>
+
+<p>Unless the system entered KDL by itself, you can normally do that by 
+invoking the keyboard shortcut Alt-SysReq-D. Note that in KDL your 
+keyboard may not work. PS/2 keyboards always do, USB keyboards connected
+via UHCI controllers do only, if one has entered KDL via the keyboard
+shortcut at least once. USB OHCI is not supported at the moment.
+</p>
+
+<p>Once the kernel debugger is running, the normal activities of the system are
+completely halted. Until it is exited, no thread will make any progress on any
+CPU, and hardware interrupts are disabled. So while in KDL (Kernel Debugging
+Land) one can leisurely examine an unmoving snapshot of the whole system.
+After using one of the commands to leave the kernel debugger
+(<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000ff;">continue</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">exit</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp">es</code></span>), the system
+continues its normal operation. If it had encountered
+a serious problem before (like a page fault in the kernel), the odds are that
+it will immediately drop back into KDL, though. In this case the commands
+<span class="geshifilter"><code class="cpp geshifilter-cpp">reboot</code></span> or <span class="geshifilter"><code class="cpp geshifilter-cpp">shutdown</code></span> are the only way out. They
+cannot shutdown the system orderly though, meaning that data not written back
+to disk yet will be lost.</p>
+
+<h3>The Basic Infrastructure</h3>
+
+<h4>Command Line Editing and Output</h4>
+
+<p>The kernel debugger has a simple command line interface. One can enter a
+command, and, after it has been executed, one is prompted for the next input.
+Basic command line editing is supported, that is HOME, END, the Cursor
+Left/Right keys, as well as DELETE and BACKSPACE work as expected. Ctrl-K clears
+the line beginning at the cursor position.
+Even a short command history is available. Cursor Up/Down navigate through
+the previously entered commands. Page Up/Down move to the previous/next line
+in the history that starts with the characters before the cursor.</p>
+
+<p>Pressing TAB after typing a part of a command name will try to complete the
+name of the command, if possible. Ambiguities will be pointed out. Pressing TAB
+when the cursor is positioned after the command name and the space following it
+will invoke the command with the argument <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">--</span>help</code></span>, which will, in
+most cases, print usage information for the command. Editing of the command
+line can then be continued.</p>
+
+<p>The way the text that has been printed "scrolls", when the bottom of the
+screen is reached, needs some getting used to, since it doesn't scroll at all,
+but the cursor simply wraps around to the top of the screen, overwriting the
+oldest output. By default the output of a debugger command stops just before
+it overwrites what it has printed before, waiting for a key to be pressed
+before continuing. Pressing Q will cause the remaining output of that command
+to be discarded silently. The <span class="geshifilter"><code class="cpp geshifilter-cpp">paging</code></span> command toggles whether the
+output stops in such cases or continues without asking the user.</p>
+
+<h4>Help</h4>
+
+<p>When looking for a command with a certain functionality without knowing its
+name, the <span class="geshifilter"><code class="cpp geshifilter-cpp">help</code></span> command can actually help. It lists all available
+commands, each with a short description. Giving <span class="geshifilter"><code class="cpp geshifilter-cpp">help</code></span> the first
+characters of a command name, the list will be restricted to the matching
+commands (e.g. "<span class="geshifilter"><code class="cpp geshifilter-cpp">help a</code></span>" lists all commands starting with "a").</p>
+
+<p>A growing number of commands support being invoked with the argument
+<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">--</span>help</code></span>. Those that do print a more detailed description how
+they can be used. As mentioned before, pressing TAB while editing the command
+line for such a command will print that info, too.</p>
+
+<h4>A Simple Calculator</h4>
+
+<p>Since kernel debugger sessions often involve lots of numbers flying around,
+basic arithmetic expressions are supported. The <span class="geshifilter"><code class="cpp geshifilter-cpp">expr</code></span> command
+will evaluate them for you and print the result.</p>
+
+<pre>
+kdebug> expr (0x898afe36 + 17 * 4 - 0x8014d184) / 32
+4960615 (0x4bb167)
+</pre>
+
+<p>Internally the numbers are represented as unsigned 64 bit integer values (and
+<span class="geshifilter"><code class="cpp geshifilter-cpp">expr</code></span> prints them that way), which means that negative numbers
+are shown as huge positive numbers. Most operations involving negatives work
+fine nonetheless, exceptions are division (<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">/</span></code></span>) and modulo
+(<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">%</span></code></span>).</p>
+
+<pre>
+kdebug> expr 7 + 3 * -4
+18446744073709551611 (0xfffffffffffffffb)
+kdebug> expr -(7 + 3 * -4)
+5 (0x5)
+kdebug> expr -6 / -3
+0 (0x0)
+</pre>
+
+<p>People familiar with the C language will know the unary <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">*</span></code></span> operator.
+It dereferences a given address pointer, i.e. looks up the value that is stored
+at that address. The kernel debugger supports that operator, too. By default
+it reads four bytes at the given address and interprets them as a number, but
+the number of bytes to be read (1, 2, 4, or 8) can be specified explicitely
+in curly braces. An error message will be printed, when trying to dereference
+an address that does not exist.</p>
+
+<pre>
+kdebug> expr *0x80000000
+1179403647 (0x464c457f)
+kdebug> expr *{2}0x80000000
+17791 (0x457f)
+kdebug> expr *0x17
+failed to dereference address 0x00000017, at position: 0, in expression: *0x17
+</pre>
+
+
+<p>While it is nice to be able to print the value of an arithmetic expression,
+it is often not necessary to do that, since one usually just wants to pass
+the value to a command, and the value of an expression can be provided
+as an argument to a command by simply putting that expression in parentheses.
+For example the <span class="geshifilter"><code class="cpp geshifilter-cpp">db</code></span> command, which takes an address and a number
+of bytes and prints that many bytes read from the memory starting at the given
+address, can be invoked like this:</p>
+
+<pre>
+kdebug> db (0x80000000 + 100) (6 * 4)
+[0x80000064]  ................   09 00 00 00 09 00 00 00 04 00 00 00 01 00 00 00
+[0x80000074]  ........           01 00 00 00 00 00 00 00
+</pre>
+
+<h4>Variables</h4>
+
+<p>Since it's not possible to scroll the output on the screen, values that
+might be of interest later will probably already be overwritten when they are
+needed. Fortunately variables can be defined to hold values for later use.
+They can be set by the assignment operator (<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000080;">=</span></code></span>), modified by the
+operators <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">+</span><span style="color: #000080;">=</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">-</span><span style="color: #000080;">=</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">*</span><span style="color: #000080;">=</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">/</span><span style="color: #000080;">=</span></code></span>,
+<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">%</span><span style="color: #000080;">=</span></code></span>, and unset via <span class="geshifilter"><code class="cpp geshifilter-cpp">unset</code></span>. The <span class="geshifilter"><code class="cpp geshifilter-cpp">vars</code></span>
+command prints all variables that are defined.</p>
+
+<pre>
+kdebug> a = 7
+kdebug> b = 3 + a
+kdebug> a -= 2
+kdebug> expr c = b - a
+5 (0x5)
+kdebug> unset a
+kdebug> vars
+               b: 10 (0xa)
+               c: 5 (0x5)
+         _thread: 2148328320 (0x800ce380)
+       _threadID: 1 (0x1)
+           _team: 2424574464 (0x90841200)
+         _teamID: 1 (0x1)
+            _cpu: 0 (0x0)
+               _: 5 (0x5)
+</pre>
+
+<p>In the example several additional variables with a name starting with an
+underscore are listed. Those are called temporary variables and in this case
+(except <span class="geshifilter"><code class="cpp geshifilter-cpp">_</code></span>) they have been set automatically when the kernel debugger
+was entered. <span class="geshifilter"><code class="cpp geshifilter-cpp">_thread</code></span> is the pointer to the current thread's
+kernel internal management structure, <span class="geshifilter"><code class="cpp geshifilter-cpp">_threadID</code></span> its ID,
+<span class="geshifilter"><code class="cpp geshifilter-cpp">_team</code></span> the current team's kernel structure, <span class="geshifilter"><code class="cpp geshifilter-cpp">_teamID</code></span>
+its ID, and <span class="geshifilter"><code class="cpp geshifilter-cpp">_cpu</code></span> the index of the CPU the kernel debugger is
+running on.</p>
+
+<p>Several commands also set temporary variables as a side effect, e.g.
+<span class="geshifilter"><code class="cpp geshifilter-cpp">sem</code></span>, which prints information about a semaphore, also sets
+the variable <span class="geshifilter"><code class="cpp geshifilter-cpp">_owner</code></span> (the ID of the team owning the semaphore)
+and others. The temporary variable <span class="geshifilter"><code class="cpp geshifilter-cpp">_</code></span> is by convention used as
+the return value of a command (if it has one). In the example above
+<span class="geshifilter"><code class="cpp geshifilter-cpp">expr</code></span> set it to 5, which was the value of the expression it
+evaluated.</p>
+
+<p>The number of temporary variables is limited. When the limit has been
+reached and another variable is defined, the least recently used variable
+is evicted automatically. This holds only for temporary variables, though;
+non temporary variables have a limit too, but they are fully controlled by the
+user. When that limit is hit, no new variable can be defined until another one
+has been <span class="geshifilter"><code class="cpp geshifilter-cpp">unset</code></span> explicitly.</p>
+
+
+<h3>The Most Popular Commmands</h3>
+
+<h4><span class="geshifilter"><code class="cpp geshifilter-cpp">sc</code></span></h4>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">sc</code></span> ("stack crawl"), alias <span class="geshifilter"><code class="cpp geshifilter-cpp">bt</code></span> ("back trace"), alias
+<span class="geshifilter"><code class="cpp geshifilter-cpp">where</code></span>, prints a stack trace of the thread with the given ID or the
+address of the thread's kernel structure. With no argument given, the current
+thread on the current CPU is selected.</p>
+
+<pre>
+kdebug> sc
+stack trace for thread 0x53 "event loop"
+    kernel stack: 0x90746000 to 0x9074a000
+      user stack: 0x70145000 to 0x70185000
+frame            caller     &lt;image>:function + offset
+90749c54 (+  52) 8008187f   &lt;kernel>:invoke_debugger_command + 0x00cf
+90749c88 (+  64) 80082620   &lt;kernel>:_ParseCommand__16ExpressionParserRi + 0x01f8
+90749cc8 (+  48) 80082012   &lt;kernel>:EvaluateCommand__16ExpressionParserPCcRi + 0x01de
+90749cf8 (+ 228) 80083734   &lt;kernel>:evaluate_debug_command + 0x0088
+90749ddc (+  64) 80080680   &lt;kernel>:kernel_debugger_loop__Fv + 0x0184
+90749e1c (+  32) 800811b5   &lt;kernel>:kernel_debugger + 0x00c9
+90749e3c (+ 192) 800810e1   &lt;kernel>:panic + 0x0029
+90749efc (+  48) 90771e19   &lt;/boot/beos/system/add-ons/kernel/bus_managers/ps2>:ps2_interrupt + 0x00cd
+90749f2c (+  64) 80027798   &lt;kernel>:int_io_interrupt_handler + 0x00ac
+90749f6c (+  48) 8008f75a   &lt;kernel>:hardware_interrupt + 0x007a
+90749f9c (+  12) 800928a6   &lt;kernel>:int_bottom_user + 0x005a (nearest)
+iframe at 0x90749fa8 (end = 0x9074a000)
+ eax 0x13           ebx 0x2cdc78        ecx 0x180f7300   edx 0x29cd3
+ esi 0x6a           edi 0x92e3f054      ebp 0x70184acc   esp 0x90749fdc
+ eip 0x2900f5    eflags 0x202
+ vector: 0x21, error code: 0x0
+90749fa8 (+   0) 002900f5   &lt;_APP_>:_CopyToFront__C11HWInterfacePUcUlllll + 0x0279
+70184acc (+ 176) 0028f653   &lt;_APP_>:CopyBackToFront__11HWInterfaceRC5BRect + 0x028b
+70184b7c (+  48) 0028f3bd   &lt;_APP_>:Invalidate__11HWInterfaceRC5BRect + 0x0049
+70184bac (+ 416) 00288c66   &lt;_APP_>:CopyRegion__13DrawingEngineP7BRegionll + 0x0686
+70184d4c (+ 208) 00247839   &lt;_APP_>:MoveWindowBy__7DesktopP11WindowLayerffl + 0x02e5
+70184e1c (+ 112) 002808ac   &lt;_APP_>:MouseMoved__11WindowLayerP8BMessageG6BPointPlb + 0x0244
+70184e8c (+  96) 002434ea   &lt;_APP_>:Filter__11MouseFilterP8BMessagePP11EventTargetPlT1 + 0x016a
+70184eec (+ 144) 0024ef46   &lt;_APP_>:_EventLoop__15EventDispatcher + 0x02ae
+70184f7c (+  48) 0024f657   &lt;_APP_>:_event_looper__15EventDispatcherPv + 0x001f
+70184fac (+  48) 00783264   &lt;libroot.so>:_get_next_team_info + 0x005c (nearest)
+70184fdc (+   0) 70184fec   762:event loop_53_stack@0x70145000 + 0x3ffec
+</pre>
+
+<p>The stack trace is so interesting, because it shows exactly in which function
+the thread is currently, from what function that function has been called, and
+so on. Also shown are the addresses of the so called stack frames, which are
+the base addresses of the respective functions' parameters and local
+variables.</p>
+
+<p>Roughly in the middle the example stack trace above is interrupted by an
+iframe (interrupt frame). An iframe ends up on the stack when a userland
+thread performs a syscall (system call), or an exception (page fault,
+division by zero) or a hardware interrupt occurs. The bottommost iframe shown
+for a userland thread is always the one for the transition to the kernel.
+In the example we can see that it happened due to a hardware interrupt, which
+is unsurprising as it was caused by pressing the Alt-SysReq-D combo. An iframe captures
+the processor registers at the time, so together with a disassembly of the
+respective function it is possible to reconstruct, what exactly is happening
+there.</p>
+
+<h4><span class="geshifilter"><code class="cpp geshifilter-cpp">teams</code></span></h4>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">teams</code></span> lists all existing teams, with their name, ID, and parent
+team.</p>
+
+<pre>
+kdebug> teams
+team           id  parent      name
+0x90841200      1  0x00000000  kernel_team
+0x90b0c200    128  0x909df600  sh
+0x909c0200     68  0x90906800  input_server
+0x908f4e00     41  0x90841200  registrar
+0x909c0e00     78  0x90841200  Tracker
+0x908f9600     47  0x90841200  debug_server
+0x909d3600     79  0x90841200  Deskbar
+0x90906200     48  0x90841200  net_server
+0x90906800     49  0x90841200  app_server
+0x909df600     81  0x90841200  Terminal
+0x909e4000     82  0x90841200  media_server
+0x90aaf200    114  0x909e4000  media_addon_server
+0x909e4a00     84  0x90841200  midi_server
+0x909f0200     85  0x90841200  print_server
+0x90906e00     61  0x90841200  syslog_daemon
+</pre>
+
+<p>Usually this is the first command used, when looking for a problem in a
+certain program, since the listing yields its team ID.</p>
+
+<h4><span class="geshifilter"><code class="cpp geshifilter-cpp">threads</code></span></h4>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">threads</code></span> lists all threads of a specified team, or all existing
+threads, if no argument is given.</p>
+
+<pre>
+kdebug> threads 78
+thread         id  state        sem/cv cpu pri  stack      team  name
+0x90b2d000    138  waiting        3921   -   5  0x99be1000   78  TrashWatcher
+0x90b14000    139  waiting        3950   -   5  0x99be5000   78  ClipboardRefsWatcher
+0x90b28000    140  waiting        3961   -   5  0x99bd9000   78  AutoMounter
+0x90915000     78  waiting        2768   -  10  0x906d1000   78  Tracker
+0x90b1e000    144  waiting        3995   -  15  0x99bf5000   78  w>Desktop
+0x90abc000    115  waiting        3220   -  15  0x99b26000   78  w>Tracker Status
+0x90b43000    147  zzz             120   -   5  0x99d00000   78  TrackerTaskLoop
+</pre>
+
+<p>For each thread a compact one line info is printed. It consists of the
+thread's kernel structure pointer, its ID, current state (running, waiting,
+etc.), the ID of the semaphore or condition variable it is currently waiting
+on (if any), and other info.</p>
+
+<h4><span class="geshifilter"><code class="cpp geshifilter-cpp">sem</code></span></h4>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">sem</code></span> prints information about a semaphore, which can be specified
+by ID, address of its kernel structure, or by name (though semaphore names need
+not be unique).
+</p>
+
+<pre>
+debug> sem 2768
+SEM: 0x9930e700
+id:      2768 (0xad0)
+name:    'AppLooperPort'
+owner:   -1
+count:   -1
+queue:   78
+last acquired by: 78, count: 1
+last released by: 78, count: 1
+</pre>
+
+<p>Of special interest, particularly when analyzing deadlock situations, are
+the "last acquired" and "last released" rows. "last acquired" shows the ID of
+the thread that last acquired the semaphore successfully. This number is
+negated, if the semaphore was released afterwards. In a case of deadlock looking
+what the last acquiring thread is doing, will usually give some clue about
+what's the problem. In a simple situation, it would wait for a semaphore that
+the first thread acquired last.</p>
+
+<p>Userland deadlocks involving benaphore-style <span class="geshifilter"><code class="cpp geshifilter-cpp">BLocker</code></span>s (the
+default) can't be analyzed that easily, since the respective sempahores will
+not have been acquired by the threads holding the locks. In most cases stack
+traces of the team's threads will help understanding those deadlocks as well,
+though.</p>
+
+
+<h3>Kernel Tracing</h3>
+
+<p>A quite powerful debugging feature of the Haiku kernel is kernel tracing.
+The kernel can reserve a specified amount of memory as tracing buffer and
+use it to record information when certain events occur. In the kernel
+debugger the recorded entries can be filtered and printed, thus providing
+an analysis tool for tracking down bugs and other problems. One of the great
+advantages of kernel tracing over usual debug output into a file or via a
+serial connection is that it comes with a significantly lower performance
+penalty, which in most cases is in fact even less than the error of
+measurement. Also very nice is, that the data are available right in the
+kernel debugger, so that one can analyze them in combination with the halted
+system.</p>
+
+<h4>Enabling It</h4>
+
+<p>Kernel tracing is a compile time feature, that is it has to be enabled when
+building Haiku. This can be done in the header file
+<span class="geshifilter"><code class="cpp geshifilter-cpp">build<span style="color: #000040;">/</span>user_config_headers<span style="color: #000040;">/</span>tracing_config.<span style="color: #007788;">h</span></code></span> (create the folder and copy <span class="geshifilter"><code class="cpp geshifilter-cpp">build<span style="color: #000040;">/</span>config_headers<span style="color: #000040;">/</span>tracing_config.<span style="color: #007788;">h</span></code></span> which contains the default settings) by changing the value of
+the <span class="geshifilter"><code class="cpp geshifilter-cpp">ENABLE_TRACING</code></span> macro to the value <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">1</span></code></span>. Furthermore
+one needs to specify, what kinds of information shall be traced, which is done
+by setting the respective macros to a value greater than 0:</p>
+
+<dl>
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">BLOCK_CACHE_TRANSACTION_TRACING</code></span></dt>
+<dd>Enables tracing of block cache transactions. This is most likely only of
+interest for developers trying to track down block cache or file system
+bugs.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">BMESSAGE_TRACING</code></span></dt>
+<dd>Enables tracing of BMessage sending. Whenever a BMessage is sent,
+the message destination (team, port, token), the delivery method (direct,
+remote), and the message's "what" field will be recorded.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">KERNEL_HEAP_TRACING</code></span></dt>
+<dd>Enables tracing of memory allocations in the kernel. For every call to <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">malloc</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">free</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>, or <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">realloc</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> in the kernel the given parameters and the result will be recorded.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">PAGE_ALLOCATION_TRACING</code></span></dt>
+<dd>Enables tracing of page allocations in the kernel. It will be recorded how pages are allocated, freed, reserved, stolen, or cleaned by the page scrubber.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">RUNTIME_LOADER_TRACING</code></span></dt>
+<dd>Enables tracing of runtime loader activities. It will be recorded what executables, libraries, and add-ons are loaded.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">SIGNAL_TRACING</code></span></dt>
+<dd>Enables tracing of signals. It will be recorded when a signal is sent,
+handled, masked, or a signal handler is installed.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">SYSCALL_TRACING</code></span></dt>
+<dd>Enables tracing of syscalls. It will be recorded when a userland thread
+entered the kernel to execute a syscall (including the syscall's parameters)
+and when it is about to exit the kernel again. Usually one also wants to define the macro <span class="geshifilter"><code class="cpp geshifilter-cpp">SYSCALL_TRACING_IGNORE_KTRACE_OUTPUT</code></span>. It skips tracing of the _kern_ktrace_output() syscall, which itself adds a tracing entry.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">TEAM_TRACING</code></span></dt>
+<dd>Enables tracing of team operations. It will be recorded when a team is
+<span class="geshifilter"><code class="cpp geshifilter-cpp">fork<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>ed or <span class="geshifilter"><code class="cpp geshifilter-cpp">exec<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>ed and when a team waits for its
+children.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">USER_MALLOC_TRACING</code></span></dt>
+<dd>Enables tracing of memory allocations in userland applications. For every call to <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">malloc</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">free</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>, or <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">realloc</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>, etc. the given parameters and the result will be recorded. Note, that this has a considerable performance impact.</dd>
+</dl>
+
+<p>The <span class="geshifilter"><code class="cpp geshifilter-cpp">MAX_TRACE_SIZE</code></span> macro defines the size of the tracing
+buffer (in bytes). The default of 1 MB is a little tight, if a lot of
+information is recorded. The tracing buffer is a ring buffer, i.e. when full
+it will start overwriting the oldest entries.</p>
+
+<h4>The <span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> Command</h4>
+
+<p>The <span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> kernel debugger command prints the recorded tracing
+information. Since usually there will be many recorded entries, there are
+several parameters to specify which subset shall be printed. The entries in
+the tracing buffer are indexed; the oldest one in the buffer has index 1.
+The first parameter of <span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> is the index of an entry and the
+second parameter the number of entries to be printed.</p>
+
+<pre>
+kdebug> traced 120 10
+  120. [    75] 62203012: syscall pre:  _kern_read_port_etc(0x1025, 0x7003ff58, 0x7003ff24, 0x0, 0x0, 0x0)
+  121. [    75] 62203037: syscall post: _kern_read_port_etc() -> 0x0
+  122. [    75] 62203330: syscall pre:  _kern_release_sem(0x857)
+  123. [    75] 62203352: syscall post: _kern_release_sem() -> 0x0
+  124. [    75] 62203545: syscall pre:  _kern_ktrace_output(0x7003f9ac)
+  125. [    75] 62203558: user: BMessage send remote: team: -1, port: 4136, token: 0, message: '_MMV'
+  126. [    75] 62203567: syscall post: _kern_ktrace_output() -> 0x20
+  127. [    75] 62203683: syscall pre:  _kern_write_port_etc(0x1028, 0x706a7070, 0x1801c100, 0x121, 0x8, 0x1)
+  128. [    75] 62203724: syscall post: _kern_write_port_etc() -> 0x0
+  129. [    75] 62203871: syscall pre:  _kern_port_buffer_size_etc(0x1025, 0x0, 0x0)
+printed 10 entries within range 120 to 129 (10 of 20655 total, 189725 ever)
+</pre>
+
+<p>The common information listed for each entry are the index, (in square
+brackets) the ID of the thread logging the entry, and the system time (in
+microseconds) when the entry was logged. The following data are specific to the
+type of the entry. A final line at the end of the listing tells us how many
+entries have been printed and from what index range (later examples will show
+that these information are not always that obvious), as well as how many entries
+are currently in the buffer and how many have been logged so far.</p>
+
+<p>The second parameter to the command can be omitted; it defaults to 30.
+If given and negative, it changes the meaning of the first parameter. Instead
+of specifying the first entry to print, it will refer to the last one, and the
+negated value of the second parameter defines the number of entries to list.</p>
+
+<pre>
+kdebug> traced 120 -5
+  116. [   117] 62202452: syscall pre:  _kern_write_port_etc(0x1025, 0x1, 0x0, 0x0, 0x8, 0x0)
+  117. [   117] 62202490: syscall post: _kern_write_port_etc() -> 0x0
+  118. [   117] 62202637: syscall pre:  _kern_ioctl(0x13, 0x2773, 0x70143f54, 0x58cca4)
+  119. [    75] 62202872: syscall post: _kern_port_buffer_size_etc() -> 0x0
+  120. [    75] 62203012: syscall pre:  _kern_read_port_etc(0x1025, 0x7003ff58, 0x7003ff24, 0x0, 0x0, 0x0)
+printed 5 entries within range 116 to 120 (5 of 20655 total, 189725 ever)
+</pre>
+
+<p>A special value for the first parameter is 0 (or any negative value). It
+refers to the last entry in the buffer, and furthermore causes the second
+parameter to be interpreted as if negative. This makes it easy to print the
+last recorded entries.</p>
+
+<p>Looking through tens or hundreds of thousands entries using
+<span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> with only those two parameters is quite impractical.
+Hence there's a simple but powerful filter mechanism. A filter is passed to
+<span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> as a list of additional parameters preceded by the keyword
+<span class="geshifilter"><code class="cpp geshifilter-cpp">filter</code></span>. It can consist of several basic filters which can be
+combined via boolean operators to a complex expression. Those operators are
+<span class="geshifilter"><code class="cpp geshifilter-cpp">and</code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp">or</code></span>, and <span class="geshifilter"><code class="cpp geshifilter-cpp">not</code></span>, and they are used
+in prefix notation, meaning that the operator comes first and is followed by
+its one respectively two arguments. This needs a little getting used to, but
+has the advantages that it doesn't require parentheses (which are already
+reserved for numeric kernel debugger expressions) and that it keeps parsing
+very simple. The basic filters are:
+</p>
+
+<dl>
+<dl>
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">thread <span style="color: #000080;">&lt;</span>thread id<span style="color: #000080;">&gt;</span></code></span></dt>
+<dd>Matches those entries recorded by the thread with the specified ID.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp">team <span style="color: #000080;">&lt;</span>team id<span style="color: #000080;">&gt;</span></code></span></dt>
+<dd>Matches those entries recorded by a thread of the team with the
+specified ID.</dd>
+
+<dt><span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #339900;">#&lt;pattern&gt;</span></code></span></dt>
+<dd>Matches those entries whose printed representation contains the
+specified case-sensitive pattern (actually not a real pattern, just a string).
+If the string contains spaces it must be put in quotes (including the
+<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #339900;">#</span></code></span>).</dd>
+</dl>
+
+<p>Very useful in combination with filters is the optional third numeric
+parameter of <span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span>. It specifies how many entries shall at most
+be searched for matches (as opposed to the second parameter which limits the
+number of entries to be printed). If omitted the same value as given for the
+second parameter is used. The special value -1 means that all entries in the
+buffer shall be searched, which is usually what one wants, but can potentially
+take a long time, when the tracing buffer is large and contains many entries.
+In the following example we search for entries from the team 41 containing the
+text "BMessage", printing five at a time at maximum.</p>
+
+<pre>
+kdebug> traced 0 5 -1 filter and team 41 #BMessage
+16337. [    44] 70393163: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+18402. [    44] 71396774: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+19248. [    44] 72402239: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+19875. [    44] 73404928: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+20489. [    44] 74408450: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+printed 5 entries within range 16337 to 20655 (4319 of 20655 total, 189725 ever)
+kdebug> traced
+ 6027. [    44] 65359596: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+ 6635. [    44] 66363060: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+ 8968. [    44] 67366540: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+11422. [    44] 68378551: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+13845. [    44] 69386518: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+printed 5 entries within range 6027 to 16336 (10310 of 20655 total, 189725 ever)
+kdebug>
+  611. [    44] 62346221: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+ 2770. [    44] 63351796: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+ 5155. [    44] 64355661: user: BMessage send direct: port: 4, token: 1, message: 'rgir'
+printed 3 entries within range 1 to 6026 (6026 of 20655 total, 189725 ever)
+</pre>
+
+<p>The example also shows another feature of the <span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> command.
+When invoked without any parameters it continues the search of the previous
+invocation. In this case the search continues backward (start index 0 implies
+backward search), still listing at most five entries at a time. In this form
+(and only in this form) <span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> is continuable, meaning that just
+hitting enter will invoke it again. This makes browsing through entries quite
+convenient.</p>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> supports some switch options which can be given before
+the first numerical argument. One is <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">--</span>printteam</code></span> which causes the
+ID of the team that logged the entry to be printed as well (after colon in the
+square brackets). When <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #000040;">--</span><span style="color: #0000dd;">difftime</span></code></span> is specified only for the first
+entry the absolute system time is printed. For subsequent entries the time
+difference to the previously printed entry will be shown. While this is not
+exactly a profiling option, it can at least be used to get a first
+impression.</p>
+
+<pre>
+kdebug> traced --printteam 0 6 -1 filter #BMessage
+87852. [    69:    69]   25882947: user: BMessage send remote: team: 82, port: 8252, token: -2, message: '
+87960. [    75:    69]   25952695: user: BMessage send remote: team: -1, port: 4136, token: 0, message: '_MUP'
+87973. [    88:    49]   25954926: user: BMessage send remote: team: 82, port: 28753, token: -2, message: '_MUP'
+87980. [    88:    49]   25955064: user: BMessage send remote: team: 80, port: 32872, token: -2, message: '_MUP'
+88148. [   141:    78]   26090266: user: BMessage send remote: team: -1, port: 28, token: -2, message: 'Iuim'
+88161. [    69:    69]   26090779: user: BMessage send remote: team: 78, port: 8245, token: -2, message: '
+printed 6 entries within range 87852 to 88451 (600 of 88451 total, 88451 ever)
+kdebug> traced --difftime 0 7 -1 filter thread 43
+88197. [    43]   26159620: syscall pre:  _kern_snooze_etc(0x186a0, 0x0, 0x8)
+88254. [    43]     100557: syscall post: _kern_snooze_etc() -> 0x0
+88255. [    43]         70: syscall pre:  _kern_snooze_etc(0x186a0, 0x0, 0x8)
+88406. [    43]     100593: syscall post: _kern_snooze_etc() -> 0x0
+88407. [    43]         65: syscall pre:  _kern_snooze_etc(0x186a0, 0x0, 0x8)
+88440. [    43]     100656: syscall post: _kern_snooze_etc() -> 0x0
+88441. [    43]         71: syscall pre:  _kern_snooze_etc(0x186a0, 0x0, 0x8)
+printed 7 entries within range 88197 to 88451 (255 of 88451 total, 88451 ever)
+</pre>
+
+
+<h3>An Example Debug Session</h3>
+
+<p>The previous sections introduced all that is needed to hunt down quite a
+variety of bugs and problems. Not in all cases the kernel debugger is the
+best choice, though. For easily reproducible bugs in userland applications simple
+<span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000dd;">printf</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> debugging or using gdb as a source level debugger might be
+a better choice. Some problems, however -- particularly ones that are hard to
+reproduce, lead to situations that make userland debugging impossible (e.g. when
+not being able to start the Terminal anymore), or are race conditions that
+disappear when adding too much debug output -- can often better be analyzed
+with the kernel debugger.</p>
+
+<p>This section documents a debug session that uncovers
+<a href="http://dev.haiku-os.org/ticket/1745">bug #1745</a> which occurs
+in revision 23864. It's the first
+time I encountered the bug and, thanks to always having kernel tracing enabled
+for syscalls, signals, teams, and <span class="geshifilter"><code class="cpp geshifilter-cpp">BMessage</code></span>s, all the information
+needed for the analysis were already available. The symptoms of the bug are that
+right after booting the Deskbar hangs and Tracker doesn't even show up.
+Here we go...</p>
+
+<pre>
+PANIC: keyboard requested halt.
+
+Welcome to Kernel Debugging Land...
+Running on CPU 0
+kdebug> teams
+team           id  parent      name
+0x9083e200      1  0x00000000  kernel_team
+0x908f0c00     36  0x9083e200  registrar
+0x90992e00     69  0x9083e200  Tracker
+0x908f5a00     40  0x9083e200  debug_server
+0x909b2e00     72  0x9083e200  Deskbar
+0x909cb000     73  0x9083e200  sh
+0x90900000     43  0x9083e200  net_server
+0x90900600     44  0x9083e200  app_server
+0x909dd000     77  0x9083e200  Terminal
+0x909dd600     78  0x9083e200  media_server
+0x909f4400     80  0x9083e200  midi_server
+0x90a40a00     81  0x9083e200  print_server
+0x90afd200    115  0x909dd000  sh
+0x909cba00     87  0x909cb000  ProcessController
+0x90900c00     56  0x9083e200  syslog_daemon
+0x90b08c00    121  0x909dd600  media_addon_server
+0x909b1c00     61  0x90900600  input_server
+kdebug> tracker=69
+kdebug> deskbar=72
+kdebug> threads (tracker)
+thread         id  state        sem/cv cpu pri  stack      team  name
+0x90b25800    128  waiting        3834   -   5  0x90784000   69  TrashWatcher
+0x90ac7800     97  waiting        2974   -  15  0x906ed000   69  w>Tracker Status
+0x90b40800    129  waiting        3866   -   5  0x90788000   69  ClipboardRefsWatcher
+0x90b3f800    130  waiting        3877   -   5  0x9079b000   69  AutoMounter
+0x90919000     69  waiting        2595   -  10  0x9063d000   69  Tracker
+0x90b48000    133  waiting        3917   -  15  0x99a0f000   69  w>Desktop
+</pre>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">teams</code></span> tells us that, although it didn't show up, Tracker is
+actually running. According to <span class="geshifilter"><code class="cpp geshifilter-cpp">threads</code></span> all of its usual threads
+are there, too. Let's see, what is keeping the desktop window ("w>Desktop")
+from showing any icons:</p>
+
+<pre>
+kdebug> sem 3917
+SEM: 0x99318e70
+id:      3917 (0xf4d)
+name:    'TrackerWindow'
+owner:   69
+count:   -1
+queue:   133
+last acquired by: 69, count: 1
+last released by: 133, count: 1
+kdebug> sc 133
+stack trace for thread 133 "w>Desktop"
+    kernel stack: 0x99a0f000 to 0x99a13000
+      user stack: 0x70145000 to 0x70185000
+frame            caller     &lt;image>:function + offset
+99a12e48 (+  32) 8002d352   &lt;kernel>:context_switch__FP6threadT0 + 0x0026
+99a12e68 (+  64) 8002d5e6   &lt;kernel>:scheduler_reschedule + 0x0272
+99a12ea8 (+  96) 8002ea5d   &lt;kernel>:switch_sem_etc + 0x039d
+99a12f08 (+  64) 8002f303   &lt;kernel>:_user_acquire_sem_etc + 0x0027
+99a12f48 (+  96) 80091a13   &lt;kernel>:x86_sysenter + 0x00ef (nearest)
+iframe at 0x99a12fa8 (end = 0x99a13000)
+ eax 0xc            ebx 0x766048        ecx 0x70184df0   edx 0xffff0104
+ esi 0xffffffff     edi 0x7fffffff      ebp 0x70184e2c   esp 0x99a12fdc
+ eip 0xffff0104  eflags 0x203
+ vector: 0x63, error code: 0x0
+99a12fa8 (+   0) ffff0104
+70184e2c (+  64) 002e7f7c   &lt;libbe.so>:_LockComplete__7BLooperP7BLooperlllx + 0x0034
+70184e6c (+  80) 002e7e89   &lt;libbe.so>:_Lock__7BLooperP7BLooperlx + 0x01c1
+70184ebc (+  48) 002e6e81   &lt;libbe.so>:Lock__7BLooper + 0x002d
+70184eec (+ 128) 003be877   &lt;libbe.so>:task_looper__7BWindow + 0x0137
+70184f6c (+  64) 002e82cb   &lt;libbe.so>:_task0___7BLooperPv + 0x0053
+70184fac (+  48) 006e9264   &lt;libroot.so>:_get_next_team_info + 0x005c (nearest)
+70184fdc (+   0) 70184fec   1261:w>TrackerWindow_133_stack@0x70145000 + 0x3ffec
+kdebug> desktop=133
+</pre>
+
+<p>The semaphore the window thread is waiting for belongs to the <span class="geshifilter"><code class="cpp geshifilter-cpp">BWindow</code></span>
+lock. The thread is in the window's message dispatcher loop, trying to lock
+the window, so that it can dispatch the next message. Someone else already has
+the lock and apparently doesn't release it. Unfortunately the lock in question
+is a benaphore-style BLocker, so that <span class="geshifilter"><code class="cpp geshifilter-cpp">sem</code></span>s "last acquired" output
+usually isn't of much help. In this case it shows thread 69, Tracker's main
+thread, as last acquirer. It may or may not be the actual owner of the lock; at
+any rate it doesn't harm to have a closer look what the thread is up to:</p>
+
+<pre>
+kdebug> sc (tracker)
+stack trace for thread 69 "Tracker"
+    kernel stack: 0x9063d000 to 0x90641000
+      user stack: 0x7efe7000 to 0x7ffe7000
+frame            caller     &lt;image>:function + offset
+90640dd8 (+  32) 8002d352   &lt;kernel>:context_switch__FP6threadT0 + 0x0026
+90640df8 (+  64) 8002d5e6   &lt;kernel>:scheduler_reschedule + 0x0272
+90640e38 (+  96) 8002ea5d   &lt;kernel>:switch_sem_etc + 0x039d
+90640e98 (+  64) 8002e692   &lt;kernel>:acquire_sem_etc + 0x0026
+90640ed8 (+  80) 8002bd6c   &lt;kernel>:port_buffer_size_etc + 0x00ec
+90640f28 (+  32) 8002c859   &lt;kernel>:_user_port_buffer_size_etc + 0x001d
+90640f48 (+  96) 80091a13   &lt;kernel>:x86_sysenter + 0x00ef (nearest)
+iframe at 0x90640fa8 (end = 0x90641000)
+ eax 0x8f           ebx 0x766048        ecx 0x7ffe5f80   edx 0xffff0104
+ esi 0xffffffff     edi 0x7fffffff      ebp 0x7ffe5fac   esp 0x90640fdc
+ eip 0xffff0104  eflags 0x216
+ vector: 0x63, error code: 0x0
+90640fa8 (+   0) ffff0104
+7ffe5fac (+  48) 002eeea3   &lt;libbe.so>:_SendFlattenedMessage__8BMessagePvlllx + 0x011b (nearest)
+7ffe5fdc (+ 144) 002eec88   &lt;libbe.so>:_SendMessage__C8BMessagelllP8BMessagexx + 0x01f8
+7ffe606c (+  80) 0030cbc7   &lt;libbe.so>:SendMessage__CQ28BMessage7PrivatelllP8BMessagexx + 0x0043
+7ffe60bc (+  80) 002f5ea4   &lt;libbe.so>:SendMessage__C10BMessengerP8BMessageT1xx + 0x0070
+7ffe610c (+ 240) 0032c5d8   &lt;libbe.so>:get_deskbar_frame__FP5BRect + 0x00c0
+7ffe61fc (+ 144) 0060d2b4   &lt;libtracker.so>:PlacePose__Q28BPrivate9BPoseViewPQ28BPrivate5BPoseR5BRect + 0x013c
+7ffe628c (+ 192) 00608065   &lt;libtracker.so>:CreatePoses__Q28BPrivate9BPoseViewPPQ28BPrivate5ModelPQ28BPrivate8PoseInfolPPQ28BPrivate5BPosebPlP5BRectT5 + 0x06a5
+7ffe634c (+  80) 0060783e   &lt;libtracker.so>:CreatePose__Q28BPrivate9BPoseViewPQ28BPrivate5ModelPQ28BPrivate8PoseInfobPlP5BRectT3 + 0x0056
+7ffe639c (+  96) 00613e5f   &lt;libtracker.so>:EntryCreated__Q28BPrivate9BPoseViewPC8node_refT1PCcPl + 0x018b
+7ffe63fc (+ 256) 006076e1   &lt;libtracker.so>:CreateVolumePose__Q28BPrivate9BPoseViewP7BVolumeb + 0x0111
+7ffe64fc (+ 352) 00606fe6   &lt;libtracker.so>:AddRootPoses__Q28BPrivate9BPoseViewbT1 + 0x0252
+7ffe665c (+ 112) 00605f5f   &lt;libtracker.so>:AddPoses__Q28BPrivate9BPoseViewPQ28BPrivate5Model + 0x010f
+7ffe66cc (+  96) 006036a7   &lt;libtracker.so>:InitCommon__Q28BPrivate9BPoseView + 0x0383
+7ffe672c (+  64) 006032d0   &lt;libtracker.so>:Init__Q28BPrivate9BPoseViewPQ28BPrivate19AttributeStreamNode + 0x003c
+7ffe676c (+  80) 0057f832   &lt;libtracker.so>:RestoreState__Q28BPrivate16BContainerWindow + 0x00ce
+7ffe67bc (+ 224) 0057f390   &lt;libtracker.so>:Init__Q28BPrivate16BContainerWindowPC8BMessage + 0x0920
+7ffe689c (+ 128) 00592d6f   &lt;libtracker.so>:Init__Q28BPrivate11BDeskWindowPC8BMessage + 0x0237
+7ffe691c (+ 528) 00649263   &lt;libtracker.so>:ReadyToRun__Q28BPrivate8TTracker + 0x044b
+7ffe6b2c (+ 528) 002dd27d   &lt;libbe.so>:DispatchMessage__12BApplicationP8BMessageP8BHandler + 0x0369
+7ffe6d3c (+  96) 002e8831   &lt;libbe.so>:task_looper__7BLooper + 0x0299
+7ffe6d9c (+  64) 002db742   &lt;libbe.so>:Run__12BApplication + 0x008a
+7ffe6ddc (+ 416) 002009eb   &lt;_APP_>:main + 0x002f
+7ffe6f7c (+  48) 00200897   &lt;_APP_>:_start + 0x005b
+7ffe6fac (+  48) 001007be   689:runtime_loader_seg0ro@0x00100000 + 0x7be
+7ffe6fdc (+   0) 7ffe6fec   674:Tracker_main_stack@0x7efe7000 + 0xffffec
+</pre>
+
+<p>Currently it is obviously waiting for a synchronous reply to a message
+it just sent (<span class="geshifilter"><code class="cpp geshifilter-cpp">_user_port_buffer_size_etc<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> in the kernel part of
+the stack trace). The stack trace also shows that the thread is still in the
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BApplication</code></span>'s <span class="geshifilter"><code class="cpp geshifilter-cpp">ReadyToRun<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> method and invoked
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BDeskWindow<span style="color: #008080;">::</span><span style="color: #007788;">Init</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> from there.
+This is at least a good reason to lock the window. So who doesn't reply to the
+message?</p>
+
+<pre>
+kdebug> traced 0 -10 -1 thread (tracker)
+80228. [    69]   71666364: syscall pre:  _kern_set_port_owner(0x1029, 0x48)
+80229. [    69]   71666387: syscall post: _kern_set_port_owner() -> 0x0
+80230. [    69]   71666438: syscall pre:  _kern_get_port_info(0x1029, 0x7ffe5f18)
+80231. [    69]   71666628: syscall post: _kern_get_port_info() -> 0x0
+80232. [    69]   71666716: syscall pre:  _kern_ktrace_output(0x7ffe5b0c)
+80233. [    69]   71666727: user: BMessage send remote: team: -1, port: 4144, token: -2, message: 'PGET'
+80234. [    69]   71666754: syscall post: _kern_ktrace_output() -> 0x20
+80235. [    69]   71666769: syscall pre:  _kern_write_port_etc(0x1030, 0x706a7070, 0x180ab8a0, 0x125, 0x8, 0x7fffffffffffffff)
+80236. [    69]   71666863: syscall post: _kern_write_port_etc() -> 0x0
+80237. [    69]   71666904: syscall pre:  _kern_port_buffer_size_etc(0x1029, 0x8, 0x7fffffffffffffff)
+printed 10 entries within range 80228 to 90162 (9935 of 90162 total, 90162 ever)
+kdebug> port 4144
+PORT: 0x80135900
+ id:              4144
+ name:            "AppLooperPort"
+ owner:           72
+ capacity:        100
+ read_sem:        2662
+ write_sem:       2663
+ read_sem count:  2
+ write_sem count: 98
+ total count:     7
+kdebug> threads 72
+thread         id  state        sem/cv cpu pri  stack      team  name
+0x90ac1800     95  waiting        2637   -   5  0x906e5000   72  TrackerTaskLoop
+0x90ad1800    101  waiting        2637   -  15  0x906fd000   72  w>Twitcher
+0x909c9000     72  waiting        3275   -  10  0x90669000   72  Deskbar
+0x90b06800    119  waiting        2637   -   5  0x90735000   72  Expando Window Watcher
+0x90b07000    120  waiting        2637   -  15  0x90739000   72  w>Deskbar
+</pre>
+
+<p>As recorded by trace entry 80233, the message was sent to port 4144. The
+owner of the port is team 72, the Deskbar, and the port itself is, according
+to its name, the <span class="geshifilter"><code class="cpp geshifilter-cpp">BApplication</code></span> looper port. The <span class="geshifilter"><code class="cpp geshifilter-cpp">threads</code></span>
+listing for the Deskbar team looks suspicious. All threads save the main thread
+wait for the same semaphore, which belongs to...</p>
+
+<pre>
+kdebug> sem 2637
+SEM: 0x99309e70
+id:      2637 (0xa4d)
+name:    'BLooperList lock'
+owner:   72
+count:   -4
+queue:   120 119 101 95
+last acquired by: 0, count: 0
+last released by: 0, count: 0
+</pre>
+
+<p>... the <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooperList</code></span> lock. The <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooperList</code></span> is a list
+of all <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooper</code></span>s of a team. It's main purpose is to allow the
+invocation of certain methods (<span class="geshifilter"><code class="cpp geshifilter-cpp">Lock<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>,
+<span class="geshifilter"><code class="cpp geshifilter-cpp">PostMessage<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>) on <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooper</code></span> pointers that are not
+necessarily valid anymore.
+Those methods simply look up the pointer in the <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooperList</code></span> before
+doing anything with it that might cause an invalid memory access. The
+list is protected by a lock, which must be held when working with the list and
+also can be held for a short time to ensure that no looper will be deleted during
+that time. The lock is an innermost lock, however, i.e. while holding it no
+other lock may be acquired in order to prevent potential deadlocks. Being a
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BLocker</code></span> and thus supporting nested locking, it is also clear that
+none of the threads waiting for the lock is its current owner, which leaves only
+the Deskbar main thread. Let's see, what it is doing and why it is waiting:</p>
+
+<pre>
+kdebug> sc 72
+stack trace for thread 72 "Deskbar"
+    kernel stack: 0x90669000 to 0x9066d000
+      user stack: 0x7efe7000 to 0x7ffe7000
+frame            caller     &lt;image>:function + offset
+9066ce48 (+  32) 8002d352   &lt;kernel>:context_switch__FP6threadT0 + 0x0026
+9066ce68 (+  64) 8002d5e6   &lt;kernel>:scheduler_reschedule + 0x0272
+9066cea8 (+  96) 8002ea5d   &lt;kernel>:switch_sem_etc + 0x039d
+9066cf08 (+  64) 8002f303   &lt;kernel>:_user_acquire_sem_etc + 0x0027
+9066cf48 (+  96) 80091a13   &lt;kernel>:x86_sysenter + 0x00ef (nearest)
+iframe at 0x9066cfa8 (end = 0x9066d000)
+ eax 0xc            ebx 0x7af048        ecx 0x7ffe66e0   edx 0xffff0104
+ esi 0xffffffff     edi 0x7fffffff      ebp 0x7ffe671c   esp 0x9066cfdc
+ eip 0xffff0104  eflags 0x203
+ vector: 0x63, error code: 0x0
+9066cfa8 (+   0) ffff0104
+7ffe671c (+  64) 00477bdc   &lt;libbe.so>:AcquireLock__7BLockerxPl + 0x0064
+7ffe675c (+  48) 004779b3   &lt;libbe.so>:Lock__7BLocker + 0x002f
+7ffe678c (+  48) 003546bd   &lt;libbe.so>:__9BAutolockR7BLocker + 0x002d
+7ffe67bc (+  64) 0033ce30   &lt;libbe.so>:AddMessage__13BMessageQueueP8BMessage + 0x0034
+7ffe67fc (+  48) 0032af20   &lt;libbe.so>:AddMessage__Q28BPrivate20BDirectMessageTargetP8BMessage + 0x0060
+7ffe682c (+ 144) 00337911   &lt;libbe.so>:_SendMessage__C8BMessagelllxbR10BMessenger + 0x0319
+7ffe68bc (+  64) 00355b70   &lt;libbe.so>:SendMessage__CQ28BMessage7PrivatelllxbR10BMessenger + 0x0040
+7ffe68fc (+  64) 0033ed01   &lt;libbe.so>:SendMessage__C10BMessengerP8BMessageG10BMessengerx + 0x0069
+7ffe693c (+ 112) 0033ec19   &lt;libbe.so>:SendMessage__C10BMessengerP8BMessageP8BHandlerx + 0x0071
+7ffe69ac (+  96) 00330ba3   &lt;libbe.so>:_PostMessage__7BLooperP8BMessageP8BHandlerT2 + 0x010f
+7ffe6a0c (+  48) 0032f67c   &lt;libbe.so>:PostMessage__7BLooperP8BMessage + 0x0024
+7ffe6a3c (+ 176) 0021c417   &lt;_APP_>:MessageReceived__7TBarAppP8BMessage + 0x021b
+7ffe6aec (+  48) 0032f808   &lt;libbe.so>:DispatchMessage__7BLooperP8BMessageP8BHandler + 0x0074
+7ffe6b1c (+ 528) 003263f8   &lt;libbe.so>:DispatchMessage__12BApplicationP8BMessageP8BHandler + 0x04e4
+7ffe6d2c (+  96) 00331831   &lt;libbe.so>:task_looper__7BLooper + 0x0299
+7ffe6d8c (+  64) 00324742   &lt;libbe.so>:Run__12BApplication + 0x008a
+7ffe6dcc (+ 432) 0021aeff   &lt;_APP_>:main + 0x002f
+7ffe6f7c (+  48) 0021adab   &lt;_APP_>:_start + 0x005b
+7ffe6fac (+  48) 001007be   727:runtime_loader_seg0ro@0x00100000 + 0x7be
+7ffe6fdc (+   0) 7ffe6fec   723:Deskbar_main_stack@0x7efe7000 + 0xffffec
+kdebug> traced 0 -10 -1 thread 72
+64131. [    72]   63166139: syscall pre:  _kern_port_count(0x1030)
+64132. [    72]   63166161: syscall post: _kern_port_count() -> 0x0
+64133. [    72]   63166217: syscall pre:  _kern_acquire_sem_etc(0xa65, 0x1, 0x8, 0x7fffffffffffffff)
+64134. [    72]   63166234: syscall post: _kern_acquire_sem_etc() -> 0x0
+64135. [    72]   63166506: syscall pre:  _kern_get_port_info(0x2051, 0x7ffe67f8)
+64136. [    72]   63166539: syscall post: _kern_get_port_info() -> 0x0
+64137. [    72]   63166651: syscall pre:  _kern_ktrace_output(0x7ffe63ec)
+64138. [    72]   63166666: user: BMessage send direct: port: 16474, token: 12, message: 'exst'
+64139. [    72]   63166690: syscall post: _kern_ktrace_output() -> 0x20
+64140. [    72]   63166723: syscall pre:  _kern_acquire_sem_etc(0xccb, 0x1, 0x8, 0x7fffffffffffffff)
+printed 10 entries within range 64131 to 90162 (26032 of 90162 total, 90162 ever)
+kdebug> port 16474
+PORT: 0x801360e0
+ id:              16474
+ name:            "Deskbar"
+ owner:           72
+ capacity:        100
+ read_sem:        3277
+ write_sem:       3278
+ read_sem count:  26
+ write_sem count: 74
+ total count:     23
+kdebug> sem 3275
+SEM: 0x99311610
+id:      3275 (0xccb)
+name:    'BMessageQueue Lock'
+owner:   72
+count:   -1
+queue:   72
+last acquired by: 0, count: 0
+last released by: 0, count: 0
+</pre>
+
+<p>According to the stack trace the thread is trying to send a message.
+<span class="geshifilter"><code class="cpp geshifilter-cpp">traced</code></span> tells us that it is a "direct" (i.e. intra-application)
+message to port 16474, which belongs to the "Deskbar" window. Intra-app
+messages are not really sent to a port, though. Instead they are directly
+added to the target's message queue. The semaphore the thread is waiting for
+belongs to that <span class="geshifilter"><code class="cpp geshifilter-cpp">BMessageQueue</code></span>. First of all, looking through the
+source code of the functions listed in the stack trace, reveals where the
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BLooperList</code></span> lock is being held although it shouldn't:</p>
+
+<pre>
+BLooper::_PostMessage(BMessage *msg, BHandler *handler,
+    BHandler *replyTo)
+{
+    AutoLocker&lt;BLooperList> listLocker(gLooperList);
+    if (!listLocker.IsLocked())
+        return B_ERROR;
+
+    if (!gLooperList.IsLooperValid(this))
+        return B_BAD_VALUE;
+
+    // Does handler belong to this looper?
+    if (handler && handler->Looper() != this)
+        return B_MISMATCHED_VALUES;
+
+    status_t status;
+    BMessenger messenger(handler, this, &status);
+    if (status == B_OK)
+        status = messenger.SendMessage(msg, replyTo, 0);
+
+    return status;
+}
+</pre>
+
+<p>The lock is held until the end of the method, including the line where
+<span class="geshifilter"><code class="cpp geshifilter-cpp">messenger.<span style="color: #007788;">SendMessage</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> is called. This is a bug -- the lock must
+be released after the construction of the <span class="geshifilter"><code class="cpp geshifilter-cpp">BMessenger</code></span> at the
+latest.</p>
+
+<p>This is only one problem, though. Just as the <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooperList</code></span> lock a
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BMessageQueue</code></span> lock should not be held while trying to acquire
+another lock. That is the main thread should not block on such a lock for a
+long time, since the owner should release it eventually. Aside from direct
+message deliveries, the message queue is normally only used within the looper it
+belongs to. So it's likely that in this case the window thread is holding it
+although it ought not to:</p>
+
+<pre>
+kdebug> sc 120
+stack trace for thread 120 "w>Deskbar"
+    kernel stack: 0x90739000 to 0x9073d000
+      user stack: 0x700c3000 to 0x70103000
+frame            caller     &lt;image>:function + offset
+9073ce48 (+  32) 8002d352   &lt;kernel>:context_switch__FP6threadT0 + 0x0026
+9073ce68 (+  64) 8002d5e6   &lt;kernel>:scheduler_reschedule + 0x0272
+9073cea8 (+  96) 8002ea5d   &lt;kernel>:switch_sem_etc + 0x039d
+9073cf08 (+  64) 8002f303   &lt;kernel>:_user_acquire_sem_etc + 0x0027
+9073cf48 (+  96) 80091a13   &lt;kernel>:x86_sysenter + 0x00ef (nearest)
+iframe at 0x9073cfa8 (end = 0x9073d000)
+ eax 0xc            ebx 0x7af048        ecx 0x701024d0   edx 0xffff0104
+ esi 0xffffffff     edi 0x7fffffff      ebp 0x7010250c   esp 0x9073cfdc
+ eip 0xffff0104  eflags 0x207
+ vector: 0x63, error code: 0x0
+9073cfa8 (+   0) ffff0104
+7010250c (+  64) 00477bdc   &lt;libbe.so>:AcquireLock__7BLockerxPl + 0x0064
+7010254c (+  48) 004779b3   &lt;libbe.so>:Lock__7BLocker + 0x002f
+7010257c (+  48) 003322d0   &lt;libbe.so>:Lock__Q28BPrivate11BLooperList + 0x0020
+701025ac (+  48) 0034c21c   &lt;libbe.so>:Lock__Q28BPrivatet25AutoLockerStandardLocking1ZQ28BPrivate11BLooperListPQ28BPrivate11BLooperList + 0x0024
+701025dc (+  48) 0034c0c1   &lt;libbe.so>:Lock__Q28BPrivatet10AutoLocker2ZQ28BPrivate11BLooperListZQ28BPrivatet25AutoLockerStandardLocking1ZQ28BPrivate11BLooperList + 0x0031
+7010260c (+  48) 0034bef4   &lt;libbe.so>:__Q28BPrivatet10AutoLocker2ZQ28BPrivate11BLooperListZQ28BPrivatet25AutoLockerStandardLocking1ZQ28BPrivate11BLooperListRQ28BPrivate11BLooperListbT2 + 0x0044
+7010263c (+  64) 00330d24   &lt;libbe.so>:_Lock__7BLooperP7BLooperlx + 0x005c
+7010267c (+  48) 0032fe81   &lt;libbe.so>:Lock__7BLooper + 0x002d
+701026ac (+  48) 004009bc   &lt;libbe.so>:Flush__C7BWindow + 0x0020
+701026dc (+  48) 003f3ee1   &lt;libbe.so>:Flush__C5BView + 0x0029
+7010270c (+ 112) 003fdda0   &lt;libbe.so>:_Draw__5BViewG5BRect + 0x011c
+7010277c (+ 736) 004033e9   &lt;libbe.so>:DispatchMessage__7BWindowP8BMessageP8BHandler + 0x1cb9
+70102a5c (+  64) 00404a29   &lt;libbe.so>:UpdateIfNeeded__7BWindow + 0x00f9
+70102a9c (+ 112) 00229cee   &lt;_APP_>:AddTeam__15TExpandoMenuBarP5BListP7BBitmapPcT3 + 0x032a
+70102b0c (+ 160) 00228f3d   &lt;_APP_>:MessageReceived__15TExpandoMenuBarP8BMessage + 0x0195
+70102bac (+  48) 0032f808   &lt;libbe.so>:DispatchMessage__7BLooperP8BMessageP8BHandler + 0x0074
+70102bdc (+ 736) 004037c0   &lt;libbe.so>:DispatchMessage__7BWindowP8BMessageP8BHandler + 0x2090
+70102ebc (+  48) 002220ec   &lt;_APP_>:DispatchMessage__10TBarWindowP8BMessageP8BHandler + 0x0054
+70102eec (+ 128) 00407a66   &lt;libbe.so>:task_looper__7BWindow + 0x0326
+70102f6c (+  64) 003312cb   &lt;libbe.so>:_task0___7BLooperPv + 0x0053
+70102fac (+  48) 00732264   &lt;libroot.so>:_get_next_team_info + 0x005c (nearest)
+70102fdc (+   0) 70102fec   1156:w>Deskbar_120_stack@0x700c3000 + 0x3ffec
+</pre>
+
+<p>After browsing through the source code of the functions listed in the stack
+trace, the erroneous code appears to be in
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BWindow<span style="color: #008080;">::</span><span style="color: #007788;">UpdateIfNeeded</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span>:</p>
+
+<pre>
+    BMessageQueue *queue = MessageQueue();
+    queue->Lock();
+
+    // First process and remove any _UPDATE_ message in the queue
+    // With the current design, there can only be one at a time
+
+    BMessage *msg;
+    for (int32 i = 0; (msg = queue->FindMessage(i)) != NULL; i++) {
+        if (msg->what == _UPDATE_) {
+            BWindow::DispatchMessage(msg, this);
+                // we need to make sure that no overridden method is called
+                // here; for BWindow::DispatchMessage() we now exactly what
+                // will happen
+            queue->RemoveMessage(msg);
+            delete msg;
+            break;
+                // NOTE: "i" would have to be decreased if there were
+                // multiple _UPDATE_ messages and we would not break!
+        }
+    }
+
+    queue->Unlock();
+</pre>
+
+<p><span class="geshifilter"><code class="cpp geshifilter-cpp">BWindow<span style="color: #008080;">::</span><span style="color: #007788;">DispatchMessage</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> is invoked while holding the message
+queue lock. <span class="geshifilter"><code class="cpp geshifilter-cpp">DispatchMessage<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> calls various functions, including
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BView<span style="color: #008080;">::</span><span style="color: #007788;">Draw</span><span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> which can be overridden by application developers. So,
+although the comment in <span class="geshifilter"><code class="cpp geshifilter-cpp">UpateIfNeeded<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> suggests that calling
+<span class="geshifilter"><code class="cpp geshifilter-cpp">DispatchMessage<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> is OK, it definitely is not.</p>
+
+<p>To sum up our findings: Tracker hangs because it's still in its
+initialization phase and waits forever for a reply message from the Deskbar.
+The Deskbar in turn has run into a standard deadlock with the
+<span class="geshifilter"><code class="cpp geshifilter-cpp">BLooperList</code></span> lock and the deskbar window's message queue lock
+involved. Main and window thread mutually wait for the lock the respective
+other thread holds.</p>
+
+
+<h3>Conclusion</h3>
+
+<p>Haiku's kernel debugger is a powerful tool whose usefulness does not end in
+the kernel domain. It can also help with certain userland problems, that would
+otherwise be tricky to tackle. This document gave an introduction to the basic
+features of the kernel debugger, its most commonly used commands, and the kernel
+tracing mechanism. It concluded with a documented debug session showing how
+to apply the previously presented information to track down a bug in practice.
+</p>
+
+<p>I hope after reading this document, Haiku developers feel encouraged to
+also consider whether using the kernel debugger could lead them quicker to a
+solution when they face a problem in Haiku. Particularly keeping the
+inexpensive kernel tracing enabled at all times might provide helpful
+information right when it's needed.</p>
+        </div>
+        </div>
+</div>
+  

@@ -1,0 +1,70 @@
++++
+type = "article"
+title = "Installing Haiku to a partition from Linux"
+date = "2007-09-06T16:36:23.000Z"
+tags = ["obsolete"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <div class="box-info">
+<strong>2010-January: This document is now obsolete. We are in the process of consolidating and re-organizing the website documentation. For now please refer to the <a href="/guides" rel="nofollow">in-progress website documentation</a>.</strong>
+</div>
+<p>This is a guide for you who have already been able to build an image of Haiku under Linux and running that with an emulator such as QEMU or VMWare and want to try Haiku natively with your real hardware.</p>
+<p>Disclaimer: Do this on your own risk. I don't take any resposibility for any data loss caused by using this guide.</p>
+<p>The following procedure have been tested with Kubuntu 7.04</p>
+<p>I assume the following:</p>
+<ul>
+<li>You are using Linux</li>
+<li>You have a build system up and running</li>
+<li>You are using GRUB as boot loader</li>
+<li>You have a spare partition on which you want to install Haiku</li>
+</ul>
+<p>The first thing you need to find out is the Linux name of your partition. A simple way of finding that is to run a partition editor. If you're using Gnome or Xfce, then use the application GParted, and if you are using KDE, the app to use is QTParted. In those applications you get a graphical view of your harddrives and partition layout.<br />
+The name of the partition can for example be<br />
+/dev/hdb3 - which means the third primary partition on the second PATA hard drive<br />
+or<br />
+/dev/sda6 - which means the second logical partition on the extended partition on the first SATA hard drive</p>
+<p>Short simplified explanation of naming:<br />
+First letter: 'h' means PATA, 's' means SATA or USB drives<br />
+Third letter: 'a' means first drive, 'b' means second drive, and so on...<br />
+Digit: Partition number, 1-4 is primary partitions, one of these can be an extended partition which in turn contains logical partitions. The numbering of logical partitions start with 5.</p>
+<p>Next step is to tell the build system that the "image" used for installing haiku on should be your partition instead of the file haiku.image which you have used previously. That can be done by overriding the variables HAIKU_IMAGE_NAME and HAIKU_IMAGE_DIR. The recommended way of doing that is to create a file called UserBuildConfig under trunk/build/jam. All your customizations to the image can be done here, like if you want to include extra drivers or applications which are not part of the standard image.<br />
+If your partition was at location /dev/sda6 the contents of UserBuildConfiq should read:</p>
+<pre>HAIKU_IMAGE_NAME	= sda6 ;
+HAIKU_IMAGE_DIR		= /dev ;</pre><p>Make sure that you wrote the right partition, because the partition will be overwritten.</p>
+<p>Now you're set to build Haiku. Issue this command in a terminal (under the trunk directory):</p>
+<pre>jam -q</pre><p>
+If no errors occured you will be flooded with messages like<br />
+Error: Failed to open connection to FS shell: No such file or directory<br />
+But that's to expect, since you dont have write access to the partition you're trying to install haiku on.</p>
+<p>To complete the installation simply run</p>
+<pre>sudo jam -q</pre><p>And the actual installation to the partition will be performed. The reason for not running with sudo the first time is that you want the ownership of the compiled files to be your user account.</p>
+<p>Now it's time to add a boot entry for Haiku in GRUB.<br />
+To edit GRUB's entries run</p>
+<pre>sudo kate /boot/grub/menu.lst</pre><p>or</p>
+<pre>sudo gedit /boot/grub/menu.lst</pre><p>depending on what editor you use.</p>
+<p>GRUB uses a different naming strategy for harddrives than Linux. It uses a scheme like this:</p>
+<pre>(hdN,n)</pre><p>Where N is the hard disk number, starting on 0. And all hard disks' name start with hd.<br />
+And n is the partition number, also starting on 0. The first logical partition always have the number 4, regardless of the number of primary partitions.<br />
+If you're still unsure, check out<br />
+<a href="http://www.gnu.org/software/grub/manual/grub.html#Naming-convention" title="http://www.gnu.org/software/grub/manual/grub.html#Naming-convention">http://www.gnu.org/software/grub/manual/grub.html#Naming-convention</a></p>
+<p>As an example<br />
+/dev/sda6 would be (hd0,5) in GRUB (if there are no PATA drives installed).</p>
+<p>The entry would finally be</p>
+<pre>
+# Haiku on /dev/sda6
+title		Haiku
+rootnoverify	(hd0,5)
+chainloader	+1
+</pre><p>This should be somewhere in your /boot/grub/menu.lst file.</p>
+<p>That's it! Reboot to test. Good luck, you'll need it.</p>
+<p>If you have updated the source and want to reinstall Haiku, just run</p>
+<pre>jam -q</pre><p>from trunk and subsequently</p>
+<pre>sudo jam -q</pre><p>And your partition once again is populated by a fresh install.</p>
+        </div>
+        </div>
+</div>
+  

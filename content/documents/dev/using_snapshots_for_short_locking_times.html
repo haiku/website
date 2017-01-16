@@ -1,0 +1,323 @@
++++
+type = "article"
+title = "Using Snapshots For Short Locking Times"
+date = "2007-09-08T15:09:01.000Z"
+tags = ["multithreading", "locking", "snapshots", "design pattern"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <p>The primary intention of my <a href="http://haiku-os.org/documents/dev/understanding_the_design_and_requirements_of_multithreaded_applications">previous article</a> was to make it very clear why and when locking is needed in multithreaded applications. In this article, I want to present my experiences in writing a new prototype for a  replacement of the document model in WonderBrush and how it is manipulated and rendered asynchronously.</p>
+
+<!--break-->
+
+<p>Before I start, I want to address an argument which I have frequently read from different sources: Some people say that multithreading makes your programs much more complicated. That it was a major barrier in porting large scale applications to BeOS. From my perspective, there are two sides to this argument. On the one hand, as a user, I see how great asynchronous, non-blocking user interfaces are. On Windows XP, you can't even move a window on screen if it's single threaded application blocks on something. So as a user, I see multithreading as a <i>desirable feature</i>. It means responsiveness. Granted, it's a feature that might affect the codebase of an application in more fundamental ways than other additions - but a very desirable feature nevertheless. And now that we have more and more multi core computers, it is even more desirable. Next is the claim that the enforced multithreading in BeOS hindered the porting of large scale, single threaded applications. The truth is that you <i>can</i> channel all your events through a self-made event queue protected by a global lock if nothing else. And indeed this is the approach that some of the porting efforts have taken in the end. It's not exactly hard to do. You still end up with an effectively single threaded application, but it will work no worse than on the original platform. Of course, a redesign to allow concurrency is much more appealing, and if that was the goal of the porting effort, than yes, I can imagine how that is hard with a large existing code base. I just wanted to point out that enforced multithreading in the BeOS API should not have been the major blocker that some people claim it to have been, since there are ways around it. To paint multithreading as the single evil reason for failed porting efforts just doesn't convince me.</p>
+
+<p>But things are slowly getting better. We see the support for multithreading in more and more code bases. And the focus of my articles is to help fellow Haiku programmers with their new applications anyways, and in this context, multithreading is just the way to go. It shouldn't be that hard if you design your applications having the issues in mind from the beginning and making use of the various helpful Haiku APIs, like messaging.</p>
+
+
+<h3>A Cleaner Separation</h3>
+
+<p>But back to WonderBrush and my new prototype. <a href="http://www.yellowbites.com/wonderbrush.html">WonderBrush</a> is an application where the user can create and manipulate different kinds of visual objects on a document canvas.</p>
+
+<p>One thing that surprised me when I designed the new prototype, was that it actually made the code <i>cleaner</i> instead of more messy. The initial design is of course more complex, because it takes more stuff into account. But take the document model as an example. In the current WonderBrush, it contains all sorts of information related to rendering, even efficiency related things like caching. All this resides in the code for the document structure, but I don't like it, it doesn't really belong there at all. It just makes the code messy.</p>
+
+<p>As a reminder, the effect I wanted to achieve, was to manipulate the objects of a document in WonderBrush in a fluently responding user interface, while rendering these objects might actually take much more time to allow fluent animation. Ingo and I came up with multiple approaches for a solution. To better illustrate the next paragraphs, maybe some code is in order.</p>
+
+<pre>
+class Rect : public Object {
+    public:
+        Rect()
+        {
+        }
+
+        void Set(float left, float top, float right, float bottom)
+        {
+            if (fLeft == left && fTop == top
+                && fRight == right && fBottom == bottom)
+                return;
+
+            fLeft = left;
+            fTop = top;
+            fRight = right;
+            fBottom = bottom;
+
+            _NotifyListeners();
+        }
+
+        ...
+
+    private:
+        float fLeft;
+        float fTop;
+        float fRight;
+        float fBottom;
+};
+</pre>
+
+<p>Let's suppose there is an <span class="geshifilter"><code class="cpp geshifilter-cpp">Object</code></span> class from which every visual object derives, in the above case, a simple rectangle. This is just so we have something to start from.</p>
+
+<p>Back to the idea to allow asynchronous rendering. The problem is of course that the rendering thread(s) need the document model to stay fixed while the rendering is in progress. On the other hand, you want to keep manipulating the objects at the same time. One idea Ingo and I had centered around the creation of modified objects which are being stuffed into a queue. The rendering process would then take the objects from the queue and apply them to the "real" objects in the document model each time rendering finished. I wasn't really happy with this idea, since it sounded a bit complicated and possibly not very efficient.</p>
+
+<p>Meanwhile I was working on another multimedia project, and I learned about the concept of snapshots. This approach is really simple, and centers around the idea that you can make a lightweight "copy" of your document model which a) only takes very short time to produce, and b) consumes only little memory. In said project, the document is time based, meaning the snapshot copy only needs to contain the objects which are visible at the given time. So making the snapshots was cheap, and it is done via short lived objects. The copies are allocated only for the time of the rendering process. More specifically, the document model is locked, the copy is made, the document model is unlocked, then the copy is used for rendering and finally destroyed again. In WonderBrush, the requirements are a little different, there might potentially be tons of objects which need to be snapshotted. So I keep the snapshots alive in parallel to the document, one for each document view, with a way to <i>sync</i> them efficiently. Here is some code to illustrate how this can be done, it's just one of many ways:</p>
+
+<pre>
+class Object {
+    public:
+        Object()
+            : fChangeToken(0)
+        {
+        }
+
+        int32 ChangeToken() const
+        {
+            return fChangeToken;
+        }
+
+        virtual ObjectSnapshot* Snapshot() const = 0;
+
+    protected:
+        void UpdateChangeToken()
+        {
+            fChangeToken++;
+        }
+
+    private:
+        fChangeToken;
+};
+
+
+class Rect : public Object {
+    public:
+        Rect()
+            : Object()
+            , ...
+        {
+        }
+
+        virtual ObjectSnapshot* Snapshot() const
+        {
+            return new RectSnapshot(this);
+        }
+
+        void Set(float left, float top, float right, float bottom)
+        {
+            if (fLeft == left && fTop == top
+                && fRight == right && fBottom == bottom)
+                return;
+
+            fLeft = left;
+            fTop = top;
+            fRight = right;
+            fBottom = bottom;
+
+            UpdateChangeToken();
+
+            _NotifyListeners();
+        }
+
+        ...
+
+    private:
+        float fLeft;
+        float fTop;
+        float fRight;
+        float fBottom;
+};
+
+class ObjectSnapshot {
+    public:
+
+        ObjectSnapshot(Object* original)
+            : fOriginal(original)
+        {
+        }
+
+        virtual bool Sync()
+        {
+            int32 changeToken = fOriginal-&gt;ChangeToken();
+            if (changeToken == fChangeToken)
+                return false;
+            
+            fChangeToken = changeToken;
+            return true;
+        }
+
+    private:
+        Object*  fOriginal;
+        int32    fChangeToken;
+}
+
+
+class RectSnapshot : public ObjectSnapshot {
+    public:
+        RectSnapshot(Rect* original)
+            : ObjectSnapshot(original)
+              fOriginal(original)
+
+        virtual bool Sync()
+        {
+            if (!ObjectSnapshot::Sync())
+                return false;
+
+            fLeft = fOriginal-&gt;Left();
+            fTop = fOriginal-&gt;Top();
+            fRight = fOriginal-&gt;Right();
+            fBottom = fOriginal-&gt;Bottom();
+
+            return true;
+        }
+
+        ...
+
+    private:
+        Rect*    fOriginal;
+
+        float    fLeft;
+        float    fTop;
+        float    fRight;
+        float    fBottom;
+};
+</pre>
+
+<p>Of course, I am trying to keep the code really simple in order to not distract from the basic idea. I am also omitting the actual tree-based structure of the document and the implementation of the notifications. The synchronization starts at the root of the object tree and descends into the branches until the <span class="geshifilter"><code class="cpp geshifilter-cpp">Sync<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> function of a layer object returns <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #0000ff;">false</span></code></span>. At the same time, new objects in the document are replicated by snapshot objects in the snapshot document. The concept of snapshots is not new at all, it is a well known design pattern. I just realized in which way I can use them in my WonderBrush prototype and how that would solve several problems I was facing. Sometimes it can take a while to realize how existing concepts apply to your problem. </p>
+
+<p>First of all this design separated what is really important in the document model from what is important when rendering it. The document model itself has nothing to do anymore with the rendering. In the above code, the objects themselves produce their snapshots via the virtual <span class="geshifilter"><code class="cpp geshifilter-cpp">Snapshot<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> method. This could be removed as well and be put into the responsibility of <i>factories</i>, so that completely different snapshots could be produced for different purposes in the application. An example might be to produce a different kind of snapshot for saving the document, which could of course happen in an extra thread allowing the user to keep working on the document while it is being saved. If you have not used the concept of snapshots so much before, I hope you realize now how useful it is.</p>
+
+<p>One concern with snapshots are their memory requirements. Of course the actual object tree shouldn't be a big problem, the problem is more when a certain type of object requires much memory and when you have a couple of those. At least in the context of WonderBrush, I can see how this is easily solved with shared data and reference counting. How could for example the "bitmap" object look?</p>
+
+<p>A reference counting class (see <a href="http://svn.berlios.de/viewcvs/haiku/haiku/trunk/headers/private/shared/Referenceable.h"><span class="geshifilter"><code class="cpp geshifilter-cpp">Referenceable</code></span> in the Haiku tree</a>) could be wrapped around the bitmap data (in this case I am just using a <span class="geshifilter"><code class="cpp geshifilter-cpp">BBitmap</code></span> for that):</p>
+
+<pre>
+class BitmapData : public Referenceable {
+    public:
+        BitmapData(BBitmap* bitmap)
+            : fBitmap(bitmap)
+        {
+        }
+
+        ~BitmapData()
+        {
+            delete fBitmap;
+        }
+
+        const BBitmap* Data() const
+        {
+            return fBitmap;
+        } 
+
+    private:
+        BBitmap* fBitmap;
+};
+</pre>
+
+<p>The <span class="geshifilter"><code class="cpp geshifilter-cpp">Bitmap</code></span> object and the <span class="geshifilter"><code class="cpp geshifilter-cpp">BitmapSnapshot</code></span> could now both use the same bitmap data:</p>
+
+<pre>
+class Bitmap : public Object {
+    public:
+        Bitmap(BBitmap* bitmap)
+            : Object()
+            , fBitmapData(new BitmapData(bitmap))
+        {
+            // not adding reference since we created the object
+        }
+
+        Bitmap(BitmapData* data)
+            : Object()
+            , fBitmapData(data)
+        {
+            fBitmapData-&gt;AddReference();
+        }
+
+        ~Bitmap()
+        {
+            fBitmapData-&gt;RemoveReference();
+        }
+
+        virtual    ObjectSnapshot() const
+        {
+            return new BitmapSnapshot(this, fBitmapData);
+        }
+
+        
+
+    private:
+        BitmapData* fBitmapData;
+};
+
+
+class BitmapSnapshot : public ObjectSnapshot {
+    public:
+        BitmapSnapshot(Bitmap* bitmap, BitmapData* data)
+            : ObjectSnapshot(bitmap)
+              fBitmapData(data)
+        {
+            fBitmapData-&gt;AddReference();
+        }
+
+        ~BitmapSnapshot()
+        {
+            fBitmapData-&gt;RemoveReference();
+        }
+
+        ...
+
+    private:
+        BitmapData* fBitmapData;
+};
+</pre>
+
+
+<p>The idea here is that bitmap data never actually changes, which is the case in a non-destructive editor like WonderBrush. The concept even allows to have the same bitmap object appear at different places in the document with the actual data being shared between all copies.</p>
+
+
+<h3>Putting It Together</h3>
+
+<p>I am a little afraid that continuing to provide code would blur the big picture. Therefor I want to focus on the structure. What entities are involved and what is the flow of locking and notifications?</p>
+
+<p>We have:</p>
+
+<ul>
+    <li><b>Document</b>
+
+<p>The Document is a tree-like structure of objects. The nodes of the tree are <i>layers</i> which contain graphical objects, which themselves might be layers again.</p>
+
+    </li>
+
+    <li><b>Interface</b>
+        <ul>
+            <li>Window/View</li>
+            <li>Renderer
+                <ul>
+                	<li><b>Document Snapshot</b></li>
+                    <li>Render thread 1</li>
+                    <li>Render thread 2</li>
+                    <li>Render thread ...</li>
+                </ul>
+            </li>
+        </ul>
+<p>A framework to display and manipulate the document. Multiple instances of the framework might be instantiated. This could be used to display the document at different zoom levels, allowing to edit it in either view. The framework consists of a window and a view. Private to the window is a rendering framework which runs as many rendering threads as the computer has CPU cores.</p>
+    </li>
+</ul>
+
+
+<p>The document is protected by a read/write lock. A very nice, proven and complete implementation of a read/write lock, written by Ingo Weinhold, is available in the Haiku source tree at <a href="http://svn.berlios.de/viewcvs/haiku/haiku/trunk/src/apps/icon-o-matic/generic/support/RWLocker.cpp">src/apps/icon-o-matic/generic/support/RWLocker</a>. The advantage of a read/write lock is that it allows multiple concurrent <i>readers</i>, in another words, threads which don't have to wait for each other to access information. As a programmer, you need to be aware though of sometimes obscured requirements to write lock. For example, I have done the mistake of using a read lock when registering listeners on data, I didn't think of this as "changing the data", but of course I <i>was</i> changing the objects, in particular the list of registered listeners. So be aware when you need to write lock and when a read lock is sufficient.</p>
+
+<p>In the prototype, any change to the document can be tracked via asynchronous notifications. When the notifications arrive, the handlers are usually read locking the document, but write locking could happen just as well depending on the kind of notification. I have tried to find a good balance between figuring out what happened at the receiving end of the notifications and too many different types of notifications.</p>
+
+<p>The rendering of the document happens on multiple levels. The basic level is the final bitmap of just the document. This is the rendering that potentially takes a while to produce. Another level is the display of manipulator tools, for example said transformation box around selected objects. The views have a display bitmap of the document which they render as the background for drawing the manipulators on top of. Important here is that there is another lock for this display bitmap. This lock is needed for the moment in which the rendering process is done producing the new bitmap (which happens off-screen) and wants to transfer it to the display bitmap. For this reason both the view and the rendering manager lock the display bitmap for the moment they need it. The important bit is that the view can continue to redraw changing manipulators, or cheap approximations of objects fluently while the user manipulates them, on top of the constant background of the bitmap. As soon as a rendering process is finished, the background is updated.</p>
+
+<p>The rendering process is triggered by the same asynchronous notifications that trigger a simple redraw of the view. I used a <span class="geshifilter"><code class="cpp geshifilter-cpp">BLooper</code></span> as the process which manages the actual rendering threads. When it receives the notifications, it read locks the document and synchronizes it's private snapshot. At this point the lock can be released and the rendering threads can be invoked. While the rendering is in progress, any new notifications will be merged into pending information about regions in need for rendering. As soon as all threads have finished, the produced bitmap is transfered to display and in case new dirty regions are present, a new rendering is triggered. The rendering manager has it's own lock for managing in progress rendering threads. Whenever a thread is finished, it needs to grab this lock to tell the manager it is done. This is only needed to avoid multiple rendering threads interfering at this section of code.</p>
+
+<p>Notice the distinction between the things that are fast (modifying the document, drawing manipulators, swapping the background bitmap, updating the snapshot of the document) and things that are slow (rendering). It is no problem to hold locks while doing fast things. For doing the slow thing, the snapshot concept is used.</p>
+
+<p>The result of all this is very nice (I can't keep myself from admitting). Feel free to download the <a href="http://www.yellowbites.com/download/WBPrototype.zip">Prototype</a> and play with it. You can't do anything with it, it is just meant to demonstrate how the asynchronous rendering feels. Please note that the rendering is <i>meant</i> to be slow. It doesn't use any caching either.</p>
+
+<p>Manipulating the document via the user interface is completely fluent and unaffected from the complexity of the document. All the available CPU cores are utilized. The code base is very clean. The added complexity for multithreading is finished and now only some basic rules need to be followed for new code. The separation of the entire rendering into the snapshot side of things has resulted in much cleaner code overall. When adding new functionality, much less code has to be updated. Unfortunately, I don't know when I will find the time to reproduce all this for real in a next version of WonderBrush, currently I am trying to spent my free time helping to develop Haiku. But once that is finished in the form of a release, I am looking forward with joy to the times that I can return to application development. Using WonderBrush will then scale much better with complex documents.</p>
+        </div>
+        </div>
+</div>
+  

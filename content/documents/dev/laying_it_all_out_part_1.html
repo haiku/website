@@ -1,0 +1,314 @@
++++
+type = "article"
+title = "Laying It All Out, Part 1"
+date = "2008-07-14T16:53:11.000Z"
+tags = ["gui", "layout", "development"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <h3>The Motivation for a Layout System</h3>
+
+<p>One of the major complaints that any serious BeOS programmer would eventually make about the GUI classes in the Be API is the lack of easy font sensitivity. What this means is that if one designs a GUI using the system default fonts and then a user of your application changes their system fonts to be much smaller or larger than the default, the GUI will likely look bad (especially if the font size is larger.) Things that were previously aligned may not be, and likely text labels will run into other components or even disappear into the side of the window. This is especially true in fixed sized GUIs like dialog boxes and configuration panels. See Figure 1.</p>
+
+<!--break-->
+
+<div style="float: left; border: 1px solid #aaa; padding: 5px; width: 510px; margin-right: 40px;">
+  <img src="/files/oops.png" />
+  <div style="margin-top: 10px;">
+	<strong>Figure 1.</strong> Oops, the programmer didn't expect someone to change to size 18 font!
+  </div>
+</div>
+
+<p>Besides font sensitivity it is also tedious to have to explicitly design a GUI with precise locations and sizes for each component. It makes adding new components or moving things around more difficult than it should be.</p>
+
+<p>The solution to these problems is something called a layout manager. What a layout manager does is manage laying out all the components of your application based on various criteria such as the type of layout as well as the minimum, preferred and maximum sizes of the GUI components. If the user resizes the window or changes the font, the layout manager gracefully resizes and realigns all the components under its management.</p>
+
+<p>As implied in the first paragraph, BeOS never had a built-in layout management system. Several third parties did come to the rescue, such as Marco Nelissen with his award winning liblayout, as well as Brian Tietz in his Santa's Gift Bag library and Angry Red Planet in their ARPCommon library. Of course while these systems all achieved the same basic goal, their implementation and usage was quite different. "Porting" an application from one layout system to the other would be fairly difficult.</p>
+
+<p>Fortunately for us, Ingo Weinhold came to the rescue by committing a layout management system into the Haiku source tree back in August 2006. It has been tweaked quite a bit since then but so far has not been put to much use. I figure that is because not many know about it. Ingo is a busy man, so I decided to learn the layout system and write these articles.</p>
+
+<p>This first article will describe the layout system from a higher level, and then in one or more future articles I will go into more detail.</p>
+
+<p>First things first, Ingo fully admits that much of the design of this layout system was inspired by the QLayout and friends in the Qt library. So it might be helpful to <a href="http://doc.trolltech.com/4.4/layout.html">read about that too</a>, though I hope to tell you everything you need to know to work with Haiku's classes eventually.</p>
+
+<h3>Types of Layout Managers</h3>
+
+<p>I will start by describing the various types of layout managers that are currently included in Haiku and how they layout the views under their control:
+
+<ul>
+<li><strong>BCardLayout:</strong> the contained views are layed out like a deck of cards, one on top of the other and all in the same area, and only one can show at a time. This would be useful in implementing a tab-based interface for showing multiple documents in one window, or for settings windows with multiple sections (like in the settings for BeIDE or FireFox.)</li>
+<li><strong>BGridLayout:</strong> the contained views are layed out in a grid, with each view getting the same general amount of space (though there are options to allow a view to span multiple rows and/or columns.) This would be useful in implementing a thumbnailing application for example, with each thumbnail getting it's own equal sized space.</li>
+<li><strong>BGroupLayout:</strong> the contained views are layed out in a group, either horizontally or vertically, depending on what orientation is wanted for the BGroupLayout. When used in combination (multiple horizontal BGroupLayouts contained in one vertical BGroupLayout for example) this is the most flexible and useful of the layouts. I imagine many future Haiku applications will make much use of this layout class.</li>
+<li><strong>BSplitLayout:</strong> this acts much like a BGroupLayout, except each view is separated by a splitter view that allows its contained area to be resized. Also optionally the area can be resized such that the view disappears completely, something called collapsing. You won't ever actually use this layout directly, but only through the BSplitView class.</li>
+<li><strong>BALMLayout:</strong> the newest kid on the block, this was added in February 2008 from code created by Christof Lutteroth and James Kim. ALM stands for Auckland Layout Model, which is a new kind of layout invented by Christof at The University of Auckland. More information about ALM can be read <a href="http://aucklandlayout.sourceforge.net/">on its SourceForge project page.</a> I suspect I will dig into this layout more in the future and may dedicate an entire article to it. But the previous link provides a lot of information about the concepts behind ALM.</li>
+</ul>
+</p>
+
+<h3>How To Build a GUI Using a Layout</h3>
+
+<div style="float: right; border: 1px solid #aaa; padding: 5px; width: 400px; margin-left: 40px;">
+  <img src="/files/midiplayer_before.png" />
+  <div style="margin-top: 10px;">
+	<strong>Figure 2.</strong> The MidiPlayer at default (size 12) and size 18 fonts. Even the size 12 version could benefit from the layout system.
+  </div>
+</div>
+
+<p>To build a Haiku GUI that uses the layout system, you first need to figure out what kind of layout manager or managers you might need. For an existing GUI it is probably fairly obvious from what you can see on the screen. For a new GUI it would probably be helpful to draw it out, though this would probably be done even if there was no layout system involved.</p>
+
+<p>Once you know the kind of layouts you plan to use, you need to make sure all the BViews you are using have the needed methods to be used in the layout system. All of the Haiku views and controls should already be compatible with the layout system (and if they are not, <a href="http://dev.haiku-os.org">log a bug</a>.) For custom BViews some extra work is required, which I will explore in a future article. For the purposes of this article I will only use views that are already well-supported by the layout system.</p>
+
+<p>For the purposes of an example I could put together a simple example GUI, but I think it will be more instructive to show an actual GUI that already exists in Haiku that is not font sensitive. The E-mail Preferences applet shown above is one example, but I don't want the complication of its GUI to interfere with showing how the layout system works. Luckily I have another good option in the MidiPlayer app. See Figure 2.
+
+<p>So based on the GUI in Figure 2, what layout managers will we need? Well the first thing I see is that there are essentially four sections arranged vertically:</p>
+
+<ol>
+	<li>The "Drop MIDI file here" control.</li>
+	<li>The labels and controls in the middle.</li>
+	<li>A separator.</li>
+	<li>The Play button.</li>
+</ol>
+
+<p>So this means that the highest-level layout manager should be a vertical BGroupLayout. The set of labels and controls seems to be arranged in a grid, so for that section we can have another layout manager, a BGridLayout. But before I start showing the code for creating this layout, let's look at the original GUI creation code. It is contained within MidiPlayerWindow.cpp in the CreateViews() method. It also makes use of a few macros. The relevant code (with line numbers) as of r26407 is show below:</p>
+
+<pre>
+<font color="#303030"> 32 </font><font color="#20a060">#define _W(a) (a-&gt;Frame().Width())</font>
+<font color="#303030"> 33 </font><font color="#20a060">#define _H(a) (a-&gt;Frame().Height())</font>
+
+...
+
+<font color="#303030">240 </font><font color="#406080">void</font> MidiPlayerWindow::CreateViews()
+<font color="#303030">241 </font>{
+<font color="#303030">242 </font>    scopeView = <font color="#506888">new</font> ScopeView;
+<font color="#303030">243 </font>
+<font color="#303030">244 </font>    showScope = <font color="#506888">new</font> BCheckBox(
+<font color="#303030">245 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;showScope&quot;</font>, <font color="#3080a0">&quot;Scope&quot;</font>,
+<font color="#303030">246 </font>        <font color="#506888">new</font> BMessage(MSG_SHOW_SCOPE), B_FOLLOW_LEFT);
+<font color="#303030">247 </font>
+<font color="#303030">248 </font>    showScope-&gt;SetValue(B_CONTROL_ON);
+<font color="#303030">249 </font>    showScope-&gt;ResizeToPreferred();
+<font color="#303030">250 </font>
+<font color="#303030">251 </font>    CreateInputMenu();
+<font color="#303030">252 </font>    CreateReverbMenu();
+<font color="#303030">253 </font>
+<font color="#303030">254 </font>    volumeSlider = <font color="#506888">new</font> BSlider(
+<font color="#303030">255 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;volumeSlider&quot;</font>, <font color="#3080a0">NULL</font>, <font color="#3080a0">NULL</font>,
+<font color="#303030">256 </font>        <font color="#806010">0</font>, <font color="#806010">100</font>, B_TRIANGLE_THUMB);
+<font color="#303030">257 </font>
+<font color="#303030">258 </font>    rgb_color col = { <font color="#806010">152</font>, <font color="#806010">152</font>, <font color="#806010">255</font> };
+<font color="#303030">259 </font>    volumeSlider-&gt;UseFillColor(<font color="#3080a0">true</font>, &amp;col);
+<font color="#303030">260 </font>    volumeSlider-&gt;SetModificationMessage(<font color="#506888">new</font> BMessage(MSG_VOLUME));
+<font color="#303030">261 </font>    volumeSlider-&gt;ResizeToPreferred();
+<font color="#303030">262 </font>    volumeSlider-&gt;ResizeTo(_W(scopeView) - <font color="#806010">42</font>, _H(volumeSlider));
+<font color="#303030">263 </font>
+<font color="#303030">264 </font>    playButton = <font color="#506888">new</font> BButton(
+<font color="#303030">265 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">80</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;playButton&quot;</font>, <font color="#3080a0">&quot;Play&quot;</font>, <font color="#506888">new</font> BMessage(MSG_PLAY_STOP),
+<font color="#303030">266 </font>        B_FOLLOW_RIGHT);
+<font color="#303030">267 </font>
+<font color="#303030">268 </font>    <font color="#505010">//playButton-&gt;MakeDefault(true);</font>
+<font color="#303030">269 </font>    playButton-&gt;ResizeToPreferred();
+<font color="#303030">270 </font>    playButton-&gt;SetEnabled(<font color="#3080a0">false</font>);
+<font color="#303030">271 </font>
+<font color="#303030">272 </font>    BBox* background = <font color="#506888">new</font> BBox(
+<font color="#303030">273 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), B_EMPTY_STRING, B_FOLLOW_ALL_SIDES,
+<font color="#303030">274 </font>        B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP,
+<font color="#303030">275 </font>        B_PLAIN_BORDER);
+<font color="#303030">276 </font>
+<font color="#303030">277 </font>    BBox* divider = <font color="#506888">new</font> BBox(
+<font color="#303030">278 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), B_EMPTY_STRING, B_FOLLOW_ALL_SIDES,
+<font color="#303030">279 </font>        B_WILL_DRAW | B_FRAME_EVENTS, B_FANCY_BORDER);
+<font color="#303030">280 </font>
+<font color="#303030">281 </font>    divider-&gt;ResizeTo(_W(scopeView), <font color="#806010">1</font>);
+<font color="#303030">282 </font>
+<font color="#303030">283 </font>    BStringView* volumeLabel = <font color="#506888">new</font> BStringView(
+<font color="#303030">284 </font>                    BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">NULL</font>, <font color="#3080a0">&quot;Volume:&quot;</font>);
+<font color="#303030">285 </font>
+<font color="#303030">286 </font>    volumeLabel-&gt;ResizeToPreferred();
+<font color="#303030">287 </font>
+<font color="#303030">288 </font>    <font color="#406080">float</font> width = <font color="#806010">8</font> + _W(scopeView) + <font color="#806010">8</font>;
+<font color="#303030">289 </font>
+<font color="#303030">290 </font>    <font color="#406080">float</font> height =
+<font color="#303030">291 </font>          <font color="#806010">8</font>  + _H(scopeView)
+<font color="#303030">292 </font>        + <font color="#806010">8</font>  + _H(showScope)
+<font color="#303030">293 </font>        + <font color="#806010">4</font>  + _H(inputMenu)
+<font color="#303030">294 </font>             + _H(reverbMenu)
+<font color="#303030">295 </font>        + <font color="#806010">2</font>  + _H(volumeSlider)
+<font color="#303030">296 </font>        + <font color="#806010">10</font> + _H(divider)
+<font color="#303030">297 </font>        + <font color="#806010">6</font>  + _H(playButton)
+<font color="#303030">298 </font>        + <font color="#806010">16</font>;
+<font color="#303030">299 </font>
+<font color="#303030">300 </font>    ResizeTo(width, height);
+<font color="#303030">301 </font>
+<font color="#303030">302 </font>    AddChild(background);
+<font color="#303030">303 </font>    background-&gt;ResizeTo(width, height);
+<font color="#303030">304 </font>    background-&gt;AddChild(scopeView);
+<font color="#303030">305 </font>    background-&gt;AddChild(showScope);
+<font color="#303030">306 </font>    background-&gt;AddChild(reverbMenu);
+<font color="#303030">307 </font>    background-&gt;AddChild(inputMenu);
+<font color="#303030">308 </font>    background-&gt;AddChild(volumeLabel);
+<font color="#303030">309 </font>    background-&gt;AddChild(volumeSlider);
+<font color="#303030">310 </font>    background-&gt;AddChild(divider);
+<font color="#303030">311 </font>    background-&gt;AddChild(playButton);
+<font color="#303030">312 </font>
+<font color="#303030">313 </font>    <font color="#406080">float</font> y = <font color="#806010">8</font>;
+<font color="#303030">314 </font>    scopeView-&gt;MoveTo(<font color="#806010">8</font>, y);
+<font color="#303030">315 </font>
+<font color="#303030">316 </font>    y += _H(scopeView) + <font color="#806010">8</font>;
+<font color="#303030">317 </font>    showScope-&gt;MoveTo(<font color="#806010">8</font> + <font color="#806010">55</font>, y);
+<font color="#303030">318 </font>
+<font color="#303030">319 </font>    y += _H(showScope) + <font color="#806010">4</font>;
+<font color="#303030">320 </font>    inputMenu-&gt;MoveTo(<font color="#806010">8</font>, y);
+<font color="#303030">321 </font>
+<font color="#303030">322 </font>    y += _H(inputMenu);
+<font color="#303030">323 </font>    reverbMenu-&gt;MoveTo(<font color="#806010">8</font>, y);
+<font color="#303030">324 </font>
+<font color="#303030">325 </font>    y += _H(reverbMenu) + <font color="#806010">2</font>;
+<font color="#303030">326 </font>    volumeLabel-&gt;MoveTo(<font color="#806010">8</font>, y);
+<font color="#303030">327 </font>    volumeSlider-&gt;MoveTo(<font color="#806010">8</font> + <font color="#806010">49</font>, y);
+<font color="#303030">328 </font>
+<font color="#303030">329 </font>    y += _H(volumeSlider) + <font color="#806010">10</font>;
+<font color="#303030">330 </font>    divider-&gt;MoveTo(<font color="#806010">8</font>, y);
+<font color="#303030">331 </font>
+<font color="#303030">332 </font>    y += _H(divider) + <font color="#806010">6</font>;
+<font color="#303030">333 </font>    playButton-&gt;MoveTo((width - _W(playButton)) / <font color="#806010">2</font>, y);
+<font color="#303030">334 </font>}
+</pre>
+
+<p>I am not going to walk through the code, but the main thing I want noticed is all the hard-coded numbers used in the manual layout, and all the work required to get things aligned. Another benefit to the Haiku layout system is cleaner code, and I think this example should prove that well. In fact I think I will let the code speak for itself. Here is the above CreateViews() method rewritten to use the layout system:</p>
+
+<pre>
+<font color="#303030">246 </font><font color="#406080">void</font> MidiPlayerWindow::CreateViews()
+<font color="#303030">247 </font>{
+<font color="#303030">248 </font>    <font color="#505010">// Set up needed views</font>
+<font color="#303030">249 </font>    scopeView = <font color="#506888">new</font> ScopeView;
+<font color="#303030">250 </font>
+<font color="#303030">251 </font>    showScope = <font color="#506888">new</font> BCheckBox(
+<font color="#303030">252 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;showScope&quot;</font>, <font color="#3080a0">&quot;Scope&quot;</font>,
+<font color="#303030">253 </font>        <font color="#506888">new</font> BMessage(MSG_SHOW_SCOPE), B_FOLLOW_LEFT);
+<font color="#303030">254 </font>    showScope-&gt;SetValue(B_CONTROL_ON);
+<font color="#303030">255 </font>
+<font color="#303030">256 </font>    CreateInputMenu();
+<font color="#303030">257 </font>    CreateReverbMenu();
+<font color="#303030">258 </font>
+<font color="#303030">259 </font>    volumeSlider = <font color="#506888">new</font> BSlider(
+<font color="#303030">260 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;volumeSlider&quot;</font>, <font color="#3080a0">NULL</font>, <font color="#3080a0">NULL</font>,
+<font color="#303030">261 </font>        <font color="#806010">0</font>, <font color="#806010">100</font>, B_TRIANGLE_THUMB);
+<font color="#303030">262 </font>    rgb_color col = { <font color="#806010">152</font>, <font color="#806010">152</font>, <font color="#806010">255</font> };
+<font color="#303030">263 </font>    volumeSlider-&gt;UseFillColor(<font color="#3080a0">true</font>, &amp;col);
+<font color="#303030">264 </font>    volumeSlider-&gt;SetModificationMessage(<font color="#506888">new</font> BMessage(MSG_VOLUME));
+<font color="#303030">265 </font>
+<font color="#303030">266 </font>    playButton = <font color="#506888">new</font> BButton(
+<font color="#303030">267 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">80</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;playButton&quot;</font>, <font color="#3080a0">&quot;Play&quot;</font>, <font color="#506888">new</font> BMessage(MSG_PLAY_STOP),
+<font color="#303030">268 </font>        B_FOLLOW_RIGHT);
+<font color="#303030">269 </font>    playButton-&gt;SetEnabled(<font color="#3080a0">false</font>);
+<font color="#303030">270 </font>
+<font color="#303030">271 </font>    BBox* divider = <font color="#506888">new</font> BBox(
+<font color="#303030">272 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), B_EMPTY_STRING, B_FOLLOW_ALL_SIDES,
+<font color="#303030">273 </font>        B_WILL_DRAW | B_FRAME_EVENTS, B_FANCY_BORDER);
+<font color="#303030">274 </font>    divider-&gt;SetExplicitMaxSize(
+<font color="#303030">275 </font>        BSize(B_SIZE_UNLIMITED, <font color="#806010">1</font>));
+<font color="#303030">276 </font>
+<font color="#303030">277 </font>    BStringView* volumeLabel = <font color="#506888">new</font> BStringView(
+<font color="#303030">278 </font>                    BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">NULL</font>, <font color="#3080a0">&quot;Volume:&quot;</font>);
+<font color="#303030">279 </font>    volumeLabel-&gt;SetAlignment(B_ALIGN_LEFT);
+<font color="#303030">280 </font>    volumeLabel-&gt;SetExplicitMaxSize(
+<font color="#303030">281 </font>        BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
+<font color="#303030">282 </font>
+<font color="#303030">283 </font>    <font color="#505010">// Build the layout</font>
+<font color="#303030">284 </font>    SetLayout(<font color="#506888">new</font> BGroupLayout(B_HORIZONTAL));
+<font color="#303030">285 </font>
+<font color="#303030">286 </font>    AddChild(BGroupLayoutBuilder(B_VERTICAL, <font color="#806010">10</font>)
+<font color="#303030">287 </font>        .Add(scopeView)
+<font color="#303030">288 </font>        .Add(BGridLayoutBuilder(<font color="#806010">10</font>, <font color="#806010">10</font>)
+<font color="#303030">289 </font>            .Add(BSpaceLayoutItem::CreateGlue(), <font color="#806010">0</font>, <font color="#806010">0</font>)
+<font color="#303030">290 </font>            .Add(showScope, <font color="#806010">1</font>, <font color="#806010">0</font>)
+<font color="#303030">291 </font>
+<font color="#303030">292 </font>            .Add(reverbMenu-&gt;CreateLabelLayoutItem(), <font color="#806010">0</font>, <font color="#806010">1</font>)
+<font color="#303030">293 </font>            .Add(reverbMenu-&gt;CreateMenuBarLayoutItem(), <font color="#806010">1</font>, <font color="#806010">1</font>)
+<font color="#303030">294 </font>
+<font color="#303030">295 </font>            .Add(inputMenu-&gt;CreateLabelLayoutItem(), <font color="#806010">0</font>, <font color="#806010">2</font>)
+<font color="#303030">296 </font>            .Add(inputMenu-&gt;CreateMenuBarLayoutItem(), <font color="#806010">1</font>, <font color="#806010">2</font>)
+<font color="#303030">297 </font>
+<font color="#303030">298 </font>            .Add(volumeLabel, <font color="#806010">0</font>, <font color="#806010">3</font>)
+<font color="#303030">299 </font>            .Add(volumeSlider, <font color="#806010">1</font>, <font color="#806010">3</font>)
+<font color="#303030">300 </font>        )
+<font color="#303030">301 </font>        .AddGlue()
+<font color="#303030">302 </font>        .Add(divider)
+<font color="#303030">303 </font>        .AddGlue()
+<font color="#303030">304 </font>        .Add(playButton)
+<font color="#303030">305 </font>        .AddGlue()
+<font color="#303030">306 </font>        .SetInsets(<font color="#806010">5</font>, <font color="#806010">5</font>, <font color="#806010">5</font>, <font color="#806010">5</font>)
+<font color="#303030">307 </font>    );
+<font color="#303030">308 </font>}
+</pre>
+
+<p>The only significant changes in the first section of the method where the views are created is the removal of the various manual layout related method calls, like <span class="geshifilter"><code class="cpp geshifilter-cpp">playButton<span style="color: #000040;">-</span><span style="color: #000040;">&amp;</span>gt<span style="color: #008080;">;</span>ResizeToPreferred<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span><span style="color: #008080;">;</span></code></span>, which was originally on line 269. There have been a few additions to give the layout system some hints on how we want things laid out. For example an unlimited width and max height of 1 is set up for the divider BBox, so it stays looking like a divider. In addition the volumeLabel is set up so it aligns left and fills up all the space available. This keeps it aligned with the labels for the BMenuFields above it.</p>
+
+<p>Next we have the real "meat" of the layout code which starts on line 284. The first thing I do is set a base layout. In this case I have decided to use a sort of "dummy" horizontal group layout so that I can later use the group layout builder to create the vertical layout I really want. It seems to be a quirk of the layout system that you have to have a layout manager set up in the window before you start adding other views that are managed by the layout system. I probably could have created the main vertical group layout outside of the builder and made that the root layout, but I don't think the code would have looked as nice.</p>
+
+<p>Speaking of the layout builders, they were created specifically for uses like the above, with each method returning an instance of the builder allowing essentially unlimited method chaining. With the right indentation it can look quite nice and becomes a good represention of how the GUI is structured. Hence why I like to use them. Currently there is a GridLayoutBuilder, GroupLayoutBuilder, and SplitLayoutBuilder.</p>
+
+<div style="float: right; border: 1px solid #aaa; padding: 5px; width: 500px; margin-left: 40px;">
+  <img src="/files/midiplayer_after.png" />
+  <div style="margin-top: 10px;">
+	<strong>Figure 3.</strong> The new layout-based MidiPlayer GUI at default (size 12) and size 18 fonts.
+  </div>
+</div>
+
+<p>On line 286 we have an AddChild() call with the call to the layout builders inside of it. The first argument for the BGroupLayoutBuilder is the orientation of the group layout and the second argument is the spacing used between the layout items. This gives the views contained within the layout a little breathing room so they don't look all crammed together. Once we have the group layout builder we can start adding views to it with the Add() method, and the first thing added is the scope view. Then we have the middle section which we want managed by a grid layout, hence the call to the grid layout builder. The arguments to BGridLayoutBuilder are also for spacing, in this case the horizontal and vertical spacing, respectively.</p>
+
+<p>On line 289 we start adding views to the grid layout by adding something called glue. What is glue? It is basically a filler that takes up space in the layout so that the views we care about are aligned properly. In this case I want the showScope checkbox aligned with the menus of the menu fields below it. More glue is used below in the vertical group layout to provide some space between the grid layout, the divider, the play button and the bottom of the window. This keeps things looking nice and also helps us maintain the look of the original MidiPlayer GUI.</p>
+
+<p>The other arguments to the Add() method for the BGridLayoutBuilder is the column and row we want the given view to appear in. So from this it can be seen that the glue is in column 0, row 0, the showScope checkbox is in column 1, row 0, the reverb menu label is in column 0, row 1, etc. Speaking of the reverb menu item, we can see that there are special methods in the BMenuField class to produce separate layout items for the one view. This is an interesting aspect of the layout system in that views that consist of different components can actually have their separate sections managed individually by the layout system. For another example of this look at the code for the ActivityMonitor, which uses this technique for the graph and legend of the main activity view.</p>
+
+<p>The final call to the group layout builder is SetInsets(), which basically is used to put some padding around the edge of the layout, in the order of left, top, right, and bottom. Five pixels seems to be a pretty standard choice for the insets. I could have used 8 pixels which would have been like what the original GUI had, but I think 5 is fine.</p>
+
+<p>There were a few other code changes needed to get the final GUI shown in Figure 3. First the needed headers were added. Second the constructor for the MidiPlayer window needed the B_AUTO_UPDATE_SIZE_LIMITS so that it gets resized automatically by the layout system:</p>
+
+<pre>
+<font color="#303030"> 41 </font>MidiPlayerWindow::MidiPlayerWindow()
+<font color="#303030"> 42 </font>    : BWindow(BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">1</font>, <font color="#806010">1</font>), <font color="#3080a0">&quot;MidiPlayer&quot;</font>, B_TITLED_WINDOW,
+<font color="#303030"> 43 </font>              B_ASYNCHRONOUS_CONTROLS | B_NOT_RESIZABLE | B_NOT_ZOOMABLE | B_AUTO_UPDATE_SIZE_LIMITS)
+</pre>
+
+<p>Third the methods used to build the menu fields needed to be changed to use the simple layout system friendly contructor. Also any manually layout code was removed. So for example the CreateReverbMenu() was changed so that this:</p>
+
+<pre>
+<font color="#303030">230 </font>    reverbMenu = <font color="#506888">new</font> BMenuField(
+<font color="#303030">231 </font>        BRect(<font color="#806010">0</font>, <font color="#806010">0</font>, <font color="#806010">128</font>, <font color="#806010">17</font>), <font color="#3080a0">&quot;reverbMenu&quot;</font>, <font color="#3080a0">&quot;Reverb:&quot;</font>, reverbPopUp,
+<font color="#303030">232 </font>        B_FOLLOW_LEFT | B_FOLLOW_TOP);
+<font color="#303030">233 </font>
+<font color="#303030">234 </font>    reverbMenu-&gt;SetDivider(<font color="#806010">55</font>);
+<font color="#303030">235 </font>    reverbMenu-&gt;ResizeToPreferred();
+</pre>
+
+<p>became this:</p>
+
+<pre>
+<font color="#303030">235 </font>    reverbMenu = <font color="#506888">new</font> BMenuField(<font color="#3080a0">&quot;Reverb:&quot;</font>, reverbPopUp, <font color="#3080a0">NULL</font>);
+</pre>
+
+<p>A similar change was made for the CreateInputMenu() method.</p>
+
+<p>Finally the constructor for the ScopeView was changed to make it a bit wider to accomodate a size 18 font. This was the "cheap" way to do it but in this case it works fine. The "proper" way would be to add the methods needed by the layout system to tell the layout system what the minimum, preferred and maximum sizes would be for that view. For this article I did not want to cover that but will probably go into it in a future article on the layout system.</p>
+
+<p>To see all of this updated code take a look at the MidiPlayer sources which are in the Haiku repository at src/apps/midiplayer. To see the previous code go back to before revision 26408 when I submitted these changes.</p>
+
+<h3>Conclusion</h3>
+
+<p>To get more ideas and tips on how to use the layout system until more documentation is written take a look at Ingo's test application for the layout system, called LayoutTest1. The source for this is at tests/kits/interface/layout/LayoutTest1.cpp and it can be tested in Haiku by adding the following line to your UserBuildConfig file:<p>
+
+<pre>
+AddFilesToHaikuImage home config bin : LayoutTest1 ;
+</pre>
+
+<p>It can then be run either from Tracker from /boot/home/config/bin or by running it from Terminal. The code also has various examples of how to build a GUI with the layout system, sometimes using builders and sometimes not, depending on what is appropriate.</p>
+
+<p>In addition the code for all the layout classes is in the Haiku Interface Kit, so for those of you who really want to dig into it, take a look at the Interface Kit headers in headers/os/interface and the implementation in src/kits/interface and src/kits/interface/layouter.</p>
+
+<p>Finally a warning: because these classes are new and untested from the perspective of an API, they are considered a private API and for now should only be used inside Haiku core code, such as the included applications or preference applets. This is because the API might change or need to be tweaked and we would not want to break other people's code (we can fix broken code inside the Haiku repository ourselves.) So just keep that in mind and use the layout system classes at the risk of having your code broken.</p>        </div>
+        </div>
+</div>
+  

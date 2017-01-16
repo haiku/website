@@ -1,0 +1,71 @@
++++
+type = "article"
+title = "How to Work on the Haiku WebKit Port"
+date = "2007-12-04T05:57:08.000Z"
+tags = ["build", "coding", "WebKit"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <div class="box-stop">This article is out of date and the code linked should not be used for anything right now. Please, refer to the more recent <a href="http://www.haiku-os.org/articles/2009-10-30_how_work_webkit" title="How to work on WebKit">How to Work on WebKit</a> article instead.</div>
+
+<p>To work on the Haiku WebKit port one needs to take some time to get the right environment set up. At the moment the Haiku WebKit port can only be developed on Linux and cross compiled with the GCC4 compiler. So the first step is to follow my <a href="http://haiku-os.org/documents/dev/building_haiku_on_ubuntu_linux_step_by_step">tutorial on building Haiku on Ubuntu</a>. On step 5 of the above, please be sure to build the GCC4 cross compiler, not the GCC2 version. If you have already built Haiku with GCC2 on Linux, I recommend renaming your current "generated" directory in the Haiku tree to "generated_gcc2" and then continue with step 5 from the above, setting up the GCC4 cross compiler. Switching between compilers can then be done by just renaming the generated directory, since it contains all compiled build tools and necessary files for each compiler.</p>
+
+<!--break-->
+
+<p>Once the above is completed, you need to download and set up the following four files:</p>
+
+<ol>
+	<li>
+	  <a href="http://www.haikuware.com/view-details/development/sample-code/webkit-haiku-port-source-code">WebKitHaikuSource.tgz</a> (10.8 MB, Haikuware) - The current source for the Haiku WebKit port directly from my copy. This includes all the core WebKit files you will need to build the Haiku WebKit port. I have also included the source for other ports in case other developers wish to reference them. This should be extracted into the 3rdparty directory of the Haiku source:
+<pre>
+<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">cd ~<span style="color: #000040;">/</span>develop<span style="color: #000040;">/</span>haiku<span style="color: #000040;">/</span>trunk<span style="color: #000040;">/</span>3rdparty
+tar zxf <span style="color: #000040;">&amp;</span>lt<span style="color: #008080;">;</span>your download directory<span style="color: #000040;">&amp;</span>gt<span style="color: #008080;">;</span><span style="color: #000040;">/</span>WebKitSource.<span style="color: #007788;">tgz</span></pre></div>
+</pre>
+		This is NOT the full WebKit tree from SVN, just the directories that affect the Haiku port. In addition the .svn directories have been stripped out to conserve space. You may want to also download the full tree from the <a href="http://webkit.org/building/checkout.html">WebKit SVN as per instructions on the WebKit site</a>.
+	</li>
+
+	<li>
+		<a href="http://ryanleavengood.com/files/WebKitDependencies.tgz">WebKitDependencies.tgz</a> (14.4 MB) - A copy of my "WebKitLibs" directory that contains the installed versions of the various libraries that WebKit depends on, like ICU, libxml2, CURL and SQLite. All of these have been compiled with the GCC4 cross compiler to run on Haiku. Currently only ICU and libxml2 seem to work 100% correctly, but the others can at least be compiled against. This also should be extracted into the 3rdparty directory like the source code above.
+	</li>
+
+	<li>
+	  <a href="http://ryanleavengood.com/files/WebKitBuildConfig">WebKitBuildConfig</a> (2.5 KB) - This file adds the WebKit port to the Haiku build system. This should be put into the build/jam directory of the Haiku source tree. Then the following line needs to be added to the UserBuildConfig in that same directory (create that file if it does not exist yet):
+<pre>
+<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">include <span style="color: #008000;">&#91;</span> FDirName $<span style="color: #008000;">&#40;</span>HAIKU_BUILD_RULES_DIR<span style="color: #008000;">&#41;</span> WebKitBuildConfig <span style="color: #008000;">&#93;</span> <span style="color: #008080;">;</span></pre></div>
+</pre>
+		Please note and include ALL the spaces in the above, they are required for Jam!
+	</li>
+
+	<li>
+	  <a href="http://ryanleavengood.com/files/linkicu.sh">linkicu.sh</a> (0.5 KB) - This script is added to the Haiku image and must be run prior to using any WebKit libraries. This file needs to be put in the build/jam folder also. See below for more information.
+	</li>
+</ol>
+
+<p>Once the above is done, the HaikuLauncher can be built by typing:</p>
+
+<pre>
+<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">jam HaikuLauncher</pre></div>
+</pre>
+
+<p>This will also compile JavaScriptCore and WebCore since the HaikuLauncher depends on them. To only compile JavaScriptCore or WebCore, use the following commands:</p>
+
+<pre>
+<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">jam libjavascriptcore.<span style="color: #007788;">so</span>
+jam libwebcore.<span style="color: #007788;">so</span></pre></div>
+</pre>
+
+<p>I generally add the -q option to the jam command-line so it quits on the first error. I find this makes it easier to fix build problems by fixing them one at a time.</p>
+
+<p>To test the port just build the Haiku image as you normally would. The WebKitBuildConfig will add the WebKit related files to the image, which is also made bigger to accomodate the added files. Once you have booted Haiku, be sure to run the linkicu.sh script above. This sets up the appropriate symlinks for the ICU library. One day I may see about removing this, but for now we have to deal with it. The HaikuLauncher can be run by typing "HaikuLauncher" in the Terminal. Right now it is very ugly and pretty much does nothing.</p>
+
+<p>When doing normal Haiku development it would be wise to set one or both of the variables at the top of the UserBuildConfig, <span class="geshifilter"><code class="cpp geshifilter-cpp">COMPILE_WEBKIT</code></span> and <span class="geshifilter"><code class="cpp geshifilter-cpp">ADD_WEBKIT_TO_IMAGE</code></span> to 0, so that WebKit isn't compiled or added to the image, respectively. This is especially important when switching back to the GCC2 compiler, since this compiler cannot currently (or probably ever) compile WebKit.</p>
+
+<p>Eventually the Haiku platform files will be added to the WebKit SVN repository, so Step 1 above will be replaced with downloading the WebKit source from SVN. But for now I'm periodically updating my tree from their SVN and making any needed changes/fixes which I will then package up into the above file.</p>
+
+<p>Any changes or fixes made to the code should be diffed against the original version of my code and emailed to me at the address shown in the copyright header of most of the Haiku port files (hint: my last name at gmail.) Please use diff -u to produce a unified diff. I know this is a bit of a pain, but until we get the port in the WebKit SVN we need to deal with it. Hopefully that will happen soon.</p>        </div>
+        </div>
+</div>
+  

@@ -1,0 +1,293 @@
++++
+type = "article"
+title = "Driver Development Presentation at WalterCon 2006"
+date = "2006-10-27T22:00:00.000Z"
+tags = ["waltercon", "presentation", "driver development"]
++++
+
+
+    <div class="field field-type-text field-field-body">
+    <div class="field-items">
+            <div class="field-item odd">
+                    <p>This is a transcription of the Driver Development Presentation given by  Axel Dörfler at WalterCon 2006.</p>
+
+<h1>Contents</h1>
+<ol>
+<li><a href="">The Device File System</a>, <i>devfs</i></li>
+<li><a href="">Modules</a></li>
+<li><a href="">Device Types</a></li>
+<li><a href="">Interrupts</a></li>
+<li><a href="">Haiku Specials</a></li>
+</ol>
+
+<!--break-->
+
+<h1>1. Device File System</h1>
+
+<h2>Weakly typed directory hierarchy:</h2>
+
+<ul>
+<li>there is no <i>/dev/eth0</i>, instead, all network devices are in <i>/dev/net/</i></li>
+<li>all drivers in a subdirectory usually follow the same API, however this is not enforced</li>
+<li>drivers can support multiple APIs by publishing more than one device</li>
+<li>the name of the driver does not need to have any relation to where or what is
+published, even though you shouldn't abuse this to avoid confusion</li>
+</ul>
+
+<h2>For development:</h2>
+
+<ul>
+<li>use <span class="geshifilter"><code class="cpp geshifilter-cpp">rescan <span style="color: #000080;">&lt;</span>driver name<span style="color: #000080;">&gt;</span></code></span> to make sure the system
+reloads your driver after a recompilation</li>
+<li>for the rescanning to work as expected, the driver <b>must</b> be located in the
+<i>drivers/bin/</i> directory - this is the only reason why it's usually not
+a good idea to put the driver into <i>drivers/dev/</i></li>
+<li>Rescanning will only work if no device published by the driver is currently in use</li>
+</ul>
+
+<h2>System boot in BeOS:</h2>
+
+<ul>
+<li>The boot loader needs to load all drivers needed to let the kernel access
+the boot file system</li>
+<li>Only the drivers found in certain well known directories are loaded:
+<ul>
+<li><i>drivers/dev/</i></li>
+<li><i>drivers/dev/disk/</i></li>
+
+</ul></li>
+<li>All other drivers are loaded on demand: an application (for example, the
+media server) looks for devices in <i>/dev/audio</i>, and the <i>devfs</i>
+will then load all of the drivers it finds in that directory.</li>
+</ul>
+
+<h2>System boot in Haiku:</h2>
+
+<ul>
+<li>It's yet to be determined how exactly the boot loader will do its job</li>
+<li>If possible, it will use hardware detection to identify which driver need to be loaded so that the kernel can boot further</li>
+</ul>
+
+<h1>2. Modules</h1>
+
+<ul>
+<li>BeOS supports 3 different types of kernel add-ons:
+<ul>
+<li>drivers</li>
+<li>file systems</li>
+
+<li>modules</li>
+</ul></li>
+<li>Haiku's file systems are standard modules; BeOS file systems are not supported</li>
+<li>Haiku's new device system uses modules only, too, but BeOS drivers are still supported for compatibility</li>
+</ul>
+
+<ul>
+<li>There can be several exported modules per add-on:
+			<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">	module_info <span style="color: #000040;">*</span>modules<span style="color: #008000;">&#91;</span><span style="color: #008000;">&#93;</span> <span style="color: #000080;">=</span> <span style="color: #008000;">&#123;</span>
+		<span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">*</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>scsi_for_sim_module,
+		<span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">*</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>scsi_bus_module,
+		<span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">*</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>scsi_device_module,
+		<span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">*</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>scsi_bus_raw_module,
+		<span style="color: #0000ff;">NULL</span>
+	<span style="color: #008000;">&#125;</span><span style="color: #008080;">;</span></pre></div></li>
+
+<li>The module name is determined by its path - plus an additional arbitrary identifier:
+<ul>
+<li>Name: <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #FF0000;">&quot;bus_managers/scsi/bus/v1&quot;</span></code></span></li>
+<li>Path: <i>bus_managers/scsi</i></li>
+<li>Free Identifier: <span class="geshifilter"><code class="cpp geshifilter-cpp">bus<span style="color: #000040;">/</span>v1</code></span></li>
+</ul></li>
+
+</ul>
+
+<ul>
+<li>To use a module, you have to get it first:
+			<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">	device_manager_info <span style="color: #000040;">*</span>gManager<span style="color: #008080;">;</span>
+	status_t status <span style="color: #000080;">=</span> get_module<span style="color: #008000;">&#40;</span>B_DEVICE_MANAGER_MODULE_NAME,
+		<span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">**</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>gManager<span style="color: #008000;">&#41;</span><span style="color: #008080;">;</span>
+	<span style="color: #0000ff;">if</span> <span style="color: #008000;">&#40;</span>status <span style="color: #000080;">&lt;</span> B_OK<span style="color: #008000;">&#41;</span> <span style="color: #008000;">&#123;</span>
+		...
+	<span style="color: #008000;">&#125;</span></pre></div></li>
+
+<li>The <span class="geshifilter"><code class="cpp geshifilter-cpp">gManager</code></span> variable points to the requested module if the above call was successful; the module's exported functions can be used</li>
+<li>After usage, you have to put the module away again using <span class="geshifilter"><code class="cpp geshifilter-cpp">put_module<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> so that the system knows that it may unload the module again to save memory</li>
+</ul>
+
+<ul>
+<li>Haiku extension: <i>Dependencies</i>
+			<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">	locked_pool_interface <span style="color: #000040;">*</span>gLockedPool<span style="color: #008080;">;</span>
+	device_manager_info <span style="color: #000040;">*</span>gManager<span style="color: #008080;">;</span>
+&nbsp;
+	module_dependency module_dependencies<span style="color: #008000;">&#91;</span><span style="color: #008000;">&#93;</span> <span style="color: #000080;">=</span> <span style="color: #008000;">&#123;</span>
+		<span style="color: #008000;">&#123;</span>B_DEVICE_MANAGER_MODULE_NAME, <span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">**</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>gManager<span style="color: #008000;">&#125;</span>,
+		<span style="color: #008000;">&#123;</span>LOCKED_POOL_MODULE_NAME, <span style="color: #008000;">&#40;</span>module_info <span style="color: #000040;">**</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>gLockedPool<span style="color: #008000;">&#125;</span>,
+		<span style="color: #008000;">&#123;</span><span style="color: #008000;">&#125;</span>
+	<span style="color: #008000;">&#125;</span><span style="color: #008080;">;</span></pre></div></li>
+
+<li>These dependencies are automatically resolved when loading the module - the referenced modules are directly available via the provided variables</li>
+<li>They will be put away after your module has been uninitialized</li>
+</ul>
+
+<h1>3. Device Types</h1>
+
+<h2>The sub directory determines the function and API of a device:</h2>
+
+<ul>
+<li>network drivers are in <i>/dev/net</i></li>
+<li>disk drivers are in /dev/disk/</li>
+
+<li>audio drivers are in /dev/audio/; there are further sub directories which specify the exact function and API, for example <i>old</i> for the R3 style sound interface, or <i>multi</i> for the never finished multi audio interface</li>
+<li>graphics drivers are in <i>/dev/graphics/</i>, TV and similar drivers can be found in <i>/dev/video/</i></li>
+</ul>
+
+<h2>API? What API?</h2>
+
+<ul>
+<li>all devices export the same C API</li>
+<li>the special type depending API is completely exported via the general purpose <span class="geshifilter"><code class="cpp geshifilter-cpp">ioctl<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> call</li>
+</ul>
+
+<h2><span class="geshifilter"><code class="cpp geshifilter-cpp">ioctl<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> pitfalls</h2>
+
+<ul>
+<li>You have to make sure the passed in arguments are valid!</li>
+
+<li>You have to make sure any pointers are valid - and stay valid during execution</li>
+<li>There is no publicly documented way to do the above in BeOS; in Haiku, you have to use <span class="geshifilter"><code class="cpp geshifilter-cpp">user_memcpy<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> to copy any incoming data before use in the kernel</li>
+<li>Any application can send any control codes - make extra double sure you can't cause crashes this way</li>
+<li>BeOS does not preserve the optional length argument when given</li>
+</ul>
+
+<h2>Network device drivers</h2>
+
+<ul>
+<li>Private definitions in <i>ether_driver.h</i></li>
+<li>The ETHER_INIT parameters can safely be ignored (they are always 0 for Haiku)</li>
+
+<li>The BONE extensions ETHER_GETIFTYPE, and ETHER_GETLINKSTATE will be supported by Haiku as well</li>
+<li>ETHER_HASIOVECS might not be supported - in that case, a replacement for this mechanism will be implemented (important for speedy Gigabit ethernet)</li>
+<li>More or less good example implementations: <span class="geshifilter"><code class="cpp geshifilter-cpp">rtl8169</code></span> for a Gigabit driver, <span class="geshifilter"><code class="cpp geshifilter-cpp">sis900</code></span> for a 10/100MBit driver</li>
+</ul>
+
+<h2>Audio device drivers</h2>
+
+<ul>
+<li>Obsolete R3 definitions in <i>sound.h</i> - this is not supported by Haiku yet</li>
+
+<li>R5's multi audio interface was never completely finished or documented (for example, recording never worked)</li>
+<li>Haiku's current multi audio implementation is not completely compatible, and is therefore called <span class="geshifilter"><code class="cpp geshifilter-cpp">hmulti_audio</code></span> for the time being</li>
+<li>Example for the old R3 API: <span class="geshifilter"><code class="cpp geshifilter-cpp">sonic_vibes</code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp">usb_audio</code></span>, <span class="geshifilter"><code class="cpp geshifilter-cpp">sis7018</code></span></li>
+
+<li>Example for Be's multi audio API: <span class="geshifilter"><code class="cpp geshifilter-cpp">ich97</code></span> - this will likely be converted to the new Haiku API, though</li>
+<li>Example for Haiku's current multi audio API would be: <span class="geshifilter"><code class="cpp geshifilter-cpp">auich</code></span></li></ul>
+
+<h2>Graphics device drivers (1/2)</h2>
+
+<ul>
+<li>Special breed because the interface is mostly free</li>
+<li>The only call is B_GET_ACCELERANT_SIGNATURE to identify the accelerant to be used by the <span class="geshifilter"><code class="cpp geshifilter-cpp">app_server</code></span></li>
+
+<li>The real app_server API to be implemented is defined in <i>add-ons/graphics/Accelerant.h</i></li>
+<li>The interface as defined in <i>GraphicsCard.h</i> is deprecated and won't be supported in Haiku</li>
+</ul>
+
+<h2>Graphics device drivers (2/2)</h2>
+
+<ul>
+<li>Haiku will extend the existing API (in a back- and upwards compatible way), but it's not yet finalized. For example, 32 bit mouse cursors with transparency will be used in Haiku</li>
+<li>Example implementation to look at: <span class="geshifilter"><code class="cpp geshifilter-cpp">intel_extreme</code></span> - the exception here is the <span class="geshifilter"><code class="cpp geshifilter-cpp">B_PROPOSE_MODE</code></span> hook which should be better be used from a different driver at the time of this writing</li>
+</ul>
+
+<h1>4. Interrupts</h1>
+
+<ul>
+<li>An interrupt will be enabled when you install a dedicated handler:
+<div class="geshifilter"><pre class="cpp geshifilter-cpp" style="font-family:monospace;">	status <span style="color: #000080;">=</span> install_io_interrupt_handler<span style="color: #008000;">&#40;</span>info.<span style="color: #007788;">pci</span><span style="color: #000040;">-</span><span style="color: #000080;">&gt;</span>u.<span style="color: #007788;">h0</span>.<span style="color: #007788;">interrupt_line</span>,
+		<span style="color: #000040;">&amp;</span>my_interrupt_handler, <span style="color: #008000;">&#40;</span><span style="color: #0000ff;">void</span> <span style="color: #000040;">*</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">&amp;</span>info, 0<span style="color: #008000;">&#41;</span><span style="color: #008080;">;</span></pre></div></li>
+
+<li>When your driver is closed, you have to remove that handler again using <span class="geshifilter"><code class="cpp geshifilter-cpp">remove_io_interrupt_handler<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span></li>
+<li>You get the interrupt line either from the PCI device info structure, or (like PS/2, and other legacy devices) you have a documented fixed line that you have to use</li>
+</ul>
+
+<h2>Things to know about interrupt handlers (1/4)</h2>
+
+<ul>
+<li>You may need to share your interrupt line with another driver; the first thing you should do in that handler is to test that <b>your</b> hardware device generated the interrupt</li>
+
+<li>Since a handler is called exclusively on one CPU, it should execute in very little time: the whole CPU is paused for other things while it's executing your code</li>
+</ul>
+
+<h2>Things to know about interrupt handlers (2/4)</h2>
+
+<ul>
+<li>The handler is called with interrupts turned off - no new interrupt can be generated while your handler is on it, at least that's the case for non-legacy edge-triggered interrupts</li>
+<li>A direct consequence of the two items above: you must not wait in your driver</li>
+</ul>
+
+<h2>Things to know about interrupt handlers (3/4)</h2>
+
+<ul>
+<li>The only real API you can use while in a handler is:
+<ul>
+<li><span class="geshifilter"><code class="cpp geshifilter-cpp">release_sem_etc<span style="color: #008000;">&#40;</span>..., B_DO_NOT_RESCHEDULE<span style="color: #008000;">&#41;</span></code></span></li>
+
+<li><span class="geshifilter"><code class="cpp geshifilter-cpp">acquire_spinlock<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">/</span>release_spinlock<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span></li>
+<li><span class="geshifilter"><code class="cpp geshifilter-cpp">get_memory_map<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> can be currently used, but this may not be possible on all architectures, and may also be deprecated in the future</li>
+</ul>
+</li><li>Timer handlers are very similar than interrupts in practice, and the same restrictions apply</li>
+</ul>
+
+<h2>Things to know about interrupt handlers (4/4)</h2>
+
+<ul>
+<li>Sometimes, your BIOS fails to assign an interrupt to your (PCI) device; this is a problem of BeOS that Haiku probably will overcome, but doesn't yet do so; if that happens the interrupt line will be <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #208080;">0x0</span></code></span> or <span class="geshifilter"><code class="cpp geshifilter-cpp"><span style="color: #208080;">0xff</span></code></span></li>
+</ul>
+
+<h1>5. Haiku Specials</h1>
+<h2><i>devfs</i> extensions (not necessarily in R1):</h2>
+
+<ul>
+<li>driver will be able to publish attributes with their devices where, for example, the network MAC address can be shown</li>
+
+<li>query support will be implemented as well</li>
+<li>Also, device writers are encouraged to place unique (serial) identifiers into the attributes - this will allow querying for your particular USB printer (and its settings), no matter where you attached it</li>
+</ul>
+
+<h2>New device system (1/2):</h2>
+
+<ul>
+<li>A device tree is built after the hardware found in the computer</li>
+<li>The function and device IDs can identify the driver to be used, the system can find the right driver faster</li>
+
+<li>Therefore, the system knows which device belongs to which driver; if your sound card already has a driver, it's not needed to look for any other drivers if that's the only sound card in your computer</li>
+</ul>
+
+<h2>New device system (2/2):</h2>
+
+<ul>
+<li>No driver can mess with a device that already has a driver</li>
+<li>Dynamic publishing and unpublishing of drivers at any time; it's not necessary to pre-publish any devices to make it available (for example, for USB mass storage devices you may put into your computer)</li>
+
+<li>You know if your driver was called from within the kernel or from userland</li>
+<li>Additional <span class="geshifilter"><code class="cpp geshifilter-cpp">read<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span><span style="color: #000040;">/</span>write<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span> calls that directly let you access ranges of physical memory</li>
+</ul>
+
+<h2>Extended stability and security:</h2>
+
+<ul>
+<li>New area flag <span class="geshifilter"><code class="cpp geshifilter-cpp">B_USER_CLONEABLE_AREA</code></span> prevents user code from cloning and inspecting kernel or driver data</li>
+
+<li>Defined interface to access user memory:
+<ul>
+<li><span class="geshifilter"><code class="cpp geshifilter-cpp">user_memcpy<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span></li>
+<li><span class="geshifilter"><code class="cpp geshifilter-cpp">user_strlcpy<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span></li>
+<li><span class="geshifilter"><code class="cpp geshifilter-cpp">user_memset<span style="color: #008000;">&#40;</span><span style="color: #008000;">&#41;</span></code></span></li>
+</ul>
+</li>
+
+</ul>
+        </div>
+        </div>
+</div>
+  
