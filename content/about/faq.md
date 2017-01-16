@@ -105,7 +105,7 @@ Yes! We reuse network drivers from FreeBSD, so most network adapters will work o
 ### What is the status of wireless internet connections?
 Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to WPA, WEP and open networks easily using the GUI.
 
-Some wireless network adapters require installation of a firmware file, which must be installed by running the install-wifi-firmwares script (see the guide [Connecting to wireless networks](guides/daily-tasks/wireless).
+Some wireless network adapters require installation of a firmware file, which must be installed by running the install-wifi-firmwares script (see the guide [Connecting to wireless networks](/guides/daily-tasks/wireless).
 
 ### What license is Haiku released under?
 Most of the Haiku code is released under the very liberal [MIT License](http://www.opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses.
@@ -114,7 +114,7 @@ Most of the Haiku code is released under the very liberal [MIT License](http://w
 Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [check out this page](http://haiku-inc.org)
 
 ### What platform(s) is Haiku targeted to run on?
-The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development. 
+The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
 
 ### Will there be a 64-bit version of Haiku?
 For R1 we are only targeting x86-32 (i586 and newer). However, there is a Haiku version for x86-64 that doesn't have official support for now; it's not as complete as the main version yet. You can download a nightly build of it on [download.haiku-os.org](https://download.haiku-os.org/nightly-images/x86_64/).
@@ -123,7 +123,7 @@ For R1 we are only targeting x86-32 (i586 and newer). However, there is a Haiku 
 Some common questions around the installation of software packages under Haiku.
 
 ### Is there a package manager?
-Yes! Haiku comes with a powerful package management system which makes it very easy to install applications and keep them up to date. Applications are distributed as package files which can either be installed from HaikuDepot, the graphical package management application, or downloaded directly from websites or other sources. 
+Yes! Haiku comes with a powerful package management system which makes it very easy to install applications and keep them up to date. Applications are distributed as package files which can either be installed from HaikuDepot, the graphical package management application, or downloaded directly from websites or other sources.
 
 ### How do I update my installation of Haiku?
 Currently this is only possible from the Terminal, see the guide [Updating your system](/guides/daily-tasks/updating-system)
@@ -141,13 +141,13 @@ There are also some alternative places to get packages:
 ## Applications
 
 ### Is there an instant messenger client?
-Yes! You'll find a package for Caya, the multi-protocol IM client. Several alternatives are also available. 
+Yes! You'll find a package for Caya, the multi-protocol IM client. Several alternatives are also available.
 
 ### Is there Java support?
-Yes! The OpenJDK virtual machine is available and enables you to run applications such as Netbeans, JDownloader, and much more. 
+Yes! The OpenJDK virtual machine is available and enables you to run applications such as Netbeans, JDownloader, and much more.
 
 ### Is there Flash support?
-Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open source operating system such as Haiku. However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for example), or using native applications such as UberTuber. 
+Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open source operating system such as Haiku. However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for example), or using native applications such as UberTuber.
 
 ### Is there an office suite?
 There are several options:
@@ -239,7 +239,7 @@ Most modern PC hardware uses sound devices compatible with the Intel HDA (high d
 ### Why is there no network access in VirtualBox?
 The default network adapter type in VirtualBox is known to not work well with Haiku.
 
-Fortunately VirtualBox provides several alternatives, which work much better. Try configuring your machine to use one of those, see the guide [Emulating Haiku in VirtualBox](guides/virtualizing/virtualbox)
+Fortunately VirtualBox provides several alternatives, which work much better. Try configuring your machine to use one of those, see the guide [Emulating Haiku in VirtualBox](/guides/virtualizing/virtualbox)
 
 ### Is there a list of working hardware?
 The development wiki has a [list of drivers](https://dev.haiku-os.org/wiki/HardwareInfo)
