@@ -7,7 +7,7 @@ tags = ["ui", "intergace", "gui", "R2"]
 +++
 
 This blog post talks about the changes that have been hapenning in recent versions of others Operating Systems, and wether Haiku should copy them or not.
-<!--break-->
+<!--more-->
 A long time ago, in 1984, Apple designed the user interface of the Macintosh. This was not the first one, (the first was at Xerox PARC) but it was widely known and set the standard for many other OSes. Amiga Workbench and GEM borrowed the menu at the top of the screen, everyone started to use cursors and icons, and titlebar for windows with buttons to close and resize them. BeOS, of course, also got a lot of inspiration from this user interface being created partly by former Apple employees.
 
 However, each of these systems grew up its own way, keeping many differences with the others. Amiga had a system of screens, where each application had a desktop on its own and windows inside it ; GEM kept single-task and most applications ran full screen instead of using windows, mac tried to integrate some multitasking while keeping the GUI as simple as possible.

@@ -9,7 +9,7 @@ tags = ["hdu", "conference", "brisbane", "australia", "uq", "developers", "c++"]
 If anything could go wrong -- it did go wrong at the Fifth Annual <a href="http://haikudownunder.com/" target="_blank">Haiku Down Under Conference</a> for Users and Developers, held at <a href="http://uq.edu.au/" target="_blank">The University of Queensland</a>, Brisbane, Australia on 19th August, 2012. At least, that's how it initially played out.
 
 <div align="center"><img src="http://haikudownunder.com/gallery/photo.php?39&size&400" alt="GP South Building at The University of Queensland" /></div>
-<!--break-->
+<!--more-->
 <h4>What could go wrong</h4>
 
 With it being a lovely August Winter Morning in Brisbane, I thought what could go wrong until realizing that our local transport service would be late and wouldn't get to me to venue on time. I'd be 20-30 minutes late. No biggy, I thought. I updated the web site and made a <a href="http://www.ustream.tv/recorded/24803762" target="_blank">short video</a> explaining the issue. However, other obstacles were coming my way in the form of the conference room's power extension cord was missing, network ports weren't live and needed to be patched up in the communication cabinet, switch VLANs had to be dealt with and then uStream's broadcasting software would only recognize the webcam and not the desktop (via ManyCam). I fired up Firefox - same problem. I then ditched uStream and went head first into Google Hangouts. Boy was I sorry ;)

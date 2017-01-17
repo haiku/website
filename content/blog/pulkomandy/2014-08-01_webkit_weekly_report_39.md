@@ -7,7 +7,7 @@ tags = ["WebKit", "webpositive", "contract", "Services Kit", "contract work"]
 +++
 
 The quest to provide a better web browsing experience continues this week with some small fixes which result from hours of tracking down bugs.
-<!--break-->
+<!--more-->
 On the Haiku side:
 <ul><li>The HTTP port is properly added to the "Host" HTTP header, making it possible to access websites on a non-default port.</li>
 <li>Data URI decoding was improved, and urldecoding made safer.</li> <li>More fixes to the HTTP protocol handler for gzipped data. This works reliably again.</li></ul>

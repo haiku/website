@@ -11,7 +11,7 @@ Hello there!
 My contract has ended, but for now I have some free time to write a report every month about the ongoing development efforts from the Haiku team. I think this is a nice way to better see the work done, more so than looking at the roadmap progress bars which tend to not move much.
 
 This month there were 91 commits (hrev48757-hrev48848). Let's see what's inside those.
-<!--break-->
+<!--more-->
 <h3>Preferences refactoring</h3>
 
 During my contract, I got the new network preflet working well enough to replace the previous one. This is the 3rd rewrite of the network preferences since the Haiku project started. While the new preflet is a bit more extensible than the previous iteration, the code architecture isn't that great (mainly because the user interface evolved quite a bit since the initial design). Axel (axeld) is working on refactoring the code to work in a simpler and more reliable way.

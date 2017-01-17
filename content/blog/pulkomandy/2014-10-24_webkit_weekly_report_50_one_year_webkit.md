@@ -11,7 +11,7 @@ Hello everyone!
 This week is a bit special, as it closes the first year of my contract with Haiku. I wish to thank everyone for their support through donations, bug reports, comments on these articles, and general support for my work. I hope this will continue into next year.
 
 This was again a rather busy week, but there was not much work on WebKit itself. I'll keep the breakdown I used last week (haiku/haikuports/webkit) as it seems to work well.
-<!--break-->
+<!--more-->
 <h3>Changes in Haiku</h3>
 
 I worked on several things in Haiku this week, some of which could be considered "off-topic". I'm trying to remove the most obvious bugs and make things more ready for a release. This started last week with the screensaver fixes, but there is more this week.

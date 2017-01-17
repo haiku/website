@@ -8,7 +8,7 @@ tags = ["contract work", "package management", "infrastructure"]
 
 Hello again!<br>
 It's been two weeks since my last report, as I wasn't working full-time these past two due to some outside appointments and other conflicts. I'll be back to working full-time next week. Despite this, I managed to make a lot of progress on a number of fronts.
-<!--break-->
+<!--more-->
 <br>
 <br>
 As mentioned previously, the next thing to work on in the build server was file transfers. These are now complete, and the build server is now capable of handling file transfers from the client to the server. This is a crucial feature, and it needs to work well, as essentially the whole function of the server revolves around transferring packages from the client to the server so they can be distributed. It took a bit of trial and error, but it now works well, and the transferred files pass checksum tests. All of the transfers occur over TLS, so integrity and security is ensured as well.<br>

@@ -11,7 +11,7 @@ Hello everyone!
 The good news first: I'll be working on WebKit for another month. Thanks to everyone who donated some money to make this possible. As said in the previous weeks, I'm now working part-time on another project to make this last longer.
 
 And then, the very good news: HTML video is working!
-<!--break-->
+<!--more-->
 <h3>Bugfixes in Haiku</h3>
 
 Last week I mentioned two problems in Haiku: one in the ffmpeg add-on and another in the media kit design. Both are now fixed. The ffmpeg add-on now reports the formats it can read. While the Media Kit API from BeOS allows to return readable and writable formats, it turns out all the plugins in BeOS only reported writable ones. Some apps (MediaConvert and BeScreenCapture) didn't check for the B_WRITABLE format, and because our ffmpeg port doesn't work very well for encoding, we have a lot of read-only formats reported. Well, these two apps were fixed (by Jessica Hamilton, thanks!) so things are working as expected again, and everything is fine.

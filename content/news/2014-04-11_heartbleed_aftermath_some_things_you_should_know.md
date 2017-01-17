@@ -6,7 +6,7 @@ tags = ["website", "openssl", "security"]
 +++
 
 As most of our visitors have probably already heard in the last few days - one of the largest security disasters I can recall in modern internet history was discovered, and dubbed "Heartbleed".
-<!--break-->
+<!--more-->
 I'm not going to describe the technical details in this post.
 
 What I am writing to let everyone know is that all of the Haiku-run servers were also affected.

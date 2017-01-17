@@ -7,7 +7,7 @@ tags = ["USBKit", "FOSDEM", "webcam", "IM Kit"]
 +++
 
 Here are some screenshots of what I fixed at FOSDEM...
-<!--break-->
+<!--more-->
 <h3>USB webcam</h3>
 As I said in my previous entry, I fixed a bug in my usb_webcam driver, and I wanted to test it ASAP.
 Well it <a href="http://revolf.free.fr/beos/shots/shot_haiku_usb_webcam_001.png">seems to work</a> on my athlon tower.

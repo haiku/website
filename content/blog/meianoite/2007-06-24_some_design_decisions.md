@@ -17,7 +17,7 @@ Well, the thing is, I didn't ditch my previous attempt completely. It <a href="/
 
 And tickets are making a comeback, but in a very different context.
 
-Anyway, suppose we're starting with a clean slate, and all we have so far are the tasks and their respective priorities. Now let's scribble a little in that slate :)<!--break-->
+Anyway, suppose we're starting with a clean slate, and all we have so far are the tasks and their respective priorities. Now let's scribble a little in that slate :)<!--more-->
 
 Remember our application domain: scheduling threads. The implementation I have considered so far works like this:
 

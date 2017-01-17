@@ -12,7 +12,7 @@ Pawel's contract has concluded with his work being merged into Haiku's master re
 <p>
 Now the even better news -- the recent donations from everyone has made it possible for Adrien to continue for another month! If another $1200 USD is raised by the end of this month, then there will definitely be enough funds to keep him coding through March (At the moment, our reserves would drop to below $800 USD, which is something we try to avoid.)
 </p>
-<!--break-->
+<!--more-->
 <p>
 As you may have seen on Adrien's blog posts, there has been some great work by other contributors which will help propel our WebKit port even further. Jérôme Duval (korli), has incorporated GCC 4.8 into Haiku. This provides support for C++11, which is being used in newer versions of WebKit and allows the newer code to compile more easily. Stephan Aßmus (stippi) has been working on implementing support for alpha masks in app_server. This will allow app_server (and every application) to properly draw objects such as rounded rectangles. These are some specific examples of how one individual's contributions open up further development opportunities for others.
 </p>

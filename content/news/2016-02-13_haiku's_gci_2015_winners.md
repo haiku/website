@@ -6,7 +6,7 @@ tags = ["gci", "code-in"]
 +++
 
 In February the roughly two months long Google Code-In (GCI) period came to an end. See the results of all participating organizations at the <a href="https://codein.withgoogle.com/winners/">GCI site</a>. As always, it's been a strenuous time for students and mentors alike. Of course, it was a very productive one, too.
-<!--break-->
+<!--more-->
 Unfortunately, statistics are not easily to come by. Amusing, really, considering we're dealing with Google here... :).<br />
 While the number of students who were seriously aiming to win the grand price &mdash; a trip to the Google headquarters in Mountainview, California for the first two &mdash; was relatively low, there were over 50 students that made first contact with Haiku by successfully finishing a handful of beginner tasks. Those were for example: running Haiku in a VM, installing Haikuporter to build a package or, more difficult but also more rewarding, working through DarkWyrm's two Haiku-centric coding lessons (<a href="/development/learning_to_program_with_haiku">1</a> and <a href="/development/programming_with_haiku">2</a>).
 

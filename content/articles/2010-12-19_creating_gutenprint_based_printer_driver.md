@@ -11,7 +11,7 @@ tags = ["printer", "driver"]
 <p>
 Gutenprint was recently ported to <a href="http://haiku-os.org">Haiku</a>, both increasing its printing capabilities, as well as extending its supported printer models. This article describes Gutenprint and the effort to port it to Haiku.
 </p>
-<!--break-->
+<!--more-->
 <h3>Extending the Haiku printer driver framework</h3>
 <p>
 Libprint, the printer driver framework, is used by native printer drivers such as Canon LIPS 3 and 4, HP PCL5 and PCL6, and Adobe PostScript. Exceptions are the Preview and the PDF printer driver.

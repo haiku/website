@@ -8,7 +8,7 @@ tags = ["localekit", "locale", "hcd2010", "hcd", "hcd hcd2010 locale localekit",
 
 Hello Haikuers,
 As you know, I worked last year as a GSoC student on the Locale Kit. Unfortunately, I had to get back to school in september and had not much free time to spend on Haiku. I attended the coding sprint at BeGeistert, but my laptop fan died while I was there and forced me to run my cpu at 800MHz, which was quite painful for coding.
-<!--break-->
+<!--more-->
 Anyway, I now have a new laptop and I'm getting ready for another summer working for Haiku. This time I'm paid directly by Haiku, Inc.. I will work on the next part of the Locale Kit. The catalogs are working fairly well and there is an ongoing effort to translate Haiku to various languages. There are a lot of translations available in alpha2, and the next release will include even more. However, fully translating a system like Haiku requires more work than just replacing strings. Part of it was already in my GSoC proposal, other things got added while encountering translation problems, and there are also some small (but very annoying) bugs I'd like to solve.
 
 Here's the task list we agreed on with the NPO :

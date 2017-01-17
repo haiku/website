@@ -6,7 +6,7 @@ date = "2011-01-08T16:48:17.000Z"
 tags = ["package management", "contract work"]
 +++
 
-<!--break-->
+<!--more-->
 [Posted now since I had to retype the whole damn thing after (Linux-)Firefox died on me two days ago when I was nearly done ... sigh]
 
 I've spent the last couple of days sifting through the existing package 

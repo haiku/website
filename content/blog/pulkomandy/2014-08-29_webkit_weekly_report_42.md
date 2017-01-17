@@ -9,7 +9,7 @@ tags = ["WebKit", "intel_extreme", "contract work"]
 Hello world!
 
 This week most of my time was spent on preparing the 1.4.3 release of HaikuWebkit. This fixes more bugs and removes the "tiled" rendering mode introduced in 1.4.0, which turned out to not work so well. Some old drawing issues will make a comeback, however, and I will need to dig into the app_server clipping code again to understnad what's happening there and actually fix them.
-<!--break-->
+<!--more-->
 Yesterday my new machine was delivered. I'm now the owner of a Core-i3 4330 based machine, which I will use for Haiku and WebKit development. This machine has two cores with hyperthreading, and is much more modern than my aging laptop. It's currently cloning the WebKit repo. I'm keeping my laptop as well so I can use both machines at the same time to do multiple big compilations in parallel.
 
 Anyway, this isn't the only reason I bought this machine. With all the talk on the mailing lists about Haiku not supporting any modern hardware, I wanted to try things for myself and see what it was really like. This machine features UEFI, USB3 ports, but also legacy PS/2 and COM ports so I have a way to use KDL if that's needed.

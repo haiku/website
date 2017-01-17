@@ -16,7 +16,7 @@ Git falls in the category of distributed source code management tools, similar t
 
 <p>This document describes how to install the git binary, and how to get the source.</p>
 
-<!--break-->
+<!--more-->
 
 <h3>Installing the binary distribution</h3>
 

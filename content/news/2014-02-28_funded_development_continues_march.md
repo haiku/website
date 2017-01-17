@@ -6,7 +6,7 @@ tags = ["contracting", "donations", "haiku inc.", "hiring"]
 +++
 
 <p>Within these past 4 weeks, over $1,200 USD and &EUR;900 EUR have been raised! Thanks directly to this fundraising, Adrien is now able to be funded through the month of March. With the addition of the newest monthly subscribers, we reached a milestone and now raise over $1,000 per month through recurring monthly donations!</p>
-<!--break-->
+<!--more-->
 <p>Thank you to everyone who has donated, for you have made this possible! This will mark the 6th month of continual contractual development. The difference between a September version of WebPositive and the soon-to-be-released version is astonishing.</p>
 
 <p>As a reminder, the bulk of Adrien's work is occurring in Haiku's WebKit branch on GitHub. https://github.com/haiku/webkit  From time to time, there will be a Haiku or HaikuPorts commit. Within the next few days, a new version of WebPositive will be available in the nightly images.</p>

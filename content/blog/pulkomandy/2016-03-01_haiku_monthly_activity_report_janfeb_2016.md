@@ -11,7 +11,7 @@ Hello there, it's time for a new report!
 There was no report in January as the month was somewhat quiet, with several of
 the devs putting most of their effort in mentoring GCI students. But everyone
 has recovered now and we are back to normal schedule.
-<!--break-->
+<!--more-->
 <h3>statistics</h3>
 
 This report covers the range hrev500012-hrev50116.

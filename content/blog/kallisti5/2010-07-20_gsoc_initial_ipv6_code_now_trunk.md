@@ -11,7 +11,7 @@ There is great news from the 2010 GSoC midterms... Atis' GSoC work thus far on I
 Apply the buildfile diff attached to this post, to any post-<a href='https://dev.haiku-os.org/changeset/37604'>r37604</a> <A href='/guides/building'>sources</a> to give IPv6 a whirl. Please keep in mind the IPv6 code is still extremely early, using IPv6 may result in dreaded KDL's and other general bugginess.  See below for Atis' example usage of the IPv6 modules.
 
 Bug reports on the new IPv6 support can be made on Trac under the Network &amp; Internet >> IPv6 component.
-<!--break-->
+<!--more-->
 <pre>
 #
 # IPv6 command quick demonstration.

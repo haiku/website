@@ -10,7 +10,7 @@ tags = []
 
 <h3>Statistics</h3>
 <p>This report covers the revision range hrev49663-hrev49748. No detailed statistics were generated yet.</p>
-<!--break-->
+<!--more-->
 <h3>Outside the tree</h3>
 <p>Next month will be quite busy for Haiku. Not only there is the BeGeistert conference on the 7th and 8th,
 followed by the coding sprint, but also the Alchimie party on the 14th and 15th, and the Capitole du Libre

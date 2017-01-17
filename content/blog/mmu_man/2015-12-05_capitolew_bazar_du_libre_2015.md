@@ -7,7 +7,7 @@ tags = ["event", "capitole", "bazar"]
 +++
 
 <img align="right" src="/files/BZDL2015_DSCN_3682.jpg" width="25%" height="25%" title="Bazar du Libre at Mix&#039;Art Myrys" />Just a quick report on Capitole du Libre, which actually didn't happen… Well, the <a href="http://toulibre.org/">Toulibre</a> team managed to turn the canceled event (due to the University administration) into a "<a href="http://bazardulibre.org/">Bazar du libre</a>" which well, was quite different but interesting nevertheless.
-<!--break-->
+<!--more-->
 [reposted blog entry, since it looks like Drupal ate the previous post...]
 
 When I heard that the event was canceled due to what happened on November 13th, just a week before the date, I just had my car-sharing trip booked. But then they announced they would be doing something anyway, so I waited a bit before asking for a refund. We didn't have much info yet, <a href="http://weblog.mixart-myrys.org/?post/2015/11/Capitole-du-Libre">as you can see here</a> with several updates as they were actually planning things.

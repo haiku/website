@@ -7,7 +7,7 @@ tags = ["contract work"]
 +++
 
 As this week concludes I'd like to post an update on what I've been up to and what I'll be working on next. After fixing a few kernel issues and looking into some others I've come to a point where I'll gradually refocus back on some of the tasks I left open before mentally entering the kernel debugging land. In this blog post I'll also try to describe some of what I did this week to hopefully make it a bit more accessible.
-<!--break-->
+<!--more-->
 <b>Bug Hunting</b>
 
 Most of my time this week I've spent further tracking down various issues. I've started out by continuing where I left off in my last blog post. Due to feedback I've got since then I've also broadened my "range of interest" a bit, looking into a few older bug reports that might now be easier to debug with the new debugging features.

@@ -11,7 +11,7 @@ Hello, here a short report about how things are coming along.
 <strong><em>Work continue on the curl streaming code</em></strong>
 
 I've continued working on the network glue by adding a very basic locking using the RWLocker in Haiku's shared kit. This class allow multiple concurrent readers and an exclusive writer at one time.
-<!--break-->
+<!--more-->
 <strong><em>Added a live555 <a href="https://github.com/haikuports/haikuports/pull/517">recipe</a> to haikuports and Fixed live555 source to compile with gcc2</em></strong>
 
 The live555 library recipe has been necessary for the next step which relates integrating it in the Haiku build system. Once this initial work has been completed I can begin to migrate the curl code to this library. To make this happen there was need of some fixes to make it compile under gcc2. Being added just a day ago, I expect the final recipe to be more sophisticated too.

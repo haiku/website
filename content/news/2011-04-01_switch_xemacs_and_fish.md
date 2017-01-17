@@ -6,7 +6,7 @@ tags = ["R1", "XEmacs", "fish"]
 +++
 
 On this first of April, the main Haiku developers wish to announce an important change that will likely increase user friendliness of the overall Haiku experience. We are a bit late to report the news due to the excitement and the required planification work, but we hope everyone will enjoy the move.
-<!--break-->
+<!--more-->
 First, many system applications will be replaced by <a href="http://xemacs.org/">XEmacs</a>, which is already being ported to Haiku:
 <ul><li>StyledEdit</li>
 <li>Pe</li>

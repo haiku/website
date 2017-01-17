@@ -14,7 +14,7 @@ tags = []
 <li>CPU initialisation fixes</li>
 <li>Introduction of the UserlandFS</li>
 
-<!--break-->
+<!--more-->
 
 <h3>Full Updates</h3>
 

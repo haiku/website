@@ -11,7 +11,7 @@ Hello there,
 <h3>app_server optimizations</h3>
 
 Work on WebKit continued this week. In the previous report, I mentioned several issues with the new tiled rendering. Most of them turned out to be either problems in app_server or misuse of the APIs in the WebKit code. The most important part was that WebKit used region clipping and expected the region to be transformed when using SetTransform; however, with the current design, region clipping isn't affected by the view transform.
-<!--break-->
+<!--more-->
 The solution was to replace the region clipping by picture clipping, using FillRegion to prepare the picture. Now the region can be sheared and rotated at will, and things will continue working properly. However, the picture clipping is too slow, and when region clipping is removed, it is always applied to the whole view. Picture clipping is currently implemented by rendering the picture to an offscreen bitmap, then extracting the alpha channel for this to use it as an agg alpha mask. There are two ways to improve this.
 
 First, we could detect the rectangle that the picture actually covers, and keep only the part of the mask that is inside that rectangle. Anything outside that region is known to be fully transparent and could be ignored when drawing. When using ClipToPicture to draw only a small area in a big view (as is often the case with the 4096x4096 tiles used in WebKit), this would avoid allocating a huge bitmap, and allow to work only on a smaller one and with a smaller part of the view.

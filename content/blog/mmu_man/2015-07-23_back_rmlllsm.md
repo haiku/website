@@ -9,7 +9,7 @@ tags = ["rmll", "lsm", "FLOSS", "event", "booth"]
 I'm back from the <a href="https://2015.rmll.info/">Libre Software Meeting (RMLL)</a>, took me some time to recover from the highly packed week. Indeed, in addition to the mandatory Haiku booth, I had 4 talks to give (and so slides to finish), and I ended up being chairman for the Embedded track.
 
 Luckily Olivier was here as well to look after the booth, even though he was also involved with the organization.
-<!--break-->
+<!--more-->
 <img src="/files/RMLL2015_DSCN2464.jpg" width="320" height="240" align="right" alt="Olivier at the Haiku booth" title="Olivier at the Haiku booth">
 On Sunday, after some hours by train (and the last part got cancelled so I had to wait for the next train), Olivier picked me at the station and I arrived as Richard Stallman was finishing his speech. I said hello to the known faces, some of which you get to see once a year, and made sure I had a room this time (so we didn't have to end up at the hotel as we did last year), and then helped at tidying up the place. Each year the civic agents are amazed how efficient we are as a group when we help them. Then I went to the boarding school where I lodged. The only detail was we could only get in every two hours, which requires some planning but wasn't much of a trouble in the end. I took the time to finish the slides for my first talk.
 

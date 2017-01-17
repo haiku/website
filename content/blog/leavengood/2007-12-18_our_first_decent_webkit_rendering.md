@@ -6,7 +6,7 @@ date = "2007-12-19T00:04:58.000Z"
 tags = ["development", "porting", "WebKit"]
 +++
 
-<p>The WebKit Haiku port team has seen some nice progress lately in the form of our first decent rendering. Read more to see it...</p><!--break-->
+<p>The WebKit Haiku port team has seen some nice progress lately in the form of our first decent rendering. Read more to see it...</p><!--more-->
 
 <img src="http://ryanleavengood.com/files/bebits-render2.png" />
 

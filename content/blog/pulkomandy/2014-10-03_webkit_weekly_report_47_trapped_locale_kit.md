@@ -9,7 +9,7 @@ tags = ["WebKit", "locale kit", "mozilla", "contract work"]
 Hello world!
 
 So, one of the changes made last week (the XMLHTTPRequest timeout support) led to an API breakage in the network kit. This made WebKit crash on starting WebPositive, and I had to make an "emergency" release during the weekend to fix this. While you can enjoy the new shiny features and the bugfixes, you will also notice it is rather slow and uses a lot of CPU. This is a known issue related to the fixes with redrawing frames, which needed to remove some optimizations. I'll try to reintroduce those in a way that doesn't involve drawing problems.
-<!--break-->
+<!--more-->
 This week I started to work on the date and time input types for HTML5. There are several variants of those, to pick a date, time date-time, month or week. Our implementation will work similar to the color picker, with a popup window similar to the Time preferences panel. I started implementing this window, but ran into several issues in our APIs, which I'm now busy fixing.
 
 First, if you look at the time preferences you will notice that the date and time are picked with a strange (and rather ugly) control. It's a spinner with up/down arrows, which is common on other systems but was never available in BeOS nor Haiku. There are good reasons for this, the small arrows on a spinner to increase and decrease the values are too small to be easily clicked, which makes them useless and force people to reach for the keyboard and enter a value manually.

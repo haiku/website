@@ -9,7 +9,7 @@ tags = ["gsoc", "gsoc2012"]
 I completed my 1/4 goal ahead of proposal schedule. By the original plan, I should investigate whether we need necessary changes to x86 idle routine and x86 architecture specific instruction usage. The results were reported to gsoc maillist on 3rd Jun. Here are the copied results:
 1. no need to change x86 idle routine
 2. monitor/mwait works perfectly. I have measured the power consumption when using idle implemented with "monitor/mwait", it's the same as the version implemented with "hlt".
-<!--break-->
+<!--more-->
 After then, I wrote one haiku normal kernel module to change the idle routine during module initialization --"hlt" version => "mwait" version. It works too. My experiment goes further after that, make the cpu always enter the deepest sandybridge c-states using "mwait" instruction, it did show an impressive power saving.
 
 Then it's time to design and implement the generic idle framework. After more code reading and careful consideration, the framework will be designed as following(this design was sent out a few days ago to gsoc mailist):

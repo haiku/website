@@ -11,7 +11,7 @@ tags = ["hdu2011", "conference"]
 We accept (and regret) that this service requires Flash, but at present, we still haven't found any other services that are capable of delivering the same features. One of these days, we hope to use a Haiku friendly service.<br>
 <br>
 This year, HDU 2011 (<a href="http://twitter.com/#!/search/%23hdu2011" title="#hdu2011" target="_new">#hdu2011</a>) was hosted from one of the ITEE boardrooms at <a href="http://uq.edu.au/" title="The University of Queensland" target="_new">The University of Queensland</a> where I, Phil Greenway (Sikosis) was joined once again by Mark Patterson (BeMark) and newcomer Daniel Devine.<br>
-<!--break-->
+<!--more-->
 <br>
 We kicked off the event at 10AM (GMT +10) instead of 9AM like previous years, to enable us plenty of time to get all the hardware setup for the event. It was raining outside, which was unusual for this time of year, still this had no impact on our event. <br>
 <br>

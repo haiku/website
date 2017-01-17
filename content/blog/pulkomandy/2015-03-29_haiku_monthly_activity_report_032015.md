@@ -9,7 +9,7 @@ tags = []
 Hello there, here comes the activity report for the month of march 2015.
 
 This month there were 104 commits (hrev48848-hrev48952), 5 more than in the previous month.
-<!--break-->
+<!--more-->
 <h3>General news</h3>
 
 First of all, some news not directly related to the commits which happened this month.

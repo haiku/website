@@ -7,7 +7,7 @@ tags = ["package management", "contract", "contract work"]
 +++
 
 The end of my first two-man-months contract has been reached, but I'll be diving right into the next 160 hours of working on package management. So, first of all: a big thank you to all the donors out there!
-<!--break-->
+<!--more-->
 Since Ingo's last blog entry from one week ago, he's spent some time on HaikuPorter, improving the dependency analyzer and implemented the requires updater, which adjusts a package with all the actual versions of dependencies that were used to build this package. Additionally, Ingo has enhanced the packaging policy checks, which are becoming a pretty thorough set of checks for ensuring that each package actually declares all the libraries and binaries it contains in the provides section. This is for instance important should we ever decide to split a package at a later stage, such that any packages depending on a specific library will just "move along". 
 
 Furthermore, on the Haiku side of things, Ingo has generalized the support for user/global settings files to global writable files (stuff traditionally put into /var) and fixed a couple of problems in the build system.

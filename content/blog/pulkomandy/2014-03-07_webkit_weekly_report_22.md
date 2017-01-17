@@ -9,7 +9,7 @@ tags = ["contract work", "webpositive", "WebKit"]
 Hello there!
 
 First of all, thanks to everyone who donated some money to make yet another month of contract work possible. This weekend I uploaded a release as announced in last week post. As expected, after this long overdue update, testers quickly found many small problems, so this week my work was mainly hunting these small bugs. Fortunately, none of them was too hard to fix. The fixes include:
-<!--break-->
+<!--more-->
 <ul>
 <li>Text was disappearing when a box used both a scrollbar and css border-radius. (missing a PushState/PopState in scrollbar drawing code, leaving the view in the wrong state)</li>
 <li>Downloads were not working (again, one case of changed method prototype. Override keyword added to the affected class, so this won't happen again)</li>

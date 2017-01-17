@@ -11,7 +11,7 @@ And after a month what we have is a prototype of a multi-process browser.
 <h3>Haiku Native Browser</h3>
 Ryan and I had a dilemma: <i>Where to start?</i> In fact, there is a lot to do on this project.
 So we decided to start with a multi-process browser prototype.
-<!--break-->
+<!--more-->
 When I arrived on the project, Ryan had already started and had created an application that displays a bitmap rendered in another application. ( You can easily see here the basic architecture of a multi-process browser, a rendering engine detached from the browser. ) I had also made a similar prototype, but as Ryan's one was most advanced (especially the bitmap renderer), we began to develop the prototype based on his work.
 
 Our work up till now:

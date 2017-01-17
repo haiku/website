@@ -9,7 +9,7 @@ tags = ["WebKit", "gsoc 2009", "native browser"]
 After much effort from my GSoC student Maxime Simon and plenty of gentle coaxing from WebKit reviewers, I'm proud to announce that the various patches to add support for Haiku as a platform in WebKit are now being committed!
 
 Maxime took my code from the original Haiku port I made in 2007 and updated it for the latest WebKit, which changes a lot daily, so you can imagine the state of the port after a few years! Still it was good to see that my previous effort was not to be wasted and it did not take Maxime long to start posting bugs and patches at the WebKit Bugzilla site.
-<!--break-->
+<!--more-->
 
 Unfortunately my code was not as polished as it should have been, so the WebKit reviewers had quite a few suggestions for improvement. Maxime quickly updated the code after each suggestion and made a new patch.
 

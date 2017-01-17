@@ -14,7 +14,7 @@ tags = ["usb", "USBKit", "BMessage", "VMWare", "VMDK"]
 <li>VMWare vmdk tools
 <ul><li>vmdk image generator</li>
 <li>vmdk jam target: haiku-vmware-image</li></ul></li></ul>
-<!--break-->
+<!--more-->
 <h3>Full Updates</h3>
 <p>Kicking off this period was the introduction a reengineered USBKit compatible USB library implementation from Michael Lotz. His library includes a number of features such as 'string getters' for interfaces that will interest USB fans in addition to building fine under R5!</p>
 

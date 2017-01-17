@@ -16,7 +16,7 @@ Oliver Tappe (zooey)
 Clemens Zeidler (czeidler)
 Rene Gollent (anevilyak)
 Alexandre Deckner (aldeck)
-<!--break-->
+<!--more-->
 Although we were missing a bunch of chocolate powered core members that were busy with real life, we had the rare pleasure to see Rene that flew from the U.S especially to join the code flurry.
 
 As it's always difficult to know exactly what happened from a single point of view, i've asked each of the participants to send me a few lines about their work. Oliver added a nice intro to the mix!

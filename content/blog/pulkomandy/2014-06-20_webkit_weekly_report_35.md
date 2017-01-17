@@ -9,7 +9,7 @@ tags = ["WebKit", "webpositive", "contract work"]
 Hello world, another update!
 
 The most exciting news this week is that I enabled the CSS JIT on Haiku. This is a new feature in WebKit that applies the same optimization techniques used for JavaScript, to CSS. CSS is becoming a complex language, and matching elements in the page with CSS rules and selectors can take a lot of time with complex stylesheets. WebKit will now use a JIT to compile CSS rules, which allows faster matching, and thus faster layout and rendering of the page. Since this uses mostly the same code as JS, enabling it was just a matter of switching the flag on in the webkit compile-time configuration.
-<!--break-->
+<!--more-->
 I fixed an important memory leak, so WebKit will now use less memory. Not everything was properly freed when you closed a tab.
 
 I disabled SSE2 instructions (this was already done, but didn't work because one of WebKit build scripts forced them back on). WebPositive can now run on Pentium 2, Pentium 3, and Athlon XP CPUs.

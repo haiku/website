@@ -8,7 +8,7 @@ tags = ["rmll", "conference"]
 
 Hello readers !
 Last week we were at the RMLL (Libre Software Meeting) in France, with François (mmu_man) and Olivier (oco). Haiku has beed holding a booth and giving some talks in this conference for some years now, and it's nice to go and meet people again.
-<!--break-->
+<!--more-->
 The event lasts 6 days, from tuesday to sunday. The 4 week days are dedicated to conferences, and the week end is targetted at a broader audience of people who doesn't know free software at all.
 
 This year we had some new things to show up : two alpha versions, whereas there was none last year. A lot of people had tried them or heard of them, and wanted to know more, so they came to our booth to ask for a live demonstration. Some of them told us they were happy that Haiku is not just another random alternative OS, but has real potential for getting his place in the real world. They were impressed by our wifi support, because "the Hurd project didn't even start to think about it".

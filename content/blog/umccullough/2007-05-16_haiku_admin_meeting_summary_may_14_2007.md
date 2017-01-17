@@ -10,7 +10,7 @@ The decision to summarize and publish regular Haiku Admin meetings is a step bei
 <br><b>Haiku Admin Meeting 2007-05-14:</b>
 
 The meeting started off with a reminder to subscribe to the new <a href="/community/ml#development">Haiku Development Mailing List</a> if any attendees had not done so yet.
-<!--break-->
+<!--more-->
 There was some immediate discussion about Zeta-related build issues that eventually <a href="https://www.freelists.org/archives/haiku-development/05-2007/msg00004.html">progressed onto</a> the new Haiku Development list.
 
 At this point, the meeting went straight into the agenda items with a quick review of some of the initial WalterCon 2007 survey results gathered thus far. It was noted that only two selections were provided for Europe destinations, and that possibly it should have been more diverse similar to the U.S. options. Further discussion took place regarding results of several other questions. (A quick reminder to readers - if you haven't submitted your results for the <a href="/news/2007-05-03/waltercon_2007_survey">survey</a>, you have until June 1, 2007) Also on the topic of WalterCon 2007, it was determined that more presentation content needs to be defined and assembled.

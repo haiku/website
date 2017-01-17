@@ -9,7 +9,7 @@ tags = ["usability"]
 <p>
 GNOME 3 is out and of course I was very curious to give it a spin. As the GNOME developers claim they care a lot about usability and have given the new desktop design a lot of thought, I was pretty excited, since I care about these things as well. Haiku still has a lot of usability issues that we need to sort out. Maybe we can learn a few things. So what are my impressions? To be honest, I have pretty mixed feelings.
 </p>
-<!--break-->
+<!--more-->
 <p>
 I've had to use the GNOME 2 desktop a lot for various reasons. There are a lot of good ideas in there and many neat usability features. At the same time there are serious gripes. For example some applications are not shut down properly when you quit your session. Since ages the system can't remember which workspaces windows were located at when restoring a session. I can't move windows between workspaces by simply dragging them. I don't mind the tiny window border width, except it's so hard to resize windows by their borders... it's the little things that are so annoying and each time I upgrade to a new Ubuntu release I get disappointed because they are still not fixed. I only ever reported one bug. The bug was that keyboard settings, in particular the key repeat delay is not persistent when plugging in new USB keyboards. This is especially annoying when you use a KVM to switch between several computers. The bug was actually a duplicate, but I have since received progress updates on the original bug. Ages later the bug had indeed been fixed (I am not complaining, Haiku bugs take ages to get fixed more often than not...), but it has recently reappeared...
 </p><p>

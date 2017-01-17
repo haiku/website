@@ -14,7 +14,7 @@ The report is going to be sort this week, for several reasons:
 <li>As announced last week, I'm currently working only part-time for Haiku,</li>
 <li>And, not much happened anyway. There are weeks like that.</li>
 </ul>
-<!--break-->
+<!--more-->
 However, this doesn't mean there is nothing happening. First, this week I uploaded the 1.2.5 release of WebKit, fixing the most visible drawing bugs. I planned to do this last week, but found some compilation problem when using haikuporter to generate the final build, so this was delayed to this monday. There were some new bug reports on this new release, I'll be looking into the new issues.
 
 Some other people are joining the fun. Js hacked an ugly patch that lets WebKit compiles on x86_64. We're stil llooking for a proper solution, but in the meantime we will be able to provide a WebKit build for 64 bit systems. Two GSoC candidates have also submitted patches. We just got a Javascript error console in Web+, and we will soon get Web Sockets support (that latter patch still needs some improvements, but there is at least a working version).

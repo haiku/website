@@ -20,7 +20,7 @@ It was a very long week, having easter in the middle too. There are various news
 I submitted a request to Haiku Inc. to work for additional 240 hours, and I hope the project gets the needed funding to support my work. If you are interested in seeing my contract continue, please consider making a donation :-)
 
 Let's talk about what happened in the meantime.
-<!--break-->
+<!--more-->
 Just after merging my work, I've decided that working on the same thing for too long was counterproductive, so I paused streaming work. The first thing I've done is to remove some dust from my branches. This led to the creation of three new public branches in my <a href="https://github.com/Barrett17">github</a> account:
 
 <ul>

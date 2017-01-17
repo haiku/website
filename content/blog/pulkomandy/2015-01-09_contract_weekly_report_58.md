@@ -9,7 +9,7 @@ tags = []
 Hello there, welcome to the first contract report for 2015!
 
 This report summarizes changes done since 19 of december as I was a bit away from keyboard for the winter break. But I'm back for another year of Haiku coding!
-<!--break-->
+<!--more-->
 First some more usability and user interface fixes and improvements.
 <ul>
 <li>Diver, our most active QA tester, noticed that several applications missed either an icon or a group title for their notifications. This was fixed for Web+ downloads and media server restart (hrev48528). I worked on fixing the layout of the Team Monitor window (hrev48529, still not complete) and fixed the TeamMonitorTest which allows to run the Team Monitor window as a standalone app (it is usually embedded in the input server, having it as a separate app allows testing without restarting the server).

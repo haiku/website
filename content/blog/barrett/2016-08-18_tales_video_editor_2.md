@@ -9,7 +9,7 @@ tags = ["media_kit", "video editing", "UltraDV"]
 Hi there, we're now in the last part of the summer.
 
 A lot happened in the UltraDV source. The code is gradually maturing and a lot of components have been replaced and implemented among more than 30 commits.
-<!--break-->
+<!--more-->
 <strong>Phase One</strong>
 
 In the first phase of the development I continued with various code massagement. It started from cleaning the tree to massive style fixes, ended up with a refactor of the directories structure.

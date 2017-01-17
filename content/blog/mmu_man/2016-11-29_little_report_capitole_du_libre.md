@@ -7,7 +7,7 @@ tags = ["libre", "capitole", "event"]
 +++
 
 <a href="https://www.haiku-os.org/files/CdL2016_DSCN5345.jpg" title="Adrien speaking"><img src="https://www.haiku-os.org/files/CdL2016_DSCN5345.jpg" title="Adrien speaking" alt="Adrien speaking" width="25%" height="25%" align="right"></a>Before I forget due to the GCI frenzy, let's take some time to write down about <a href="https://2016.capitoledulibre.org/" title="Capitole du Libre">Capitole du Libre</a>, which was held in Toulouse on the 19th and 20th November.
-<!--break-->
+<!--more-->
 I arrived some days before the event, as I also participated in the <a href="http://www.monnaielibreoccitane.org/rml8/" title="8èmes Rencontres des Monnaies Libres">8th Fair Money Meeting</a>, and Adrien was kind enough to host me this time again.
 
 Last year the event was canceled due to the terror attacks in Paris, and ended up as the "Bazar du Libre" at the local artist squat and fablab, which was still interesting but lacked the usual booths and most planned talks.

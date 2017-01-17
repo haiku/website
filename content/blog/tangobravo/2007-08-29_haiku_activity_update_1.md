@@ -8,7 +8,7 @@ tags = ["activity update", "progress"]
 
 A couple of months ago there was a debate on the mailing list about the openness of the Haiku project. I made the point that there was a lot of information in the public domain - SVN commits logs, bug updates, and a multitidue of mailing lists - the problem was that activity on these fronts was not obvious to more casual Haiku-watchers. I should have kept my mouth shut, because I ended up agreeing to write some summaries of this activity! This is the first of what will hopefully be weekly updates. Feel free to leave comments and suggestions below.
 
-<!--break-->
+<!--more-->
 
 <h3><a href="https://lists.berlios.de/pipermail/haiku-commits/">SVN Commit List</a></h3>
 I'll start with Ithamar Adema who committed the first version of his legacy SATA driver just before the official start date of this update. Thankfully I'm allowed to mention it as he made some further changes to it during the period - adding nForce support to go along with the ALi and VIA support of the initial commit, and extending the driver to support 4-channel controllers. This driver is for "legacy" SATA chipsets - more recent controllers will implement the AHCI standard. Never fear though, AHCI chipset owners - Marcus is working on a driver for that. Obviously I'll keep you updated on progress in these blog posts.

@@ -7,7 +7,7 @@ tags = ["debugger signals manual"]
 +++
 
 As an operating system that implements the POSIX specification, Haiku includes support for signals, and the requisite API calls for an application to decide how it will handle them. While these aren't really used by the Be API in any meaningful way, they do frequently come into play for ported applications and libraries. Up until now, however, our debugger has lacked support for them, which could make debugging situations involving signals a less than convenient affair if one didn't already know what to look for. As of hrev49356, this has been rectified.
-<!--break-->
+<!--more-->
 <h3>Basics</h3>
 
 POSIX defines a broad variety of default signals, and the various cases in which they should be sent to a running application. Some of these are simply intended to inform the application of environmental changes so that it can adapt accordingly if needed, while others can be of a more fatal nature. The API includes the ability for the application to control how such signals are responded to, i.e. by ignoring them entirely, or by installing an application-supplied function to handle them as they're received.

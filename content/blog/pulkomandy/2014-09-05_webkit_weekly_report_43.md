@@ -9,7 +9,7 @@ tags = ["WebKit", "webpositive", "contract work"]
 Hello there,
 
 This week most of my time was spent on debugging. My new machine is running fine, and now building WebKit takes a little more than an hour, which is much better than the 4 hours I was getting on the old laptop. With a 4 thread CPU machine some concurrency and locking issues became much easier to reproduce. This led to identifying and fixing a bug in our BSecureSocket class, which was not properly setting up SSL for thread-safe operation. I think this will fix most of the remaining memory corruption problems.
-<!--break-->
+<!--more-->
 Some of the other bugs fixed include not updating the URL bar when navigating to an anchor in the same page (we were waiting for a network load to start to update the URL, but that doesn't happen when navigating inside the same page), not resetting the page title when opening a page without title (wrong variable name was used...), another concurrency issue in the video drawing code, and a crash because of an enabled, but not properly implemented, WebKit feature (now disabled). These minor bugfixes make use of WebKit and Web+ much better.
 
 More important is the debugging of the remaining drawing issues. As I mentioned in last week report some drawing issues that were fixed in the 1.4 release were back in 1.4.3 as I had to switch back to the previous drawing mode for performance reasons. However with all these experiments I got a better understanding of how the drawing is supposed to work, and with all the work done in app_server to support picture-based clipping I could fix the remaining issues. So we now have proper alpha-channel composited layer supports, and also (partial) rendering of "3D transformed" objects.

@@ -11,7 +11,7 @@ A new month, a new report!
 <h3>Statistics</h3>
 
 The commit range this month is hrev48952-hrev49106. I got bored of doing the statistics by hand, so I've run the repo through <a href="http://gitstats.sourceforge.net/">gitstats</a> instead. This gives more information than what I could do manually, including a listing of the most active commiters this month. Be sure to have a look at <a href="http://pulkomandy.tk/stats-201504">the results</a>!
-<!--break-->
+<!--more-->
 <h3>General news</h3>
 
 Rather sad news this month: after years of service, bebits.com was put offline. This is another piece of the BeOS history disappearing from the web. However, there are some backups, and we'll see what can be done with them.

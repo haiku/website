@@ -13,7 +13,7 @@ So, now that I'm (mostly) done moving and I have set up my workplace (including 
 A quick reminder, you can follow the commits on the <a href="https://github.com/haiku/haiku-webkit/tree/bnetapi" title="bnetapi branch of haiku-webkit repo">bnetapi branch of haiku-webkit repo at github</a>.
 
 I've also set up a <a href="https://gist.github.com/pulkomandy/6685664#file-bnetapi-webkit-bugs-md">Gist</a> TODO list so you can see things I want to work on. Please send me comments about websites that don't work well, I'll add them to the list and see what can be done.
-<!--break-->
+<!--more-->
 Now on to the actual coding work. I added support for relative URLs in 302 redirections in WebKit network code. While not part of the HTTP protocol standard, this is widely used by many web servers (such as Apache) and was required to get the Roundcube webmail working with the Service Kit based WebKit port. That was the only bugfix this week.
 
 The next item I want to cross from the TODO list is a crash that happens when going to http://play.google.com (and some other websites, but this is an easy way to reproduce it). The issue is on the WebKit side and was already fixed there, so all that's needed is to merge some commits from their repository, recompile, and enjoy. Sounds easy ? Well, not so much.

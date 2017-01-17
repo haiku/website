@@ -9,7 +9,7 @@ tags = ["media server", "media_kit", "streaming contract"]
 It's really a long time since the latest report, starting with this one I'm going to restore the usual article frequency.
 
 The second part of my contract has been accepted and I'm finally returning to work on streaming support. However there is various work I had not the possibility to talk about and other things I pushed in the last week.
-<!--break-->
+<!--more-->
 The first issue dates back to 7th April: the ticket <a href="https://dev.haiku-os.org/ticket/5106">#5106</a>. BControllable is a media_kit interface allowing nodes to provide a toolkit independant interface targeted to be used for media controls. The first example you may see is the Mixer tab in Media preferences.
 
 The problem was due to certain nodes, specifically the ones handling parameter events in the queue, that changed the value with a noticeable delay.

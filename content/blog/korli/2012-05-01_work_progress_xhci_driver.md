@@ -7,7 +7,7 @@ tags = ["xHCI driver qemu", "xHCI", "driver", "QEMU"]
 +++
 
 I started to work on the xHCI driver in late 2011: I found the code provided during the Google Summer of Code 2011 was promising and didn't get its full exposure. Another reason was Haiku Inc. provided me with hardware I needed to mentor the xHCI project by Jian Jiang.
-<!--break-->
+<!--more-->
 <h4>Background</h4>
 
 <ol><a href="/files/xhci.png"><img src="/files/xhci.png" height="350" align="right"></a>

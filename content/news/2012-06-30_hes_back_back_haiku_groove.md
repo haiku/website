@@ -18,7 +18,7 @@ He's back, back in the Haiku groove!
 (Ok, enough ripping off <a href="http://www.youtube.com/watch?v=L-4vMQOOiUY">KISS lyrics</a>)
 
 Michael Lotz has been casually making commits in his <a href="https://github.com/mmlr/haiku/commits/key_store">KeyStore feature branch</a>! First as a reminder to everyone, as Michael <a href="/blog/mmlr/2011-11-28_bugs_back_wireless_and_friends">explained</a> the KeyStore API will be able to "securely manage keys, passwords, certificates, etc. in a central place and generic way (so that it can be used by other applications as well)". More details on its design and functionality are mentioned in <a href="/blog/mmlr/2011-12-23_api_design_hard_finding_bugs_can_be_made_easy">Michael's blog</a>. As you can imagine the KeyStore API will add much appreciated functionality to Haiku, specifically in the area of managing wifi connections.
-<!--break-->
+<!--more-->
 The majority of Michael's commits are from while he was on the contract, which is to be expected. However, some new changesets have been committed in the past few days. At this point, encryption needs to be implemented and may utilize OpenSSL. Though even without encryption, the API could be used to store wifi passwords for example. He plans to contribute in his spare time and we are all pleased that Michael's life is returning to normal.
 
 Additionally Haiku, Inc. and Michael tied up some loose ends. Ignoring banking fees, a total of 8050 CHF was paid to Michael, which works out to be almost 8800 USD. Near the beginning of the contract, Haiku, Inc. secured a large portion of Swiss Francs. At the time, the exchange rate was 1 CHF = 1.09 USD, which was vastly improved over the previous months.

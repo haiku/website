@@ -11,7 +11,7 @@ It's been a while since I last wrote something here on Blog-O-Sphere. Probably m
 During the weekends, I'm working on enhancing a very old BeOS application long lost in time. While browsing the Haiku kit and application source tree, sometimes I stumble upon some new (at least for me) but also interesting small elements that Haiku added to the Haiku API during its development. I like to try these elements out. Most of these API additions might change or even disappear in the nearest future, since I understand their development process is not yet finished, but they're interesting to know nevertheless.
 
 I know some of these additions might be obvious to those up-to-date with the Haiku source code. But maybe some readers will find this at least a bit informative.
-<!--break-->
+<!--more-->
 Just recently I have noticed that already since some time, Haiku has a built-in notifications system present, exported directly through the Application Kit. The class responsible for this functionality is BNotification, included through the Notification.h header file (present in headers/os/app). It's a very easy to use and Be-friendly class.
 
 <pre>#include <Notification.h>

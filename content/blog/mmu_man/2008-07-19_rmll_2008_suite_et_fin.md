@@ -7,7 +7,7 @@ tags = ["event", "report", "rmll"]
 +++
 
 Been quite busy those days, but I wouldn't forget to report the remaining days at RMLL... more people, talks, and RMS of course!
-<!--break-->
+<!--more-->
 
 <h3>Thursday</h3>
 

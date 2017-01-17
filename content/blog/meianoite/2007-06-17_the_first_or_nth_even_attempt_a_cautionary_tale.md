@@ -12,7 +12,7 @@ tags = ["scheduler", "gsoc", "scheduling algorithm", "algorithm", "O(1)", "compl
 Remember where I left <a href="/blog/meianoite/2007-06-17/introduction_to_the_new_haiku_scheduler_and_other_tidbits#bench">on the previous post</a>? Now, with greater confidence, I set myself to improve my original algorithm's performance even further. But that's just because I <b>knew</b> it sucked. It was extremely inefficient as far as implementation goes; it looked great in the benchmarks because it was being compared to O(n) (<i>n</i> being the number of threads in the system) algorithms, while it had O(1) complexity, so I already had a head-start, so to speak. Still, I knew the algorithm very well and understood that there were plenty of bottlenecks to fix. I wrote it, after all.
 
 [/pride mode=off]
-<!--break-->
+<!--more-->
 Well, things started to look great as I progressed. I eliminated a nested loop, then I eliminated an outer loop, then I benchmarked a little more, and I reached extremely small overhead (only 8x slower)<a href="#note1" name="mem_bound">[1]</a> compared to the theoretical lower bound, i.e., a standard "for" loop that reads sequentially from an array (and does nothing afterwards with the element it just read). 
 
 But then something hit me.

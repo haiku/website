@@ -9,7 +9,7 @@ tags = ["contract work", "WebKit", "beta1", "ui"]
 Hello world!
 
 Work continue this week with a lot of long overdue UI enhancements. Not very technical work there, but finally closing all those tickets allows us to more easily find the important ones in the bugtracker. These changes also make Haiku more polished and easier to use, which is one of the project goals, after all.
-<!--break-->
+<!--more-->
 First of all, I did some work to clean up the new network preferences. In no particular order:
 <ul>
 <li>The "DNS" panel has been renamed to "DNS Client", since there may be a "DNS Server" there (hrev48354).</li>

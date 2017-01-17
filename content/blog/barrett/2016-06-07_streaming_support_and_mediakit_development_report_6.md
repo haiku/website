@@ -9,7 +9,7 @@ tags = ["media server", "media_kit", "streaming contract"]
 Finally a new report. The time since the latest report has been spent mostly into gaining a preliminary support to streaming and begin finalyzing the underlying support code.
 
 This included documenting myself about the APIs and figuring out how to implement the functionality in a clean way. There are various additions, we are moving to the right place so we finally have a streaming infrastructure.
-<!--break-->
+<!--more-->
 In haikuports and HaikuDepot it's finally available the live555 package.
 
 It's separated in two independant components, the live555 package providing some tools such as the streaming server and the OpenRTSP client. There's also a live555_dev package, providing headers and static libraries.

@@ -7,7 +7,7 @@ tags = ["streaming contract", "media server", "media_kit"]
 +++
 
 Let's talk about the most recent improvements in streaming support, this is perhaps a bit more technical than in past but in this case most of the work was related to refine internal mechanisms. I'm going to talk also about recent MediaPlayer changes, as well as other things.
-<!--break-->
+<!--more-->
 <strong>hrev50369</strong>
 
 This was a very variegated hrev, with different areas being worked on.

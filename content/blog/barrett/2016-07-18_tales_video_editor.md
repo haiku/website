@@ -7,7 +7,7 @@ tags = ["video editing", "UltraDV", "media_kit"]
 +++
 
 Someone might have already noticed there's some ferment around <a href="https://github.com/Barrett17/UltraDV">UltraDV</a>, originally supposed to be a BeOS killer app then it stalled down. It was finally open sourced under MIT license around 2013 and today we are trying to find a path to see it's <a href="https://freedomsponsors.org/issue/767/port-ultradv-over-to-haiku">development continue</a>. Today I'm going to show the good points as well as the hard ones.
-<!--break-->
+<!--more-->
 UltraDV is a video editor, from the code point of view it's an huge program, one of the biggest I've personally seen around the open source ones.
 
 As already stated in past I'm particularly interested in promoting software development for Haiku and being a media_kit developer I'd like to see the potential applications of this API on the road. A project like this isn't a downhill, it needs a certain care in how the development should be carried down and a long term roadmap to ensure maintanability. So first of all I would like to show the fundamental points, specifically what UltraDV is and what is not.

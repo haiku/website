@@ -9,7 +9,7 @@ tags = ["localekit"]
 GSoC is now over. It was quite fun to work with Haiku this summer, I learnt a lot of things, I gained commit access, and soon I'll have a new TShirt to wear :)
 
 After the alpha release, the locale kit was merged back into the trunk. Of course, as soon as this was done I got flooded with bug reports, ranging from build breakage on freebsd to lack of grist in the jamfiles making the catalogs mix up between apps. As far as I know, both of these are now fixed, but there is still a problem when building from Dano and the bluetooth preflet doesn't want to be localized.
-<!--break-->
+<!--more-->
 I'm also back to school, meaning I have a lot less time to spend on Haiku.
 
 Still, I started to localize some applications so the code gets more exposure. Now, you can see my work in the Appearance and Bluetooth preflets. However, there are only french and english catalogs available. Some people asked me on IRC how translation is supposed to work, so I decided to write it down here instead of repeating it each time I'm asked.

@@ -11,7 +11,7 @@ Several of us started twitting (rather, <a href="http://identi.ca/">identi.ca</a
 Then when getting back tonight we noticed the website was unreachable.
 It really seems like it brought us quite a lot of unwaranted advertising! It's quite visible on the server stats:
 <img src="http://revolf.free.fr/beos/stats-haiku-www-20101015.png">
-<!--break-->
+<!--more-->
 Here is a screengrab of the twitter search for <a href="http://twitter.com/#!/search/haiku%20xkcd">"haiku xkcd"</a>:
 <a href="http://revolf.free.fr/beos/xkcd-haiku-20101015.png"><img src="http://revolf.free.fr/beos/xkcd-haiku-20101015-th.png"></a>
 

@@ -11,7 +11,7 @@ As an operating system with a short boot time and a small footprint, Haiku is lo
 With WebPositive well on it's way to becomming a great browser, users will want a great media experience to go with it.
 
 I propose to work on Media Player and the Media Kit, in order to improve it with new functionalities: DVD playback, streaming support, tray icon controls...
-<!--break-->
+<!--more-->
 <h4 class="icon-person-medium">Personal Profile</h4>
 <ul>
  <li><strong>Full name:</strong> Christopher Humphries</li>

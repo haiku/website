@@ -8,7 +8,7 @@ tags = ["package management", "contract work"]
 
 One month has passed (too fast), so it's time to summarize the developments 
 in the fields of package management for Haiku.
-<!--break-->
+<!--more-->
 <h2><b>Where we are now</b></h2>
 
 Implementation has been started, the following is a list of more or less 

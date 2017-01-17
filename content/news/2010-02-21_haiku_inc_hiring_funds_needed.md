@@ -8,7 +8,7 @@ tags = ["haiku inc.", "hiring", "contract", "contracting"]
 <p>The Haiku project rests on the shoulders of volunteer individuals who spend their free time developing, bughunting and in general advancing the system. Unfortunately everyone's time is limited and working for a living takes a major cut into what could be dedicated to Haiku work. It would be great if a developer could take off work for a few weeks to fully concentrate on Haiku development.</p>
 
 <p>And this is exactly what we would like to make possible! Starting now:</p>
-<!--break-->
+<!--more-->
 <p>Haiku Inc. is proud to announce that a long time project contributor has contacted us and will be hired to do contractual work on Haiku: Stephan Aßmus for 160 hours of development time.</p>
 
 <p>For the past weeks he has already been working hard on Haiku's WebKit port and the basic browser (working title "HaikuLauncher"), the original and continuing work of Ryan Leavengood and Maxime Simon. For his contractual work he'll continue to focus on these areas. This should pave the way to include a nice little default browser in Haiku.</p>

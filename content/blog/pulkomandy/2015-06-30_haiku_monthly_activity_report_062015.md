@@ -13,7 +13,7 @@ Hi there, it's time for the monthly report!
 Commit range scanned this month: hrev49209-hrev49344.
 
 There are currently 38 tickets open in the beta 1 release. For the first time, we are below 40.
-<!--break-->
+<!--more-->
 <h3>Packages</h3>
 
 Humdinger: The CatKeysEditor application is now available. It can be used to translate applications, just like the Pootle website. This can be used to translate Haiku itself, but also 3rd party applications that are not hosted on Haiku servers.

@@ -7,7 +7,7 @@ tags = ["personal", "hardware"]
 +++
 
 <p align="justify">
-Whenever I was with Axel and saw Haiku running on his IBM ThinkPad T40p, I was almost convinced, that he must have forgotten to commit a rather effective patch, though he swore that that was not the case. I have never seen the app_server perform so well on any other machine.<!--break--> When I saw this first, at the time I was working on a bigger patch to the app_server, but it was already taking me some time, and I was quite afraid that I had messed it up and must have made app_server much slower. But then I commited that work regardless and Axel installed it on his machine and it was just as fast. Before my patch to the BRegion implementation, which came some time later, Axel could degrade the performance by opening a couple more windows, but with the new BRegion code from XOrg, the app_server scales much better.
+Whenever I was with Axel and saw Haiku running on his IBM ThinkPad T40p, I was almost convinced, that he must have forgotten to commit a rather effective patch, though he swore that that was not the case. I have never seen the app_server perform so well on any other machine.<!--more--> When I saw this first, at the time I was working on a bigger patch to the app_server, but it was already taking me some time, and I was quite afraid that I had messed it up and must have made app_server much slower. But then I commited that work regardless and Axel installed it on his machine and it was just as fast. Before my patch to the BRegion implementation, which came some time later, Axel could degrade the performance by opening a couple more windows, but with the new BRegion code from XOrg, the app_server scales much better.
 </p>
 
 <p align="justify">

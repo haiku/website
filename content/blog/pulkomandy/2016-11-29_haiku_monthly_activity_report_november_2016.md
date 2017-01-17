@@ -16,7 +16,7 @@ tasks yesterday.
 
 Anyway, let's have a look at what's cooking in the source tree. This report covers
 hrev50665-50717.
-<!--break-->
+<!--more-->
 <h3>Networking</h3>
 
 Some fixes to BUrl allow it to handle URLs without a protocol or authority. In

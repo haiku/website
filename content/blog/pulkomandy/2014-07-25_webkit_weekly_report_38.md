@@ -9,7 +9,7 @@ tags = ["WebKit", "webpositive", "app_server", "rmll", "contract work"]
 Hello there,
 
 As mentioned in the previous report, two weeks ago I attended the RMLL conference. As usual this was quite interesting, and an occasion to show Haiku to more people in the free software community. We got only about 10 persons attending our conference and 4 attending our workshop on making Haiku packages. However, the main event was the "Libre Village" where we got to meet people and try to get as much of them as possible to try Haiku. I played Critical Mass with some people there, and also helped porting PyTouhou to Haiku.
-<!--break-->
+<!--more-->
 Last week I worked only 3 days (back on WebKit) so I'll be reporting about the changes made in these two weeks now.
 
 First of all, there was a problem in the 1.4.1 release not working in the nightlies. olta, js and jessicah worked on sorting out the issues with our cross compiler and things should be working fine now. This new build of WebKit makes use of ELF TLS support which was added by pdziepak. This should slightly improve performance and startup time.

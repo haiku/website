@@ -12,7 +12,7 @@ In brief, this period saw a lot of bug fixing work from the core contributors. A
 
 Read on for more on those, updates on mailing list discussions, and to find out how I managed to include a reference to Shakespeare...
 
-<!--break-->
+<!--more-->
 
 <h3><a href="https://lists.berlios.de/pipermail/haiku-commits/">SVN Commit List</a></h3>
 

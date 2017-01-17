@@ -9,7 +9,7 @@ tags = ["webpositive", "Services Kit", "contract work"]
 As you may know, I'm going to spend some time again as a full-time Haiku developer. This time, I'll be working on improving WebPositive and the WebKit port to bring a better web browsing experience to Haiku users.
 
 During the past weeks I've managed to spare some free time to get up to speed on the various pieces of code involved and how to work with them. This first blog post summarizes the current state of affairs and I'll set some goals (with your help) for the next monthes.
-<!--break-->
+<!--more-->
 <h1>Architecture overview</h1>
 A web browser is not as simple as it looks. There are several different things working together to bring your web pages to the screen:
 <ul>

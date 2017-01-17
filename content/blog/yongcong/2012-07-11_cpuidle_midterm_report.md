@@ -7,7 +7,7 @@ tags = ["gsoc", "gsoc2012"]
 +++
 
 With the good preparation in quarter term/bonding period, I have completed the generic cpuidle kernel module, native intel cpuidle module and cpuidle driver(for states/info reporting). By original plan, these tasks will be all completed by the end of 3/4 term...
-<!--break-->
+<!--more-->
 Well I want to show the power saving result on my laptop(i5-2520M CPU, 4G memory, 320GB harddisk), after enabling the cpuidle and native intel cpuidle module, I saved about 2.5watt. Note, such power saving is achieved after removing ipro1000 driver and disabling Tracker, Deskbar.
 
 After then, I added support to get c-state information such as, how many c-states there are, how long does each cpu spend on each c-state. It works well, here is output of my laptop c-states report after booting up 1-2 minutes

@@ -7,7 +7,7 @@ tags = ["gsoc", "usability", "pkg", "package"]
 +++
 
 Even though I had some private issues this week, all is going well with the PackageInstall. In its current form it is able to properly install all 3 test BeOS packages I tried on it, creating files and directories along with their data and attributes without flaw. So, what's left to do right now?
-<!--break-->
+<!--more-->
 <ol>
 <li>The package installer GUI right now is implemented using the traditional way - with font sensitivity in mind. Ryan proposed that this might be a good chance to start using the Haiku layout API to get things done better and more readable.</li>
 <li>Package and file collisions. What to do when a package is already installed or a file from the package already exists in the given path? This was given some discussion a while back, but it's still not clear whether any complicated form of operations is needed. Would the standard 'Should I replace XYZ?' suffice?</li>

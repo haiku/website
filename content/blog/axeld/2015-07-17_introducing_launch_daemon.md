@@ -13,7 +13,7 @@ While there is still a lot to do, it's now feature complete in terms of being ab
 Since the switch to our package manager, there was no longer a way to influence the boot process at all. The only file you could change was the UserBootscript which is started only after Tracker and Deskbar; the whole system is already up at this point.
 
 The launch_daemon gives the power back to you, but also allow software you install to automatically be started on system boot as well. You can also even prevent system components from being started at all if you so wish.
-<!--break-->
+<!--more-->
 Furthermore, it allows for event based application start, start on demand, a multi-threaded boot process, and even enables you to talk to servers before they actually started. More on that later.
 
 The launch_daemon is deeply integrated with the rest of the system, and builds on OS services not available on other systems, so porting an existing solution was not an option. However, I could reuse some of their design ideas without having to adopt any solutions I did not like that much.

@@ -7,7 +7,7 @@ tags = ["gsoc", "gsoc2012", "x86_64"]
 +++
 
 Since my quarter term report I have made a great deal of progress. The boot loader x86_64 support is finished, and the kernel can now be booted to the point of searching for the boot volume. A screenshot of this:
-<!--break-->
+<!--more-->
 <div align="center">
 <a href="/files/images/x86_64-midterm.png"><br />
 <img src="/files/images/x86_64-midterm.png" width="640px" height="435px" />

@@ -9,7 +9,7 @@ tags = ["soc", "gsoc", "network", "preferences"]
 The idea today is to compare and comment on popular network preferences apps. I'll pick Mac OS X, Windows, Zeta and Linux and comment on what we can learn from each and think about how can we design a successful network preferences application for Haiku. I will not focus on the eye candy or widgets, the focus is on the user experience and features.
 
 Lots of shots of different OSes and some opinions by yours truly.
-<!--break-->
+<!--more-->
 
 <h3>Mac OS X - Network Preferences Application</h3>
 Mac OS X uses an unified preferences application like the one in Zeta. This application is called <i>System Preferences</i>. Mac OS X uses different applications for setting network preferences and setting network services.

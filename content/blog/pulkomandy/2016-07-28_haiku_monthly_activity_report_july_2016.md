@@ -9,7 +9,7 @@ tags = []
 Hey there!
 
 Here comes the activity report for July of 2016. It covers hrev50388-hrev50455
-<!--break-->
+<!--more-->
 <h3>USB3</h3>
 
 (USB 3 introduces a new family of hardware controllers, which we need to support).

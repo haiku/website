@@ -7,7 +7,7 @@ tags = ["rmll"]
 +++
 
 Last week <a href="/user/oco">Olivier</a> and I had the difficult task of handling the booth at <a href="http://2012.rmll.info/">RMLL</a> and showing off Haiku in the land of gruyère, chocolate and banks.
-<!--break-->
+<!--more-->
 I arrived on saturday, after chatting in the train with some other attendant (tshirts help a lot to recognize your peers), and it didn't start very well since I pinched a finger under my luggage. I had some medecine at hand luckily, and after some tram we arrived and I asked for a glass of water and ice cubes. At least the week-end was for the general public and we didn't have to care about a booth yet, so I spent some time talking with others to avoid thinking about the flattened finger.
 
 This year instead of student houses we had a casern to settle in at night. Quite odd for a neutral country. The showers were a bit unusual (and downstairs), but all in all the accomodation was enough for a summer week. After leaving the luggage there, I went with others to the Kugler fundry for the evening event.

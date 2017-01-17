@@ -12,7 +12,7 @@ This report covers the range hrev50117-hrev50336.
 
 <h3>Command line apps</h3>
 AGMS contributed some fixes to the "mail" command line app which can be now be used easily to send automated messages from a script. This is an useful tool to have in automated tasks to post status report, errors, etc.
-<!--break-->
+<!--more-->
 <h3>Graphics</h3>
 
 Rudolfc fixed some issues with non-32 bit video modes. If you are still using Haiku in 256 colors, it is now possible to have video overlays on that.

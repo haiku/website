@@ -7,7 +7,7 @@ tags = ["contract work", "package management", "infrastructure"]
 +++
 
 A lot has happened since my last report. I decided to spend some time working on stabilizing both Haiku and the packaging system, and so I am closer to having full builds & HPKR generation, but I'm not quite there yet.
-<!--break-->
+<!--more-->
 <br><br>
 I spent some time this week looking into the long-standing issues (e.g. DHCP) with Haiku, and then there was the launch_daemon merge from Axel also this week. I wound up deciding that with Haiku being this unstable currently, that having the build server update the builders unconditionally would be a bad idea, so I disabled that feature. I have on my TODO list to implement a way for administrators to be able to manually trigger updates once they're sure that Haiku is stable enough to run the buildservers on.<br>
 <br>

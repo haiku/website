@@ -12,7 +12,7 @@ This week two important things happened for my GSoC project: I got commit access
 
 The catalogs allow strings in an application to be translated. At a first glance you may think this is the only needed thing in a Locale Kit and my work is finished, but it is not the case. The first missing part is the preflet allowing you to select your favorite language. The locale kit will now always try French, if not found default to German, then finally to English. I think this is not the setup most of you want to use.
 
-<!--break-->
+<!--more-->
 
 But that's not all we need. Good localization needs to provide services to format numbers, dates and some other things. Each country keeps its own system when it comes to formatting. In France you write 1 000,23 while some other countries will use 1,000.23 for the same number. Dates may use YYYY/MM/DD or DD/MM/YYYY or some other more complex format. There are a lot of subtle differences, some countries even use a different format for numbers when it's a monetary value (ie. $600) or a percentage. These things can't be handled properly by the catalog system.
 

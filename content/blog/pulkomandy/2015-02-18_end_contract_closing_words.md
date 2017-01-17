@@ -11,7 +11,7 @@ Hi,
 As you probably have noticed, there were no weekly report in the previous weeks. The reason for this is that my contract is currently stopped. There is currently not enough money in Haiku's treasure chest to safely continue it. So, it's time to me to get back to "real life" and a full-time job in a software development company.
 
 First of all I want to thank everyone who made this long contract possible by donating money to Haiku. It was a great experience for me, and a lot of fun as well. I did my best to move Haiku forward towards the R1 release. Unfortunately the beta 1 still isn't there, and we currently have 57 blocking tickets. It is a small number, but only the most complex or big issues are left.
-<!--break-->
+<!--more-->
 I have spent the greatest part of this month job-hunting, but I found something now (in a company with some free software culture, even). It took me some time doing all the job interviews and the like, and required quite a lot of my energy and motivation, so not much of it was left for Haiku work in the evenings. But once things have settled a bit I will make some time for Haiku in my free-time schedule again. Progress may not be as fast as it was during this year, but I'll still be around.
 
 I'm finishing this contract with some things left on hold, so I'll document the current state of things here, for someone else to pick it up.

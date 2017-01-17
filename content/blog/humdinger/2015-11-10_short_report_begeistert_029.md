@@ -8,7 +8,7 @@ tags = ["begeistert"]
 
 <span class="inline right"><img src="/files/screenshots/begeistert-logo.png" alt="BeGeistert Logo" title="BeGeistert Logo" class="image image-_original " width="272" height="60" /></span>BeGeistert 029 was once more a quite small gathering, with 14 Haiku users attending, plus one father, girlfriend, wife and baby.
 Puck was there the second year in a row, bringing Colin's desktop machine with him, which was left behind when Colin moved to New Zealand. (How is Colin these days?) Another new face to BeGeistert: Markus "TwoFX", one of our finalists in the Google Code-In 2014 and contributer of various patches since. He brought his girlfriend Leslie, who pleasantly doubled the number of attending females.
-<!--break-->
+<!--more-->
 I arrived later than usual on Saturday, but with perfect timing for lunch - I'm gifted that way - and so, after the meal, BeGeistert was already in full swing. People discussing their latest ideas, chatting, or in my case keeping Axel away from real work by having him show me how to split some massive commit into more easily to handle smaller ones. Also, my iprowifi4965 refused to connect to the WPA encrypted BeGeistert WLAN, as did Adrien's machine, so we used good old tethered LAN...
 
 We had three talks planned for this BeGeistert, but our timetable was thwarted by the lack of a projector (which Germans wrongly call "Beamer", as Jonathan reminded us :)). Maybe one would be available in the evening, but after our dinner at a Spanish restaurant in the Altstadt and a traditional round of "Killepitsch" (a herbal liquor), nobody was really in the mood. So the talks were postponed to Sunday.

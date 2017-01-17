@@ -7,7 +7,7 @@ tags = ["interface kit", "Layout API"]
 +++
 
 A short post about something that's not really documented. When working on a communication application for Haiku, I needed to create a typical configuration wizard window. I required a few views to be present in one spot, with only one being shown at the same time - with the ability to switch between them on user Next/Prev button press. Since Haiku exports a neat layout API, I wanted to use one of those if only possible. And then I found the BCardLayout.
-<!--break-->
+<!--more-->
 Since the Haiku API is still being worked on, some places are not yet well documented - with others not documented at all. The BCardLayout is the latter. It's a rather easy-to-use feature though. There's a living example in the Haiku core code as well - in the media preferences application (check out src/preferences/media/MediaWindow.cpp).
 
 The usage is simple. We first define the BCardLayout somewhere where we can access it throughout the scope of our window. We then need to 'attach' the newly created layout somewhere - either by SetLayout(), or simply by creating a view with this layout passed to the constructor. We then can easily add the views we want to be able to switch between - with only one view visible at a time. Switching between views can be performed by calling SetVisibleItem() of the BCardLayout object. The SetVisibleItem() method takes either the view index (int32) in the layout or the BLayoutItem we're interested in directly.

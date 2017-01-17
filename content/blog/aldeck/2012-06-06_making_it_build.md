@@ -9,7 +9,7 @@ tags = ["webkit webpositive contract", "webpositive", "WebKit", "contract", "con
 Hello fellow Haiku'ers, as promised I'm posting a quick update on my WebKit / WebPositive contract work. It's been a little more than a week already, and a small report is due!
 
 Welcome WebKit r115944 ! As you may know, WebKit is a really big project, in the last two years, 70000 revisions have passed and the file count has almost doubled. The approach I took was to start by checking out a recent WebKit revision and try building the components one by one, re-applying our changes. The idea was to add only the strict necessary for Haiku and at the same time try to include as many features as possible, ignoring assumptions and workarounds that aren't needed anymore. As many things have changed in WebKit and as I needed to get familiar with this huge codebase anyway, I decided to dismantle our port and put it back together again, like one would have done with a complex piece of mechanics. Thus I did a Jamfile from scratch, based on other platforms buildsystems, and replayed our changes one by one, as the compiler asked. Each time trying to document my changes and research the reasons and implications of the changes.
-<!--break-->
+<!--more-->
 WebKit is composed of several distinct parts, as seen in the source tree:
 
 WTF (Web Template Framework) provides base utility classes for all the project, it's pretty much platform agnostic and only few changes were needed to make it build again. It took me a day to get it to build again on Haiku.

@@ -9,7 +9,7 @@ tags = ["WebKit", "webpositive", "contract work"]
 Hello there!
 
 During the last two weeks, I spent most of my time working on the WebKit2 port. As I already mentioned, WebKit2 is where current WebKit development happens, and the most important change is the split of the WebKit system into two processes, one for showing the window, and one for doing the actual work of rendering the pages. But the more interesting thing is the more up to date and full-featured API that lets WebKit handle, for example, HTTPS certificates, so we don't have to do it ourselves - just show the dialog to the user when told to.
-<!--break-->
+<!--more-->
 So, this week I fixed all the compilation problems and finally got the WebProcess (the process that does network and page rendering stuff) and WebKitTestRunner (the testsuite runner for WebKit2) to compile. Most of the implementation is still stubbed out however, and the WebProcess will crash quite early in execution.
 
 The next step is defining the API for WebKit2, which will be a bit different from the existing WebKit one. I'm starting, of course, with the BWebView class.

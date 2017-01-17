@@ -11,7 +11,7 @@ It was a rather ominous start to the day with fog covering most of the city earl
 The live feed was provided using the Flash-based UStream service once again and we apologise for those who couldn't follow along. We keep waiting for some better technology to be made available to do the stream and is also open source and Haiku friendly. One day.
 
 <div align="center"><img src="http://haikudownunder.com/gallery/photo.php?48" width="520" alt="HDU 2013 Flyers" /></div>
-<!--break-->
+<!--more-->
 <b>On with the Show</b>
 The event "Computer ChaOS" was kicked off with me, Phil Greenway (Sikosis) talking about how the OS landscape has changed in recent times with mobile looking to take over desktop Internet usage in 2015. I then concluded with the State of Haiku keynote, as I do each year, highlighting Haiku's achievements over the previous year.
 

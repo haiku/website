@@ -7,7 +7,7 @@ tags = ["begeistert"]
 +++
 
 Probably forgetting half of what took place and getting the other half backwards, below are my recollections of BeGeistert 023.
-<!--break-->
+<!--more-->
 Friday evening, together with Fredrik Holmqvist (tqh), I arrived at BeGeistert 023 held at the youth hostel in Düsseldorf. The hostel was recently renovated and besides comfy beds it sports a restaurant as well as a bar.
 
 Greeted by the BeGeistert orga-team, we were handed our room keys and decided to hit town ourselves to hunt down a schnitzel and a beer, since the rest of the attendees had already left for dinner. Back at the hostel again, we met the coding sprint guys, talked for a bit, svn upped and went to bed.

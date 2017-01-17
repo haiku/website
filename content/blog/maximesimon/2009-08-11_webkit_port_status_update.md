@@ -16,7 +16,7 @@ I think that we can split this work in two parts:
 Ryan and I thought that the first part would have been a bit easier, but in fact since the previous port (by himself), many code in WebKit has changed. It is still a work-in-progress but I made some good advances.
 
 As for the second part, it is also something that we are still working on. I can say that it is in great shape to be complete before the end of summer. ( The summer ends on the 21th of September… ;)
-<!--break-->
+<!--more-->
 <h3>Improvements made on the port.</h3>
 <span class="inline inline-left"><a href="/files/screenshots/HaikuLauncher.png" onclick="launch_popup(2708, 629, 684); return false;" target="_blank"><img src="/files/screenshots/HaikuLauncher.thumbnail.png" alt="First screenshot of HaikuLauncher.: Screenshot of the first start of HaikuLauncher" title="First screenshot of HaikuLauncher"  class="image image-thumbnail " width="184" height="200" /></a><span class="caption" style="width: 182px;"><strong>HaikuLauncher:</strong><br/>First start.</span></span>
 I do not know if you remember, but in my last blog post I just finished building WebKit. And in fact it was just the beginning of the beginning.

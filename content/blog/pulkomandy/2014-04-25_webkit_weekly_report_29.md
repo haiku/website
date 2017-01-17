@@ -19,7 +19,7 @@ Work continues on the testsuite: I found one bug in the testsuite system that gr
 </ul>
 
 I will continue marking the failing tests as expected to fail, and review them in case I find one that's easy to fix. The 5000 "no references" tests are easily fixed, we just need to generate a reference rendering of the page. This is because these tests have platform-specific results, so there is no common reference for all platforms, and we need a haiku-specific one.
-<!--break-->
+<!--more-->
 A lot of the remaining failures are problems of different font sizes, and various other things we don't support.
 
 During this test review, I found (and fixed) two potentially crashing bugs. One was a missing null termination in a string when encoding a canvas image as a data URL. The other was when extracting a rectangle from an image to copy it to a canvas. We didn't properly handle negative coordinates for the rectangle, which javascript allows, and we ended up writing data outside of the allocated memory for the image, corrupting the memory allocation structures with weird effects. Fortunately, libroot_debug was helpful in finding this.

@@ -9,7 +9,7 @@ tags = []
 Hi there, here comes the report for the month of September!
 
 This report covers revisions hrev49453-hrev49663.
-<!--break-->
+<!--more-->
 <h3>User interface</h3>
 mmlr made some fixes to the keystore server request window. This is the alert-like window that asks the user if it should let an application access the keystore and store or read "keys" stored there. The keystore is used to store wifi passwords, haikudepot accounts, and could be used by any application eeding to store 'secret' data such as passwords in a secure way, and not in plain sight in a settings file.
 

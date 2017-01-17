@@ -14,7 +14,7 @@ No, not this kind of blue box!
 
 …
 <a href="https://www.youtube.com/watch?v=13S58aQw7wA">Spoilers!</a>
-<!--break-->
+<!--more-->
 <h3>Blue box</h3>
 
 Actually, some time ago, Finn Bastiansen mailed me, asking if I was interested in getting a BeBox he didn't use anymore. He thought about auctioning it first and giving the money to Haiku, Inc. but he thought it'd be interesting to see if it could boot Haiku. It might take some time but should be quite doable.
