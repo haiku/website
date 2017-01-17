@@ -11,7 +11,7 @@ if [ ! -d content ]; then
 fi
 
 wget https://github.com/haiku/haiku/archive/master.zip -O master.zip -nv
-unzip master.zip 'haiku-master/docs/userguide/**'
+unzip -q master.zip 'haiku-master/docs/userguide/**'
 rm master.zip
 
 rm -rf public/
