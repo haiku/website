@@ -55,8 +55,8 @@ function timeToNow(isodate) {
 
 
 var tabs = document.querySelectorAll("#activity-tabs li");
-for (var item of tabs) {
-	item.addEventListener('click', function (e) {
+for (var i = 0; i < tabs.length; i++) {
+	tabs[i].addEventListener('click', function (e) {
 		e.preventDefault();
 		var n;
 		if (n = document.querySelector("#activity-tabs li.active")) n.classList.remove("active");
