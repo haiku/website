@@ -5,6 +5,8 @@ date = "2016-01-11T00:00:00.000Z"
 tags = []
 +++
 
+<style>.hydden { display: none; }</style>
+
 <div class="alert alert-info">
 <h3 style="margin-top:0">Before asking...</h3>
 <p>...have you checked or consulted any of the following online resources?</p>
@@ -15,18 +17,19 @@ tags = []
 </ul>
 </div>
 
-<form name="contact" action="/contact_thanks" netlify>
+<form name="contact" action="/contact_thanks" netlify netlify-honeypot="name">
+  <p class="hydden"><label>Bot field: <input name="name"></label></p>
   <div class="form-group">
-    <label for="em_addr">Email address</label>
-    <input type="email" class="form-control" id="em_addr" name="em_addr" placeholder="Email">
+    <label for="email_address">Email address</label>
+    <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email">
   </div>
   <div class="form-group">
-    <label for="em_subj">Subject</label>
-    <input type="text" class="form-control" id="em_subj" name="em_subj" placeholder="Subject">
+    <label for="email_subject">Subject</label>
+    <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="Subject">
   </div>
   <div class="form-group">
-    <label for="em_body">Message</label>
-    <textarea id="em_body" name="em_body" class="form-control" style="min-height:125px;resize:vertical;" placeholder="Message"></textarea>
+    <label for="email_body">Message</label>
+    <textarea id="email_body" name="email_body" class="form-control" style="min-height:125px;resize:vertical;" placeholder="Message"></textarea>
   </div>
   <button type="submit" class="btn btn-default">Send</button>
 </form>
