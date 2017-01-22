@@ -11,7 +11,9 @@ Well, after a long delay and BeGeistert 021 among us, I suppose it's time to tel
 My friend, Amir, and I set out to Columbus from Pittsburgh on the Friday evening before OLF, and as we traveled, I could already feel the excitement.  Once settled at the Hyatt hotel, I scrambled a bit to build/install Haiku on my MSI Wind U100 netbook.  I also let Amir try out a live CD on his laptop, and we shared some conversation about Haiku.  He wanted to come to OLF mainly for the various talks, and naturally I was there to help man the Haiku table. As he slept, I eventually got my system set up as I liked it with a GCC4 hybrid trunk build (with additional apps/media), and then went to sleep for a couple of hours.
 
 This was my first time being at the OLF, or any computer-related event for that matter, so I didn't know what to expect.  Upon meeting Darkwyrm and Mike after registration, I felt right at home and knew the day would go just fine.
+
 <!--more-->
+
 <span class="inline right"><a href="/files/screenshots/dw_attendee_800.jpg" rel="lightbox"><img src="/files/screenshots/dw_attendee_800.thumbnail.jpg" alt="Darkwyrm conversing with an attendee about Haiku" title="Darkwyrm conversing with an attendee about Haiku" class="image image-thumbnail" width="200" height="150" /></a><span class="caption" style="width: 198px;"><strong>Darkwyrm talking to an attendee</strong></span></span>
 
 We met lots of people who were interested in Haiku.  Some people knew of and used BeOS before, and even did a double-take while walking near our table.  Others didn't know anything about Haiku at all, and that meant we had to provide some history about BeOS/Haiku, and what Haiku's goals/features/benefits are.  Regardless of the audience, it was a joy to get to talk to people about Haiku and get a glimpse into their views on operating systems and software in general.

@@ -9,7 +9,9 @@ tags = ["WebKit", "app_server", "contract work"]
 Hello everyone!
 
 The report is a bit early this week, because I will not be available tomorrow (in case you wonder, I will be at the <a href="http://forever-party.net">Forever Party</a>). So, here it is.
+
 <!--more-->
+
 This week I continued the work on bug fixes. Last week I had already fixed most of the issues introduced in the previous release, but there were some more things I wanted to clean up before doing another release. First of all, I merged the latest version of WebKit (again). No surprises here, this comes with the usual set of fixes, optimizations and cleanups. I find it much easier to track these releases as they are made, because this way I can review the changes and when I get a new bug, it's possible to look at the git log and find the change that triggered it. If I let WebKit do too much progress at once, merging a huge number of commits at once, it's much harder to track the problems. Things are getting more stable on WebKit side, however. The GTK port is about to join the EFL one (and ours) on using the CMake build system, removing the autotools-based one. This means the CMake build files will be used by one more platform, and kept up to date by more people. One less thing to worry about.
 
 The new release will happen today, it is building as I write this blog post. My goal for this release was to fix as much issues as possible to get a "stable" release. This is because I plan to start work on a big item on the TODO list next, yes, you guessed, HTML5 Audio/Video support! Finally!

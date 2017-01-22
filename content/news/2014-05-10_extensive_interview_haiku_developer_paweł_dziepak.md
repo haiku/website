@@ -8,7 +8,9 @@ tags = ["interview", "developer", "pdziepak", "Paweł Dziepak", "development", "
 <p align="justify"><em>I have interviewed <strong>Paweł Dziepak</strong> during my private conversation with him, on polish Haiku IRC channel (<strong>#haiku-pl, Freenode</strong>). We talked for two nights, on 28 and 29 of April 2014. <strong>Paweł</strong> is known to the community as <strong>pdziepak</strong>, I am <strong>Premislaus</strong>. There are many great people involved with <strong>Haiku Project</strong>, everyone is worth interviewing - I will try to do that in the future (<strong>Ingo</strong>, <strong>Axel</strong>, <strong>Stephan</strong>, beware!). Why <strong>pdziepak</strong> this time? The big role in the decision played ease of communication, since we are the same nationality, we talk pretty often with each other on IRC channel. Besides, he is an excellent programmer, engineer with vision! Despite his young age, he doesn't do mobile apps, his field of interest are kernel architectures. Unfortunately, he didn't have current photo and he said no when I proposed him to take a stylish one, either selfie or in an elevator.</em></a>
 
 <p align="justify"><em>We had deep and sincere conversation about <strong>Haiku Project and Community</strong> condition. I also asked him about Open Source movement in general. The part of that I present to you below:</em></a>
+
 <!--more-->
+
 <p align="justify"><strong>Premislaus: Hi Paweł! I will start with standard question: write a little about yourself, who are you, where are you from, how old are you, what and where do you study?</strong></a>
 
 <p align="justify"><strong>pdziepak:</strong> Hi. My name is Paweł Dziepak, I am 22 years old, I was born in Opole, currently I study computer science at University of Wrocław and because of that I moved to Wrocław four years ago.</a>

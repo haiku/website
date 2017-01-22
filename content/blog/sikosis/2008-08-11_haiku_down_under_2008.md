@@ -10,7 +10,9 @@ In May this year, I wrote to the Haiku Mailing List, proposing that the Australi
 
 As Haiku's Anniversary is coming up on the 18th August -- I figured, we'd try and have an annual event centred around this date. Due to the short notice, I thought it would be best to keep it as simple as possible, and as this is the first event, it can then be used to generate more interest and discussions around Haiku.
 
+
 <!--more-->
+
 
 So, if you have any ideas or suggestions of what you would like to see, please advise ASAP. Also, if you would like to show off your latest code or have something to say, please let me know also and we'll work that into the schedule.
 

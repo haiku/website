@@ -11,7 +11,9 @@ So this is the day.
 I slept not too bad. The only trouble with rooms this big is you have to walk a lot :D
 
 After two days hacking I wanted to do some sightseeing. I started by the cable-car, it's really funny the way it goes up and down. Then I went north on Van Ness, west on Lombard street, and I walked a little in the Presidio Park. Was nice to see some nature! And I finally saw the Golden-Gate Bridge in the distance. Then I walked back to town via the Palace of Fine Arts, Marina Boulevard (btw, <a href="https://en.wiktionary.org/wiki/boulevard">boulevard</a> is a French word, although there are several explanations for its origin), Fort Mason, and they I took the bus back to the hotel to get a shower and a little nap before the GCI Opening Party.
+
 <!--more-->
+
 At 4:30pm I went to the atrium hoping to see Scott who mailed me he was around already, but instead I found some other mentors and students, including Hannah who brought her little brother, so we started discussing, and settled down to wait for others. At one point Vale showed up as well, and soon it was 5:30 so we went to the meeting space.
 
 <img align="left" width="25%" height="25%" src="/files/IMG_20160612_173944.jpg" alt="Hi Scott!" title="Hi Scott!" />We were given our badges, large badges, you really see them from far away! We also had a first chunk of swag: a large bag with pockets for a laptop and a tablet, a jacket...

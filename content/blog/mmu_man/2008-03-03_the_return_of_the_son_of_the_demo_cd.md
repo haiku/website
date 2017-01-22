@@ -15,7 +15,9 @@ As everyone knows (or should), every BeOS install CD was actually a live CD (way
 
 While it used to work long ago, nobody actually tried to make one for some time, and some fixes were required to make it happen again.
 Making an usable CD still requires some work (Bootscript.cd, ramdisk for settings maybe...), but it finally <a href="http://revolf.free.fr/beos/shots/shot_haiku_livecd_001.png">boots again</a>.
+
 <!--more-->
+
 
 One of the problems was a kernel argument that was passed as int32 and checked for as bool, obviously missing the int32 value.
 The FloppyBootImage jam file I wrote also lacked the scsi_cd driver in the list of boot modules to be put into the gzipped tarball that goes on the floppy image. Since I used a copy-paste from the NetBootImage file I overlooked this.

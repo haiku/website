@@ -11,7 +11,9 @@ Hello everyone.
 Well, just got confirmation from Haiku, Inc. that I can continue working on this during May. Thanks to everyone who donated money to Haiku, Inc. for making this possible!
 
 As mentioned last week, I'm working on fixing the flickering and missing rendering on some pages. I didn't get very good results yet, but I can at least give you an overview of the different ways WebKit can render things on screen.
+
 <!--more-->
+
 If you have followed the porting since the very early days, you already know that all the drawing has to happen in the main thread, where all the application runs, and not in the view thread. On Haiku, we accomplish this by drawing to an offscreen bitmap. The window thread then just copies parts of that bitmap on the screen.
 
 Things have changed a bit over time to make things go faster, and be more easily hardware accelerated. The first change (developed for iOS) is the use of a tiled backing store. This is similar to our offscreen bitmap, but instead of a single bitmap, a lot of smaller tiles (usually 256x256 pixels) are used. The idea on iOS is to use these as GPU textures. Once a tile is rendered, there should be no need to modify it ; for example when scrolling the page, instead the tile can be moved on the screen. The GPU can keep tiles in memory as long as there is free space, allowing very fast scrolling without the need to redraw anything.

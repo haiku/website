@@ -7,7 +7,9 @@ tags = ["FOSDEM", "2010", "report", "pictures", "photos"]
 +++
 
 Just came back from FOSDEM 2010, i don't have much to say, since it was quite a flash journey for me, i left home Sunday at 7:30AM and got back at 7:30PM. I originally planned to go on both days  but this year Haiku didn't have its own stand, instead Haiku was present Sunday in the Alt-OS (ie: not Linux nor BSD) DevRoom in the form of several talks by François Revol, Olivier Coursière and Niels Reedijk. The <a href="http://fosdem.org/2010/schedule/devrooms/altos" title="DevRoom">Alt-OS DevRoom</a> was a (~50 people capacity) class room, that François entirely managed and organized, he invited other projects to give talks and scheduled the talks.
+
 <!--more-->
+
 Unfortunately, i arrived a few minutes after Olivier started his "Introducing Haiku" talk, and the room was so packed that i couldn't even get in the room (for safety reasons). <a href="http://www.flickr.com/photos/fredrikwendt/4335273864/">This is what i was welcomed with"</a> :)
 When i managed to enter, for the next talk, there were still no seats available and stood up like ~30 other people. I eventually managed to seat next to the Haiku guys (Jerôme Duval joined us in the afternoon). 
 

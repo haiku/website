@@ -7,7 +7,9 @@ tags = ["undefined", "FLOSS", "event"]
 +++
 
 <a href="/images/capitole_du_libre_haiku_booth_1"><img src="/files/screenshots/Capitole_du_libre_2014_DSCN2119.thumbnail.jpg" align="right"></a>I'm heading back home from <a href="http://2014.capitoledulibre.org/" title="Capitole du libre">Capitole du libre</a>, held this week-end in Toulouse, where I helped Adrien on the Haiku booth. I even just distributed two more flyers, since I've gone car-sharing for a change for both ways. I decided quite late, but Adrien kindly offered his sofa so I couldn't resist.
+
 <!--more-->
+
 I arrived on friday evening, and after spending five hours in a car had one more hour and a half with the metro and tram. It was raining almost all along.
 
 <h3>Saturday</h3>

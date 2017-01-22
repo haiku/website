@@ -11,7 +11,9 @@ Hey there,
 Finally the reports are back to normal monthly schedule!
 <p>
 The summer is coming, which in my case means a little more free time for Haiku hacking. Anyway, on to the interesting facts. This report covers hrev50367-hrev50387 (yes, only 20 revisions this month, but some of them are large-ish with several commits from Barrett).
+
 <!--more-->
+
 <h3>TLS SNI support</h3>
 Mark Hellegers contributed several patches which are getting merged. This one provides SNI support in BSecureSocket. SNI (Server Name Identification) is a feature of the TLS protocol which makes the client tell the server which domain name he wants to connect to. This is useful because a single machine may serve different hostnames, and, when a TCP connection opens, the server has no idea which of the names is being looked for.
 <p>

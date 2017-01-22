@@ -10,7 +10,9 @@ This year's Google Summer of Code Mentor Summit again fell on the same weekend a
 
 <img src="/files/screenshots/DSC_2139-1024.JPG" width="480" /><br />
 Here's the group picture.  <a href="/files/screenshots/DSC_2139-1024.JPG">click to see larger view</a>
+
 <!--more-->
+
 Here are the sessions I attended:
 
 Static Code Analysis

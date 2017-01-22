@@ -10,7 +10,9 @@ Hi everyone,
 It's been two weeks since the previous blog post, so here goes an update.
 
 First of all, I wanted to make it clear that I haven't started to work on my contract, so the few things that happened in the last two weeks were done on my free time. Said free time was short, as I'm in the process of moving to another city and I've been packing a lot of stuff and cleaning my flat. Note I will be offline starting next week, and I hope to get internet access back as soon as possible. I won't start working on the contract before I'm back online, as testing a web browser without any internet access creates more problems than I'm willing to solve.
+
 <!--more-->
+
 Anyway, on to the work done !
 
 I'll start on the Service Kit side. By testing some websites I often use, I found that chunked http transfers were not working properly. This was tracked down to the use of a static variable in the chunked transfer code, and was solved in https://cgit.haiku-os.org/haiku/commit/src/kits/network?id=2ec188b9032a9c642a27c26819d41c8311993492 .

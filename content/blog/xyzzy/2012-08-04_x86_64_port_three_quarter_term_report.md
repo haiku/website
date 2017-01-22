@@ -9,7 +9,9 @@ tags = ["gsoc", "gsoc2012", "x86_64"]
 I have continued to make good progress since my midterm report. All the kernel functionality except for user debugging is implemented, and I have ported a basic set of drivers, including PCI, disk drivers, BFS and PS/2 input. For most drivers, porting is just a matter of fixing compiler warnings. For some, there are 64-bit issues which make porting more difficult. For example, the USB stack will require a bit more work as it currently assumes that addr_t is 32-bit everywhere.
 
 I have also made some progress in porting userland to x86_64. I currently have libroot, libbe, bash, and most of the command line utilities ported. I have got an interactive bash shell running on top of consoled (which is usually used to run gdb on if app_server crashes).
+
 <!--more-->
+
 <div align="center">
 <a href="/files/images/x86_64-threequarter.png"><br />
 <img src="/files/images/x86_64-threequarter.png" width="640px" height="519px" />

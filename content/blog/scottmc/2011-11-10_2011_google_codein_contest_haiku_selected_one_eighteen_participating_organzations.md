@@ -27,7 +27,9 @@ Google's contest to introduce pre-university students to the many kinds of contr
 Official Google Code-In website and to review the updated rules for 2011. [2]
 
 Over the next couple of weeks we will be busy getting our task list in order and putting together a good group of Haiku mentors for this.  Many of the tasks will be for translations, so we may still need a few more mentors to cover some of those tasks.  If you are interested in mentoring please let us know on the mailing list.  For a preview of some of the possible Haiku tasks, you can check the wiki page we used for gathering ideas. [3]
+
 <!--more-->
+
 Students can start claiming tasks on November 21st, 2011 with the contest continuing through January 16th, 2011.  We will be posting as many tasks as we have ready and covered by available mentors on the first day of the contest.  One big difference this year vs. last year is that we will only be able to posts tasks at the start of the contest and then a second wave on December 16th, so this will mean a bit more up front work to get ready.  We also have some open tasks that ask students to solve open trac tickets, of which there's around 2000 or so open tickets to consider.  For those tasks the student will find one they are interested in fixing and then claim the task.
 
 For official contest rules, see the Google Code-In page. [4]

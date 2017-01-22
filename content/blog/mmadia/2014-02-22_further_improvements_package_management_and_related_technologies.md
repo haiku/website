@@ -16,7 +16,9 @@ Luckily, with any actively developed software such as Haiku, bug fixes
 continue to happen. This article will go into some of those issues, what
 has been done to fix them, and what other improvements are in the pipeline.
 </p>
+
 <!--more-->
+
 <p>
 There were several factors that led to some software not being able to be installed.
 They included a minimally functional PackageInstaller (for installing BeOS Software Valet packages),

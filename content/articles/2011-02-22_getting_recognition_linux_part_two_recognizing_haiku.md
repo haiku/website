@@ -6,7 +6,9 @@ tags = ["ubuntu", "ppa", "grub"]
 +++
 
 <div class="alert alert-info">This article was written when Ubuntu 10.10 was the latest version. Starting with Ubuntu 11.04 (Natty Narwhal), Haiku should be recognized out of the box. Just run <span class="cli">sudo update-grub</span> to add it to the GRUB menu.</div><p>When I switched from Windows to Ubuntu, not only did I wonder why <a href="/articles/2011-01-26_getting_recognition_linux_part_one_recognizing_be_file_system">it wouldn't recognize the BFS file systems</a>, but also why Windows would automatically get added to the GRUB menu, but Haiku wouldn't.</p>
+
 <!--more-->
+
 <p>GRUB 2 uses its <span class="app">30_os-prober</span> script to detect other installed operating systems and add them to the menu. This script, in turn, uses the <span class="app">os-prober</span> utility to do the actual detecting. You can try it out with <span class="cli">sudo os-prober</span> to get a summary of all the recognized operating systems.</p>
 <p>This utility didn't have any code to detect Haiku, so I <a href="http://git.debian.org/?p=d-i/os-prober.git;a=history;f=os-probes/mounted/x86/83haiku">wrote a module</a> that will look for the Haiku stage 1 bootloader, stage 2 bootloader and kernel. If all three are found, it will return the necessary information for GRUB to create a menu entry.</p>
 <p>When I was about to submit the module to the maintainers, I discovered that François Revol had already <a href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=590897">submitted a module</a> to detect Haiku. But as it only checked for the stage 2 bootloader and was ignored by the maintainers for more than six months, I also submitted my module and after two days it got accepted. As of <span class="app">os-prober v1.44</span>, Haiku will be recognized by it.</p>

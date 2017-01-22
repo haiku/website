@@ -7,7 +7,9 @@ tags = ["debugger", "expressions", "syntax highlighting"]
 +++
 
 Since the last <a href="/blog/anevilyak/2014-10-30_code_sprint_2014_debugger">time</a>, I've put a bit more work into improving the expression evaluator that was started as part of the sprint. Since some of its new capabilities are likely to be useful to others, and might not necessarily be obvious from simply reading the commit list, I thought I'd elaborate on them a bit here.
+
 <!--more-->
+
 <h3>Expression improvements</h3>
 
 Since the last time, the expression parser has grown several new capabilities. We are now able to infer the types of operands, and as such one no longer needs to set the type that one wishes the value to be returned as. A further consequence is that expressions can now return arbitrarily typed values as results, not just simple numeric values. This means that, for instance, an expression can return a data member of a class, and if that member is itself an object or other more complex type, it can then be expanded to look at its internal values.

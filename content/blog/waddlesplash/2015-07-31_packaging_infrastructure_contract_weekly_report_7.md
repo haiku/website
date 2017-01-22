@@ -9,7 +9,9 @@ tags = ["contract work", "infrastructure", "package management"]
 Hello again!<br>
 <br>
 A lot has happened since last week. The DHCP bug that has been plaguing Haiku for over a month is now fixed, some various other issues have been cleared up, and the Kitchen has a lot of edge-cases fixed and properly parses dependencies.
+
 <!--more-->
+
 <br>
 <br>
 I didn't do very much work on Monday for various reasons. On Tuesday and Wednesday, I spent some time investigating the DHCP bug, which lead to some bugfixes in BNetworkAddress. I was working alongside a couple other members of the Haiku team, who were also investigating it. It was a rather hard bug to track, and PulkoMandy eventually fixed it late Wednesday, which meant that Haiku was finally stable enough for me to look into deploying Kitchen builders.<br>

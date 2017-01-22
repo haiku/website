@@ -7,7 +7,9 @@ tags = ["NFS"]
 +++
 
 <p>Earlier this week NFSv4 client I have been working on during the last year Google Summer of Code has been merged into the main Haiku repository and is now available in nightly images. The client supports all caching mechanisms available in the version 4 of NFS what means that it can get the most out of network connection and the server. Unfortunately due to limitations of the NFS protocol itself extended attributes are not supported yet.</p>
+
 <!--more-->
+
 <p>In order to mount a NFS share you need to type the following command:</p>
 <pre>mount -t nfs4 -p "server_address:path flags" directory</pre>
 <p><code>server_address</code> may be either an IP address or a host name. Flags are optional, the default configuration should be appropriate in most cases and should be changed only if problems appear. The available flags are:</p>

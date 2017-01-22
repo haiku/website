@@ -7,7 +7,9 @@ tags = ["gsoc", "gsoc2010", "dvd", "media kit", "media add-on", "media node"]
 +++
 
 Extending the media kit with the ability to read DVD is a challenge, but a unique opportunity to learn about the kit architecture and Haiku software integration. This time I'll be talking about my actual first development steps concerning DVD support.
+
 <!--more-->
+
 First of all, I needed several DVD related libraries. I presented thise in my last post, and they proved easy enough to integrate. Apart from some include path and endian switching issues, they compiled without any fuss.
 
 Well I say it was easy, but the next step was to change the library build system from Automake to Jam (and learn how to use Jam) in order to build them with Haiku, and make them directly available to my add-on as static libraries.

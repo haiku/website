@@ -9,7 +9,9 @@ tags = ["WebKit", "contract work"]
 Hello there!
 
 Yesterday I released version 1.4.4 of HaikuWebKit. This version includes the latest fixes to the rendering code and should be completely useable again. There are still a few drawing issues but they shouldn't prevent you to browse the web anymore.
+
 <!--more-->
+
 This is not the only change in this release. I ran through the html5test.com results and implemented some of the missing features to improve our score. The most visible changes are:
 
 <ul>

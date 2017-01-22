@@ -9,7 +9,9 @@ tags = ["contract", "WebKit", "haikuporter", "contract work"]
 It's Friday again !
 
 So, in my last blog post I told you I was converting our WebKit build files to CMake. This week I managed to get a working HaikuLauncher (the test browser that comes in the WebKit tree) and surf the web a bit with it.
+
 <!--more-->
+
 Getting an executable generated wasn't too hard, but then I noticed that it wouldn't run. Investigation showed that CMake had linked some gcc2 libraries with the gcc4-built WebKit, and, as you know, this can't work. The main issue had already be fixed with the package manager branch. In Package Managed Haiku, the libs nad headers for each architecture are better separated, and CMake is aware of the 2 compiler versions. So, I upgraded my computer to run the Package Managed Haiku.
 
 I quickly found out some of the libs we provided as optional packages before were not yet converted into packages for the new system. So I headed over at <a href="http://bb.haikuports.org/haikuports/commits">Haikuports</a> and started working on the recipe files for these. I also updated the recipe for my most needed tool, the vim text editor (Pe is unusable with my AZERTY keyboard because of the position-mapped keyboard shortcuts).

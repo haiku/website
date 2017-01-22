@@ -9,7 +9,9 @@ tags = ["benchmark", "hostplatform", "performance"]
 <p>
 In these exciting times, during which Ingo Weinhold is making great progress with some performance optimizations in the Haiku kernel, I felt this strong urge to conduct some benchmark results, even if that caused me great deal of pain in setting up all the test platforms! The results are quite interesting, even though I didn't manage to test all possible combinations of host platforms and file systems.
 </p>
+
 <!--more-->
+
 <p>
 One thing we Haiku developers do all the time is building Haiku, so naturally this is one of the most interesting benchmarks for us. But it is also an informative system level benchmark. It gives an impression about various kernel related tasks such as the efficiency of locking primitives, concurrency in the kernel, task scheduling across multiple CPUs, forking and launching processes and to some degree file system performance and caching. During a Haiku build, the master build tool "jam" will repeatedly fork itself to launch build tools such as GCC, the linker, mimeset and various other useful command line programs. The jam address space will grow to about half a gigabyte of memory after having parsed all Jamfiles in the tree and cloning this address space when jam forks the various subprocesses to build individual targets puts a lot of stress on the kernel and its low level system services. Other operating system aspects such as the graphical user interface have very little influence in the outcome of the benchmark, only a badly implemented Terminal with slow text rendering and scrolling would be able to have any impact, but that should not be an issue with any platform I benchmarked.
 </p>

@@ -20,7 +20,9 @@ I have some experience with development thanks to several academic projects, chi
 Our first big project used an obscure language called "oRis", an object and agent-oriented language developed as part of the doctoral thesis of Fabrice Harrouet. The project's objective was to design a simulation of pathfinding robots, with basic behaviour and capable of cooperating to achieve goals in a virtual maze. This project enabled us to learn how to manage a project using Subversion, and how to organise its development.
 The project was managed at this page:
 <a href=http://code.google.com/p/csr/>http://code.google.com/p/csr/</a>
+
 <!--more-->
+
 This year, our main project was to write a compiler in Java for a natural imperative "project" language, a good introduction to understanding and using widespread compilers.
 The project was managed at this page:
 <a href=http://code.google.com/p/compilateur-projet/>http://code.google.com/p/compilateur-projet/</a>

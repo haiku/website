@@ -7,7 +7,9 @@ tags = ["wpa", "WiFi", "haikuware bounty"]
 +++
 
 <p>As you might have noticed, the WiFi encryption bounty ends tomorrow. Obviously, this is a good time to give an overview over what I did in the past weeks. Unfortunately, and hopefully before I got you excited, the most interesting thing of the bounty, the wpa_supplicant, does not work yet. I've ported it to Haiku, but so far it has resisted my attempts to find out where the problem is located -- well, in the hours I put into debugging I've found a couple of potential causes, but there is at least one more to be found, and fixed.</p>
+
 <!--more-->
+
 <p>The bounty was divided into three parts: the first was porting the wpa_supplicant, the second one was to design, and implement a C++ API to use WLAN functions; the WLAN functionality is pretty much completely covered by the new BNetworkDevice class. The final part was to integrate the WiFi functionality into userland applications like ifconfig, net_server, NetworkStatus, and the Network preferences application.</p>
 
 <p>While there is always room for improvement, I at least completed the last two parts of the bounty. I have not published the wpa_supplicant port anywhere yet, as I need to clean it up a bit before, and I haven't decided where to put it yet. In any case, I intend to work on this over the next weeks.</p>

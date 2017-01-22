@@ -7,7 +7,9 @@ tags = ["scheduler", "affinity", "hyperthreading"]
 +++
 
 When I first started working on the scheduler I didn't make a big deal about it, but when I did mention it I was quite surprised at the amount of interest there was in what I was doing. So much so that it was suggested that I start blogging about it, so here I am! I would like to take this time to introduce myself as well as the work that I am doing on the scheduler.
+
 <!--more-->
+
 <strong>Who Am I?</strong>
 My name is Dewey Taylor, but those on IRC know me as Duggan. I have a BS in CS and I am an original BeOS user starting with R5, so I was somewhat of a late-comer. I followed the Haiku project (then OpenBeOS) since it's inception from a distance but joined the community-proper about 4 or 5 years ago. My major focus has been on third-party native application development, but it's not uncommon for me to delve into the Haiku trunk as well.
 

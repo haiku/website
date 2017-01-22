@@ -7,7 +7,9 @@ tags = ["gsoc", "gsoc2010", "htree", "ext3"]
 +++
 
 The first milestone of the ext3 implementation was to have read support. Since ext2 read support is already implemented, the only missing feature (as far as I can tell) for ext3 read implementation was support for indexed directories. In ext3, indexed directories use a tree structured called HTree. This tree has a fixed depth and its keys are file name hashes. Each node of the tree is a file system block inside the directory file (ie. linked by the directory i-node).
+
 <!--more-->
+
 To allow backwards compatibility with ext2 tools, it uses a clever scheme to hide itself from ext2 mounts, representing each node as a fake and empty directory entry. This way the directory's entries can be read normally (sequentially) if mounted as ext2, and can be read in indexed mode by ext3. Because it uses hash values, there is a possibility that a hash collision occurs. Therefore, another clever trick is used: the least significant bit of the hash key in the tree is used to flag if the node contains entries that were supposed to be in the previous node. However, this limits the hash value to 31 bits.
 
 The leaf nodes contain the directory's entries with the full file names of the directory's files. They are arranged the same way as in ext2. Therefore, once we find the leaf node where the entry is supposed to be located, we simply traverse it sequentially until we find it or reach the end of the leaf node. If we do reach the end of the node, we proceed to the next leaf node if its parent node indicates it holds collision entries from the previous leaf.

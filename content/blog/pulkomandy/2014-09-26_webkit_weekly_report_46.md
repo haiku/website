@@ -9,7 +9,9 @@ tags = ["WebKit", "webpositive", "geolocation", "contract work"]
 Hello everyone!
 
 This week most of my work went into improving our HTML5 support in WebKit. A lot of small issues and relatively simple features had piled up on my TODO list, and there weren't too much new bug reports so I spent some time to fix those. Here is a quick review of the features I added support for this week.
+
 <!--more-->
+
 <h3>range control</h3>
 
 Range is a new input type in HTML5, which we implement as a slider. While WebKit has handling for it, and it is enabled by default, we never implemented the drawing code for this, and as a result the slider was not visible (but worked fine). I fixed this and gave the sliders a look close to the native ones thanks to BControlLook. There are some tweaks to do to get them to render at the proper size, however, but I will get back to that.

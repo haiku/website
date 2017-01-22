@@ -7,7 +7,9 @@ tags = ["media_kit", "BMediaRoster", "media_server"]
 +++
 
 Hello, it has been some time since my last article, in the meantime I continued to improve things out and since I changed some important parts of the media_kit, I think it's correct to notify the community about new and 'old' features added recently. This is an article mostly written for application developers, but I tried to explain the improvements made with simple words so I hope it will be interesting to anyone.
+
 <!--more-->
+
 <h1><strong>The Old Ones</strong></h1>
 
 One of my goals was to implement some important parts of BMediaRoster which were still missing from the Haiku implementation:

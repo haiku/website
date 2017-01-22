@@ -16,7 +16,9 @@ Right. So let's keep in mind that the BeBook <a href="http://www.beunited.org/be
 This post is not going to address these directly. Instead, today I'll be telling the background story of how quite a number of pieces are being woven together to fulfill those specific needs and constraints. OK, enough metablogging ;)
 
 After <a href="/blog/meianoite/2007-06-17/the_first_or_nth_even_attempt_a_cautionary_tale#polishing">letting go of the previous approach</a>, I decided to study the subject on the very traditional literature about it. And while I was studying classic scheduler approaches on the Minix book, I noticed that the description of lottery-based scheduling was very compatible with that description of priorities meaning approximate frequency of being chosen by the scheduler. Lottery scheduling was <a href="http://www.waldspurger.org/carl/research.html">proposed by Carl Waldspurger</a> in 1994, and it works roughly like this<a href="#note1" name="lottery">[1]</a>:
+
 <!--more-->
+
 Let's use a supply vs. demand analogy. Think of a very popular store you know, and suppose there's a <b>big</b> sale going on. Only one person can go inside the store at any time, and only when someone else gets out of it. The people outside refused to form a line, but they accepted participating in a lottery-like system, where numbers are drawn randomly and the person holding the winning ticket gets inside the store. 
 
 Suppose you could assign different priorities to people with special needs; for example, the elderly and the pregnant could receive more than one ticket to increase their chances of going inside sooner than others.

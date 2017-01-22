@@ -15,7 +15,9 @@ Anyway, with this in mind, the crown jewel of content I had was a special 50 min
 
 <div align="center"><img src="http://haikudownunder.com/gallery/photo.php?2" width="400" alt="Sikosis on the Mic" border="0" /></div>
 Technical difficulties plagued the entire event. From IE browser plugin issues with uStream, presentation slides being cut off, the strange echo and last but not least the uStream stream dying half way through the event. In other words, the streaming was an utter steaming pile of fail.
+
 <!--more-->
+
 <div align="center"><img src="http://haikudownunder.com/gallery/photo.php?3" width="400" alt="Dirty Hack" border="0" /></div>
 With that said, I managed to rip the audio from the recording and I have made a re-edited video with additional demo footage, which is <a href="http://www.vimeo.com/6279139" target="_blank">available on Vimeo</a>.
 

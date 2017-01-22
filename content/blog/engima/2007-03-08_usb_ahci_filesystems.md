@@ -18,7 +18,9 @@ tags = ["usb", "AHCI", "NetPositive", "NTFS", "NFS", "GoogleFS"]
 <li>NTFS</li>
 </ul>
 </ul>
+
 <!--more-->
+
 <h3>Full Updates</h3>
 <p>After a few minor fixes NetPositive shows the first sign of (networked) life under Haiku. Followed by performance fixes, caching referenced modules for example, IPv4 and ICMP should have gained some speed. All this can be experienced now that the NetServer is started on boot.</p>
 

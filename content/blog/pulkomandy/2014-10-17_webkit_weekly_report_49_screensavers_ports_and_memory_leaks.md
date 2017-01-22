@@ -9,7 +9,9 @@ tags = ["WebKit", "contract work"]
 Hello world!
 
 This has been a busy week with activity on all fronts.
+
 <!--more-->
+
 <h3>Fixes in Haiku</h3>
 
 I got a new version of fRiSS released. I finally converted it to use the layout kit but this led to discovering and fixing some bugs in the interface kit:

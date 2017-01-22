@@ -7,7 +7,9 @@ tags = ["contract work", "wpa_supplicant", "intel_extreme"]
 +++
 
 As some of you know, I've started my contract work on Haiku pretty exactly one month ago. During that time I've been working on various things that I'd like to summarize in this post. In the future I plan on posting more but shorter entries, but since much has happened in this month this one is going to be a bit more elaborate.
+
 <!--more-->
+
 <b>The wpa_supplicant</b>
 
 The more or less obvious first task was to finally finish the port of the wpa_supplicant, a software component that is responsible for handling the authentication and key management in wireless networks. It was the missing component keeping Haiku from accessing WPA/WPA2 encrypted networks.

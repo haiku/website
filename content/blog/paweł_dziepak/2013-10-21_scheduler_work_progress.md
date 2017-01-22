@@ -7,7 +7,9 @@ tags = ["kernel", "scheduler", "contract", "contract work"]
 +++
 
 Thanks to generosity of Haiku supporters, I will be able to continue my work on scheduler in November. It's high time I wrote a report about what has already been done. As it was mentioned before my work can be tracked in the <a href="https://github.com/pdziepak/Haiku/tree/scheduler">scheduler</a> branch in my repository. Commit descriptions and some comments in the scheduler code contain more detailed motivation behind some of the decisions I had to make. In this post, though, I will concentrate how my work looked so far and what I plan to do next.
+
 <!--more-->
+
 I started with machine dependent part - detecting CPU and cache topology. I didn't need that information until recently, but I wanted to have low level code written before I moved on to reworking the scheduler. CPU vendors make it a bit more complicated than one could expect since AMD and Intel provide topology information in different ways. Moreover, in case of both AMD and Intel their older processors report such data in different way than the new ones, so actually there are four different means of detecting CPU topology. Currently, Haiku recognizes three levels of CPU topology: package (i.e. socket), core and SMT. However, it was implemented in such way that adding another level in the future will be quite trivial.
 
 Once, I was done with the low level stuff I started working on simple scheduler and improving its performance on single processor machines. I had two main goals make it O(1) with regard to the number of ready threads (i.e. all scheduler operations take constant time regardless of how many threads there are) and to prevent thread starvation. In order to achieve constant complexity I used a priority queue created from 121 (because we have 121 possible thread priorities) lists. To improve performance I used a bitmap that allows the scheduler to quickly find the highest priority thread.

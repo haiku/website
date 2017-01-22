@@ -8,7 +8,9 @@ tags = ["gsoc", "sub-pixel", "antialiasing"]
 
 Another few weeks have passed since my last update, so here is another short report on the status of my project.
 I hope everyone is enjoying the results of my work that have already been integrated into the main source trunk. Now I am pleased to announce that also the second part of my project is almost finished.
+
 <!--more-->
+
 Sub-pixel antialiasing can now be used for all vector-graphics in Haiku. This includes not only most geometric shapes in the system, but also transformed (rotated, skewed…) and hinted text. For colour filtering, Stephan’s averaging method is used and the user can adjust the ratio between the weight of sub-pixel values and average values. If the last sentence doesn’t seem to make much sense to you, see this mailing list thread for details about the filtering method:
 
 https://www.freelists.org/archives/haiku-development/07-2008/msg00093.html

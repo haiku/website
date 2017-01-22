@@ -10,7 +10,9 @@ tags = []
 
 This report covers commits hrev49500-hrev49593.
 Detailed statistics: http://pulkomandy.tk/stats-201508/
+
 <!--more-->
+
 <h3>Packages</h3>
 
 We are still uploading packages manually at the moment, as the Haiku Kitchen isn't live yet.

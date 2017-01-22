@@ -10,7 +10,9 @@ tags = ["event", "exhibition", "chemnitz", "demo", "report"]
 The "Chemnitzer Linux Tage" (Chemnitzer Linux Days) was actually celebrating it's tenth anniversary. It started out as a kind of Linux install fest, but has since become a general Open Source event where all kinds of projects have a platform to demonstrate themselves. So despite the name, this event was perfect for Haiku.
 </p>
 
+
 <!--more-->
+
 
 <p align="justify">
 In the run up, I figured I should better get myself a mobile computer again. Previous experience has taught me that it is very beneficial to get the same hardware that Ingo and Axel call their own, and so I got a Lenovo/IBM T60. My old T40p was a really solid machine, so I was confident that the T60 would be a good laptop. It arrived pretty soon after I ordered it, so I could install Ubuntu as a build platform and set everything up that I needed for Haiku. Thanks to the helpful instructions on this site, it is pretty easy to get everything running on first try, to the point where Haiku is being installed, complete with optional application packages and other extras, ready for being demoed. Haiku on this notebook, even though it runs in VESA mode, is blazingly fast and responsive. The ipro1000 network works out of the box, even better than on Ubuntu, since I needed Haiku to figure out that I had the cable plugged in the wrong plug (Ubuntu would not show that the ipro1000 was even recognized, only after the cable was in the correct plug - it <i>needs</i> to be the docking station).

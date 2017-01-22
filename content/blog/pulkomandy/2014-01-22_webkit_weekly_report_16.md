@@ -11,7 +11,9 @@ Hello world!
 As I said last week, the remaining drawing glitches are because of BView limitations. Well, it's time to solve those as well!
 
 I'll start with what is now known as the "border bleeding" bug. You have encountered it if you tried opening the Haiku website, or the bugtracker, in Web+. You will easily notice that some items are completely filled with the border color, instead of the expected background one. To understand what's going on, let's have a look at the way WebKit draws things.
+
 <!--more-->
+
 <h4>WebKit drawing code</h4>
 It's about time I give you a quick tour of WebKit source organization. Please open this page in a new tab: https://github.com/haiku/webkit.
 

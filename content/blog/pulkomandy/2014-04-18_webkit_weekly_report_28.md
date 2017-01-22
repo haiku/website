@@ -11,7 +11,9 @@ Hello everyone,
 Slow progress on the code this week...
 
 I fixed two small issues in the video decoding code: a useless notification was sent, leading to very high cpu usage on jamendo.com (and possibly other places). And, the video drawing was not always using B_OP_COPY. This led to CPU waste as the mode used could be slower (B_OP_OVER has to scan each pixel to see if it is transparent), and created some drawing glitches on some videos.
+
 <!--more-->
+
 Another optimisation was in the copying from the rendering bitmap to the view. We always copied the whole bitmap at the slightest change. Now we copy only the part that needs updating. This doesn't help with slow scrolling, but it helps in a few other cases such as a link getting highlighted when the mouse hovers it (only the small rectangle around said link is copied, instead of the whole window). This should make the browser feel slightly faster, but still not as much as we'd like.
 
 I implemented scaling using the transform support, which will also slightly improve performance (the transform matrix was used anyway, so merging the scaling into it makes one less operation). It also allows different scaling on X and Y axis, allowing distorting objects.

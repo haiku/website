@@ -9,7 +9,9 @@ tags = ["gsoc2010", "gsoc", "ipv6"]
 With the exhaustion of IPv4 addresses that is expected to happen soon, the next Internet protocol version IPv6 has become more important than ever. All major desktop operating systems (Windows, Mac OS, Linux) already have IPv6 support. The main objective of this Summer of Code project is to create an IPv6 implementation in Haiku kernel. This work will allow user-space application developers to add IPv6 support to their programs, and Haiku users to have IPv6 connectivity to the Internet or other networks.
 
 The full proposal follows.
+
 <!--more-->
+
 <h4 class="icon-person-medium">Personal Profile</h4>
 <ul>
 <li><strong>Full name:</strong> Atis Elsts </li>

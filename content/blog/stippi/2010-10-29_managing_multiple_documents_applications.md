@@ -10,7 +10,9 @@ tags = ["S&T", "Stack&Tile", "window", "deskbar", "document", "api"]
 Working on my rewrite of WonderBrush, I've been thinking about the document management. As you may know, WonderBrush is a stricly single window application in its current release. It can still open more than one document at once, of course, and those are displayed in a list above the navigational preview of the current document. One of the drawbacks of this approach is that there are no previews of all the documents visible at once, and it's harder to make non-current documents the target of drag&drop operations, like when dragging objects from one document onto another document to move or copy them there.
 </p>
 
+
 <!--more-->
+
 
 <p>
 Many web browsers display multiple documents in a tabbed interface. Some web browsers show a preview of a non-current web page in a tool tip like fashion when you hover with the mouse over a tab. It seems to be useful to have a graphical representation which is bigger than a mere favicon. The same scheme is visible in other user interface features of current browsers or their extensions.

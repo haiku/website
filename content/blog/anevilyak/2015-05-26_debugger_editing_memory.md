@@ -7,7 +7,9 @@ tags = ["debugger", "memory", "editing"]
 +++
 
 As those who make regular use of it probably already know, one of the features of Haiku's integrated debugger is the ability to inspect the contents of arbitrary (mapped) locations in the target team's address space. This can be handy in various instances, such as when trying to track down bugs that are likely due to a piece of code overwriting part of another data structure, since the data that's been written to memory might contain some pattern or even a familiar string that might hint at the culprit.
+
 <!--more-->
+
 Up until recently, however, looking is all that one has been able to do. There are other circumstances in which one might actually want to modify the data for various reasons. The inspector is now able to do precisely that.
 
 <img src="/files/inspector1.png"/>

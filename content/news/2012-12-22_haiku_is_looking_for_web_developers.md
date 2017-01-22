@@ -8,7 +8,9 @@ tags = ["developer", "python", "php", "drupal", "volunteer"]
 <p>The Haiku project is supported by various websites and web services, such as the <a href="/>main website</a>, the <a href="https://dev.haiku-os.org/">development tracker</a> and the <a href="http://i18n.haiku-os.org/pootle">translation tools</a>. For all these services we have various short and long term goals and objectives, and we are looking for help to realize our plans.</p>
 
 <p>Helping out means that you are contributing to the continued development of Haiku! We are looking for people with Drupal/PHP skills and people with Python experience.</p>
+
 <!--more-->
+
 <h3>Drupal Developer</h3>
 
 <p>Haiku uses <a href="http://drupal.org/">Drupal</a> as our CMS system. Our short term goals are:</p>

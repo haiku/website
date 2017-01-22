@@ -13,7 +13,9 @@ Hello there, here comes the report for the month of may!
 Commit range: hrev49107-hrev4921
 
 Detailed statistics: http://pulkomandy.tk/stats-20150529/
+
 <!--more-->
+
 <h3>Packages</h3>
 
 ICU was updated to version 55.1. The new features are not yet used (we will be able to use it to replace our custom StringForSpeed implementation, as they added a specific formatting system for that), but it already fixes a few problems like strange entries in the Locale Preferences language and country list.

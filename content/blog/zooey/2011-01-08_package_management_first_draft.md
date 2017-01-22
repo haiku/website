@@ -11,7 +11,9 @@ The following is a first draft of how package management on Haiku could look lik
 Several people have already added their ideas on package management to the <a href="https://dev.haiku-os.org/wiki/PackageManagerIdeas">wiki article</a>. Additionally, many opinions have been stated in comments to my first blog entry. 
 
 I have tried to incorporate most ideas mentioned into this draft, but due to the sheer amount of contradicting views, some sacrifices have to be made.
+
 <!--more-->
+
 <strong>HPKG and Package-FS</strong>
 
 Haiku's package format (hpkg) has been designed explictly to support swift access to the contained file-hierarchy and -contents in order to facilitate mounting one or more folders containing such packages via Haiku's package-fs.

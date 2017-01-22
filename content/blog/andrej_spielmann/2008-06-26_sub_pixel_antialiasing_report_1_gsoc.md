@@ -10,7 +10,9 @@ The first month of GSoC coding period is almost over and it's time for a summary
 This month wasn't particularly easy. I was working hard to distribute my effort between Haiku and my exams accordingly. I must confess, I was probably doing more schoolwork than Haiku :-)
 Nevertheless, I did make some progress and now I am very happy to announce some of the first actual results of my project!
 
+
 <!--more-->
+
 Thanks to the great lucidity of the app server's and AGG's source codes, I have quickly become familiar with them and could start making the additions. I decided to begin by implementing sub-pixel antialiasing for untransformed text. This includes virtually all the text that one normally encounters around the system, in text editors or browsing the internet.
 The internal part of the technology is now finished and it is already possible to have all the text in the system sub-pixel rendered. The first picture shows some text displayed in Haiku with its present gray-shade antialiasing and the second picture shows (almost) the same screen rendered with my implementation of sub-pixel antialiasing (click to see the full version and make sure you are viewing it in its full size).
 

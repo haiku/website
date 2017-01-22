@@ -9,7 +9,9 @@ tags = ["media_kit", "streaming contract", "media server"]
 Hello, as you may have seen from the news on the front page of the website, the contract I proposed has been accepted. This contract relates to development in the media_kit area. While there is more than one goal, the first part will be dealing with streaming support. I would like to thank all the donors that made this contract possible.
 
 The first week has been something like slow start; I expect to spend an increasing number of hours the more I get into the contract. As the official announcement hinted this is an initial contract for 120 hours. My intention is to get the media_kit in good shape to eventually concentrate on other things. The tasks I put into my contract proposal are important for more than one reason:
+
 <!--more-->
+
 Hello, as you may have seen from the news on the front page of the website, the contract I proposed has been accepted. This contract relates to development in the media_kit area. While there is more than one goal, the first part will be dealing with streaming support. I would like to thank all the donors that made this contract possible.
 
 The first week has been something like slow start; I expect to spend an increasing number of hours the more I get into the contract. As the official announcement hinted this is an initial contract for 120 hours. My intention is to get the media_kit in good shape to eventually concentrate on other things. The tasks I put into my contract proposal are important for more than one reason:

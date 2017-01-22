@@ -7,7 +7,9 @@ tags = ["BG 028", "events", "begeistert", "HSA"]
 +++
 
 After a nice short walk through the light drizzle of the slowly condensing mist that completely shrouded the top of Düsseldorf's landmark Rhine Tower, I arrived pretty early at the Youth Hostel. Entering our conference room I was greeted by its single occupant: Matthias, who I haven't seen at a BeGeistert for some years. We were chatting while I was setting up my gear and one by one more people entered our conference room. Most of them coming from breakfast; they already arrived the day before. I was glad to see most of the regular core developers did manage to come to BeGeistert after all!
+
 <!--more-->
+
 While setting up my notebook and mouse was naturally done quite quickly, I wondered about the madman, that provided a scene I haven't seen since BeGeisterts form over ten years ago: Someone brought a bloody desktop tower with not one, but two LCD!
 
 <div align="center">

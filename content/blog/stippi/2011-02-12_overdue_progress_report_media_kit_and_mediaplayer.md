@@ -13,7 +13,9 @@ Going through some backup files on my hard drive, I discovered a blog entry abou
 <p>
 While I was contracted to work on the port of WebKit to Haiku, and later on WebPositive, I've written regular enthusiastic blog entries to report on my progress. This time around, I haven't felt confident in the results of my work up until now. Getting the FFmpeg plugin to perform decently was quite a piece of often frustrating work.
 </p>
+
 <!--more-->
+
 <p>
 Before I can explain what my work has been and the obstacles I faced, I should probably get some nomenclature out of the way. The FFmpeg software is composed of several libraries, of which the most important ones are libavformat, with many implementations for multi-media container formats, and libavcodec, composed of many encoder/decoder implementations, which can decompress and compress the media streams in those container files. In BeOS API slang, <code>BMediaFile</code> represents the container, and <code>BMediaTrack</code> the different streams of media within such a container file.
 </p>

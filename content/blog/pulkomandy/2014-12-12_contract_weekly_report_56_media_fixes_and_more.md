@@ -9,7 +9,9 @@ tags = ["contract work", "R1", "media", "interpolator"]
 Hello world!
 
 With the fixes done this week, we now have less than 2500 open tickets left before R1. I had crossed this bar last week already, but not for long as new tickets sometimes come faster than we can close old ones. I think now we are under that bar in a more durable way.
+
 <!--more-->
+
 <h3>News from Google Code-In</h3>
 
 After the very busy first week of Google Code-In, things are getting quieter again as the students move on to more complex and longer tasks. You can see the stats at http://gci.puckipedia.com/org/haiku (the hosting for last week's leaderboard was a bit problematic, this one is more stable). We currently have more than 200 tasks completed. We continued on last year's idea of getting the students to write recipes for various BeOS and ported software, and as there are some returning students who are getting bored with that, so we also added some pure coding tasks, either improving existing apps, fixing bugs in Haiku, or writing new applications. Here are some highlights:

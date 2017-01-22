@@ -16,7 +16,9 @@ tags = ["kernel", "vm", "usb", "resedit", "scheduler"]
     <li>Addition of VMware graphics driver.</li>
 </ul>
 
+
 <!--more-->
+
 
 <h3>Full Updates</h3>
 Showing that an OS isn't complete without personality, DarkWyrm has committed a collection of BeDoper and HaikuWiki quotes to Haiku's 'fortunes'. The possibility of 'boot time' Haikus is intriguing.

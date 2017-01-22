@@ -7,7 +7,9 @@ tags = ["debugger", "expressions", "code sprint", "begeistert", "conditional bre
 +++
 
 While I was unable to actually attend Begeistert this time around, I was nonetheless able to take some time off work to join in on the traditional during/post-BG code sprint. As per usual, this revolved around improving our integrated debugger.
+
 <!--more-->
+
 <h3>Expressions</h3>
 
 The first thing I chose to work on this time around was adding support for expression evaluation. Many times when debugging, it can be handy to be able to do some quick math/bit operations, i.e. to calculate an offset when trying to figure out what was being accessing during a crash. Up until now however, we've lacked the ability to do this. Not any more:

@@ -12,7 +12,9 @@ This week saw the driver for AHCI SATA controllers begun in earnest, the beginni
 
 There was also a discussion on the development mailing list about "hybrid" images of Haiku, allowing both GCC 2 and GCC 4 compiled apps to work on the same system.
 
+
 <!--more-->
+
 
 <h3><a href="https://lists.berlios.de/pipermail/haiku-commits/">SVN Commit List</a></h3>
 

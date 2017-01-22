@@ -21,7 +21,9 @@ revisions range, which mmu_man celebrated with a birthday cake icon in hrev50000
 in August.
 
 Detailed statistics will be available soon.
+
 <!--more-->
+
 <h3>User interface</h3>
 
 hrev49750, hrev49809: Skipp-OSX fixed some drawing glitches in Tracker.

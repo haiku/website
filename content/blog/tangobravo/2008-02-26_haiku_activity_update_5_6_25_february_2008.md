@@ -10,7 +10,9 @@ Here's a summary of the last 3 weeks in Haiku-land. Axel was off skiing for part
 
 Highlights include progress towards self-hosting, a new kernel allocator that is much faster and more scalable, improved VMware Image support in the build system, automatic syscall restarts, and the usual raft of bug fixes, stability updates and interface tweaks.
 
+
 <!--more-->
+
 
 <h3><a href="https://lists.berlios.de/pipermail/haiku-commits/">SVN Commit List</a></h3>
 

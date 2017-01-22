@@ -7,7 +7,9 @@ tags = ["package management", "contract work"]
 +++
 
 <p>After quite some delay Oliver and I have finally started our contracts with Haiku, Inc. to continue our work on package management. Each of us will work 320 hours in total, i.e. the equivalent of 2 months of continuous full-time work.</p>
+
 <!--more-->
+
 <p>We probably won't quite work full-time, so it will take a little longer. One reason for that is that, due to delays on our customers side, we still haven't finished our previous contract. There're still a few things to do which depend on their feedback (bug fixing, documentation updates, etc.). But instead of further postponing the Haiku contracts we've decided it would be in everyone's best interest for us to start now and just pause (or reduce work hours) as needed.</p>
 
 <p>Last Friday Oliver and I met up to discuss the state of things and how we intend to proceed. The run-time support for package management in Haiku (in the package management branch, of course) is in pretty good shape already. With the system itself and all the third-party software living in packages the system boots and is fully functional.</p>

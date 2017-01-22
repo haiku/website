@@ -7,7 +7,9 @@ tags = ["output capture", "images", "dwarf", "debugger"]
 +++
 
 This time around, we only have one or two new features to cover as such, since most of my time recently has been spent under the hood.
+
 <!--more-->
+
 <h4>Output capture</h4>
 A capability that was requested some time ago was viewing/capturing the console output of the debugged program. This can be handy since, depending on how the program was launched this might not necessarily be available on a terminal, or it might generally be a bit unwieldy to have to keep switching windows between the app, debugger and terminal in question. This feature has now been implemented:
 <p>

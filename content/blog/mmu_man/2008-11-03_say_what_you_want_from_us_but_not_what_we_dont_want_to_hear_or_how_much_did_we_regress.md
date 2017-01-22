@@ -11,7 +11,9 @@ Last week I received a mail telling me MSI wanted to <a href="http://forum.msi.c
 Then after some other's post I replied a second time, first to someone mentioning the need for <a href="https://en.wikipedia.org/wiki/HDMI">HDMI</a> support on why I didn't agree because of <a href="https://en.wikipedia.org/wiki/Digital_rights_management">DRM</a>, then a maybe-rantful-but-oh-so-true digression about the availability of specifications. Sadly, neither post are available for your reading pleasure, a moderator found them to be "rubbish" and removed them altogether, who obviously doesn't use alternative Operating Systems, never wrote a driver with only uncommented Linux code as reference, doesn't live in France, and never saw a TV set manual from before 1980.
 
 Since my views weren't welcome there, I'll try to at least make them clear here, and either MSI (and other vendors) read them or not, but I'm used to the latter anyway. Please note that was the act of a moderator, which might or might not be part of MSI, nor reflect their own policy <i>(I wish)</i>.
+
 <!--more-->
+
 
 <h3>On open drivers</h3>
 

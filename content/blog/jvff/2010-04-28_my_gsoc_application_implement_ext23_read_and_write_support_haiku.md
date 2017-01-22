@@ -9,7 +9,9 @@ tags = ["gsoc", "gsoc2010", "ext3", "application"]
 Haiku currently has ext2 read-only support. My project is to extend the code to allow for full ext3 support. The code will be MIT licensed and will be object-oriented (inspired by Haiku's BFS implementation), allowing for easy understanding, learning and maintainability.
 
 The full Google Summer of Code application follows:
+
 <!--more-->
+
 <h4 class="icon-person-medium">Personal Profile</h4>
 <ul>
     <li><strong>Full name:</strong> Janito Vaqueiro Ferreira Filho</li>

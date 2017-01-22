@@ -7,7 +7,9 @@ tags = ["package management"]
 +++
 
 With the announcement of Ingo and Oliver's contracts for package management, it is worthwhile to revisit how package management will function. When reading, keep in mind that this explanation will be condensed, simplified, and partially incomplete. Nonetheless, it will provide a general overview on how things will work.
+
 <!--more-->
+
 Each piece of software lives on the hard drive as a type of compressed archive. For this explanation, let us call that file a "package-archive". That package-archive contains directory information for all of its contents. As an example, the settings file goes here, the binary there, etc.
 
 

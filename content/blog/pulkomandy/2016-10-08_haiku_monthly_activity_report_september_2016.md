@@ -8,7 +8,9 @@ tags = []
 
 Hey there, time for a report! (I'm really out of ideas for taglines. Any suggestions?)
 This report covers hrev50529-hrev50576
+
 <!--more-->
+
 A bug prevented debugger from debugging make 4.2 sources, which had an unusual way of specifying source paths in the ELF debug info. It is also possible to step instruction by instruction when viewing the assembler code.
 
 Screenshot now creates the target directory if it doesn't exist, and warns you if it can't save the files.

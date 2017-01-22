@@ -14,7 +14,9 @@ I love Haiku. That probably doesn't surprise anyone. I am phenomenally proud of 
 But.
 </p>
 
+
 <!--more-->
+
 
 <p align="justify">
 It has also been a very long six years. I can't possibly count the thousands of hours that I have invested, nor the thousands of dollars. I work as a software engineer in my day job, so I have spent literally all of my waking hours staring at a monitor for too long. Additionally, my personal life is in a state of very rapid flux. But, also, this isn't fun anymore. There is no joy for me in Haiku. That isn't a reflection on the project or the people involved; I am just not having fun doing the same things over and over. That has probably become obvious in some of the lack of attention to detail on my part. I apologize for this. I should have done this sooner.

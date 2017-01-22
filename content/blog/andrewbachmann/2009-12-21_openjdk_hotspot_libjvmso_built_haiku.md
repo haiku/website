@@ -7,7 +7,9 @@ tags = ["java", "hotspot", "OpenJDK", "haiku"]
 +++
 
 As my first blog entry, I present a set of instructions for building the OpenJDK "hotspot" repository on Haiku.  The product of this process will be a partial jre, including the libjvm.so libraries.
+
 <!--more-->
+
 The Haiku alpha already has installed some of the required software, such as mercurial, gcc 2.95.3 and gcc 4.x.
 
 To build OpenJDK on Haiku some extra files are required.  By default the build will attempt to use xsltproc for xslt transforms.  It can alternatively use xalan.  The xsltproc program is available for download as part of HaikuPorts, or individually here:

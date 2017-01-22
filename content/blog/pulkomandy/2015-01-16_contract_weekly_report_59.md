@@ -9,7 +9,9 @@ tags = ["contract work"]
 Hello world!
 
 I have not given any news from the Google Code-In for some time. It ends this week, and students have completed more than 400 tasks for Haiku. While this includes a lot of simple tasks (the simplest "getting started" ones involved just booting Haiku and running StyledEdit), it means the students at least got to see what Haiku is. We have a more complete set of recipes in haikuporter waiting to be packaged.
+
 <!--more-->
+
 Talking about automating package building and uploading, there is ongoing work at http://haikungfu.net. If you want to help Haiku and know some Ruby on Rails, it may be a good opportunity to join this effort at https://github.com/kallisti5/haikeuken.
 
 If your thing is Javascript, we also now have a buildbot dashboard at http://kallisti5.github.io/. This shows the build status from our buildbots in an easily readable way. I contributed some code to this dashboard, which is mainly based on work by the WebKit team (thanks!) and some hacking by kallisti5. If you think you can help with improving this code, your help is welcome.

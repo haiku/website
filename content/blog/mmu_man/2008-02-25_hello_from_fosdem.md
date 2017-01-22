@@ -9,7 +9,9 @@ tags = ["FOSDEM", "booth", "advocacy"]
 Hi there from our FOSDEM booth in the corridor!
 
 <img src="http://revolf.free.fr/beos/FOSDEM/frame_0017.jpg" alt="Niels and me at the booth">
+
 <!--more-->
+
 
 After taking the train to Paris on friday, where I joined Marc Schneider, developer of <a href="http://www.openaguila.org/">OpenAguila</a>, a french free software ERP which we shared a booth with, we went by car to Lille, where Rémi Grumeau, the <a href="http://beosfrance.com/">BeOSFrance</a> webmaster, kindly offered us a couch for the week end.
 

@@ -7,7 +7,9 @@ tags = ["hcd", "locale", "localekit", "contract work"]
 +++
 
 So, I'm still working on the locale kit. Here are some things I did since last time :
+
 <!--more-->
+
 * ICU was updated from 4.2 to 4.4. This update includes fixes to the data (for example timezones rules change over time), but also new functions I needed for the time preflet.
  * The time preflet now formats the date and time using the local format. The display is still somewhat imperfect, but it is already more intuitive for people using format different from the US one. Getting it right took quite some time and required changes and additions to the Locale API, as thiswas an use case no one thought of before.
  * As I was a bit tired of messing with locale stuff, I took a break and fixed some unrelated things. I added the gcc version to the kdl command sysinfo ; and I fixed the Classic Be and Macintosh decorators, that were broken following some API cleanup in this area.

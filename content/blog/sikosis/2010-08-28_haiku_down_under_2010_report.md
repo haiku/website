@@ -9,7 +9,9 @@ tags = ["report", "conference", "australia"]
 <img src="http://blog.sikosis.com/images/logo_hdu-2010.png" alt="Haiku Down Under 2010" border="0" align="right" />It was a fine, sunny morning in Brisbane, Australia: home of the Third Annual <a href="http://haikudownunder.com/">Haiku Down Under</a> Virtual Conference for Haiku Users and Developers. Virtual in the respect that the event was streamed live over the Internet via the <a href="http://www.ustream.tv/channel/haiku-down-under-2010">uStream</a> service. We accept (and regret) that this service requires Flash, so you can’t use Haiku to view this event, you must use another OS like Windows, Mac or Linux.
 
 This year, HDU (short for Haiku Down Under; not slang for <a href="http://www.urbandictionary.com/define.php?term=hdu" target="_blank">How Dare yoU</a>) were able to book a conference venue at <a href="http://uq.edu.au/" target="_blank">The University of Queensland</a> with projector, white board and limited seating where myself, Sikosis was joined by BeMark and Mojodale.
+
 <!--more-->
+
 Unfortunately, the event started about 20 minutes late due to the conference room's network ports not being wired up in the switch cabinet. Thankfully, I'm an admin with keys at UQ, so I rushed around to get our broadcasting  and monitoring machines online as soon as possible.
 
 <div align="center"><img src="http://haikudownunder.com/gallery/photo.php?8&size&450" alt="Outside HDU 2010 Venue" border="0" align="center" /></div>

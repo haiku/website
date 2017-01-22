@@ -9,7 +9,9 @@ tags = ["WebKit", "webpositive", "contract work"]
 Hello everyone,
 
 I spent most of the week working on the texture mapper drawing code. I spent a lot of time tweaking the options (each change requires a complete build of Web+, so this added up to a lot of time...), and today I got the texture mapper to display something in a BWindow.
+
 <!--more-->
+
 Things are far from usable yet, however. The screen is not always refreshed, so the pages often show all white until you scroll or resize the window to force it to refresh. Scrollbars aren't visible anymore (in this mode they are supposed to be handled by the "client", that is, we will have to draw native scrollbars instead of using WebKit faked ones) ; scrolling doesn't really work (only the part of the page that was initially visible is properly rendered) ; and things are very crashy.
 
 The performance isn't very good, either, but currently the texture mapper is drawing to the offscreen view instead of directly to the on-screen one, so I think this can be improved.

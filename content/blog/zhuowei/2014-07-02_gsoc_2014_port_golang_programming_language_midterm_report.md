@@ -9,7 +9,9 @@ tags = []
 Hello,
 
 I'm currently working on a Golang port for Haiku as part of Google Summer of Code. Since the last blog post, there has been some progress: simple Golang programs can now be compiled and run.
+
 <!--more-->
+
 <h3>Status of the port:</h3>
 
 What works:

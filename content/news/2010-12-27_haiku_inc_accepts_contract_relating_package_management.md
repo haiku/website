@@ -6,7 +6,9 @@ tags = ["contracting", "donations", "haiku inc.", "hiring"]
 +++
 
 As seen with the poll for the <a href="https://dev.haiku-os.org/wiki/FutureHaikuFeatures">must-have features for R1</a>, <strong>the lack of proper package management is clearly one of the items that are delaying the release of R1</strong>. More importantly though, as package management is an actual lacking feature (as opposed to a bug in an existing implementation), even the beta cycle is being blocked as a result. In order to progress, Haiku needs package management.
+
 <!--more-->
+
 Despite some <a href="https://dev.haiku-os.org/wiki/PackageManagerIdeas">brain storming</a>, an <a href="https://dev.haiku-os.org/browser/haiku/trunk/src/add-ons/kernel/file_systems/packagefs">initial implementation of a PackageFS</a>and the specification of its <a href="https://dev.haiku-os.org/wiki/PackageFormat">package format</a>, little else has been done and much remains. 
  
 <strong>To help remedy this, Oliver Tappe has submitted a contract for 160 hours for a total of $2,622 USD</strong>. His efforts will center around doing the groundwork of getting package management actually started. 

@@ -9,7 +9,9 @@ tags = ["haiku_loader", "elf64", "x86_64", "gsoc", "gsoc2010"]
 One of the first steps I'm taking in setting up x86_64 support for haiku is updating haiku_loader to support elf64 binaries. I felt like it would be a bit more logical to be able to boot a 64bit kernel before trying to build one.
 
 There are a few hurdles to jump before haiku_loader is ready to load a 64bit haiku kernel. For example, we need to add the code to detect weather a kernel is an elf32 or elf64 binary. We need to load it accordingly and finally we'll need to modify how the kernel_args data structure is handled to support 64bit pointers.
+
 <!--more-->
+
 <b>detecting elf binary type</b>
 
 Detecting the elf binary type isn't a huge challenge. In fact it's actually the easiest part. The elf header format has a descriptor that  confirms the format.

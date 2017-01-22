@@ -6,7 +6,9 @@ date = "2010-04-15T13:45:44.000Z"
 tags = ["begeistert", "conference"]
 +++
 
+
 <!--more-->
+
 While the number of participants wasn't as staggeringly high as the last time in October after the R1/alpha1 was just out the door, about 30 people made it to the conference rooms of the youth hostel. Besides the usual suspects, a new developer, Sebastian, made his debut and fit right in.
 
 As usual people seized the opportunity to show their newest projects and the progress they've made. Everyone had their notebook set up and small groups started to form and dissolve and wander along to the next computer to discuss the little presentations. When  Haiku showed some unusual behavior, say wander off to the kernel debugging land, a core developer could quickly be summoned to analyze and often fix the problem.

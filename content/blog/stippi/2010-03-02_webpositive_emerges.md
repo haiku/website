@@ -7,7 +7,9 @@ tags = ["native browser", "WebKit", "webpositive", "contract work"]
 +++
 
 Wow, it's been 10 days already since I posted my first blog entry on my work on WebKit and the native web browser. Of course my continous updates to the package I posted in my first article will probably have spoiled most of the surprise, but HaikuLauncher has been reduced again into just a bare browser shell, while a new codebase, WebPositive, has been split off from it. Using WebPositive has become a whole lot more pleasing in the meantime. For those of you who have not followed the comments to the original blog, these are the things implemented since my first post on the project:
+
 <!--more-->
+
 <ul>
 <li>Big WebKit API cleanup (BWebView, BWebPage, etc).</li>
 <li>Fixed crashes and oddities with downloads.</li>

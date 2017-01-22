@@ -11,7 +11,9 @@ Hey there!
 Life continues in Haiku, with bugfixes and slowly getting prepared for the beta release. Not much in terms of new and exciting features, but Haiku is getting more stable and the bugs slowly fade away.
 
 In terms of Haiku commits, this report covers hrevs 50577 to 50664.
+
 <!--more-->
+
 <h3>DriveSetup / Partitioning fixes</h3>
 
 Getting Haiku installed and booted seems to be a recurrent problem for some new users. We have gotten multiple reports lately on the forums and the IRC channel. It was time to review some of the reported bugs and try to fix some things.

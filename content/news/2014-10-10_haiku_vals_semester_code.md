@@ -8,7 +8,9 @@ tags = ["SoC2014", "students"]
 The Haiku project is participating in this year's "Semester of Code" (SoC) of the European <a href="http://virtualalliances.eu/what-is-vals/">VALS</a> project. The SoC is similar to Google's GSoC, but without the financial incentive and more emphasis on the educational side. 
 
 Its goal is to connect higher education students with open source projects to introduce them to the cooperative nature of working within a group on a bigger project. For Haiku, besides potentially extending its feature set, it's another opportunity to spark the interest of new, eager developers with a chance to gain future regular contributors.
+
 <!--more-->
+
 These are the <a href="http://vps.semesterofcode.com/projects/browse?organisation=58">Haiku coding projects</a> interested students can apply for:
 <ul>
 <li><p>Add subtitle support to the Media Kit</p></li>

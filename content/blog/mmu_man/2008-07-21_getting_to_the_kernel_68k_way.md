@@ -8,7 +8,9 @@ tags = ["port", "progress report", "m68k"]
 
 Someday I should write about the start of the 68k port, there is plenty to talk about...
 Today^Wnight^Wmornin erh, hmm well, now, I'll try to do a live report on the issue I left you with last time: getting the kernel to load correctly.
+
 <!--more-->
+
 
 I was at the point where it reads the 2 program segments into memory and start with digging symbols and relocation entries.
 I actually spent some time adding an hex dumper to <a href="https://dev.haiku-os.org/browser/haiku/trunk/src/system/boot/loader/elf.cpp">elf.cpp </a> to see if the loaded segments were correctly read, by diffing the debug output and the hexdump of the original binary.

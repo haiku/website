@@ -7,7 +7,9 @@ tags = ["gsoc", "gsoc2010", "dvd", "media player"]
 +++
 
 The first objective of this project is to give Media Player the ability to play DVD's. Here's a quick introduction of the tools I chose for the job.
+
 <!--more-->
+
 The DVD format is a bit of a nightmare. The actual disk information (chapters, audio track and subtitle information), is stored in IFO files and a navigation byte code which requires a custom virtual machine. The associated media data is stored in separate 1GB VOB (Video OBject) files, each containing both audio, video and subtitles in separate data segments.
 
 Fortunately, the libraries available to actually interact with a DVD make it much easier than I thought, and as they are those used by VLC, they were already ported:

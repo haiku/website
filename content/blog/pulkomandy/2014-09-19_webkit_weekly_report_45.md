@@ -13,7 +13,9 @@ As usual, after the 1.4.4 release there were some new bug reports for me to work
 <li>Several problems were fixed in the video code, which are leading to deadlocks and/or crashes of WebKit after a video is done playing.</li>
 <li>A problem with text not being drawn (seen for example on Trac) was fixed. This is apparently a new bug introduced on WebKit side, where small text with shadows ends up not being drawn at all. I'm not sure my fix is completely correct, but it seems to work.</li>
 </ul>
+
 <!--more-->
+
 On Haiku side, we now have proxy support. I implemented only the most basic part of it: HTTP-only (no HTTPS) and without authentication. I will complete these two missing parts next week. Since this is implemented on the Services Kit side, it will be available to all applications using that API (currently WebKit and HaikuDepot for metadata fetching). There should be a system-wide setting to configure the proxy, but our current Network preflet is not really designed for this. So I will also have a look at finishing the rewritten version, which is basically working but needs some UI changes.
 
 I also worked on the migration to Python 2.7, which went smoothly. We were using the long outdated Python 2.6, and migrating required rebuilding all Python libraries against the new Python version. This was also a good time to update some other packages, so we now have a more bugfixed git, and a newer subversion.

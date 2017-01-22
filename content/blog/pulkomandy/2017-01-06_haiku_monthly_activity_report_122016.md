@@ -9,7 +9,9 @@ tags = []
 Happy new year everyone!
 
 Here is the last report for commits in the year 2016. It covers hrev50718-hrev50829.
+
 <!--more-->
+
 <h3>User interface</h3>
 
 DiskUsage: cleanup and polishing by Janus.

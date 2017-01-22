@@ -7,7 +7,9 @@ tags = ["gsoc2010", "gsoc", "ext3"]
 +++
 
 Google Summer of Code 2010 is now over. It was a wonderful experience, and I learned a lot about Haiku's internals, about file system development, and about myself. I successfully completed my proposal to a point an initial version of the Ext3 file system is available to the Haiku kernel for testing. There are some things that remain to be completed, like sparse files, proper revoke support, multi-transaction truncation and some more thorough testing, but overall, it was successful.
+
 <!--more-->
+
 The first thing that is very noticeable and that limits very much Ext3 support is proper Journal mode support. Because the file cache doesn't support transactions (yet), it would require a hack to make the file data journalled and therefore the only mode supported is writeback, which unfortunately is also the less secure of three modes, because corrupt data can appear on the file system. I still want to finish this, but because it depends on an external part of the system, it will be a while until it gets completely finished.
 
 File write operations all work correctly (in all tests done so far, if something appears wrong, please contact me and/or file a bug report on Trac), but large file truncation can be a little problematic. This should only happen in absurdly large files, but nevertheless is something to be considered. Basically, since truncation changes a lot of blocks (the inode table, single/double/triple indirect blocks) it can become large enough to exceed the journal log size. The way to handle this is to allow the truncation to be split into smaller transactions. The code to do this isn't very complex, but it takes a little work to determine when to split the transaction. Another related issue is that shrinking a file is done in reverse order in Ext3 to make sure it is consistent across file system failures, and currently my code is doing it in the wrong order. Also another small fix to do.

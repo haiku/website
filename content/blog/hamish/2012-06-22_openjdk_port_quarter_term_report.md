@@ -7,7 +7,9 @@ tags = ["gsoc", "gsoc2012", "OpenJDK"]
 +++
 
 Since my last blog entry I have mostly completed the implementation of the AWT/Java2D port. It is still in need of a lot of testing, but it is stable enough to run a lot of Swing apps out of the box. For example, here's jEdit and SwingSet:
+
 <!--more-->
+
 <div align="center">
 <a href="/files/images/haikuswing.png">
 <img src="/files/images/haikuswing.png" width="640px" height="480px">

@@ -11,7 +11,9 @@ Hello everyone!
 The <a href="http://www.haiku-support-association.org/index-eng.html">Haiku Support Association (HSA)</a> would like to invite everyone to the 26th BeGeistert on 3rd & 4th of November 2012. The location will be once again the youth hostel in Düsseldorf, Germany.
 
 For years now, BeGeistert has been the regular get-together of users and developers of Haiku (and BeOS before that); a nice opportunity to present the latest projects and get a direct reaction from the participants.
+
 <!--more-->
+
 Clemens Zeidler will be making use of this when he shows off the <a href="/blog/czeidler/2012-09-03_ale_auckland_layout_editor">Auckland Layout Editor (ALE)</a>. After a presentation he plans an evaluation to gauge ALE's impact. He did that once before with Stack&Tile, which showed a significant advantage over the regular window management.
 
 Another talk/workshop will be Ingo Weinhold's demonstration of debugging under Haiku, showing the Debugger, DebugAnalyzer and working with profiling and in KDL.

@@ -7,7 +7,9 @@ tags = ["contract work", "allocation tracking"]
 +++
 
 So what is going on right now in the time I spend on my Haiku contract? For the past two and a half weeks I've had my mind wrapped around various parts of the kernel. Things started out at BeGeistert and the coding sprint following it. The nice thing about the coding sprint is that you spend a lot of time with very knowledgeable people and can therefore tackle things that you would usually shy away from. In this case, Ingo Weinhold and I were seeing some random memory corruption problems and an apparent memory/pages leak. So we started investigating those by adding more debug functions into the relevant parts.
+
 <!--more-->
+
 <b>Debug Memory Initialization for the Slab</b>
 
 The old (non-slab) heap implementation Haiku used for quite a while had gained a lot of debugging features over the time. When switching to the slab those were "lost" in a sense. Since the general stability was far better at that point it didn't really hurt to lose them though, so the pressure of adding them there again was quite low.

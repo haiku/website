@@ -8,7 +8,9 @@ tags = ["contract work", "beta1", "R1"]
 
 Hi!
 So, this week marks the start of the Google Code-In contest. I've spent some of my time preparing some tasks for it as well as reviewing the work from students. Our IRC channel is incredibly busy, and there have been 110 tasks completed by 65 students already. You can currently watch the leaderboard here for unofficial stats: http://ematirov.tk/org/haiku/
+
 <!--more-->
+
 Anyways, I've also been working on my own, and continuing to fix issues currently set for the R1 milestone.
 
 <h3>New and updated packages</h3>

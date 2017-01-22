@@ -14,7 +14,9 @@ tags = ["VMWare", "CFLAGS", "syscall", "benchmark"]
 <li>Useful URI to application redirects</li>
 <li>Syscall benchmarks and results</li>
 </ul>
+
 <!--more-->
+
 <h3>Full Updates</h3>
 
 <p>In a nod to the old days of BeOS Ryan Leavengood checked in an implementation of the 'Buy Now' and 'Message' screen savers.</p>

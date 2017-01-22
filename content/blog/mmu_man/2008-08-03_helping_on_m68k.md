@@ -8,7 +8,9 @@ tags = ["port", "m68k"]
 
 As the m68k port is getting shape, maybe some of you want to give a hand, so here is how to set up the environment. After explaining the choice of the target platform we'll start with the build system, then the emulator to debug on the chosen platform.
 
+
 <!--more-->
+
 
 <h3>Why not Macs? I want it on my Amiga! I have a NeXT to give away!</h3>
 <i>(I wish ;))</i>

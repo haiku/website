@@ -8,7 +8,9 @@ tags = ["port", "progress report", "m68k"]
 
 I've been getting further recently on the 68k port, as you may know already everything now compiles but the kernel is still largely stubbed, misses drivers, and the bootloader doesn't load it yet.
 I've almost finished mmu setup, at least for the 040 ARAnyM emulates. 
+
 <!--more-->
+
 
 <h3>translucent translation</h3>
 

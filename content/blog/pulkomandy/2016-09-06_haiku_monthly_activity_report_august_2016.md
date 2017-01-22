@@ -13,7 +13,9 @@ This report covers hrev50456-hrev50528
 <h3>Video drivers</h3>
 
 The work on the intel_extreme driver continues. In the previous month there was a large refactor, merging an old branch originally started by mmlr. kallisti5 updated it and tested it on the early intel models (everything up to SandyBridge).
+
 <!--more-->
+
 Unlike the Radeon-HD driver, which implements an AtomBIOS VM and then lets the card BIOS run inside it and perform a lot of the hard work, the Intel driver must include the code for everything. And it doesn't help that Intel keeps changing the registers of their video hardware from one generation to the next.
 
 This month there has been work on IronLake and SandyBridge FDI training (to connect the display to the video controller on these chipset generations).
