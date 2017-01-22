@@ -18,7 +18,7 @@ unzip -q master.zip 'haiku-master/docs/userguide/**'
 unzip -q master.zip 'haiku-master/docs/welcome/**'
 rm master.zip
 
-rm -rf public/
+rm -rf public/docs/
 
 sed -i "s/BuildTypeIsDeploy = false/BuildTypeIsDeploy = true/g" config.toml
 $HUGO
