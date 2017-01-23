@@ -6,11 +6,11 @@ date = "2017-01-22 12:05:49+00:00"
 tags = ["haiku", "software"]
 +++
 
-<a href="/files/blog/moochris/leafmenu.png" title="Deskbar Menu"><img src="/files/blog/moochris/leafmenu.png" title="Deskbar Menu" alt="Deskbar Menu" align="right"></a>So you've installed Haiku from a recently nightly (or sometime soon, the R1 beta) and you're launching applications from the Deskbar menu (the blue 'leaf' menu). Perfect, but there are a few more options to investigate if you want to quickly launch your favourite programs.
+So you've installed Haiku from a recently nightly (or sometime soon, the R1 beta) and you're launching applications from the Deskbar menu (the blue 'leaf' menu). Perfect, but there are a few more options to investigate if you want to quickly launch your favourite programs.
 
 <!--more-->
 
-The first option is the simplest. In the Deskbar menu, just click on the 'Applications' submenu (or any of the others) to open a tracker window with shortcuts. Drag an icon with the right mouse button to the desktop and select 'Create link here' from the context menu. Hey presto, a shortcut icon on your desktop.
+<a href="/files/blog/moochris/leafmenu.png" title="Deskbar Menu"><img src="/files/blog/moochris/leafmenu.png" title="Deskbar Menu" alt="Deskbar Menu" align="right"></a>The first option is the simplest. In the Deskbar menu, just click on the 'Applications' submenu (or any of the others) to open a tracker window with shortcuts. Drag an icon with the right mouse button to the desktop and select 'Create link here' from the context menu. Hey presto, a shortcut icon on your desktop.
 
 <a href="/files/blog/moochris/launchbox.png" title="LaunchBox"><img src="/files/blog/moochris/launchbox.png" title="LaunchBox" alt="LaunchBox" align="left"></a>This does require you to double-click the icon and the desktop can end up a bit messy this way :) Second option - use LaunchBox.
 
