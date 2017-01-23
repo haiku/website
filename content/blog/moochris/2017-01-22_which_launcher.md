@@ -6,15 +6,15 @@ date = "2017-01-22 12:05:49+00:00"
 tags = ["haiku", "software"]
 +++
 
-<a href="/files/blog/moochris/leafmenu.png" title="Leaf Menu"><img src="/files/blog/moochris/leafmenu.png" title="Leaf Menu" alt="Leaf Menu" align="right"></a>So you've installed Haiku from a recently nightly (or sometime soon, the R1 beta) and you're launching applications from the 'leaf' menu. Perfect, but there are a few more options to investigate if you want to quickly launch your favourite programs.
+<a href="/files/blog/moochris/leafmenu.png" title="Deskbar Menu"><img src="/files/blog/moochris/leafmenu.png" title="Deskbar Menu" alt="Deskbar Menu" align="right"></a>So you've installed Haiku from a recently nightly (or sometime soon, the R1 beta) and you're launching applications from the Deskbar menu (the blue 'leaf' menu). Perfect, but there are a few more options to investigate if you want to quickly launch your favourite programs.
 
 <!--more-->
 
-The first option is the simplest. In the 'leaf' application menu, just click on the 'Applications' submenu (or any of the others) to open a tracker window with shortcuts. Right-click on a shortcut and in the context menu select 'Create link', then 'Desktop'. Hey presto, a shortcut icon on your desktop.
+The first option is the simplest. In the Deskbar menu, just click on the 'Applications' submenu (or any of the others) to open a tracker window with shortcuts. Drag an icon with the right mouse button to the desktop and select 'Create link here' from the context menu. Hey presto, a shortcut icon on your desktop.
 
 <a href="/files/blog/moochris/launchbox.png" title="LaunchBox"><img src="/files/blog/moochris/launchbox.png" title="LaunchBox" alt="LaunchBox" align="left"></a>This does require you to double-click the icon and the desktop can end up a bit messy this way :) Second option - use LaunchBox.
 
-LaunchBox can be found in 'Desktop applets' in the 'leaf' menu and you can make it start at boot by right-clicking on its icon and 'Create link' to /home/config/settings/boot/launch.
+LaunchBox can be found in 'Desktop applets' in the Deskbar menu and you can make it start at boot by right-clicking on its icon and 'Create link' to /home/config/settings/boot/launch.
 
 You can add buttons (or clear existing ones) using the context menu and simply drag and drop the program's icon to the empty button to create a launcher. It's quite customisable and you can also define multiple launch 'pads'.
 
