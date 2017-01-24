@@ -97,7 +97,7 @@ getURL("https://api.github.com/repos/haiku/haiku/commits", function(data) {
 	tabSrc.innerHTML = html + tabSrc.innerHTML;
 });
 function LoadTicketsTab(tab) {
-	getURL("/exapi/tickets", function (res) {
+	getURL("/exapi/tickets?ticket=on&format=rss&max=10", function (res) {
 		var doc = new DOMParser().parseFromString(res, "text/xml");
 		var html = "<ul>";
 		var items = doc.querySelectorAll("item");
