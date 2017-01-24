@@ -6,6 +6,7 @@ for cmd in "mv rm wget unzip sed $HUGO"; do
 	command -v $cmd >/dev/null 2>&1 || { echo -e >&2 "$cmd is not installed, please install it."; exit 1; }
 done
 command -v hugo_0.18 >/dev/null 2>&1 && HUGO=hugo_0.18
+which doxygen || true
 echo "Using Hugo $HUGO"
 
 if [ ! -d content ]; then
