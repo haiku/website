@@ -12,6 +12,28 @@
 
 const DISPLAY_ITEMS_COUNT = 7;
 
+var tabs = document.querySelectorAll("#activity-tabs li");
+for (var i = 0; i < tabs.length; i++) {
+	tabs[i].addEventListener('click', function (e) {
+		e.preventDefault();
+		var n;
+		if (n = document.querySelector("#activity-tabs li.active"))
+			n.classList.remove("active");
+		e.target.parentNode.classList.add("active");
+		if (n = document.querySelector("#activity-tabs .tab-content .active"))
+			n.classList.remove("active");
+		var tab = document.querySelector("#activity-tabs .tab-content " + e.target.hash);
+		tab.classList.add("active");
+		if (tab.children[0].classList.contains("loader")) {
+			// Tab hasn't yet been loaded
+			if (tab.id == "tickets")
+				LoadTicketsTab(tab);
+			else if (tab.id == "ml")
+				LoadMailingListTab(tab);
+		}
+	});
+}
+
 var getURL = function (url, successHandler, errorHandler) {
 	var xhr = typeof XMLHttpRequest != 'undefined' ?
 		new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
@@ -37,9 +59,8 @@ function escapeHTML(html) {
     escapethingy.textContent = html;
     return escapethingy.innerHTML;
 }
-function timeToNow(isodate) {
+function timeToNow(b) {
 	var a = new Date();
-	var b = new Date(isodate);
 	var diff = parseInt((a - b) / 1000),
 		day_diff = Math.floor(diff / 86400);
 	return day_diff == 0 && (
@@ -52,18 +73,16 @@ function timeToNow(isodate) {
 		day_diff < 7 && day_diff + " days ago" ||
 		day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
 }
-
-
-var tabs = document.querySelectorAll("#activity-tabs li");
-for (var i = 0; i < tabs.length; i++) {
-	tabs[i].addEventListener('click', function (e) {
-		e.preventDefault();
-		var n;
-		if (n = document.querySelector("#activity-tabs li.active")) n.classList.remove("active");
-		e.target.parentNode.classList.add("active");
-		if (n = document.querySelector("#activity-tabs .tab-content .active")) n.classList.remove("active");
-		document.querySelector("#activity-tabs .tab-content " + e.target.hash).classList.add("active");
-	});
+function MakeListItem(href, txt, date) {
+	return ('<li><a target="_blank" href="' + href + '">' + escapeHTML(txt) +
+		'</a><span style="float:right">' + (date ? timeToNow(date) : '') + "</span></li>");
+}
+function InnerXML(xml) {
+	var xmls = new XMLSerializer();
+	var ret = '';
+	for (var i = 0; i < xml.childNodes.length; i++)
+		ret += xmls.serializeToString(xml.childNodes[i]);
+	return ret;
 }
 
 var tabSrc = document.querySelector("#activity-tabs #source");
@@ -71,10 +90,40 @@ getURL("https://api.github.com/repos/haiku/haiku/commits", function(data) {
 	var json = JSON.parse(data);
 	var html = "<ul>";
 	for (var i = 0; i < DISPLAY_ITEMS_COUNT; i++) {
-		html += '<li><a target="_blank" href="https://cgit.haiku-os.org/haiku/commit/?id=' + json[i].sha +
-			'">' + escapeHTML(json[i].commit.message.split("\n")[0]) + '</a><span style="float:right">' +
-			timeToNow(json[i].commit.committer.date) + "</span></li>";
+		html += MakeListItem('https://cgit.haiku-os.org/haiku/commit/?id=' + json[i].sha,
+			json[i].commit.message.split("\n")[0], new Date(json[i].commit.committer.date));
 	}
 	html += "</ul>";
 	tabSrc.innerHTML = html + tabSrc.innerHTML;
 });
+function LoadTicketsTab(tab) {
+	getURL("/exapi/tickets", function (res) {
+		var doc = new DOMParser().parseFromString(res, "text/xml");
+		var html = "<ul>";
+		var items = doc.querySelectorAll("item");
+		for (var i = 0; i < DISPLAY_ITEMS_COUNT && i < items.length; i++) {
+			var itm = items[i];
+			html += MakeListItem(InnerXML(itm.querySelector("link")),
+				InnerXML(itm.querySelector("title")),
+				new Date(InnerXML(itm.querySelector("pubDate"))));
+		}
+		html += "</ul>";
+		tab.children[0].remove();
+		tab.innerHTML = html + tab.innerHTML;
+	});
+}
+function LoadMailingListTab(tab) {
+	getURL("/exapi/freelists/haiku-development", function (res) {
+		var doc = new DOMParser().parseFromString(res, "text/xml");
+		var html = "<ul>";
+		var items = doc.querySelectorAll("item");
+		for (var i = 0; i < DISPLAY_ITEMS_COUNT && i < items.length; i++) {
+			var itm = items[i];
+			html += MakeListItem(InnerXML(itm.querySelector("link")).replace("http:", "https:"),
+				InnerXML(itm.querySelector("title")), undefined);
+		}
+		html += "</ul>";
+		tab.children[0].remove();
+		tab.innerHTML = html + tab.innerHTML;
+	});
+}
