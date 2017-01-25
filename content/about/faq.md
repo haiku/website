@@ -183,7 +183,7 @@ Yes! In order to provide support for a modern version of C++ and up to date libr
 The setarch command can be used to switch between different architectures. On x86, the gcc2 architecture is x86_gcc2.
 
 ### What is Kernel Debugging Land?
-The Haiku Kernel comes with a powerful and user friendly on-screen debugger. There you can enter commands investigate the problem and collect information in order to [write a bug report](docs/welcome/en/bugreports.html).
+The Haiku Kernel comes with a powerful and user friendly on-screen debugger. There you can enter commands investigate the problem and collect information in order to [write a bug report](https://www.haiku-os.org/docs/welcome/en/bugreports.html).
 
 You can also reboot the machine, [generate QR codes](/blog/mmlr/2012-07-01_qr_encode_your_kdl_output), or play a game of hangman. :)
 
