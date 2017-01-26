@@ -15,7 +15,6 @@ fi
 
 if [ ! -d haiku ]; then
 	git clone https://github.com/haiku/haiku/ --depth=5
-	justcloned=1
 fi
 cd haiku
 	if [ ! -d generated ]; then
@@ -30,7 +29,7 @@ cd haiku
 		cd ..
 	fi
 	gitout=$(git pull --ff-only)
-	if [[ $gitout != *"Already up-to-date"* ]] || [ $justcloned -ne 1 ]; then
+	if [[ $gitout != *"Already up-to-date"* ]] || [ ! -d "generated/doxygen/html" ]; then
 		cd docs/user/
 			../../generated/doxybin/doxygen
 		cd ../..
