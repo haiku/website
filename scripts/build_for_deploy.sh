@@ -22,11 +22,11 @@ if [ ! -d generated ]; then
 	mkdir generated
 	cd generated
 	wget https://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.linux.bin.tar.gz -O doxygen.tar.gz -nv
-	tar -xvf doxygen.tar.gz
+	tar -xvf doxygen.tar.gz doxygen-1.8.13/bin/
 	mkdir doxybin
-	cp doxygen-*/bin/* doxybin/
+	mv doxygen-*/bin/* doxybin/
 	rm -rf doxygen-*/
-	rm doxygen.bin.tar.gz
+	rm doxygen.tar.gz
 	cd ..
 fi
 generated/doxybin/doxygen --help || true
