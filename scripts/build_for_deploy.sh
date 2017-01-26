@@ -20,8 +20,8 @@ cd haiku
 	if [ ! -d generated ]; then
 		mkdir generated
 		cd generated
-		wget https://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.linux.bin.tar.gz -O doxygen.tar.gz -nv
-		tar -xvf doxygen.tar.gz doxygen-1.8.13/bin/
+		wget https://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.linux.bin.tar.gz -O doxygen.tar.gz -nv
+		tar -xvf doxygen.tar.gz doxygen-1.8.11/bin/
 		mkdir doxybin
 		mv doxygen-*/bin/* doxybin/
 		rm -rf doxygen-*/
