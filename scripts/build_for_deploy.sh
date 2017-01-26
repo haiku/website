@@ -15,22 +15,26 @@ fi
 
 if [ ! -d haiku ]; then
 	git clone https://github.com/haiku/haiku/ --depth=5
+	justcloned=1
 fi
 cd haiku
-git pull --ff-only
-if [ ! -d generated ]; then
-	mkdir generated
-	cd generated
-	wget https://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.linux.bin.tar.gz -O doxygen.tar.gz -nv
-	tar -xvf doxygen.tar.gz doxygen-1.8.13/bin/
-	mkdir doxybin
-	mv doxygen-*/bin/* doxybin/
-	rm -rf doxygen-*/
-	rm doxygen.tar.gz
-	cd ..
-fi
-generated/doxybin/doxygen --help || true
-rm -rf generated
+	if [ ! -d generated ]; then
+		mkdir generated
+		cd generated
+		wget https://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.linux.bin.tar.gz -O doxygen.tar.gz -nv
+		tar -xvf doxygen.tar.gz doxygen-1.8.13/bin/
+		mkdir doxybin
+		mv doxygen-*/bin/* doxybin/
+		rm -rf doxygen-*/
+		rm doxygen.tar.gz
+		cd ..
+	fi
+	gitout=$(git pull --ff-only)
+	if [[ $gitout != *"Already up-to-date"* ]] || [ $justcloned -ne 1 ]; then
+		cd docs/user/
+			../../generated/doxybin/doxygen
+		cd ../..
+	fi
 cd ..
 
 rm -rf public/docs/
@@ -42,3 +46,8 @@ sed -i "s/BuildTypeIsDeploy = true/BuildTypeIsDeploy = false/g" config.toml
 mkdir public/docs/
 cp -R haiku/docs/userguide/ public/docs/
 cp -R haiku/docs/welcome/ public/docs/
+cp -R haiku/docs/interface_guidelines/ public/docs/
+cp -R haiku/generated/doxygen/html/ public/docs/
+
+mv public/docs/html/ public/docs/api/
+mv public/docs/interface_guidelines/ public/docs/HIG/
