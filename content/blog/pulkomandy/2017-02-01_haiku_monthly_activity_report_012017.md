@@ -100,6 +100,11 @@ Google Summer of Code
 
 Haiku is applying to the Google Summer of Code. We were not selected the last two years, but we hope to be back this year with some new project ideas and a renewed mentor team.
 
+Web services
+------------
+
+Now that the website migration is mostly done, Waddlesplash is working on imrpoving our Pootle (user interface translation) and user guide translation online tools. Both were largely unmaintained for the past few years, and it is great news that someone is taking care of them again.
+
 Are we released yet?
 --------------------
 
