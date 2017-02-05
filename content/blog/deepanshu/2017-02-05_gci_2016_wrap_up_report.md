@@ -35,7 +35,7 @@ Punsith Ratnayake
 Owen
 Winston Durand
 
-Congratulations finalists! Safe travels, grand winners!  We are thankful for your precious contributions and will be delighted see you continue to [contribute](https://www.haiku-os.org/community/getting-involved/) even after the program.This year Jessica Hamilton will make the trip to meet the winners as both the students picked her.
+Congratulations finalists! Safe travels, grand winners!  We are thankful for your precious contributions and will be delighted see you continue to [contribute](https://www.haiku-os.org/community/getting-involved/) even after the program.This year Jessica Hamilton will make the trip to meet the winners as both the winners picked her.
 
 Haiku had an impressive growth in the number of students:
 
