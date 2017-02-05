@@ -29,7 +29,7 @@ Punsith Ratnayake <br>
 Owen <br>
 Winston Durand</p>
 
-<p>Congratulations finalists! Safe travels, grand winners!  We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/community/getting-involved/">contribute</a> even after the program.This year Jessica Hamilton will make the trip to meet the winners as both the students picked her.</p>
+<p>Congratulations finalists! Safe travels, grand winners!  We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/community/getting-involved/">contribute</a> even after the program. This year Jessica Hamilton will make the trip to meet the winners as they both picked her as the mentor they would like to meet.</p>
 
 <p>Haiku had an impressive growth in the number of students:</p>
 
@@ -55,8 +55,4 @@ Winston Durand</p>
 
 <p>I hope that despite probably being the best of their age in their field, the winning students will stay humble, and hunger for new knowledge.</p>
 
-<p>So congratulations and thanks to all our hardworking students and their mentors, and especially Scott McCreary who once again shouldered the responsibility of administrating Haiku’s GCI participation. <br>
-ing students will stay humble, and hunger for new knowledge.</p>
-
-<p>So congratulations and thanks to all our hardworking students and their mentors, and especially Scott McCreary who once again shouldered the responsibility of administrating Haiku’s GCI participation. <br>
-data source</p>
+<p>So congratulations and thanks to all our hardworking students and their mentors, and especially Scott McCreary who once again shouldered the responsibility of administrating Haiku’s GCI participation.</p>
