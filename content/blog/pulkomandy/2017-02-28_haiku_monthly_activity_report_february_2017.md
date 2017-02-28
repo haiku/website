@@ -9,7 +9,7 @@ tags = []
 Hello world!
 
 Let's see what happened in Haiku this month. This report covers hrevs 50928 to
-XXXXXX.
+50988.
 
 waddlsplash worked on enabling real subpixel rendering in Haiku. This used to be
 protected by Microsoft patents, but they are all expired or will expire really
