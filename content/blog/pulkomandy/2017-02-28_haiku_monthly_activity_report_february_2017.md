@@ -47,7 +47,7 @@ axeld fixed a memory leak in bfs.
 tqh tweaked our ACPI code to fix all warnings, and enabled Werror so the compiler
 will now complain if someone adds warning-generating code in that area.
 
-Skipp_osx added case insensitie comparison methods to BString, and used them to
+Skipp_osx added case insensitive comparison methods to BString, and used them to
 fix some bugs in the legacy PackageInstaller (to install SoftwareValet packages
 from BeOS).
 
@@ -80,7 +80,7 @@ up a new buildmaster instance (much better than the half disassembled laptop
 in my basement I used for testing until now).
 
 We are now working on connecting everything together: exposing a web interface
-shwoing the status of the builders, making changes to haikuports git repos trigger
+showing the status of the builders, making changes to haikuports git repos trigger
 an automated build of the changed packages and update of the repos, etc. Having
 the server hosted on Haiku controlled infrastructure helps collaborating on that
 and should also make the builds faster, as the build master can upload packages
