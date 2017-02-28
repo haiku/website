@@ -31,7 +31,7 @@ to a newer version, and at best, moved to packages.
 korli investigated and fixed some bugs in our pthread API, in order to increase compatibility
 and make it easier to port software.
 
-Dariusz Knociński improved the Polsih keymap, adding various special characters
+Dariusz Knociński improved the Polish keymap, adding various special characters
 (various kinds of typographic quotes, apostrophes, etc).
 
 kallisti5 fixed a problem with host-only builds resulting in an infinite recursion in Jam
@@ -40,7 +40,7 @@ kallisti5 fixed a problem with host-only builds resulting in an infinite recursi
 a specific architecture. This is used by the package buildbots as they need the generic "package"
 tool, but nothing arch specific.
 
-hudinger reworked the layout of Tracker info window, to fix some overlapped text depending on font and font size.
+humdinger reworked the layout of Tracker info window, to fix some overlapped text depending on font and font size.
 
 axeld fixed a memory leak in bfs.
 
@@ -59,10 +59,10 @@ deprecated catalogs, missing languages, etc.
 
 Lioncash fixed some memory leaks and late NULL pointer checks.
 
-jua made many improvements to our FUSE layer, and used it to implement an SMB
-filesystem, allowing to access Windows network shared drives (or anything using 
-the same protocol). This is nicely integrated in the Network preferences thanks
-to the add-on support there.
+jua made many improvements to our FUSE layer, and used it to port and extend
+the fusesmb filesystem, allowing to access Windows network shared drives (or
+anything using the same protocol). This is nicely integrated in the Network
+preferences thanks to the add-on support there.
 
 Kyle Ambroff helped investigate and fix a freeze of the network preferences, when
 trying to configure a network in static mode.
@@ -71,7 +71,7 @@ trying to configure a network in static mode.
 
 There are some good news about the beta1 release this month.
 
-First, not mentionned above are a lot of package updates in the repositories, in
+First, not mentioned above are a lot of package updates in the repositories, in
 order to keep them close to the release branches at haikuports.
 
 But more importantly, the move of the haiku website and forums to new hosting was
