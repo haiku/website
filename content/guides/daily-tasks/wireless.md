@@ -75,8 +75,9 @@ Alternatively, you can put your ifconfig command to join your wireless network i
 <h3>Notes</h3>
  
 <a name="firmware-offline"><strong>Offline download of binary firmware files.</strong></a>
-<p>If you cannot obtain the binary firmware files via the install-wifi-firmwares.sh script (for example due to lack of Internet connection within Haiku), you can also <strong>download this <a href="/files/download-data-for-wlan-firmwares.txt">shell script</a></strong> (or the <a href="/files/alpha4_download-data-for-wlan-firmwares.txt">Alpha4-version</a> if you're still using those), <strong>and run it from any other OS</strong> that has <span class="cli>wget</span> and <span class="cli">zip</span> installed.<br />
-The script will download the needed files and create a zip file that is to be extracted to Haiku's /boot. Once unpacked, execute the install-wifi-firmwares.sh script to install the firmware files.</p>
+<p>If you cannot obtain the binary firmware files via the install-wifi-firmwares.sh script (for example due to lack of Internet connection within Haiku), you can also <strong>download this <a href="/files/download-data-for-wlan-firmwares.txt">shell script</a></strong> (or the <a href="/files/alpha4_download-data-for-wlan-firmwares.txt">Alpha4-version</a> if you're still using that), <strong>and run it from another OS</strong> that has <span class="cli>wget</span> and <span class="cli">zip</span> installed.<br />
+Windows users need to have <a href="http://gnuwin32.sourceforge.net/packages/wget.htm">wget</a> and <a href="http://gnuwin32.sourceforge.net/packages/zip.htm">zip</a> for Windows installed in their default locations and use this <a href="/files/download-data-for-wlan-firmwares.bat">batch script</a>.</p>
+<p>The script will download the needed files and create a zip file that is to be extracted to Haiku's /boot. Once unpacked, execute the install-wifi-firmwares.sh script to install the firmware files.</p>
  
 <h3><a name="hardware-notes"><strong>Wi-Fi hardware support</strong></a></h3>
 To support a large number of wireless cards with reduced legwork, the Haiku wireless network drivers are FreeBSD wireless drivers wrapped in code to translate them to the Haiku driver subsystem.
