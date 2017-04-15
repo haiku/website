@@ -108,7 +108,7 @@ Wireless drivers are supported by our FreeBSD compatibility layer as well, and t
 Some wireless network adapters require installation of a firmware file, which must be installed by running the install-wifi-firmwares script (see the guide [Connecting to wireless networks](/guides/daily-tasks/wireless).
 
 ### What license is Haiku released under?
-Most of the Haiku code is released under the very liberal [MIT License](http://www.opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses.
+Most of the Haiku code is released under the very liberal [MIT License](http://www.opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License, [without trademark claims by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). See also the [Haiku, Inc. website](http://www.haiku-inc.org/trademarks.html) for the Haiku trademarks and their usage requirements.
 
 ### What is Haiku Inc.?
 Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [check out this page](http://haiku-inc.org)
