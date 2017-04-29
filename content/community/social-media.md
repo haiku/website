@@ -10,11 +10,12 @@ There are a number of ways you can keep up with news about Haiku and social medi
 </p>
 
 <h4>Official Accounts</h4>
-<p><b><a href="https://twitter.com/haikuOS" target="_blank">Official Twitter feed</a></b><br />
+<p><b><a href="https://twitter.com/haikuOS" target="_blank">Official Twitter account</a></b><br />
+<p><b><a href="https://mastodon.xyz/@haiku" target="_blank">Official Mastodon/GNUsocial account</a></b><br />
 <p><b><a href="https://youtube.com/user/haikuos" target="_blank">Official YouTube account</a></b><br />
 <p><b><a href="https://www.linkedin.com/company/haiku-inc-" target="_blank">Official Linkedin account</a></b><br />
 <p><b><a href="https://www.openhub.net/orgs/haiku/projects" target="_blank">Official OpenHub account</a></b><br />
-<p><b><a href="https://delicious.com/haikuos" target="_blank">Official Delicious account</a></b><br />
+<p><b><a href="https://del.icio.us/haikuos" target="_blank">Official Delicious account</a></b><br />
 
 <h4>Recognized Community Groups</h4>
 <p><b><a href="https://plus.google.com/communities/116050756631351429142" target="_blank">Google+ community</a></b><br />
