@@ -1,5 +1,5 @@
 +++
 type = "blog_index"
-author = "Vivek"
+author = "vivek"
 title = "Vivek's blog"
 +++
