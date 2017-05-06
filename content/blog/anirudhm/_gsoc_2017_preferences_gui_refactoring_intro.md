@@ -12,7 +12,7 @@ I'm **Anirudh Murali** (Trac: *anirudh*; IRC: *anirudhm*), from the southern reg
 
 As of now, if one has to access any Preferences, a right click on the Deskbar, and accessing it with the submenu of Preferences, and still people who are new to Haiku end up selecting the wrong preferences option, atleast it happened for me. Even though Preference options are labelled, new users who aren't familiar with the terminology take time to find the right option. What I intend to do for this summer is to revamp the access method of Preferences.
 
-###Preferences Panel
+### Preferences Panel
 
 A Preference Panel containing shortcuts to every preference options, sorted under respective categories.
 For example, Keyboard, Mouse, Trackpad preferences would be coming under Input section and similarily other options as well.
@@ -27,7 +27,7 @@ Here's a mockup of what Haiku's Preferences Panel would look like (subject to ch
 
 Nearby to every preference option, either in a side pane or nearby the option, a quick toggle of most used preference will be added. Example: Enabling/Disabling Trackpad with a checbox in the central panel.
 
-####Search Implementation with Trie
+#### Search Implementation with Trie
 
 Along with this, a Search bar to filter the displayed Preference listing. Every preference listing will be assigned with set of meta keywords which will include the options present inside the preference listing, and a Trie with all the keywords pushed in the tree. Using this method for traversal will allow us to fetch results in O(m) timeframe where m is the length of the string entered by the user.
 
