@@ -1,8 +1,8 @@
 +++
 type = "blog"
-title = "TITLE_GOES_HERE"
-author = "AUTHOR_GOES_HERE"
-date = "DATE_GOES_HERE"
+title = "[GSoC 2017] Preferences GUI Refactoring Intro"
+author = "anirudhm"
+date = "2017-05-06 23:32:54+00:00"
 tags = ["haiku", "gsoc2017", "gsoc"]
 +++
 
