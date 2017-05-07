@@ -8,18 +8,20 @@ tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "
 I am Deepanshu(Trac: digib0y IRC:digib0y), I am one of the seven students selected for GSoC this year from Haiku. I will be working to add Harfbuzz support this summer.
 
 **Quick intro:**
-I am an engineering student of Christ University, India. I'am pursuing a degree in Bachelor of Technology in Computer Science and Engineering.
+I am an engineering student of Christ University, India. I am pursuing a degree in Bachelor of Technology in Computer Science and Engineering.
 
 I have been a previous Google Code-In student where I worked with Haiku for the first time, I can recall the first time I ever connected to an IRC channel during GCI 2014; it was both my interest in the GCI task and my attraction to the positive, friendly environment on #haiku that convinced me to continue working with Haiku.
 
 **Project Description:**
 Text is the primary means of communication in computers, and is bound to be so for the decades to come. With the widespread adoption of Unicode as the canonical character set for representing text a whole new domain has been opened up in a desktop system software design.
 
+Haiku got internation support in 2009(Thanks to Pulkomandy!). However, it only works for languages with layouting rules similar to the latin alphabet, other scripts such as arabic, devanagari, or CJK, have several problems ranging from minor(word breaks at expected places) to unreadable text(characters rendered in the wrong direction, or not rendered at all). The goal of the project is to improve the situation, with a focus on Devanagari which is a script shared by over 120 languages.
+
 HarfBuzz uses GLib for Unicode functions (to get few Unicode character properties an normalisation). It can also use ICU for this, or a small bundled library called UCDN. If HarfBuzz is built without GLib or ICU, it will use UCDN. Alternatively we can provide the Unicode callbacks to interface with something else. However, we will be using ICU which is in the core of Haiku.
 
 FreeType is used for loading fonts and glyph metrics etc. We can also build HarfBuzz without FreeType and use HarfBuzzs internal font functions.
 
-Font rendering should be reworked to use the HarfBuzz library (The Harfbuzz package contains an OpenType text shaping engine), instead of just Freetype, providing numerous supports.
+Font rendering will be reworked to use the HarfBuzz library (The Harfbuzz package contains an OpenType text shaping engine), instead of just Freetype, providing numerous supports.
 
 **What to expect on completion of project:**
 -Rendering of  Devanagari and other scripts using ligatures properly, allowing use of the system to view and edit text in the Hindi language
@@ -43,7 +45,9 @@ Font rendering should be reworked to use the HarfBuzz library (The Harfbuzz pack
 
 Apart from this I will complete translation of Haiku to Hindi.
 
-**References:**
--[PDF copy of my GSoC Proposal](https://www.google.com)
+**References:**
+-[PDF copy of my GSoC Proposal](/files/blog/digib0y/Harfbuzz)
 -[Harfbuzz freedestop.org](https://www.freedesktop.org/wiki/Software/HarfBuzz/)
 -[HarfBuzz Wiki](https://en.wikipedia.org/wiki/HarfBuzz)
+
+

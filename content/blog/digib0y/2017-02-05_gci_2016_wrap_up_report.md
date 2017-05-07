@@ -40,7 +40,7 @@ Raefaldhi Amartya Junior from Indonesia</li>
 
 <p>Haiku had an impressive growth in the number of students:</p>
 
-<p><img src="/files/blog/deepanshu/graph_gci2016.PNG" alt="Number of students" title=""></p>
+<p><img src="/files/blog/digib0y/graph_gci2016.PNG" alt="Number of students" title=""></p>
 
 <p>To list some of the students’ achievements:</p>
 
