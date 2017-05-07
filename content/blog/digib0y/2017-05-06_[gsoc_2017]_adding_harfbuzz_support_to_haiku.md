@@ -8,9 +8,9 @@ tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "
 I am Deepanshu(Trac: digib0y IRC:digib0y), I am one of the seven students selected for GSoC this year from Haiku. I will be working to add Harfbuzz support this summer.
 
 **Quick intro:**
-I am an engineering student of Christ University, India. Im pursuing a degree in Bachelor of Technology in Computer Science and Engineering.
+I am an engineering student of Christ University, India. I'am pursuing a degree in Bachelor of Technology in Computer Science and Engineering.
 
-I have been a previous Google Code In student where I worked with Haiku for the first time, I can recall the first time I ever connected to an IRC channel during GCI 2014; it was both my interest in the GCI task and my attraction to the positive, friendly environment on #haiku that convinced me to continue working with Haiku.
+I have been a previous Google Code-In student where I worked with Haiku for the first time, I can recall the first time I ever connected to an IRC channel during GCI 2014; it was both my interest in the GCI task and my attraction to the positive, friendly environment on #haiku that convinced me to continue working with Haiku.
 
 **Project Description:**
 Text is the primary means of communication in computers, and is bound to be so for the decades to come. With the widespread adoption of Unicode as the canonical character set for representing text a whole new domain has been opened up in a desktop system software design.
@@ -43,7 +43,7 @@ Font rendering should be reworked to use the HarfBuzz library (The Harfbuzz pack
 
 Apart from this I will complete translation of Haiku to Hindi.
 
-References:
+**References:**
 -[PDF copy of my GSoC Proposal](https://www.google.com)
 -[Harfbuzz freedestop.org](https://www.freedesktop.org/wiki/Software/HarfBuzz/)
 -[HarfBuzz Wiki](https://en.wikipedia.org/wiki/HarfBuzz)
