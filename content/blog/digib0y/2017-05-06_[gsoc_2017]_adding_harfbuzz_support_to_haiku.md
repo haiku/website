@@ -19,7 +19,7 @@ HarfBuzz uses GLib for Unicode functions (to get few Unicode character propertie
 
 FreeType is used for loading fonts and glyph metrics etc. We can also build HarfBuzz without FreeType and use HarfBuzzs internal font functions.
 
-Font rendering should be reworked to use the HarfBuzz library (The Harfbuzz package contains an OpenType text shaping engine.), instead of just Freetype, providing numerous supports/
+Font rendering should be reworked to use the HarfBuzz library (The Harfbuzz package contains an OpenType text shaping engine), instead of just Freetype, providing numerous supports.
 
 **What to expect on completion of project:**
 -Rendering of  Devanagari and other scripts using ligatures properly, allowing use of the system to view and edit text in the Hindi language
