@@ -5,7 +5,7 @@ author = "digib0y"
 date = "2017-05-06 22:36:57+00:00"
 tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "GSoC", "Google Summer of Code"] 
 +++
-<li>I am Deepanshu(Trac: digib0y IRC:digib0y), I am one of the seven students selected for GSoC this year from Haiku. I will be working to add Harfbuzz support this summer.</li>
+<p>I am Deepanshu(Trac: digib0y IRC:digib0y), I am one of the seven students selected for GSoC this year from Haiku. I will be working to add Harfbuzz support this summer.</p>
 
 <h3>Quick intro:</h3>
 <p>I am an engineering student of Christ University, India. I am pursuing a degree in Bachelor of Technology in Computer Science and Engineering.
