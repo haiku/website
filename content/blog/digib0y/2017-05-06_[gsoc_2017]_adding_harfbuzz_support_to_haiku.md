@@ -33,7 +33,7 @@ I have been a previous Google Code-In student where I worked with Haiku for the 
 <p>Apart from this I will complete translation of Haiku to Hindi.<p>
 <h3>References:</h3>
 
-<li><a href="/files/blog/digib0y/Harfbuzz">PDF copy of my GSoC Proposal</a>
+<li><a href="/files/blog/digib0y/Harfbuzz.pdf">PDF copy of my GSoC Proposal</a>
 <br>
 <li><a href="https://www.freedesktop.org/wiki/Software/HarfBuzz/">Harfbuzz freedestop.org</a> 
 <br>
