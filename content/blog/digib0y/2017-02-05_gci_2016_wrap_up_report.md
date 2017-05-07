@@ -1,9 +1,9 @@
 +++
 type = "blog"
 title = "GCI 2016 Wrap Up Report"
-author = "Deepanshu"
+author = "digiboy"
 date = "2017-02-05 12:44:02+05:30"
-tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In"]
+tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In","GCI2016"]
 +++
 
 
@@ -40,7 +40,7 @@ Raefaldhi Amartya Junior from Indonesia</li>
 
 <p>Haiku had an impressive growth in the number of students:</p>
 
-<p><img src="/files/blog/deepanshu/graph_gci2016.PNG" alt="Number of students" title=""></p>
+<p><img src="/files/blog/digib0y/graph_gci2016.PNG" alt="Number of students" title=""></p>
 
 <p>To list some of the students’ achievements:</p>
 
