@@ -1,9 +1,9 @@
 +++
 type = "blog"
 title = "GCI 2016 Wrap Up Report"
-author = "Deepanshu"
+author = "digiboy"
 date = "2017-02-05 12:44:02+05:30"
-tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In"]
+tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In","GCI2016"]
 +++
 
 
