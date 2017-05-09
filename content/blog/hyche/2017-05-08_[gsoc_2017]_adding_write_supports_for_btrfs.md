@@ -6,7 +6,8 @@ date = "2017-05-08 13:49:47+07:00"
 tags = ["haiku", "gsoc2017", "gsoc", "filesystem", "btrfs"]
 +++
 
-Hello everyone, 
+Hello everyone,
+
 My name is Hy (Trac: hyche, freenode IRC: ugen), and this first blog is about my introduction and Btrfs. This is the first time I participate in Google Summer of Code, I also know Haiku through this event. My project in this summer is **write supports for Btrfs** and my main mentor is *mmu_man* (Fredrik Holmqvist).
 
 During the community bonding period, I will 
