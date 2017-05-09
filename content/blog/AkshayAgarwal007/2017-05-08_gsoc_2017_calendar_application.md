@@ -49,7 +49,7 @@ tags = ["haiku","gsoc2017","gsoc","Google Summer of Code"]
     <li>I would be coming up with a final design for this, incorporating all the options required for supporting recurring events and an event color picker.</li>
 </ul>
 
-<p><img src="/files/blog/AkshayAgarwal007/add-event.png" alt="Add Event"></p>
+<p><img src="/files/blog/AkshayAgarwal007/add-event.png" alt="Add Event" class="img-responsive center-block"></p>
 
 <h4>Day View </h4>
 <ul>
@@ -59,7 +59,7 @@ tags = ["haiku","gsoc2017","gsoc","Google Summer of Code"]
     <li>Using the calendar widget in the side panel, user can navigate through months. Buttons to navigate one month at a time can be replaced by a dropdown to simply select month+year for user's ease.</li>
 </ul>
 
-<p><img src="/files/blog/AkshayAgarwal007/day-view.png" alt="Day View"></p>
+<p><img src="/files/blog/AkshayAgarwal007/day-view.png" alt="Day View" class="img-responsive center-block"></p>
 
 <h4>Month View</h4>
 <ul>
@@ -67,7 +67,7 @@ tags = ["haiku","gsoc2017","gsoc","Google Summer of Code"]
     <li>Again the buttons to navigate one month/year at a time can be replaced by a dropdown to simply select month+year for user's ease.</li>
 </ul>
 
-<p><img src ="/files/blog/AkshayAgarwal007/month-view.png" alt="Month View"></p>
+<p><img src ="/files/blog/AkshayAgarwal007/month-view.png" alt="Month View" class="img-responsive center-block"></p>
 
 <p>I would be finalising the user interface design in the upcoming week and suggestions from you all would be highly valuable for the same.</p>
 
