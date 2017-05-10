@@ -20,11 +20,11 @@ I am a profound Linux user. I have gained formal education on the subject while 
 
 TCP and IP together form the most ubiquitous pair of protocols used in the implementation of the internet stack. It’s really important to get them working at full throttle. When I was going through the list of issues at Trac, a lot of them complained about the network:
 
-*#1958, #12815 - slow speeds during file exchange using ftp, scp, sftp
-*#10747, #11066, #1143 - network related KDLs
-*#1073 - requesting implementation of path MTU discovery 
-*#2967 - bug with getpeername() that succeeds on unconnected sockets 
-*#1994 - requesting implementation of urgent data for TCP 
+*#1958, #12815 - slow speeds during file exchange using ftp, scp, sftp 
+*#10747, #11066, #1143 - network related KDLs 
+*#1073 - requesting implementation of path MTU discovery  
+*#2967 - bug with getpeername() that succeeds on unconnected sockets  
+*#1994 - requesting implementation of urgent data for TCP  
 
 and more ...
 
@@ -44,9 +44,9 @@ For this month, I am mainly focused on porting a TCP profiler such as tcpdive to
 
 During summer I will be implementing each section of rfc 7414 one after the other. There are majorly 3 sections and I will have 3 months to work on them:
 
->Section 2: describes the very fundamental functionalities of tcp.
->Section 3: Strongly Encouraged Enhancements - describes recommended TCP modifications that improve performance and security
->Section 4: Experimental Extensions - describes those extensions that are not widely but are gaining popularity
+>Section 2: describes the very fundamental functionalities of tcp. 
+>Section 3: Strongly Encouraged Enhancements - describes recommended TCP modifications that improve performance and security 
+>Section 4: Experimental Extensions - describes those extensions that are not widely but are gaining popularity 
 
 To more details on the timeline, you can refer to my proposal:
 https://docs.google.com/document/d/1-FlypLFN2c1OOSkwh9N72uuQWMbY3hHiTwhFSqPaJbM/edit
