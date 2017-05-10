@@ -41,7 +41,7 @@ and more ...<br>
 
 <h3>Current state</h3>
 
-<p>The code for TCP can be found <a hreaf="https://github.com/haiku/haiku/tree/master/src/add-ons/kernel/network/protocols/tcp"> here</a>. It provides for all the mainframe syscalls like: bind, listen, sendmsg, etc. Needless to say, all the salient features of tcp like checksum, window, ack, fin are well implemented.</p>
+<p>The code for TCP can be found <a href="https://github.com/haiku/haiku/tree/master/src/add-ons/kernel/network/protocols/tcp"> here</a>. It provides for all the mainframe syscalls like: bind, listen, sendmsg, etc. Needless to say, all the salient features of tcp like checksum, window, ack, fin are well implemented.</p>
 
 <p>So what we have is a up and running tcp implementation but it lacks much of the extensions suggested by rfc 7414 like the timestamps option, window scale option, round trip time mechanisms involving timestamps, appropriate byte counting (ABS) for congestion control, Robust header compressions, etc.</p>
 
