@@ -8,7 +8,7 @@ tags = ["haiku", "gsoc2017", "gsoc", "filesystem", "btrfs"]
 
 <p>Hello everyone,</p>
 
-<p>My name is Hy (Trac: hyche, freenode IRC: ugen), and this first blog is about my introduction and Btrfs. This is the first time I participate in Google Summer of Code, I also know Haiku through this event. My project in this summer is <b>write supports for Btrfs</b> and my main mentors are <i>mmu_man</i> and <i>tqh</i> (Fredrik Holmqvist).</p>
+<p>My name is Hy (Trac: hyche, freenode IRC: ugen), and this first blog is about my introduction and Btrfs. This is the first time I participate in Google Summer of Code, I also know Haiku through this event. My project in this summer is <b>write supports for Btrfs</b> and my main mentors are <i>mmu_man</i> (François Revol) and <i>tqh</i> (Fredrik Holmqvist).</p>
 
 <p>During the community bonding period, I will </p>
 <ul>
