@@ -3,12 +3,13 @@ type = "blog"
 title = "[GSOC 2017] Tcp optimization and fine tuning"
 author = "a-star"
 date = "2017-05-10 13:11:55+05:30"
-tags = ["haiku", "software"]
+tags = ["haiku", "software", "gsoc", "gsoc2017"]
 +++
 
 Hello Haiku!
 
-My name is Ayush (nick: a-star). I am really glad to have been selected for GSOC 2017 and I will striving to optimize the tcp implementation of Haiku this summer.
+My name is Ayush (nick: a-star). I am really glad to have been selected for GSOC 2017 and I will be striving to optimize the tcp implementation of Haiku this summer.
+
 
 <h3>A little about me</h3>
 
@@ -58,7 +59,7 @@ and more ...<br>
 <li>Section 3: Strongly Encouraged Enhancements - describes recommended TCP modifications that improve performance and security</li>
 <li>Section 4: Experimental Extensions - describes those extensions that are not widely but are gaining popularity </li>
 </ul><br>
+For more details on the timeline, you can refer to my <a href="https://docs.google.com/document/d/1-FlypLFN2c1OOSkwh9N72uuQWMbY3hHiTwhFSqPaJbM/edit"> proposal</a>.
 
-To more details on the timeline, you can refer to my <a href="https://docs.google.com/document/d/1-FlypLFN2c1OOSkwh9N72uuQWMbY3hHiTwhFSqPaJbM/edit"> proposal</a>.
 <br>
 Thnx...
