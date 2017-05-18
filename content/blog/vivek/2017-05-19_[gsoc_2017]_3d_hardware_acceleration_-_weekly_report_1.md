@@ -6,19 +6,19 @@ date = "2017-05-19 00:49:04+05:30"
 tags = ["driver", "gsoc2017", "gsoc"]
 +++
 
-###Hello again
+### Hello again
 
 My previous blog post was a brief introduction to my project - 3D Hardware Acceleration in Haiku. The second week of GSoC demands the second post and so here we go.
 
 
-###Bonding
+### Bonding
 
 Well, there hasn't been a lot of coding work in the last two week, as much as I would have liked, primarily because I wasn't well for a couple of days. But, I did do what I am supposed to do at this period, i.e. "Bonding with the Community".
 
 I was regular to the IRC before GSoC started, so I was already familiar with the names. Last two weeks I came to know the people even better. Adrien (*PulkoMandy*), Fredrik (*tqh*), James Taylor (*Duggan*) and Alex (*kallisti5*) have helped me a lot, among others. I also made friends with my fellow interns - Akshay (*akshay*), Anirudh (*anirudhm*), Ayush (*a-star*), Deepanshu (*digib0y*), Hy (*ugen*) and Joseph (*return0e*). Good luck to all of them.
 
 
-###Progress
+### Progress
 
 I started off, thinking of trying to generate an include dependency graph (every node in the graph represents a header/source file in the project and every directed edge from file1 to file2 indicates that file1 has included file2). The motivation was if I could generate such a graph, then I could easily move up from the leaf nodes to the highest-connectivity node in the graph, without breaking the compilability of the source.
 I tried to generate the graph using Doxygen, running it on DragonflyBSD's sources.
