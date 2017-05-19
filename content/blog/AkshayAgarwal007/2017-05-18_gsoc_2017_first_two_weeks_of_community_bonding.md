@@ -65,11 +65,11 @@ class="img-responsive center-block"></p>
 <p><b>Issues that I faced and how I resolved them:</b></p>
 
 <ul>
-    <li>I faced difficulties in pointing to the changed headers(rather than the 
+    <li>I faced difficulties in pointing to the changed headers (rather than the 
     one in system/develop) while compiling the test application. I used the -I 
     flag with gcc pointing to the changed headers to get it done.</li>
     <li> I was not able to link the test application to the newly built
-    libbe.so. I fixed it by adding the newly built libbe.so inside a lib folder 
+    libbe.so. I fixed it by adding the newly built libbe.so inside a <i>lib</i> folder 
     next to my executable.</li>
     <li> For getting a new build of libbe.so after my changes to files in the 
     locale kit, I simply did <i>jam libbe.so</i> from within root of my Haiku clone 
