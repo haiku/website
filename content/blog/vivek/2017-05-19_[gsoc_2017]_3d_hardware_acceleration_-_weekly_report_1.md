@@ -24,10 +24,10 @@ I started off, thinking of trying to generate an include dependency graph (every
 I tried to generate the graph using Doxygen, running it on DragonflyBSD's sources.
 
 It looked good for some files, like drm_atomic.h shown below.
-<p><img src="drm_atomic_h.png" alt="drm_atomic.h Include Graph" class="img-responsive center-block"></p>
+<p><img src="/files/blog/vivek/drm_atomic_h.png" alt="drm_atomic.h Include Graph" class="img-responsive center-block"></p>
 
 But it failed for drm_auth.c (drmP.h has a fairly large list of dependencies, which I expected to see in the graph, but unfortunately did not).
-<p><img src="drm_auth_c.png" alt="drm_auth.c Include Graph" class="img-responsive center-block"></p>
+<p><img src="/files/blog/vivek/drm_auth_c.png" alt="drm_auth.c Include Graph" class="img-responsive center-block"></p>
 
 I asked people on the mailing list for help, and surely enough, received a lot of it. PulkoMandy suggested some more tools, but none of the seemed to work the way I wanted them to. At last, on PulkoMandy's and Duggan's suggestions, I decided to add files to the source and rely on the compiler generated error files to proceed.
 
