@@ -9,7 +9,7 @@ tags = ["haiku", "swift", "gsoc", "gsoc17"]
 Hello everyone!
 
 ## Community Bonding period
-Last week I introduced myself and my GSoC project on porting Swift to Haiku, which can be found [here](https://www.haiku-os.org/blog/return0e/2017-05-10_%5Bgsoc_2017%5D_porting_the_swift_programming_language_to_haiku/) in case if you missed it. The bonding period so far involved a mix of initial communication with my mentors **jua_**  and **koril** (Thanks for merging my HaikuPorter recipes!) alongside receiving assistance from other haiku-devs, notably PulkoMandy and waddlesplash. In addition, I mostly spent the week researching the swift front-end driver internals [1] by reading its documentation, patching more script files used for building swift and meeting several other GSoC students on IRC/mailing lists; and I wish them good luck with their projects. Shortly afterwards, I've made contact with the swift-dev mailing list about this project and asked about adding 32 bit support and both ideas are acceptable with the swift community [2]. But until the x86_64 port has a functioning toolchain, x86 support will be considered later.
+Last week I introduced myself and my GSoC project on porting Swift to Haiku, which can be found [here](https://www.haiku-os.org/blog/return0e/2017-05-10_%5Bgsoc_2017%5D_porting_the_swift_programming_language_to_haiku/) in case if you missed it. The bonding period so far involved a mix of initial communication with my mentors **jua_**  and **korli** (Thanks for merging my HaikuPorter recipes!) alongside receiving assistance from other haiku-devs, notably PulkoMandy and waddlesplash. In addition, I mostly spent the week researching the swift front-end driver internals [1] by reading its documentation, patching more script files used for building swift and meeting several other GSoC students on IRC/mailing lists; and I wish them good luck with their projects. Shortly afterwards, I've made contact with the swift-dev mailing list about this project and asked about adding 32 bit support and both ideas are acceptable with the swift community [2]. But until the x86_64 port has a functioning toolchain, x86 support will be considered later.
 
 ## Porting progress
 This week, early platform support has been added in various script files and those changes have made it possible to build the compiler inside Haiku by using clang++. While Haiku already had support for thread-local storage (TLS) for sometime, this was required for self-hosting the llvm/clang forks and the clang port had TLS support disabled upstream [3]. This briefly caused some build issues but was later fixed in my swift-clang fork. 
@@ -32,7 +32,7 @@ Swiftc and stdlib all contain allot of runtime bugs due to missing platform impl
 * Add WIP recipe to HaikuPorts.
 * Investigate swift-corelibs and libdispatch requirements.
 
-The repo used for porting is over at [return/swift](http://github.com/return/swift). Hopefully a WIP swift recipe will be available on HaikuPorts in a few weeks, so that my mentors or even others can try it out.
+The repository used for porting is over at [return/swift](http://github.com/return/swift). Hopefully a WIP swift recipe will be available on HaikuPorts in a few weeks, so that my mentors or even others can try it out.
 
 [1] https://github.com/apple/swift/blob/master/docs/DriverInternals.rst
 
