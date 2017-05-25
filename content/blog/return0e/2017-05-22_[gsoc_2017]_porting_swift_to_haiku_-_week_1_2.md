@@ -17,7 +17,7 @@ This week, early platform support has been added in various script files and tho
 As expected, the swift front-end (swiftc), runtime (libswiftCore.so) and the standard library (stdlib) are very unstable, with the compiler instantly crashing when running swift source files. More work needs to be done in resolving these issues but apart from that, not much serious programming was done so far; only preparation work for building the compiler on Haiku for the coding period.
 
 ## Issues encountered so far
-Swiftc and stdlib all contain allot of runtime bugs due to missing platform implementations at the moment. For example, directly compiling a source file causes the front-end to poll infinitely; thus never actually generating a executable. The runtime uses some platform-specific code to handle extracting metadata from dynamic libraries and this must be implemented in Haiku (dl_iterate_phdr() is used in ImageIntrospectionELF.cpp [4]), running swift programs won't be possible without this. I also tried importing C libraries such as math and stdio from the SwiftGlibc metaclass to test the ClangImporter tool, but it fails to import certain modules in the standard library despite correctly adding the paths to the POSIX headers. For now, I'll be investigating the compiler front-end and runtime issues in the swift port to enable compiling or running swift source files on Haiku.
+Swiftc and stdlib all contain allot of runtime bugs due to missing platform implementations at the moment. For example, directly compiling a source file causes the front-end to poll infinitely; thus never actually generating a executable. The runtime uses some platform-specific code to handle extracting metadata from dynamic libraries and this must be implemented in Haiku (dl_iterate_phdr() is used in ImageInspectionELF.cpp [4]), running swift programs won't be possible without this. I also tried importing C libraries such as math and stdio from the SwiftGlibc metaclass to test the ClangImporter tool, but it fails to import certain modules in the standard library despite correctly adding the paths to the POSIX headers. For now, I'll be investigating the compiler front-end and runtime issues in the swift port to enable compiling or running swift source files on Haiku.
 
 ## Goals achieved
 
@@ -34,10 +34,10 @@ Swiftc and stdlib all contain allot of runtime bugs due to missing platform impl
 
 The repository used for porting is over at [return/swift](http://github.com/return/swift). Hopefully a WIP swift recipe will be available on HaikuPorts in a few weeks, so that my mentors or even others can try it out.
 
-[1] https://github.com/apple/swift/blob/master/docs/DriverInternals.rst
+[1] [Swift Driver Internals](https://github.com/apple/swift/blob/master/docs/DriverInternals.rst)
 
-[2] https://lists.swift.org/pipermail/swift-dev/Week-of-Mon-20170508/004568.html
+[2] [Swift Mailing List Thread](https://lists.swift.org/pipermail/swift-dev/Week-of-Mon-20170508/004568.html)
 
-[3] https://github.com/llvm-mirror/clang/commit/ef7bceadf4b43c953855013577afac4c2fcb1d62
+[3] [Clang TLS commit](https://github.com/llvm-mirror/clang/commit/ef7bceadf4b43c953855013577afac4c2fcb1d62)
 
-[4] https://github.com/return/swift/blob/swift-3.1-haiku/stdlib/public/runtime/ImageInspectionELF.cpp#L94
+[4] [ImageInspectionELF implementation](https://github.com/return/swift/blob/swift-3.1-haiku/stdlib/public/runtime/ImageInspectionELF.cpp#L94)
