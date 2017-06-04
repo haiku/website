@@ -8,7 +8,7 @@ tags = []
 <p>Here's a list of sites providing 3rd party software for Haiku. Some offer a direct download of HPKG packages or zip archives, others have a repository which you can add to Haiku with the "Repositories" preference panel.</p>
 
 <ul>
-<li><a href="http://wildman.ddns.net/be/">BeBytes - The BeOS Software Archive</a>: A software archive like the old BeBits in BeOS times.</li>
+<li><a href="http://www.be.wildman-productions.org/">BeBytes - The BeOS Software Archive</a>: A software archive like the old BeBits in BeOS times.</li>
 <li><a href="https://www.software.besly.de/">BeSly Software Repo</a>: A repository of mainly YAB applications</li>
 <li><a href="http://clasquin-johnson.co.za/michel/haiku/repo/index.html">Clasqm's repo</a>: A repository with a huge collection mainly of packaged BeOS applications, but also new Haiku software, documentation, fonts, demos and other things.</li>
 <li><a href="http://fatelk.com/repo">Fat Elk Software</a>: A repository Fat Elk's own and other 3rd party software</li>
