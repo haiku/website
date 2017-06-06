@@ -55,7 +55,7 @@ preferences.</p>
 calendar widget.</i></p>
 
 <p>The code for the same is here:
-https://github.com/AkshayAgarwal007/Calendar</p>
+<a href="https://github.com/AkshayAgarwal007/Calendar">https://github.com/AkshayAgarwal007/Calendar</a></p>
 
 <p>Also there are minor peculiarities I have noted with the calendar view i.e if
 we change the selected day, the current day should always remain highlighted
@@ -66,4 +66,4 @@ the day of week header can be made locale aware.</p>
 kit, Haiku date/time classes and the calendar view.</p>
 
 <p>Next I'll be writing the event class and would be working on GUI for Add
-Event section as well as the day view.</p>
+Event section as well as the Day View.</p>
