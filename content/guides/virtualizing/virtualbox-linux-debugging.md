@@ -60,5 +60,5 @@ to
 <pre>serial_debug_speed speed</pre>
 Possible "<em>speed</em>" values are: 9600, 19200, 38400, 57600, 115200.
 
-<h3 id="part_finish>The End</h3>
+<h3 id="part_finish">The End</h3>
 <div class="alert alert-warning">Don't forget to delete or move the output file! VirtualBox won't do it automatically and it can grow to immense sizes.</div>
