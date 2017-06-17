@@ -2,7 +2,7 @@
 type = "news"
 title = "HAIKU needs you!"
 date = "2013-08-30T00:42:24.000Z"
-tags = ["contracting", "donations", "haiku inc.", "hiring"]
+tags = ["contracting", "donations", "haiku-inc", "hiring"]
 +++
 
 We have heard you. Other areas of Haiku need some loving. Though, we need your contribution to make this awesome.

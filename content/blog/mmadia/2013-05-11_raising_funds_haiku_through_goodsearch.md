@@ -3,7 +3,7 @@ type = "blog"
 author = "mmadia"
 title = "Raising funds for Haiku through Goodsearch"
 date = "2013-05-11T17:10:14.000Z"
-tags = ["donations", "haiku inc."]
+tags = ["donations", "haiku-inc"]
 +++
 
 <a href="http://www.goodsearch.com/?charityid=949749"><img src="/files/images/goodsearch_200x40.jpg" alt="GoodSearch logo" border="8" align="right" /></a>

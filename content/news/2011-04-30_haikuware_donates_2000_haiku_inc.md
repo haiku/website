@@ -2,7 +2,7 @@
 type = "news"
 title = "Haikuware donates $2,000 to Haiku, Inc."
 date = "2011-04-30T16:28:26.000Z"
-tags = ["contracting", "donations", "haiku inc.", "hiring"]
+tags = ["contracting", "donations", "haiku-inc", "hiring"]
 +++
 
 <img src="/files/star-thank-you.png" border="8" align="right" />

@@ -2,7 +2,7 @@
 type = "news"
 title = "Contract extension and 2013 financial review."
 date = "2014-02-07T03:01:07.000Z"
-tags = ["contracting", "donations", "haiku inc.", "hiring"]
+tags = ["contracting", "donations", "haiku-inc", "hiring"]
 +++
 
 <p>

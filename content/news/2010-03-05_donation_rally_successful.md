@@ -2,7 +2,7 @@
 type = "news"
 title = "Donation rally successful"
 date = "2010-03-05T12:38:40.000Z"
-tags = ["contracting", "haiku-inc", "hiring", "donations", "haiku inc."]
+tags = ["contracting", "haiku-inc", "hiring", "donations"]
 +++
 
 It's not just Stippi's project that's a huge success (see the WebKit/Web+ progress documented in his <a href="/blog/stippi"> blog posts</a>). Our call for donations for this kind of contractual work is also doing very well!

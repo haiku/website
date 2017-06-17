@@ -2,7 +2,7 @@
 type = "news"
 title = "Haiku, Inc. accepts contract relating to package management"
 date = "2010-12-27T23:50:26.000Z"
-tags = ["contracting", "donations", "haiku inc.", "hiring"]
+tags = ["contracting", "donations", "haiku-inc", "hiring"]
 +++
 
 As seen with the poll for the <a href="https://dev.haiku-os.org/wiki/FutureHaikuFeatures">must-have features for R1</a>, <strong>the lack of proper package management is clearly one of the items that are delaying the release of R1</strong>. More importantly though, as package management is an actual lacking feature (as opposed to a bug in an existing implementation), even the beta cycle is being blocked as a result. In order to progress, Haiku needs package management.

@@ -2,7 +2,7 @@
 type = "news"
 title = "He's back, back in the Haiku groove!"
 date = "2012-06-30T16:49:42.000Z"
-tags = ["contracting", "donations", "haiku inc.", "hiring"]
+tags = ["contracting", "donations", "haiku-inc", "hiring"]
 +++
 
 <img src="/files/lighter.png" border="8" align="left" />

@@ -2,7 +2,7 @@
 type = "news"
 title = "Funded development continues into March!"
 date = "2014-03-01T04:20:43.000Z"
-tags = ["contracting", "donations", "haiku inc.", "hiring"]
+tags = ["contracting", "donations", "haiku-inc", "hiring"]
 +++
 
 <p>Within these past 4 weeks, over $1,200 USD and &EUR;900 EUR have been raised! Thanks directly to this fundraising, Adrien is now able to be funded through the month of March. With the addition of the newest monthly subscribers, we reached a milestone and now raise over $1,000 per month through recurring monthly donations!</p>

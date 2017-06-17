@@ -2,7 +2,7 @@
 type = "news"
 title = "Haiku Inc. is hiring - funds needed"
 date = "2010-02-21T16:03:43.000Z"
-tags = ["haiku inc.", "hiring", "contract", "contracting"]
+tags = ["haiku-inc", "hiring", "contract", "contracting"]
 +++
 
 <p>The Haiku project rests on the shoulders of volunteer individuals who spend their free time developing, bughunting and in general advancing the system. Unfortunately everyone's time is limited and working for a living takes a major cut into what could be dedicated to Haiku work. It would be great if a developer could take off work for a few weeks to fully concentrate on Haiku development.</p>
