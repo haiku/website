@@ -7,7 +7,7 @@ tags = []
 
 VMs are an ideal way of testing operating systems without having them physically installed. Installing Haiku into VM is a solution for those who don't want to set it up into a physical computer.
 
-There are several methods offered to install Haiku. These include Vmdk images, Raw images, Iso images and Anyboot images which are a hybrid of the latter two images. The Raw image (and thus the Anyboot image) is a preinstalled environment, in which the Virtual Hard Disk size cannot be customized, but going through the installation process is not required.
+There are several methods offered to install Haiku. These include VMDK images, Raw images, ISO images and Anyboot images which are a hybrid of the latter two images. The Raw image (and thus the Anyboot image) is a preinstalled environment, in which the Virtual Hard Disk size cannot be customized, but going through the installation process is not required.
 
 In this guide the Haiku operating system is being run under virtual circumstances using Ubuntu 12.04 LTS, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
 
@@ -92,7 +92,11 @@ If, after running Virt-manager, you run into this pop-up:
 
 ![image10](/files/kvm_10.png)
 
-Then the solution is to run Virt-manager with administrative priviliges, which can be done in the terminal:
+The solution is to add yourself to the libvirtd group so you can control KVM.
 ```
-sudo virt-manager
+sudo usermod -a -G libvirtd $(whoami)
 ```
+
+##### Freezing with the QXL video device
+
+The virtual machine may occasionally hang or freeze during use, and switching the video device to the VGA or VMVGA one may solve this.
