@@ -16,13 +16,13 @@ You will also need a virtual machine manager, also known as a hypervisor. These 
 With regard to performance, you should make sure that the virtualization options in your BIOS are activated (Intel VT-x or AMD-V). If your hypervisor supports that, you'll get a nice boost in performance. Choosing AHCI over IDE in the BIOS can be another.
 
 <h3>Hosted hypervisors</h3>
-<b>Multi-platform</b>
 <ul>
     <li><a href="/guides/virtualizing/virtualbox">VirtualBox</a><ul>
         <li><a href="/guides/virtualizing/virtualbox-linux-debugging">with serial debugging under Linux</a></li>
         <li><a href="/guides/virtualizing/virtualbox-windows-debugging">with serial debugging under Windows</a></li>
     </ul>
     </li>
+    <li><a href="/guides/virtualizing/KVM">KVM</a></li>
     <li><a href="/guides/virtualizing/bochs">Bochs</a></li>
 </ul>
 <h3>Native hypervisors</h3>
