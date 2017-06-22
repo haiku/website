@@ -3,7 +3,7 @@ type = "blog"
 title = "[GSoC 2017: Harfbuzz] Week #3 #4 of Community Bond"
 author = "digib0y"
 date = "2017-06-01 18:58:37+05:30"
-tags = ["haiku", "harfbuzz","gsoc","gsoc2017","google","summerofcode"]
+tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "GSoC", "Google Summer of Code","harfbuzz"]
 +++
 
 <p>Hello Everyone,</p>
