@@ -12,6 +12,6 @@ tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "
 <p>I pointed out few issues in one of my <a href="https://www.haiku-os.org/blog/digib0y/2017-06-01_gsoc_2017_harfbuzz_week_3_4_of_community_bond/">previous blog </a>post. I have used the same words in Hindi for rendering in application. You will see that it is being rendered properly.</p>
 <p>I would take the time out and say the rendering is more accurate and better when compared to rendering on Ubuntu 16.04.</p>
 <p>I request if anyone here can read in languages in the screenshot below, let me know the feedback on their rendering.</p><br /><br />
-<img src="/files/blog/digib0y/renderingcomp.jpg" alt="Haiku vs Ubuntu on Rendering" class="img-responsive center-block" /><br /><br />
+<img src="/files/blog/digib0y/app_ss.png" alt="Harfbuzz App Rendering" class="img-responsive center-block" /><br /><br />
 <p>Spaces between the words are missing, will be fixed soon :)</p>
 <p>That is all for now, more blog post with updates coming soon..)</p>
