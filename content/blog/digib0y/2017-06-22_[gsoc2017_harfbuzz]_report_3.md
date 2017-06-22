@@ -13,5 +13,4 @@ tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "
 <p>I would take the time out and say the rendering is more accurate and better when compared to rendering on Ubuntu 16.04.</p>
 <p>I request if anyone here can read in languages in the screenshot below, let me know the feedback on their rendering.</p><br /><br />
 <img src="/files/blog/digib0y/app_ss.png" alt="Harfbuzz App Rendering" class="img-responsive center-block" /><br /><br />
-<p>Spaces between the words are missing, will be fixed soon :)</p>
 <p>That is all for now, more blog post with updates coming soon..)</p>
