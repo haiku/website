@@ -3,7 +3,7 @@ type = "blog"
 title = "[GSoc 2017] Adding Harfbuzz support to Haiku"
 author = "digib0y"
 date = "2017-05-06 22:36:57+00:00"
-tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "GSoC", "Google Summer of Code"] 
+tags = ["haiku", "software", "GSoC2017", "students", "summerofcode", "google", "GSoC", "Google Summer of Code","harfbuzz"] 
 +++
 <p>I am Deepanshu(Trac: digib0y IRC:digib0y), I am one of the seven students selected for GSoC this year from Haiku. I will be working to add Harfbuzz support this summer.</p>
 
