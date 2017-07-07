@@ -26,10 +26,36 @@ tags = ["localization makefile-engine makefile"]
 <pre>BString *string = new BString(B_TRANSLATE("Invert selection"));
 </pre></li>
 
-<li><p><b><tt>B_TRANSLATE_COMMENT</tt></b> allows you to leave an explanatory comment for the translators. For example:</p>
-<pre>BString string = B_TRANSLATE_COMMENT("%s% settings", "Don't translate the variable %s%");
+<li><p><b><tt>B_TRANSLATE_COMMENT</tt></b> allows you to leave an explanatory comment for the translators as a second parameter. For example:</p>
+<pre>BString string = B_TRANSLATE_COMMENT("Connection refused", "As it's shown in the status bar, translate the string as short as possible.");
 </pre></li>
 </ul>
+
+<p>Here are two slightly more involved changes to make certain situations properly localizable.</p>
+<ul>
+<li><p>You mustn't concatenate strings by just stringing them together. The order of the strings may be different for different languages. Assuming the "<tt>filename</tt>" is a variable holding a file name, you often see something like this:</p>
+<pre>BString text(filename);
+text += " already exists.";
+</pre>
+<p>Instead, you should reference that file name in a variable, that you then replace with the file name:</p>
+<pre>BString text(B_TRANSLATE("%file% already exists."));
+text.ReplaceAll("%file%", filename);
+</pre></li>
+
+<li>Correctly handling plural forms is where a localization can shine or suck.<br />
+This sucks:</p>
+<pre>BString text(B_TRANSLATE("You have %number% mail(s)."));
+text.ReplaceAll("%number%", numberOfMailsAsString);</pre>
+<p>While this looks a bit more complicated, but is much nicer:</p>
+<pre>BString text;
+static BMessageFormat format(B_TRANSLATE("{0, plural,"
+	"=0{You have no mail.}"
+	"=1{You have one mail.}"
+	"other{You have # mails.}}"));
+format.Format(text, numberOfMailsAsInt);
+</pre>
+<p>The ""<tt>#</tt>" is replaced with the integer variable "<tt>numberOfMailsAsInt</tt>" when formatting it all and putting it into the "<tt>text</tt>" string in the last line.<br />
+You'll have to include "<tt>MessageFormat.h</tt>".</p>
 
 <h2>2. Changes to the Makefile</h2>
 
@@ -62,4 +88,4 @@ make bindcatalogs</pre>
 <p>So, after the regular built, you do the <tt>make bindcatalogs</tt> to put the catalogs created from the catkeys into the executable's resources.</p>
 <p><br /></p>
 <hr />
-<div class="alert alert-info">There's a thread "<a href="https://www.haiku-os.org/community/forum/catkeys_translators_needed_3rd_party_apps">Catkeys translators needed for 3rd party apps</a>" in the forum. If you need catkeys translations for your apps, you may want to post a request there.</div>
+<div class="alert alert-info">If you need catkeys translations for your apps, you may want to have a look at the <a href="https://i18n.haiku-os.org/pootle/projects/3rd_party/">Pootle site for 3rd party projects</a>.</div>
