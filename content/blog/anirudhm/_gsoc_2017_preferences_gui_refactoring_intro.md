@@ -3,7 +3,7 @@ type = "blog"
 title = "[GSoC 2017] Preferences GUI Refactoring Intro"
 author = "anirudhm"
 date = "2017-05-06 23:32:54+00:00"
-tags = ["haiku", "gsoc2017", "gsoc"]
+tags = ["haiku", "gsoc", "gsoc2017", "preferences"]
 +++
 
 Hello World.
