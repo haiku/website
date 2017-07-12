@@ -3,7 +3,7 @@ type = "blog"
 title = "[GSoC 2017] Porting Swift to Haiku - Week #6 #7"
 author = "return0e"
 date = "2017-07-11 23:20:21+01:00"
-tags = ["haiku", "gsoc17", "swift" "software"]
+tags = ["haiku", "gsoc17", "swift", "software"]
 +++
 
 TL;DR: Compiling Swift programs works, added C library interoperability and adding support for running the test-suite.
