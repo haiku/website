@@ -14,7 +14,7 @@ The key highlights that distinguish Haiku from other operating systems include:
   * Specific focus on personal computing
   * Custom kernel designed for responsiveness
   * Fully threaded design for great efficiency with multi-processor/core CPUs
-  * Rich OO API for faster development
+  * Rich object-oriented API for faster development
   * Database-like file system (BFS) with support for indexed metadata
   * Unified, cohesive interface
 
