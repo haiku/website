@@ -117,7 +117,7 @@ Haiku Inc. is the non-profit organization based in the United States whose goal 
 The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
 
 ### Will there be a 64-bit version of Haiku?
-For R1 we are only targeting x86-32 (i586 and newer). However, there is a Haiku version for x86-64 that doesn't have official support for now; it's not as complete as the main version yet. You can download a nightly build of it on [download.haiku-os.org](https://download.haiku-os.org/nightly-images/x86_64/).
+For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 64-bit x86_64. The 32-bit release is compatible with the BeOS at a binary and API level. The 64-bit release is _not_ binary compatible with BeOS, but still enjoys compatibility with the powerful BeOS API (while offering modern features). The 32-bit Haiku release can run most BeOS applcations without modification or recompiling.
 
 ## Package Management
 Some common questions around the installation of software packages under Haiku.
@@ -172,9 +172,9 @@ You can check the status of the releases at the [roadmap page](https://dev.haiku
 
 ## Technology
 ### I heard Haiku still uses GCC2, is that true?
-GCC2 is used to compile a big part of the system in order to ensure binary compatibility with BeOS. One of the changes in version 3 of gcc was the introduction of a new mangling convention for the C++ language, which unfortunately makes it impossible to link gcc2 and gcc3+ compiled binaries or libraries. Because of this, we are still using and maintaining a fork of gcc2 allowing us to provide BeOS compatibility.
+Our own interal fork of GCC2 is used to compile the x86 32-bit release to maintain BeOS binary compatibility. While GCC2 is the primary compiler for the x86 32-bit release, it also includes GCC 5.4.0 which can be leveraged to compile newer applications requiring it.
 
-Note that this limitation only applies to the x86 (32-bit) version of Haiku. Other versions are not providing binary compatibility with BeOS and are free from this restriction, so they use a more up to date compiler.
+Other architectures (including x86_64) don't leverage GCC2.
 
 ### Is there support for newer GCC compilers?
 Yes! In order to provide support for a modern version of C++ and up to date libraries, the official versions of Haiku come with both gcc2 and gcc5 installed, and a set of libraries suitable for use with each compiler. If you are not interested in BeOS support, we also provide an (unsupported) version of the system that uses only gcc4.
@@ -199,7 +199,7 @@ The SysRq key is usually the same as "print screen", but may need to press an ex
 
 ## Hardware
 ### What are the minimum hardware requirements to run Haiku?
-Haiku will run on a Pentium or better CPU with 128MiB of RAM, 600MiB of storage space and a VESA compliant video card. In fact, it has been tested to work on CPUs as slow as a Pentium II 400MHz with 64MiB of RAM.
+The x86 32-bit release of Haiku will run on a Pentium or better CPU with 128MiB of RAM, 600MiB of storage space and a VESA compliant video card. In fact, it has been tested to work on CPUs as slow as a Pentium II 400MHz with 64MiB of RAM.
 
 However, for a satisfactory user experience, we recommend **at least** a Pentium III with 256MiB of RAM and 2GiB of storage space.
 For compiling Haiku within itself, 1GiB of memory is recommended.
