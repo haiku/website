@@ -23,21 +23,21 @@ Haiku's source code is currently being hosted in a <a href="http://git-scm.com/"
 <ul>
 <li><h4>Build Tools:</h4>
 <pre class="terminal">
-git clone git://git.haiku-os.org/buildtools
-</pre>
-or (if the git protocol is blocked by a firewall or if you prefer to access the source through an encrypted channel):
-<pre class="terminal">
 git clone https://git.haiku-os.org/buildtools
+</pre>
+or (if you have a problem with https)
+<pre class="terminal">
+git clone git://git.haiku-os.org/buildtools
 </pre>
 </li>
 
 <li><h4>Haiku:</h4>
 <pre class="terminal">
-git clone git://git.haiku-os.org/haiku
+git clone https://git.haiku-os.org/haiku
 </pre>
 or:
 <pre class="terminal">
-git clone https://git.haiku-os.org/haiku
+git clone git://git.haiku-os.org/haiku
 </pre>
 </li>
 </ul>
