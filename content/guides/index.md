@@ -12,12 +12,17 @@ Haiku can easily be installed several ways utilizing pre-built images from the H
 
 <p>
 <h4><a name="haiku_virtualization"></a><img src='/images/App_Generic_32.png'> <a href='/guides/virtualizing'>Virtualizing Haiku</a></h4>
-<p>Installing Haiku in a virtual machine is a bit easier than just installing it on a regular PC, but for those not familiar with virtual machines, it can be a bit confusing.</p>
+Installing Haiku in a virtual machine is a bit easier than just installing it on a regular PC, but for those not familiar with virtual machines, it can be a bit confusing.</p>
 </p>
 
 <p>
 <h4><a name="booting_haiku"></a><img src='/images/System_Kernel_32.png'> <a href='/guides/booting'>Booting Haiku</a></h4>
 Various methods and procedures to boot Haiku.
+</p>
+
+<p>
+<h4><a name="network_booting_haiku"></a><img src='/images/Prefs_Network_32.png'> <a href='/guides/network_booting'>Network Booting Haiku</a></h4>
+Booting Haiku over a local network.
 </p>
 
 <p>
@@ -32,6 +37,4 @@ Problems do occur with computers.  Various troubleshooting techniques for an arr
 
 <h4><a name="build_from_source"></a><img src='/images/ide_project_32.png'> <a href='/guides/building'>Building Haiku</a></h4>
 <p>Building Haiku from sources is a surprisingly simple process which allows developers to get started quickly developing on Haiku and allowing end users to experiment with the latest Haiku sources.
-</p>
-
 </p>
