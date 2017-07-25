@@ -34,21 +34,21 @@ more improvements that I would be working on.</p>
 and month view and they are in progress. I also worked on storing and loading of
 app preferences and refactored the way it was previously implemented. I also
 improved the day view UI and included category indicator in event list items
-(blue indicates default category). KapiX's [Koder](https://github.com/KapiX/Koder)
-and Humdingerb's [QuickLaunch](https://github.com/humdingerb/quicklaunch) were
-useful resoruces in implementation of preferences settings and work on event
-list view respectively. Thanks to them.</p>
+(blue indicates default category). KapiX's <a href="https://github.com/KapiX/Koder">
+Koder</a> and Humdingerb's <a href="https://github.com/humdingerb/quicklaunch">
+QuickLaunch</a> were useful resoruces in implementation of preferences settings
+and work on event list view respectively. Thanks to them.</p>
 
 <p><b>Preview of current state:</b></p>
-
+<br>
 <p><img src="/files/blog/AkshayAgarwal007/calendar_preview.png" alt="Calendar-Preview" class="img-responsive center-block"></p>
 
 <p><i>The toolbar icons are just placeholder icons. Icons for the same are welcome. 
 (Something on this line <a href="https://www.haiku-os.org/files/blog/AkshayAgarwal007/add-event.png">
 Day View Mockup </a>) Also improved icon for the main application icon
 are welcome.</i></p>
-
-<p><b>Github Repo</b>: 
+<br>
+<p><b>GitHub Repo</b>:
 <a href="https://github.com/AkshayAgarwal007/Calendar">AkshayAgarwal007/Calendar</a></p>
-
+<br>
 <p>Thank you for reading.</p>
