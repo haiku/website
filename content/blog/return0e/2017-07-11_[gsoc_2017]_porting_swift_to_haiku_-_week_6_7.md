@@ -19,7 +19,10 @@ With the exception of some small hacks which will be eventually removed and apar
 
 References:
 
-[1] ["strace of swiftc"]("https://gist.github.com/return/73b9adbd1466255c7c9d06e8f58aac8e")
-[2] [readFromAPipe function]("https://github.com/return/swift/blob/swift-3.1-haiku/lib/Basic/Unix/TaskQueue.inc#L247")
-[3] ["TaskQueue execute loop"]("https://github.com/return/swift/blob/swift-3.1-haiku/lib/Basic/Unix/TaskQueue.inc#L326")
-[4] [stdlib tests under FreeBSD]("https://lists.swift.org/pipermail/swift-dev/Week-of-Mon-20160104/000737.html")
+[1] [strace of swiftc](https://gist.github.com/return/73b9adbd1466255c7c9d06e8f58aac8e)
+
+[2] [readFromAPipe function](https://github.com/return/swift/blob/swift-3.1-haiku/lib/Basic/Unix/TaskQueue.inc#L247)
+
+[3] [TaskQueue execute loop](https://github.com/return/swift/blob/swift-3.1-haiku/lib/Basic/Unix/TaskQueue.inc#L326)
+
+[4] [stdlib tests under FreeBSD](https://lists.swift.org/pipermail/swift-dev/Week-of-Mon-20160104/000737.html)
