@@ -3,7 +3,7 @@ type = "blog"
 title = "[GSoC 2017 - BTRFS Write Supports] Week #6 #7 #8"
 author = "HyChe"
 date = "2017-07-07 23:15:13+07:00"
-tags = ["haiku", "software"]
+tags = ["haiku", "gsoc2017", "gsoc", "filesystem", "btrfs"]
 +++
 
 ### Hello again,
