@@ -62,7 +62,173 @@ The Be engineers that originally wrote this BFoo purposely added some data paddi
 <p>Voila! More data without making the class bigger. Notice the added destructor; make sure you're cleaning up your new (dynamically allocated) data.</li>
 </ol>
 
-<p>And there you have it: Binary Compatibility in 3 Easy Steps! Questions, comments, or corrections? Please let me know! (erik:at:cgsoftware.com)</p>        </div>
+<h3>More about vtables</h3>
+
+<p>A vtable (or virtual functions table) is created for each class with virtual
+methods. It allows the compiler to find the right version of the method to call,
+no matter how much subclassing and overriding of methods took place.</p>
+
+<p>Like for the object content, the vtable is part of the ABI, so its layout
+(size, and order of the contents) must not change.</p>
+
+<p>If that principle was followed strictly, it would not be possible to ever add
+or remove a new virtual method to a class (because that would change the vtable
+size). Over the years, this became quite a problem in Haiku, as we needed to
+extend several classes with new functionality.</p>
+
+<p>Fortunately, the Be engineers had planned for a way to achieve that. Just like
+for the object data, they added some reserved slots to each class. Usually it
+looks something like this:
+
+<pre>
+	class BFoo {
+		public:
+			virtual void Foo();
+
+		private:
+			virtual void Reserved1();
+			virtual void Reserved2();
+	};
+</pre>
+</p>
+
+<p>When you need to add a new virtual method to such a class, you can do just
+this:
+<pre>
+	class BFoo {
+		public:
+			virtual void Foo();
+			virtual void NewFancyStuff();
+
+		private:
+			virtual void Reserved2();
+	};
+</pre>
+
+Then, the vtable layout is not changed, and ABI is preserved!
+</p>
+
+<h3>… Or is it?</h3>
+
+<p>Well, actually, there is more to it. Let's see how the vtable looks for a
+subclass of BFoo declared this way:
+<pre>
+	class MyFoo : public BFoo {
+		public:
+			void Foo() override;
+	};
+</pre>
+
+This class overrides the Foo method from BFoo, but leaves the two reserved
+methods untouched. Hence its vtable will have 3 entries:
+
+<table>
+	<tr><td>MyFoo::Foo</td></tr>
+	<tr><td>BFoo::Reserved1</td></tr>
+	<tr><td>BFoo::Reserved2</td></tr>
+</table>
+</p>
+
+<p>As you can see, and unfortunately, the vtable references the reserved methods.
+When these are removed from BFoo, suddenly we get an undefined reference, as
+the vtable references methods which are now gone. So, we need to make this work
+somehow.</p>
+
+<p>We cannot re-add the method to BFoo, because if we make it virtual, it would
+change the vtable side, and if we don't, it wouldn't have the same mangled name
+("mangled" names are a conversion of C++ method names to a longer and somewhat
+cryptic string, used so that the linker can differenciate methods with the same
+name but different implementations, for example taking different parameters or
+being from different classes).</p>
+
+<p>So, we have to manually provide a symbol which looks like the now gone
+reserved method. Fortunately, the C++ language is flexible enough to let us do
+this (well, by bending it a little stronger than usual). First, we need to know
+the mangled name of the method. There does not seem to be an easy tool for that,
+so you will need to use readelf or objdump to list library symbols to find it.
+Then we declare this symbol as an extern C function:
+
+<pre>
+extern "C" void Reserved1__3Foo()
+{
+}
+</pre>
+
+The extern "C" tells the compiler to not mangle the name further (it uses C
+mangling rules, which are essentially "just use the function name as is"). Note
+that some extra care is needed when using different versions of gcc, as they do
+not all use the same mangling rules for C++ (this is the main reason Haiku is
+still required to use gcc2 to provide BeOS compatibility).
+</p>
+
+<p>So, we fixed our undefined reference, and our program is running again.
+But, there is an additionnal problem. MyFoo is still referencing BFoo::Reserved1
+in its vtable. So, if someone writes:
+
+<pre>
+MyFoo foo;
+foo.NewFancyStuff();
+</pre>
+
+It will not work, because the Reserved1 method will be called instead. Since we
+cannot fix the vtable, we have to live with that extra indirection and make our
+replacement for Reserved1 do the right thing:
+</p>
+
+<pre>
+extern "C" void Reserved1__3Foo(Foo* object)
+{
+	object-&lt;Foo::NewFancyStuff();
+}
+</pre>
+
+There are several things happening there:
+<ul>
+<li>Reserved1 now takes a Foo object as its first argument. This is where the
+"this" pointer is placed when calling a method in C++, and that is how the
+compiler thinks Reserved1 should be called.</li>
+<li>We use that pointer to call the new method NewFancyStuff.</li>
+<li>We take care of calling it with the Foo:: prefix, which forces the
+comiler to skip any subclass vtable and look for the implementation in Foo
+directly.</li>
+</ul>
+</p>
+
+<p>And that should be it! We are now ABI compatible!</p>
+
+<h3>Except when more subclasses are involved!</h3>
+
+<p>Ah yes, right. There is an additional problem we need to solve. Given a base class BView and a derived
+class BButton which both live in libbe, as well as a third-party class
+FooButton. When reusing e.g. the virtual slot _ReservedView4() in BView to
+implement PreferredSize() we create a similar situation, with an additional
+snag: Initially both BView's, BButton's, and FooButton's vtable referred to
+BView::_ReservedView4(). After introducing BView::PreferredSize() and
+overriding it in BButton, FooButton still refers to BView::_ReservedView4(),
+i.e. invoking PreferredSize() on a FooButton calls the reserved symbol
+function we provide for compatibility. Having it Call BView::PreferredSize(),
+similar to the previous example, is not quite what we want, however, since we
+actually want BButton::PreferredSize() to be called.
+</p>
+
+<p>
+The solution the software engineers at Be Inc. came up with, is the following:
+The root class of the class hierarchy, BArchivable, defines a virtual method
+Perform() which every class in the hierarchy overrides (or should override).
+The method provides a mechanism to emulate a virtual function call.
+</p>
+
+<p>
+In the PreferredSize() example, the compatibility function
+_ReservedView4__5BView() doesn't call BView::PreferredSize() directly, but
+instead it calls Perform(PERFORM_CODE_PREFERRED_SIZE,...). All derived classes
+that override PreferredSize() also need to handle PERFORM_CODE_PREFERRED_SIZE
+in their Perform() implementation and call their respective implementation of
+the PreferredSize() method, i.e. for BButton that's BButton::PreferredSize().
+</p>
+
+<p>And there you have it: Binary Compatibility in 3 (not-so-)Easy Steps!</p>
+		</div>
         </div>
 </div>
   
