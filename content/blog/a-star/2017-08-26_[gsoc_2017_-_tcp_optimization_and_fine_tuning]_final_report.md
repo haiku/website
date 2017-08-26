@@ -41,7 +41,11 @@ tags = ["haiku", "software", "gsoc", "tcp", "gsoc2017", "network"]
 	</ol>
 </p>
 
-<p> Thanks for reading. It's been awesome this summer.</p>
+<h4>What's left out</h4>
+
+<p>Some of the extensions such as extended SACK, urgent data mechanism and Path MTU discovery are yet to be implemented. I will work on them shortly.</p>
+
+<b> Thanks for reading. It's been awesome this summer.</b>
 
 
 	
