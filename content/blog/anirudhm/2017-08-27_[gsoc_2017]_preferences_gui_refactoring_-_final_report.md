@@ -55,4 +55,4 @@ As proposed, SuperPrefs now boasts:
 
 If you’re a student and reading this for future GSoC programs, I’d highly recommend you to submit a proposal for Haiku. So, it’s been an amazing summer, thanks again Haiku and the Google Summer of Code team.
 
-[Anirudh](http://www.anirudhmurali.com) | m.anirudh18@gmail.com | [LinkedIn](https://www.linkedin.com/in/manirudh/)
+[Anirudh](http://www.anirudhmurali.com) | [LinkedIn](https://www.linkedin.com/in/manirudh/)
