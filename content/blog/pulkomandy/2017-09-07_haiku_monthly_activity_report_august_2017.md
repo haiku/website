@@ -8,7 +8,7 @@ tags = []
 
 <p>Hi there, it's time for a new monthly report!</p>
 
-<p>This report covers hrev31437-hrevXXXXX</p>
+<p>This report covers hrev31437-hrev51402</p>
 <p>First of all, I have updated the git stats pages for <a href="http://pulkomandy.tk/stats">haiku</a> and <a href="http://pulkomandy.tk/stats_hp">haikuports</a>. These provide an overview of the overall activity with various graphs, author ranking, etc.</p>
 
 <p>Anyway, let's see what happened in Haiku this month. As you know, it was the 3rd month of the coding period, and several patches from our GSoC students were merged in (and there is more to come as we continue reviewing their work). You can already enjoy a faster TCP stack, several improvements to the locale kit, and partial write support for btrfs (do not use in production, still experimental).</p>
