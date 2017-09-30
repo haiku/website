@@ -2,9 +2,9 @@
 draft = true
 type = "article"
 title = "Release Notes"
-date = "NEEDS_ACTUAL_DATE"
 tags = []
 +++
+date = "NEEDS_ACTUAL_DATE"
 
 It's been almost five years since Haiku's last release in November 2012 &mdash; too long. Most of the delay was due to a handful of infrastructural issues that took some time to get ironed out. Please keep in mind that this is beta-quality software, which means it is feature complete but still contains known and unknown bugs. While we are mostly confident in its stability, we cannot provide any assurances against data loss.
 
