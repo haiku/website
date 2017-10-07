@@ -46,7 +46,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 **Additional requirements for ARM:**
 
-```sudo apt-get install u-boot-tools util-linux mtools device-tree-compiler```
+```sudo apt-get install u-boot-tools util-linux mtools device-tree-compiler bc```
 
 <a name="pacman"></a>
 ## ![pacman](/files/os-icons/arch-32.png) pacman (ArchLinux)
@@ -57,7 +57,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 **Additional requirements for ARM:**
 
-```sudo pacman -S yaourt uboot-tools mtools```
+```sudo pacman -S yaourt uboot-tools mtools bc```
 
 <a name="yum"></a>
 ## ![yum](/files/os-icons/fedora-32.png) RPM-based GNU/Linux Distributions using yum(Fedora, CentOS...)
@@ -68,7 +68,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 **Additional requirements for ARM:**
 
-```sudo yum install mtools libfdt```
+```sudo yum install mtools libfdt bc```
 
 <a name="zypper"></a>
 ## ![zypper](/files/os-icons/suse-32.png) RPM-based GNU/Linux Distribution using zypper (OpenSUSE, SLES)
@@ -86,7 +86,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 **Additional requirements for ARM:**
 
-```sudo emerge -av u-boot-tools mtools util-linux dtc```
+```sudo emerge -av u-boot-tools mtools util-linux dtc bc```
 
 <a name="bsd"></a>
 ## ![freebsd](/files/os-icons/freebsd-32.png) BSD Based Distribution (FreeBSD)
