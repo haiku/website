@@ -10,23 +10,40 @@ It's been almost five years since Haiku's last release in November 2012 &mdash; 
 
 As a result of such a long gap between releases, there are a lot more changes in this release than in previous ones, and so this document is weightier than it has been in the past. The notes are mostly organized in order of importance and relevance, not chronologically, and due to the sheer number of changes, thousands of smaller improvements simply aren't recognized here.
 
-## System requirements
+## Variants
 
-This release sees the addition of official x86_64 images, alongside the existing x86 32-bit ones. Note that these images are incapable of running BeOS (GCC2) applications, but they are as (or more) stable than the 32-bit ones.
+This release sees the addition of official 64-bit x86_64 images, alongside the existing 32-bit x86_gcc2 ones.
 
-<table><tr><td>
-<h4>MINIMUM</h4>
- - **Processor**: Intel Pentium II; AMD Athlon
- - **Memory:** 256MB
- - **Monitor:** 800x600
- - **Storage:** 1GB
-</td><td>
-<h4>RECOMMENDED</h4>
- - **Processor**: Intel Core 2 Duo; AMD Athlon II
- - **Memory:** 2GB
- - **Monitor:** 1366x768
- - **Storage:** 8GB
-</td></tr></table>
+{{< alert-info "BeOS ABI" "64-bit releases are not capable of running BeOS (GCC2) applications without them being recompiled.">}}
+
+### Haiku 32-bit
+
+  - **Architecture:** x86_gcc2
+  - **BeOS Binary Compatibility:** Yes
+  - **Compiler:** gcc 2.95.3 (x86_gcc2) + gcc 5.4.0 (x86)
+  - **Minimum system requirements**
+    - **Processor**: Intel Pentium II; AMD Athlon
+    - **Memory:** 256MiB
+    - **Monitor:** 800x600
+    - **Storage:** 1GiB
+  - **Recommended system configuration**
+    - **Processor**: Intel Core 2 Duo; AMD Athlon II
+    - **Memory:** 2GB
+    - **Graphics Card:** ATI/AMD, Intel
+    - **Monitor:** 1366x768
+    - **Storage:** 8GiB
+
+### Haiku 64-bit
+
+  - **Architecture:** 64-bit x86_64
+  - **BeOS Binary Compatibility:** No
+  - **Compiler:** gcc 5.4.0 (x86_64)
+  - **Minimum system requirements**
+    - **Processor**: 64-bit CPU. Intel Core 2 (2006+); AMD Opteron (2003+)
+    - **Memory:** 2GiB
+    - **Graphics Card:** ATI/AMD, Intel
+    - **Monitor**: 800x600
+    - **Storage:** 8GiB
 
 ## New features
 
