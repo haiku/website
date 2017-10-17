@@ -3,7 +3,7 @@ type = "blog"
 author = "PulkoMandy"
 title = "Back from GSoC mentor summit"
 date = "2017-10-16T20:26:14.000Z"
-tags = [GSoC Google Summit Meetup]
+tags = ["GSoC", "Google", "Summit", "Meetup"]
 +++
 
 <p>Hi there! This week-end was the <a href="http://summerofcode.withgoogle.com">Google Summer of Code</a> mentor summit.
