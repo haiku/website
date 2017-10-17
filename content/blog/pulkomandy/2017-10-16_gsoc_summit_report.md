@@ -17,7 +17,7 @@ year (by a combination of an extra mentor allowed because we do GCI, putting peo
 slots freed by other orgs sending only one (or 0) mentor), having some Haiku people working at Google and helping run
 the event, and an hand-crafted badge to get into the event without registering)</p>
 
-<img src="/files/blog/pulkomandy/GSoCMentoSummit2017/people.jpg"/>
+<img src="/files/blog/pulkomandy/GSoCMentoSummit2017/haiku.jpg"/>
 <p>Left to right: Scott McCreary, Bruno G. Albuquerque, Rene Gollent, Urias McCullough, Jessica Hamilton, Adrien Destugues</p>
 
 <p>This year the week-end started with a more formal than usual social event. After checking out our rooms at the hotels, we took
