@@ -30,6 +30,8 @@ for (var i = 0; i < tabs.length; i++) {
 				LoadTicketsTab(tab);
 			else if (tab.id == "ml")
 				LoadMailingListTab(tab);
+			else if (tab.id == "pkgs")
+				LoadPackagesTab(tab);
 		}
 	});
 }
@@ -121,6 +123,21 @@ function LoadMailingListTab(tab) {
 			var itm = items[i];
 			html += MakeListItem(InnerXML(itm.querySelector("link")).replace("http:", "https:"),
 				InnerXML(itm.querySelector("title")), undefined);
+		}
+		html += "</ul>";
+		tab.children[0].remove();
+		tab.innerHTML = html + tab.innerHTML;
+	});
+}
+function LoadPackagesTab(tab) {
+	getURL("/exapi/packages?natlangcode=en&limit=10&types=CREATEDPKGVERSION", function (res) {
+		var doc = new DOMParser().parseFromString(res, "text/xml");
+		var html = "<ul>";
+		var items = doc.querySelectorAll("entry");
+		for (var i = 0; i < DISPLAY_ITEMS_COUNT && i < items.length; i++) {
+			var itm = items[i];
+			html += MakeListItem(itm.querySelector("link").getAttribute("href").replace("http:", "https:"),
+				InnerXML(itm.querySelector("title")).replace(/(.*) - PkgVersion\[versionCoordinates=(.*)\] - (.*) : new version/, "$1 $2 ($3) ") + InnerXML(itm.querySelector("summary")), new Date(InnerXML(itm.querySelector("updated"))));
 		}
 		html += "</ul>";
 		tab.children[0].remove();
