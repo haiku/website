@@ -14,7 +14,7 @@ To give us the best assistance resolving bugs within Haiku, please be sure to ad
 When Haiku fails to boot on a machine, it generally fails in one of the following ways:
 
   1. White [Kernel Debug Land](#kernel-debug-land) (kdl) box
-  2. [Black screen after booting](#black-screen-after-booting)
+  2. [Blank or corrupted screen after booting](#blank-or-corrupted-screen-after-booting)
   3. [Instant reboot](#instant-reboot)
 
 ## Kernel Debug land
@@ -37,17 +37,19 @@ Since obtaining the data in a KDL can be challenging at times, the following ste
   2. A picture is taken of all text on the screen ensuring the text is as clear as possible.
   3. The picture is provided to existing or new bug reports with the architecture and build (hrevXXXXXX)
 
-## Black screen after booting
+## Blank or corrupted screen after booting
 
-A black screen after booting can be caused by several different issues and is a tricky issue to debug.
+A black, blank, or corrupted screen after booting can be caused by several different issues and can be a tricky issue to debug.
 
 ### Mitigation
 
-The easiest approach to resolving a black/blank screen at boot is to leverage the `Use fail-safe video mode` [boot option](/docs/userguide/en/bootloader.html). This will disable any specialized hardware acceleration or mode setting and fall back to basic VESA or Frame buffer based video resolutions and rendering.
+The easiest approach to resolving a black/blank/corrupted screen at boot is to leverage the `Use fail-safe video mode` [boot option](/docs/userguide/en/bootloader.html). This will disable any specialized hardware acceleration or mode setting and fall back to basic VESA or Frame buffer based video resolutions and rendering.
+
+{{< alert-info "Tip" "You can configure Haiku to always boot using the fail-safe video driver by enabling 'fail_safe_video_mode' in ~/config/settings/kernel/drivers/kernel">}}
 
 ### Reporting
 
-Reporting detailed information from black screen systems can be difficult given their nature. Sometimes the host is responsive, however the end user is unable to determine the state of the machine.
+Reporting detailed information from computers experiencing black/blank/corrupted screens can be difficult given their nature. Sometimes the host is responsive, however the end user is unable to determine the state of the machine.
 
   1. [Serial Debugging](serial) is the fastest and most accurate way to obtain debug data from a uncooperative system. This method however requires a built-in serial port and specialized hardware and cables.
   2. Obtaining system logs is possible in some circumstances.
