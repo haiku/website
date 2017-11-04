@@ -8,7 +8,7 @@ tags = []
 
 <p>Hey there! It's time for the monthly report!</p>
 
-<p>This report covers hrev51465-hrevXXXXX.</p>
+<p>This report covers hrev51465-hrev51517.</p>
 
 <h3>Packages</h3>
 
@@ -52,3 +52,7 @@ tags = []
 <h3>Drivers</h3>
 
 <p>The FTDI USB serial-port driver now works better with modern FTDI chips. Previously this driver only handled the old generation USB1 ones.</p>
+
+<h3>Translators</h3>
+
+<p>The WebP translator recognizes more type of WebP files. The format is quite flexible and can do many things (lossy, lossless, ...).</p>
