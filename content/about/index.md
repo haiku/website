@@ -31,3 +31,20 @@ Haiku is developed by a growing community of volunteer developers from all aroun
 
   * [Discover the Haiku Community](/community)
   * Check out [Haiku Contributors](https://github.com/haiku/haiku/graphs/contributors) at GitHub
+
+### Who are the maintainers in the About window?
+
+Active developers are considered "Maintainers" of the Haiku operating system.
+
+  * Anyone who has contributed directly to the haiku or haikuporter codebase within the last 24 months.
+  * Anyone who has contributed directly to haikuports 12 or more times in the last 12 months.
+
+Changes to the maintainers list are done by hand and groomed to the best of our ability.
+If you feel left out (or unfairly included), let us know via the mailing lists!
+
+Example usage of git to check authors since December 2016:
+```
+git log --after=Dec2016 | grep Author: | sort | uniq -c | sort -n
+```
+
+Maintainers are moved to "Past Maintainers" once the conditions above are no longer true.
