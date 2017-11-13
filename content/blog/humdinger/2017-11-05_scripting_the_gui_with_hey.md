@@ -119,7 +119,7 @@ Use the "InternalName" instead. So this:
 
 becomes:
 
-    hey -o Time set Selection View "tabView" of Window 0 to 3
+    hey -o Time set Selection of View "tabView" of Window 0 to 3
 
 Checking a checkmark
 -----------------
@@ -174,5 +174,4 @@ The 'Network time' tab has a text field at the top:
 
 Or after a bit of nosing around with "get InternalName":
 
-	hey -o Time set Value of View 0 of View "Network time" of Window 0 to
- "Example text"
+	hey -o Time set Value of View 0 of View "Network time" of Window 0 to "Example text"
