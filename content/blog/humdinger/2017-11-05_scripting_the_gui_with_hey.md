@@ -16,7 +16,7 @@ Please comment, if you have more tips!
 
 As example application, we have a look at the Time preferences.
 
-![The Time preferences](/files/blog/humdinger/time_prefs.png)
+![The Time preferences](https://www.haiku-os.org/files/blog/humdinger/time_prefs.png)
 
 Moving and resizing a window
 ------------------------
@@ -48,7 +48,7 @@ It's not as straight forward as expected... To change to the "Clock" tab:
 
     hey -o Time set Selection of View 0 of View 0 of Window 0 to 3
 
-![The Clock tab](/files/blog/humdinger/time_clock.png)
+![The Clock tab](https://www.haiku-os.org/files/blog/humdinger/time_clock.png)
 
 You can explore the hierarchy of an app's GUI by counting the views in the window, getting their "InternalName" and looking at the output of the various "getsuites":
 
@@ -131,7 +131,7 @@ We're on the "Clock" tab of the Time preferences:
        "result" (B_STRING_TYPE) : "Clock"
        "error" (B_INT32_TYPE) : 0 (0x00000000)
 
-![The Clock tab](/files/blog/humdinger/time_clock.png)
+![The Clock tab](https://www.haiku-os.org/files/blog/humdinger/time_clock.png)
 
 Find the "Show clock in Deskbar" checkbox by checking the 'InternalName' of the views inside the "Clock" view. The checkbox itself is in another view "show clock box":
 
@@ -168,7 +168,7 @@ Filling out a text field
 
 The 'Network time' tab has a text field at the top:
 
-![A text field](/files/blog/humdinger/time_textfield.png)
+![A text field](https://www.haiku-os.org/files/blog/humdinger/time_textfield.png)
 
     hey -o Time set Value of View 0 of View 2 of View 0 of View 0 of View 0 of Window 0 to "Example text"
 
