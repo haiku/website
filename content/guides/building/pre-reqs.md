@@ -42,63 +42,87 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 **Basic requirements:**
 
-```sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool```
+```
+sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool
+```
 
 **Additional requirements for ARM:**
 
-```sudo apt-get install u-boot-tools util-linux mtools device-tree-compiler bc```
+```
+sudo apt-get install u-boot-tools util-linux mtools device-tree-compiler bc
+```
 
 <a name="pacman"></a>
 ## ![pacman](/files/os-icons/arch-32.png) pacman (ArchLinux)
 
 **Basic requirements:**
 
-```sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex cdrtools bc```
+```
+sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex cdrtools bc
+```
 
 **Additional requirements for ARM:**
 
-```sudo pacman -S yaourt uboot-tools mtools bc```
+```
+sudo pacman -S yaourt uboot-tools mtools bc
+```
 
 <a name="yum"></a>
 ## ![yum](/files/os-icons/fedora-32.png) RPM-based GNU/Linux Distributions using yum(Fedora, CentOS...)
 
 **Basic requirements:**
 
-```sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static```
+```
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static
+```
 
 **Additional requirements for ARM:**
 
-```sudo yum install mtools libfdt bc```
+```
+sudo yum install mtools libfdt bc
+```
 
 <a name="zypper"></a>
 ## ![zypper](/files/os-icons/suse-32.png) RPM-based GNU/Linux Distribution using zypper (OpenSUSE, SLES)
 
 **Basic requirements:**
 
-```sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel```
+```
+sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel
+```
 
 <a name="gentoo"></a>
 ## ![gentoo](/files/screenshots/gentoo-32_0_0.png) Portage based GNU/Linux Distribution (Gentoo)
 
 **Basic requirements:**
 
-```sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrkit wget nasm net-misc/curl bc```
+```
+sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrkit wget nasm net-misc/curl bc
+```
 
 **Additional requirements for ARM:**
 
-```sudo emerge -av u-boot-tools mtools util-linux dtc bc```
+```
+sudo emerge -av u-boot-tools mtools util-linux dtc bc
+```
 
 <a name="bsd"></a>
 ## ![freebsd](/files/os-icons/freebsd-32.png) BSD Based Distribution (FreeBSD)
 
 **Package based (FreeBSD < 10):**
-```sudo pkg_add -r bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl```
+```
+sudo pkg_add -r bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl
+```
 
 **Package based (FreeBSD >= 10):**
-```sudo pkg install bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl```
+```
+sudo pkg install bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl
+```
 
 **Ports based:**
-```sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/cdrtools-devel ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk```
+```
+sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/cdrtools-devel ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk
+```
 
 <a name="osx"></a>
 ## ![osx](/files/os-icons/macosx-32.png) OS X
