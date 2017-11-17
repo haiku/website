@@ -11,13 +11,13 @@ Haiku can be compiled for devices leveraging the ARMv7 or later processor archit
 
 ## Create a Compiler Toolchain
 
-Building the ARM compiler toolchain is quite easy using Haiku's ``configure`` tool.
+Building the ARM compiler toolchain is quite easy using Haiku's ```configure``` tool.
 
 > For a complete list of flags for the configure script, see [Haiku's Configure Options](/guides/building/configure)
 
 1. Perform a git clone haiku and buildtools
-2. Within the haiku source directory, create your workspace for ARM via ``mkdir generated.arm; cd generated.arm``
-2. Leverage configure to build your ARM toolchain. ``../configure -j2 --build-cross-tools arm ../../buildtools``
+2. Within the haiku source directory, create your workspace for ARM via ```mkdir generated.arm; cd generated.arm```
+2. Leverage configure to build your ARM toolchain. ```../configure -j2 --build-cross-tools arm ../../buildtools```
 
 ## Building an MMC (SD Card) Image
 
@@ -30,4 +30,4 @@ This will generate an MMC image suitable for booting Haiku on a real ARM hardwar
 
 The ARM images can also be emulated in QEMU. In the example below, we emulate a Raspberry Pi 2.
 
-``qemu-system-arm -M raspi2 -kernel haiku_loader.ub -initrd haiku-floppyboot.tgz.ub -dtb rpi2.dtb -m 2G``
+```qemu-system-arm -M raspi2 -kernel haiku_loader.ub -initrd haiku-floppyboot.tgz.ub -dtb rpi2.dtb -m 2G```
