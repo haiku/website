@@ -20,4 +20,4 @@ Editing is also supported for floating point values, as well as more restricted 
 
 <img src="/files/edit_window_picker.png" />
 
-This completes the missing pieces mentioned in my previous linked post, and I hope will make the life of our OS and app developers at least a little bit easier. Correspondingly, the <a href="https://www.dropbox.com/s/e6gx39r0asc2t8f/DebuggerReferenceManual.pdf?dl=1">reference manual</a> has been updated to include these new features. As always, feedback, comments, suggestions for improvements, etc. are welcome!
+This completes the missing pieces mentioned in my previous linked post, and I hope will make the life of our OS and app developers at least a little bit easier. Correspondingly, the <a href="/files/DebuggerReferenceManual.pdf">reference manual</a> has been updated to include these new features. As always, feedback, comments, suggestions for improvements, etc. are welcome!

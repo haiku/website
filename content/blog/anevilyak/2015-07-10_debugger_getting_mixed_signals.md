@@ -36,4 +36,4 @@ The drop down seen at the top allows a global default to be set for how signals 
 
 <h3>Manual v1</h3>
 
-While signals are the only new actual feature to be noted this time around per se, I have also been working on a reference manual for the debugger in order to help new developers learn how to use its capabilities, and where/how they can be found. I am happy to announce that I believe the manual is now in a state where it's ready for broader distribution, and can be found for download in PDF format <a href="https://www.dropbox.com/s/e6gx39r0asc2t8f/DebuggerReferenceManual.pdf?dl=1">here</a>. Feedback and suggestions for improvements welcome!
+While signals are the only new actual feature to be noted this time around per se, I have also been working on a reference manual for the debugger in order to help new developers learn how to use its capabilities, and where/how they can be found. I am happy to announce that I believe the manual is now in a state where it's ready for broader distribution, and can be found for download in PDF format <a href="/files/DebuggerReferenceManual.pdf">here</a>. Feedback and suggestions for improvements welcome!
