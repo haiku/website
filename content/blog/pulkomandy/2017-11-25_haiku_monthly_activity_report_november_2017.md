@@ -38,16 +38,16 @@ roughly in time order, rather than the usual categories.</p>
 
 <p>Alchimie is a demoparty around alternative computers. It takes place every 2 years near Valence. This year I attended it for the first time, mostly as an Amstrad CPC demomaker (my other hobby when I'm not doing Haiku things). However, mmu_man asked me to give a talk about Haiku, as he is usually doing it and everyone was joking that he was the only contributor. Since I was preparing a talk for the Capitole du Libre anyway, I gave mostly the same.<p>
 <p>I focused on all the issues the Haiku project is facing in many areas. The conference area was mostly full, with several devs from MorphOS and AmigaOS lands. They found it quite interesting that we are all facing very similar problems. It also led to some other interesting discussions and comparisons (we have SMP, but they have 3D acceleration!), and discussions about code review tools, the possibility for them to also reuse FreeBSD drivers, etc. Overall a quite successful talk.<p>
-<p>Later on I also attended a talk about yearly news in AmigaOS 4, then another showing the work in progress in porting or rewriting games for AmigaOS4, which involves stripping the shaders from unsupported stuff to get them running. We could also see the AmigaOne X5000, the latest Amiga machine, which surprised me by taking about a minute just to get to an u-boot prompt. AmigaOS itself still boots quite fast, but I don't know what they are doing before reaching the OS.</p>
+<p>Later on I also attended a talk about yearly news in AmigaOS 4, then another showing the work in progress in porting or rewriting games for AmigaOS4, which involves stripping the shaders from unsupported stuff to get them running. We could also see the AmigaOne X5000, the latest Amiga machine, which surprised me by taking about a minute just to get to a u-boot prompt. AmigaOS itself still boots quite fast, but I don't know what they are doing before reaching the OS.</p>
 
 <h3>Week 2</h3>
 
 <p>waddleplash reviewed and merged several patches which were pending on the bugtracker, including work by Dale Cieslak to speed up the character map application, old patches from Andreas Faerber to clean up the kernel network stack (used for network booting) on PowerPC, and a patch by Owen to improve keyboard shortcuts in file panels.</p>
 
-<p>Korli started work on the FreeBSD11 compatibility layer, bringing several wired network interfaces up to date. The work on wireless oens remains to be done.</p>
+<p>Korli started work on the FreeBSD11 compatibility layer, bringing several wired network interfaces up to date. The work on wireless ones remains to be done.</p>
 
 <p>kallisti5 introduced lutimes, a function required by POSIX which was not available yet.</p>
-<p>korli fixed the shm_open function to set the FD_CLOEXEC flag. POSIX cmpatibility subtleties again.</p>
+<p>korli fixed the shm_open function to set the FD_CLOEXEC flag. POSIX compatibility subtleties again.</p>
 <p>John Scipione tweaked the look of BSpinner</p>
 <p>Janus fixed various problems in the PowerStatus replicant, mainly to allow replicating it on the desktop after resizing (if you want that huge battery gauge, now you can).</p>
 <p>Kallisti5 got the UART output working again on the Raspberry Pi 2, allowing for debugging the kernel and boot process (it still crashes early on, but at least we can try to investigate now). He also cleaned various things in our shared UART code.</p>
@@ -108,7 +108,7 @@ roughly in time order, rather than the usual categories.</p>
 
 <p>mmlr reworked the remote app_server support and started work on an HTML5 client for it. This replaces the earlier existing attempt at an HTML5 backend for app_server, with a more modern one using canvas and websockets. There is still some work needed to get everything working properly, and this is quite complex to set up with no easy frontend, yet.</p>
 
-<p>I fixed an app_server crash when setting an empty drag bitmap, for examplethis could happen in the Locale preferences when dragging or double clicking items around.</p>
+<p>I fixed an app_server crash when setting an empty drag bitmap, for example this could happen in the Locale preferences when dragging or double clicking items around.</p>
 
 <p>mmu_man fixed a NULL pointer dereference in the UVC webcam driver. However, we were still unable to get it to display a picture.</p>
 
