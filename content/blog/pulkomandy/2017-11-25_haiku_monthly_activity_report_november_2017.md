@@ -12,10 +12,6 @@ and a coding sprint.</p>
 <p>Read on for our adventures climbing over a gate, planespotting, and
 eventually troubleshooting a real-scale flight simulator!</p>
 
-<h3>Alchimie 2017</h3>
-
-<p>On 11 and 12 of November,
-
 <p>This report also covers hrev51518-hrev51622.</p>
 
 <p>In order to better keep track of what happened during the sprint, this report is
@@ -30,7 +26,7 @@ roughly in time order, rather than the usual categories.</p>
 <p>John Scipione fixed various bugs in DeskBar and replicants, making it possible to resize the deskbar with automatic relayouting of the replicants.</p>
 <p>Philippe Houdoin reworked TextSearch to use xargs, making it a lot faster and more reliable.</p>
 <p>Greg Cain (a new contributor) fixed several problems in the XHCI driver, meaning we now have much better support for USB3 ports. There are still some problems and he is investigating them, however it is already enough to use USB3 ports with an HID mouse, and on some machines, even <strong>boot to the desktop from an USB3 port</strong>.</p>
-<p>John Scipione continued his work to document the API, this time focusing on the Locale Kit and number and diration formats.</p>
+<p>John Scipione continued his work to document the API, this time focusing on the Locale Kit and number and duration formats.</p>
 <p>A-star-ayush fixed some issues in the TCP work he did during GSoC. He is currently busy with exams, but should be soon back with more work in that area.</p>
 <p>Andrew Lindesay reworked the data download in HaikuDepot to improve the initial startup time of the application, as a lot of data (screenshots, icons, descriptions) have to be downloaded from the server.</p>
 
@@ -44,21 +40,21 @@ roughly in time order, rather than the usual categories.</p>
 
 <p>waddleplash reviewed and merged several patches which were pending on the bugtracker, including work by Dale Cieslak to speed up the character map application, old patches from Andreas Faerber to clean up the kernel network stack (used for network booting) on PowerPC, and a patch by Owen to improve keyboard shortcuts in file panels.</p>
 
-<p>Korli started work on the FreeBSD11 compatibility layer, bringing several wired network interfaces up to date. The work on wireless oens remains to be done.</p>
+<p>Korli started work on the FreeBSD11 compatibility layer, bringing several wired network interfaces up to date. The work on wireless ones remains to be done.</p>
 
 <p>kallisti5 introduced lutimes, a function required by POSIX which was not available yet.</p>
-<p>korli fixed the shm_open function to set the FD_CLOEXEC flag. POSIX cmpatibility subtleties again.</p>
+<p>korli fixed the shm_open function to set the FD_CLOEXEC flag. POSIX compatibility subtleties again.</p>
 <p>John Scipione tweaked the look of BSpinner</p>
-<p>Janus fixed variosu problems in the PowerStatus replicant, mainly to allow replicating it on the desktop after resizing (if you want that huge battery gauge, now you can).</p>
+<p>Janus fixed various problems in the PowerStatus replicant, mainly to allow replicating it on the desktop after resizing (if you want that huge battery gauge, now you can).</p>
 <p>Kallisti5 got the UART output working again on the Raspberry Pi 2, allowing for debugging the kernel and boot process (it still crashes early on, but at least we can try to investigate now). He also cleaned various things in our shared UART code.</p>
 <p>John Scipione fixed alignment of Tracker column titles with the scrollbar arrow.</p>
 
 <h3>Capitole du Libre</h3>
 
-<p>The Capitole du Libre is an event around free software (and hardware) in Toulouse. We were there with a Haiku booth for the 3rd (or 4th?) year. The event is a great success and keeps growing every year. As mentionned above, I gave a talk there. It was much less succesful than at the Alchimie, with maybe 4 or 5 people attending. This seems to be a combination of lots of interesting talks happening at the same time, and being scheduled as the first talk on sunday morining, after everyone had a busy night talking, eating, hacking, and doing whatever they do instead of sleeping.</p>
+<p>The Capitole du Libre is an event around free software (and hardware) in Toulouse. We were there with a Haiku booth for the 3rd (or 4th?) year. The event is a great success and keeps growing every year. As mentionned above, I gave a talk there. It was much less succesful than at the Alchimie, with maybe 4 or 5 people attending. This seems to be a combination of lots of interesting talks happening at the same time, and being scheduled as the first talk on sunday morning, after everyone had a busy night talking, eating, hacking, and doing whatever they do instead of sleeping.</p>
 <p>Besides the talk, the event is also an opportunity to meet and discuss with people from other projects. I had a try at porting Poezio, an XMPP command-line client, and got one of the developers to finally submit patches to haikuporter that we had started working on together back in july at the RMLL, and were sleeping on his laptop since then. I still hope to get him to boot is Haiku VM more often.</p>
 <p>This year our booth was just next to Purism, who were demoing their laptops and advertising their upcoming phone. Their goal is to provide devices which don't need any closed source software to run: no binary blobs, open source BIOS, etc. We wanted to try running Haiku, but their laptops boot straight into coreboot which can only load a Linux kernel, or maybe, possibly an UEFI executable. Since we only had a BIOS-based USB drive, this did not work. We will try to have at least an EFI one ready next time.</p>
-<p>I made some demos of Haiku, the usual things with filesystem attributes, playing several videos, plugging a MIDI keyboard (but several people complained about the latency), and showing CPU load on USB blinkenlights. François also had the usual 600MHz demo laptop, which still doesn't want to die afte rall those years.</p>
+<p>I made some demos of Haiku, the usual things with filesystem attributes, playing several videos, plugging a MIDI keyboard (but several people complained about the latency), and showing CPU load on USB blinkenlights. François also had the usual 800MHz demo laptop, which still doesn't want to die after all those years.</p>
 <p>On sunday morning, KapiX joined us and helped give some demos on the booth, explaining the goals of the project, and so on. It meant it was a little easier for us to visit other people, and I tried to convert people to Haiku by giving them home-made cookies. We'll see if new contributors pop-up thanks to this!</p>
 <p>In the evening, Hy Che joined us as the event was closing. He found his way thanks to helpful people around the tramway and metro lines. Thanks to them :)</p>
 
@@ -82,7 +78,7 @@ roughly in time order, rather than the usual categories.</p>
 
 <p>So, what did we work on during the sprint?</p>
 
-<p>I started by cleaning up and pushing some changes to BSecureSocket to relax the constraints on allowed SSL cipher suites. During the Capitole du Libr,e Web+ would not load the login portal web page without these changes.</p>
+<p>I started by cleaning up and pushing some changes to BSecureSocket to relax the constraints on allowed SSL cipher suites. During the Capitole du Libre, Web+ would not load the login portal web page without these changes.</p>
 <p>Right after this, I started investigating problems on a laptop I was recently donated. It works, except the backlight doesn't turn on.</p>
 <p>I was trying to use an ExpressCard to serial adapter, but could not get that working. After some investigation and help from mmu_man, we found out that there were two bugs in the serial debug code which made it impossible to change the base address for the serial port. After fixing these, we got serial output working... and the laptop booted to a fully working display!</p>
 <p>It seems that the problem is timing related, and the extra time spent sending serial debug message makes things slow enough that the initialization succeeds.</p>
@@ -90,7 +86,7 @@ roughly in time order, rather than the usual categories.</p>
 <p>I then downloaded Intel datasheets and tried to find what could be broken in the Intel driver. I did not find what I was looking for, but I found that changing the backlight was pretty easy to do, so I went ahead and added that. It is now possible to adjust it from the Screen preferences on Intel video cards.</p>
 <p>Meanwhile, KapiX finished his changes to PowerStatus and reworked the battery info window to use a vertical BTabView. It looks much better now, even if on most machines you will ever see only one single tab.</p>
 
-<p>I then investigated problems with FirstBootPrompt, which would not layout prperly. Eventually I found the explanation for the problem we were having, and the solution was just to force a minimal size on some of the widgets to make sure everything would fit, no matter the language used. It took some iterations to get everything right, but we now have a nice and working boot prompt. It was quite embarassing to have bugs in the first window shown to users when they start Haiku for the first time.</p>
+<p>I then investigated problems with FirstBootPrompt, which would not layout properly. Eventually I found the explanation for the problem we were having, and the solution was just to force a minimal size on some of the widgets to make sure everything would fit, no matter the language used. It took some iterations to get everything right, but we now have a nice and working boot prompt. It was quite embarassing to have bugs in the first window shown to users when they start Haiku for the first time.</p>
 
 <p>While playing with FirstBootPrompt, I managed to repeatedly crash the deskbar due to a race condition: it is not a good idea to change the current language while Deskbar tries to use it to format the time for the clock. I reworked DeskBar to cache some information and not re-create a time format object everytime it formats something.</p>
 
@@ -108,7 +104,7 @@ roughly in time order, rather than the usual categories.</p>
 
 <p>mmlr reworked the remote app_server support and started work on an HTML5 client for it. This replaces the earlier existing attempt at an HTML5 backend for app_server, with a more modern one using canvas and websockets. There is still some work needed to get everything working properly, and this is quite complex to set up with no easy frontend, yet.</p>
 
-<p>I fixed an app_server crash when setting an empty drag bitmap, for examplethis could happen in the Locale preferences when dragging or double clicking items around.</p>
+<p>I fixed an app_server crash when setting an empty drag bitmap, for example this could happen in the Locale preferences when dragging or double clicking items around.</p>
 
 <p>mmu_man fixed a NULL pointer dereference in the UVC webcam driver. However, we were still unable to get it to display a picture.</p>
 
