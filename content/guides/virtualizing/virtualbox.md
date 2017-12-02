@@ -28,29 +28,29 @@ After installing VirtualBox and downloading an ISO image, we can begin the insta
 
 We begin, by clicking the icon **`New`** (or pressing <kbd>Ctrl</kbd> + <kbd>N</kbd>):
 
-![](/files/image1_1.png)
+![](/files/guides/virtualizing/virtualbox/vbox_1.png)
 
 We need to specify what kind of guest operating system we are going to install. This is helpful in the pre-configuration of virtual machines – it applies default settings for supported OS’s. For Haiku, we are going to choose "*Other*" for operating system type and "*Other/Unknown*" for version:
 
-![](/files/image3.png)
+![](/files/guides/virtualizing/virtualbox/vbox_2.png)
 
 The next step is to define how much of the host’s physical memory we want to allocate for our virtual machine. This decision should be based on the amount of RAM the host has, but it is recommended to spend a minimum of 256MB of RAM to make it run smoothly. More memory can increase the performance of the VM, but too much can slow down the host, so there needs to be a balance between the VM and host machine resources:
 
-![](/files/image4.png)
+![](/files/guides/virtualizing/virtualbox/vbox_3.png)
 
 After we have done that, we need to create a hard disk image, which is going to be stored on the physical drive, at the specified location. We choose *Create a virtual harddrive now* (if it is not selected already) and click **`Create`**:
 
-![](/files/image5.png)
+![](/files/guides/virtualizing/virtualbox/vbox_4.png)
 
 Choose VDI and click **`Next`**.
 
-![](/files/image7_1.png)
+![](/files/guides/virtualizing/virtualbox/vbox_5.png)
 
 Here we can define how big the virtual hard disk should be. In most cases it is sufficient to use the default option, which is *Dynamically allocated*. This will allow the image file to grow as more content is saved in it, with no lack in functionality:
 
 The next slide will ask us for the location of the hard disk image file and the maximum size of the dynamically expanding file. Input the values and click **`Create`**:
 
-![](/files/image7_2.png)
+![](/files/guides/virtualizing/virtualbox/vbox_7.png)
 
 ##### Step 2. Configuring the virtual machine.
 
@@ -58,15 +58,15 @@ Now we need to configure our new virtual machine:
 
 First, click on the Settings icon that appeared for our virtual machine.
 
-![](/files/image8_0.png)
+![](/files/guides/virtualizing/virtualbox/vbox_8.png)
 
 The settings window allows the user to configure the hardware aspects of the virtual machine that the guest OS will be using.  First of all, we need to attach our ISO image with the Haiku installation to the virtual machine in the form of emulated CD-ROM drive. To do that, we choose *Storage* from the left panel, and then click on *Empty* in the *Storage Tree*. Then we click on the CD icon next to the CD/DVD Device drop-down list:
 
-![](/files/image9.png)
+![](/files/guides/virtualizing/virtualbox/vbox_9.png)
 
 Now we click on *Choose a virtual CD/DVD disk file...*. In the new window we point to the location where we stored our Haiku ISO image and then click **`Open`** to confirm. Here is what we will see after that:
 
-![](/files/image10.png)
+![](/files/guides/virtualizing/virtualbox/vbox_10.png)
 
 After you are done with configuring, click **`OK`** to go back to the main window.
 
@@ -78,11 +78,11 @@ The installation itself is quite simple and does not differ really from a physic
 
 DriveSetup should detect two devices, one is our CD-ROM (ISO) file and another is the “harddrive” we created earlier. All we need to do is select that drive, go to *Partitions -> Format*, click on *Be File System* and continue the initialization. Then you use Installer from the Deskbar's appliction menu to install from the CD image to the big virtual harddrive.
 
-![](/files/image11_0.png)
+![](/files/guides/virtualizing/virtualbox/image11_0.png)
 
 And that’s it! Power off and go back to the "Storage" Settings. To prevent booting the ISO image at every bootup, select the ISO image, click on the CD icon to the right and choose *Remove Attachment* :
  
-![](/files/VB_5_remove-old-iso.png)
+![](/files/guides/virtualizing/virtualbox/vbox_11.png)
  
 ### Additional steps <a name="part_additional"></a>
 
@@ -92,19 +92,19 @@ There are a few settings that could be changed to improve performance of Haiku. 
 
 We begin by clicking on the Settings icon.
 
-![](/files/image8_0.png)
+![](/files/guides/virtualizing/virtualbox/vbox_12.png)
 
 The settings window allows the user to configure the hardware aspects of the virtual machine guest OS will be using.
              
 One of the ways to increase performance is changing the video memory assigned to the virtual machine. On the left panel click Display tab, and move the first slider to the right, to increase the amount of memory assigned. This should allow the GUI to run more smoothly and be more responsive.
 
-![](/files/image15.png)
+![](/files/guides/virtualizing/virtualbox/vbox_13.png)
 
 By default, mouse integration with the guest is disabled in VirtualBox. However, we can easily enable this convenient feature:
 
 Go to the *System* tab under *Settings* and change *Pointing Device* to *USB Tablet*.
 
-![](/files/VB_6_mouse_settings.png)
+![](/files/guides/virtualizing/virtualbox/vbox_14.png)
 
 After you are done with configuring, click **`OK`** to go back to the main window.
  
@@ -114,9 +114,9 @@ One of the inconveniences users experience while using virtual machines is scree
              
 First solution is simply adjusting the screen resolution using tools built into system. In Haiku we can use the Screen preflet, which can be found under the Preferences menu. By changing the resolution the user will then notice that size of the VM window has now changed.
 
-![](/files/image17.png)
+![](/files/guides/virtualizing/virtualbox/image17.png)
 
-<a name="part_customVESA></a>
+<a name="part_customVESA"></a>
 The other way is to resize the guest window through the host. While Virtual Guest Additions are available from HaikuDepot, there is no automatic window resizing support yet. However the user may use custom VESA resoultion as a workaround. 
 
 For example, type this in your host system:
@@ -132,7 +132,7 @@ There are some known issues with the network cards on VirtualBox virtual machine
              
 Go to the settings of Haiku virtual machine (it needs to be shutdown first) and click *Network -> Advanced-> Adapter type -> Intel PRO/1000 MT*.  Accept changes by clicking **`OK`**.
 
-![](/files/image22.png)
+![](/files/guides/virtualizing/virtualbox/vbox_15.png)
 
 Now the network services should be working properly.
 
