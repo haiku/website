@@ -5,54 +5,106 @@ date = "2016-12-23T21:36:57.000Z"
 tags = []
 +++
 
-<div class="box-warning">Haiku isn't working fully with Parallels Desktop yet as only the Raw and Anyboot images work and that is after following a workaround. Be sure to follow the workaround instructions on renaming the files.</div>
+Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-##### Parallels Desktop
+This guide will describe the process of running Haiku on a virtual machine (VM) using Parallels Desktop 13. Parallels Desktop is not fully working with Haiku and needs a workaround. Be sure to follow all the steps to run Haiku.
 
-Parallels Desktop is available for free (14 day trial version) or for $80 (full version) on [their website](http://www.parallels.com/products/desktop/).
-
-##### Anyboot
-
-The required files can be found at on the [get-haiku page](http://www.haiku-os.org/get-haiku) of this website. Select the closest mirror or the torrent (further down the page) in order to enjoy higher transfer rates. Verify using the checksums that your download has not been corrupted.
-
-##### Raw
-
-Raw is deprecated in favor of Anyboot, and as such can only be found on the nightly [build page](http://haiku-files.org/haiku/development/). There are no checksums for this version.
+We will using an anyboot image file - it can be obtained [here](http://localhost:8080/get-haiku). Parallels Desktop is available for free as a 14-day trial or $80 for the full version [on their website](https://www.parallels.com/products/desktop/)
 
 ##### Go to section:
 
-*   [Running Haiku from a Raw or Anyboot image](#part_rawimage)
-*   [Additional Steps](#part_additional)
-*   [Troubleshooting](#part_trouble)
+* [Running Haiku from an Anyboot image](#part_running)
+* [Additional steps](#part_additional)
+* [Troubleshooting](#part_trouble)
 
-### Running Haiku from a Raw or Anyboot image
+### Running Haiku from an Anyboot image <a name="part_running"></a>
 
-#### Step 1. Downloading Haiku
+The following guide will describe installation of Haiku with an Anyboot image on Parallels Desktop.
 
-After downloading the Raw or Antboot image, unzip the file and in the folder you will see a .image file. Now rename the .image file to .hdd
+##### Step 1. Renaming the Anyboot image
 
-#### Step 2. Opening the file
+After downloading the Anyboot image, we need to rename the image to make it work on Parallels Desktop.
 
-Start up Parallels Desktop. Then click on _Install Windows on another OS_ from DVD or image file before clicking <span class="button">Continue</span> once.  
-![Parallels Wizard](/files/parallels_image1_1.png)  
-Now, you will be in the installation screen where you're asked for your installation disc. Enable _Continue without installation disc_ (small checkbox in lower-left corner), before clicking <span class="button">Continue</span> once. When the _Please select your operating system_ dialogue appears, select _Other_, then _Other_ again. Continue until the Virtual Machine starts to boot. It will fail to boot. Now, this is the trick: Click on _Virtual Machine_ in the menu bar and press <span class="button">Stop</span>. Click on _Virtual Machine_ again and press <span class="button">Configure</span>.  
-![Parallels Wizard](/files/parallels_image2_1.png)  
-Click on _Hardware_ > _Hard Disk 1_. For the source, select the file which you renamed from .image to .hdd. Close the window and start your Virtual Machine. When a prompt comes up asking you to convert the image, click <span class="button">Accept</span>. Haiku is up and running!  
+Open the folder where the Anyboot image is located. Unzip the image, then change the image's extension from .iso to .hdd
 
-### Additional Steps
+![](/files/guides/virtualizing/parallels-desktop/rename_image.png)
 
-**TODO**  
+When asked for confirmation, click **`Use .hdd`**
 
-### Troubleshooting
+![](/files/guides/virtualizing/parallels-desktop/rename_confirm.png)
 
-#### Parallels Desktop warns that the virtual hard drive image file is either damaged or locked
+##### Step 2. Creating a virtual machine
 
-Parallels does not support the VMDK images produced by Haiku build system. It complains that it is an old-format virtual hard disk (for Parallels 3.0 or earlier) and offers to convert it, but fails with the error message "_Unable to convert the virtual hard disk to the new format. The virtual hard drive image file is either damaged or locked._" which instantly disappears. You need to use the Raw or Anyboot images.
+After installing Parallels Desktop and renamed the Anyboot image, we can begin the installation process.
 
-#### Parallels Desktop warns that there is _No boot device available_ and that it is _Unable to connect Hard Disk_
+Open the Parallels Desktop application, if you are running Parallels Desktop for the first time, the Installation Assistant will appear. Skip all steps until you are in the **`Create new`** window.
 
-You need to use the renaming workaround.
+![](/files/guides/virtualizing/parallels-desktop/create_new.png)
 
-#### Parallels Desktop warns that the _device still expects data transfer_
+Select the *Install Windows or another OS from a DVD or image file* option, and then click **`Continue`**
+
+Check *Continue without a source* on the lower-left corner. Then, click **`Continue`** once.
+
+![](/files/guides/virtualizing/parallels-desktop/create_blank.png)
+
+When the *Please select your operating system* window appears, select *Other*, then *Other* again.
+
+![](/files/guides/virtualizing/parallels-desktop/select_os.png)
+
+Then, the *Name and Location* window will appear. Name your virtual machine, and select the location of the virtual machine. Check *Create alias on Mac desktop* if you want to create an alias on the desktop. Check *Customize settings before installation*. Then, click **`Create`**
+
+![](/files/guides/virtualizing/parallels-desktop/name_loc.png)
+
+Wait while the virtual machine is being created, and then the *Virtual Machine Configuration* window will appear, along with a *Configuration* dialog. 
+
+![](/files/guides/virtualizing/parallels-desktop/wizard_vmconfig.png)
+
+This is the important step to make Haiku run in Parallels Desktop. On the *Configuration* dialog, click *Hardware* > *Hard Disk*. For the source, select the Anyboot image that we renamed.
+
+![](/files/guides/virtualizing/parallels-desktop/harddisk.png)
+
+A dialog will appear asking to convert to the new format. Click **`Convert`**.
+
+![](/files/guides/virtualizing/parallels-desktop/convert.png)
+
+The *Configuration* window will then shows a notice saying that the specified hard disk image is invalid. As we have converted them, click **`Yes`**
+
+![](/files/guides/virtualizing/parallels-desktop/hdd_invalid.png)
+
+Close the *Configuration* window, and then click **`Continue`** on the *Virtual Machine Configuration* window.
+
+The virtual machine will start, and congratulations! Haiku is now up and running!
+
+### Additional steps <a name="part_additional"></a>
+
+##### Additional step 1. Configuring the virtual machine
+
+There are a few settings that could be changed to improve performance of Haiku. Remember that you need to divide resources responsibly, depending on your host specification.
+
+We begin by stopping the virtual machine first, if it hasn't already been stopped yet, by clicking on *Actions* > *Shut Down*. After stopping, we can configure the virtual machine by clicking on *Actions* > *Configure...*
+
+![](/files/guides/virtualizing/parallels-desktop/config_menu.png)
+
+The *Configuration* window will appear. 
+
+The *Configuration* window allows the user to configure aspects of the virtual machine.
+
+One of the ways to increase performance is changing the video memory assigned to the virtual machine. Click on *Hardware* > *Graphics*, and change the memory to a larger amount to increase the amount of video memory assigned. This should allow the GUI to run more smoothly and be more responsive.
+
+![](/files/guides/virtualizing/parallels-desktop/config_vram.png)
+
+To increase the amount of memory assigned to the virtual machine, click *Hardware* > *CPU & Memory*. Then, move the slider to the right, to increase the amount of memory assigned. This could be useful if we needed more memory to compile Haiku, as an example.
+
+![](/files/guides/virtualizing/parallels-desktop/config_ram.png)
+
+After you are done with configuring, close the *Configuration* window to return to the virtual machine.
+
+### Troubleshooting <a name="part_trouble"></a>
+
+##### Parallels Desktop warns that there is _No boot device available_ and that it is _Unable to connect Hard Disk_
+
+On the configuration window, make sure your hard disk uses the renamed image.
+
+##### Parallels Desktop warns that the _device still expects data transfer_
 
 When booting with ISO or Anyboot images, Parallels will hang on Disk icon. This is a bug in Haiku which can be read about [here](http://dev.haiku-os.org/ticket/4502)
