@@ -22,7 +22,11 @@ With regard to performance, you should make sure that the virtualization options
         <li><a href="/guides/virtualizing/virtualbox-windows-debugging">with serial debugging under Windows</a></li>
     </ul>
     </li>
+    <li><a href="/guides/virtualizing/vmware-workstation">VMware Workstation</a></li>
+    <li><a href="/guides/virtualizing/vmware-fusion">VMware Fusion</a></li>
+    <li><a href="/guides/virtualizing/parallels-desktop">Parallels Desktop</a></li>
     <li><a href="/guides/virtualizing/KVM">KVM</a></li>
+    <li><a href="/guides/virtualizing/simnow">SimNow</a></li>
     <li><a href="/guides/virtualizing/bochs">Bochs</a></li>
 </ul>
 <h3>Native hypervisors</h3>
