@@ -1,131 +1,111 @@
 +++
 type = "article"
-title = "Virtualizing Haiku in VMware-Workstation "
+title = "Virtualizing Haiku in VMware Workstation"
 date = "2016-12-22T18:11:53.000Z"
 tags = []
 +++
 
-The required ISO file can be found at on the "Get Haiku" page of this website which is located [here](https://www.haiku-os.org/get-haiku). VMware Player is available for free on their website which can be found [here](https://www.vmware.com/products/player/). There is also VMware Workstation, which is similar but has more features and is commercial. This means you have to pay for this version, but it does offer a 30 days trial. However you could just stick to the free one _(VMware Player)_ as you most likely will not need the extra features. You can both read about the commercial version's extra features and download it from its website [here](https://www.vmware.com/products/workstation/overview.html)
+Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-##### Go to section:
+This How-To guide will describe the process of running Haiku on virtual machine (VM) using VMWare Workstation 14 and an Anyboot image file.
 
-*   [Running Haiku from a VM image.](#part_vmimage)
-*   [Installing and running Haiku from an ISO image.](#part_iso)
-*   [Additional Steps.](#part_additional)
-*   [Troubleshooting.](#part_trouble)
+The Anyboot image file can be obtained [here](/get-haiku). VMWare Player is available from VMWare for free [on their website](https://www.vmware.com/products/player/). There is also VMware Workstation, which is similar but has more features and is commercial. This means you have to pay for this version, but it does offer a 30 days trial. However you could just stick to the free one _(VMware Player)_ as you most likely will not need the extra features. You can both read about the commercial version's extra features and download it from its website [here](https://www.vmware.com/products/workstation/overview.html)
 
-### Running Haiku from a VM image.
+##### Go to section
 
-##### Step 1. Downloading Haiku.
+* [Installing and running Haiku from an Anyboot image](#part_install)
+* [Additional steps](#part_additional)
+* [Troubleshooting](#part_trouble)
 
-Download the vmdk zip file from the Haiku website and unzip it. You should be able to see these following files. ![File system](/files/images/image1.jpeg)
+### Installing and running haiku from an Anyboot image <a name="part_install"></a>
 
-##### Step 2. Opening the file.
+The following guide will describe installation of Haiku with an Anyboot image on VMWare.
 
-![](/files/images/image2.jpeg "Picture 2")
-Double click the file with the .vmx extension to open the virtual machine in VMware Player or VMware Workstation in this instance.
+##### Step 1. Creating a virtual machine
 
-##### Step 3. Adjusting Memory.
+After downloading the Anyboot image and installing VMWare Workstation, we can begin the installation process.
 
-Adjust the amount of Random Access Memory (RAM) allocated for the virtual machine to your preference. 256MB is recommended if the host machine has less than 1GB of RAM. The more RAM you allocate will make the virtual machine faster.
+Open VMWare Workstation. On the Home tab, click **`Create a virtual machine`**.
 
-<div class="box-warning">Excessive allocation may cause the host machine to slow down.</div>
+![](/files/guides/virtualizing/vmware-workstation/vmware_workstation.png)
 
-##### Step 4. Starting the Virtual Machine.
+The *New Virtual Machine Wizard* will appear. Select *Typical*, then click **`Next`**.
 
-Once you are done with adjusting the values, or accept the defaults, simply power on the virtual machine. You may want to switch to full screen mode as the virtual machine will have a resolution of over 1024 x 768.
+![](/files/guides/virtualizing/vmware-workstation/new_machine.png)
 
-##### Step 5. Finishing Up.
+Select *Installer disc image file _(.iso)_*, and browse for the Anyboot image we have downloaded. VMWare will then complain that it could not detect which operating system is in the disc image. Click **`Next`** again.
 
-Congratulations, your Haiku virtual machine is ready for testing. Do take a look at the Haiku User Guide if you are not familiar with navigating around the desktop. You can find a link to this on the desktop or you can find another version of it online [here](https://www.haiku-os.org/docs/userguide/en/contents.html).
+![](/files/guides/virtualizing/vmware-workstation/installer_disc.png)
 
-![](/files/images/image3.jpeg "Picture 3")
+Select the *Other* operating system, and *Other* version, then click **`Next`**.
 
-<div class="box-info">Optionally you could mount the blank hard disk image that came in the download if there is data needed to be stored.</div>
+![](/files/guides/virtualizing/vmware-workstation/select_os.png)
 
-### Installing and running Haiku from an ISO image.
+Give a name to the virtual machine, and choose the location where the virtual machine will be stored. Then, click **`Next`** again.
 
-This method is pretty much similar to installing on an actual machine, but a little more tedious than running Haiku from a VM image
+![](/files/guides/virtualizing/vmware-workstation/name_loc.png)
 
-##### Step 1. Downloading Haiku.
+Specify the hard disk size of virtual machine. Some will need to allocate more than the default size. This can be expanded later. We can also split the virtual hard disk image, to make transporting to another machine easier, but note that it may slow down performance on large virtual disks. When done adjusting the disk size and splitting, click **`Next`**.
 
-Download and unzip the iso image from the Haiku website. It contains the iso disk image which is necessary for installing Haiku.
+![](/files/guides/virtualizing/vmware-workstation/disk_size.png)
 
-##### Step 2. Creating a virtual machine.
+Verify the details of the new virtual machine, then click **`Finish`** to create the virtual machine.
 
-Create a new virtual machine, select typical and continue.
+![](/files/guides/virtualizing/vmware-workstation/ready_create.png)
 
-##### Step 3. Selecting the location.
+Now the virtual machine is created and we are ready to install Haiku to the virtual machine.
 
-Select the location of the iso image you have unzipped.
+##### Step 2. Installing Haiku
 
-##### Step 4. Selecting type of Operating System.
+Before we install Haiku to the virtual machine, we first need to start it by clicking on **`Power on this virtual machine`** option.
 
-![](/files/images/image4.jpeg "Picture 4")
-For the operating system, select Other. For version, do take note to make sure that Other is selected. Do not select Other 64-bit.
+![](/files/guides/virtualizing/vmware-workstation/start_vm.png)
 
-##### Step 5. Naming the virtual machine.
+The virtual machine will automatically boot the Anyboot image we chose as the installer disc image.
 
-Give a name to your virtual machine, and point to the location which you want to store the necessary files.
+The installation itself is quite simple and does not differ really from a physical one (follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing 
+Haiku).
 
-##### Step 6. Specifying Disk space.
+We run the installer by clicking **`Run installer`** inside the virtual machine, and proceed with the installation like we are installing on a physical machine.
 
-![](/files/images/image5.jpeg "Picture 5")
-Specify how much disk space to give the virtual machine. Do store virtual disk as a single file if you are not dealing with a huge amount of data.
+The Installer will say that there are no partitions, as the hard disk is still empty. Click on **`Set up partitions...`** to bring up DriveSetup. DriveSetup should detect two devices, one is CD-ROM which contains the Haiku image, and a hard disk which is our virtual machine's virtual hard disk. All we need to do is select the hard disk, go to *Partitions -> Format*, click on *Be File System* and continue the initialization. When done setting up the disk, close DriveSetup.
 
-##### Step 7. Adjusting Memory.
+Then we can proceed to installing Haiku. Select the virtual hard disk as the destination, then click on **`Install`**. Wait until the installation is complete, and then click **`Restart`** to restart to our new Haiku installation.
 
-Click finish and edit the virtual machine settings. Allocate the amount of RAM you would the virtual machine to have. Try allocating 512 MB if you have more than 1GB of RAM on your host machine.
+### Additional steps <a name="part_additional"></a>
 
-##### Step 8. Starting the Virtual Machine.
+##### Additional step 1. Installing the VMWare Addons
 
-Save the settings and power on the virtual machine. Once Haiku has booted, you can choose whether to run as a Live-CD (which does not have any persistency through reboots) or continue with the installation.
+Haiku provides a `vmware_addons` package that allows clipboard sharing between Haiku and the host OS, mouse sharing (so that the mouse can seamlessly enter and quit the VM window), and disk compacting (reducing the sizes of auto-expanding virtual disks). Install it with the HaikuDepot application from the Deskbar's Applications menu.
 
-##### Step 9. Initialising partition.
+### Troubleshooting <a name="part_trouble"></a>
 
-![File system](/files/images/image6.jpeg)Don't worry if you see the warning saying Haiku can't find any partitions to boot from. Click O and we will setup the necessary partitions needed to install Haiku. Click <span class="button">Set up partitions</span>. Before clicking on the device with the hard disk icon. Then click Disk > Initialize > Intel Partition Map…
+##### Adding more RAM to the virtual machine
 
-##### Step 10. Selecting partition.
+When we need to increase the memory allocated to the virtual machine, we can increase it from the virtual machine settings.
 
-Select the new space and click Partition > Create.
+On the virtual machine tab, when the VM is powered off, click on *Edit virtual machine settings*. The *Virtual Machine Settings* window will then appear.
 
-![](/files/images/image7.jpeg "Picture 7")
+Navigate to *Hardware* > *Memory*. We can than increase the memory allocated by dragging the slider to the top. Note that allocating more than the maximum recommended memory may cause the host to memory swap.
 
-<div class="box-warning">It is important that you tick the active partition or else your disk will not boot!</div>
+![](/files/guides/virtualizing/vmware-workstation/config_memory.png)
 
-##### Step 11. Creating a new partition.
+Click **`OK`** to close the settings window.
 
-You may just create one partition or more if you like, but note down the partition with the active parameter as installation must be done only on active partitions. If you want to avoid confusion, simply create one partition.
+##### Increasing the virtual disk size without reinstalling
 
-##### Step 12. Formatting the new partition.
+VMWare allows expanding a virtual hard disk to be bigger, but take note that there is no way to reduce the size of your virtual hard disk once it starts to occupy space.
 
-![](/files/images/image8.jpeg "Picture 8")
-Format the newly created partition(s) by selecting the partition and clicking Partition > Format > Be File System… Accept the defaults and you should see something like the previous screen.
+On the virtual machine tab, when the VM is powered off, click on *Edit virtual machine settings*. The *Virtual Machine Settings* window will then appear.
 
-##### Step 13. Selecting your new partition.
+Navigate to *Hardware* > *Hard Disk*, then on the right pane click **`Expand`**
 
-Close the dialog box and select the partition you want to install Haiku. Ensure that the partition is correct.
+![](/files/guides/virtualizing/vmware-workstation/expand_disk.png)
 
-##### Step 14. Installing Haiku.
+Specify the amount of the expanded hard disk image, then click **`Expand`**
 
-Begin the installation! Reboot once you are done, you should be able to see the Haiku desktop after you reboot. If you are stuck at the installation screen after reboot, disconnect the iso from the virtual disk drive and try again.
+![](/files/guides/virtualizing/vmware-workstation/expand_disk2.png)
 
-![](/files/images/image9.jpeg "Picture 9")
+Click **`OK`** to close the settings window.
 
-<div class="box-info">The first boot will have a few start up items that fully configure Haiku, please be patient.</div>
-
-##### Step 14. You are now finished.
-
-Enjoy Haiku and refer to the Haiku User Guide if you encounter any problems
-
-### Additional Steps.
-
-**TODO**
-
-### Troubleshooting.
-
-##### Question: Help! My disk space is running out, how do I allocate more space without reinstalling?
-
-Answer: Simple, follow these step to add more storage to your Haiku, but take note that there is no way to reduce the size of your virtual hard disk once it starts to occupy space. Go to the configurations of the virtual machine. Select the hard disk you want to expand or add a new virtual disk. Specify the new capacity of the virtual disk. Only enter a value higher than the original, shrinking the disk is not possible. Increase the size of the partition using GParted or the Haiku iso. Do be careful to avoid any loss of data.
-
-![](/files/images/image10.jpeg "Picture 10")
+Then, resize the Haiku partition inside the virtual machine using the Haiku ISO or GParted.
