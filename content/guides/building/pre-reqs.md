@@ -30,7 +30,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       | Missing mkisofs     |
 | Mac OS X                           | [MacPorts](#osx)     | YES       |                     |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | YES       | Untested            |
-| [OpenSuSE](http://opensuse.org)    | [rpm/zypper](#zypper)| YES       | Missing mkisofs     |
+|[openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       | Missing mkisofs     |
 | Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       | Missing mkisofs     |
@@ -83,12 +83,12 @@ sudo yum install mtools libfdt bc
 ```
 
 <a name="zypper"></a>
-## ![zypper](/files/os-icons/suse-32.png) RPM-based GNU/Linux Distribution using zypper (OpenSUSE, SLES)
+## ![zypper](/files/os-icons/suse-32.png) RPM-based GNU/Linux Distribution using zypper (openSUSE, SLES)
 
 **Basic requirements:**
 
 ```
-sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel
+sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel cdrtools
 ```
 
 <a name="gentoo"></a>
@@ -97,7 +97,7 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 **Basic requirements:**
 
 ```
-sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrkit wget nasm net-misc/curl bc
+sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrtools wget nasm net-misc/curl bc
 ```
 
 **Additional requirements for ARM:**
