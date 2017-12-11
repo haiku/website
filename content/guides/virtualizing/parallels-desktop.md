@@ -9,7 +9,7 @@ Virtual instances of operating systems are perfect for all kinds of testing purp
 
 This guide will describe the process of running Haiku on a virtual machine (VM) using Parallels Desktop 13. Parallels Desktop is not fully working with Haiku and needs a workaround. Be sure to follow all the steps to run Haiku.
 
-We will using an anyboot image file - it can be obtained [here](http://localhost:8080/get-haiku). Parallels Desktop is available for free as a 14-day trial or $80 for the full version [on their website](https://www.parallels.com/products/desktop/)
+We will using an anyboot image file - it can be obtained [here](/get-haiku). Parallels Desktop is available for free as a 14-day trial or $80 for the full version [on their website](https://www.parallels.com/products/desktop/)
 
 ##### Go to section:
 
