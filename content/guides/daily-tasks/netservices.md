@@ -14,7 +14,10 @@ The basic installation of Haiku contains several standard system network utiliti
 new password:
 repeat new password:</pre></p>
 
-<div class='box-info'>To access your Haiku system remotely, you will need to know its network address. Haiku's default hostname is shredder. If shredder doesn't resolve, you can simply launch the <span class='app'>Network</span> preference applet to find your system's network address.</div>
+<div class='box-info'>To access your Haiku system remotely, you will need to know its network address.
+Haiku's default hostname is shredder. If shredder doesn't resolve, you can simply launch the
+<span class='app'>Network</span> preference applet to find your system's network address.
+You can change the hostname by editing /system/settings/network/hostname.</div>
 
 <h3>ftpd - an FTP server daemon</h3>
 Haiku can easily be made to listen for incoming FTP connections to serve its files.
@@ -31,6 +34,7 @@ SSH is a network protocol that allows for data to be exchanged using a secure ch
 Starting the SSH server daemon in Haiku is easy:
 <ol>
 <li>Add the SSH server user: <pre class="terminal">useradd sshd</pre></li>
+<li>Edit /system/settings/ssh/sshd_config and add the following option: <pre class="terminal">PermitRootLogin true</pre></li>
 <li>Start the SSH server daemon: <pre class="terminal">/boot/system/bin/sshd</pre></li>
 </ol>
 
