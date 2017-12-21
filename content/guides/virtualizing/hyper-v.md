@@ -5,77 +5,176 @@ date = "2013-01-14T10:32:53.000Z"
 tags = []
 +++
 
-There are two methods for installing Haiku: RAW images and Anyboot images. RAW images consist of a pre-installed environment, whereby the Virtual Hard Disk is of a fixed size. By using a RAW image, you do not need to go through the installation process. The Anyboot images, on the other hand, can be burnt to a CD-RW or DVD-RW, or even a USB drive but they can also be used in Hyper-V, to create a virtual CD-ROM that can be used to install Haiku onto a virtual Hard Disk. This guide will show you how to get Haiku running in Microsoft’s Hyper-V using the anyboot images.
+There are two methods for installing Haiku: RAW images and Anyboot images. RAW images consist of a pre-installed environment, whereby the Virtual Hard Disk is of a fixed size. By using a RAW image, you do not need to go through the installation process.
+The Anyboot images, on the other hand, can be burnt to a CD-RW or DVD-RW, or even a USB drive but they can also be used in Hyper-V, to create a virtual CD-ROM that can be used to install Haiku onto a virtual Hard Disk.
+This guide will show you how to get Haiku running in Microsoft’s Hyper-V using the Anyboot images.
 
-The required image files can be found at on the "Get Haiku" page of this website which is located [here](/get-haiku). Since it  Hyper-V can be found as bundled software on any edition of Windows Pro above Windows 8 and Windows Server 2012/2016, and can installed from the Programs and Features panel in the Control Panel on Windows 8 Pro.
+### Step One: Enable Hyper-V and download a Haiku image
+##### Part A: Enabling Hyper-V
+Since Hyper-V can be found bundled with any edition of Windows Pro of version 8 or later (this also applies to the Windows Server equivalents), it does not need any extra downloads.
+To enable Hyper-V, press {{< keyboard WIN >}} + {{< keyboard R >}} to open the "Run" window. Then type "OptionalFeatures" and press {{< keyboard Enter >}}.
+The "Windows Features" window should now be visible. Tick the "Hyper-V" checkbox and click "Ok" to install Hyper-V. This may require you to restart your computer.
 
-### Step One: Configuration Wizard
-First of all, you will need to install Hyper-V. Then once you have done that, you will need to run the Hyper-V Manager;  which can be run by going Action > New > Virtual Machine. This will guide you through a configuration wizard that will help you to set up Haiku on Hyper-V. It will first give you the informal window Before You Begin, click Next. This next window is the Specify Name and Location window. Here you will first need to add the name of your virtual machine (try “Haiku testing”), then secondly you will need to specify the location of where you want your virtual machine to be on your computer (somewhere with lots of room). Click next and after this you will taken to the Assign Memory window. You need to tell Hyper-V how much memory it can use with this virtual machine. Use half of what Ram you have on your computer; so if you have 2048mb or ram, allow Hyper V to use around 1024mb for the virtual machine.  You can also check the checkbox Use Dynamic Memory, to also allow Hyper-V to use more RAM memory if it needs it. (Picture 2-1).
+##### Part B: Downloading a Haiku image
+The required image files can be found on the "Get Haiku" page of the Haiku website, which is located [here](/get-haiku).
+It is recommended that you use the nightly images for now, as the Alpha 4 images were released over 5 years ago at the time of writing (December 2017), which means that they does not contain any of the new features and fixes that Haiku has gained since then.
+The architecture that we will be using is x86_gcc2, as virtualising the x64 architecture is not covered by this guide. You can find the x86_gcc2 images [here](https://download.haiku-os.org/nightly-images/x86_gcc2_hybrid/).
+
+### Step Two: Configuration Wizard
+Run the Hyper-V Manager, which can be done by going to Action > New > Virtual Machine.
+The configuration wizard that will help you set-up Haiku in Hyper-V. To begin, click "Next".
+
+This next window is the "Specify Name and Location" window. Here you will need to add the name of your virtual machine (try "HaikuVM") and specify where your virtual machine will be stored.
+
+If you are running this using Windows 10 or Windows Server 2016, then please follow the step below.
+##### Windows 10 configuration:
+If you are running Windows 10 or Windows Server 2016, there is an additional step that you must perform (shown in picture 2-1-1). When you click the "Next" button, you are prompted to select the machine's generation.
+Always select "Generation 1" for Haiku.
+
+![](/files/guides/virtualizing/Hyper-V/ChooseGeneration1.jpg)
+
+*Picture 2-1-1*
+
+Click "Next" to go to the Assign Memory window. You need to tell Hyper-V how much memory it can use with this virtual machine, as otherwise the Virtual Machine might consume all the memory of your actual machine.
+A general rule is to use half of your total RAM e.g. if you have 8GB of RAM, give the Virtual Machine 4GB.
+You can also check the "Use Dynamic Memory" checkbox, which will allow Hyper-V to use more memory when it needs to (see picture 2-1).
 
 
-
-![](/files/image1_2.png)
+![](/files/guides/virtualizing/Hyper-V/AssignMemory.png)
 
 *Picture 2-1*
 
-After clicking next again you will arrive at the configure networking screen, however as Haiku does not  yet work with Hyper-V’s network adapter without some extra steps, just leave it as it is, and click next and well will come back to it later. On the following screen you are asked to create virtual hard disk or attach to an existing virtual hard disk. We will need to create virtual hard disk, so give it the name haiku.vhdx. You will also be asked how large you want the virtual hard disk to be. Haiku can happily run with only a 1GB hard drive but it will need something over 5GB in order do the things you want. You are also asked give location of where the virtual hard disk will be kept; give it lots of room! (Picture 2-2).When you are finished click next again to go the following screen, here you are asked to specify where your installation media are. Choose Install an operating system from a boot CD/ROM, and then select Image file. Now click browse and select the Haiku image that you downloaded prior. (Picture 2-3). We are now finished with this wizard so click finish.
+Click "Next" again to go to the "Configure Networking" screen, however as Haiku does not yet work with Hyper-V’s default network adapter, just leave it as it is and click "Next", we will come back to it later.
 
-![](/files/image2.png)
+On the following screen you are asked to create a virtual hard disk or attach to an existing virtual hard disk. We will create a virtual hard disk, so give it the name "Haiku.vhdx".
+The virtual hard disk size can run with 1GB hard drive but it will need something over 5GB in order do the things you want.
+You are also asked give location of where the virtual hard disk will be kept; give it lots of room (see picture 2-2)! When you are finished click "Next" again to go the following screen, here you are asked to specify where your installation media is. 
+
+![](/files/guides/virtualizing/Hyper-V/CreateVHD.png)
 
 *Picture 2-2*
 
+Choose "Install an operating system from a boot CD/ROM" and then select Image file. Now click browse and select the Haiku image that you downloaded previously (see picture 2-3). We are now finished with the wizard so click "Finish".
 
-![](/files/image3_0.png)
+![](/files/guides/virtualizing/Hyper-V/AssignISO.png)
 
 *Picture 2-3*
 
 
-### Step Two: Installing Haiku
-Now that we have created the virtual machine, we need to start the virtual machine and install Haiku. On the main screen, double  click the virtual machine we just created, which should be located in the column Virtual Machines. Now on the window that pops up click Action > Start.  This will start the virtual machine and the installation will begin. You first need to choose your language, than set up the partitions, choose on which partition you will install Haiku and begin the installation (3-1). To free your mouse from virtual machine press the key combination {{< keyboard Ctrl >}}+{{< keyboard Alt >}}+{{< keyboard &rarr; >}}.
+### Step Three: Installing Haiku
+Now that we have created the virtual machine, we need to start the virtual machine and install Haiku. On the main screen, double click the virtual machine we just created, which should be located in the column Virtual Machines.
+Now on the window that pops up click Action > Start.  This will start the virtual machine and the installation will begin. You should see a screen like picture 3-1.
 
-![](/files/image4_0.png)
+To free your mouse from virtual machine, press the key combination {{< keyboard Ctrl >}}+{{< keyboard Alt >}}+{{< keyboard "→" >}}.
+
+During the installation, there are three steps that you need to complete:
+
+1. [Choose your language](#step-one-choosing-your-language)
+2. [Set-up your partitions](#step-two-set-up-your-partitions)
+3. [Install Haiku](#step-three-install_haiku)
+
+##### Step One: Choosing your language
+As you can see in picture 3-1, the first screen that you should encounter when booting the ISO is the language-select screen.
+You should select your language from the list to the left, we will assume English to be your default for this guide. After that, select your keyboard mapping from the "Keymap" dropdown.
+This is important because your keyboard may be typing the wrong keys if Haiku does not know what format it uses.
+
+After selecting your display language and keyboard layout, click the "Run Installer" button to continue.
+
+![](/files/guides/virtualizing/Hyper-V/StartScreen.jpg)
 
 *Picture 3-1*
 
+##### Step Two: Set-up your partitions
+After clicking the "Run Installer" button, you should see a screen like the one shown in picture 3-2. This is just a message warning you that Haiku is alpha-quality software, which may crash and break at times.
+After reading the text on the new screen (or not reading it), click the "Continue" button to carry on with the installation.
+
+![](/files/guides/virtualizing/Hyper-V/InstallDisclaimer.jpg)
+
+*Picture 3-2*
+
+When you first run the installer, you will see a message claiming that no suitable partitions have been found. Just dismiss the pop-up by clicking the "Ok" button.
+You should now see an image that looks similar to picture 3-3. Select the "Set up partitions..." button to open "DriveSetup", which should look like picture 3-4.
+
+![](/files/guides/virtualizing/Hyper-V/InstallMain.jpg)
+
+*Picture 3-3*
+
+![](/files/guides/virtualizing/Hyper-V/InstallDriveSetup.jpg)
+
+*Picture 3-4*
+
+Click on the volume that has the name "Virtual HD". This will be our OS volume but first we need to format it.
+To format the volume, click on the "Disk" menu in the top-left corner of the window, hover over the "Initialize" section and select the "Intel Partition Map..." option.
+A warning message will appear, telling you that you will lose all the data on that disk, which is ok since there is no data on the disk currently.
+Click the "Continue" button to proceed with the partitioning. Another warning will appear as well, just click the "Write changes" button to dismiss it.
+The disk should now be ready for formatting. Just click the "Ok" button to dismiss the success pop-up and we can start to create partitions.
+
+At this stage, the "DriveSetup" window should now look like Picture 3-4.
+
+![](/files/guides/virtualizing/Hyper-V/DriveSetupInitialised.jpg)
+
+*Picture 3-4*
+
+Select the partition named "\<empty\>" and right-click on it. Then, click the "Create" button. This will create a partition in that space.
+Set it to fill the entire drive and tick the "Active partition" checkbox.
+You should now be seeing a window that looks similar to picture 3-5. Then, just click the "Create" button and press the "Write changes" button again.
+
+![](/files/guides/virtualizing/Hyper-V/DriveSetupCreatePartition.jpg)
+
+*Picture 3-5*
+
+There is one final step before the file system is ready: formatting our partition. To do this, right-click on the partition that we just created, now called "(Be File System)".
+Then, hover over the "Format" option and click the "Be File System..." item. Once again, click "Continue".
+You should now see a box asking for a name to give the partition (seen in picture 3-6). Call it "Haiku" (the default) and click "Initialize" and "Write changes".
+Once this is done, click "Ok" and you now have a working file system.
+
+![](/files/guides/virtualizing/Hyper-V/DriveSetupFormat.jpg)
+
+*Picture 3-6*
+
+##### Step Three: Install Haiku
+
+Close the "DriveSetup" program by clicking on the box in its top-left corner to return to the main setup menu (as seen in picture 3-3).
+This time, click the "Onto" drop-down and select the partition we just made (the one called "Haiku" that is not greyed out).
+Once that is done, just click "Begin". The setup will then install Haiku onto the partition you just made.
+
+Once the setup is completed, just click "Restart" and you will be in your very own Haiku installation.
+
 ### Additional Steps
 ##### Step One: Networking
-Now we need to create network connection, to have network access:
+Firstly, we need to create a network connection, so that we can have network access from our Haiku Virtual Machine:
 1. Go to Action > Virtual Switch Manager, choose external and click Create Virtual Switch.
 
 2. Open up Control Panel > Network and Internet > Network Connections. You will find that you now have “Ethernet” and “vEthernet (Your Switch Name)” connections.
 
-3. Right click on “Ethernet” and click “Properties”.  Under the Networking Tab select all items in the “This connection uses the following items” and then click “OK” (Picture 4-2).
+3. Right click on “Ethernet” and click “Properties”.  Under the Networking Tab select all items in the “This connection uses the following items” and then click “OK” (see picture 4-1).
 
-Windows will now give you a nice warning about items being disabled (such as IPv4, etc).  Click “Yes” on this dialog. At this point you will see the “vEthernet” connection suddenly switch to “Identifying…..” and a few moments later you’ll be connected to your network (if you’re on a Windows domain the domain name will show).
+Windows will give you a warning about items being disabled (such as IPv4, etc.). 
+Click “Yes” to the dialog that appears (see picture 4-2). At this point you will see the “vEthernet” connection switch to the “Identifying...” state, so just wait a few moments until you are connected to your local network again.
 
-
-![](/files/image5_0.png)
+![](/files/guides/virtualizing/Hyper-V/ConfigureVirtualSwitch.png)
 
 *Picture 4-1*
 
-Now go to the settings of the virtual machine in hardware > network adapter > virtual switch, choose your connection and apply (Picture 4-3).
-
-![](/files/image6_0.png)
+![](/files/guides/virtualizing/Hyper-V/ConfigureAdapter.png)
 
 *Picture 4-2*
 
+Now, open the settings window of your Haiku Virtual Machine by right-clicking on its name and selecting the "Settings..." option. Then, click on the "Network Adapter" icon and click the "Remove" button (see picture 4-3). Press "Apply" to save your changes.
 
-![](/files/image7.png)
+![](/files/guides/virtualizing/Hyper-V/RemoveInternetAdapter.jpg)
 
 *Picture 4-3*
 
-##### Step Two: Audio
-About audio, first go to services in task manager, and start Windows Audio (if it’s not started) (Picture 4-4). Next open the Remote Desktop Connection and choose Show Options. On the Local Resources tab under Remote Audio, choose Settings. Ensure that “Play on this computer” is selected (Picture 4-5).
+Haiku does not currently work with the default type of network adapter on Hyper-V, so the adapter must be changed. Click on the "Add Hardware" section, add a "Legacy Network Adapter" and click "Apply" (see picture 4-4).
 
-![](/files/image8_1.png)
+![](/files/guides/virtualizing/Hyper-V/AddLegacyAdapter.jpg)
 
 *Picture 4-4*
 
+Go to the settings of the virtual machine in Hardware > Legacy Network Adapter > Virtual Switch, choose your connection and click "Apply" (see picture 4-5).
 
-![](/files/image9_0.png)
+
+![](/files/guides/virtualizing/Hyper-V/ApplyCorrectAdapter.jpg)
 
 *Picture 4-5*
-
-
-### Troubleshooting
-If you have problems with starting the virtual machine, than your computer doesn’t support virtualization or you need to activate from the BIOS. Data Execution Prevention need to be enabled, you may find in advanced settings in BIOS. Another problem is that Hyper-V doesn’t support USB.
