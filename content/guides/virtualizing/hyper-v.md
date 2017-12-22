@@ -6,7 +6,7 @@ tags = []
 +++
 
 There are two methods for installing Haiku: RAW images and Anyboot images. RAW images consist of a pre-installed environment, whereby the Virtual Hard Disk is of a fixed size. By using a RAW image, you do not need to go through the installation process.
-The Anyboot images, on the other hand, can be burnt to a CD-RW or DVD-RW, or even a USB drive but they can also be used in Hyper-V, to create a virtual CD-ROM that can be used to install Haiku onto a virtual Hard Disk.
+The Anyboot images, on the other hand, can be burnt to a CD-RW or DVD-RW, or even a USB drive but they can also be used in Hyper-V, to create a virtual CD-ROM that can be used to install Haiku onto a virtual Hard Disk or even to just boot into Haiku directly. Whilst Anyboot images can be used to boot directly into Haiku, any changes that you make to the Anyboot drives will be reverted as soon as you shutdown/restart. That is why you will need to install the Haiku image to a (virtual) hard drive using the installer program bundled with the Anyboot image.
 This guide will show you how to get Haiku running in Microsoft’s Hyper-V using the Anyboot images.
 
 ### Step One: Enable Hyper-V and download a Haiku image
