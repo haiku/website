@@ -53,7 +53,7 @@ After downloading the ISO image, unzip the file and in the folder, you will see 
 
 ##### Step 3. Selecting the location.
 
-**TODO**
+Click on installer disk image and then click on browse. Specify the file location and click next.
 
 ##### Step 4. Selecting type of Operating System.
 
@@ -61,15 +61,15 @@ For the operating system, select Other. For version, do take note to make sure t
 
 ##### Step 5. Naming the virtual machine.
 
-**TODO**
+Now name the virtual machine.The name of the virtual machine will help you find the virtual machine in your list. For this method I will name it "Haiku".
 
 ##### Step 6. Specifying Disk space.
 
-**TODO**
+When you create a virtual machine,it stores the data in your hard disk.You must specify the maximum amount of data the vm can use in your hard disk.The space starts from being small and keeps on expanding as you keep on adding data.The deafult space will be 8 GB.
 
 ##### Step 7. Adjusting Memory.
 
-**TODO**
+You can either store the virtual disk as a single file or split it into multiple files.Splitting will help you to move the virtual machine to another desktop but may reduce performance with large disks.
 
 ##### Step 8. Starting the Virtual Machine.
 
@@ -104,8 +104,9 @@ You have successfully installed Haiku! Have fun and refer to the Haiku User Guid
 
 ### Additional Steps.<a name="part_additional"></a>
 
-**TODO**  
+Click on the edit virtual mchine and change the ram to 2048 mb (2GB) for better prformance.
 
 ### Troubleshooting.<a name="part_trouble"></a>
 
-**TODO**
+If you want to run a pendrive in your virtual machine,then click the option of pendrives onn the top right corner and click connect to vm.
+If any device connected is not working.Click on the top right corner and see if it is enabled by clicking on Player > Removable devices.
