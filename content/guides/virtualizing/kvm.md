@@ -5,98 +5,119 @@ date = "2017-01-25"
 tags = []
 +++
 
-VMs are an ideal way of testing operating systems without having them physically installed. Installing Haiku into VM is a solution for those who don't want to set it up into a physical computer.
+Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-There are several methods offered to install Haiku. These include VMDK images, Raw images, ISO images and Anyboot images which are a hybrid of the latter two images. The Raw image (and thus the Anyboot image) is a preinstalled environment, in which the Virtual Hard Disk size cannot be customized, but going through the installation process is not required.
+In this guide the Haiku operating system is being run under virtual circumstances using Arch Linux, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
 
-In this guide the Haiku operating system is being run under virtual circumstances using Ubuntu 12.04 LTS, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
+In this guide, we will be using an Anyboot image - it can be obtained [here](/get-haiku).  Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
 
-In this guide, we have used ISO and Anyboot/Raw images. The required files can be found on the Get-Haiku page of this website which is located [here](../../get-haiku). Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
+##### Go to section
 
-### Downloading KVM on Ubuntu 10.4 and above
+* [Installing KVM](#part_kvm)
+* [Installing and running Haiku from an Anyboot image](#part_iso)
+* [Additional steps](#part_additional)
+* [Troubleshooting](#part_trouble)
 
-If your Ubuntu version is over 10.04, you can enter the following into the terminal and set up KVM and Virt-manager.
+### Installing KVM <a name="part_kvm"></a>
 
+If you are using Arch Linux, you can enter the following into the terminal and set up KVM and virt-manager.
 ```
-sudo apt-get install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils
-```
-```
-sudo apt-get install virt-manager
+sudo pacman -S qemu virt-manager
 ```
 
-### Installing and running Haiku from an ISO image
+If you are using Ubuntu, you can enter the following into the terminal instead and set up KVM and virt-manager:
+```
+sudo apt-get install qemu-kvm libvirt-bin virt-manager
+```
 
-The following guide will describe the installation of Haiku on Virtual Machine, using an ISO image.
-Once KVM is set up and the ISO image is downloaded, you can start the installation.
+To enable libvirtd on boot, issue the following command into the terminal:
+```
+sudo systemctl enable libvirtd
+```
+
+### Installing and running Haiku from an Anyboot image <a name="part_iso"></a>
+
+The following guide will describe the installation of Haiku on KVM, using an Anyboot image as an ISO. Once the Anyboot image is downloaded, you can start the installation.
 
 First, create a new virtual machine.
 
-![image0](/files/kvm_0.png)
+![](/files/guides/virtualizing/kvm/virt_manager.png)
 
-Give a name to your Haiku virtual machine and choose the method of OS installation, which is **`Local install media`** in this case and click **`Forward`**.
+Then, choose the method of OS installation, which is **`Local install media`** in this case and click **`Forward`**.
 
-![image1](/files/kvm_1.png)
+![](/files/guides/virtualizing/kvm/create_machine.png)
 
-Browse to the ISO image and choose **`Other`** as the operating system type and **`Generic`** as the version. **`Forward`** to go to the next step.
+Choose `Use ISO image`, and browse to the Anyboot image we have downloaded. Then, click **`Forward`**.
 
-![image2](/files/kvm_2.png)
+![](/files/guides/virtualizing/kvm/select_media.png)
 
-Here, we're supposed to choose memory and CPU settings. It is better to assign more than 256M of RAM for smooth running ; too much, on the other hand, may cause a lag for the host.
+Here, we're supposed to choose memory and CPU settings. It is better to assign more than 256M of RAM for smooth running ; too much, on the other hand, may cause a lag for the host.  After choosing the memory size and CPU, click **`Forward`**.
 
-![image3](/files/kvm_3.png)
+![](/files/guides/virtualizing/kvm/memory_cpu.png)
 
-After choosing your desired memory and CPU settings, click **`Forward`**.
+Here, we can adjust the size of the disk image, or existing disk images. After adjusting, click **`Forward`**
 
-![image4](/files/kvm_4.png)
+![](/files/guides/virtualizing/kvm/hard_disk.png)
 
-Now, you can run Haiku. You can either have it installed onto the virtual hard disk or just try it out.
+Name the virtual machine, verify the settings of the VM, then click **`Finish`**
 
-### Installing and running Haiku from Anyboot or Raw images
+![](/files/guides/virtualizing/kvm/confirm_create.png)
 
-The following guide will describe the installation procedure of Haiku on Virtual Machine, using a VM disk image.
+After clicking **`Finish`**, the VM will start and boot to the Haiku image. You can choose to install Haiku or boot to the desktop. Installation is simple and does not differ really from a physical one (follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku).
 
-Give a name to your Haiku virtual machine and choose the method of OS installation, which is **`Import existing disk image`** in this case and click **`Forward`**.
+### Additional steps <a name="part_additional"></a>
 
-![image5](/files/kvm_5.png)
+#### Additional step 1. Creating a network
 
-Provide the existing storage path for the Anyboot image to be used and choose an operating system type and version. Let us select Other and Generic each for OS Type and Version. Click **`Forward`** and move on.
+The VM we created by default will be assigned to a default network, which is using NAT. To create another type of virtual network, you can follow the steps below. If you want to create a bridged network instead, consult your distribution's documentation. 
 
-![image6](/files/kvm_6.png)
+First, on the virt-manager window choose `Edit` > `Connection Details`. The Connection Details window will appear. Click on the Add button in the lower left corner to add a virtual network.
 
-Memory and CPU settings to be decided. More than 256M of RAM is recommended for smooth running ; too much, on the other hand, may cause a lag for the host.
+![](/files/guides/virtualizing/kvm/virtual_network_1.png)
 
-![image7](/files/kvm_7.png)
+Name the virtual network that will be created.
 
-Click **`Forward`** and **`Finish`**.
-Now, you can run Haiku. You can either have it installed into a virtual hard disk or try it out.
+![](/files/guides/virtualizing/kvm/net_name.png)
 
-### Additional Steps
+Here, you can customize the network address range. If you are fine with the default settings, simply click **`Forward`**
 
-// TODO
+![](/files/guides/virtualizing/kvm/ip_range.png)
 
-### Troubleshooting
+If you want to enable the IPv6 address range, you can customize it here. Otherwise, just click **`Forward`**
 
-##### Advanced options warning
+![](/files/guides/virtualizing/kvm/ipv6.png)
 
-If, in the middle of the installation process, you encounter the following exclamation mark under Advanced options:
+Here, you can forward the network packets of the VM to a physical network, or keep the virtual network isolated. If you need Internet connection on the VM, you should forward to a physical network connected to the Internet. When you are done, click **`Finish`**
 
-![image8](/files/kvm_8.png)
+![](/files/guides/virtualizing/kvm/connect_physical.png)
 
-This can be fixed by downloading and installing Hardware Abstraction Layer from Ubuntu Software center.
+The virtual network will then be created. Now, close the Connection Details window.
 
-![image9](/files/kvm_9.png)
+On the virt-manager window, right-click on the Haiku VM, and choose **`Open`**. Then, click on the button with the light-bulb icon to switch to the VM configuration tab.
+
+![](/files/guides/virtualizing/kvm/vm_settings.png)
+
+If there's no NIC hardware in the VM, click the **`Add Hardware`**, then choose **`Network`**.
+
+After that, go to the **`NIC`** hardware on the VM, then choose the network source to be the virtual network we have created.
+
+![](/files/guides/virtualizing/kvm/vm_settings_net.png)
+
+Now the VM should have a network connection.
+
+### Troubleshooting <a name="part_trouble"></a>
 
 ##### Unable to connect to Libvirt
 
-If, after running Virt-manager, you run into this pop-up:
+If, after running Virt-manager, you run into a pop-up saying that it is unable to connect to libvirt, then:
 
-![image10](/files/kvm_10.png)
+1. Make sure the libvirtd daemon is running by issuing ```sudo systemctl start libvirtd```
 
-The solution is to add yourself to the libvirtd group so you can control KVM.
+2. Make sure you are a member of the 'libvirt' group by running: 
 ```
-sudo usermod -a -G libvirtd $(whoami)
+sudo usermod -a -G libvirt $(whoami)
 ```
 
 ##### Freezing with the QXL video device
 
-The virtual machine may occasionally hang or freeze during use, and switching the video device to the VGA or VMVGA one may solve this.
+The virtual machine may occasionally hang or freeze during use, and switching the video device to the VGA or VMVGA may solve this.
