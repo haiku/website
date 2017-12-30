@@ -11,7 +11,6 @@ There are several methods offered to install Haiku. Among those, only the vmdk a
 
 The required files can be found at on the Get-Haiku page of this website which is located [here](http://www.haiku-os.org/get-haiku).
 
-
 Both the vmdk and iso are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files. VMware Fusion is available for free on their website which can be found [here](http://www.vmware.com/products/fusion/).
 
 ##### Go to section:
@@ -45,67 +44,96 @@ After downloading the ISO image, unzip the file and in the folder, you will see 
 
 ##### Step 2. Creating a virtual machine.
 
-![](/files/new-vm-step-1.png)
+At the Installation method screen, choose **Create a new custom virtual machine**.
 
-![](/files/new-vm-step-2.png)
- 
-![](/files/new-vm-step-3.png)
+![](/files/guides/virtualizing/vmware-fusion/new-vm-step-1.png)
 
-##### Step 3. Selecting the location.
+Then, on the operating system type screen, for the operating system, select Other. For version, do take note to make sure that Other is selected. Do not select Other 64-bit. After selecting, click **Continue**.
 
-**TODO**
+![](/files/guides/virtualizing/vmware-fusion/new-vm-step-2.png)
 
-##### Step 4. Selecting type of Operating System.
+Choose **Legacy BIOS** as the boot firmware.
 
-For the operating system, select Other. For version, do take note to make sure that Other is selected. Do not select Other 64-bit.
+![](/files/guides/virtualizing/vmware-fusion/select-firmware.png)
 
-##### Step 5. Naming the virtual machine.
+Then, you can choose to use an existing virtual disk or create a new one. The default values should be enough to install Haiku. Click **Continue**.
 
-**TODO**
+![](/files/guides/virtualizing/vmware-fusion/virtual-disk.png)
 
-##### Step 6. Specifying Disk space.
+Verify the settings of the virtual machine. We now need to attach the Haiku ISO to the virtual machine. Click **Customize Settings**.
 
-**TODO**
+![](/files/guides/virtualizing/vmware-fusion/vm-summary.png)
 
-##### Step 7. Adjusting Memory.
+We will be asked to save the virtual machine first. Name the virtual machine, and choose the location, then click **Save**.
 
-**TODO**
+![](/files/guides/virtualizing/vmware-fusion/name-loc.png)
 
-##### Step 8. Starting the Virtual Machine.
+##### Step 3. Configuring the Virtual Machine
+
+The Settings window will now appear. Choose the **CD/DVD (IDE)** item.
+
+![](/files/guides/virtualizing/vmware-fusion/vm-settings.png)
+
+Choose *Use ISO image file*, then browse for the Haiku ISO we downloaded.
+
+![](/files/guides/virtualizing/vmware-fusion/vm-cd-dvd.png)
+
+To adjust the amount of memory the virtual machine uses, we go back to the main settings window by clicking **Show All**. Then, click on the **Processor & Memory** panel.
+
+Adjust the memory amount as needed, by moving the slider to the right or typing in the new amount. Note that too much memory assigned to the virtual machine can slow down the host system.
+
+![](/files/guides/virtualizing/vmware-fusion/vm-memory.png)
+
+##### Step 4. Starting the Virtual Machine.
 
 Save the settings and power on the virtual machine. Once Haiku has booted, you can choose whether to run as a Live-CD (which does not have any persistency through reboots) or continue with the installation.
 
-##### Step 9. Initialising partition.
+![](/files/guides/virtualizing/vmware-fusion/vmware-haiku.png)
+
+##### Step 5. Initialising partition.
 
 Don't worry if you see the warning saying Haiku can't find any partitions to boot from. Click <kbd>OK</kbd> and we will setup the necessary partitions needed to install Haiku. Click <kbd>Set up partitions</kbd>. Before clicking on the device with the hard disk icon. Then click Disk > Initialize > Intel Partition Map…
 
-##### Step 10. Selecting partition.
+##### Step 6. Selecting partition.
 
 Select the new space and click Partition > Create.
 
 <div class="box-info">It is important that you tick the active partition or else your disk will not boot!</div>
 
-
-##### Step 11. Formatting the new partition.
+##### Step 7. Formatting the new partition.
 
 Format the newly created partition(s) by selecting the partition and clicking Partition > Format > Be File System… Accept the defaults and you should see something like the previous screen.
 
-##### Step 12. Selecting your new partition.
+##### Step 8. Selecting your new partition.
 
 Close the dialog box and select the partition you just created. Ensure that the partition is correct.
 
-##### Step 14. Installing Haiku.
+##### Step 9. Installing Haiku.
 
 Begin the installation! Reboot once you are done, you should be able to see the Haiku desktop after you reboot. If you are stuck at the installation screen after reboot, disconnect the iso from the virtual disk drive and try again.
 
-##### Step 15. You are now finished.
+##### Step 10. You are now finished.
 
 You have successfully installed Haiku! Have fun and refer to the Haiku User Guide if you encounter any problems.  
 
 ### Additional Steps.<a name="part_additional"></a>
 
-**TODO**  
+##### Additional step 1. Installing the VMWare Addons
+
+Haiku provides a `vmware_addons` package that allows clipboard sharing between Haiku and the macOS host, mouse sharing (so that the mouse can seamlessly enter and quit the VM window), and disk compacting (reducing the sizes of auto-expanding virtual disks). Install it with the HaikuDepot application from the Deskbar's Applications menu.
 
 ### Troubleshooting.<a name="part_trouble"></a>
 
-**TODO**
+##### Increasing the virtual disk size without reinstalling
+
+VMWare Fusion allows expanding a virtual hard disk to be bigger, but take note that there is no way to reduce the size of your virtual hard disk once it starts to occupy space.
+
+First, shut down the virtual machine if not already by clicking on the **Virtual Machine** menu > **Shut Down**.
+
+Then, on the virtual machine window, click on the **Virtual Machine** menu > **Settings**. The Settings window will appear.
+
+After that, choose the **Hard Disk (IDE)** item.
+
+To expand the hard disk, move the slider to the right, or type in the new size. Then, click **Apply**
+
+![](/files/guides/virtualizing/vmware-fusion/harddisk.png)
