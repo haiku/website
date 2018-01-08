@@ -15,15 +15,16 @@ This article is aimed at developers, as AMD SimNow is both a Virtual machine and
 *   [Preparing the Virtual Machine](#part_preparing-vm)
 *   [Running the Virtual Machine](#part_running-vm)
 
-### Downloading Haiku <a name="#part_download-h"></a>
+
+### <a name="part_download-h"></a> Downloading Haiku 
 
 There are several methods offered to install Haiku. For AMD SimNow will need to download either the iso image or the anyboot image [here](http://www.haiku-os.org/get-haiku) which is a mix of the iso image and the RAW image and can directly be used as an HDD, i.e. it does not require installation.
 
-### Downloading AMD SimNow <a name="#part_download-s"></a>
+### <a name="part_download-s"></a> Downloading AMD SimNow
 
 There is only the linux version of SimNow available on the AMD's website, but you can get an older 64bit Windows .exe [here](http://bit.ly/18Oa4np).
 
-### Installing SimNow <a name="#part_installing-s"></a>
+### <a name="part_installing-s"></a> Installing SimNow
 Installation of AMD SimNow is just like installing any other software.
 
 ![](https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/simnow/image1.png)
@@ -32,7 +33,7 @@ Installation of AMD SimNow is just like installing any other software.
 
 ![](https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/simnow/image3.png)
 
-### Preparing the Virtual Machine <a name="#part_preparing-vm"></a>
+### <a name="part_preparing-vm"></a> Preparing the Virtual Machine 
 
 ##### Creating the Hard Disk Image
 
@@ -96,7 +97,7 @@ Change File type to _"ISO Images (*.iso)"_ and browse to the downloaded Haiku is
 
 You can also use the anyboot image to directly run Haiku without installation in the VM. Just choose the anyboot image as your IDE Primary Master, and you're ready to go!
 
-### Running the Virtual Machine <a name="#part_running-vm"></a>
+### <a name="part_running-vm"></a> Running the Virtual Machine
 
 ![](https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/simnow/image18.png)
 
