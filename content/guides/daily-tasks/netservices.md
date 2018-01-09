@@ -34,7 +34,7 @@ SSH is a network protocol that allows for data to be exchanged using a secure ch
 Starting the SSH server daemon in Haiku is easy:
 <ol>
 <li>Add the SSH server user: <pre class="terminal">useradd sshd</pre></li>
-<li>Edit /system/settings/ssh/sshd_config and add the following option: <pre class="terminal">PermitRootLogin true</pre></li>
+<li>Edit /system/settings/ssh/sshd_config and add the following option: <pre class="terminal">PermitRootLogin yes</pre></li>
 <li>Start the SSH server daemon: <pre class="terminal">/boot/system/bin/sshd</pre></li>
 </ol>
 
