@@ -16,7 +16,7 @@ A large amount of detailed documentation is available for users and developers.
 * [Booting Haiku](/guides/booting)
 * [Installing Haiku](/guides/installing)
 * [Virtualizing Haiku](/guides/virtualizing)
-* [Trobleshooting](/guides/troubleshooting)
+* [Troubleshooting](/guides/troubleshooting)
 
 ### Developer Documentation
 
