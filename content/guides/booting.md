@@ -65,8 +65,8 @@ If you previously had only one operating system installed on your computer, GRUB
   * Edit /etc/grub.d/40_custom and add the following entry
 
     menuentry "Haiku R1A2" {
-       set root=(hd0,3)
-       chainloader +1
+       set root=(hd0,3);
+       chainloader +1
     }
 
 Of course the partition in the entry (hd0,3) needs to point to the one where you actually installed Haiku. Now you can regenerate the boot menu configuration by issuing `sudo update-grub`
