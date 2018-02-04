@@ -9,7 +9,7 @@ tags = []
 This page details the steps in creating an OptionalPackage. In addition to being a regular binary distribution archive, an OptionPackage includes a plain text file called <code>.OptionalPackageDescription</code> and possibly the license file.
 </p>
 
-<div class="alert alert-info">NOTE: With the recent incorporation of package management, OptionalPackages are obsolete. Haiku package files (HPKG) replace them. See <a href="https://dev.haiku-os.org/wiki/PackageManagement/BuildingPackages">PackageManagement/BuildingPackages</a> and <a href="http://bb.haikuports.org/haikuports/wiki/HaikuPorterForPM/BuildRecipes">HaikuPorterForPM / BuildRecipes</a> for instructions on creating HPKG's.</div>
+<div class="alert alert-info">NOTE: With the recent incorporation of package management, OptionalPackages are obsolete. Haiku package files (HPKG) replace them. See <a href="https://github.com/haiku/haiku/blob/master/docs/develop/packages/BuildingPackages.wiki">PackageManagement/BuildingPackages</a> and <a href="https://github.com/haikuports/haikuports/wiki/HaikuPorter-BuildRecipes">HaikuPorter / BuildRecipes</a> for instructions on creating HPKG's.</div>
 
 <h3 class="icon-document-medium">.OptionalPackageDescription</h3>
 <p>In <a href="https://dev.haiku-os.org/changeset/25050">changeset 25050</a>, support for these files was introduced. The contents of <code>.OptionalPackageDescription</code> is appended to AboutSystem's "COPYRIGHTS" attribute, which will cause the respective info to be shown in the about view.</p>
