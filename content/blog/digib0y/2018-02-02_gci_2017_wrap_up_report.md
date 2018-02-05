@@ -53,13 +53,4 @@ Owen Pan from United States</li>
 <li>and much more!</li>
 </ul>
 
-
-<h3>Let's see what our mentors and students have to say about their experience of GCI 2017</h3>
-
-<p>I hope that despite probably being the best of their age in their field, the winning students will stay humble, and hunger for new knowledge.</p>
-
-<p>I hope that despite probably being the best of their age in their field, the winning students will stay humble, and hunger for new knowledge.</p>
-
-<p>I hope that despite probably being the best of their age in their field, the winning students will stay humble, and hunger for new knowledge.</p>
-
 <p>So congratulations and thanks to all our hardworking students and their mentors, and especially Scott McCreary who once again shouldered the responsibility of administrating Haiku’s GCI participation.</p>
