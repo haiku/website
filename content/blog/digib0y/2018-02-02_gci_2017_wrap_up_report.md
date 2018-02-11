@@ -7,20 +7,24 @@ tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In"
 +++
 
 
-<p>Like all good things Google Code-In 2017 comes to an end, this year the program attracted over 3529 students in total for Google Code-In and out of those about ⅓ of the students claimed at least one task for Haiku, with 255 students completing at least one Haiku task. Haiku is also proud of its history of getting selected each year in <a href="http://codein.withgoogle.com">Google’s Code-In</a>.
+<p>Like all good things Google Code-In 2017 comes to an end, this year the program attracted over 3555 students in total for Google Code-In and out of those about ⅓ of the students claimed at least one task for Haiku, with 255 students completing at least one Haiku task. Haiku is also proud of its history of getting selected each year in <a href="http://codein.withgoogle.com">Google’s Code-In</a>.
 
 <p>Just like the other 24 organizations, Haiku picked winners out of the 10 students who completed the most tasks for Haiku, finalists and grand prize winners were picked collectively by the diligent team of Haiku’s 20+ mentors. The grand prize winners will be flown to Northern California to visit Google’s headquarters, enjoy a day of adventure in San Francisco, and meet one or two of their mentors and Google engineers.</p>
 
 <h3>Haiku’s Grand Prize Winners</h3>
 <ul>
-<li>
-Owen Pan from United States</li>
+<li>Owen Pan from United States</li>
 <li>Hiếu Đức Lê from Vietnam</li>
 </ul>
 
-<h3>Haiku’s Finalists</h3>
+<h3>Haiku’s Runner Up</h3>
 <ul>
 <li>Đắc Tùng Dương </li>
+</ul>
+
+
+<h3>Haiku’s Finalists</h3>
+<ul>
 <li>Xiang Fan </li>
 <li>Duong Dac</li>
 </ul>
@@ -35,10 +39,6 @@ Owen Pan from United States</li>
 </ul>
 
 <p>Congratulations everyone! Safe travels, grand prize winners! We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/community/getting-involved/">contribute</a> even after the program.</p>
-
-<p>Haiku had an impressive growth in the number of students:</p>
-
-<p><img src="/files/blog/digib0y/graph_gci2017.PNG" alt="Number of students" title=""></p>
 
 <p>To list some of the students’ achievements:</p>
 
