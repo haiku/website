@@ -19,7 +19,7 @@ tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In"
 
 <h3>Haiku’s Runner Up</h3>
 <ul>
-<li>Đắc Tùng Dương </li>
+<li>Bach Nguyen</li>
 </ul>
 
 
