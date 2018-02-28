@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Haiku Inc. All rights reserved.
+ * Copyright 2017-2018, Haiku Inc. All rights reserved.
  * Distributed under the terms of the MIT License.
  *
  * Contains portions of John Resig's Pretty Date.
@@ -137,7 +137,7 @@ function LoadPackagesTab(tab) {
 		for (var i = 0; i < DISPLAY_ITEMS_COUNT && i < items.length; i++) {
 			var itm = items[i];
 			html += MakeListItem(itm.querySelector("link").getAttribute("href").replace("http:", "https:"),
-				InnerXML(itm.querySelector("title")).replace(/(.*) - PkgVersion\[versionCoordinates=(.*)\] - (.*) : new version/, "$1 $2 ($3) ") + InnerXML(itm.querySelector("summary")), new Date(InnerXML(itm.querySelector("updated"))));
+				InnerXML(itm.querySelector("title")).replace(/(.*) - PkgVersion\[versionCoordinates=(.*)\] - (.*) : new version/, "$1 $2 ($3) "), new Date(InnerXML(itm.querySelector("updated"))));
 		}
 		html += "</ul>";
 		tab.children[0].remove();
