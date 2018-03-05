@@ -12,7 +12,7 @@ tags = []
 
 <h3>Infrastructure</h3>
 
-<p>There is a lot of invisible work in progress on getting the HAiku infrastructure
+<p>There is a lot of invisible work in progress on getting the Haiku infrastructure
 migrated to a new server and streamlined to use containers and standardized setup.
 This will eventually allow to better share the work of system administration in
 a larger team, allowing to scale up the infrastructure.</p>
@@ -22,9 +22,9 @@ version up in production.</p>
 
 <h3>Address space protection</h3>
 
-<p>Korli is still working on better protection of the kernel memory by using user\_memcpy
+<p>Korli is still working on better protection of the kernel memory by using user_memcpy
 as appropriate. This month he worked on usb (raw and hid) drivers, PCI msix, SCSI driver,
-write\_overlay, ACPI button and battery drivers,</p>
+write_overlay, ACPI button and battery drivers.</p>
 
 <h3>Media Kit</h3>
 
@@ -64,7 +64,7 @@ shown initially. However, this makes HaikuDepot look more like a boring package
 manager, rather than an application store, so we will probably need to revisit
 this at some later time.</p>
 
-<p>Andrew Lindesay also integrated some changes to continue iproving performance
+<p>Andrew Lindesay also integrated some changes to continue improving performance
 and reliability of HaikuDepot and in particular the integration with the server
 which provides icons, screnshots and user ratings. He started provisioning for
 future API changes and continued the work on getting notifications in batches,
@@ -78,7 +78,7 @@ of polling /dev/null in their configure script.</p>
 
 <h3>C library</h3>
 
-<p>Kallisti5 added an mkstemps function, which is a BSD extension but commonly
+<p>Kallisti5 added a mkstemps function, which is a BSD extension but commonly
 available on other operating systems.</p>
 
 <h3>Build system</h3>
