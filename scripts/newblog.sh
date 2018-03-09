@@ -20,5 +20,5 @@ fi
 
 DIRNAME=`echo $1 | tr '[:upper:]' '[:lower:]'`
 mkdir -p content/blog/$DIRNAME
-cp ./scripts/blog_index.md content/blog/$DIRNAME/index.md
-sed -i s/NAME_GOES_HERE/$1/g content/blog/$DIRNAME/index.md
+cp ./scripts/blog_index.md content/blog/$DIRNAME/_index.md
+sed -i s/NAME_GOES_HERE/$1/g content/blog/$DIRNAME/_index.md
