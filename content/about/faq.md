@@ -117,7 +117,7 @@ Haiku Inc. is the non-profit organization based in the United States whose goal 
 The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
 
 ### Will there be a 64-bit version of Haiku?
-For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 64-bit x86_64. The 32-bit release is compatible with the BeOS at a binary and API level. The 64-bit release is _not_ binary compatible with BeOS, but still enjoys compatibility with the powerful BeOS API (while offering modern features). The 32-bit Haiku release can run most BeOS applications without modification or recompiling.
+Yes. For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 64-bit x86_64. The 32-bit release is compatible with the BeOS at a binary and API level. The 64-bit release is _not_ binary compatible with BeOS, but still enjoys compatibility with the powerful BeOS API (while offering modern features). The 32-bit Haiku release can run most BeOS applications without modification or recompiling.
 
 ## Package Management
 Some common questions around the installation of software packages under Haiku.
@@ -126,7 +126,7 @@ Some common questions around the installation of software packages under Haiku.
 Yes! Haiku comes with a powerful package management system which makes it very easy to install applications and keep them up to date. Applications are distributed as package files which can either be installed from HaikuDepot, the graphical package management application, or downloaded directly from websites or other sources.
 
 ### How do I update my installation of Haiku?
-All installed packages, system as well as 3rd party, can be updated with the SoftwareUpdater application.
+All installed packages, system as well as third-party, can be updated with the SoftwareUpdater application.
 
 ### Where can I get more software for Haiku?
 The HaikuDepot application is the main entry point to discover Haiku software. It allows you to install many applications and libraries packaged by the [Haikuports project](http://haikuports.org)
@@ -195,10 +195,10 @@ The SysRq key is usually the same as "print screen", but may need to press an ex
 
 ## Hardware
 ### What are the minimum hardware requirements to run Haiku?
-The x86 32-bit release of Haiku will run on a Pentium or better CPU with 256MiB of RAM, 800MiB of storage space and a VESA compliant video card.
+The x86 32-bit release of Haiku will run on a Pentium or better CPU with 192MiB of RAM (as long as virtual memory is activated), 1GiB of storage space and a VESA compliant video card.
 
 However, for a satisfactory user experience, we recommend **at least** a Pentium4 with 512MiB of RAM and 2GiB of storage space.
-For compiling Haiku within itself, 2GiB of memory is recommended.
+For compiling Haiku within itself, 2GiB of RAM is recommended.
 
 ### Why doesn't Haiku let me use my monitor's resolution?
 Most likely, Haiku is using the VESA driver. As with any other VESA driver, it has limitations. The problem is that the VESA driver cannot configure an arbitrary resolution. Even if it recognizes the needed one from the monitor info.
