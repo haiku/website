@@ -74,7 +74,7 @@ Haiku is a fast, efficient, easy to use and lean open source operating system in
 The name of the project is simply "Haiku". Unfortunately, despite numerous attempts, the registration of haiku.org has not been possible; hence the reason for haiku-os.org.
 
 ### Where does the name Haiku come from?
-Haiku is named after the classical three-line Japanese poetry form. Haiku poetry is known for its quiet power, elegance and simplicity - among the core qualities of BeOS which we aim to recreate in Haiku. BeOS included some haiku in its user interface, in the form of network error messages displayed by its web browser. A list of most of the haikus are at [http://8325.org/haiku](http://8325.org/haiku).
+Haiku is named after the classical three-line Japanese poetry form. Haiku poetry is known for its quiet power, elegance, and simplicity - among the core qualities of BeOS which we aim to recreate in Haiku. BeOS included some haiku in its user interface, in the form of network error messages displayed by its web browser. A list of most of the haikus is avaiable at [http://8325.org/haiku](http://8325.org/haiku).
 
     Sites you are seeking
     From your path they are fleeing
@@ -114,7 +114,7 @@ Most of the Haiku code is released under the very liberal [MIT License](http://w
 Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [check out this page](http://haiku-inc.org)
 
 ### What platform(s) is Haiku targeted to run on?
-The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
+The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS, and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
 
 ### Will there be a 64-bit version of Haiku?
 Yes. For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 64-bit x86_64. The 32-bit release is compatible with the BeOS at a binary and API level. The 64-bit release is _not_ binary compatible with BeOS, but still enjoys compatibility with the powerful BeOS API (while offering modern features). The 32-bit Haiku release can run most BeOS applications without modification or recompiling.
@@ -142,19 +142,19 @@ Yes! You'll find a package for Caya, the multi-protocol IM client. Several alter
 Yes! The OpenJDK virtual machine is available and enables you to run applications such as Netbeans, JDownloader, and much more.
 
 ### Is there Flash support?
-Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open source operating system such as Haiku. However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for example).
+Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open-source operating system such as Haiku. However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for example).
 
 ### Is there an office suite?
 There are several options:
 
-  * You can run GoBe productive, the office suite for BeOS, if you have a copy of it. Unfortunately it is not distributed anymore.
+  * You can run GoBe productive, the office suite for BeOS, if you have a copy of it. Unfortunately, it is not distributed anymore.
   * You can buy a copy of [ThinkFree](http://thinkfree.com) office, which runs fine on Haiku using the OpenJDK virtual machine.
  * You can find the [Caligra](https://www.calligra.org/) office suite at HaikuDepot.
   * You can use an online tool such as [Google Docs](http://docs.google.com)
   * You can use native applications, such as Sum-It (spreadsheet), WonderBrush (drawing and graphical design).
 
 ### Are there any games for Haiku?
-Yes! HaikuDepot offers a selection of open source and freeware games. Most games written for BeOS will also run fine, and you can use emulators such as DosBox to run games originally written for other systems as well.
+Yes! HaikuDepot offers a selection of open source and freeware games. Most games written for BeOS will also run fine, and you can use emulators such as DOSBox to run games originally written for other systems as well.
 
 ### Is there python, ruby, perl?
 Yes! Haiku includes these common scripting languages and many more.
@@ -168,7 +168,7 @@ You can check the status of the releases at the [roadmap page](https://dev.haiku
 
 ## Technology
 ### I heard Haiku still uses GCC2, is that true?
-Our own interal fork of GCC2 is used to compile the x86 32-bit release to maintain BeOS binary compatibility. While GCC2 is the primary compiler for the x86 32-bit release, it also includes GCC 5.4.0 which can be leveraged to compile newer applications requiring it.
+Our own internal fork of GCC2 is used to compile the x86 32-bit release to maintain BeOS binary compatibility. While GCC2 is the primary compiler for the x86 32-bit release, it also includes GCC 5.4.0 which can be leveraged to compile newer applications requiring it.
 
 Other architectures (including x86_64) don't leverage GCC2.
 
@@ -179,7 +179,7 @@ Yes! In order to provide support for a modern version of C++ and up to date libr
 The ``setarch`` command can be used to switch between different architectures. On 32bit Haiku the default architecture is "x86_gcc2", secondary architecture is "x86".
 
 ### What is Kernel Debugging Land?
-The Haiku Kernel comes with a powerful and user friendly on-screen debugger. There you can enter commands investigate the problem and collect information in order to [write a bug report](https://www.haiku-os.org/docs/welcome/en/bugreports.html).
+The Haiku Kernel comes with a powerful and user-friendly on-screen debugger. There you can enter commands investigate the problem and collect information in order to [write a bug report](https://www.haiku-os.org/docs/welcome/en/bugreports.html).
 
 You can also reboot the machine, [generate QR codes](/blog/mmlr/2012-07-01_qr_encode_your_kdl_output), or play a game of hangman. :)
 
@@ -227,14 +227,14 @@ Haiku also provides drivers for several other card families. There is a [list of
 Some drivers (non-HD Radeon and Matrox) have experimental multi-monitor support, which allows both a clone and an extended desktop mode. However, applications are not made aware of the fact that the display is split across multiple monitors, which leads to issues such as windows opening in the middle of the desktop, split between the two monitors.
 
 ### How come there is no sound?
-First of all check that your sound card is visible in the Media preferences (this means there is a driver for it). If the card is detected but there is still no sound, this is a problem with our audio drivers.
+First of all, check that your sound card is visible in the Media preferences (this means there is a driver for it). If the card is detected but there is still no sound, this is a problem with our audio drivers.
 
 Most modern PC hardware uses sound devices compatible with the Intel HDA (high definition audio) specification. Unfortunately, the specification leaves the routing of the audio signals to the different outputs not completely specified, making it difficult to write a driver that works out of the box on all machines.
 
 ### Why is there no network access in VirtualBox?
 The default network adapter type in VirtualBox is known to not work well with Haiku.
 
-Fortunately VirtualBox provides several alternatives, which work much better. Try configuring your machine to use one of those, see the guide [Emulating Haiku in VirtualBox](/guides/virtualizing/virtualbox)
+Fortunately, VirtualBox provides several alternatives, which work much better. Try configuring your machine to use one of those, see the guide [Emulating Haiku in VirtualBox](/guides/virtualizing/virtualbox)
 
 ### Is there a list of working hardware?
 The development wiki has a [list of drivers](https://dev.haiku-os.org/wiki/HardwareInfo)
@@ -253,7 +253,7 @@ Instructions for [building Haiku](/guides/building) from source are documented i
 
 ## Using
 ### Why doesn't the tilde key work properly?
-The tilde {{< keyboard "~" >}} key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice, or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
+The tilde {{< keyboard "~" >}} key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
 
 ### How do I change my keyboard layout?
 Use the Keymaps preferences. If your preferred layout is not available there yet, you can customize an existing one by drag'n'dropping the keys around.
