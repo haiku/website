@@ -74,7 +74,7 @@ Haiku is a fast, efficient, easy to use and lean open source operating system in
 The name of the project is simply "Haiku". Unfortunately, despite numerous attempts, the registration of haiku.org has not been possible; hence the reason for haiku-os.org.
 
 ### Where does the name Haiku come from?
-Haiku is named after the classical three-line Japanese poetry form. Haiku poetry is known for its quiet power, elegance, and simplicity - among the core qualities of BeOS which we aim to recreate in Haiku. BeOS included some haiku in its user interface, in the form of network error messages displayed by its web browser. A list of most of the haikus is avaiable at [http://8325.org/haiku](http://8325.org/haiku).
+Haiku is named after the classical three-line Japanese poetry form. Haiku poetry is known for its quiet power, elegance, and simplicity - among the core qualities of BeOS which we aim to recreate in Haiku. BeOS included some haiku in its user interface, in the form of network error messages displayed by its web browser. A list of most of the haikus is available at [http://8325.org/haiku](http://8325.org/haiku).
 
     Sites you are seeking
     From your path they are fleeing
