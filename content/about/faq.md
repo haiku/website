@@ -259,4 +259,4 @@ The tilde {{< keyboard "~" >}} key is a dead key, used to type characters like Ã
 Use the Keymaps preferences. If your preferred layout is not available there yet, you can customize an existing one by drag'n'dropping the keys around.
 
 ### Is there some kind of failsafe mode I can boot into? How do I get to it?
-You can get to the boot menu by holding {{< SHIFT >}} or pressing {{< SPACE >}} before the Haiku boot screen shows. From there you can toggle several safe mode settings, such as forcing a lower video resolution, preventing drivers from getting loaded, or disabling some hardware features by blacklisting its driver. See the [user guide's Boot Loader](/docs/userguide/en/bootloader.html) chapter.
+You can get to the boot menu by holding {{< keyboard SHIFT >}} or pressing {{< keyboard SPACE >}} before the Haiku boot screen shows. From there you can toggle several safe mode settings, such as forcing a lower video resolution, preventing drivers from getting loaded, or disabling some hardware features by blacklisting its driver. See the [user guide's Boot Loader](/docs/userguide/en/bootloader.html) chapter.
