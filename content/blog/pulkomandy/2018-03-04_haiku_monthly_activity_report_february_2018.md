@@ -8,7 +8,7 @@ tags = []
 
 <p>Welcome to the second monthly report for 2018!</p>
 
-<p>This report covers hrev51791-hrev51882</p>
+<p>This report covers hrev51791-hrev51832</p>
 
 <h3>Infrastructure</h3>
 
