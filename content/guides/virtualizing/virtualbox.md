@@ -5,6 +5,8 @@ date = "2011-03-12T16:46:57.000Z"
 tags = []
 +++
 
+For Google Code In 2017, Jakub Pajdowski created a [video on how to install Haiku in VirtualBox](http://haiku-files.org/files/media/GCI-2017_VirtualBox_Jakub-Pajdowski.mp4) [6 MiB].
+
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
 This How-To guide will describe the process of running Haiku on virtual machine (VM) using VirtualBox 3.2 There are two ways it can be done– one is installing and running Haiku from CD-ROM image, which is similar to a physical instance. Ror convenience and time-saving purposes, the user may also use the already prepared VM hard disk image. The decision is left up to the user, although many people prefer VM image as it is easier to manage.

@@ -5,6 +5,8 @@ date = "2016-12-29T10:30:00.000Z"
 tags = []
 +++
 
+For Google Code In 2017, Brihadeesh Radhakrishnan created a [video on how to install Haiku in VMware Fusion](http://haiku-files.org/files/media/GCI-2017_VMWare-Fusion_Brihadeesh-Radhakrishnan.mkv) [6 MiB].
+
 There are several methods offered to install Haiku. Among those, only the vmdk and the iso methods are suitable for running Haiku easily on VMware Fusion. Basically these are the two methods that will be shown in this guide. The easiest of all is utilising the vmdk which is already properly configured.
 
 <div class="box-info">Running Haiku from a VM image is recommended to avoid any possible problems. Unless it does not work, or you would like to simulate an actual installation, do stick to this method.</div>
