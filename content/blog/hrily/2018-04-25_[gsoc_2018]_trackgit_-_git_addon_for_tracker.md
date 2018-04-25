@@ -13,6 +13,7 @@ I'm currently doing my B.Tech. in Computer Engineering at National Institute of 
 ## About TrackGit
 
 The proposed project focuses on implementing an Addon for Tracker to support the Git version control system. The following are the requirements from the Addon:
+
 + Provide user friendly graphical interface:
   + To create or clone git repositories.
   + To add files to git.
