@@ -198,11 +198,9 @@ part-time student<br />
             <li><a href="/legacy-docs/writing-video-card-drivers/appendix-a-sources-of-information#a.3">The Internet</a></li>
             <li><a href="/legacy-docs/writing-video-card-drivers/appendix-a-sources-of-information#a.4">Testing For Specifications</a></li>
             <li><a href="/legacy-docs/writing-video-card-drivers/appendix-a-sources-of-information#a.5">Reverse Engineering</a></li>
+			<li><a href="/legacy-docs/writing-video-card-drivers/appendix-b-glossary">Glossary</a></li>
+			<li><a href="/legacy-docs/writing-video-card-drivers/appendix-c-references">References</a></li>
         </ol>
-    </li><br />
-
-    <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/appendix-b-glossary">Glossary</a></font></li>
-
-    <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/appendix-c-references">References</a></font></li>
+    </li>
 </ol>
 </p>
