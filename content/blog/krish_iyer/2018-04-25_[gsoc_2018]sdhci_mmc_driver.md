@@ -1,6 +1,6 @@
 +++
 type = "blog"
-title = "[GSoC 2018]:SDHCI MMC Driver"
+title = "[GSoC 2018] SDHCI MMC Driver"
 author = "krish_iyer"
 date = "2018-04-25 22:08:09+05:30"
 tags = ["haiku", "software"]
