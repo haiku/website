@@ -39,7 +39,7 @@ part-time student<br />
 
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver">Kernel Driver</a></font>
         <ol>
-            <li><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1">Interface To The OS</a></h4>
+            <li><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1">Interface To The OS</a>
                 <ol>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1.1">init_hardware()</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1.2">init_driver()</a></font></li>
@@ -199,10 +199,8 @@ part-time student<br />
             <li><a href="/legacy-docs/writing-video-card-drivers/appendix-a-sources-of-information#a.4">Testing For Specifications</a></li>
             <li><a href="/legacy-docs/writing-video-card-drivers/appendix-a-sources-of-information#a.5">Reverse Engineering</a></li>
         </ol>
-    </li><br />
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/appendix-b-glossary">Glossary</a></font></li>
-
-    <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/appendix-c-references">References</a></font></li>
+	<li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/appendix-c-references">References</a></font></li>
 </ol>
 </p>
