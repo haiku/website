@@ -11,7 +11,7 @@ Hey folks! here's the updates of past two weeks on the project!
 
 I have cloned the latest haiku source and built the image file. With the generated image file I have emulated sdhci-pci device successfully. Following are the instructions to be followed:
 
-## Clonning the source code
+## Cloning the source code
 
 	git clone https://github.com/haiku/haiku.git
 	git clone https://github.com/haiku/buildtools.git
@@ -81,7 +81,7 @@ For exploring the hardware in the computer, the system has device drivers.
 
 ### APIs implemented so far:
 * supports_device(): It actually checks if the device belongs to PCI bus and filter out for sdhci-pci device out of all the devices on the pci bus.
-* init_device(): it creates a private data structure(device_cookie) for unint_driver(), register_child_devices(), rescan_child_devices(), device_removed(), suspend() and resume().
+* init_device(): it creates a private data structure(device_cookie) for uninit_driver(), register_child_devices(), rescan_child_devices(), device_removed(), suspend() and resume().
 
 ### To make the driver module loadable:
 * Module name must end with driver_v1(SDHCI_PCI_DEVICE_MODULE_NAME "busses/mmc/sdhci_pci/driver/v1")
