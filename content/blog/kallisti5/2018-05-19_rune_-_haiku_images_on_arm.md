@@ -6,7 +6,7 @@ date = "2018-05-19 15:33:42-05:00"
 tags = ["haiku", "software"]
 +++
 
-Up until recently, Haiku builds for ARM have targetted individual ARM boards. The compile process for ARM images required two things: an architecture, and a target board (such as the Raspberry Pi 2). This board setting adjusted a large number of defines throughout Haiku at compile time to set the operating system up for the target ARM device. The board selection also handled placing all the propriety bits (a lot of which have sketchy licensing) into the Haiku image during compile. Haiku would then has to distribute these files. (sketchy licensing and all)
+Up until recently, Haiku builds for ARM have targetted individual ARM boards. The compile process for ARM images required two things: an architecture, and a target board (such as the Raspberry Pi 2). This board setting adjusted a large number of defines throughout Haiku at compile time to set the operating system up for the target ARM device. The board selection also handled placing all the propriety bits (a lot of which have sketchy licensing) into the Haiku image during compile. Haiku would then have to distribute these files. (sketchy licensing and all)
 
 Over the past few years, François Revol, Ithamar R. Adema, and others have worked to add [Flat Device Tree (FDT)](https://elinux.org/Device_Tree_Reference) support to Haiku. FDT's enable operating systems to obtain core knowledge of the devices they run on by simply swapping one or more compiled binary files. These files describe critical things the operating system needs to know about the hardware they run on. *Really* important things such as what devices exist at what memory locations. (Think video frame buffers, serial ports, etc)
 
