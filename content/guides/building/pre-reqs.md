@@ -43,13 +43,13 @@ Below are common build platforms and their statuses. This is not meant as a comp
 **Basic requirements:**
 
 ```
-sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool
+sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool mtools
 ```
 
 **Additional requirements for ARM:**
 
 ```
-sudo apt-get install u-boot-tools util-linux mtools device-tree-compiler bc
+sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 ```
 
 <a name="pacman"></a>
@@ -58,13 +58,13 @@ sudo apt-get install u-boot-tools util-linux mtools device-tree-compiler bc
 **Basic requirements:**
 
 ```
-sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex cdrtools bc
+sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex cdrtools bc mtools
 ```
 
 **Additional requirements for ARM:**
 
 ```
-sudo pacman -S yaourt uboot-tools mtools bc
+sudo pacman -S yaourt uboot-tools bc
 ```
 
 <a name="yum"></a>
@@ -73,13 +73,13 @@ sudo pacman -S yaourt uboot-tools mtools bc
 **Basic requirements:**
 
 ```
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static mtools
 ```
 
 **Additional requirements for ARM:**
 
 ```
-sudo yum install mtools libfdt bc
+sudo yum install libfdt bc
 ```
 
 <a name="zypper"></a>
@@ -97,13 +97,13 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 **Basic requirements:**
 
 ```
-sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrtools wget nasm net-misc/curl bc
+sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrtools wget nasm net-misc/curl bc mtools
 ```
 
 **Additional requirements for ARM:**
 
 ```
-sudo emerge -av u-boot-tools mtools util-linux dtc bc
+sudo emerge -av u-boot-tools util-linux dtc bc
 ```
 
 <a name="bsd"></a>
@@ -136,7 +136,7 @@ Once you have installed XCode and the command line tools as well as agreed to th
 **To install the prerequisite software using Macports do the following:**
 
 1. Install <a href="http://www.macports.org/">MacPorts</a> (A standard Installer package is provided).
-2. Close your Terminal, open a new one and type ```sudo port install autoconf cdrtools gawk wget nasm less mpfr gmp libmpc bison```
+2. Close your Terminal, open a new one and type ```sudo port install autoconf cdrtools gawk wget nasm less mpfr gmp libmpc bison mtools```
 
 If you get an error “port: command not found”, the MacPorts shell configuration, stored in <code>~/.profile</code>, is probably not taken into account.
 If you’re using Bash, you probably have a <code>~/.bash_profile</code> or <code>~/.bash_login</code> file, preventing bash to read <code>~/.profile</code>.
@@ -156,7 +156,7 @@ You can now retry the <code>port install...</code> command in a new Terminal.
 **To install the prerequisite software using Homebrew:**
 
 1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm homebrew/dupes/less mpfr gmp libmpc bison```
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm homebrew/dupes/less mpfr gmp libmpc bison mtools```
 3. Force using the newer bison version. ```brew link bison --force```
 
 Note: You'll need to install gnu less from the dupes repository as OS X comes with BSD less while Haiku requires GNU less.
