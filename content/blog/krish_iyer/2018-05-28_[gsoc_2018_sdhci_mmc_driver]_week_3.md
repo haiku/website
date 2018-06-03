@@ -8,6 +8,7 @@ date = "2018-05-28 20:35:18+05:30"
 tags = ["haiku", "software", "GSoC 2018", "SDHCI", "MMC", "Driver"]
 +++
 Sorry folks! for the delay in the updates. I was pretty much occupied by end term exams. After initial setup, we divided the our initial plan in following steps.
+
 * Discover PCI bus
 * Filter out SDHC device from the connected devices on the bus.
 * Register the device as the child node.
