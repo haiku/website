@@ -17,6 +17,6 @@ My mentor Stephen had put up few comments on my commits so far. I addressed them
 
 The initial implementation of clone was blocking the UI thread. I used the pthread library to make the clone processes threaded. Now the clone command does not block UI.
 
-## Implmented Clone progress Window
+## Implemented Clone progress Window
 
 In addition to making clone progresses threaded, I also implemented the displaying of clone progress. Unfortunately, the progress text is not displayed correctly, which should be solved soon.
