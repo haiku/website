@@ -21,7 +21,7 @@ Previously, the status was shown in a BAlert. This was not good if the status te
 
 ## Implemented TrackGit Application
 
-The major change in the TrackGit till now is the implementation of TrackGit Application. Previously whenevere user clicked on same option twice, say status,s then two windows were opened, even if repo for checking status was same.
+The major change in the TrackGit till now is the implementation of TrackGit Application. Previously whenevere user clicked on same option twice, say status, then two windows were opened, even if repo for checking status was same.
 
 In ideal case, the addon should move the previous status window to front whenever such scenario happens.
 
