@@ -74,5 +74,5 @@ interrupts is more important and splitting can be done in parallel.
 Thanks to korli, PulkoMandy, phoudoin for helping me. I will be soon be ready
 with a plan for bus manager after setting up the interrupts and registers etc.	
 
-[1]: https://github.com/krish-iyer/haiku/blob/sdhci_mmc_driver/src/system/kernel/device_manager/device_manager.cpp#L1917
-[2]: https://review.haiku-os.org/#/c/haiku/+/276/
+1. https://github.com/krish-iyer/haiku/blob/sdhci_mmc_driver/src/system/kernel/device_manager/device_manager.cpp#L1917
+2. https://review.haiku-os.org/#/c/haiku/+/276/

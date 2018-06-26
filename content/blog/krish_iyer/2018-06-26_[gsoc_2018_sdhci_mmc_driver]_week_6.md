@@ -39,10 +39,11 @@ In this I was also explored an interesting aspect which I haven't looked into, t
 attached link to mail archive[6] and tried to explain. Please comment below if I have missed something or any different idea 
 in which it could have been explained. Recently, there was also a commit[7] regarding register definition for sepc version 4.2 
 in qemu. Let's see in this week if get card detection working.
-[1]:https://github.com/qemu/qemu/blob/bec9c64ef7be8063f1192608b83877bc5c9ea217/hw/sd/sdhci.c#L72
-[2]:https://www.sdcard.org/jp/developers/overview/host_controller/simple_spec/Simplified_SD_Host_Controller_Spec.pdf
-[3]:https://www.sdcard.org/downloads/pls/pdf/index.php?p=PartA2_SD%20Host_Controller_Simplified_Specification_Ver4.20.jpg&f=PartA2_SD%20Host_Controller_Simplified_Specification_Ver4.20.pdf&e=EN_SSA2
-[4]:https://github.com/krish-iyer/haiku/blob/5abb958dec121d202e3f71450d41acff063d5393/src/add-ons/kernel/busses/mmc/sdhci_pci.cpp#L116
-[5]:https://github.com/krish-iyer/haiku/commit/5abb958dec121d202e3f71450d41acff063d5393
-[6]:https://www.freelists.org/post/haiku-development/SDHCI-MMC-Driver-Trouble-in-Mapping-the-Registers,1   
-[7]:https://github.com/qemu/qemu/commit/1e23b63f022ae79d7a5c535fe549127ad52d5ba6
+
+1. https://github.com/qemu/qemu/blob/bec9c64ef7be8063f1192608b83877bc5c9ea217/hw/sd/sdhci.c#L72
+2. https://www.sdcard.org/jp/developers/overview/host_controller/simple_spec/Simplified_SD_Host_Controller_Spec.pdf
+3. https://www.sdcard.org/downloads/pls/pdf/index.php?p=PartA2_SD%20Host_Controller_Simplified_Specification_Ver4.20.jpg&f=PartA2_SD%20Host_Controller_Simplified_Specification_Ver4.20.pdf&e=EN_SSA2
+4. https://github.com/krish-iyer/haiku/blob/5abb958dec121d202e3f71450d41acff063d5393/src/add-ons/kernel/busses/mmc/sdhci_pci.cpp#L116
+5. https://github.com/krish-iyer/haiku/commit/5abb958dec121d202e3f71450d41acff063d5393
+6. https://www.freelists.org/post/haiku-development/SDHCI-MMC-Driver-Trouble-in-Mapping-the-Registers,1   
+7. https://github.com/qemu/qemu/commit/1e23b63f022ae79d7a5c535fe549127ad52d5ba6
