@@ -26,7 +26,8 @@ IOMMU is as follows:
 		physicalAddress, mapSize, B_ANY_KERNEL_BLOCK_ADDRESS,
 		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA,
 		(void **)&fCapabilityRegisters);
-So for publishing the slots we need a mmc disk driver[1], which will get the child device node which was registered by register_child_devices() in sdhci_pci.cpp, 
+So for publishing the slots we need a [mmc disk driver](https://github.com/krish-iyer/haiku/blob/3b142c3fdb0757065875e37ebdf6435898fbe15f/src/add-ons/kernel/drivers/disk/mmc/mmc_disk.cpp
+), which will get the child device node which was registered by register_child_devices() in sdhci_pci.cpp, 
 it is mmc bus in this case. As each slot is a mmc bus device, it will publish the slots in /dev/disk/mmc/…
 The hierarchy will be something like:
 	
@@ -47,8 +48,3 @@ This week while figuring out I also notice something like , "B_PRI(x)" which are
 the values across different architechtures like %d and %ld will be different for 32-bit and 64-bit.
 
 Next, I will try to create a device module which will do MMC io, read, write etc on MMC media. Thanks to korli, DeadYak, PulkoMandy, phoudoin. 
-
-1. https://github.com/krish-iyer/haiku/blob/3b142c3fdb0757065875e37ebdf6435898fbe15f/src/add-ons/kernel/drivers/disk/mmc/mmc_disk.cpp
-
- 
-  
