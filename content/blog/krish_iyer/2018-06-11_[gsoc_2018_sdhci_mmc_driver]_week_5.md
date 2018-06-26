@@ -47,7 +47,8 @@ This week while figuring out I also notice something like , "B_PRI(x)" which are
 the values across different architechtures like %d and %ld will be different for 32-bit and 64-bit.
 
 Next, I will try to create a device module which will do MMC io, read, write etc on MMC media. Thanks to korli, DeadYak, PulkoMandy, phoudoin. 
-[1]: https://github.com/krish-iyer/haiku/blob/3b142c3fdb0757065875e37ebdf6435898fbe15f/src/add-ons/kernel/drivers/disk/mmc/mmc_disk.cpp
+
+1. https://github.com/krish-iyer/haiku/blob/3b142c3fdb0757065875e37ebdf6435898fbe15f/src/add-ons/kernel/drivers/disk/mmc/mmc_disk.cpp
 
  
   
