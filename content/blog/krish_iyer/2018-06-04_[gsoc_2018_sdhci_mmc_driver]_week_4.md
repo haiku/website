@@ -10,8 +10,8 @@ tags = ["haiku", "software", "driver", "SDHCI", "MMC", "GSoC 2018"]
 Hey everyone! here I am with another update. Last time I had concluded-"PCI class is not discoverable to device manager", it was actally a bit wrong.
 So korli explained that device manager won't load a driver which system
 doesn't know so in order for device manager to consider sdhci bus device, it has to
-be added under a condition of the devices of same type. So we added it under
-"disk"[1]. With that he also committed PoC[2] which came out to be very useful but
+be added under a condition of the devices of same type. So we [added it under
+"disk"](https://github.com/krish-iyer/haiku/blob/sdhci_mmc_driver/src/system/kernel/device_manager/device_manager.cpp#L1917). With that he also committed [PoC](https://review.haiku-os.org/#/c/haiku/+/276/) which came out to be very useful but
 still I took sometime to really understand it.
 
 So next thing which we intended to do is to register a child device or a node
@@ -73,6 +73,3 @@ interrupts is more important and splitting can be done in parallel.
 
 Thanks to korli, PulkoMandy, phoudoin for helping me. I will be soon be ready
 with a plan for bus manager after setting up the interrupts and registers etc.	
-
-1. https://github.com/krish-iyer/haiku/blob/sdhci_mmc_driver/src/system/kernel/device_manager/device_manager.cpp#L1917
-2. https://review.haiku-os.org/#/c/haiku/+/276/
