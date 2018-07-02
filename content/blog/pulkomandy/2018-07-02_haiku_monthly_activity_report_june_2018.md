@@ -17,7 +17,7 @@ are now part of a "team".</p>
 They are an open source project, funded themselves by donations from their users, and with an
 interesting approach to funding free software and other commons creations. Your donations are
 anonymous if you use this channel, which makes sure it isn't used as a hidden contract work or
-bounty or any other kind of commercial system. So, have a look at the <a href="">Haiku team on Liberapay</a>
+bounty or any other kind of commercial system. So, have a look at the <a href="https://liberapay.com/Haiku/">Haiku team on Liberapay</a>
 and consider funding the work of either the team as a whole, or one contributor in particular.</p>
 
 <h3>Drivers</h3>
