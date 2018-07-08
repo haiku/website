@@ -12,7 +12,7 @@ As many of you are already aware, LibreOffice is now available on Haiku. This ha
 
 WebArchive has a copy of [a wiki page](http://web.archive.org/web/20131016171054/http://wiki.ooo4kids.org/index.php/EnvironmentSetup/HaikuOS) detailing how to build OOo4Kids on Haiku. It's so far in the past, that it says it can't be built on Alpha 2 because of some bugs. The person working on that was oco. But wait, what is OOo4Kids and why port that instead of full Open/LibreOffice?[^1]
 
-> It is a lightweight version of Open Office (it was before LibreOffice fork). At that time, it was better to start with that as some dependencies not available under Haiku were already removed, like Java
+It is a lightweight version of Open Office (it was before LibreOffice fork). At that time, it was better to start with that as some dependencies not available under Haiku were already removed, like Java
 
 oco didn't [get very far](http://lists.ports.haiku-files.org/pipermail/haikuports-devs-ports.haiku-files.org/2014-July/003636.html) in terms of usability: he had everything compiling, with VCL (LibreOffice's GUI toolkit) being just an empty shell. However, looking at these instructions and considering this was before Haiku had a package manager, I'm guessing a lot of work and figuring things out were needed to get to that point. That being said, I ended up starting from scratch.
 
@@ -60,7 +60,7 @@ mmu_man suggested that I should give a presentation about the port in Open Docum
 
 ## Final stretch
 
-After [the presentation](https://fosdem.org/2018/schedule/event/ode_haiku/) I talked with [Michael Meeks](https://people.gnome.org/~michael/) about the port. He was very glad to see someone work on a new port and diving into VCL. He encouraged me to upstream my patches as soon as I can and suggested using Cairo for rendering [^3], which would save significant amount of work. I wanted to push LO out to users as soon as possible so I started pursuing that. I have cleaned up and [upstreamed](https://github.com/LibreOffice/core/commits?author=KapiX) the basics that enabled LO to compile on Haiku. GUI port was very hacky so I ommitted that part of the code.
+After [the presentation](https://fosdem.org/2018/schedule/event/ode_haiku/) I talked with [Michael Meeks](https://people.gnome.org/~michael/) about the port. He was very glad to see someone work on a new port and diving into VCL. He encouraged me to upstream my patches as soon as I can and suggested using Cairo for rendering [^3], which would save significant amount of work. I wanted to push LO out to users as soon as possible so I started pursuing that. I have cleaned up and [upstreamed](https://github.com/LibreOffice/core/commits?author=KapiX) the basics that enabled LO to compile on Haiku. GUI port was very hacky so I omitted that part of the code.
 
 Somewhere around that time Qt port started taking shape and diver asked if that could be used. I didn't like the idea at first [^4] but intrigued I tried to build it. With my knowledge of the build system it was pretty easy and I didn't even have to write [any new code](https://github.com/LibreOffice/core/commit/99614e0a782a15749bdc3781d5319309c8d48b46). With that in place, diver and 3dEyes took it from there.
 
