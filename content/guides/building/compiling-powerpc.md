@@ -24,5 +24,5 @@ tags = ["PowerPC compiling"]
 <pre class="terminal">jam -q haiku-boot-cd</pre>
 <br/>
 <b>To compile a Haiku network boot image:</b>
-<a href="/guides/booting/over_local_network">Booting Haiku over a local network</a>
+<a href="/guides/network_booting">Booting Haiku over a local network</a>
 </p>
