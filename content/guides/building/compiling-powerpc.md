@@ -21,7 +21,7 @@ tags = ["PowerPC compiling"]
 <p>Apple PowerPC hardware is starting to age. There was quite a bit of work on PowerPC code, however given the large amount of reliability issues with Apple PowerPC hardware and the large hardware cost, PowerPC development has slowed.<br/>
 
 <b>To compile a Haiku boot cd for PowerPC:</b>
-<pre class="terminal">jam -q haiku-boot-cd-ppc</pre>
+<pre class="terminal">jam -q haiku-boot-cd</pre>
 <br/>
 <b>To compile a Haiku network boot image:</b>
 <a href="/guides/booting/over_local_network">Booting Haiku over a local network</a>
