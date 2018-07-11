@@ -37,7 +37,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Will GoBe Productive work in Haiku?](#will-gobe-productive-work-in-haiku)
   * Technical
     * [When is the next release?](#when-is-the-next-release)
-    * [I heard Haiku still uses GCC2, is that true?](#i-heard-haiku-still-uses-gcc2-is-that-true)
+    * [I heard Haiku still uses gcc2, is that true?](#i-heard-haiku-still-uses-gcc2-is-that-true)
     * [Is there support for newer GCC compilers?](#is-there-support-for-newer-gcc-compilers)
     * [How do I use the different GCC versions?](#how-do-i-use-the-different-gcc-versions)
     * [What is Kernel Debugging Land?](#what-is-kernel-debugging-land)
@@ -167,13 +167,13 @@ Yes! Haiku's 32-bit installation is binary-compatible with BeOS R5, which means 
 You can check the status of the releases at the [roadmap page](https://dev.haiku-os.org/roadmap).
 
 ## Technology
-### I heard Haiku still uses GCC2, is that true?
-Our own internal fork of GCC2 is used to compile the x86 32-bit release to maintain BeOS binary compatibility. While GCC2 is the primary compiler for the x86 32-bit release, it also includes GCC 5.4.0 which can be leveraged to compile newer applications requiring it.
+### I heard Haiku still uses gcc2, is that true?
+Our own internal fork of gcc2 is used to compile the x86 32-bit release to maintain BeOS binary compatibility. While gcc2 is the primary compiler for the x86 32-bit release, it also includes a modern gcc7 which can be leveraged to compile newer applications requiring it.
 
-Other architectures (including x86_64) don't leverage GCC2.
+Other architectures (including x86_64) don't leverage gcc2.
 
 ### Is there support for newer GCC compilers?
-Yes! In order to provide support for a modern version of C++ and up to date libraries, the official versions of Haiku come with both gcc2 and gcc5 installed, and a set of libraries suitable for use with each compiler. If you are not interested in BeOS support, we also provide an (unsupported) version of the system that uses only gcc4.
+Yes! In order to provide support for a modern version of C++ and up to date libraries, the official versions of Haiku come with both gcc2 and gcc7 installed, and a set of libraries suitable for use with each compiler. If you are not interested in BeOS support, we also provide a 64bit version of the system that uses only gcc7.
 
 ### How do I use the different GCC versions?
 The ``setarch`` command can be used to switch between different architectures. On 32bit Haiku the default architecture is "x86_gcc2", secondary architecture is "x86".
