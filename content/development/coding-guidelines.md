@@ -38,42 +38,42 @@ First, let's use some examples to illustrate the main formatting conventions:
 ```cpp
 class Foo : public Bar {
 public:
-                                Foo(int32);
-    virtual                     ~Foo();
+								Foo(int32);
+	virtual						~Foo();
 
-    virtual void                SomeFunction(SomeType* argument);
+	virtual void				SomeFunction(SomeType* argument);
 
-    // indent long argument lists by a tab:
-    virtual const char*         FunctionLotsOfArguments(const char* name,
-                                    const char* path, const char* user);
+	// indent long argument lists by a tab:
+	virtual const char*		 FunctionLotsOfArguments(const char* name,
+									const char* path, const char* user);
 
 private:
-            int32               _PrivateMethod();
-    static  int32               _SomeStaticPrivateMethod();
+			int32			   _PrivateMethod();
+	static  int32			   _SomeStaticPrivateMethod();
 
-    volatile int32              fMember;
-        const char*             fPointerMember;
+	volatile int32				fMember;
+		const char*				fPointerMember;
 };
 
 // The ':' always comes on its own line, initializers following
 
 Foo::Foo(int32 param)
-    :
-    Bar(int32* param),
-    fMember(param),
-    fPointerMember(NULL)
+	:
+	Bar(int32* param),
+	fMember(param),
+	fPointerMember(NULL)
 {
-    ...
+	...
 }
 
 /*! Function descriptions are using doxygen style. Please note, this is not
-    a place for end-user documentation, but for documentation that helps
-    understanding the code, and using the functions correctly.
+	a place for end-user documentation, but for documentation that helps
+	understanding the code, and using the functions correctly.
 */
 template const T*
 Foo::Bar(const char* bar1, T bar2)
 {
-    ...
+	...
 }
 ```
 
@@ -486,8 +486,8 @@ bool doThings = value;
 *   Don't use constructor call syntax for initializing pointers, etc. to `NULL` like this:
 
 ```cpp
-	// wrong
-	BView* view(NULL);
+// wrong
+BView* view(NULL);
 ```
 
 <dl>
