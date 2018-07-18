@@ -12,7 +12,7 @@ As many of you are already aware, LibreOffice is now available on Haiku. This ha
 
 WebArchive has a copy of [a wiki page](http://web.archive.org/web/20131016171054/http://wiki.ooo4kids.org/index.php/EnvironmentSetup/HaikuOS) detailing how to build OOo4Kids on Haiku. It's so far in the past, that it says it can't be built on Alpha 2 because of some bugs. The person working on that was oco. But wait, what is OOo4Kids and why port that instead of full Open/LibreOffice?[^1]
 
-It is a lightweight version of Open Office (it was before LibreOffice fork). At that time, it was better to start with that as some dependencies not available under Haiku were already removed, like Java
+> It is a lightweight version of Open Office (it was before LibreOffice fork). At that time, it was better to start with that as some dependencies not available under Haiku were already removed, like Java
 
 oco didn't [get very far](http://lists.ports.haiku-files.org/pipermail/haikuports-devs-ports.haiku-files.org/2014-July/003636.html) in terms of usability: he had everything compiling, with VCL (LibreOffice's GUI toolkit) being just an empty shell. However, looking at these instructions and considering this was before Haiku had a package manager, I'm guessing a lot of work and figuring things out were needed to get to that point. That being said, I ended up starting from scratch.
 
