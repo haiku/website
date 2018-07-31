@@ -17,7 +17,7 @@ It can also be used directly from various emulators such as [QEMU](https://www.q
 
 |Version                      |Date               |
 |-----------------------------|-------------------|
-|[R1, Alpha 4.1](release-r1a4)|November 14th, 2012|
+|[R1, Alpha 4.1](http://haiku.osuosl.org/releases/r1alpha4.1/)|November 14th, 2012|
 |[R1, Alpha 3](http://haiku.osuosl.org/releases/r1alpha3/)|June 20th, 2011|
 |[R1, Alpha 2](http://haiku.osuosl.org/releases/r1alpha2/)|May 10th, 2010|
 |[R1, Alpha 1](http://haiku.osuosl.org/releases/r1alpha1/)|September 14th, 2009|
