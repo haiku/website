@@ -194,7 +194,7 @@ function updateDonationMeter() {
 				// 1. Current donation total
 				var current = json.total_donations;
 				var currentSpan = document.getElementById("fundraising-current-text");
-				currentSpan.innerText = "$" + addCommas(Math.ceil(current));
+				currentSpan.innerText = "$" + addCommas(Math.round(current));
 
 				// 2. The right pixels for the "percentage" donated.
 				//    This is (current_donations/10000) * 128, where 10000 is the
