@@ -12,8 +12,8 @@ Building the x86_64 compiler toolset is quite easy and involves generating GCC
 binaries for your platform. For a complete list of flags for the configure
 script, see <a href='/guides/building/configure'>Haiku's Configure Options</a>.
 
-x86_64 exclusively uses GCC 5, this differs from our 32-bit x86_gcc2 builds which
-include both GCC 2 (for BeOS compatibility) and GCC 5 as a secondary architecture.
+x86_64 exclusively uses gcc7, this differs from our 32-bit x86_gcc2 builds which
+include both gcc2 (for BeOS compatibility) and gcc7 as a secondary architecture.
 
 From the Haiku source directory, run the following to compile
 the build tools (be sure to adjust the options to match your build environment):

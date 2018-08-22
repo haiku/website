@@ -186,4 +186,4 @@ Recommended file systems to use under Linux are XFS, and ReiserFS at this time.
 
 There is a fallback mechanism that is used otherwise, but this is known to be problematic sometimes.
 
-In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : --use-xattr](/guides/building/configure/use-xattr)
+In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : \--use-xattr](/guides/building/configure/use-xattr)
