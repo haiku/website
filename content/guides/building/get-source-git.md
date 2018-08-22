@@ -23,22 +23,26 @@ Haiku's source code is currently being hosted in a <a href="http://git-scm.com/"
 <ul>
 <li><h4>Build Tools:</h4>
 <pre class="terminal">
-git clone https://git.haiku-os.org/buildtools
+git clone https://review.haiku-os.org/buildtools
 </pre>
+<!--
 or (if you have a problem with https)
 <pre class="terminal">
 git clone git://git.haiku-os.org/buildtools
 </pre>
+-->
 </li>
 
 <li><h4>Haiku:</h4>
 <pre class="terminal">
-git clone https://git.haiku-os.org/haiku
+git clone https://review.haiku-os.org/haiku
 </pre>
+<!--
 or:
 <pre class="terminal">
 git clone git://git.haiku-os.org/haiku
 </pre>
+-->
 </li>
 </ul>
 
@@ -108,11 +112,6 @@ Then clone the repositories from GitHub:
 <pre class="terminal">
 git clone http://github.com/haiku/buildtools.git
 git clone http://github.com/haiku/haiku.git
-</pre>
-Alternatively, from Gitorious:
-<pre class="terminal">
-git clone http://git.gitorious.org/haiku/buildtools.git
-git clone http://git.gitorious.org/haiku/haiku.git
 </pre>
 Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
 </li>
