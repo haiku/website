@@ -102,7 +102,7 @@ Haiku's main Git repository does not allow HTTP access, which is a problem if yo
 </div>
 Instead, use one of our mirror repositories at GitHub or Gitorious for anonymous HTTP access, they are both kept in sync with the main repository. First, set Git to connect through your proxy server:
 <pre class="terminal">
-git config \--global http.proxy http://proxyuser:proxypwd@proxy.server.com:8080
+git config --global http.proxy http://proxyuser:proxypwd@proxy.server.com:8080
 </pre>
 Then clone the repositories from GitHub:
 <pre class="terminal">
@@ -118,11 +118,11 @@ Note however that these repositories do not contain any hrev tags, which are use
 </li>
 <li><h4>Updating the Sources</h4>
 <div class="alert alert-danger">
-Be sure to use the \--rebase argument while doing a pull prior to a push to avoid confusing nonlinear histories! ("Merge 'master' on ssh://git.haiku-os.org/haiku" messages showing your name and others changes) Do <b>NOT</b> however use \--rebase on branches you have shared with other people! (rebase re-writes the local history. If your local history doesn't match people who cloned off of you, and they want to push to you, they will have <b>major</b> problems.)
+Be sure to use the --rebase argument while doing a pull prior to a push to avoid confusing nonlinear histories! ("Merge 'master' on ssh://git.haiku-os.org/haiku" messages showing your name and others changes) Do <b>NOT</b> however use --rebase on branches you have shared with other people! (rebase re-writes the local history. If your local history doesn't match people who cloned off of you, and they want to push to you, they will have <b>major</b> problems.)
 </div>
 <pre class="terminal">
 cd /path/haiku/haiku
-git pull \--rebase
+git pull --rebase
 </pre>
 Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
 <pre class="terminal">git pull \--rebase /path/haiku/haiku /path/haiku/buildtools</pre>
