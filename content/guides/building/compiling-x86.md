@@ -13,7 +13,7 @@ tags = ["compiling. x86"]
 <pre class="terminal">./configure \--build-cross-tools x86_gcc2 ../buildtools</pre></p>
 
 <h4>gcc7</h4>
-<p>gcc4 is the default build planned for post-R1. gcc4 doesn't offer complete BeOS binary compatibility, however benefits from using a more-modern toolchain.
+<p>gcc7 is the default build planned for post-R1. gcc7 doesn't offer complete BeOS binary compatibility, however benefits from using a more-modern toolchain.
 <pre class="terminal">./configure \--build-cross-tools x86 ../buildtools</pre></p>
 
 <h4>gcc2h / gcc7h hybrid builds</h4>
