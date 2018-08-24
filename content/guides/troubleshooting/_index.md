@@ -51,7 +51,7 @@ The easiest approach to resolving a black/blank/corrupted screen at boot is to l
 
 Reporting detailed information from computers experiencing black/blank/corrupted screens can be difficult given their nature. Sometimes the host is responsive, however the end user is unable to determine the state of the machine.
 
-  1. [Serial Debugging](serial) is the fastest and most accurate way to obtain debug data from a uncooperative system. This method however requires a built-in serial port and specialized hardware and cables.
+  1. [Serial Debugging](troubleshooting/serial) is the fastest and most accurate way to obtain debug data from a uncooperative system. This method however requires a built-in serial port and specialized hardware and cables.
   2. Obtaining system logs is possible in some circumstances.
      - Boot the system until the black screen is encountered and wait 30 seconds.
 	 - Hold {{< keyboard CTL >}} + {{< keyboard ALT >}} + {{< keyboard DEL >}} for 5 seconds (or until system reboots)

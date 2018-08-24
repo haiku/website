@@ -5,6 +5,9 @@ date = "2009-05-10T01:23:57.000Z"
 tags = []
 +++
 
+<div class="alert alert-warning">
+With the introduction of package management, optional packages - and therefore this page - became obsolete.
+</div>
 <p>
 This page details the steps in creating an OptionalPackage. In addition to being a regular binary distribution archive, an OptionPackage includes a plain text file called <code>.OptionalPackageDescription</code> and possibly the license file.
 </p>
