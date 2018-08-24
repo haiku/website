@@ -17,7 +17,7 @@ When Haiku fails to boot on a machine, it generally fails in one of the followin
   2. [Blank or corrupted screen after booting](#blank-or-corrupted-screen-after-booting)
   3. [Instant reboot](#instant-reboot)
 
-## Kernel Debug land
+## Kernel Debug Land
 
 The Kernel Debug Land is the debugger built into Haiku's kernel and represents a captured critical exception within the operating system.
 
@@ -29,7 +29,7 @@ If the source of the problem is identified in the KDL, the add-on or driver can 
 
 ### Reporting
 
-KDL exceptions should always be reported to the Haiku bug tracker. (either by searching for existing bugs, or reporting new undiscovered bugs)
+KDL exceptions should always be reported to the Haiku bug tracker (either by searching for existing bugs, or reporting new undiscovered bugs).
 
 Since obtaining the data in a KDL can be challenging at times, the following steps are generally used to report KDL exceptions to the Haiku developers:
 
@@ -68,4 +68,4 @@ Leveraging various [boot options](/docs/userguide/en/bootloader.html) such as `S
 
 ### Reporting
 
-[Serial Debugging](serial) is the only real way to obtain debugging data from instant reboot problems. This method however requires a built-in serial port and specialized hardware and cables.
+[Serial Debugging](troubleshooting/serial) is the only real way to obtain debugging data from instant reboot problems. This method however requires a built-in serial port and specialized hardware and cables.
