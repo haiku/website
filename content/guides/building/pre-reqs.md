@@ -43,7 +43,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 **Basic requirements:**
 
 ```
-sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool mtools
+sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool mtools gcc-multilib
 ```
 
 **Additional requirements for ARM:**
@@ -73,7 +73,7 @@ sudo pacman -S yaourt uboot-tools bc
 **Basic requirements:**
 
 ```
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static mtools
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686
 ```
 
 **Additional requirements for ARM:**
