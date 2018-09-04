@@ -27,6 +27,11 @@ Non-fatal KDL exceptions can sometimes be worked around by typing `continue` int
 
 If the source of the problem is identified in the KDL, the add-on or driver can be blacklisted using the `Blacklist entries` [bootloader menu.](/docs/userguide/en/bootloader.html)
 
+#### Known Issues and workarounds:
+
+  * Attempting to clone non-user-clonable kernel area!
+    * This is due to Haiku's SMAP protections.  The mentioned driver is attempting to access kernel memory without using proper procedure. You can disable SMAP protections by choosing `Disable SMEP and SMAP` in the [bootloader](https://www.haiku-os.org/docs/userguide/en/bootloader.html). [Reporting](#reporting) these errors with a picture of the screen is helpful!
+
 ### Reporting
 
 KDL exceptions should always be reported to the Haiku bug tracker (either by searching for existing bugs, or reporting new undiscovered bugs).
