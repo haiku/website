@@ -8,7 +8,7 @@ tags = []
 
 <p>Hi there, it's time for the monthly report! (yes, I'm still out of inspiration for catchy headlines)</p>
 
-<p>This report covers hrev52055-521XX</p>
+<p>This report covers hrev52055-52140</p>
 
 <h3>Drivers</h3>
 
