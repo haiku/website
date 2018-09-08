@@ -22,7 +22,7 @@ Finally on the driver related news korli fixed a bug on the s3 accelerant as a r
 
 PulkoMandy fixed a bug in MediaKit where online radio streams would only play for a few seconds and then stop. You can now enjoy infinite music on Haiku.
 
-phuodoin fixed a bug where the system became unresponsive when a textsearch is used in a big search.
+phoudoin fixed a bug where the system became unresponsive when a textsearch is used in a big search.
 
 jackburton fixed a 4 years old KDL that ocurred whenever ifconfig was used to remove an interface.
 
