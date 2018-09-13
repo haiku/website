@@ -38,7 +38,7 @@ cd ..
 rm -rf public/docs/
 
 sed -i "s/BuildTypeIsDeploy = false/BuildTypeIsDeploy = true/g" config.toml
-$HUGO
+$HUGO --minify
 sed -i "s/BuildTypeIsDeploy = true/BuildTypeIsDeploy = false/g" config.toml
 
 mkdir public/docs/
