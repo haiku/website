@@ -9,7 +9,7 @@ Haiku has growing support for connecting to wireless (Wi-Fi, 802.11) networks an
  
 <h3>Pre-requirements</h3>
 <ul>
-<li>Haiku R1 Alpha 4 (R1A4) or later</li>
+<li>Haiku R1/beta1 or later</li>
 <li>A <a href="#hardware-notes">supported</a> 802.11 wireless network device</li>
 </ul>
 <br>
@@ -103,9 +103,9 @@ As of R1A4, only PCI, PCI-X, PCI-Express, Mini PCI, and Mini PCI-Express devices
 </ul>
  
 <h4>Supported Hardware</h4>
-All of <a href="http://www.freebsd.org/releases/9.3R/hardware.html#wlan">FreeBSD 9.3 WLAN drivers</a> except aironetwifi should be working.
+All of <a href="​https://www.freebsd.org/releases/11.1R/hardware.html#wlan">FreeBSD 11.1 WiFi drivers</a> except aironetwifi should be working.
 <ul>
-<li>atheroswifi supporting almost every Atheros chipset out there (Except for the AR9285)</li>
+<li>atheroswifi supporting almost every Atheros pre-10K chipset</li>
 <li>broadcom43xx supporting
         <ul>
         <li>Broadcom BCM4301</li>
@@ -117,7 +117,6 @@ All of <a href="http://www.freebsd.org/releases/9.3R/hardware.html#wlan">FreeBSD
         <li>Broadcom BCM4318</li>
         </ul>
 </li>
-<li>ipw2100 supporting Intel Pro Wireless 2100</li>
 <li>iprowifi2200 supporting
         <ul>
         <li>Intel Pro Wireless 2200BG</li>
@@ -125,8 +124,9 @@ All of <a href="http://www.freebsd.org/releases/9.3R/hardware.html#wlan">FreeBSD
         <li>Intel Pro Wireless 2915ABG</li>
         </ul>
 </li>
-<li>iprowifi3945 supporting Intel Pro Wireless 3945</li>
-<li>iprowifi4965 supporting Intel Pro Wireless 4965</li>
+<li>iprowifi3945 supporting Intel Pro Wireless 3945+</li>
+<li>iprowifi4965 supporting Intel Pro Wireless 4965+</li>
+<li>idualwifi7260 supporting Intel Dual-Band Wireless AC 3160+/7260+</li>
 <li>marvell88w8335 supporting
         <ul>
         <li>Marvell Libertas 88W8310</li>
