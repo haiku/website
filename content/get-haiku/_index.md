@@ -1,30 +1,97 @@
 +++
 type = "article"
-taxonomies = "articles"
 title = "Get Haiku!"
-date = "2012-11-12T03:03:52.000Z"
+date = "2018-09-28 20:38:42-04:00"
 tags = []
 +++
 
-While we work on the last few blockers before R1 Beta 1, it is **strongly** recommended you try out a **[nightly/development build](https://download.haiku-os.org/)**.
+<div class="box-release-info-right">
+<p><strong>Current Official Version Information</strong></p>
+<ul>
+	<li><strong>Version:</strong> R1/beta1</li>
+	<li><strong>Release date:</strong> September 28th, 2018 </li>
+	<li><strong>Release notes:</strong> <a href="/get-haiku/release-notes/">Release notes.</a> </li>
+	<li><strong>Computer platform:</strong> x86, 32-bit and 64-bit</li>
+	<!--li><strong>Important:</strong> <a href="https://dev.haiku-os.org/wiki/R1/Beta1/ReleaseAddendum">Post Release Addendum</a></li-->
+</ul>
+</div>
 
-The Anyboot image is the preferred distribution format. It can be
-written directly to a [USB flash drive](/guides/installing/making_haiku_usb_stick),
-empty disk, or [written to CD/DVD](/get-haiku/burn-cd) media.
-It can also be used directly from various emulators such as [QEMU](https://www.qemu.org/), [VirtualBox](http://virtualbox.org), [VMWare](http://vmware.com), etc.
+<span style="font-size:1.1em;line-height:1.7em !important;margin-bottom:25px !important;">
+Here you will find information on how to get Haiku, by either downloading
+the latest official release. <!--or purchasing an installation CD from
+Haiku, Inc. (not yet available). The proceeds from ordering CD's will be
+used by Haiku, Inc. to help speed the release of Haiku R1.--> If you choose
+to download an image, please select from the list of available mirrors
+below.
+</span> (If you are looking for the nightly images, they can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>.)
 
-## Previous Releases
+These are `anyboot` images. They can be
+written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>,
+empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.
+It can also be used directly from QEMU.
+They can be used "live" or used to install Haiku to another disk/partition of your choice.
 
-|Version                      |Date               |
-|-----------------------------|-------------------|
-|[R1, Alpha 4.1](/get-haiku/release-r1a4)|November 14th, 2012|
-|[R1, Alpha 3](http://haiku.osuosl.org/releases/r1alpha3/)|June 20th, 2011|
-|[R1, Alpha 2](http://haiku.osuosl.org/releases/r1alpha2/)|May 10th, 2010|
-|[R1, Alpha 1](http://haiku.osuosl.org/releases/r1alpha1/)|September 14th, 2009|
+### Direct Download Locations
 
-## Acknowledgment
+<p><strong>NOTE: Not all mirrors may be online. Please choose another mirror if you encounter a failure.</strong></p>
 
-We thank all the organizations and companies who provide the server space
-and bandwidth to mirror our releases.
+<div class="nolinks">
+<table id="mirrors">
+<thead style="font-weight: bold;">
+<tr>
+<td>Mirror</td>
+<td>32-bit</td>
+<td>64-bit</td>
+</tr>
+</thead>
+<tbody>
+    <tr class="odd">
+      <td class="location"><b>Location:</b> East Coast, United States <br/>Provided by: <a target="_blank" class="ext" href="http://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
+    </tr>
+    <tr class="even">
+      <td class="location"><b>Location:</b> Gunzenhausen, Germany <br/>Provided by: <a target="_blank" class="ext" href="http://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
+    </tr>
+</tbody>
+</table>
+</div>
 
-![Our Mirrors](/files/images/logos/logo_all-download-mirrors.png)
+### Torrents
+
+<p>In order to assist with distribution, we have also created .torrent files that can be used to download and seed the release files for others.<br/>
+<b>Please continue seeding the torrents if you can!</b></p>
+<ul>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip.torrent">32-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip.torrent">64-bit</a></li>
+</ul>
+
+<h3>Checksums</h3>
+
+<p>To make sure that you have got the right file and that it has not been corrupted during file transfer, it is always wise to ensure the integrity of your download. To that end, you can use the SHA256 checksums shown below to verify that what you have is the correct file.</p>
+
+<pre>
+297b1410dfd74f1a404c1d2d0e62beaee77ecde7711a71156e15f8d33f2899ed haiku-r1beta1-x86_64-anyboot.zip
+142fa9341a360029115658cd81c96a134dc54cebbae85faf1c07e3ba6f33b812 haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip
+</pre>
+
+<p>
+	If you are in macOS or Linux, you can use the <code>sha256sum</code>
+	command from the Terminal to generate a checksum for your downloaded
+	file and verify against those above. If you are in Windows, you can use
+	a tool such as hashtab to display checksums for files directly in explorer.
+	<a href="http://implbits.com/products/hashtab/" title="Download hashtab">download from here</a>.
+	</p>
+
+<h3 class="App_People_32">Acknowledgment</h3>
+
+<p style="padding-right:50px;">
+	We thank all the organizations and companies who provide the server space
+	and bandwidth to mirror our releases.
+</p>
+
+<!--
+<img src="/files/images/logos/logo_all-download-mirrors.png" halign="center" />
+-->
