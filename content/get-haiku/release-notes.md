@@ -1,14 +1,15 @@
 +++
-draft = true
 type = "article"
-title = "Release Notes"
+title = "R1/beta1 – Release Notes"
 tags = []
+date = "2018-09-28 20:26:33-04:00"
 +++
-date = "NEEDS_ACTUAL_DATE"
 
-It's been just about a month less than six years since Haiku's last release in November 2012 &mdash; too long. Please keep in mind that this is beta-quality software, which means it is feature complete but still contains known and unknown bugs. While we are mostly confident in its stability, we cannot provide assurances against data loss.
+It's been just about a month less than six years since Haiku's last release in November 2012 &mdash; too long. As a result of such a long gap between releases, there are a lot more changes in this release than in previous ones, and so this document is weightier than it has been in the past. The notes are mostly organized in order of importance and relevance, not chronologically, and due to the sheer number of changes, thousands of smaller improvements simply aren't recognized here.
 
-As a result of such a long gap between releases, there are a lot more changes in this release than in previous ones, and so this document is weightier than it has been in the past. The notes are mostly organized in order of importance and relevance, not chronologically, and due to the sheer number of changes, thousands of smaller improvements simply aren't recognized here.
+Please keep in mind that this is beta-quality software, which means it is feature complete but still contains known and unknown bugs. While we are mostly confident in its stability, we cannot provide assurances against data loss.
+
+*To download Haiku, see "[Get Haiku!](/get-haiku/)". For press inquiries, see "[Press contact](#press-contact)".*
 
 ## System requirements
 
@@ -49,6 +50,10 @@ Since packages are merely "activated", not installed, this means that <a href="h
 
 And of course, since the disk transactions for managing packages are limited to moving them between directories and in and out of the "activated packages" listing file, installations and uninstallations are practically instant. You can thus also manage the installed package set on a non-running Haiku system by mounting its boot disk and then manipulating the `/system/packages` directory and associated configuration files.
 
+As a result, it is now possible to update the system by running SoftwareUpdater and then rebooting. (For those users who already run package-management-enabled nightlies, you can switch your system repositories from `master` to `r1beta1` to update directly into the beta release.) We intend to maintain the `r1beta1` repositories with bugfixes to Haiku itself, and new packages and security updates at HaikuPorts, for the forseeable future.
+
+&mdash;&mdash;&mdash;
+
 In addition to HaikuDepot, there is also `pkgman`, the command-line interface to the package management system. Unlike most other package managers where packages can be installed only by name, e.g. `pkgman install rsync`, `pkgman install sdl2_devel`, Haiku packages can also be searched for and installed by provides, e.g. `pkgman install cmd:rsync` or `pkgman install devel:libsdl2`, which will locate the most relevant package that provides that, and install it.
 
 Accompanying the package manager is a massively revamped <a href="https://github.com/haikuports/haikuports/">HaikuPorts</a>, which has moved from a organized array of build scripts to a well-oiled full-fledged ports tree, containing <a href="https://repology.org/repository/haikuports_master">a wide array</a> of both native and ported software for Haiku.
@@ -61,7 +66,7 @@ Thanks to the generous support of donors, Haiku, Inc. was able to employ a devel
 
 <img src="/files/get-haiku/webkit.png" alt="WebPositive playing Rick Astley">
 
-WebKit is a pretty hefty piece of software, and as a result working on bringing it up to speed meant also fixing a large number of bugs in Haiku itself that it exposed, such as broken stack alignment, various kernel panics in the network stack, bad edge-case handling in `app_server`'s rendering core, missing support for extended transforms and gradients, broken picture-clipping support, missing POSIX functionality, media codec issues, ... the list goes on.
+WebKit is a pretty hefty piece of software, and as a result working on bringing it up to speed meant also fixing a large number of bugs in Haiku itself that it exposed, such as broken stack alignment, various kernel panics in the network stack, bad edge-case handling in `app_server`'s rendering core, missing support for extended transforms and gradients, broken picture-clipping support, missing POSIX functionality, media codec issues, GCC upgrades ... the list goes on.
 
 For better or for worse, HaikuWebKit now also uses our own network protocol layer, which means that it now supports Gopher.
 
@@ -179,6 +184,8 @@ Additionally, Haiku's `userlandfs`, which supports running filesystem drivers in
 
 Thanks in part to more testers running Haiku full- or part-time, and also due to running Haiku on automated HaikuPorts package builders, a significant number of kernel panics, strange crashes, or other system instabilities especially related to long uptimes or heavy workloads were found and fixed since the previous release.
 
+In addition, a variety of new native drivers were added, most notably (semi-experimental) support for USB3 (XHCI) devices. This is still a little unstable; depending on your hardware, you may or may not be able to boot from a USB3 device. The most common controllers (Intel's, etc.) are the ones that presently work the best.
+
 ### 64-bit `time_t` (except on 32-bit x86)
 
 On all platforms except 32-bit x86, `time_t` is now a 64-bit value. (The exception for 32-bit x86 is to preserve BeOS binary compatibility.)
@@ -211,3 +218,13 @@ There are over 3200 open tickets on Haiku's bug tracker and over 11000 closed it
 For information about major issues that have been fixed since the release, visit <https://dev.haiku-os.org/wiki/R1/Beta1/ReleaseAddendum>.
 
 For more help see the 'Welcome' link on the Haiku desktop, or visit the Haiku Project's website at <https://www.haiku-os.org>.
+
+## Press contact
+
+Press inquiries may be directed to:
+
+ * waddlesplash (English)
+ * pulkomandy (French)
+ * humdingerb (German)
+
+All three contacts may be reached via `<nickname>@gmail`.
