@@ -103,7 +103,7 @@ As of R1A4, only PCI, PCI-X, PCI-Express, Mini PCI, and Mini PCI-Express devices
 </ul>
  
 <h4>Supported Hardware</h4>
-All of <a href="​https://www.freebsd.org/releases/11.1R/hardware.html#wlan">FreeBSD 11.1 WiFi drivers</a> except aironetwifi should be working.
+All of <a href="https://www.freebsd.org/releases/11.1R/hardware.html#wlan">FreeBSD 11.1 WiFi drivers</a> except aironetwifi should be working.
 <ul>
 <li>atheroswifi supporting almost every Atheros pre-10K chipset</li>
 <li>broadcom43xx supporting
