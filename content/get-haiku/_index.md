@@ -55,6 +55,11 @@ They can be used "live" or used to install Haiku to another disk/partition of yo
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
+    <tr class="odd">
+      <td class="location"><b>Location:</b> Paris, France<br/>Provided by: <a target="_blank" class="ext" href="http://www.lip6.fr/" title="LIP6">LIP6</a></td>
+      <td><a class="track" href="https://ftp.lip6.fr/pub/haiku/releases/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://ftp.lip6.fr/pub/haiku/releases/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
+    </tr>
 </tbody>
 </table>
 </div>
