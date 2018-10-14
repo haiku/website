@@ -76,11 +76,11 @@ menuentry "Haiku" {
 }
 ```
 
-Of course, the partition in the entries needs to point to the one where you actually installed Haiku. On Linux you can get the `UUID` values of all the partitions and disks in use using the `sudo blkid` and `sudo fdisk -l` commands.
+Of course, the partition in the entries needs to point to the one where you actually installed Haiku. On Linux you can get the `UUID` values of all the partitions and disks in use by using the `sudo blkid` and `sudo fdisk -l` commands.
 
-<div class="alert alert-info">The EFI entry above assumes you've created the `EFIBOOT` partition and put the boot loader inside it as explained [on the official guide](/guides/uefi_booting). If you didn't, you need to check the path of the `chainloader` directive and fix accordingly.</div>
+<div class="alert alert-info">The EFI entry above assumes you've created the `EFIBOOT` partition and put the boot loader inside it as explained [in the official guide](/guides/uefi_booting). If you didn't, you need to check the path of the `chainloader` directive and fix accordingly.</div>
 
-On Ubuntu (and other Linux flavors), you can eventually customize more the GRUB setup in a GUI environment using __Grub Customizer__ and following this [getting started tutorial](http://tipsonubuntu.com/2018/03/11/install-grub-customizer-ubuntu-18-04-lts/).
+On Ubuntu (and other Linux flavors), you can eventually customize the GRUB setup further in a GUI environment using __Grub Customizer__ and following this [getting started tutorial](http://tipsonubuntu.com/2018/03/11/install-grub-customizer-ubuntu-18-04-lts/).
 
 Finally, you can regenerate the boot menu configuration by issuing `sudo update-grub` and reboot.
 
