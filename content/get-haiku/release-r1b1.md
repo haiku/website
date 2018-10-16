@@ -36,34 +36,39 @@ They can be used "live" or used to install Haiku to another disk/partition of yo
 <p><strong>NOTE: Not all mirrors may be online. Please choose another mirror if you encounter a failure.</strong></p>
 
 <div class="nolinks">
-<table id="mirrors">
+<table id="mirrors" class="table thead-dark table-hover">
 <thead style="font-weight: bold;">
 <tr>
 <td>Mirror</td>
-<td>32-bit</td>
-<td>64-bit</td>
+<td title="BeOS API + binary compatible">32-bit</td>
+<td title="BeOS API compatible">64-bit</td>
 </tr>
 </thead>
 <tbody>
-    <tr class="odd">
+    <tr>
       <td class="location"><b>Location:</b> East Coast, United States <br/>Provided by: <a target="_blank" class="ext" href="http://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
       <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
-    <tr class="even">
+    <tr>
       <td class="location"><b>Location:</b> Gunzenhausen, Germany <br/>Provided by: <a target="_blank" class="ext" href="http://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
-    <tr class="odd">
+    <tr>
       <td class="location"><b>Location:</b> Paris, France<br/>Provided by: <a target="_blank" class="ext" href="http://www.lip6.fr/" title="LIP6">Laboratoire d'Informatique de Paris 6</a></td>
       <td><a class="track" href="https://ftp.lip6.fr/pub/haiku/releases/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://ftp.lip6.fr/pub/haiku/releases/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
-    <tr class="even">
+    <tr>
       <td class="location"><b>Location:</b> New York, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.rit.edu" title="RIT">Rochester Institute of Technology</a></td>
       <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
+    </tr>
+    <tr>
+      <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
 </tbody>
 </table>
