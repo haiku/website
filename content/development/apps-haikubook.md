@@ -5,7 +5,7 @@ date = "2018-10-19T22:32:00.000Z"
 tags = ["Development","api","documentation"]
 +++
 
-<p class="intro">When building any application you should consider using the Haiku API building blocks. These are native Haiku libraries that make creating Haiku application easy.</p>
+<p class="intro">When building any application you should consider using the Haiku API building blocks. These are native Haiku libraries that make creating Haiku applications easy.</p>
 
 <p>These API perform very well on Haiku, and benefit from being able to use Haiku Messaging, Application Tiling and Stacking, and the Be Filesystem - which platform-independent toolkits like Qt or GTK+ lack.</p>
 

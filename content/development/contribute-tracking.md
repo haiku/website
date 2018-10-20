@@ -5,7 +5,7 @@ date = "2018-10-19T20:33:00.000Z"
 tags = ["Development","Bug","feature","tracking","trac","milestone"]
 +++
 
-<p class="intro">The Haiku project has an extensive Milestone &amp; Bug Tracking system. Below are the main links, and direct links to some useful searches on the system:-</p>
+<p class="intro">The Haiku project has an extensive Milestone &amp; Bug Tracking system. Below are the main links, and direct links to some useful searches on the system.</p>
 
 <ul>
 <li><strong><a href="https://dev.haiku-os.org/wiki">Project management and bug/issue tracking system</a></strong> (Trac)</li>
