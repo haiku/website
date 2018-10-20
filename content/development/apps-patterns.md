@@ -5,7 +5,7 @@ date = "2018-10-19T22:37:00.000Z"
 tags = ["Development","application","patterns","documentation"]
 +++
 
-<p class="intro">There are several common patterns or approaches that you will use when developing Haiku native applications. These are listed below:-</p>
+<p class="intro">There are several common patterns or approaches that you will use when developing Haiku native applications. These are listed below:</p>
 
 These tutorials were created by DarkWyrm unless otherwise stated.
 
