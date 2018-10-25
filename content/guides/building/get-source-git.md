@@ -45,6 +45,7 @@ git clone git://git.haiku-os.org/haiku
 -->
 </li>
 </ul>
+<p>If you don't care about the commit history and want to keep the download small, try using the parameter <tt>--depth</tt> when cloning. <tt>--depth 10</tt> limits the history to the last 10 commits, for example.</p>
 
 <a name="dev_access"></a>
 <h3>Git Access - Contributors with commit permission</h3>
