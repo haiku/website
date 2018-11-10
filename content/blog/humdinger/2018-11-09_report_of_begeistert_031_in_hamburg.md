@@ -9,15 +9,17 @@ tags = ["haiku", "begeistert", "event", "meeting"]
 <div align="center">
 <img width="100%" src="/files/blog/humdinger/BeGeistert_031/BG031_title.jpg" title="BeGeistert 031 in Hamburg " alt="BeGeistert 031 in Hamburg" />
 </div>
-Only slighty bigger than 2017's "Kernel Debugging Camp" in Toulouse, this year's regular BeGeistert 031 (on its last day affectionately mottoed "The Dirty One") was held from November 1st to 4th in Hamburg.
+<p>Only slighty bigger than 2017's "Kernel Debugging Camp" in Toulouse, this year's regular BeGeistert 031 (on its last day affectionately mottoed "The Dirty One") was held from November 1st to 4th in Hamburg.</p>
 
-As in the past when BeGeistert was in Düsseldorf, we had a nice conference room in a Youth Hostel, just with a slighty less nice bedroom. Toiletts and showers on the floor instead of in every room...
+<p>As in the past when BeGeistert was in Düsseldorf, we had a nice conference room in a Youth Hostel, just with a slighty less nice bedroom. Toiletts and showers on the floor instead of in every room...</p>
 
-_[Thanks to PulkoMandy for providing some photos in addition to my own. You can right-click and open them in a new window for a larger version.]_
+<p><i>[Thanks to PulkoMandy for providing some photos in addition to my own. You can right-click and open them in a new window for a larger version.]</i></p>
 
-<img width="33%" hspace="20" vspace="15" align="right" src="/files/blog/humdinger/BeGeistert_031/Youth_Hostel.jpg" title="The youth hostel" alt="The youth hostel" />The hostel is a bit outside the city center of Hamburg, directly neighbouring a racetrack. No horses around while we were there, but lots of dogs and their walkers and half a dozen lawn-mowing robots that keep the grass short when not on a quest for the nearest charging station.
+<img width="33%" hspace="20" vspace="15" align="right" src="/files/blog/humdinger/BeGeistert_031/Youth_Hostel.jpg" title="The youth hostel" alt="The youth hostel" />
 
-Contrary to BeGeistert tradition there was no BG-weekend with a following/preceding week of code sprinting, but simply 4 days of Haiku hacking. In the past the general Haiku users came to meet the devs and each other on those weekends. Since attendance has been dwindling over the years, this distinction has dissolved and now it's mainly developers and dev-savvy users for all 4 days.
+<p>The hostel is a bit outside the city center of Hamburg, directly neighbouring a racetrack. No horses around while we were there, but lots of dogs and their walkers and half a dozen lawn-mowing robots that keep the grass short when not on a quest for the nearest charging station.</p>
+
+<p>Contrary to BeGeistert tradition there was no BG-weekend with a following/preceding week of code sprinting, but simply 4 days of Haiku hacking. In the past the general Haiku users came to meet the devs and each other on those weekends. Since attendance has been dwindling over the years, this distinction has dissolved and now it's mainly developers and dev-savvy users for all 4 days.</p>
 
 <div align="center">
 <img width="33%" hspace="20" vspace="15" src="/files/blog/humdinger/BeGeistert_031/The_Guys_front.jpg" title="The guys I" alt="The guys I" /> <img width="33%" hspace="20" vspace="15" src="/files/blog/humdinger/BeGeistert_031/The_Guys_back.jpg" title="The guys II" alt="The guys II" />
@@ -83,7 +85,7 @@ However, I finally ended up working on improving scaling Haiku to high DPI scree
 
 It was really nice to meet you guys (again).
 
-####Kacper aka KapiX
+#### Kacper aka KapiX
 
 I have:<br />
 
@@ -94,7 +96,7 @@ I have:<br />
 
 It was really great to meet all of you and I hope we can see each other next year or sooner... Thanks!
 
-####Lorenz aka Lorglas
+#### Lorenz aka Lorglas
 
 First of all thanks to the developers and visitors.<br />
 First I worked on my svn gui (written in YAB).
@@ -103,7 +105,7 @@ On the second day, I reworked the old [BeSly ](http://besly.de/index.php/en/)sit
 
 It was great fun and I'm looking forward to a BeGeistert 2019.
 
-####Me aka Humdinger
+#### Me aka Humdinger
 First I worked on [Quicklaunch](https://github.com/humdingerb/quicklaunch) to be more localization friendly. The current version creates a query to find all matching applications for every letter entered by the user. This only works for the English name of an application, i.e. its actual filename. If a user has set the "Translate application and folder names" checkbox in the Locale prefs, Quicklaunch ignores that as it keeps on looking for the English application filenames.<br />
 This is now solved. I do just one query at the launch of Quicklaunch and create a list that holds the localized filenames which I then filter according to the user input.<br />
 This change went remarkably smoothly. But if you consider the changes to string translations, collateral changes to some no longer needed options and ReadMe update, plus figuring in my bumbling approach to coding, it all took a while...
@@ -111,13 +113,13 @@ This change went remarkably smoothly. But if you consider the changes to string 
 Next was [Clipdinger](https://github.com/humdingerb/clipdinger). I added the clip text to the tool tip, so you see what you'll paste even if the list shows only the start of the clip. Even with some help by Axel, I'm not happy with the result. I'll revert and try something else.<br />
 The other feature I was working on is a filter so you can search the clip history. All is pretty much in place now, but I see some drawing issue where on first use: the strings in the list of clips aren't drawn for some reason. Needs some more investigation.
 
-####Robert aka Robert Kausch
+#### Robert aka Robert Kausch
 
 It was my first BeGeistert event and I really enjoyed it. Would have loved to spend more time there with all of you and I'm looking forward to attend again in 2019.
 
 I ported the Monkey's Audio library and command line utility to Haiku (it's now available via HaikuPorts) and fixed a few bugs in the Haiku version of my [fre.ac](https://www.freac.org/index.php/en) audio converter. Also demonstrated fre:ac to those who were still there on Sunday afternoon.
 
-####Stephan aka Stippi
+#### Stephan aka Stippi
 
 I regret not having spent more time talking to everyone of you. The upside is of course that I spent more time coding.<br />
 Most of the time I added features and fixed some bugs in the rewrite of WonderBrush which I am slowly working on over the last years. I noticed my last commit was from three years ago, I have literally done _nothing_ inbetween. At BeGeistert, I implemented a few more filters (Saturation, Brightness, Contrast) and features (Duplicate object, and "Duplicate linked" which works a bit like instancing objects that share resources such as vector paths). I also worked on showing the paths contained in a shape objects right within the layer/object tree and making drag&drop work for them.
