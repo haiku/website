@@ -58,7 +58,7 @@ Stephan demonstrated his recently open-sourced "Next Generation" [WonderBrush v3
 </div>
 I have asked all participants to write a few paragraphs about their work at BeGeistert:
 
-#### Adam Fowler aka adamfowleruk
+### Adam Fowler aka adamfowleruk
 
 I did a little but announced it already, see the post in the forums: [Paladin IDE release and next version plans](https://discuss.haiku-os.org/t/paladin-ide-release-and-next-version-plans/7809)
 
@@ -66,14 +66,14 @@ Also I've created a plugin concept, primarily for Paladin, but in future general
 
 Kacper and I looked at a code editor protocol that is now in both Paladin and Koder. A double click on a build error will open Koder at the right line and column (assuming it's your default source code editor).
 
-#### Adrien aka PulkoMandy
+### Adrien aka PulkoMandy
 Things accomplished on my side:
 
 - WebKit is now up to date, bugfixed, and failing to play videos which explains the lack of a release.
 - Cleanups in ffmpeg plugin to use the new APIs. Probably introduces some regressions.
 - Experiments with brightness control for VESA (inconclusive).
 
-#### Axel aka axeld
+### Axel aka axeld
 
 I originally wanted to reverse engineer the Gobe Productive document format (to extract the data from it for something like OpenOffice). But other than finding the on disk format hard to grasp, I didn't get much done on that front. I then intended to improve DiskProbe with some utility functions for reverse engineering.
 
@@ -85,7 +85,7 @@ However, I finally ended up working on improving scaling Haiku to high DPI scree
 
 It was really nice to meet you guys (again).
 
-#### Kacper aka KapiX
+### Kacper aka KapiX
 
 I have:<br />
 
@@ -96,7 +96,7 @@ I have:<br />
 
 It was really great to meet all of you and I hope we can see each other next year or sooner... Thanks!
 
-#### Lorenz aka Lorglas
+### Lorenz aka Lorglas
 
 First of all thanks to the developers and visitors.<br />
 First I worked on my svn gui (written in YAB).
@@ -105,7 +105,7 @@ On the second day, I reworked the old [BeSly ](http://besly.de/index.php/en/)sit
 
 It was great fun and I'm looking forward to a BeGeistert 2019.
 
-#### Me aka Humdinger
+### Me aka Humdinger
 First I worked on [Quicklaunch](https://github.com/humdingerb/quicklaunch) to be more localization friendly. The current version creates a query to find all matching applications for every letter entered by the user. This only works for the English name of an application, i.e. its actual filename. If a user has set the "Translate application and folder names" checkbox in the Locale prefs, Quicklaunch ignores that as it keeps on looking for the English application filenames.<br />
 This is now solved. I do just one query at the launch of Quicklaunch and create a list that holds the localized filenames which I then filter according to the user input.<br />
 This change went remarkably smoothly. But if you consider the changes to string translations, collateral changes to some no longer needed options and ReadMe update, plus figuring in my bumbling approach to coding, it all took a while...
@@ -113,13 +113,13 @@ This change went remarkably smoothly. But if you consider the changes to string 
 Next was [Clipdinger](https://github.com/humdingerb/clipdinger). I added the clip text to the tool tip, so you see what you'll paste even if the list shows only the start of the clip. Even with some help by Axel, I'm not happy with the result. I'll revert and try something else.<br />
 The other feature I was working on is a filter so you can search the clip history. All is pretty much in place now, but I see some drawing issue where on first use: the strings in the list of clips aren't drawn for some reason. Needs some more investigation.
 
-#### Robert aka Robert Kausch
+### Robert aka Robert Kausch
 
 It was my first BeGeistert event and I really enjoyed it. Would have loved to spend more time there with all of you and I'm looking forward to attend again in 2019.
 
 I ported the Monkey's Audio library and command line utility to Haiku (it's now available via HaikuPorts) and fixed a few bugs in the Haiku version of my [fre.ac](https://www.freac.org/index.php/en) audio converter. Also demonstrated fre:ac to those who were still there on Sunday afternoon.
 
-#### Stephan aka Stippi
+### Stephan aka Stippi
 
 I regret not having spent more time talking to everyone of you. The upside is of course that I spent more time coding.<br />
 Most of the time I added features and fixed some bugs in the rewrite of WonderBrush which I am slowly working on over the last years. I noticed my last commit was from three years ago, I have literally done _nothing_ inbetween. At BeGeistert, I implemented a few more filters (Saturation, Brightness, Contrast) and features (Duplicate object, and "Duplicate linked" which works a bit like instancing objects that share resources such as vector paths). I also worked on showing the paths contained in a shape objects right within the layer/object tree and making drag&drop work for them.
