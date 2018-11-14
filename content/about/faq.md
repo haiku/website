@@ -103,9 +103,7 @@ Yes! Although the OS is still considered in "alpha" stage, it is reasonably stab
 Yes! We reuse network drivers from FreeBSD, so most network adapters will work on Haiku out of the box. Haiku includes an e-mail client and a web browser, and you can install other network-enabled applications.
 
 ### What is the status of wireless internet connections?
-Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to WPA, WEP and open networks easily using the GUI.
-
-Some wireless network adapters require installation of a firmware file, which must be installed by running the install-wifi-firmwares script (see the guide [Connecting to wireless networks](/guides/daily-tasks/wireless).
+Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to  WEP, WPA, WPA2, and open networks easily using the GUI.
 
 ### What license is Haiku released under?
 Most of the Haiku code is released under the very liberal [MIT License](http://www.opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License, [without trademark claims by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). See also the [Haiku, Inc. website](http://www.haiku-inc.org/trademarks.html) for the Haiku trademarks and their usage requirements.
