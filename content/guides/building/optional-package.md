@@ -5,6 +5,9 @@ date = "2009-05-10T01:23:57.000Z"
 tags = []
 +++
 
+<div class="alert alert-warning">
+With the introduction of package management, optional packages - and therefore this page - became obsolete.
+</div>
 <p>
 This page details the steps in creating an OptionalPackage. In addition to being a regular binary distribution archive, an OptionPackage includes a plain text file called <code>.OptionalPackageDescription</code> and possibly the license file.
 </p>
@@ -55,7 +58,7 @@ Create your archive as you typically would. HaikuPorts has a wiki page describin
 <b>&lt;softwareName&gt;-&lt;softwareVersion&gt;-&lt;platform&gt;-&lt;buildDate&gt;.zip</b>
 
 Notes:
-<ul><li>when &lt;platform&gt; is x86, differentiate between x86-gcc2 and x86-gcc4</li>
+<ul><li>when &lt;platform&gt; is x86, differentiate between x86_gcc2 and x86_gcc7</li>
 <li>&lt;buildDate&gt; is YYYY-MM-DD format, also known as <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a></li>
 </ul>
 </p>

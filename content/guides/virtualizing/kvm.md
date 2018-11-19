@@ -5,6 +5,8 @@ date = "2017-01-25"
 tags = []
 +++
 
+For Google Code In 2017, Arnav Bhatt created a [video on how to install Haiku in KVM](http://haiku-files.org/files/media/GCI-2017_KVM_Arnav-Bhatt.mkv) [2 MiB].
+
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
 In this guide the Haiku operating system is being run under virtual circumstances using Arch Linux, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.

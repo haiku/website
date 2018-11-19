@@ -38,7 +38,7 @@ These file systems cannot be used with the --use-xattr option.
 <ul>
 <li><h4>Btrfs</h4>
 <p>Building Haiku on Btrfs with extended attributes does not work.  Utilizing it will give an error like the following, which was encountered when building Poorman.</p>
-<p><em>mimeset: "/btrfs/haiku/haiku/generated.x86gcc2/objects/haiku/x86/release/apps/poorman/PoorMan": No space left on device</em>
+<p><em>mimeset: "/btrfs/haiku/haiku/generated.x86_gcc2/objects/haiku/x86/release/apps/poorman/PoorMan": No space left on device</em>
 </p>
 <p>Btrfs will need to be explored again in the future as it matures, since currently it is still a fairly young filesystem.</p>
 </li>

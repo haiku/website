@@ -23,30 +23,35 @@ Haiku's source code is currently being hosted in a <a href="http://git-scm.com/"
 <ul>
 <li><h4>Build Tools:</h4>
 <pre class="terminal">
-git clone https://git.haiku-os.org/buildtools
+git clone https://review.haiku-os.org/buildtools
 </pre>
+<!--
 or (if you have a problem with https)
 <pre class="terminal">
 git clone git://git.haiku-os.org/buildtools
 </pre>
+-->
 </li>
 
 <li><h4>Haiku:</h4>
 <pre class="terminal">
-git clone https://git.haiku-os.org/haiku
+git clone https://review.haiku-os.org/haiku
 </pre>
+<!--
 or:
 <pre class="terminal">
 git clone git://git.haiku-os.org/haiku
 </pre>
+-->
 </li>
 </ul>
+<p>If you don't care about the commit history and want to keep the download small, try using the parameter <tt>--depth</tt> when cloning. <tt>--depth 10</tt> limits the history to the last 10 commits, for example.</p>
 
 <a name="dev_access"></a>
 <h3>Git Access - Contributors with commit permission</h3>
 <ul>
 <li><h4>Configure Git on your system:<a name="configure_env"></a></h4>
-<p>Before making your first commit on a new system, be <strong>sure</strong> to configure Git. These global settings are stored in your git configuration directory (~/.git/) and will be appended to <strong>each</strong> commit as your personal information.</p>
+<p>Before making your first commit on a new system, be <strong>sure</strong> to configure Git. These global settings are stored in your git configuration directory (~/.git/ or for Haiku: ~config/settings/git/) and will be appended to <strong>each</strong> commit as your personal information.</p>
 <pre class="terminal">
 git config --global user.name "John Doe"
 git config --global user.email "john.doe@developers.com"
@@ -109,11 +114,6 @@ Then clone the repositories from GitHub:
 git clone http://github.com/haiku/buildtools.git
 git clone http://github.com/haiku/haiku.git
 </pre>
-Alternatively, from Gitorious:
-<pre class="terminal">
-git clone http://git.gitorious.org/haiku/buildtools.git
-git clone http://git.gitorious.org/haiku/haiku.git
-</pre>
 Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
 </li>
 <li><h4>Updating the Sources</h4>
@@ -125,7 +125,7 @@ cd /path/haiku/haiku
 git pull --rebase
 </pre>
 Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
-<pre class="terminal">git pull --rebase /path/haiku/haiku /path/haiku/buildtools</pre>
+<pre class="terminal">git pull \--rebase /path/haiku/haiku /path/haiku/buildtools</pre>
 </li>
 <li><h4>Making local commits</h4>
 

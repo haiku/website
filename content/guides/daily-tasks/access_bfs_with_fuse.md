@@ -21,28 +21,28 @@ The initial implementation of a BFS FUSE module was added in
 <a name="linux"></a>
 <a name="linux_apt"></a>
 <h4>APT-based GNU/Linux Distribution (Debian, Ubuntu...)</h4>
-<pre>
+```
 	sudo apt-get install libfuse-dev
-</pre>
+```
 
 <a name="bsd"></a>
 <h4>BSD Based Distribution</h4>
-<pre>
+```
 	sudo portinstall sysutils/fusefs-kmod sysutils/fusefs-libs
-</pre>
+```
 
 <h3>Building the BFS FUSE module from source</h3>
-<pre>
+```
 	cd /path/haiku/haiku/
-	jam \&lt;build\&gt;bfs_fuse
-</pre>
+	jam '<build>bfs_fuse'
+```
 
 <h3>Mounting your BFS partition</h3>
 In this example, /dev/sdaX is the BFS partition you wish to mount.
-<pre>
+```
 	mkdir /path/to/mountPoint
 	/path/to/bfs_fuse /dev/sdaX /path/to/mountPoint
-</pre>
+```
 
 At this point, your BFS partition should be mounted at /path/to/mountPoint.
 

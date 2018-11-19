@@ -21,6 +21,11 @@ Various methods and procedures to boot Haiku.
 </p>
 
 <p>
+<h4><a name="efi_booting_haiku"></a><img src='/images/Website_Edit_Profile_32.png'> <a href='/guides/uefi_booting'>UEFI Booting Haiku</a></h4>
+Booting Haiku via UEFI on hardware that supports it.
+</p>
+
+<p>
 <h4><a name="network_booting_haiku"></a><img src='/images/Prefs_Network_32.png'> <a href='/guides/network_booting'>Network Booting Haiku</a></h4>
 Booting Haiku over a local network.
 </p>

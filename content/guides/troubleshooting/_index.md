@@ -17,7 +17,7 @@ When Haiku fails to boot on a machine, it generally fails in one of the followin
   2. [Blank or corrupted screen after booting](#blank-or-corrupted-screen-after-booting)
   3. [Instant reboot](#instant-reboot)
 
-## Kernel Debug land
+## Kernel Debug Land
 
 The Kernel Debug Land is the debugger built into Haiku's kernel and represents a captured critical exception within the operating system.
 
@@ -27,9 +27,14 @@ Non-fatal KDL exceptions can sometimes be worked around by typing `continue` int
 
 If the source of the problem is identified in the KDL, the add-on or driver can be blacklisted using the `Blacklist entries` [bootloader menu.](/docs/userguide/en/bootloader.html)
 
+#### Known Issues and workarounds:
+
+  * Attempting to clone non-user-clonable kernel area!
+    * This is due to Haiku's SMAP protections.  The mentioned driver is attempting to access kernel memory without using proper procedure. You can disable SMAP protections by choosing `Disable SMEP and SMAP` in the [bootloader](https://www.haiku-os.org/docs/userguide/en/bootloader.html). [Reporting](#reporting) these errors with a picture of the screen is helpful!
+
 ### Reporting
 
-KDL exceptions should always be reported to the Haiku bug tracker. (either by searching for existing bugs, or reporting new undiscovered bugs)
+KDL exceptions should always be reported to the Haiku bug tracker (either by searching for existing bugs, or reporting new undiscovered bugs).
 
 Since obtaining the data in a KDL can be challenging at times, the following steps are generally used to report KDL exceptions to the Haiku developers:
 
@@ -51,7 +56,7 @@ The easiest approach to resolving a black/blank/corrupted screen at boot is to l
 
 Reporting detailed information from computers experiencing black/blank/corrupted screens can be difficult given their nature. Sometimes the host is responsive, however the end user is unable to determine the state of the machine.
 
-  1. [Serial Debugging](serial) is the fastest and most accurate way to obtain debug data from a uncooperative system. This method however requires a built-in serial port and specialized hardware and cables.
+  1. [Serial Debugging](troubleshooting/serial) is the fastest and most accurate way to obtain debug data from a uncooperative system. This method however requires a built-in serial port and specialized hardware and cables.
   2. Obtaining system logs is possible in some circumstances.
      - Boot the system until the black screen is encountered and wait 30 seconds.
 	 - Hold {{< keyboard CTL >}} + {{< keyboard ALT >}} + {{< keyboard DEL >}} for 5 seconds (or until system reboots)
@@ -68,4 +73,4 @@ Leveraging various [boot options](/docs/userguide/en/bootloader.html) such as `S
 
 ### Reporting
 
-[Serial Debugging](serial) is the only real way to obtain debugging data from instant reboot problems. This method however requires a built-in serial port and specialized hardware and cables.
+[Serial Debugging](troubleshooting/serial) is the only real way to obtain debugging data from instant reboot problems. This method however requires a built-in serial port and specialized hardware and cables.
