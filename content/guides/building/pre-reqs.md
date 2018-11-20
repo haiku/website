@@ -189,5 +189,3 @@ There is a fallback mechanism that is used otherwise, but this is known to be pr
 In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : \--use-xattr](/guides/building/configure/use-xattr)
 
 
-
-
