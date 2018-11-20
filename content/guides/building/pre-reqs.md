@@ -156,7 +156,7 @@ You can now retry the <code>port install...</code> command in a new Terminal.
 **To install the prerequisite software using Homebrew:**
 
 1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm homebrew/dupes/less mpfr gmp libmpc bison mtools```
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm less mpfr gmp libmpc bison mtools```
 3. Force using the newer bison version. ```brew link bison --force```
 
 Note: You'll need to install gnu less from the dupes repository as OS X comes with BSD less while Haiku requires GNU less.
@@ -187,3 +187,7 @@ Recommended file systems to use under Linux are XFS, and ReiserFS at this time.
 There is a fallback mechanism that is used otherwise, but this is known to be problematic sometimes.
 
 In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : \--use-xattr](/guides/building/configure/use-xattr)
+
+
+
+
