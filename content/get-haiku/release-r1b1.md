@@ -16,23 +16,21 @@ tags = []
 </ul>
 </div>
 
-<span style="font-size:1.1em;line-height:1.7em !important;margin-bottom:25px !important;">
-Here you will find information on how to get Haiku, by either downloading
-the latest official release. <!--or purchasing an installation CD from
-Haiku, Inc. (not yet available). The proceeds from ordering CD's will be
-used by Haiku, Inc. to help speed the release of Haiku R1.--> If you choose
-to download an image, please select from the list of available mirrors
-below.
-</span> (If you are looking for the nightly images, they can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>.)
+(If you are looking for the nightly images, they can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>.)
 
-These are `anyboot` images. They can be
-written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>,
-empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.
-It can also be used directly from QEMU.
-They can be used "live" or used to install Haiku to another disk/partition of your choice.
+### Installation DVD
+
+You can order the <i>32bit version</i> of Haiku as an installation DVD. Please read the post <a href="https://discuss.haiku-os.org/t/buy-now-haiku-dvd/7861">BUY NOW - Haiku DVD</a> for all details. You can pay more than the suggested 3 to 5 €, everything exceeding the costs will be used by Haiku, Inc. to help speed up the release of Haiku R1.
+
+### Download a Haiku Image
+
+These are `anyboot` images. They can be written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>, empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.<br />
+The images can be used "live" or used to install Haiku to another disk/partition of your choice.<br />
+They can also be used directly from QEMU.
 
 ### Direct Download Locations
 
+If you choose to download an image, please select from the list of available mirrors below.
 <p><strong>NOTE: Not all mirrors may be online. Please choose another mirror if you encounter a failure.</strong></p>
 
 <div class="nolinks">
@@ -104,7 +102,8 @@ They can be used "live" or used to install Haiku to another disk/partition of yo
 
 <p style="padding-right:50px;">
 	We thank all the organizations and companies who provide the server space
-	and bandwidth to mirror our releases.
+	and bandwidth to mirror our releases.<br />
+	Thanks to PulkoMandy and Naria for handling everything needed to get R1Beta1 DVDs to our users.
 </p>
 
 <!--
