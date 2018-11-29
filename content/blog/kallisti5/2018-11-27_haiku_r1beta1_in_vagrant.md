@@ -6,7 +6,7 @@ date = "2018-11-27 19:37:27-06:00"
 tags = ["haiku", "software"]
 +++
 
-Over the last year, I have been slowly pushing patches upstream to Vagrant introducing native Haiku support. Vagrant is an open-source tool to build and maintain portable virtual development environments. Essentially, Vagrant lets you deploy and rapidly customize a Haiku virtual machine with programatic scripts.
+Over the last year, I have been slowly pushing patches upstream to Vagrant introducing native Haiku support. Vagrant is an open-source tool to build and maintain portable virtual development environments. Essentially, Vagrant lets you deploy and rapidly customize a Haiku virtual machine with programmatic scripts.
 
 Since we now have a new stable release, I have prepared some [updated R1/beta1 images](https://app.vagrantup.com/haiku-os) to play with under an official Haiku, Inc. account.
 
