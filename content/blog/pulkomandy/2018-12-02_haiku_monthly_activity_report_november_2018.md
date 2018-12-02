@@ -104,7 +104,7 @@ back. He started fixing some of them, but there is a lot more work to do to
 get everything triaged. PVS is focused on detecting typical mistakes such
 as suspicious operator precedence, missing pointer dereferences, etc.</p>
 
-<p>miqlas fixed some missing prototypes in math.h to ease his work porting
+<p>extrowerk fixed some missing prototypes in math.h to ease his work porting
 more software to Haiku, and fixed the signature of the screenmode command so
 it can reliably be used as a shortcut handler.
 
