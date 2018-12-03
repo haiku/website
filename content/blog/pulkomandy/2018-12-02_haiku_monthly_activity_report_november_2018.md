@@ -69,8 +69,8 @@ changing them so that the compiler will be called with file paths relative to
 the repository root. This helps creating reproducible builds, because gcc
 stores the file path in the generated object files. He then cleaned up some
 rules related to building the kernel and bootloader. Eventually a lot of
-obsolete ruels were removed, and some of the overrides in Haiku source have
-been upstreamed in our fork of Jam (unfurtunately the real upstream Jam at
+obsolete rules were removed, and some of the overrides in Haiku source have
+been upstreamed in our fork of Jam (unfortunately the real upstream Jam at
 perforce is not maintained anymore so we can't upstream there).</p>
 
 <p>Kallisti5 started improving the bootstrap process (used to rebuild haiku
