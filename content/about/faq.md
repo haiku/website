@@ -106,10 +106,10 @@ Yes! We reuse network drivers from FreeBSD, so most network adapters will work o
 Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to WEP, WPA, WPA2, and open networks easily using the GUI.
 
 ### What license is Haiku released under?
-Most of the Haiku code is released under the very liberal [MIT License](https://opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License, [without trademark claims by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). See also the [Haiku, Inc. website](http://www.haiku-inc.org/trademarks.html) for the Haiku trademarks and their usage requirements.
+Most of the Haiku code is released under the very liberal [MIT License](https://opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License, [without trademark claims by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). See also the [Haiku, Inc. website](https://www.haiku-inc.org/trademarks/) for the Haiku trademarks and their usage requirements.
 
 ### What is Haiku Inc.?
-Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [check out this page](http://www.haiku-inc.org)
+Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [see this page](https://www.haiku-inc.org)
 
 ### What platform(s) is Haiku targeted to run on?
 The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS, and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.

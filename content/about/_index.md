@@ -27,7 +27,7 @@ The Be Operating System introduced progressive concepts and technologies that we
 
 ## Who is behind Haiku?
 
-Haiku is developed by a growing community of volunteer developers from all around the world. Additionally, Haiku also exists thanks to the dedicated support of a fervent and friendly community, and that of [Haiku, Inc.](http://haiku-inc.org), a non-profit organization founded by former project leader Michael Phipps with the purpose of supporting the development of Haiku as well as the growth of both the community and the Haiku platform.
+Haiku is developed by a growing community of volunteer developers from all around the world. Additionally, Haiku also exists thanks to the dedicated support of a fervent and friendly community, and that of [Haiku, Inc.](https://haiku-inc.org), a non-profit organization founded by former project leader Michael Phipps with the purpose of supporting the development of Haiku as well as the growth of both the community and the Haiku platform.
 
   * [Discover the Haiku Community](/community)
   * Check out [Haiku Contributors](https://github.com/haiku/haiku/graphs/contributors) at GitHub
