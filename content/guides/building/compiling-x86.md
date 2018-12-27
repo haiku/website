@@ -35,7 +35,7 @@ jam -q -j2 @image
 </p>
 
 <h4>Compiling raw nightly disk images</h4>
-<p>This is the default nightly image build target. This contains a complete system with an included compiler. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
-```jam -q -j2 @nightly-raw
+This is the default nightly image build target. This contains a complete system with an included compiler. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
 ```
-</p>
+jam -q -j2 @nightly-raw
+```
