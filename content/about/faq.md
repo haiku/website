@@ -158,7 +158,7 @@ Yes! _HaikuDepot_ offers a selection of open source and freeware games. Most gam
 Yes! Haiku includes these common scripting languages and many more.
 
 ### Will GoBe Productive work in Haiku?
-Yes! Haiku's 32-bit installation is binary-compatible with BeOS R5, which means applications designed for BeOS R5 will run. There may still be a few drawing bugs and other glitches, remember Haiku is still in alpha stage. But overall GoBe Productive should be usable.
+Yes! Haiku's 32-bit installation is binary-compatible with BeOS R5, which means applications designed for BeOS R5 will run. There may still be a few drawing bugs and other glitches, remember Haiku is still in beta stage. But overall GoBe Productive should be usable.
 
 ## Releases
 ### When is the next release?
