@@ -23,17 +23,17 @@ In this guide, we will be using an Anyboot image - it can be obtained [here](/ge
 ### Installing KVM <a name="part_kvm"></a>
 
 If you are using Arch Linux, you can enter the following into the terminal and set up KVM and virt-manager.
-```
+```sh
 sudo pacman -S qemu virt-manager
 ```
 
 If you are using Ubuntu, you can enter the following into the terminal instead and set up KVM and virt-manager:
-```
+```sh
 sudo apt-get install qemu-kvm libvirt-bin virt-manager
 ```
 
 To enable libvirtd on boot, issue the following command into the terminal:
-```
+```sh
 sudo systemctl enable libvirtd
 ```
 
@@ -116,7 +116,7 @@ If, after running Virt-manager, you run into a pop-up saying that it is unable t
 1. Make sure the libvirtd daemon is running by issuing ```sudo systemctl start libvirtd```
 
 2. Make sure you are a member of the 'libvirt' group by running: 
-```
+```sh
 sudo usermod -a -G libvirt $(whoami)
 ```
 

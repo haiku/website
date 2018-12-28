@@ -11,13 +11,13 @@ Building the x86 compiler toolset is quite easy and involves generating gcc bina
 From the haiku source directory, run the following. (be sure to adjust the options to match your build environment.)
 <h4>gcc2</h4>
 gcc2 is the default build planned for R1 given it's BeOS binary compatibility enabling native binary BeOS applications to run on Haiku.
-```
+```sh
 ./configure --build-cross-tools x86_gcc2 ../buildtools
 ```
 
 <h4>gcc7</h4>
 gcc7 is the default build planned for post-R1. gcc7 doesn't offer complete BeOS binary compatibility, however benefits from using a more-modern toolchain.
-```
+```sh
 ./configure --build-cross-tools x86 ../buildtools
 ```
 
@@ -29,13 +29,13 @@ gcc7 is the default build planned for post-R1. gcc7 doesn't offer complete BeOS 
 
 <h4>Compiling a basic raw Haiku disk image</h4>
 <p>This is the most basic build, it generally is good for quickly testing the OS after making modifications as it doesn't contain a lot of extra applications. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
-```
+```sh
 jam -q -j2 @image
 ```
 </p>
 
 <h4>Compiling raw nightly disk images</h4>
 This is the default nightly image build target. This contains a complete system with an included compiler. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
-```
+```sh
 jam -q -j2 @nightly-raw
 ```

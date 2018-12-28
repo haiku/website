@@ -5,14 +5,11 @@ date = "2017-12-08"
 tags = []
 +++
 
-Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a 
-solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
+Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-In this guide the Haiku operating system is being run under virtual circumstances using Fedora 27, Xen 4.9.1, and Virt-Manager, but you can use any distribution of Linux that is 
-supported by Xen as dom0.
+In this guide the Haiku operating system is being run under virtual circumstances using Fedora 27, Xen 4.9.1, and Virt-Manager, but you can use any distribution of Linux that is supported by Xen as dom0.
 
-In this guide, we will be using an Anyboot image - it can be obtained [here](/get-haiku).  Both the ISO and anyboot images are available there, do select the closest mirror to enjoy 
-higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
+In this guide, we will be using an Anyboot image - it can be obtained [here](/get-haiku).  Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
 
 ##### Go to section
 
@@ -27,16 +24,14 @@ For instructions on installing Xen on other distributions, the Xen wiki has link
 
 On Fedora 16 and above, you can enter the following into the terminal to install Xen and virt-manager (replace yum with dnf for Fedora 22 or newer)
 
-```
+```sh
 yum install xen
-```
-```
 yum install libvirt-daemon-driver-xen libvirt-daemon-config-network libvirt-daemon-driver-network virt-manager virt-viewer
 ```
 
 The libvirtd daemon is by default not running, enable it on startup with
 
-```
+```sh
 sudo systemctl enable libvirtd
 ```
 
@@ -77,7 +72,7 @@ After clicking **`Finish`**, the VM will start and boot to the Haiku image. You 
 
 #### Additional step 1. Creating a virtual network
 
-The VM we created by default does not have networking. To create a virtual network, you can follow the steps below. If you want to create a bridged network instead, consult your distribution's documentation. 
+The VM we created by default does not have networking. To create a virtual network, you can follow the steps below. If you want to create a bridged network instead, consult your distribution's documentation.
 
 First, on the virt-manager window choose `Edit` > `Connection Details`. The Connection Details window will appear. Click on the Add button in the lower left corner to add a virtual network.
 
@@ -121,7 +116,7 @@ If, after running Virt-manager, you run into a pop-up saying that it is unable t
 
 1. Make sure the libvirtd daemon is running by issuing ```sudo systemctl start libvirtd```
 
-2. Make sure you are a member of the 'libvirtd' group by running: 
-```
+2. Make sure you are a member of the 'libvirtd' group by running:
+```sh
 sudo usermod -a -G libvirtd $(whoami)
 ```

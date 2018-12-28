@@ -19,13 +19,13 @@ From the Haiku source directory, run the following to compile
 the build tools (be sure to adjust the options to match your build environment):
 
 **Working in a clean build directory:**
-```
+```sh
 mkdir generated.x86_64; cd generated.x86_64
 ../configure --build-cross-tools x86_64 ../../buildtools
 ```
 
 **Working in the top level:**
-```
+```sh
 ./configure --build-cross-tools x86_64 ../buildtools
 ```
 
@@ -46,7 +46,7 @@ to an optical disc, or that can be written directly to a USB stick.
 
 {{< alert-info "Build Threads" "Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.">}}
 
-```
+```sh
 jam -q -j2 @nightly-anyboot
 ```
 
@@ -59,7 +59,7 @@ a VM or written directly to a USB stick.
 
 {{< alert-info "Build Threads" "Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.">}}
 
-```
+```sh
 jam -q -j2 @nightly-raw
 ```
 

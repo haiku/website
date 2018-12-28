@@ -22,7 +22,7 @@ For this tutorial we will be using an ISO image file - it can be obtained [here]
 
 ### Installing and running Haiku from an ISO image. <a name="part_iso"></a>
 
-The following guide will describe installation of Haiku with an ISO image on VirtualBox. 
+The following guide will describe installation of Haiku with an ISO image on VirtualBox.
 
 ##### Step 1. Creating a virtual machine.
 
@@ -75,7 +75,7 @@ After you are done with configuring, click **`OK`** to go back to the main windo
 ##### Step 3. Installing Haiku
 
 Hopefully, at this point everything is properly configured and we can run the Haiku installation. To do so, click the Start Icon (or Machine -> Start) to run the virtual machine. After a few seconds Haiku's GUI should appear.
-             
+
 The installation itself is quite simple and does not differ really from a physical one (follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku).
 
 DriveSetup should detect two devices, one is our CD-ROM (ISO) file and another is the “harddrive” we created earlier. All we need to do is select that drive, go to *Partitions -> Format*, click on *Be File System* and continue the initialization. Then you use Installer from the Deskbar's appliction menu to install from the CD image to the big virtual harddrive.
@@ -97,7 +97,7 @@ We begin by clicking on the Settings icon.
 ![](/files/guides/virtualizing/virtualbox/vbox_12.png)
 
 The settings window allows the user to configure the hardware aspects of the virtual machine guest OS will be using.
-             
+
 One of the ways to increase performance is changing the video memory assigned to the virtual machine. On the left panel click Display tab, and move the first slider to the right, to increase the amount of memory assigned. This should allow the GUI to run more smoothly and be more responsive.
 
 ![](/files/guides/virtualizing/virtualbox/vbox_13.png)
@@ -109,20 +109,20 @@ Go to the *System* tab under *Settings* and change *Pointing Device* to *USB Tab
 ![](/files/guides/virtualizing/virtualbox/vbox_14.png)
 
 After you are done with configuring, click **`OK`** to go back to the main window.
- 
+
 ##### Additional Step 2. Adjusting window settings.
 
 One of the inconveniences users experience while using virtual machines is screen resolutions. By default, guest OS’s apply a big screen resolution, causing the windows to have scrolling bars on both sides to navigate in x-axis and y-axis. There are two solutions for that problem.
-             
+
 First solution is simply adjusting the screen resolution using tools built into system. In Haiku we can use the Screen preflet, which can be found under the Preferences menu. By changing the resolution the user will then notice that size of the VM window has now changed.
 
 ![](/files/guides/virtualizing/virtualbox/image17.png)
 
 <a name="part_customVESA"></a>
-The other way is to resize the guest window through the host. While Virtual Guest Additions are available from HaikuDepot, there is no automatic window resizing support yet. However the user may use custom VESA resoultion as a workaround. 
+The other way is to resize the guest window through the host. While Virtual Guest Additions are available from HaikuDepot, there is no automatic window resizing support yet. However the user may use custom VESA resoultion as a workaround.
 
 For example, type this in your host system:
-```
+```sh
 VBoxManage setextradata "VM name" "CustomVideoMode1" "1400x1050x16"
 ```
 
@@ -131,7 +131,7 @@ VBoxManage setextradata "VM name" "CustomVideoMode1" "1400x1050x16"
 ##### 1. Haiku cannot connect to the internet
 
 There are some known issues with the network cards on VirtualBox virtual machines. The symptom is simply the inability to connect to other computers over the Internet. A solution to this problem is as follows:
-             
+
 Go to the settings of Haiku virtual machine (it needs to be shutdown first) and click *Network -> Advanced-> Adapter type -> Intel PRO/1000 MT*.  Accept changes by clicking **`OK`**.
 
 ![](/files/guides/virtualizing/virtualbox/vbox_15.png)
