@@ -42,13 +42,13 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 **Basic requirements:**
 
-```
+```sh
 sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool mtools gcc-multilib
 ```
 
 **Additional requirements for ARM:**
 
-```
+```sh
 sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 ```
 
@@ -57,13 +57,13 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 
 **Basic requirements:**
 
-```
+```sh
 sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex cdrtools bc mtools
 ```
 
 **Additional requirements for ARM:**
 
-```
+```sh
 sudo pacman -S yaourt uboot-tools bc
 ```
 
@@ -72,13 +72,13 @@ sudo pacman -S yaourt uboot-tools bc
 
 **Basic requirements:**
 
-```
+```sh
 sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686
 ```
 
 **Additional requirements for ARM:**
 
-```
+```sh
 sudo yum install libfdt bc
 ```
 
@@ -87,7 +87,7 @@ sudo yum install libfdt bc
 
 **Basic requirements:**
 
-```
+```sh
 sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel cdrtools
 ```
 
@@ -96,13 +96,13 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 
 **Basic requirements:**
 
-```
+```sh
 sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrtools wget nasm net-misc/curl bc mtools
 ```
 
 **Additional requirements for ARM:**
 
-```
+```sh
 sudo emerge -av u-boot-tools util-linux dtc bc
 ```
 
@@ -110,17 +110,17 @@ sudo emerge -av u-boot-tools util-linux dtc bc
 ## ![freebsd](/files/os-icons/freebsd-32.png) BSD Based Distribution (FreeBSD)
 
 **Package based (FreeBSD < 10):**
-```
+```sh
 sudo pkg_add -r bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl
 ```
 
 **Package based (FreeBSD >= 10):**
-```
+```sh
 sudo pkg install bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl
 ```
 
 **Ports based:**
-```
+```sh
 sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/cdrtools-devel ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk
 ```
 
@@ -156,7 +156,7 @@ You can now retry the <code>port install...</code> command in a new Terminal.
 **To install the prerequisite software using Homebrew:**
 
 1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm homebrew/dupes/less mpfr gmp libmpc bison mtools```
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm less mpfr gmp libmpc bison mtools```
 3. Force using the newer bison version. ```brew link bison --force```
 
 Note: You'll need to install gnu less from the dupes repository as OS X comes with BSD less while Haiku requires GNU less.
@@ -187,3 +187,5 @@ Recommended file systems to use under Linux are XFS, and ReiserFS at this time.
 There is a fallback mechanism that is used otherwise, but this is known to be problematic sometimes.
 
 In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : \--use-xattr](/guides/building/configure/use-xattr)
+
+

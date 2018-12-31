@@ -30,4 +30,4 @@ This will generate an MMC image suitable for booting Haiku on a real ARM hardwar
 
 The ARM images can also be emulated in QEMU. In the example below, we emulate a Raspberry Pi 2.
 
-```qemu-system-arm -M raspi2 -kernel haiku_loader.ub -initrd haiku-floppyboot.tgz.ub -dtb rpi2.dtb -m 2G```
+```sh qemu-system-arm -M raspi2 -kernel haiku_loader.ub -initrd haiku-floppyboot.tgz.ub -dtb rpi2.dtb -m 2G```

@@ -54,7 +54,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Is there a list of working hardware?](#is-there-a-list-of-working-hardware)
   * Installing
     * [Where can I get Haiku from?](#where-can-i-get-haiku-from)
-    * [Is there a live CD available?](#is-there-a-live-cd-available)
+    * [Is there a live DVD available?](#is-there-a-live-dvd-available)
     * [How do I build Haiku from source?](#how-do-i-build-haiku-from-source)
     * [How do I install to a USB stick?](#how-do-i-install-to-a-usb-stick)
     * [Now that I have Haiku on a USB stick, how do I install Haiku to my system?](#now-that-i-have-haiku-on-a-usb-stick-how-do-i-install-haiku-to-my-system)
@@ -80,7 +80,7 @@ Haiku is named after the classical three-line Japanese poetry form. Haiku poetry
     From your path they are fleeing
     Their winter has come.
 
-While there are no current plans to include poetic messages in Haiku, we consider this another subtle way of proudly cherishing our BeOS roots.
+To avoid trademark conflicts the originally named OpenBeOS was renamed to Haiku. The name "Haiku" got the most votes in a public poll in late 2002. Competing candidates were: Auros, Begin, Dysis, Firebox, Firefly, Forge, Indigo, Infinity, Jaffa, Mantis, Menlo, Nemo, Nova, Terra.
 
 ### Is Haiku based on Linux?
 Haiku is not a Linux distribution, nor does it use the Linux kernel.
@@ -97,19 +97,19 @@ Haiku reimplements both the BeOS technologies as well as the end user experience
 Check out our [Haiku Slideshow](/slideshows/haiku-1) and the [Haiku Movies](/about/movies) pages.
 
 ### Can I use Haiku as my primary Operating System?
-Yes! Although the OS is still considered in "alpha" stage, it is reasonably stable and can be used to perform most daily tasks such as browsing the web, writing and reading e-mails, or listening to music and watching videos. Making regular backups is recommended, of course.
+Yes! Although the OS is still considered in "beta" stage, it is reasonably stable and can be used to perform most daily tasks such as browsing the web, writing and reading e-mails, or listening to music and watching videos. Making regular backups is recommended, of course.
 
 ### Can Haiku connect to the Internet?
 Yes! We reuse network drivers from FreeBSD, so most network adapters will work on Haiku out of the box. Haiku includes an e-mail client and a web browser, and you can install other network-enabled applications.
 
 ### What is the status of wireless internet connections?
-Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to  WEP, WPA, WPA2, and open networks easily using the GUI.
+Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to WEP, WPA, WPA2, and open networks easily using the GUI.
 
 ### What license is Haiku released under?
-Most of the Haiku code is released under the very liberal [MIT License](http://www.opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License, [without trademark claims by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). See also the [Haiku, Inc. website](http://www.haiku-inc.org/trademarks.html) for the Haiku trademarks and their usage requirements.
+Most of the Haiku code is released under the very liberal [MIT License](https://opensource.org/licenses/mit-license.php). Some third party components (e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License, [without trademark claims by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). See also the [Haiku, Inc. website](https://www.haiku-inc.org/trademarks/) for the Haiku trademarks and their usage requirements.
 
 ### What is Haiku Inc.?
-Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [check out this page](http://haiku-inc.org)
+Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [see this page](https://www.haiku-inc.org)
 
 ### What platform(s) is Haiku targeted to run on?
 The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS, and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
@@ -121,15 +121,15 @@ Yes. For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 
 Some common questions around the installation of software packages under Haiku.
 
 ### Is there a package manager?
-Yes! Haiku comes with a powerful package management system which makes it very easy to install applications and keep them up to date. Applications are distributed as package files which can either be installed from HaikuDepot, the graphical package management application, or downloaded directly from websites or other sources.
+Yes! Haiku comes with a powerful package management system which makes it very easy to install applications and keep them up to date. Applications are distributed as package files which can either be installed from _HaikuDepot_, the graphical package management application, or downloaded directly from websites or other sources.
 
 ### How do I update my installation of Haiku?
-All installed packages, system as well as third-party, can be updated with the SoftwareUpdater application.
+All installed packages, system as well as third-party, can be updated with the _SoftwareUpdater_ application.
 
 ### Where can I get more software for Haiku?
-The HaikuDepot application is the main entry point to discover Haiku software. It allows you to install many applications and libraries packaged by the [Haikuports project](http://haikuports.org)
+The _HaikuDepot_ application is the main entry point to discover Haiku software. It allows you to install many applications and libraries packaged by the [Haikuports project](https://github.com/haikuports)
 
-There are also some [alternative places](https://www.haiku-os.org/community/software) to get packages.
+There are also some [alternative repositories](https://www.haiku-os.org/community/software) to get packages.
 
 ## Applications
 
@@ -145,20 +145,20 @@ Not at the moment. Flash is proprietary technology from Adobe, making it difficu
 ### Is there an office suite?
 There are several options:
 
-  * You can run GoBe productive, the office suite for BeOS, if you have a copy of it. Unfortunately, it is not distributed anymore.
-  * You can buy a copy of [ThinkFree](http://thinkfree.com) office, which runs fine on Haiku using the OpenJDK virtual machine.
- * You can find the [Caligra](https://www.calligra.org/) office suite at HaikuDepot.
-  * You can use an online tool such as [Google Docs](http://docs.google.com)
+  * You can install [LibreOffice](https://www.libreoffice.org/) available at _HaikuDepot_.
+  * You can find the [Caligra](https://www.calligra.org/) office suite at _HaikuDepot_.
+  * You can use an online tool such as [Google Docs](https://docs.google.com).
   * You can use native applications, such as Sum-It (spreadsheet), WonderBrush (drawing and graphical design).
+  * You can run GoBe productive, the office suite for BeOS, if you have a copy of it. Unfortunately, it is not distributed anymore.
 
 ### Are there any games for Haiku?
-Yes! HaikuDepot offers a selection of open source and freeware games. Most games written for BeOS will also run fine, and you can use emulators such as DOSBox to run games originally written for other systems as well.
+Yes! _HaikuDepot_ offers a selection of open source and freeware games. Most games written for BeOS will also run fine, and you can use emulators such as DOSBox to run games originally written for other systems as well.
 
 ### Is there python, ruby, perl?
 Yes! Haiku includes these common scripting languages and many more.
 
 ### Will GoBe Productive work in Haiku?
-Yes! Haiku's 32-bit installation is binary-compatible with BeOS R5, which means applications designed for BeOS R5 will run. There may still be a few drawing bugs and other glitches, remember Haiku is still in alpha stage. But overall GoBe Productive should be usable.
+Yes! Haiku's 32-bit installation is binary-compatible with BeOS R5, which means applications designed for BeOS R5 will run. There may still be a few drawing bugs and other glitches, remember Haiku is still in beta stage. But overall GoBe Productive should be usable.
 
 ## Releases
 ### When is the next release?
@@ -171,13 +171,13 @@ Our own internal fork of gcc2 is used to compile the x86 32-bit release to maint
 Other architectures (including x86_64) don't leverage gcc2.
 
 ### Is there support for newer GCC compilers?
-Yes! In order to provide support for a modern version of C++ and up to date libraries, the official versions of Haiku come with both gcc2 and gcc7 installed, and a set of libraries suitable for use with each compiler. If you are not interested in BeOS support, we also provide a 64bit version of the system that uses only gcc7.
+Yes! In order to provide support for a modern version of C++ and up to date libraries, the official versions of Haiku come with both gcc2 and gcc7 installed, and a set of libraries suitable for use with each compiler. If you are not interested in BeOS support, we also provide a 64-bit version of the system that uses only gcc7.
 
 ### How do I use the different GCC versions?
-The ``setarch`` command can be used to switch between different architectures. On 32bit Haiku the default architecture is "x86_gcc2", secondary architecture is "x86".
+The ``setarch`` command can be used to switch between different architectures. On 32-bit Haiku the default architecture is "x86_gcc2", secondary architecture is "x86".
 
 ### What is Kernel Debugging Land?
-The Haiku Kernel comes with a powerful and user-friendly on-screen debugger. There you can enter commands investigate the problem and collect information in order to [write a bug report](https://www.haiku-os.org/docs/welcome/en/bugreports.html).
+The Haiku kernel comes with a powerful and user-friendly on-screen debugger. There you can enter commands investigate the problem and collect information in order to [write a bug report](https://www.haiku-os.org/docs/welcome/en/bugreports.html).
 
 You can also reboot the machine, [generate QR codes](/blog/mmlr/2012-07-01_qr_encode_your_kdl_output), or play a game of hangman. :)
 
@@ -193,10 +193,10 @@ The SysRq key is usually the same as "print screen", but may need to press an ex
 
 ## Hardware
 ### What are the minimum hardware requirements to run Haiku?
-The x86 32-bit release of Haiku will run on a Pentium or better CPU with 192MiB of RAM (as long as virtual memory is activated), 1GiB of storage space and a VESA compliant video card.
+The x86 32-bit release of Haiku will run on a Pentium or better CPU with 256 MiB of RAM (as long as virtual memory is activated), 1,5 GiB of storage space and a VESA compliant video card.
 
-However, for a satisfactory user experience, we recommend **at least** a Pentium4 with 512MiB of RAM and 2GiB of storage space.
-For compiling Haiku within itself, 2GiB of RAM is recommended.
+However, for a satisfactory user experience, we recommend **at least** a Pentium4 with 512 MiB of RAM and 2 GiB of storage space.
+For compiling Haiku within itself, 2 GiB of RAM is recommended.
 
 ### Why doesn't Haiku let me use my monitor's resolution?
 Most likely, Haiku is using the VESA driver. As with any other VESA driver, it has limitations. The problem is that the VESA driver cannot configure an arbitrary resolution. Even if it recognizes the needed one from the monitor info.
@@ -204,13 +204,12 @@ Most likely, Haiku is using the VESA driver. As with any other VESA driver, it h
 It can only *pick* (quite literally) one resolution from a fixed list, the VESA BIOS list as manufactured in your graphics board. It cannot configure the mode on the chip as a special graphics driver can.
 
 ### How can I check which graphics driver is being used?
-There are two common ways to check. First, the Screen preferences shows this information at the top left of the window.
+There are two common ways to check. First, the _Screen_ preferences shows this information at the top left of the window.
 Alternatively, from within Terminal, you can run
 
 ``
 listimage | grep accel
 ``
-
 
 If ``vesa.accelerant ``is shown amongst other text, then Haiku does not have a dedicated driver for your graphics card and instead is using VESA.
 
@@ -225,7 +224,7 @@ Haiku also provides drivers for several other card families. There is a [list of
 Some drivers (non-HD Radeon and Matrox) have experimental multi-monitor support, which allows both a clone and an extended desktop mode. However, applications are not made aware of the fact that the display is split across multiple monitors, which leads to issues such as windows opening in the middle of the desktop, split between the two monitors.
 
 ### How come there is no sound?
-First of all, check that your sound card is visible in the Media preferences (this means there is a driver for it). If the card is detected but there is still no sound, this is a problem with our audio drivers.
+First of all, check that your sound card is visible in the _Media_ preferences (this means there is a driver for it). If the card is detected but there is still no sound, this is a problem with our audio drivers.
 
 Most modern PC hardware uses sound devices compatible with the Intel HDA (high definition audio) specification. Unfortunately, the specification leaves the routing of the audio signals to the different outputs not completely specified, making it difficult to write a driver that works out of the box on all machines.
 
@@ -239,22 +238,21 @@ The development wiki has a [list of drivers](https://dev.haiku-os.org/wiki/Hardw
 
 ## Installing
 ### Where can I get Haiku from?
-You can download an ISO which can be burned to a CD, or written to a USB flash drive, of the current version of Haiku from our [Get Haiku!](/get-haiku) page.
-Official Haiku Installation CDs are available from [Haiku, Inc.](http://www.haiku-inc.org/order-disc.html).
+At the [Get Haiku!](/get-haiku) page you can download ISO images which can be be burned to a DVD, or written to a USB flash drive. The page has also information on how to order a physical Installation DVD.
 The latest and possibly unstable nightly images are [available here](https://download.haiku-os.org/).
 
-### Is there a live CD available?
-The installation CD is also a Live CD.
+### Is there a live DVD available?
+The installation DVD is also a Live DVD.
 
 ### How do I build Haiku from source?
 Instructions for [building Haiku](/guides/building) from source are documented in our guides.
 
 ## Using
 ### Why doesn't the tilde key work properly?
-The tilde {{< keyboard "~" >}} key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice or press it followed by space. If you don't like this behavior, you can customize your dead keys in the Keymaps preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
+The tilde {{< keyboard "~" >}} key is a dead key, used to type characters like ñ. To type a standalone tilde, you need to either press the tilde key twice or press it followed by space. If you don't like this behavior, you can customize your dead keys in the _Keymaps_ preferences panel. You can also use the "US" keyboard layout which doesn't include this feature.
 
 ### How do I change my keyboard layout?
-Use the Keymaps preferences. If your preferred layout is not available there yet, you can customize an existing one by drag'n'dropping the keys around.
+Use the _Keymaps_ preferences. If your preferred layout is not available there yet, you can customize an existing one by drag'n'dropping the keys around.
 
 ### Is there some kind of failsafe mode I can boot into? How do I get to it?
 You can get to the boot menu by holding {{< keyboard SHIFT >}} or pressing {{< keyboard SPACE >}} before the Haiku boot screen shows. From there you can toggle several safe mode settings, such as forcing a lower video resolution, preventing drivers from getting loaded, or disabling some hardware features by blacklisting its driver. See the [user guide's Boot Loader](/docs/userguide/en/bootloader.html) chapter.
