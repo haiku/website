@@ -1,0 +1,162 @@
++++
+type = "blog"
+author = "PulkoMandy"
+title = "Haiku monthly activity report - 12/2018"
+date = "2019-01-03T13:26:14.000Z"
+tags = []
++++
+
+<p>Happy new year! It's 2019 and Haiku is still alive!</p>
+
+<p>First of all, it's time to look at the stats for <a href="http://pulkomandy.tk/stats">Haiku</a> and <a href="http://pulkomandy.tk/stats_hp">Haikuports</a>.
+As you can see, the activity for haikuports keeps growing (there are now 2x more commits to haikuports than to Haiku),
+and Haiku got slightly more commits in 2018, after two historically low activity years.
+Let's hope the trend continues and we can reach the high levels of activity of 2008-2010 again someday.</p>
+
+<p>Anyway, let's see what happened in december. This reports covers hrev52616-527xx.</p>
+
+<h3>Kernel</h3>
+
+<p>Kallisti5 made the very small first step towards a RISC-V port. This is a
+new royalty and patent-free CPU architecture. However there isn't currently
+much suitable harware for Haiku using it, so this is more of an experimentation
+with the buildtools than anything else at this point.</p>
+
+<p>waddlesplash added enforcement of W^X protection for all kernel areas,
+meaning no memory is both writable and executable at the same time in the kernel.
+Such areas would only be useful for live code generation (eg. JIT engines) and
+we don't have anything like that. Moreover, if someone manages to get a pointer
+to such an area, it can make an easy place for injecting some code and then
+executing it.</p>
+
+<p>waddleplash also added a new trigger of the low resource manager when the kernel runs out of address space.
+The low resource manage ris a special task which is run when some resource is low (for example, memory, or 
+address space in a specific thread or now in the kernel). It tries to release some
+memory that can easilyt be reclaimed, for example by flushing write caches to disk or clearing read caches.</p>
+
+<p>He also reworked the file descriptor disconnection. This is a problem more
+tricky than it seems, because in some cases a closed file descriptors may still
+have operations happening on it. So, we have to be careful about not freeing the
+data structures too early, but also not forgetting to free them and leaking.
+This was already reworked back in 2015, but the implementation didn't work
+in some cases.</p>
+
+<p>mmlr fixed a race condition in starting a new team, that could sometimes lead to a lockup of the executable trying to do that.</p>
+
+<p>He also fixed the early boot messages, and then problems in the early initialization preventing to boot with 64 CPU cores, and crashing in some cases when many CPU cores are used (more than 16 or 32).</p>
+
+<h3>Drivers</h3>
+
+<p>kallisti5 made some minor changes to interrupt hadling for the worki in progress
+sdhci (SD card controller) driver. The driver is however not ready for use and still not included in the image.</p>
+
+<p>PulkoMandy merged back the support for USB floppy drives into the main USB mass storage driver.
+These are similar, but with a few differences that made it easier to experiment with floppies in a separate driver.
+The new driver does not work for floppies at the moment, but at least it does not panic as the previous one.
+Once floppies are working again, the next step will be reworking that driver to use our generic SCSI stack, as
+USB actually uses a subset of SCSI commands for mass storage.</p>
+
+<p>waddlesplash continues keeping network drivers up to date with FreeBSD, and fixing 
+bugs and problems as they are found. Some of the drivers are now in sync with FreeBSD 12.</p>
+
+<p>tqh updated ACPICA (the standard code for ACPI management that we share with other OS)
+to the current version, bringing in a lot of bugfixes.</p>
+
+<p>waddlesplash fixed a missing erorr check in the NTFS driver, which could panic the system on failed mounts.</p>
+
+<h3>libroot</h3>
+
+<p>Korli added bound checks in the towlower and towupper fallback implementations,
+to avoid them crashing on out of range data. Normally, the implementation is
+done by ICU, but in some cases, we are using a minimal implementation that avoids
+pulling the whole ICU library and its locale database.</p>
+
+<p>Korli also fixed the demangler (the piece of code that turns C++ symbols back
+into readable method or class names) to return the correct error when a parameter
+is not found. This will just help getting the correct error code, but it is
+useful to know what went wrong.</p>
+
+<p>Korli and waddlesplash also fixed a bug in the runtime_loader (the application that loads and runs applications)
+that would occasionally crash, and was easily triggered by the Java virtual machine. We now
+have a working Java implementation again.</p>
+
+<h3>Cleanups and safety</h3>
+
+<p>mt was hard at work this month reviewing issues from the PVS studio scan.
+PVS studio is commercial software that performs code static analysis. They did
+a test run of their tools on Haiku a few years ago and send us a raw report
+as well as detailed blogposts highlighting some of the identified issues.
+You can have a look at the <a href="http://pulkomandy.github.io">the scan report</a>
+and see lines get filled in green as issues are reviewed and fixed.</p>
+
+<p>waddlesplash ran the build using clang and fixed various warnings detected
+by it. He also fixed various issues in BDirectory, Installer, Tracker, etc.</p>
+
+<h3>app_server</h3>
+
+<p>mmlr added error checks and fixed several places where app_server would read large data to the stack, leading to stack overflows.</p>
+
+<h3>Application Kit</h3>
+
+<p>PulkoMandy added a way to run a BLooper inside an existing thread. Normally,
+a BLooper spawns and control its own thread (created when you call Run()). There
+was already a special case for BApplication (which takes control of the main
+thread). This change is required to simplify porting WebKit, which wants to
+create threads and later on turn them into loopers.</p>
+
+<h3>Media Kit</h3>
+
+<p>PulkoMandy reverted some changes to the ffmpeg plugin after noticing they
+broke youtube playback. These changes were related to computing the presentation
+time of decoded video frames, an information which is currently not used by
+MediaPlayer, making this a little difficult to test.</p>
+
+<p>Barrett continues his work refactoring the encoding/decoding part of the
+Media Kit. He started plugging his new framework in BMediaFile, and started
+to adjust the codecs (ffmpeg wrapper) to make use of the new system. This is
+still work in progress, but it's getting there and will hopefully help getting
+better support for media decoding and encoding.</p>
+
+<h3>Network Kit</h3>
+
+<p>Peter Kosyh is continuing his work on IMAP support, fixing some deadlocks and
+crashes. It should now be quite reliable and usable for daily emailing.</p>
+
+<p>Danc2 fixed an issue in the network preferences management that would prevent
+using custom settings (non-DHCP) with mulitple network interfaces (which are more
+common now that we support wifi). This was later reworked by axeld who proposed a more correct implementation.</p>
+
+<h3>Interface Kit</h3>
+<p>Thanks to waddlesplash, CenterOnScreen is no longer allowed to leave the window tab outside the screen if the window is very high.</p>
+
+<p>PulkoMandy and waddlesplash reworked the shortcut code in BMenu to better handle utf8 characters, fixing a crash under libroot_debug, and allowing BMenu to auto-assign shortcuts even using non-ASCII characters.</p>
+
+<h3>Applications</h3>
+
+<p>Humdinger made the layout of headers in Mail more compact, so you have some
+more space for the mail body. He added new preset queries for easily locating mails
+with the same sender, subject or recipient than the currently open one. He also
+foxed the handling of the HTML escape &amp;szlig;, which was accidentally translated to ö.
+It is now also possible to edit the subject of mails directly from Tracker
+(in case the sender forgot to set one).</p>
+
+<p>Humdinger also fixed TextSearch to use the preferred
+sourcecode editor, instead of always opening Pe (which is slowly being phased out,
+as Koder gets all needed features).</p>
+
+<p>EXL fixed a bug with the hyperlinks in AboutSystem, which were trying to
+both open the link and open the /bin/open executable.</p>
+
+<p>kerwizzy implemented subsampling in Mandelbrot, for a slower, but nicer look.</p>
+
+<p>Owenca fixed an infinite loop in Mail when trying to find URLs in a message.</p>
+
+<p>Andrew Lindesay continues his work on HaikuDepot, reworking parts of the networking
+code to be faster and more reliable. It also allows to get a progress bar for
+the initial loading of the application, when all application informations are
+downloaded from the depot server.</p>
+
+<p>Rajagopalan-Gangadharan added a "browse" button to WebPositive settings to
+easily change the download location using a file panel.</p>
+
+<p>mmlr fixed an use-after-free case in Installer.</p>
