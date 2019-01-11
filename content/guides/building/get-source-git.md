@@ -72,7 +72,6 @@ git clone ssh://<login>@git.haiku-os.org/haiku
 
 <h4>Switching from anonymous to developer access</h4>
 <p>Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:</p>
-
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
 ```
@@ -85,7 +84,6 @@ Haiku's source code needs to reside on a case sensitive file system.
 </div>
 In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" as two different files. Some file systems that are (or could be) case in-sensitive include, FAT32, NTFS, and HFS+. Mac OS X's HFS+ is case in-sensitive by default. For more information regarding how to create a case-sensitive HFS+ volume, see <a href="/documents/dev/how_build_haiku_mac_os_x#part_diskimage">this article</a>.
 </li>
-<ul>
 <a name="proxy_access"></a>
 <li><h4>Getting the source code through an HTTP proxy</h4>
 <div class="alert alert-warning">
@@ -129,7 +127,6 @@ The short commit message should be a summary no longer than 64 characters, no re
 
 <h5>Long commit comments</h5>
 Long commit messages are best used to explain what was changed and why on new code, rewrites, or other tasks that may need explanation.
-
 ```sh
 git commit -a -F ~/mycommitlog
 ```
