@@ -17,24 +17,26 @@ Haiku currently supports building itself, or having itself *cross compiled* on a
 
 Below are common build platforms and their statuses. This is not meant as a complete list, and the build specifics might change with new versions of those platforms. Further below you'll find more specific help on how to set up the build.
 
-|Platform                            | Package Manager      | Supported | Notes               |
+Note that in addition to all the platform-specific packages, you will also need to [install Haiku's custom version of Jam](/guides/building/jam).
+
+| Platform                           | Package Manager      | Supported | Notes               |
 |------------------------------------|----------------------|-----------|---------------------|
-| [Haiku](http://www.haiku-os.org)   | pkgman               | YES       | Easiest             |
-| [ArchLinux](http://archlinux.org)  | [pacman](#pacman)    | YES       |                     |
-| BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
+| [Haiku](https://www.haiku-os.org)  | pkgman               | YES       | Easiest             |
+| [ArchLinux](https://archlinux.org) | [pacman](#pacman)    | YES       |                     |
 | [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                     |
-| [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       | Missing mkisofs     |
-| [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       | Missing mkisofs     |
-| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Works very well     |
+| [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                     |
+| [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       |                     |
+| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       |                     |
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
-| [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       | Missing mkisofs     |
-| Mac OS X                           | [MacPorts](#osx)     | YES       |                     |
-| [NetBSD](http://netbsd.org)        | [packages](#bsd)     | YES       | Untested            |
+| [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
+| macOS                              | [Homebrew](#osx)     | YES       |                     |
+| [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
 |[openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
-| [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       | Missing mkisofs     |
+| [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
+| [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
 | Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
-| [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       | Missing mkisofs     |
-| [Windows](http://microsoft.com)    | [Cygwin](#cygwin)    | NO        |                     |
+| BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
+| [Windows](http://microsoft.com)    | [see notes](#windows)| NO        |                     |
 | Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
 
 <a name="apt"></a>
@@ -43,7 +45,7 @@ Below are common build platforms and their statuses. This is not meant as a comp
 **Basic requirements:**
 
 ```sh
-sudo apt-get install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libcurl4-openssl-dev genisoimage libtool mtools gcc-multilib
+sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool mtools gcc-multilib
 ```
 
 **Additional requirements for ARM:**
@@ -58,7 +60,7 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 **Basic requirements:**
 
 ```sh
-sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex cdrtools bc mtools
+sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex xorriso bc mtools
 ```
 
 **Additional requirements for ARM:**
@@ -68,12 +70,12 @@ sudo pacman -S yaourt uboot-tools bc
 ```
 
 <a name="yum"></a>
-## ![yum](/files/os-icons/fedora-32.png) RPM-based GNU/Linux Distributions using yum(Fedora, CentOS...)
+## ![yum](/files/os-icons/fedora-32.png) RPM-based GNU/Linux Distributions using yum (Fedora, CentOS...)
 
 **Basic requirements:**
 
 ```sh
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel genisoimage curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686
 ```
 
 **Additional requirements for ARM:**
@@ -88,7 +90,7 @@ sudo yum install libfdt bc
 **Basic requirements:**
 
 ```sh
-sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel cdrtools
+sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel xorriso
 ```
 
 <a name="gentoo"></a>
@@ -97,7 +99,7 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 **Basic requirements:**
 
 ```sh
-sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib cdrtools wget nasm net-misc/curl bc mtools
+sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib libisoburn wget nasm net-misc/curl bc mtools
 ```
 
 **Additional requirements for ARM:**
@@ -109,23 +111,18 @@ sudo emerge -av u-boot-tools util-linux dtc bc
 <a name="bsd"></a>
 ## ![freebsd](/files/os-icons/freebsd-32.png) BSD Based Distribution (FreeBSD)
 
-**Package based (FreeBSD < 10):**
+**Package based:**
 ```sh
-sudo pkg_add -r bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl
-```
-
-**Package based (FreeBSD >= 10):**
-```sh
-sudo pkg install bison git nasm gawk texinfo cdrtools-devel wget u-boot mtools linuxfdisk curl
+sudo pkg install bison git nasm gawk texinfo xorriso wget u-boot mtools linuxfdisk curl
 ```
 
 **Ports based:**
 ```sh
-sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/cdrtools-devel ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk
+sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk
 ```
 
 <a name="osx"></a>
-## ![osx](/files/os-icons/macosx-32.png) OS X
+## ![osx](/files/os-icons/macosx-32.png) macOS
 
 A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ works fine.
 
@@ -133,10 +130,18 @@ First install Xcode via ```xcode-select --install``` and accept the license. ```
 
 Once you have installed XCode and the command line tools as well as agreed to the end user license you can install the prerequisite software either by using MacPorts or by using Homebrew.
 
+**To install the prerequisite software using Homebrew:**
+
+1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools```
+3. Force using the newer bison version. ```brew link bison --force```
+
+Note: You'll need to install gnu less from the dupes repository as macOS comes with BSD less while Haiku requires GNU less.
+
 **To install the prerequisite software using Macports do the following:**
 
 1. Install <a href="http://www.macports.org/">MacPorts</a> (A standard Installer package is provided).
-2. Close your Terminal, open a new one and type ```sudo port install autoconf cdrtools gawk wget nasm less mpfr gmp libmpc bison mtools```
+2. Close your Terminal, open a new one and type ```sudo port install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools```
 
 If you get an error “port: command not found”, the MacPorts shell configuration, stored in <code>~/.profile</code>, is probably not taken into account.
 If you’re using Bash, you probably have a <code>~/.bash_profile</code> or <code>~/.bash_login</code> file, preventing bash to read <code>~/.profile</code>.
@@ -153,23 +158,15 @@ You can now retry the <code>port install...</code> command in a new Terminal.
 
 <p>Note: the ARM port is not yet supported for OS X, MacPorts has mtools but is missing sfdisk at least.</p>
 
-**To install the prerequisite software using Homebrew:**
+<a name="windows"></a>
+## ![windows](/files/os-icons/package-32.png) Windows
+{{< alert-warning "Warning" "Windows is not maintained as a development environment.">}}
 
-1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf cdrtools gawk wget nasm less mpfr gmp libmpc bison mtools```
-3. Force using the newer bison version. ```brew link bison --force```
-
-Note: You'll need to install gnu less from the dupes repository as OS X comes with BSD less while Haiku requires GNU less.
+To build Haiku on Windows, we recommend installing Windows Subsystem for Linux, and then following the instructions for the appropriate Linux distribution.
 
 <a name="beos_zeta"></a>
 ## ![beos](/files/os-icons/beos-32.png) BeOS & Zeta
 {{< alert-warning "Warning" "BeOS and Zeta are no longer maintained or supported.">}}
-
-<a name="cygwin"></a>
-## ![cygwin](/files/os-icons/package-32.png) Cygwin (Windows)
-{{< alert-warning "Warning" "Cygwin is not maintained as a development environment. These instructions are dependent on community contributions.">}}
-
-* [MauriceK's instructions](MauriceK's instructions)
 
 <a name="solaris"></a>
 ## ![cygwin](/files/os-icons/package-32.png) Solaris
