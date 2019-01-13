@@ -1,40 +1,40 @@
 +++
 type = "article"
-title = "--use-xattr"
+title = "Native Extended Attributes and Cross-Compiling Haiku"
 date = "2010-02-15T23:19:09.000Z"
 tags = []
 +++
 
-<p>
-Due to the various ways that xattr is implemented in the various file systems, some will present issues that need to be considered and others will simply be unusable. This page aims to clarify which file systems are capable of being utilized by the --use-xattr option when building Haiku.  Please keep in mind that best results are generally obtained by using a filesystem natively, as compared to using it via a userland implementation like FUSE.   All filesystems listed below are assumed to be utilized natively, unless otherwise noted.
-</p>
+Due to the various ways that extended attributes are implemented in various file systems, some will present issues that need to be considered and others will simply be unusable. This page aims to clarify which file systems have extended attribute implementations compatible enough with Haiku's that they can be utilized during cross-builds.
 
-<h3>Known Working File systems</h3>
-This is an incomplete list of file systems whose implementation of xattr is known to work with Haiku's build system.
+Note that `configure` auto-detects the extended attribute capabilites of the filesystem you have asked it to configure a build on, and will automatically select "full", "ref", or no usage at all based on the filesystem's capabilites. If you would like to check what it has selected, you can view the `build/BuildConfig` file in your `generated` directory, and check the values of `HAIKU_HOST_USE_XATTR` and `HAIKU_HOST_USE_XATTR_REF`.
+
+Please keep in mind that best results are generally obtained by using a filesystem natively, as compared to using it via a userland implementation like FUSE. All filesystems listed below are assumed to be utilized natively, unless otherwise noted.
+
+<h3>Compatible filesystems</h3>
 <ul>
 <li><h4>JFS</h4>(Note: JFS may exhibit instability and out-of-memory errors when --use-xattr is utilized.)</li>
-
 <li><h4>NTFS (via NTFS-3G)</h4></li>
-<li><h4>ReiserFS v3</h4></li>
-<li><h4>Reiser4</h4></li>
+<li><h4>ReiserFS</h4></li>
 <li><h4>UFS2</h4></li>
 <li><h4>XFS</h4></li>
 <li><h4>ZFS</h4></li>
 </ul>
 
-<h3>Unconfirmed File systems</h3>
+<!--
+<h3>Unconfirmed filesystems</h3>
 <p>
-According to this page on Wikipedia, <a href="http://en.wikipedia.org/wiki/Extended_file_attributes">Extended file attributes</a>, the following file systems support xattr. However, it is not confirmed if their xattr functionality can be used by Haiku's build system.
+According to <a href="http://en.wikipedia.org/wiki/Extended_file_attributes">this page on Wikipedia</a>, the following file systems support extended attributes. However, it is not confirmed if their functionality can be used by Haiku's build system.
 </p>
 <p>
-Note that the amount of data stored in attributes may be limited by the used file system.  Any filesystem which stores attributes in hidden files should be fine.
+Note that the amount of data stored in attributes may be limited by the used file system. (Any filesystem which stores attributes in hidden files should be fine.)
 </p>
 <ul>
 <li><h4>UFS1</h4></li>
 </ul>
+-->
 
-<h3>Troublesome File systems</h3>
-These file systems cannot be used with the --use-xattr option.
+<h3>Troublesome filesystems</h3>
 <ul>
 <li><h4>Btrfs</h4>
 <p>Building Haiku on Btrfs with extended attributes does not work.  Utilizing it will give an error like the following, which was encountered when building Poorman.</p>
@@ -68,26 +68,19 @@ try them on a file:
     getfattr -n "user.testAttr" tt
 </pre>
 If they fail, you can check, whether your FS is mounted with xattrs enabled.
-"mount" should list "user_xattr" as mount option for your FS. 
+"mount" should list "user_xattr" as mount option for your FS.
 
 If it doesn't you can try adding it in your /etc/fstab. After that it might still not
 work, which probably means that the kernel has been compiled with that feature disabled.
 <a href="http://www.freelists.org/post/haiku-development/Problem-generating-Haiku-VMWare-image,6">Problem generating Haiku VMWare image</a> mailing list thread.
 </p>
 
-<p>On some Linux distributions (Debian Lenny for example), you may also need to install the attr and attr-dev packages first:</p>
+<p>On some Linux distributions (Debian/Ubuntu/..., for example), you may also need to install the attr package first:</p>
 
 <pre>
-sudo apt-get install attr attr-dev
+sudo apt-get install attr
 </pre>
 
-</li>
-
-<li><h4>How can you check the block size of an (ext3) partition?</h4>
-Some Linux or BSD based distributions include `tune2fs`
-<pre>
-    tune2fs -l /dev/...
-</pre>
 </li>
 
 <li>
@@ -114,21 +107,16 @@ and if you want to enable xattr at the next boot edit /etc/fstab at the line of 
 </p>
 </li>
 
-<li><h4>What does the build system do when --use-xattr isn't used?</h4>
+<li><h4>What does the build system do when native extended attributes aren't used?</h4>
 <p>
-Under BeOS incompatible platforms that cannot make use of xattr, the build system is restricted to the generic attribute emulation (using separate files). This is likely slower and also requires you to <a href="/guides/building/jam#emulated_attributes">clean up the $(HAIKU_OUTPUT_DIR)/generated/attributes directory</a> from time to time. If you're only doing full builds that doesn't matter at all, since you would delete the generated/{attributes,objects,tmp} directories before a build anyway. 
+Under BeOS incompatible platforms that cannot make use of xattr, the build system is restricted to the generic attribute emulation (using separate files). This is likely slower and also requires you to <a href="/guides/building/jam#emulated_attributes">clean up the $(HAIKU_OUTPUT_DIR)/generated/attributes directory</a> from time to time. If you're only doing full builds that doesn't matter at all, since you would delete the generated/{attributes,objects,tmp} directories before a build anyway.
 <a href="http://www.freelists.org/post/haiku/buildmirrortorrent-host,1"> build/mirror/torrent host</a> mailing list thread.
 </p>
 </li>
 
 <li>
 <p>From <a href="https://dev.haiku-os.org/ticket/2772#comment:1">Ticket #2772</a>,
-Attribute mixups are known to happen when building without xattr support (i.e. configuring without --use-xattr) and when not building from the scratch (i.e. after deleting generated/objects and generated/attributes).
-</p>
-</li>
-
-<li><h4>The alternative --use-xattr-ref</h4>
-<p>As of hrev46113 (the package management merge) the alternative option --use-xattr-ref is available. It uses the generic attribute emulation mechanism, but tags files that have attributes with a single unique ID xattr attribute that references the corresponding separate attribute files. This prevents the attribute mix-ups the generic attribute emulation suffers from. The option requires working xattr support, but it can be used with file systems that have a per-file attribute size limit, like ext4.
+Attribute mixups are known to happen when building without even xattr-ref and when not building from the scratch (i.e. after deleting generated/objects and generated/attributes).
 </p>
 </li>
 
