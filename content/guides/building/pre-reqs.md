@@ -60,7 +60,7 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 **Basic requirements:**
 
 ```sh
-sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex xorriso bc mtools
+sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex xorriso bc mtools python
 ```
 
 **Additional requirements for ARM:**
@@ -113,12 +113,12 @@ sudo emerge -av u-boot-tools util-linux dtc bc
 
 **Package based:**
 ```sh
-sudo pkg install bison git nasm gawk texinfo xorriso wget u-boot mtools linuxfdisk curl
+sudo pkg install bison git nasm gawk texinfo xorriso wget u-boot mtools linuxfdisk curl python3
 ```
 
 **Ports based:**
 ```sh
-sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk
+sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk lang/python
 ```
 
 <a name="osx"></a>
