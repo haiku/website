@@ -45,7 +45,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 **Basic requirements:**
 
 ```sh
-sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool mtools gcc-multilib
+sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool mtools gcc-multilib python3
 ```
 
 **Additional requirements for ARM:**
@@ -75,7 +75,7 @@ sudo pacman -S yaourt uboot-tools bc
 **Basic requirements:**
 
 ```sh
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686 python36
 ```
 
 **Additional requirements for ARM:**
@@ -90,7 +90,7 @@ sudo yum install libfdt bc
 **Basic requirements:**
 
 ```sh
-sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel xorriso
+sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel xorriso python3
 ```
 
 <a name="gentoo"></a>
