@@ -26,6 +26,18 @@ a physical key on the keyboard.
 
   * ``{{< keyboard ALT >}}``
 
+### asciinema
+[Asciinema](https://asciinema.org) allows you to make recordings of shell
+sessions and play them in a simple javascript-based web player.
+
+  * pip3 install asciinema
+  * asciinema rec
+  * (do things)
+  * ctl+d to finish
+  * place the generated .cast file into ```/static/asciinema/```
+  * Use the asciinema shortcode to embed:
+    * ```{{< asciinema "demo.cast">}}```
+
 ## Troubleshooting
 
 ### macOS: "date: illegal option"
