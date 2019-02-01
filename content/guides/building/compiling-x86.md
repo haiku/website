@@ -15,12 +15,6 @@ gcc2 is the default build planned for R1 given it's BeOS binary compatibility en
 ./configure --build-cross-tools x86_gcc2 ../buildtools
 ```
 
-<h4>gcc7</h4>
-gcc7 is the default build planned for post-R1. gcc7 doesn't offer complete BeOS binary compatibility, however benefits from using a more-modern toolchain.
-```sh
-./configure --build-cross-tools x86 ../buildtools
-```
-
 <h4>gcc2h / gcc7h hybrid builds</h4>
 <p>Haiku can be build as a hybrid image meaning that it contains gcc2 as well as gcc7 binaries. More information on this can be found on the <a href='/guides/building/gcc-hybrid'>gcc-hybrid</a> page.</p>
 
