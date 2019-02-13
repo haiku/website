@@ -101,3 +101,31 @@ Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.
     title Haiku
     root (hd0,2)
     chainloader +1
+
+### Adding Haiku to the Windows bootloader using EasyBCD
+
+* First get EasyBCD from [this site](https://neosmart.net/EasyBCD/)
+* Install it as you would install any windows software
+* When you launch it you'll see 2 panels
+* On the left panel click on "Add new entry"
+
+[](/files/guides/easybcd_0.png)
+
+* On the right panel click on the "Linux/BSD" tab
+* Leave the "Type" section as GRUB (leagcy)
+* In the "Name" section type Haiku
+* In the "Drive" section choose your haiku partition which will have the "0xEB" ID in its string, if you have multiple haiku partitions, you would have to figure out which one by its size.
+* Click on the "Add entry" button
+
+[](/files/guides/easybcd_1.png)
+
+* On the left panel you have the "edit boot menu" option
+
+[](/files/guides/easybcd_2.png)
+
+* Click on it and in the right panel  you'll see the list of your OS's
+You can make one of them the default by checking its checkbox
+
+* Below you have the timer radio button, either check the "wait for user selection" one, so that the bootloader will wait until you make a choice and hit enter, or choose the amount of seconds the bootloader should wait before launching the default OS.
+
+
