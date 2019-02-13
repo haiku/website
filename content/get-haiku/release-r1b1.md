@@ -30,7 +30,7 @@ They can also be used directly from QEMU.
 
 ### Direct Download Locations
 
-If you choose to download an image, please select from the list of available mirrors below.
+If you choose to download an image, please select from the list of available mirrors below. Mirrors are in no specific order.
 <p><strong>NOTE: Not all mirrors may be online. Please choose another mirror if you encounter a failure.</strong></p>
 
 <div class="nolinks">
@@ -67,6 +67,11 @@ If you choose to download an image, please select from the list of available mir
       <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
       <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
+    </tr>
+    <tr>
+      <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
 </tbody>
 </table>
