@@ -80,6 +80,8 @@ Of course, the partition in the entries needs to point to the one where you actu
 
 <div class="alert alert-info">The EFI entry above assumes you've created the `EFIBOOT` partition and put the boot loader inside it as explained <a href="https://www.haiku-os.org/guides/uefi_booting">in the official guide</a>. If you didn't, you need to check the path of the `chainloader` directive and fix accordingly.</div>
 
+<div class="alert alert-info">The EFI entry above assumes that your disk is partitioned using the intel/mbr partitioning system. For systems using GPT partitioning, replace the line `insmod part_msdos` with `insmod part_gpt`.</div>
+
 On Ubuntu (and other Linux flavors), you can eventually customize the GRUB setup further in a GUI environment using __Grub Customizer__ and following this [getting started tutorial](http://tipsonubuntu.com/2018/03/11/install-grub-customizer-ubuntu-18-04-lts/).
 
 Finally, you can regenerate the boot menu configuration by issuing `sudo update-grub` and reboot.
@@ -121,7 +123,11 @@ Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.
 
 ![](/files/guides/booting/MakeDefaultEntrySaveSettings.png)
 
+* On the left panel you have the "edit boot menu" option
+
 * Click on it and in the right panel  you'll see the list of your OS's
 You can make one of them the default by checking its checkbox
 
 * Below you have the timer radio button, either check the "wait for user selection" one, so that the bootloader will wait until you make a choice and hit enter, or choose the amount of seconds the bootloader should wait before launching the default OS.
+
+
