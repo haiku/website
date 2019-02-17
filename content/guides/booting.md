@@ -109,7 +109,7 @@ Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.
 * When you launch it you'll see 2 panels
 * On the left panel click on "Add new entry"
 
-[](/files/guides/easybcd_0.png)
+![](/files/guides/booting/AddNewEntry.png)
 
 * On the right panel click on the "Linux/BSD" tab
 * Leave the "Type" section as GRUB (leagcy)
@@ -117,11 +117,13 @@ Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.
 * In the "Drive" section choose your haiku partition which will have the "0xEB" ID in its string, if you have multiple haiku partitions, you would have to figure out which one by its size.
 * Click on the "Add entry" button
 
-[](/files/guides/easybcd_1.png)
+![](/files/guides/booting/EditHaikuEntry.png)
 
 * On the left panel you have the "edit boot menu" option
 
-[](/files/guides/easybcd_2.png)
+![](/files/guides/booting/MakeDefaultEntrySaveSettings.png)
+
+* On the left panel you have the "edit boot menu" option
 
 * Click on it and in the right panel  you'll see the list of your OS's
 You can make one of them the default by checking its checkbox
