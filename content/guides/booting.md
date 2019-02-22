@@ -123,8 +123,6 @@ Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.
 
 ![](/files/guides/booting/MakeDefaultEntrySaveSettings.png)
 
-* On the left panel you have the "edit boot menu" option
-
 * Click on it and in the right panel  you'll see the list of your OS's
 You can make one of them the default by checking its checkbox
 
