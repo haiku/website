@@ -162,7 +162,10 @@ You can now retry the <code>port install...</code> command in a new Terminal.
 ## ![windows](/files/os-icons/package-32.png) Windows
 {{< alert-warning "Warning" "Windows is not maintained as a development environment.">}}
 
-To build Haiku on Windows, we recommend installing Windows Subsystem for Linux, and then following the instructions for the appropriate Linux distribution.
+It is possible to install Windows Subsystem for Linux and follow the instructions
+for the appropriate Linux distribution (for example, Ubuntu is available this way
+in the Windows store). However, this is currently slower than running Haiku in
+a virtual machine and building from there.
 
 <a name="beos_zeta"></a>
 ## ![beos](/files/os-icons/beos-32.png) BeOS & Zeta
