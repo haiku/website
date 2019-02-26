@@ -2,7 +2,7 @@
 type = "news"
 title = "Back into Google Summer of Code"
 date = "2018-02-18T17:47:20.000Z"
-tags = ["gsoc", "gsoc2017"]
+tags = ["gsoc", "gsoc2018"]
 +++
 
 <p>Haiku is proud to once again be part of the Google Summer of Code.
