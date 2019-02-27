@@ -22,8 +22,8 @@ The key highlights that distinguish Haiku from other operating systems include:
 
 The Be Operating System introduced progressive concepts and technologies that we believe represent the ideal means to simple and efficient personal computing. Haiku is the realization of those concepts and technologies in the form of an operating system that is open source and free.
 
-[Read the General FAQ](/about/faq)
-[Take the Screenshot Tour](/slideshows/haiku-tour)
+  * [Read the General FAQ](/about/faq)
+  * [Take the Screenshot Tour](/slideshows/haiku-tour)
 
 ## Who is behind Haiku?
 
