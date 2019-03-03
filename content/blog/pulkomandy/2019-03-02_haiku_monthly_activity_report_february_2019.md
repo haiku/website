@@ -2,7 +2,7 @@
 type = "blog"
 author = "PulkoMandy"
 title = "Haiku monthly activity report - 02/2019"
-date = "Sat, 2 Mar 2019 11:52:44 +0100"
+date = "2019-03-02T10:52:44.000Z"
 tags = []
 +++
 
