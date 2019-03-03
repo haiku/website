@@ -1,12 +1,12 @@
 +++
 type = "blog"
 author = "PulkoMandy"
-title = "Haiku monthly activity report - 12/2018"
-date = "2019-03-03T07:26:14.000Z"
+title = "Haiku monthly activity report - 02/2019"
+date = "Sat, 2 Mar 2019 11:52:44 +0100"
 tags = []
 +++
 
-Welcome to the activity report for february 2019. This month has been quite busy
+Welcome to the activity report for February 2019. This month has been quite busy
 for me with the annual visit to FOSDEM (<a href="/conference/2019_fosdem_2019/">read the report</a>), and managing the application
 process for both GSoC and Outreachy (Haiku has been <a href="/news/2019-02-26_haiku_gets_into_gsoc_and_outreachy/">accepted to both programs</a> this year).
 
