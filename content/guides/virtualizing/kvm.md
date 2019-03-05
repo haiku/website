@@ -32,6 +32,11 @@ If you are using Ubuntu, you can enter the following into the terminal instead a
 sudo apt-get install qemu-kvm libvirt-bin virt-manager
 ```
 
+As of Ubuntu 18.10, the `libvirt-bin` package has been replaced, so the necessary command is a little different:
+```sh
+sudo apt-get install qemu-kvm libvirt-daemon-system libvirt-clients virt-manager
+```
+
 To enable libvirtd on boot, issue the following command into the terminal:
 ```sh
 sudo systemctl enable libvirtd
