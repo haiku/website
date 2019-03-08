@@ -72,6 +72,7 @@ git clone ssh://<login>@git.haiku-os.org/haiku
 
 <h4>Switching from anonymous to developer access</h4>
 <p>Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:</p>
+
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
 ```
@@ -90,28 +91,36 @@ In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" 
 Haiku's main Git repository does not allow HTTP access, which is a problem if you are accessing the Internet through a proxy server that only permits HTTP (port 80) traffic.
 </div>
 Instead, use one of our mirror repositories at GitHub or Gitorious for anonymous HTTP access, they are both kept in sync with the main repository. First, set Git to connect through your proxy server:
+
 ```sh
 git config --global http.proxy http://proxyuser:proxypwd@proxy.server.com:8080
 ```
+
 Then clone the repositories from GitHub:
+
 ```sh
 git clone http://github.com/haiku/buildtools.git
 git clone http://github.com/haiku/haiku.git
 ```
+
 Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
 </li>
 <li><h4>Updating the Sources</h4>
 <div class="alert alert-danger">
 Be sure to use the `--rebase` argument while doing a pull prior to a push to avoid confusing nonlinear histories! ("Merge 'master' on ssh://git.haiku-os.org/haiku" messages showing your name and others changes) Do <b>NOT</b> however use --rebase on branches you have shared with other people! (rebase re-writes the local history. If your local history doesn't match people who cloned off of you, and they want to push to you, they will have <b>major</b> problems.)
 </div>
+
 ```sh
 cd /path/haiku/haiku
 git pull --rebase
 ```
+
 Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
+
 ```sh
 git pull --rebase /path/haiku/haiku /path/haiku/buildtools
 ```
+
 </li>
 <li><h4>Making local commits</h4>
 
@@ -119,6 +128,7 @@ In git you make commits to your local tree, then push the final results to the c
 
 <h5>Short commit comment</h5>
 Short commit messages are best utilized for small changes or changes that hold a simple ideal.
+
 ```sh
 git commit -a -m "WebPositive: Style cleanup, no functional change"
 ```
@@ -127,6 +137,7 @@ The short commit message should be a summary no longer than 64 characters, no re
 
 <h5>Long commit comments</h5>
 Long commit messages are best used to explain what was changed and why on new code, rewrites, or other tasks that may need explanation.
+
 ```sh
 git commit -a -F ~/mycommitlog
 ```
@@ -146,9 +157,11 @@ The first line should be a summary no longer than 64 characters, separated from 
 
 </li>
 <li><h4>Pushing changes remotely</h4>
+
 ```sh
 git push
 ```
+
 After your changes are complete, the push command will push your local tree to the remote Haiku repository.
 </li>
 <li><h4>Example git workflow</h4>
