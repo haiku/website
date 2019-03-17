@@ -11,12 +11,12 @@ Better late than never... Here's a quick report on GCI 2018.
 
 At the end of the contest, each organization chooses five finalists. These finalists each receive limited edition Google Code-in hoodies. Two finalists from each organization will be grand prize winners and go on a trip to Google Headquarters in California.
 
-###Haiku's Grand Prize Winners 2018:
+### Haiku's Grand Prize Winners 2018:
 
 * Bach Nguyen from United States (52 completed tasks)
 * Ojasva Jain from India (28 completed tasks)
 
-###Haiku's Finalists:
+### Haiku's Finalists:
 
 * a.u.naseef (8 completed tasks)
 * arnavbhatt288 (13 complete taks)
