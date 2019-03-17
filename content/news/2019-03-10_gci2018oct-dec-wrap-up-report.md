@@ -19,9 +19,9 @@ At the end of the contest, each organization chooses five finalists. These final
 ### Haiku's Finalists:
 
 * a.u.naseef (8 completed tasks)
-* arnavbhatt288 (13 complete taks)
-* claire (8 completed taks)
-* nishanth1232 (12 completed taks)
+* arnavbhatt288 (13 complete tasks)
+* claire (8 completed tasks)
+* nishanth1232 (12 completed tasks)
 
 We congratulate all participants and hope all of you have made progress during this journey. It has been a pleasure having you work with us. Your development over these 7 weeks has been impressive and we’d be happy to have all of you as potential new users and/or contributors. From the coding assignments, to documentation, to design, to all the extra work done, Haiku is glad for all the tasks completed. We would love to see all of you around Haiku!
 
@@ -38,6 +38,5 @@ Some of the contributions to this year’s run of GCI with Haiku include:
 * Presenting Haiku at their schools or other local groups.
 
 and much more!
-
 
 We thank Scott McCreary for once more taking over the administering as an Org. Admin. This year Luc Schrijvers (Begasus) will make the trip to meet the winners as they both picked him as the mentor they would like to meet. 
