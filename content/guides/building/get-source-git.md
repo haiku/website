@@ -68,14 +68,15 @@ The &lt;login&gt;@ is only needed if your currently logged in username doesn't m
 git clone ssh://<login>@git.haiku-os.org/haiku
 ```
 </li>
-</ul>
 
-<h4>Switching from anonymous to developer access</h4>
+<li><h4>Switching from anonymous to developer access</h4>
 <p>Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:</p>
 
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
 ```
+</li>
+</ul>
 
 <h3>Some Notes</h3>
 <ul>
