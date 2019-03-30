@@ -18,9 +18,9 @@ There are a number of ways you can keep up with news about Haiku and social medi
 <p><b><a href="https://del.icio.us/haikuos" target="_blank">Official Delicious account</a></b><br />
 
 <h4>Recognized Community Groups</h4>
-<p><b><a href="https://plus.google.com/communities/116050756631351429142" target="_blank">Google+ community</a></b><br />
 <p><b><a href="https://www.facebook.com/groups/haikuosgroup/" target="_blank">Facebook group</a></b><br />
 <p><b><a href="https://www.reddit.com/r/haikuOS/" target="_blank">Subreddit</a></b><br />
+<p><b><a href="https://discord.gg/5FDhmM4/" target="_blank">Discord server</a></b><br />
 <p><b><a href="https://www.linkedin.com/groups?gid=165215" target="_blank">LinkedIn community</a></b><br />
 <p><b><a href="https://vk.com/haiku_os" target="_blank">Vk.com community</a></b><br />
 <p><b><a href="https://www.flickr.com/groups/haiku-os/" target="_blank">Flickr group</a></b><br />
