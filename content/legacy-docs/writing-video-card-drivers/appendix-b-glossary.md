@@ -52,17 +52,15 @@ The AGP port is typically connected via the Northbridge controller in contrast t
 
 <a name="DirectX"></a>
 <h4>DirectX</h4>
-<p>Microsoft's counterpart for the openGL standard. This standard is not open, and can only be used on Windows systems. Because Microsoft is so powerful, this ensures that most of the graphic card producers support directX. DirectX also supports features other than the mentioned 3D acceleration used for gaming, such as audio. </p>
-
+<p>Microsoft DirectX is a collection of application programming interfaces for handling tasks related to multimedia, especially game programming and video, on Microsoft platforms. Microsoft’s counterpart for the OpenGL standard. This standard is not open, and can only be used on Windows systems. Because Microsoft is so powerful, this ensures that most of the graphic card producers support DirectX. DirectX also supports features other than the mentioned 3D acceleration used for gaming, such as audio.</p>
 
 <a name="DMA"></a>
 <h4>DMA</h4>
 <p>It is possible for several hardware components to access memory directly without passing through the CPU first, which allows the CPU to be occupied with other tasks. Most motherboards have two DMA controllers present for use by ISA cards, but this is no longer necessary for PCI (AGP) devices. Terwijl ISA kaarten daar soms gebruik van maken, is het voor PCI en AGP kaarten niet langer nodig. De PCI (AGP) controller combineert zelfstandig toegangsaanvragen tot aaneengesloten reeksen adressen zodat een soort vervangend DMA systeem ontstaat. Hiervoor is geen programmering nodig: het is in de hardware van de controller 'ingebakken' en gedraagt zich transparant. </p>
 
-
-<p>
-<b>Double Buffering</b><br />
-While one buffer (filled with a picture) is presented on the screen, work on second buffer in the background can occur with another picture. During the vertical refresh period the buffers can be switched and the process repeats, making for very smooth on-screen updates. </p>
+<a name="DoubleBuffering"></a>
+<h4>Double Buffering</h4>
+<p>While one buffer (filled with a picture) is presented on the screen, work on second buffer in the background can occur with another picture. During the vertical refresh period the buffers can be switched and the process repeats, making for very smooth on-screen updates. </p>
 
 
 <a name="DPMS"></a>
@@ -137,7 +135,7 @@ This bus was upgraded to a 16-bit databus when the 286 was introduced. A lot of 
 
 <a name="OpenGL"></a>
 <h4>OpenGL</h4>
-<p>SGI and the Khronos Group's open standard for 3D hardware acceleration. Because this is an open standard, it makes it possible to be used by various platforms. </p>
+<p>SGI and the Khronos Group's open standard for 3D hardware acceleration. The OpenGL Registry contains specifications of the core API and shading language; specifications of Khronos- and vendor-approved OpenGL extensions; header files corresponding to the specifications; and related documentation including specifications, extensions, and headers for the GLX, WGL, and GLU APIs. Because this is an open standard, it makes it possible to be used by various platforms. </p>
 
 
 <a name="OSD"></a>
@@ -185,58 +183,71 @@ Deze uitspraak geldt niet voor moderde (TFT) LCD schermen: die kunnen met 60Hz p
 
 <a name="SingleBuffering"></a>
 <h4>Single Buffering</h4>
-<p>See also 'Double Buffering'. Single buffering is applied only if there is not sufficient video card memory for more than one hardware overlay bitmap, as frequently the case in some laptops. When single buffering is the only mode available, the CPU is used to maintain sufficient video throughput. </p>
+<p>See also double buffering. Single buffering is only applied if not enough video card memory is available to create more than one hardware overlay bitmap as is often the case on laptops. Because single-buffering can also be used with the hardware overlay unit or backend scaler, a considerable gain is achieved in video quality and reduced CPU load.</p>
 
 
 <a name="Slopspace"></a>
 <h4>Slopspace</h4>
-<p>Als een co&ouml;rdinaat-waarde niet voldoet aan de granulariteit die eraan wordt gesteld, dan wordt de co&ouml;rdinaat-waarde naar boven afgerond zodat wel aan de granulariteit wordt voldaan. Het verschil tussen de gevraagde en de verkregen co&ouml;rdinaat-waarde wordt apart bewaard ter referentie voor de daadwerkelijk gebruikte 'ruimte'. </p>
+<p>If a coordinate value does not meet the granularity that is set, the coordinate value is rounded up so that the granularity is met. The difference between the requested and the obtained coordinate value is kept separately for reference for the actual used ' space '.</p>
 
 
 <a name="TSR"></a>
 <h4>TSR</h4>
-<p>'Terminate and Stay Ready' program. Dit soort programma's betreft vaak een soort drivers voor DOS. Soms was in het DOS tijdperk bijvoorbeeld de grootte van de BIOS-ROM in videokaarten niet groot genoeg om alle functies te bevatten. Of kwamen later updates uit die functionaliteit toevoegden aan de kaart. Een TSR kon dan uitkomst brengen: voor de gebruiker leek het erop alsof het BIOS uitgebreid was zodra deze file geladen was. Op deze wijze kon bijvoorbeeld VBE 2 support aan VBE 1.2 compatible kaarten worden toegevoegd.</p>
+<p>' Terminate and Stay Ready ' program. These types of programs often concern some kind of drivers for DOS. Sometimes in the DOS era, for example, the size of the BIOS ROM in video cards was not large enough to contain all the functions. Or later came updates that added functionality to the card. A TSR could then bring the result: for the user it seemed as if the BIOS was extended as soon as this file was loaded. In this way for example VBE 2 support could be added to VBE 1.2 compatible cards.</p>
 
 
 <a name="UnifiedDriver"></a>
 <h4>Unified Driver</h4>
-<p>Een driver die een hele serie, meestal na elkaar door de fabrikant op de markt gebrachte videokaarten ondersteunt. </p>
+<p>A driver that supports a whole series of video cards, usually placed on the market by the manufacturer. </p>
 
 
 <a name="VBE"></a>
 <h4>VBE</h4>
-<p>VESA BIOS Extensions. Naast de standaard in het VGA BIOS aanwezige grafische- en tekstmodes, werden later grafische modes geintroduceerd voor modes die niet in de VGA standaard voorzien waren. Om nu  applicatieprogrammeurs op eenvoudige wijze toegang tot deze extra modes te geven, werd een standaard door de VESA organisatie bedacht die dit mogelijk maakte zonder gebruik van specifiek voor een kaart geschreven drivers. <br />
-Deze nieuwe standaard maakt gebruik van de zogenaamde VGA BIOS INT10 (hex) hook en conventies om de modes te activeren. Omdat de grafische kaarten steeds hogere resoluties en kleurdiepten aankonden, moest ook VBE regelmatig worden uitgebreid. Zo ontstonden diverse versies van het VBE: 1.0, 1.2, 2.0 en tegenwoordig 3.0. <br />
-Versie 3.0 is de eerste versie van VBE welke op een bruikbare manier uitvoering van de VBE modes in protected mode toestaat. Hiervoor is een speciale 'protected mode hook' geintroduceerd, welke (een aantal van) dezelfde modes kan instellen als mogelijk is via de oude 'realmode' hook: INT10. </p>
+<p>VESA BIOS Extensions. In addition to the standard graphics and text modes present in the VGA BIOS, later graphical modes were introduced for modes that were not fitted with the VGA standard. In order to give application programmers easy access to these additional modes, a standard was conceived by the VESA organization which made this possible without the use of specific drivers for a card.
+
+This new standard uses the so-called VGA BIOS INT10 (hex) Hook and conventions to activate the modes. Because the graphics cards could always have higher resolutions and colour depths, VBE also had to be extended regularly. Several versions of the VBE were created: 1.0, 1.2, 2.0 and nowadays 3.0.
+
+Version 3.0 is the first version of VBE which allows the VBE modes to be implemented in protected mode in a usable way. For this, a special ' protected mode hook ' has been introduced, which (some of) the same modes can be set as possible via the old ' realmode ' hook: INT10.</p>
 
 
 <a name="VCO"></a>
 <h4>VCO</h4>
-<p>Voltage controller oscillator. Dit is in de context van dit document een onderdeel van een PLL. Het betreft een 'frequentiebron' waarvan de frequentie middels een aantal registers (de 'delers' of 'scalers') kan worden ingesteld. </p>
+<p>Voltage controller oscillator. This is part of a PLL in the context of this document. It is a ' frequency source ', the frequency of which can be set by a number of registers (the ' divisors ' or ' scalers '). </p>
 
 
 <a name="VerticalRetrace"></a>
 <h4>Vertical Retrace</h4>
-<p>Bij de opbouw van een beeld op een beeldbuis (CRT) monitor wordt een electronenstraal over de oppervlakte van de buis bewogen met hoge snelheid, waardoor het beeld ontstaat. De beeldbuis wordt 'gescand' van links naar rechts en van boven naar onder met bijna horizontale lijnen. Als de straal rechtsonder in het beeld aankomt, wordt hij uitgeschakeld en weer snel naar de linker-bovenkant van het scherm gestuurd.<br />
-Deze terugstuur actie is de vertical retrace. Tijdens de vertical retrace worden geen beeldpunten opgewekt (omdat de straal uit staat) zodat het beeld kan worden verwisseld of gestoord zonder dat dit te zien is. Het beeld is stabiel voor het menselijk oog omdat het beeld steeds snel na elkaar wordt gescand, en de beeldbuis bovendien een nagloeitijd heeft. </p>
+<p>When building an image on an image tube (CRT) monitor, a electronenstraal over the surface of the tube is moved at high speed, which creates the image. The CRT is ' scanned ' from left to right and from top to bottom with almost horizontal lines. When the beam is in the lower right hand side of the image, it is turned off and quickly sent to the top left of the screen.
+
+This return action is the vertical retrace. During the vertical retrace no image points are generated (because the beam is off) so that the image can be swapped or disturbed without seeing it. The image is stable for the human eye because the image is always scanned quickly, and the image tube also has an after-glow time.
+</p>
 
 
 <a name="WarmStartOfTheVideoCard"></a>
 <h4>Warm start of the video card</h4>
-<p>De driver gaat ervan uit dat de kaart al een koude start heeft gemaakt. Alleen de benodigde display mode wordt ingesteld, waaronder de pixelclock van de DAC. De typische koude start initialisatie wordt niet gedaan. <br />
-Eventuele benodigde informatie verzameld door het VGA BIOS tijdens de koude start zoals de grootte van het geheugen, wordt uit kaartregisters gelezen welke tijdens deze koude start zijn geinitialiseerd. Soms kan de benodigde informatie ook (rechtstreeks) uit het VGA BIOS worden gelezen.<br />
-In het kaartBIOS kunnen de bij de productie bepaalde gegevens zijn voorgedefinieerd.</p>
+<p>The driver assumes that the card has already made a cold start. Only the required display mode is set, including the Pixelclock of the DAC. The typical cold start initialization is not done. Any necessary information collected by the VGA BIOS during the cold start, such as memory size, is read from map registers that were initialized during this cold start. Sometimes the required information can also be read (directly) from the VGA BIOS.
+
+In the map BIOS, the data specified in the production can be predefined.
+</p>
 
 
 <a name="YCbCr411"></a>
 <h4>YCbCr411</h4>
-<p>Zie YCbCr422. In de colorspace YCbCr411 wordt van elke pixel de helderheidsinformatie opgeslagen (4 bekeken pixels), terwijl van de kleurinformatie op de vier pixels wordt opgeslagen (1 uit de 4 bekeken pixels). </p>
+<p>See YCbCr422. In The colors pace YCbCr411, the brightness information is stored from each pixel (4 pixels viewed), while the color information is stored in one of the four pixels (1 from the 4 pixels viewed).</p>
 
 
 <a name="YCbCr422"></a>
 <h4>YCbCr422</h4>
-<p>Een colorspace met compressie welke wordt gebruikt voor de opslag van video. Oorspronkelijk werd de gebruikte compressietechniek ingevoerd voor het kleurentelevisie signal CVBS (Composite Video Baseband System) wegens beperkte bandbreedte van de bestaande zenders en TV toestellen. De kleurinformatie moest op compatible wijze worden verzonden.<br />
-In een TV toestel worden de beelden opgebouwd uit drie basiskleuren. rood (R), groen (G) en blauw (B). Rood, groen en blauw gemengd licht levert namelijk de 'kleur' wit op mits in de juiste verhouding gemengd. Wanneer deze basiskleuren in de verhouding gemengd zijn dat ze wit op leveren kunnen alle grijstinten tussen zwart en wit worden opgewekt door variatie van de gezamelijke intensiteit: De zogenaamde helderheidsinformatie luminantie 'Y'. De kleurinformatie die zich in de basiskleuren bevindt wordt chrominantie genoemd: 'C'. <br />
-Wanneer nu basiskleur mist maar wel luminantie aanwezig is kan de missende basiskleur weer uit de aanwezige informatie worden afgeleid, bijvoorbeeld: G = Y - R - B. <br />
-In YCbCr zijn de luminantie Y, de blauwe basiskleur Cb en de rode basiskleur Cr aanwezig. Hier is voor gekozen omdat het menselijk oog gevoeliger is voor helderheidsinformatie dan voor kleuren. In YCbCr422 wordt namelijk voor elke pixel de helderheidsinformatie opgeslagen, (bekeken per 4 pixels) maar de beide basiskleuren alleen om de pixel (2 pixels in de bekeken 4 pixels). In deze standaard wordt de compressie in richting uitgevoerd. Pixels direct na elkaar (van links naar rechts) zijn zo uitgevoerd. De pixels erboven en eronder staan los van de bekeken 'rij'. Er zijn ook colorspaces waar de compressie twee dimensionaal is uitgevoerd: zo ontstaat een hogere compressie. Een backend scaler van een videokaart kan dit soort colorspaces omzetten naar 'standaard' RGB. Hierbij kan bij sommige scalers worden gekozen voor interpolatie van de kleurinformatie voor de 'missende pixels', terwijl andere scalers alleen pixels kunnen dupliceren.</p>
+<p>A colors pace with compression used to store video. Originally, the compression technique used was introduced for the colour television signal CVBS (composite Video Base band System) due to limited bandwidth of the existing transmitters and TV sets. The color information had to be sent in compatible mode.
+
+In a TV set, the images are made up of three basic colours. Red (R), Green (G) and Blue (B). Red, green and blue mixed light produces the ' colour ' white when mixed in the right proportion. When these basic colours are mixed in the ratio that they deliver white, all shades of gray between black and white can be generated by variation of the joint intensity: the so-called luminance information ' Y '. The color information found in the basic colors is called chrominance: ' C '.
+
+When one basic colour is missing but luminance is present, the missing base colour can be derived from the present information, for example: G = Y – R – B.
+
+In YCbCr, the luminance Y, the blue base color Cb and the red base color Cr are present. This has been chosen because the human eye is more sensitive to clarity than to colours. In YCbCr422, the brightness information is stored for each pixel, (viewed by 4 pixels) but the two base colors only to the pixel (2 pixels in the viewed 4 pixels).
+
+In this standard, compression is performed in one direction. Pixels immediately consecutively (from left to right) are executed. The pixels above and below are separate from the viewed ' row '. There are also colorspaces where the compression is performed two dimensional: this creates a higher compression.
+
+A backend scaler of a video card can convert this type of colorspaces to ' standard ' RGB. Some scalers may choose to interpolate the color information for the ' missing pixels ', while other scalers can only duplicate pixels.
+</p>
 
