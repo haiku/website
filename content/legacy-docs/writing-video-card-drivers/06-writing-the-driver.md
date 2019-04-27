@@ -85,7 +85,7 @@ Only the frame buffer access is now actually made available to BeOS by the drive
 In any case, this step is intended to allow this frame buffer to access and not disrupt the VBE mode. It is also very useful to build log functions to a file in the accelerant for testing purposes. For example, simply Omonstotelijk can be proven that the accelerant is actually active: otherwise, it will not be logged.</p>
 
 <a name="6.1.4"></a>
-<h5>6.1.4 Stap 3: Hardware cursor building/h5>
+<h5>6.1.4 Step 3: Hardware cursor building</h5>
 
 <p>When hardware cursor support is first built in, the next step can be tested with it. 
 
@@ -109,7 +109,7 @@ The cursorbitmap is usually 64 at 64 pixels large in the cards. BeOS uses only 1
 The cursor itself must be tested for disturbances occurring during movement. If so, the programming of the coordinate registers must be synchronized to the vertical retrace. More information about this can be found in the description of the accelerant function MOVE_CURSOR.</p>
 
 <a name="6.1.5"></a>
-<h5>6.1.5 Step 4: Set Frame buffer start address/h5>
+<h5>6.1.5 Step 4: Set Frame buffer start address</h5>
 
 <p>The lowest few bits of the start address are often not saved. This means that there is a minimum step size (granularity) for putting this start address. This is important for the next step.
 
