@@ -1,14 +1,15 @@
 +++
 type = "article"
 title = "Conclusion"
-date = "2010-05-26T02:27:42.000Z"
+date = "2019-04-27T11:24:15.000Z"
 tags = []
 +++
 
 <h3>7 - Conclusion</h3>
 
-<p>Writing a graphics card driver is fun once in a while. You learn a lot and it is not so difficult as one would think, at least not if you plan it in a structured way. It takes a lot of imagination for the developer to write a driver, because it is difficult to test all combinations. </p>
+<p>Writing video drivers is nice to do a while. It is very instructive and (yet) good to do when the whole structure is addressed. Sometimes writing video drivers requires the necessary imagination from the programmer, because it is difficult to test some (combinations) of things or make them testable. 
 
-<p>Grabbing and understanding the specs 'as such' is a real challenge sometimes. Even when all is documented it still takes a lot of time to solve some puzzles. Probably it is more important to get the card out first than making some good documentation.</p>
+Also, the retrieval and understanding of the specifications is sometimes a challenge. Even if there is some documentation from a chip or card manufacturer, you still need to be puzzled regularly. Probably because of the big pressure from the manufacturers to be first with a new card on the market, you can see that the documentation is often bad or incomplete.
 
-<p>To summarize:  If you love a challenge you should consider developing a BeOS graphic driver. You can get far with the right documentation and specs you find in this guide. At least the 'step plan' is a good tool to follow.  But, still, it is a great challenge...</p>
+To summarize: Anyone who has a challenge should start writing a (BeOS) video driver. The documentation and guidelines in this document are already a very long way to come. Especially the included roadmap is an important tool. But it remains a challenge...
+</p>
