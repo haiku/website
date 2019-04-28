@@ -99,13 +99,13 @@ depending on the availability of a requested function in the card's hardware.
 The BeOS R5 supports the following hooks:
 
 <b>Initialization:</b>
-<li>INIT_ACCELERANT</li>
+<ul><li>INIT_ACCELERANT</li>
 <li>CLONE_ACCELERANT</li>
 <li>ACCELERANT_CLONE_INFO_SIZE</li>
 <li>GET_ACCELERANT_CLONE_INFO</li>
 <li>UNINIT_ACCELERANT</li></li>
 <li>GET_ACCELERANT_DEVICE_INFO</li>
-<li>ACCELERANT_RETRACE_SEMAPHORE</li>
+<li>ACCELERANT_RETRACE_SEMAPHORE</li></ul>
 
 2018 update:
 Haiku has added support for the DDC/EDID channel which is used to determine the specifications of a screen
@@ -124,32 +124,32 @@ GET_PREFERRED_DISPLAY_MODE
 Also added by Haiku are two hooks to get and set the screen's brightness. This will (mostly) be used for controlling
 laptop panels brightness.
 
-<li>GET_BRIGHTNESS</li>
-<li>SET_BRIGHTNESS</li>
+<ul><li>GET_BRIGHTNESS</li>
+<li>SET_BRIGHTNESS</li></ul>
 
 <b>Mode configuration:</b>
-ACCELERANT_MODE_COUNT</li>
-GET_MODE_LIST</li>
-PROPOSE_DISPLAY_MODE</li>
-SET_DISPLAY_MODE</li>
-GET_DISPLAY_MODE</li>
-GET_FRAME_BUFFER_CONFIG</li>
-GET_PIXEL_CLOCK_LIMITS</li>
-MOVE_DISPLAY</li>
-SET_INDEXED_COLORS</li>
-GET_TIMING_CONSTRAINTS</li>
+<ul>ACCELERANT_MODE_COUNT</li>
+<li>GET_MODE_LIST</li>
+<li>PROPOSE_DISPLAY_MODE</li>
+<li>SET_DISPLAY_MODE</li>
+<li>GET_DISPLAY_MODE</li>
+<li>GET_FRAME_BUFFER_CONFIG</li>
+<li>GET_PIXEL_CLOCK_LIMITS</li>
+<li>MOVE_DISPLAY</li>
+<li>SET_INDEXED_COLORS</li>
+<li>GET_TIMING_CONSTRAINTS</li></ul>
 
 <b>Powersave functions:</b>
-<li>DPMS_CAPABILITIES</li>
+<ul><li>DPMS_CAPABILITIES</li>
 <li>DPMS_MODE</li>
-<li>SET_DPMS_MODE</li>
+<li>SET_DPMS_MODE</li></ul>
 
 <b>Cursor management:</b>
 The cursor management hooks are only exported when the accelerant and the card both support a hardware cursor.
 
-<li>SET_CURSOR_SHAPE</li>
+<ul><li>SET_CURSOR_SHAPE</li>
 <li>MOVE_CURSOR</li>
-<li>SHOW_CURSOR</li>
+<li>SHOW_CURSOR</li></ul>
 
 2018 update:
 While the (older) BeOS hooks are still supported in Haiku, Haiku also has added support for full color cursors. When
@@ -162,12 +162,12 @@ add full color support:
 SET_CURSOR_BITMAP
 
 <b>Acceleration engine synchronisation:</b>
-<li>ACCELERANT_ENGINE_COUNT</li>
+<ul><ul><li>ACCELERANT_ENGINE_COUNT</li>
 <li>ACQUIRE_ENGINE</li>
 <li>RELEASE_ENGINE</li>
 <li>WAIT_ENGINE_IDLE</li>
 <li>GET_SYNC_TOKEN</li>
-<li>SYNC_TO_TOKEN</li>
+<li>SYNC_TO_TOKEN</li></ul>
 
 <b>2D acceleration:</b>
 The first four 2D hooks are used by the app_server. All hooks can be used by applications via BwindowScreen for
@@ -185,12 +185,12 @@ to right in memory) is too big to specify to the hardware. So the acceleration e
 mode, while the mode itself is supported. This can happen, because the memory reading hardware for the
 CRTC/DAC hardware is a different hardware block from the acceleration engine in the GPU.
 
-<li>SCREEN_TO_SCREEN_BLIT</li>
+<ul><li>SCREEN_TO_SCREEN_BLIT</li>
 <li>FILL_RECTANGLE</li>
 <li>INVERT_RECTANGLE</li>
 <li>FILL_SPAN</li>
 <li>SCREEN_TO_SCREEN_TRANSPARENT_BLIT</li>
-<li>SCREEN_TO_SCREEN_SCALED_FILTERED_BLIT</li>
+<li>SCREEN_TO_SCREEN_SCALED_FILTERED_BLIT</li></ul>
 
 <b>Hardware overlay:</b>
 For the hardware overlay functionality the following hooks are used. Depending on engine architecture different
@@ -199,7 +199,7 @@ can be setup in the card. Therefore the overlay hooks below are requested after 
 It is allowed to export all hooks, or no hooks at all: nothing in between. This way the accelerant lets the user know
 the current set mode on this card (or head) supports overlay or not.
 
-<li>OVERLAY_COUNT</li>
+<ul><li>OVERLAY_COUNT</li>
 <li>OVERLAY_SUPPORTED_SPACES</li>
 <li>OVERLAY_SUPPORTED_FEATURES</li>
 <li>ALLOCATE_OVERLAY_BUFFER</li>
@@ -207,7 +207,7 @@ the current set mode on this card (or head) supports overlay or not.
 <li>GET_OVERLAY_CONSTRAINTS</li>
 <li>ALLOCATE_OVERLAY</li>
 <li>RELEASE_OVERLAY</li>
-<li>CONFIGURE_OVERLAY</li>
+<li>CONFIGURE_OVERLAY</li></ul>
 
 The most important hooks are discussed one by one in the following paragraphs.</p>
 
