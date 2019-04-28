@@ -25,26 +25,26 @@ instance a network connection to the system with telnet or ftp. At least one ins
 
 - <i>Debugging</i>: By separating the code into two parts, we can more easily add features to the driver over time, and see what impact our changes have on the system more easily. If something goes wrong, it's far easier to narrow down the offending piece of code, then wading through one gigantic set of code. Plus, it further refines the coding style, as it were, in case other programmers take a peek at how things were done.
 
-At least one instance of the accelerant is loaded for each published name from the kerneldriver. This way a single
-kerneldriver can support multiple cards it detected simultaneously. All loaded accelerants control their own
-graphicscard using communication with that single instance of the kerneldriver. The accelerant/driver ‘sets’ all work
-independently: variables inside the kerneldriver need to be seperated for each supported device (using arrays for
+At least one instance of the accelerant is loaded for each published name from the kernel driver. This way a single
+kernel driver can support multiple cards it detected simultaneously. All loaded accelerants control their own
+graphics card using communication with that single instance of the kernel driver. The accelerant/driver ‘sets’ all work
+independently: variables inside the kernel driver are separated for each supported device (using arrays for
 example).
 
-When needed, a second or later instance of the accelerant (called a 'clone') can be loaded for a graphicscard for
+When needed, a second or later instance of the accelerant (called a 'clone') can be loaded for a graphics card for
 which already a first ('original') accelerant was loaded. A clone has the same information (called ‘shared info’) as the
-original accelerant. 'Shared info' was created by the kerneldriver to be later on shared with all accelerants using this
+original accelerant. 'Shared info' was created by the kernel driver to be later on shared with all accelerants using this
 kerneldriver for the graphicscard this shared info belongs to. The original accelerant largely fills in the shared info it
 got from the kerneldriver. Via the kernel driver this information is also visible for all clones for the same
 graphics card the original accelerant is controlling. Both original accelerant and clones create their 'own' cloned 'copy'
 of the shared info so they can all access it in their own adress space. When something is read from, or written to this
-cloned area actually the original shared info as created by the kerneldriver is accessed: which is the way all driver
+cloned area actually the original shared info as created by the kernel driver is accessed: which is the way all driver
 parts (kernel driver, original- and cloned accelerants) can control and use the same shared information.
 
-When a second kerneldriver would be loaded for another graphics card: so that card is _not_ supported by the first
+When a second kernel driver would be loaded for another graphics card: so that card is _not_ supported by the first
 kerneld river, in theory a matching accelerant would be searched for by the system.
 
-When the system is booted, a kerneld river will be loaded for each and every graphics card found in the system (if all
+When the system is booted, a kernel driver will be loaded for each and every graphics card found in the system (if all
 cards have a BeOS driver that is). But because the BeOS currently only supports a single graphics card with a single
 screen per system, only one 'original' accelerant will be loaded by the app_server for a 'randomly' chosen loaded
 graphics kerneldriver. Not entirely random though, it selects the first found kernel driver via their more or less
@@ -99,13 +99,13 @@ depending on the availability of a requested function in the card's hardware.
 The BeOS R5 supports the following hooks:
 
 <b>Initialization:</b>
-INIT_ACCELERANT
-CLONE_ACCELERANT
-ACCELERANT_CLONE_INFO_SIZE
-GET_ACCELERANT_CLONE_INFO
-UNINIT_ACCELERANT
-GET_ACCELERANT_DEVICE_INFO
-ACCELERANT_RETRACE_SEMAPHORE
+<li>INIT_ACCELERANT</li>
+<li>CLONE_ACCELERANT</li>
+<li>ACCELERANT_CLONE_INFO_SIZE</li>
+<li>GET_ACCELERANT_CLONE_INFO</li>
+<li>UNINIT_ACCELERANT</li></li>
+<li>GET_ACCELERANT_DEVICE_INFO</li>
+<li>ACCELERANT_RETRACE_SEMAPHORE</li>
 
 2018 update:
 Haiku has added support for the DDC/EDID channel which is used to determine the specifications of a screen
@@ -124,32 +124,32 @@ GET_PREFERRED_DISPLAY_MODE
 Also added by Haiku are two hooks to get and set the screen's brightness. This will (mostly) be used for controlling
 laptop panels brightness.
 
-GET_BRIGHTNESS
-SET_BRIGHTNESS
+<li>GET_BRIGHTNESS</li>
+<li>SET_BRIGHTNESS</li>
 
 <b>Mode configuration:</b>
-ACCELERANT_MODE_COUNT
-GET_MODE_LIST
-PROPOSE_DISPLAY_MODE
-SET_DISPLAY_MODE
-GET_DISPLAY_MODE
-GET_FRAME_BUFFER_CONFIG
-GET_PIXEL_CLOCK_LIMITS
-MOVE_DISPLAY
-SET_INDEXED_COLORS
-GET_TIMING_CONSTRAINTS
+ACCELERANT_MODE_COUNT</li>
+GET_MODE_LIST</li>
+PROPOSE_DISPLAY_MODE</li>
+SET_DISPLAY_MODE</li>
+GET_DISPLAY_MODE</li>
+GET_FRAME_BUFFER_CONFIG</li>
+GET_PIXEL_CLOCK_LIMITS</li>
+MOVE_DISPLAY</li>
+SET_INDEXED_COLORS</li>
+GET_TIMING_CONSTRAINTS</li>
 
 <b>Powersave functions:</b>
-DPMS_CAPABILITIES
-DPMS_MODE
-SET_DPMS_MODE
+<li>DPMS_CAPABILITIES</li>
+<li>DPMS_MODE</li>
+<li>SET_DPMS_MODE</li>
 
-<b>Cursor management:<b>
+<b>Cursor management:</b>
 The cursor management hooks are only exported when the accelerant and the card both support a hardware cursor.
 
-SET_CURSOR_SHAPE
-MOVE_CURSOR
-SHOW_CURSOR
+<li>SET_CURSOR_SHAPE</li>
+<li>MOVE_CURSOR</li>
+<li>SHOW_CURSOR</li>
 
 2018 update:
 While the (older) BeOS hooks are still supported in Haiku, Haiku also has added support for full color cursors. When
@@ -162,12 +162,12 @@ add full color support:
 SET_CURSOR_BITMAP
 
 <b>Acceleration engine synchronisation:</b>
-ACCELERANT_ENGINE_COUNT
-ACQUIRE_ENGINE
-RELEASE_ENGINE
-WAIT_ENGINE_IDLE
-GET_SYNC_TOKEN
-SYNC_TO_TOKEN
+<li>ACCELERANT_ENGINE_COUNT</li>
+<li>ACQUIRE_ENGINE</li>
+<li>RELEASE_ENGINE</li>
+<li>WAIT_ENGINE_IDLE</li>
+<li>GET_SYNC_TOKEN</li>
+<li>SYNC_TO_TOKEN</li>
 
 <b>2D acceleration:</b>
 The first four 2D hooks are used by the app_server. All hooks can be used by applications via BwindowScreen for
@@ -185,12 +185,12 @@ to right in memory) is too big to specify to the hardware. So the acceleration e
 mode, while the mode itself is supported. This can happen, because the memory reading hardware for the
 CRTC/DAC hardware is a different hardware block from the acceleration engine in the GPU.
 
-SCREEN_TO_SCREEN_BLIT
-FILL_RECTANGLE
-INVERT_RECTANGLE
-FILL_SPAN
-SCREEN_TO_SCREEN_TRANSPARENT_BLIT
-SCREEN_TO_SCREEN_SCALED_FILTERED_BLIT
+<li>SCREEN_TO_SCREEN_BLIT</li>
+<li>FILL_RECTANGLE</li>
+<li>INVERT_RECTANGLE</li>
+<li>FILL_SPAN</li>
+<li>SCREEN_TO_SCREEN_TRANSPARENT_BLIT</li>
+<li>SCREEN_TO_SCREEN_SCALED_FILTERED_BLIT</li>
 
 <b>Hardware overlay:</b>
 For the hardware overlay functionality the following hooks are used. Depending on engine architecture different
@@ -199,21 +199,20 @@ can be setup in the card. Therefore the overlay hooks below are requested after 
 It is allowed to export all hooks, or no hooks at all: nothing in between. This way the accelerant lets the user know
 the current set mode on this card (or head) supports overlay or not.
 
-OVERLAY_COUNT
-OVERLAY_SUPPORTED_SPACES
-OVERLAY_SUPPORTED_FEATURES
-ALLOCATE_OVERLAY_BUFFER
-RELEASE_OVERLAY_BUFFER
-GET_OVERLAY_CONSTRAINTS
-ALLOCATE_OVERLAY
-RELEASE_OVERLAY
-CONFIGURE_OVERLAY
+<li>OVERLAY_COUNT</li>
+<li>OVERLAY_SUPPORTED_SPACES</li>
+<li>OVERLAY_SUPPORTED_FEATURES</li>
+<li>ALLOCATE_OVERLAY_BUFFER</li>
+<li>RELEASE_OVERLAY_BUFFER</li>
+<li>GET_OVERLAY_CONSTRAINTS</li>
+<li>ALLOCATE_OVERLAY</li>
+<li>RELEASE_OVERLAY</li>
+<li>CONFIGURE_OVERLAY</li>
 
-The most important hooks are discussed one by one in the following paragraphs.
-</p>
+The most important hooks are discussed one by one in the following paragraphs.</p>
 
 <a name="4.1.1"></a>
-<h5>4.1.1 INIT_ACCELERANT<h5>
+<h5>4.1.1 INIT_ACCELERANT</h5>
 
 <p>This hook is called first, so before any other hook is called. It will ask the already loaded kerneldriver for it's
 shared_info struct and make a clone of it for it's own use. If that fails (because the kerneldriver does not belong to
