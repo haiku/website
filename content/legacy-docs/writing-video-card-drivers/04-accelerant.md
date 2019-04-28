@@ -372,7 +372,9 @@ the screen ('scrap paper '). This is the difference between:
     
 Remark:
 Different parts of the graphicscard (chip) often have different restrictions:
+
 - CRTC-timing (control of the screen) usually needs visible widths dividable by 8;
+
 - CRTC-memory access (for fetching pixel information that is i.e. fed to the DACs) needs a specific pitch
 between the different horizontal lines depending on the colordepth, because the hardware functions with a fixed
 number of bytes per ‘fetch’ (as in: uses batches, for i.e. electronic design simplicity and/or speed reasons: the
@@ -380,6 +382,7 @@ size of the batches (also) depends on the buswidth to/from graphics RAM). For in
 cards need a pitch which is dividable by 128 bytes, while Matrox G100 and later cards just need 16 (in 8bit
 color this means 16 pixels, while in 32bit color this means just 4 pixels) 11, 12;
 Assistance with writing graphics card drivers for the BeOS. By Rudolf Cornelissen - 26
+
 - The acceleration engine has its own limits which must be dealt with. Matrox G100 and newer cards work here
 with a 32 pixels width, so independant of the colorspace in use!
 In order for the graphicscard hardware to be able to accomodate a lot of (custom) horizontal resolutions in
