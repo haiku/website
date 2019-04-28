@@ -258,7 +258,7 @@ supported by the driver. Therefore these days for instance widescreen modes can 
 screen preferences panel for this anymore.
 
 <a name="4.1.2"></a>
-<h5>4.1.2 CLONE_ACCELERANT<h5>
+<h5>4.1.2 CLONE_ACCELERANT</h5>
     
 <p>In case the driver and accelerant are already in use when an(other) application for example wants to load the
 accelerant for itself, this will be done using the </code>CLONE_ACCELERANT</code> hook. Because the card hardware was already
@@ -268,13 +268,13 @@ First the hook will open the kernel driver (so for a second or later time). Afte
 for its shared_info which will be cloned. Then the already before created modelist will be cloned.</p>
 
 <a name="4.1.3"></a>
-<h5>4.1.3 UNINIT_ACCELERANT<h5>
+<h5>4.1.3 UNINIT_ACCELERANT</h5>
 <p>When the current accelerant is the original one this function will destroy the semaphores the accelerant uses, along
 with the cloned shared_info and the mode_list. If the current accelerant is a clone, only the cloned shared_info and
 mode_list will be destroyed after which the kerneldriver will be closed.</p>
 
 <a name="4.1.4"></a>
-<h5>4.1.4 ACCELERANT_RETRACE_SEMAPHORE<h5>
+<h5>4.1.4 ACCELERANT_RETRACE_SEMAPHORE</h5>
 <p>This hook only returns the semaphore the kerneldriver created for the function of synchronizing code with the
 screen's vertical retrace, important to be able to show tearfree moving video for example. If software wants to sync, it
 needs to lock the semaphore. This will not succeed until the kernel driver releases this semaphore because it's vertical
@@ -357,7 +357,7 @@ display_mode 'target' to in effect disable limit checking.
 The illogical manner of using a single(!) display_mode called 'bounds' holding a copy of 'target' is not advisable.</p>
 
 <a name="4.1.8"></a>
-<h5>4.1.8 GET_FRAME_BUFFER_CONFIG<h5>
+<h5>4.1.8 GET_FRAME_BUFFER_CONFIG</h5>
     
 <p>This function returns the 'fbc' struct belonging to the currently active display_mode to the caller. This fbc struct
 contains information which actually belongs inside the display_mode itself, since it is indispensable to correctly
@@ -579,7 +579,7 @@ the used 8-bit bus, the colordata for input to the palette RAM should be 'shifte
 The Matrox G100-G550 cards for example have a 3x 8-bit palette RAM at their disposal.</p>
 
 <a name="4.1.12"></a>
-<h5>4.1.12 GET_TIMING_CONSTRAINTS<h5>
+<h5>4.1.12 GET_TIMING_CONSTRAINTS</h5>
 <p>This function is used to indicate the restrictions that the CRTC timing must meet. Here you can see, among other
 things, by which factor the horizontal timing must be divisible for valid display_modes (usually 8 'pixels'). The
 vertical timing usually works 'per pixel'.</p>
