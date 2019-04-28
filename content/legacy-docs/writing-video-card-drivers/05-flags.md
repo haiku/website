@@ -12,26 +12,34 @@ tags = []
   <tr>
     <td width="60%" valign="top" align="center"><img src="/files/images/writing-video-card-drivers/5.flags.png" alt="Flags Chart"></td>
 
+    <td width="40%" valign="top">
+      <b>Chart Legend</b>
+      <ul>
+        <li><b>Name</b> - The name as defined in the BeOS header files.</li>
+        <li><b>API Construct</b> - The construct used in classes and functions.</li>
+        <li><b>C</b> - The command, from API of appserver or accelerant.</li>
+        <li><b>S</b> - Status, from accelerant to API.</li>
+        <li><b>P</b> - The app_server is target.</li>
+        <li><b>A</b> - The accelerant is source or target.</li>
+      </ul>
+    </td>
+  </tr>
+</table></p>
+
 <p>A flag is basically a single tray. This tray has two states: TRUE or false. Flags can be given a command, or a status is indicated. The flags in BeOS are passed through 32bits words so that 32 flags can be passed.
 
 There are several types of flags for video drivers. They have all in common that they are useful for applications from within the API. A subdivision of the types of flags can be created:
-
 -There are flags that are passed on to the accelerant;
-
 -There are also flags that are not passed on to the accelerant. These are flags that tell the App_server how to deal with the accelerant.
 
 Flags that are passed on to the accelerant consist of two types:
-
 -Status flags only indicate a state in the accelerant;
-
 -command flags are used to pass a command to the accelerant. In addition, they sometimes indicate the status of the execution of the command.
 
 A number of flags are passed in a single direction (direction accelerant: command, from accelerant: status), while others are basically passed in both directions (command with the status of the command, or only status information: the ' Command ' is then ignored).
 
 Last but not least, there are some special Flaggen:
-
 -Command flags for the accelerant in the API, but also used by the app_server itself;
-
 -Status flags that are in the accelerant for the API but also influence the behavior of a class or the app_server (directly).
 
 When this particular situation is in force, this is indicated in the detailed description of the flag in question. This is not indicated In the table below. 
@@ -49,7 +57,7 @@ Name of the flag place in the API C S P A
 </ul>					
 
 <b>For mode setup: </b>					
-<ul>B_SUPPORTS_OVERLAYS	BScreen: struct display_mode.flags 		+		+</li>
+<ul><li>B_SUPPORTS_OVERLAYS	BScreen: struct display_mode.flags 		+		+</li>
 <li>B_HARDWARE_CURSOR	BScreen: struct display_mode.flags		+		+</li>
 <li>B_IO_FB_NA	BScreen: struct display_mode.flags		+		+</li>
 <li>B_PARALLEL_ACCESS	BScreen: struct display_mode.flags		+		+</li>
@@ -115,7 +123,7 @@ When the overlay channel is explicitly requested, it may only occur when the fir
 If a video card has more than one overlay unit, creating multiple bitmaps with the B_BITMAP_RESERVE_OVERLAY_CHANNEL flag can be successful. Playback will in principle then be done via different overlay units.
 Cards with more than one single overlay unit (backend scaler) have not yet been spotted by the author.</p>
 
-<a name="5.1.3></a>
+<a name="5.1.3"></a>
 <h5>5.1.3 B_OVERLAY_TRANSFER_CHANNEL</h5>
 
 <p>This flag is special because it is not passed on to the accelerant, but is used to influence the behaviour of the app_server relative to the accelerant.
@@ -174,7 +182,7 @@ Switching can be useful when a display_mode just cannot be created due to lack o
 
 
 <a name="5.2.3"></a>
-</h5>5.2.3 B_IO_FB_NA</h5>
+<h5>5.2.3 B_IO_FB_NA</h5>
 
 <p>This flag indicates that the video memory of the graphics card should not be used by the app_server when the card's acceleration engine could be engaged with it. This situation is likely to apply only to older cards.
 
@@ -254,7 +262,7 @@ Sync_on_green is currently no longer used and is only supported in some older vi
 The fashion list as it is exported by the accelerant contains both modes with negative and positive synchronization signals. This list is usually (partially) copied from the list as mentioned in the R4 Graphics Driver Kit.</p>
 
 <a name="5.4"></a>
-<h4>5.4 Conclusion</h5>
+<h4>5.4 Conclusion</h4>
 
 <p>The intended use of the video driver related flags is unfortunately not optimally documented in BeOS. This is why this document does not clearly indicate the exact function of each flag.
 
