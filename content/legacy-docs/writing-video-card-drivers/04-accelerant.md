@@ -161,8 +161,8 @@ add full color support:
 
 SET_CURSOR_BITMAP
 
-<b>Acceleration engine synchronisation:</b>
-<ul><ul><li>ACCELERANT_ENGINE_COUNT</li>
+<b>Acceleration engine synchronization:</b>
+<ul><li>ACCELERANT_ENGINE_COUNT</li>
 <li>ACQUIRE_ENGINE</li>
 <li>RELEASE_ENGINE</li>
 <li>WAIT_ENGINE_IDLE</li>
@@ -194,7 +194,7 @@ CRTC/DAC hardware is a different hardware block from the acceleration engine in 
 
 <b>Hardware overlay:</b>
 For the hardware overlay functionality the following hooks are used. Depending on engine architecture different
-functions may be needed for different colordepths. Also the overlay engine may not support all possible modes that
+functions may be needed for different colordepths. Also, the overlay engine possibly won't support all possible modes that
 can be setup in the card. Therefore the overlay hooks below are requested after every single modeswitch!
 It is allowed to export all hooks, or no hooks at all: nothing in between. This way the accelerant lets the user know
 the current set mode on this card (or head) supports overlay or not.
