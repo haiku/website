@@ -10,7 +10,21 @@ tags = []
 
 <p><table width="100%" cellspacing="0" cellpadding="0" border="0" align="center">
   <tr>
-    <td width="60%" valign="top" align="center"><img src="/files/images/writing-video-card-drivers/5.flags.png" alt="Flags Chart"></td></p>
+    <td width="60%" valign="top" align="center"><img src="/files/images/writing-video-card-drivers/5.flags.png" alt="Flags Chart"></td>
+
+    <td width="40%" valign="top">
+      <b>Chart Legend</b>
+      <ul>
+        <li><b>Name</b> - The name as defined in the BeOS header files.</li>
+        <li><b>API Construct</b> - The construct used in classes and functions.</li>
+        <li><b>C</b> - The command, from API of appserver or accelerant.</li>
+        <li><b>S</b> - Status, from accelerant to API.</li>
+        <li><b>P</b> - The app_server is target.</li>
+        <li><b>A</b> - The accelerant is source or target.</li>
+      </ul>
+    </td>
+  </tr>
+</table></p>
 
 <p>A flag is basically a single tray. This tray has two states: TRUE or false. Flags can be given a command, or a status is indicated. The flags in BeOS are passed through 32bits words so that 32 flags can be passed.
 
@@ -143,6 +157,7 @@ Implementing this flag in the accelerant is optional, but it is highly recommend
 
 <a name="5.1.6"></a>
 <h5>5.1.6 B_OVERLAY_FILTER_VERTICAL</h5>
+
 <p>Via This flag an application can ask the accelerant to have the hardware filter (interpolate) during vertical scaling of the overlay output. If the flag is not used, copying of pixels is applied to omhoogschalen, and pixels are "dropped" (dropped) during down scaling.
 Implementing this flag in the accelerant is optional, but it is highly recommended. The image quality increases considerably when interpolation is applied.</p>
 
