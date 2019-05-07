@@ -51,6 +51,8 @@ private:
 			int32			   _PrivateMethod();
 	static  int32			   _SomeStaticPrivateMethod();
 
+// Redundant private: to separate the fields from the methods:
+private:
 	volatile int32				fMember;
 		const char*				fPointerMember;
 };
