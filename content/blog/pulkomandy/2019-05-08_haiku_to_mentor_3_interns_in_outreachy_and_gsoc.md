@@ -31,7 +31,6 @@ such as ad blocking, private browsing, etc.
 
 Bharati Ramana Joshi will continue the work on write support for btrfs, bringing
 another modern filesystem to Haiku and improving interoperability with Linux
-This is the content of your post.
 and ReactOS (the two other OS that already support btrfs out of the box).
 
 The Haiku team welcomes these new contributors and wishes them great success on
