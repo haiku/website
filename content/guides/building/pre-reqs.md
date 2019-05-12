@@ -21,7 +21,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 
 | Platform                           | Package Manager      | Supported | Notes               |
 |------------------------------------|----------------------|-----------|---------------------|
-| [Haiku](https://www.haiku-os.org)  | pkgman               | YES       | Easiest             |
+| [Haiku](https://www.haiku-os.org)  | [pkgman](#pkgman)    | YES       | Easiest             |
 | [ArchLinux](https://archlinux.org) | [pacman](#pacman)    | YES       |                     |
 | [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                     |
 | [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                     |
@@ -38,6 +38,23 @@ Note that in addition to all the platform-specific packages, you will also need 
 | BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
 | [Windows](http://microsoft.com)    | [see notes](#windows)| NO        |                     |
 | Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
+
+<a name="pkgman"></a>
+## ![pkgman](/files/os-icons/ubuntu-32.png) pkgman
+
+**Basic requirements:**
+
+```sh
+pkgman install mtools python3
+```
+
+**Additional requirements for ARM:**
+
+```sh
+pkgman install dtc bc
+```
+
+
 
 <a name="apt"></a>
 ## ![APT](/files/os-icons/ubuntu-32.png) APT (Linux distributions such as Debian, Ubuntu, Mint...)
