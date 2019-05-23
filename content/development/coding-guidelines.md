@@ -28,6 +28,7 @@ Make your code not stick out — make it consistent with the rest of the code yo
 
 *   **Set your editor to 4 spaces per tab.** (_This is the standard used for the line-limit and for alignment [e.g. in class definitions], but if you aren't doing either of these things you can set your editor to whatever you want._)
 *   A line must not have more than 80 columns; when wrapping a line, you usually indent one extra tab, but that can get more depending on the contents.
+*   Always separate operators with a space on both sides, and use a space after comma.
 *   Use tabs to indent blocks.
 *   Lines that need broken up due to length need to have one additional indention.
 *   Functions/classes in namespaces are not indented.
@@ -260,7 +261,7 @@ const uint32 kOpenFile = 'open';
 
 ```cpp
 	...
-	BPoseView::WatchNewNode(&itemNode,watchMask, lock.Target());
+	BPoseView::WatchNewNode(&itemNode, watchMask, lock.Target());
 		// have to node monitor ahead of time because
 		// Model will cache up the file type and preferred
 		// app (comment about the above line)
