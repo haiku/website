@@ -130,12 +130,12 @@ sudo emerge -av u-boot-tools util-linux dtc bc
 
 **Package based:**
 ```sh
-sudo pkg install bison git nasm gawk texinfo xorriso wget u-boot mtools linuxfdisk curl python3
+sudo pkg install bison git nasm gawk texinfo xorriso wget u-boot-tools mtools linuxfdisk curl python3 gcc gmake
 ```
 
 **Ports based:**
 ```sh
-sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget devel/u-boot emulators/mtools sysutils/linuxfdisk lang/python
+sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget devel/u-boot-tools emulators/mtools sysutils/linuxfdisk lang/python devel/gcc devel/gmake
 ```
 
 <a name="osx"></a>
