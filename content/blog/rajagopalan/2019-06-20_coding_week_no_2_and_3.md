@@ -27,13 +27,20 @@ Ok let's all jump into the world of webkit shall we?</h3>
 
 Now the main feature of a browser is to show webpages. hell no!! It has got other cool stuff too.
 
-So first I did easy things like showing the status of the progress, keeping track of history( to go back and forward 🚗). For this I had to complete implementing Shared memory :heavenly tones play: . Sounds cool eh? Yes Shared memory is about allocating memory and sharing it with other processes, this is done to keep track of visited processes.
+So first I did easy things like showing the status of the progress, keeping track of history( to go back and forward 🚗). For this I had to complete implementing Shared memory :heavenly tones play: . Sounds cool eh? Yes Shared memory is about allocating memory and sharing it with other processes, this is done to keep track of visited links.
 
-(Psst [click-here](https://imgur.com/a/0Ny2sj5) for some cool stuff)
+![](zeus-1.PNG)
+
+![](zeus-2.PNG)
+
+![](zeus-3.PNG)
+
 
 Yeah that's right we have loaded a blank url completely, I bet your mind is blown 🤯.
 
-Oh ya totally forgot about the cool debugging system we use. We use [BeDC](http://pulkomandy.tk/drop/BeDC-1.0.zip) to get outputs from different process in cool colours(its magical trust me or take a look [here](https://imgur.com/a/YSWQBSz))
+Oh ya totally forgot about the cool debugging system we use. We use [BeDC](http://pulkomandy.tk/drop/BeDC-1.0.zip) to get outputs from different process in cool colours(its magical trust me or take a look 
+
+![](zeus-4.PNG)
 
 Now before we get to rendering we need to get the webpage of source cause nobody is ever going to load about:blank. duh!
 So we started working on NetworkProcess and hey I managed to make Http requests using BHttpRequest and BUrlRequest and got the html in bits and pieces. Few parts from the well maintained WebKitLegacy port were stolen and used in NetworkProcess. So we are doing some more work to make it "usable". All pray for it to go really smooth 🤞🏻.</h3>
