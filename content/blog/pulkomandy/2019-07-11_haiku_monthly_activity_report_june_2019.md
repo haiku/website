@@ -8,7 +8,7 @@ tags = []
 
 <p>Hey, it's time for a new monthly report already! This one is a bit shorter
 than usual as the previous one was a bit late, but let's try to get mostly back
-on schedule. This report covers hrevs 5317553238</p>
+on schedule. This report covers hrev53175-hrev53238.</p>
 
 <h3>Optimizations</h3>
 
@@ -23,6 +23,14 @@ generic malloc allocator, helping reduce memory fragmentation. The first
 patches have just started to land (in packagefs), there will likely be more.
 Ideally beta2 will be able to boot and install with 256MB of RAM or maybe
 even less thanks to this work.</p>
+
+<p>Meanwhile, waddlesplash is also auditing the code and starting to work
+towards making APIs more restricted (allowing some things only for the root
+user, for example), in order to provide some more privilege separation. Haiku
+has so far been largely a single user system, and did not worry too much about
+the usual attack vectors for an UNIX system. But modern computers are often
+online and we should try to keep our user's data reasonably safe. We have a
+long way to go, but we have to start with something.</p>
 
 <h3>Polishing</h3>
 
@@ -105,7 +113,7 @@ programs are trying to use the console at the same time.</p>
 
 <h3>System libraries</h3>
 
-<p>Waddleshash added a missing "noreturn" attribute to the declaration of exit()
+<p>Waddlesplash added a missing "noreturn" attribute to the declaration of exit()
 in the C library, indicating to the compiler that this function indeed never
 returns to the caller. This allows to build SDL without warnings. Thanks to
 Ryan from the SDL team for reporting the problem!</p>
