@@ -8,7 +8,7 @@ tags = []
 <p>
 Haiku uses a custom fork of <a href="http://www.perforce.com/jam/jam.html">Perforce's Jam</a>. This <a href="https://www.freelists.org/post/haiku/New-Build-System"> mailing list thread</a> helps to explain the decision to fork jam.
 </p>
-As of December 2011, this is the current version. If a different version is reported, then you will need to build and install jam from source. 
+As of August 2019, this is the current version. If a different version is reported, then you will need to build and install jam from source. 
 <pre class="terminal">
 jam -v
 Jam 2.5-haiku-20111222. OS=LINUX. Copyright 1993-2002 Christopher Seiwald.
@@ -93,6 +93,10 @@ The BFS image is simply concatenated at the end. Inside the MBR is a partition t
 </ul>
 <h4>Non-Release Targets</h4>
 <p>In addition to looking at <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/DefaultBuildProfiles">DefaultBuildProfiles</a>, there is also a way of finding possible targets by looking at the various <a href="http://grok.bikemonkey.org/source/search?q=NotFile&defs=&refs=&path=%2Fbuild%2Fjam&hist=&project=haiku">"NotFile" statements</a>. A "NotFile" statement is usually used to create a build target with a more user-friendly name. Targets such as these should be viewed as a minimal base.</p>
+
+<h3>Customizing the build, enabling debug, etc.</h3>
+
+<p>Various aspects of the build system are customizable through the <a href="/guides/building/userbuildconfig">UserBuildConfig file</a>.</p>
 
 <h3>Some Notes</h3>
 <ul>
