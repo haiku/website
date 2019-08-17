@@ -7,7 +7,7 @@ tags = ["haiku", "software"]
 +++
 
 ### Introduction
-Hey there beautiful person reading this post ❤😍. We are in the endgame now (Ha get it avengers reference!). Yes, Google summer of code 2019 is coming to an end. Phew couldn't say how 3 months passed by🏃🏻‍, but this is one of my most memorable experiences I will never forget. So let me wrap GSOC with this final report 😃😁👍. Buckle up tight its going to be a long post...
+Hey there beautiful person reading this post. We are in the endgame now (Ha get it avengers reference!). Yes, Google summer of code 2019 is coming to an end. Phew couldn't say how 3 months passed by, but this is one of my most memorable experiences I will never forget. So let me wrap GSOC with this final report. Buckle up tight it's going to be a long post...
 
 I am trying to port webkit2 to Haiku.
 
@@ -21,9 +21,9 @@ I am trying to port webkit2 to Haiku.
 
     Lol, definitely thats the whole point of this project.
 
-3. Did we really ask you 😒these questions?
+3. Did we really ask you these questions?
 
-    No, you but I believe it wakes up the inner nerd🤓 inside you to ask more questions❓.
+	No, you but I believe it wakes up the inner nerd inside you to ask more questions.
 
 ### Link to the source code
 
@@ -31,13 +31,13 @@ https://github.com/haiku/webkit/commit/f1a711a70db81705c9df6cdaaef53599daf2326f
 
 ### WebKit Rewind⏪
 
-I'll go through what has been done till now on webkit2. I know I know that you guys would have read the same stuffs in my previous posts, please don't get bored 🥱 I promise its so interesting 👍🏻 this time. I have added stats for nerds *cough,cough* (that is link to commits that implements a specific feature)
+I'll go through what has been done till now on webkit2. I know I know that you guys would have read the same stuffs in my previous posts, please don't get bored, I promise it's so interesting this time. I have added stats for nerds *cough, cough* (that is link to commits that implements a specific feature)
 
 > Community Bonding
 
 By this time, I have talked with lot of haiku dev's mostly chitchat. I have never felt so welcomed anywhere. They accepted me even if I asked any stupid question.
 
-Sorry don't know any github links related to this 🤣.
+Sorry don't know any github links related to this.
 
 > Enable build fix
 
@@ -49,7 +49,7 @@ Ah, yes I still remember that nostalgic moment, my stepping stone into webkit2 -
 
 https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/aec19064eca9a9e30cfdac602f0a15de15ad12d9
 
-Same old drama, had to get webkit to build on haiku before anything could be even done. Initially to get it to compile I had to just define all the platform dependent functions which were just declared and of course lot of time staring at screen 💻 to see if there is any error.
+Same old drama, had to get webkit to build on haiku before anything could be even done. Initially to get it to compile I had to just define all the platform dependent functions which were just declared and of course lot of time staring at screen to see if there is any error.
 
 Few files were required to be added as a part of forwarding headers. I was confused with local and system includes and then came to know about dilemma between "Rect.h"(Webkit2) and <Rect.h>(BRect).
 
@@ -59,13 +59,13 @@ https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/e506367bfa01bd99842b00e
 
 > Github Practice
 
-So our code was like around 5 years old before I started doing it. After dusting I mean updating our fork with latest upstream code. Before doing any commits I had to have the latest code in my fork. At that point of time all I knew was push,pull,commit and soon realized these are not enough. Took a week 💪🏻to train myself with advanced git commands like rebase,cherry-pick and then tried on the big picture. 
+So our code was like around 5 years old before I started doing it. After dusting I mean updating our fork with latest upstream code. Before doing any commits I had to have the latest code in my fork. At that point of time all I knew was push,pull,commit and soon realized these are not enough. Took a week to train myself with advanced git commands like rebase,cherry-pick and then tried on the big picture. 
 
 To be honest I messed up the first time, Pulkomandy cleaned up my mess as usual and the saying **Second times the charm** is actually true.
 
 > A Minibrowser to satisfy our needs
 
-The compilation is done what now? A browser to test our stuff (even if we have nothing 🤣). I stole the design from HaikuLauncher( a testing browser that uses webkitlegacy ). Was just a basic browser with messed up schema but felt so happy that I have accomplished something 🥳.
+The compilation is done what now? A browser to test our stuff (even if we have nothing). I stole the design from HaikuLauncher( a testing browser that uses webkitlegacy ). Was just a basic browser with messed up schema but felt so happy that I have accomplished something.
 
 https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/ba318c89f7ebd39a28436b7ca343589dc29da2a5
 
@@ -87,7 +87,7 @@ Here they are - https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/4e6627e
 
 ![](/files/img2.png)
 
-yayy 🥳🎉
+yayy
 
 > RunLoop
 
@@ -99,7 +99,7 @@ https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/1d893a848557302876edb7a
 
 We wish processes had mouths to speak with other processes instead all they had was BMessage. Other platforms used sockets for the same. 
 
-Initially we hit some kind of IPC deadlock as we tried to use mainloop as proxy. So we came to know that if we have BMessenger object then we can send message directly🤯. In this way mainloop had to interfere only once for handshaking🤝🏻. *psst* It would be nice if we could directly send to any looper in a different process without much work.
+Initially we hit some kind of IPC deadlock as we tried to use mainloop as proxy. So we came to know that if we have BMessenger object then we can send message directly. In this way mainloop had to interfere only once for handshaking. *psst* It would be nice if we could directly send to any looper in a different process without much work.
 
 https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/641dd71b0f55295d3c8047f22fc8659422a74536
 
@@ -113,7 +113,7 @@ Few fun facts related to IPC:
 
     When the other process recieves the bmessenger it forwards to correct looper where message should be recieved. Then once connection is successful each process starts sending messages. Each IPC message is tagged 'ipcm' with Data Attached to them.
 
-And yes I started to give meaningful commit messages.Plus here is one of a kind limited edition 🤑💰💲 doodle by me
+And yes I started to give meaningful commit messages. Plus here is one of a kind limited edition doodle by me.
 
 ![](/files/Ipc.jpg)
 
@@ -121,7 +121,7 @@ And yes I started to give meaningful commit messages.Plus here is one of a kind 
 
 **Sharing is caring**
 
-Shared memory is pretty much used everywhere in webkit2 starting from sharing history to bitmap across different processes. I learnt about areas in Haiku. It's pretty cool 😎.
+Shared memory is pretty much used everywhere in webkit2 starting from sharing history to bitmap across different processes. I learnt about areas in Haiku. It's pretty cool.
 
 https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/e5c14d2f67dfe92f0f7edf85b86133daaa1cdee5
 
@@ -137,13 +137,13 @@ https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/adb7b269ca6aa2a6b9420e6
 
 > Network Process
 
-Now that our browser is ready to post Load a url request to webkit we need to get network process up and running. This process will actually communicate with the INTERNET(WOAH!!🤲🏻) - makes request using ```BUrlRequest ```. Html and other resources is received and added to a shared buffer and sent to WebProcess. This has to be called on the runloop( main thread) so we used an explicit call to ```callOnMainThread``` provided by WebTemplate Framework. But Pulkomandy suggested the use of SynchronousListener so which makes the BMessage end up on main thread but in this case it doesnt work consistently(Maybe this is a bug where some work is required!).
+Now that our browser is ready to post Load a url request to webkit we need to get network process up and running. This process will actually communicate with the INTERNET(WOAH!!) - makes request using ```BUrlRequest ```. Html and other resources is received and added to a shared buffer and sent to WebProcess. This has to be called on the runloop( main thread) so we used an explicit call to ```callOnMainThread``` provided by WebTemplate Framework. But Pulkomandy suggested the use of SynchronousListener so which makes the BMessage end up on main thread but in this case it doesnt work consistently(Maybe this is a bug where some work is required!).
 
 https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/ff1ed047c83c89c6a6d56a8771edda39d1eeddb5
 
 > Logging
 
-Have you guys ever tried BeDC its a cool logging tool in haiku(Give it a try!). We couldn't perform debug build because it always run of memory at that point of time. Maybe it is fixed with the advent of rpmalloc. But we used BeDC to log and to find which part requires tinkering. It is really colorful too.
+Have you guys ever tried BeDC its a cool logging tool in haiku (Give it a try!). We couldn't perform debug build because it always run of memory at that point of time. Maybe it is fixed with the advent of rpmalloc. But we used BeDC to log and to find which part requires tinkering. It is really colorful too.
 
 https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/3b33d1ac69d2f89ea7f660b3fce881148e6ad1a2
 
@@ -163,7 +163,7 @@ Check this out!
 
 > Cleanup work
 
-So my goal was to get webkit2 rendering and I could proudly say I achieved the base work required 😀. Which we could build on top off it... 
+So my goal was to get webkit2 rendering and I could proudly say I achieved the base work required. Which we could build on top off it... 
 
 Hence by the end of GSOC we wanted to have clean code with all debugging statements removed,Indentations were fixed (4 spaces for webkit and tab for haiku), Fixed lot of randomness with the code as well as the MiniBrowser.
 
@@ -177,13 +177,13 @@ https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/58274793f52f11a827448c8
 
 ### Conclusion
 
-It was really a nice summer for me. I learnt a lot throughout especially how to use communication platforms efficiently, Work on a complex project, How to not loose my hopes anytime ( seriously I doubted myself many times before taking up this project that its going to be impossible),But when we got that page rendered beautifully no words to speak...
+It was really a nice summer for me. I learnt a lot throughout especially how to use communication platforms efficiently, Work on a complex project, How to not loose my hopes anytime (seriously I doubted myself many times before taking up this project that its going to be impossible). But when we got that page rendered beautifully no words to speak...
 
-### Credits💕
+### Credits
 
 It is a very pleasant experience for me in Haiku and that was made possible again by sweet developers of haiku for making feel welcomed and helped us when things were seeming to be bad.
 
-A special thanks to my mentor Pulkomandy for patiently listening to me, teaching me even smallest of things and also having some chit chat with me despite his busy schedule. Learnt a lot not only with code but related to life too... Readers may think I'm being overly dramatic but I really mean it. Im just so lucky to have got Pulkomandy as my mentor😀.Lots of love from me!! Especially when we are breaking our heads when browser initialization took about 15 seconds, and it was all because of me where I added sleep(15) and that was the reason for such a mess. Not to mention we were working with this 15 seconds lag until the end. When I said this to Pulkomandy, I expected him to be mad but he handled it so cool embracing my mistake(despite the fact that he told me many times not to mess up platform generic code😥). I would really like to thank Pulkomandy ,well thanks can never be enough.I really owe you💕🏩. 
+A special thanks to my mentor Pulkomandy for patiently listening to me, teaching me even smallest of things and also having some chit chat with me despite his busy schedule. Learnt a lot not only with code but related to life too... Readers may think I'm being overly dramatic but I really mean it. Im just so lucky to have got Pulkomandy as my mentor😀.Lots of love from me!! Especially when we are breaking our heads when browser initialization took about 15 seconds, and it was all because of me where I added sleep(15) and that was the reason for such a mess. Not to mention we were working with this 15 seconds lag until the end. When I said this to Pulkomandy, I expected him to be mad but he handled it so cool embracing my mistake(despite the fact that he told me many times not to mess up platform generic code). I would really like to thank Pulkomandy, well thanks can never be enough.I really owe you. 
 
 I would also like to thank a developer from Qtwebkit and his name is annulen(Konstantin Tokarev ) for helping me initially to get through webkit code, patiently telling me what each stuff did. Im really really grateful for this. Thank you so much!!
 
@@ -193,7 +193,7 @@ And finally, I promise you guys I'm not going to leave Haiku after GSOC. I reall
 
 ### Apologies
 
-English is my pretty weak spot. I'm sorry if there is any spelling mistakes or grammatical errors or any understanding problems(Hey this is just my 5th post so I'm improving). Also I'm sorry if it was too technical and too long...😓🥺
+English is my pretty weak spot. I'm sorry if there is any spelling mistakes or grammatical errors or any understanding problems(Hey this is just my 5th post so I'm improving). Also I'm sorry if it was too technical and too long...
 
 I had lot to talk in my mind and I didnt make any plans on what to talk just went with the flow so sorry if I missed something important(Please let me know in the comments)
 
