@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "Introducing myself gsoc 2019"
-author = "RAJAGOPALAN"
+author = "rajagopalan"
 date = "2019-05-08 12:19:38+05:30"
 tags = ["haiku", "software","gsoc2019" ,"webkit2"]
 +++
