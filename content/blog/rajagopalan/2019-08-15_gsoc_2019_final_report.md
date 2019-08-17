@@ -7,7 +7,7 @@ tags = ["haiku", "software"]
 +++
 
 ### Introduction
-Hey there beautiful person reading this post ❤😍. We are in the endgame now (Ha get it avengers reference!). Yes, Google summer of code 2019 is coming to an end. Phew couldn't say how 3 months passed by🏃🏻‍, but this is one of my most memorable experiences I will never forget. So let me wrap GSOC with this final report 😃😁👍. Buckle up tight its going to be a long post........
+Hey there beautiful person reading this post ❤😍. We are in the endgame now (Ha get it avengers reference!). Yes, Google summer of code 2019 is coming to an end. Phew couldn't say how 3 months passed by🏃🏻‍, but this is one of my most memorable experiences I will never forget. So let me wrap GSOC with this final report 😃😁👍. Buckle up tight its going to be a long post...
 
 I am trying to port webkit2 to Haiku.
 
@@ -24,6 +24,10 @@ I am trying to port webkit2 to Haiku.
 3. Did we really ask you 😒these questions?
 
     No, you but I believe it wakes up the inner nerd🤓 inside you to ask more questions❓.
+
+### Link to the source code
+
+https://github.com/haiku/webkit/commit/f1a711a70db81705c9df6cdaaef53599daf2326f
 
 ### WebKit Rewind⏪
 
@@ -109,7 +113,7 @@ Few fun facts related to IPC:
 
     When the other process recieves the bmessenger it forwards to correct looper where message should be recieved. Then once connection is successful each process starts sending messages. Each IPC message is tagged 'ipcm' with Data Attached to them.
 
-And yes I started to give meaningful commit messages.Plus here is one of a kind limited edition 🤑💰💲 doodle by me (Please don't sell it)
+And yes I started to give meaningful commit messages.Plus here is one of a kind limited edition 🤑💰💲 doodle by me
 
 ![](/files/Ipc.jpg)
 
@@ -173,13 +177,13 @@ https://github.com/RAJAGOPALAN-GANGADHARAN/webkit/commit/58274793f52f11a827448c8
 
 ### Conclusion
 
-It was really a nice summer for me. I learnt a lot throughout especially how to use communication platforms efficiently, Work on a complex project, How to not loose my hopes anytime ( seriously I doubted myself many times before taking up this project that its going to be impossible),But when we got that page rendered beautifully no words to speak.... 
+It was really a nice summer for me. I learnt a lot throughout especially how to use communication platforms efficiently, Work on a complex project, How to not loose my hopes anytime ( seriously I doubted myself many times before taking up this project that its going to be impossible),But when we got that page rendered beautifully no words to speak...
 
 ### Credits💕
 
 It is a very pleasant experience for me in Haiku and that was made possible again by sweet developers of haiku for making feel welcomed and helped us when things were seeming to be bad.
 
-A special thanks to my mentor Pulkomandy for patiently listening to me, teaching me even smallest of things and also having some chit chat with me despite his busy schedule. Learnt a lot not only with code but related to life too.. Readers may think I'm being overly dramatic but I really mean it. Im just so lucky to have got Pulkomandy as my mentor😀.Lots of love from me!! Especially when we are breaking our heads when browser initialization took about 15 seconds, and it was all because of me where I added sleep(15) and that was the reason for such a mess. Not to mention we were working with this 15 seconds lag until the end. When I said this to Pulkomandy, I expected him to be mad but he handled it so cool embracing my mistake(despite the fact that he told me many times not to mess up platform generic code😥). I would really like to thank Pulkomandy ,well thanks can never be enough.I really owe you💕🏩. 
+A special thanks to my mentor Pulkomandy for patiently listening to me, teaching me even smallest of things and also having some chit chat with me despite his busy schedule. Learnt a lot not only with code but related to life too... Readers may think I'm being overly dramatic but I really mean it. Im just so lucky to have got Pulkomandy as my mentor😀.Lots of love from me!! Especially when we are breaking our heads when browser initialization took about 15 seconds, and it was all because of me where I added sleep(15) and that was the reason for such a mess. Not to mention we were working with this 15 seconds lag until the end. When I said this to Pulkomandy, I expected him to be mad but he handled it so cool embracing my mistake(despite the fact that he told me many times not to mess up platform generic code😥). I would really like to thank Pulkomandy ,well thanks can never be enough.I really owe you💕🏩. 
 
 I would also like to thank a developer from Qtwebkit and his name is annulen(Konstantin Tokarev ) for helping me initially to get through webkit code, patiently telling me what each stuff did. Im really really grateful for this. Thank you so much!!
 
@@ -189,7 +193,7 @@ And finally, I promise you guys I'm not going to leave Haiku after GSOC. I reall
 
 ### Apologies
 
-English is my pretty weak spot. I'm sorry if there is any spelling mistakes or grammatical errors or any understanding problems(Hey this is just my 5th post so I'm improving). Also I'm sorry if it was too technical and too long.....😓🥺
+English is my pretty weak spot. I'm sorry if there is any spelling mistakes or grammatical errors or any understanding problems(Hey this is just my 5th post so I'm improving). Also I'm sorry if it was too technical and too long...😓🥺
 
 I had lot to talk in my mind and I didnt make any plans on what to talk just went with the flow so sorry if I missed something important(Please let me know in the comments)
 
