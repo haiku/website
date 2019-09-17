@@ -25,9 +25,9 @@ ones and finding they didn't make that much sense.</p>
 <h3>Package kit</h3>
 
 <p>The package kit is still relatively new code, and its error handling is
-showing its limitations as we investirage problems and often get bugreports
+showing its limitations as we investigate problems and often get bugreports
 with not-so-helpful error messages. Kallisti5 fixed some of these, as part
-of an ongoing effort, with some progress made everytime a new unhelpful error
+of an ongoing effort, with some progress made every time a new unhelpful error
 message is encountered.</p>
 
 <p>Ryan Leavengood also optimized the way we handle "old" states (allowing to
@@ -42,7 +42,7 @@ your system is up to date to at least hrev53373 to avoid problems in the future.
 <h3>Keyboard management</h3>
 
 <p>Pascal Abresch got the first part of his work to handle "media" keys (play,
-pause, and other additional keys) recognized by Haiku. The PS/2 driver has been
+pause, and other additional keys) recognised by Haiku. The PS/2 driver has been
 adjusted, but adding all these new keys to the keymap means we now have more
 than 128 possible keys, which the BeOS keymap format does not allow. So we will
 need a new one, and this will break compatibility with old apps using the
@@ -69,7 +69,7 @@ various warnings in many places in Haiku codebase.</p>
 
 <p>Another round of bugfixes from waddlesplash: his work on
 optiminzing the kernel uncovered some bugs and introduced the occasional
-regression (givne our lack of automated tests, this is unsurprising). These
+regression (given our lack of automated tests, this is unsurprising). These
 problems have now been solved and Haiku is running nice and stable (and faster
 than before) again.</p>
 
@@ -83,7 +83,7 @@ symlink file to get information about it. Some applications rely on the name
 they are launched at to behave differently, and other may also use FS attributes
 from the symlink to do specific things.</p>
 
-<p>oco fixed a crash that could happen when unpluging an USB midi device</p>
+<p>oco fixed a crash that could happen when unplugging an USB midi device</p>
 
 <h3>Network</h3>
 
@@ -110,7 +110,7 @@ CPUs. This led to a lot of cleanups in various part of the code for warnings tha
 had been previously ignored, and the initial work to add the new CPU in buildtools,
 haikuporter, and the initial support files required to build a bootstrap image.
 Jaroslaw is a new contributor, but not unknown to Haiku as he had already worked
-on a proof of concept ARM64 port as well as an earlier one targetting the AVR32
+on a proof of concept ARM64 port as well as an earlier one targeting the AVR32
 architecture. This time with things being upstreamed, we hope that the port will
 be more maintainable and reach an usable state.</p>
 
@@ -218,7 +218,7 @@ to avoid emulating an actual storage device, and instead use a more appropriate 
 interface. In particular, the driver is now able to handle timeout on requests if
 they turn out to be too slow to complete.</p>
 
-<p>Finally, mouting BFS partitions will now be read-write by default, and will
+<p>Finally, mounting BFS partitions will now be read-write by default, and will
 not anymore ask the user if they only want to mount read-only. The filesystem is
 now stable enough that this should be fine to do.</p>
 
