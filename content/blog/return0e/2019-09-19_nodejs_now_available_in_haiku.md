@@ -31,7 +31,9 @@ Simple Express Web Server:
 
 Socket.IO Chat Demonstration:
 
-<img src="/files/blog/return0e/socketio.png" alt="socketio" class="img-responsive center-block">
+<img src="/files/blog/return0e/socketiomac.png" alt="socketio-mac" class="img-responsive center-block">
+
+<img src="/files/blog/return0e/socketio.png" alt="socketio-haiku" class="img-responsive center-block">
 
 
 Creating a static site via Hexo:
@@ -43,6 +45,8 @@ It is also possible to attach node programs for remote debugging via the Chrome 
 <img src="/files/blog/return0e/node-haiku-img.png" alt="node-haiku-img" class="img-responsive center-block">
 
 <img src="/files/blog/return0e/node-inspect-mac.png" alt="node-macos-inspector" class="img-responsive center-block">
+
+<img src="/files/blog/return0e/inspector-demo-mac.png" alt="node-macos-inspector-console" class="img-responsive center-block">
 
 <img src="/files/blog/return0e/haiku-inspector-debugge.png" alt="node-haiku-img" class="img-responsive center-block">
 
