@@ -35,7 +35,7 @@ At this point, continue the installation as usual to the 'Haiku' filesystem.
 ### Installing the EFI Loader
 
 **Note:** Due to a [bug](https://dev.haiku-os.org/ticket/14539) in r1beta1, the UEFI loader isn't available during installation.
-You can grab the UEFI bootloader [here](https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-efiloader.zip).
+You can grab the UEFI bootloader [here](https://ftp.osuosl.org/pub/haiku/r1beta1/haiku-r1beta1-x86_64-efiloader.zip).
 
 After the installation is successful (but before rebooting), return to the live desktop and mount the "EFIBOOT" partition from the desktop.
 
