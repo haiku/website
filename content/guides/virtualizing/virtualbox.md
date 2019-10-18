@@ -80,7 +80,7 @@ The installation itself is quite simple and does not differ really from a physic
 
 DriveSetup should detect two devices, one is our CD-ROM (ISO) file and another is the “harddrive” we created earlier. All we need to do is select that drive, go to *Partitions -> Format*, click on *Be File System* and continue the initialization. Then you use Installer from the Deskbar's appliction menu to install from the CD image to the big virtual harddrive.
 
-![](/files/guides/virtualizing/virtualbox/image11_0.png)
+![](/files/guides/virtualizing/virtualbox/image11.png)
 
 And that’s it! Power off and go back to the "Storage" Settings. To prevent booting the ISO image at every bootup, select the ISO image, click on the CD icon to the right and choose *Remove Attachment* :
  
