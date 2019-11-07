@@ -20,7 +20,7 @@ Project | Technology | Link
 Website | Web/Hugo   | https://haiku-os.org
 Gerrit  | Java       | https://review.haiku-os.org
 Discourse | Ruby     | https://discuss.haiku-os.org
-Buildbot | Python    | https://build.haiku-os.org/buildbot
+Buildbot | Python    | https://build.haiku-os.org/buildbot/
 Pootle  | Python     | https://i18n.haiku-os.org/pootle
 User guide translator | PHP | https://i18n.haiku-os.org/userguide
 Trac    | Python     | https://dev.haiku-os.org
