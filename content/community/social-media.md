@@ -15,6 +15,7 @@ There are a number of ways you can keep up with news about Haiku and social medi
 <p><b><a href="https://youtube.com/user/haikuos" target="_blank">Official YouTube account</a></b><br />
 <p><b><a href="https://www.linkedin.com/company/haiku-inc-" target="_blank">Official Linkedin account</a></b><br />
 <p><b><a href="https://www.openhub.net/orgs/haiku/projects" target="_blank">Official OpenHub account</a></b><br />
+<p><b><a href="https://keybase.io/team/haiku" target="_blank">Official Keybase Team</a></b><br />
 <p><b><a href="https://del.icio.us/haikuos" target="_blank">Official Delicious account</a></b><br />
 
 <h4>Recognized Community Groups</h4>
