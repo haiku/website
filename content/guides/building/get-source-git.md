@@ -7,10 +7,8 @@ tags = []
 
 <span class="right"><img src='/images/archive_64.png'></span>
 
-Haiku's source code is currently being hosted in a <a href="http://git-scm.com/" target="_blank">Git based repository</a>. Anonymous access will allow anyone to download Haiku's source code; However, only Haiku contributors with commit access should use the authenticated (non-anonymous) method.
-
-<div class="alert alert-danger">
-<strong>Configure your git!</strong> Before making any commits to the Haiku repository (local even), be <strong>sure</strong> to <a href="#configure_env">configure</a> the git environment on your local system! Failure to configure git properly before a commit will result in incorrect naming in your commit and public humiliation on the mailing list.</div>
+Haiku's source code is currently being hosted in a <a href="http://git-scm.com/" target="_blank">Git based repository</a> with <a href="https://gerritcodereview.com">Gerrit code review</a>.
+Anonymous access will allow anyone to download Haiku's source code; However, the authenticated (non-anonymous) method is required for submitting patches.
 
 <div class="alert alert-warning">
 <strong>The buildtools are not needed when building from within Haiku</strong>. Pre-built images of Haiku already come with the buildtools pre-installed.
@@ -18,76 +16,65 @@ Haiku's source code is currently being hosted in a <a href="http://git-scm.com/"
 
 <a name="anon_access"></a>
 <h3>Git Access - Anonymous testers</h3>
-<ul>
-<li><h4>Build Tools:</h4>
+<h4>Build Tools:</h4>
 ```sh
 git clone https://review.haiku-os.org/buildtools
 ```
-</li>
-
-<li><h4>Haiku:</h4>
+<h4>Haiku:</h4>
 ```sh
 git clone https://review.haiku-os.org/haiku
 ```
-</li>
-</ul>
 <p>If you don't care about the commit history and want to keep the download small, try using the parameter `--depth` when cloning. `--depth 10` limits the history to the last 10 commits, for example.</p>
 
 <a name="dev_access"></a>
-<h3>Git Access - Contributors with commit permission</h3>
-<ul>
-<li><h4>Configure Git on your system:<a name="configure_env"></a></h4>
+<h3>Git Access - Contributors and patch submitters</h3>
+
+<div class="alert alert-danger">
+<strong>Configure your git!</strong> Before making any commits to the Haiku repository (local even), be <strong>sure</strong> to <a href="#configure_env">configure</a> the git environment on your local system! Failure to configure git properly before a commit will result in incorrect naming in your commit, making it impossible to give you well-deserved credit for your work.</div>
+
+<h4>Configure Git on your system:<a name="configure_env"></a></h4>
 <p>Before making your first commit on a new system, be <strong>sure</strong> to configure Git. These global settings are stored in your git configuration directory (~/.git/ or for Haiku: ~config/settings/git/) and will be appended to <strong>each</strong> commit as your personal information.</p>
 ```sh
 git config --global user.name "John Doe"
 git config --global user.email "john.doe@developers.com"
 ```
-If you were used to the short version of the svn commands (st, di,... instead of status, diff,...), you'll also want to set up similar shortcuts as aliases for the respective long git commands:
-```sh
-git config --global alias.st "status -s"
-git config --global alias.di "diff"
-git config --global alias.ci "commit"
-git config --global alias.co "checkout"
-```
-On Mac OS X, you should always set the following option in order to avoid confusion about the NFD and NFC representation of filenames:
+
+On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:
 ```sh
 git config core.precomposeunicode true
 ```
-</li>
 
-<li><h4>Build Tools:</h4>
+<h4>Build Tools:</h4>
 The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.
 ```sh
 git clone ssh://<login>@git.haiku-os.org/buildtools
 ```
-</li>
 
-<li><h4>Haiku:</h4>
+<h4>Haiku:</h4>
 The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.
 ```sh
 git clone ssh://<login>@git.haiku-os.org/haiku
 ```
-</li>
 
-<li><h4>Switching from anonymous to developer access</h4>
+Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.
+
+<h4>Switching from anonymous to developer access</h4>
 <p>Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:</p>
 
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
 ```
-</li>
-</ul>
 
 <h3>Some Notes</h3>
-<ul>
-<li><h4>Case Sensitive Filesystem</h4>
+
+<h4>Case Sensitive Filesystem</h4>
 <div class="alert alert-warning">
 Haiku's source code needs to reside on a case sensitive file system.
 </div>
 In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" as two different files. Some file systems that are (or could be) case in-sensitive include, FAT32, NTFS, and HFS+. Mac OS X's HFS+ is case in-sensitive by default. For more information regarding how to create a case-sensitive HFS+ volume, see <a href="/documents/dev/how_build_haiku_mac_os_x#part_diskimage">this article</a>.
-</li>
+
 <a name="proxy_access"></a>
-<li><h4>Getting the source code through an HTTP proxy</h4>
+<h4>Getting the source code through an HTTP proxy</h4>
 <div class="alert alert-warning">
 Haiku's main Git repository does not allow HTTP access, which is a problem if you are accessing the Internet through a proxy server that only permits HTTP (port 80) traffic.
 </div>
@@ -105,8 +92,10 @@ git clone http://github.com/haiku/haiku.git
 ```
 
 Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
-</li>
-<li><h4>Updating the Sources</h4>
+
+<h3>Common tasks</h3>
+
+<h4>Updating the Sources</h4>
 <div class="alert alert-danger">
 Be sure to use the `--rebase` argument while doing a pull prior to a push to avoid confusing nonlinear histories! ("Merge 'master' on ssh://git.haiku-os.org/haiku" messages showing your name and others changes) Do <b>NOT</b> however use --rebase on branches you have shared with other people! (rebase re-writes the local history. If your local history doesn't match people who cloned off of you, and they want to push to you, they will have <b>major</b> problems.)
 </div>
@@ -122,28 +111,26 @@ Alternatively, a single path or multiple paths can be given to <span class="cli"
 git pull --rebase /path/haiku/haiku /path/haiku/buildtools
 ```
 
-</li>
-<li><h4>Making local commits</h4>
+<h4>Making local commits</h4>
 
-In git you make commits to your local tree, then push the final results to the central remote Haiku repository. The comment quality of commits should be high, explaining changes in as much detail as possible.
+In git you make commits to your local tree, then push the final results to the
+central remote Haiku repository. Split your work in not too large commits, but
+remember that each commit will be reviewed separately, so don't make them too
+small either.
 
-<h5>Short commit comment</h5>
-Short commit messages are best utilized for small changes or changes that hold a simple ideal.
+The commit message will also be reviewed, and should describe the change in
+as much detail as possible. You can refer to other commits by ehter their hrev
+tag or their SHA1 hash, and to bugs using the #number notation. Gerrit and cgit
+will then auomatically add an hyperlink to the relevant place.
 
-```sh
-git commit -a -m "WebPositive: Style cleanup, no functional change"
-```
+The commit message should include a short description on the first line (ideally
+less than 64 characters), then a blank line, and a more detailed explanation.
+The short message is visible in "git log", the web interface, and many other git
+tools, and allows to know what the commit is about. The details are available
+separately (for example in git log -p or when looking at the commit directly in
+the web interface), so they are both important.
 
-The short commit message should be a summary no longer than 64 characters, no returns
-
-<h5>Long commit comments</h5>
-Long commit messages are best used to explain what was changed and why on new code, rewrites, or other tasks that may need explanation.
-
-```sh
-git commit -a -F ~/mycommitlog
-```
-
-The following commit message format is recommended:
+Here is an example of a good commit message:
 ```
 kernel: Perform the usual early morning tasks
 
@@ -154,18 +141,37 @@ kernel: Perform the usual early morning tasks
   shenanigans.
 * No functional change.
 ```
-The first line should be a summary no longer than 64 characters, separated from a detailed description by a blank line. The description lines shouldn't be longer than 72 characters.
 
-</li>
-<li><h4>Pushing changes remotely</h4>
+<h5>Short commit comment</h5>
+If your commit is very short, you can include it directly on the Git command line:
 
 ```sh
-git push
+git commit -a -m "WebPositive: Style cleanup, no functional change"
+```
+
+<h5>Long commit comments</h5>
+
+If your commit message is longer, you can put it in a file and use it this way:
+
+```sh
+git commit -a -F ~/mycommitlog
+```
+
+Or you can use "git commit -a", which will open an editor and let you write down
+the message when you commit your changes.
+
+<h4>Pushing changes for review</h4>
+
+```sh
+git push origin HEAD:refs/for/master
 ```
 
 After your changes are complete, the push command will push your local tree to the remote Haiku repository.
-</li>
-<li><h4>Example git workflow</h4>
+The commits will be added to the review page and people will review them. You can them amend your commits
+and push them again, until they are reviewed and merged.
+
+Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
+overview of the process.
+
+<h4>Example git workflow</h4>
 <img src='/files/gitProcess_0.png'>
-</li>
-</ul>
