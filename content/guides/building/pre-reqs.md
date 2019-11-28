@@ -7,7 +7,7 @@ tags = []
 
 The tools you need to compile software for Haiku, or to compile Haiku itself, depend on the platform that is used for building.
 
-Currently, Haiku is arguably the most convenient development environment. **A [nightly image](https://download.haiku-os.org) (or [stable release](/get-haiku)) of Haiku should contain all of the software needed to build its sources for x86.**
+Currently, Haiku is arguably the most convenient development environment. **A [nightly image](https://download.haiku-os.org) (or [stable release](/get-haiku)) of Haiku should contain all of the software needed to build its sources for x86.**  Note that a build of the entire operating system on an x86_64 Haiku host will require that the buildtools are also prepared and compiled.  Use the same instructions as a cross-compile in this case.  The reason for this is because some 32bit elements need to be built as well and the compiler supplied by default on an x86_64 environment is insufficient for building these elements.
 
 So while Haiku is not the fastest, being able to immediately test the freshly compiled binaries and having the tool chain pre-installed certainly reduces the chances of headaches. On occasion, building Haiku on Haiku can be problematic if the host version is significantly out of date compared to the version being built. In this case, cross-compiling from another OS, or updating to a newer Haiku may be required to get things working again.
 
