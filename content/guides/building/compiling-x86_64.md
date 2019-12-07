@@ -41,7 +41,7 @@ These commands should be run from the same path you ran your configure in above.
 Compiling a nightly anyboot Haiku iso image
 --------------------------------------
 
-This is the standard build which which results in a live ISO that can be burned
+This is the standard build which results in a live ISO that can be burned
 to an optical disc, or that can be written directly to a USB stick.
 
 {{< alert-info "Build Threads" "Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.">}}
