@@ -5,7 +5,7 @@ date = "2016-12-29T10:30:00.000Z"
 tags = []
 +++
 
-For Google Code In 2017, Brihadeesh Radhakrishnan created a [video on how to install Haiku in VMware Fusion](http://haiku-files.org/files/media/GCI-2017_VMWare-Fusion_Brihadeesh-Radhakrishnan.mkv) [6 MiB].
+For Google Code In 2019, Thinker Pal created a [video on how to install Haiku in VMware Fusion](http://haiku-files.org/files/media/GCI-2019_VMware_Fusion_Thinker-Pal.mp4) [24 MiB].
 
 Start by downloading a [Haiku ISO image](http://www.haiku-os.org/get-haiku), do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files. [VMware Fusion](http://www.vmware.com/products/fusion/) is available for free.
 
