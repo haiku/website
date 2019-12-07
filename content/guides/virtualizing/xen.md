@@ -5,11 +5,11 @@ date = "2019-12-7"
 tags = []
 +++
 
-Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
+Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers but want to become familiar with it.
 
-In this guide the Haiku operating system is being run under virtual circumstances using Arch Linux, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
+In this guide, the Haiku operating system is being run under virtual circumstances using Arch Linux, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
 
-In this guide, we will be using an Anyboot image - it can be obtained [here](/get-haiku).  Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
+This tutorial, for demonstration purposes, uses an Anyboot image. It can be obtained [here](/get-haiku). Both the ISO and Anyboot images are available there. Verify the checksums to make sure the downloaded files are not corrupted.
 
 ##### Go to section
 
@@ -22,14 +22,14 @@ In this guide, we will be using an Anyboot image - it can be obtained [here](/ge
 
 #### Ubuntu Linux
 
-If you are using Ubuntu Linux (18.04 and below), you can enter the following command in order to set up Xen and virt-manager:
+If you are using Ubuntu Linux (18.04 and below), you can enter the following commands in order to set up Xen and virt-manager:
 
 ```sh
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install xen-hypervisor xen-utils virt-manager libvirt-bin bridge-utils
 ```
 
-However, if you are using a more recent version of Ubuntu (18.10), then you will have to use this command instead, as `libvirt-bin` has been replaced:
+However, if you are using a more recent version of Ubuntu (18.10 or up), then you will have to use this command instead as `libvirt-bin` has been replaced:
 
 ```sh
 sudo apt-get update && sudo apt-get upgrade
@@ -50,7 +50,7 @@ You can find more Ubuntu Linux-specific information regarding Xen in [Ubuntu's o
 
 As Xen is not currently officially available in the official repositories, you will have to use the [Arch User Repository (AUR)](https://aur.archlinux.org/) in order to install Xen.
 
-Of course, you can use your favorite [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) in order to install the `xen` package. AUR helpers make the process of installing packages from the AUR a lot less tedious. However, the most universal way of installing Xen in Arch Linux would be the following:
+Of course, you can use an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) in order to install the `xen` package. However, the most universal way of installing Xen in Arch Linux would be the following:
 
 ```sh
 pacman -Syu
@@ -59,7 +59,7 @@ makepkg -csi
 pacman -S bridge-utils
 ```
 
-Alternatively, you may wish to want to [compile Xen from source.](https://wiki.xenproject.org/wiki/Compiling_Xen_From_Source)
+Alternatively, you may want to [compile Xen from source.](https://wiki.xenproject.org/wiki/Compiling_Xen_From_Source)
 
 Moreover, you will have to install either the `seabios` package and/or the `ovmf` package, depending on whether you want to boot your virtual machine in BIOS or UEFI mode respectively. It should be added that Haiku does [support UEFI booting](https://www.haiku-os.org/guides/uefi_booting/).
 
@@ -75,7 +75,7 @@ Lastly, you will have to enable the `libvirtd` daemon, as it is not enabled by d
 sudo systemctl enable libvirtd
 ```
 
-Reboot your machine and make sure to select the Xen kernel in your boot menu. To boot into Xen, choose `Arch Linux, with Xen hypervisor`
+Reboot your machine and make sure to select the Xen kernel in your boot menu. To boot into Xen, choose `Arch Linux, with Xen hypervisor`.
 
 You may also want to consult Arch Linux's [wiki](https://wiki.archlinux.org/index.php/Xen).
 
@@ -94,9 +94,7 @@ Also, make sure to enable the `libvirtd` daemon, which is not enabled by default
 sudo systemctl enable libvirtd
 ```
 
-To boot into Xen, on Fedora's boot menu choose `Fedora, with Xen hypervisor`
-
-Consulting the [Xen wiki](https://wiki.xen.org/wiki/Fedora_Host_Installation) is generally a good idea.
+To boot into Xen on Fedora's boot menu, choose `Fedora, with Xen hypervisor`. Consulting the [Xen wiki](https://wiki.xen.org/wiki/Fedora_Host_Installation) is generally a good idea.
 
 ### Installing and running Haiku from an Anyboot image <a name="part_iso"></a>
 
@@ -111,15 +109,15 @@ Then, choose the method of OS installation, which is **`Local install media`** i
 
 ![](/files/guides/virtualizing/xen/create_machine.png)
 
-Choose `Use ISO image`, and browse to the Anyboot image we have downloaded. Then, click **`Forward`**.
+Choose `Use ISO image`, and browse to the image you downloaded. Then, click **`Forward`**.
 
 ![](/files/guides/virtualizing/xen/select_media.png)
 
-Here, we are supposed to adjust memory and CPU settings. It is better to assign more than 256M of RAM for smooth running ; too much, on the other hand, may cause a lag for the host. After choosing the memory size and CPU, click **`Forward`**.
+Here is where you adjust the memory and CPU settings. It is best to assign more than 256M of RAM for smoother performance; too little may cause lag. After choosing the memory size and CPU, click **`Forward`**.
 
 ![](/files/guides/virtualizing/xen/memory_cpu.png)
 
-Here, we can adjust the size of the disk image, or existing disk images. After adjusting, click **`Forward`**
+Here, we can adjust the size of the disk image, or existing disk images. After making any necessary changes, click **`Forward`**
 
 ![](/files/guides/virtualizing/xen/hard_disk.png)
 
@@ -127,15 +125,15 @@ Name the virtual machine, verify the settings of the VM, then click **`Finish`**
 
 ![](/files/guides/virtualizing/xen/confirm_create.png)
 
-After clicking **`Finish`**, the VM will start and boot to the Haiku image. You can choose to install Haiku or boot to the desktop. Installation is simple and does not differ really from a physical one (follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku).
+After clicking **`Finish`**, the VM will boot to the Haiku image. You can choose to install Haiku or boot to the desktop. Follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku.
 
 ### Additional steps <a name="part_additional"></a>
 
 #### Networking
 
-The VM we created by default does not have networking. To create a virtual network, you can follow the steps below. If you want to create a bridged network instead, consult your distribution's documentation.
+By default, this VM does not have networking. To create a virtual network, you can follow the steps below. If you want to create a bridged network instead, consult your distribution's documentation.
 
-First, on the virt-manager window choose `Edit` > `Connection Details`. The Connection Details window will appear. Click on the Add button in the lower left corner to add a virtual network.
+First, on the virt-manager window, choose `Edit` > `Connection Details`. The Connection Details window will appear. Click on the Add button in the lower left corner to add a virtual network.
 
 ![](/files/guides/virtualizing/xen/virtual_network_1.png)
 
@@ -163,7 +161,7 @@ On the virt-manager window, right-click on the Haiku VM, and choose **`Open`**. 
 
 If there's no NIC hardware in the VM, click the **`Add Hardware`**, then choose **`Network`**.
 
-After that, go to the **`NIC`** hardware on the VM, then choose the network source to be the virtual network we have created.
+After that, go to the **`NIC`** hardware on the VM, then choose the network source to be the virtual network.
 
 ![](/files/guides/virtualizing/xen/vm_settings_net.png)
 
@@ -178,4 +176,4 @@ Now the VM should have a network connection.
 
 ##### Unable to connect to libvirt xen:///.
 
-- Ensure that you are currently using a Xen host kernel. If you are using [GRUB](https://www.gnu.org/software/grub/) and the kernel will not appear for some reason, run `update-grub` in your terminal.
+- Ensure that you are using a Xen host kernel. If you are using [GRUB](https://www.gnu.org/software/grub/) and the kernel does not appear, try running `update-grub` in your terminal.
