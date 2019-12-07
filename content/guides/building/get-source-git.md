@@ -44,27 +44,27 @@ git config --global user.name "John Doe"
 git config --global user.email "john.doe@developers.com"
 ```
 
-On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:
+<p>On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:</p>
 
 ```sh
 git config core.precomposeunicode true
 ```
 
 <h4>Build Tools:</h4>
-The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.
+<p>The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.</p>
 
 ```sh
 git clone ssh://<login>@git.haiku-os.org/buildtools
 ```
 
 <h4>Haiku:</h4>
-The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.
+<p>The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.</p>
 
 ```sh
 git clone ssh://<login>@git.haiku-os.org/haiku
 ```
 
-Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.
+<p>Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.</p>
 
 <h4>Switching from anonymous to developer access</h4>
 <p>Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:</p>
@@ -86,20 +86,20 @@ In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" 
 <div class="alert alert-warning">
 Haiku's main Git repository does not allow HTTP access, which is a problem if you are accessing the Internet through a proxy server that only permits HTTP (port 80) traffic.
 </div>
-Instead, use one of our mirror repositories at GitHub or Gitorious for anonymous HTTP access, they are both kept in sync with the main repository. First, set Git to connect through your proxy server:
+<p>Instead, use one of our mirror repositories at GitHub or Gitorious for anonymous HTTP access, they are both kept in sync with the main repository. First, set Git to connect through your proxy server:</p>
 
 ```sh
 git config --global http.proxy http://proxyuser:proxypwd@proxy.server.com:8080
 ```
 
-Then clone the repositories from GitHub:
+<p>Then clone the repositories from GitHub:</p>
 
 ```sh
 git clone http://github.com/haiku/buildtools.git
 git clone http://github.com/haiku/haiku.git
 ```
 
-Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
+<p>Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.</p>
 
 <h3>Common tasks</h3>
 
@@ -113,7 +113,7 @@ cd /path/haiku/haiku
 git pull --rebase
 ```
 
-Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
+<p>Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.</p>
 
 ```sh
 git pull --rebase /path/haiku/haiku /path/haiku/buildtools
@@ -152,7 +152,7 @@ kernel: Perform the usual early morning tasks
 ```
 
 <h5>Short commit comment</h5>
-If your commit is very short, you can include it directly on the Git command line:
+<p>If your commit is very short, you can include it directly on the Git command line:</p>
 
 ```sh
 git commit -a -m "WebPositive: Style cleanup, no functional change"
@@ -160,14 +160,14 @@ git commit -a -m "WebPositive: Style cleanup, no functional change"
 
 <h5>Long commit comments</h5>
 
-If your commit message is longer, you can put it in a file and use it this way:
+<p>If your commit message is longer, you can put it in a file and use it this way:</p>
 
 ```sh
 git commit -a -F ~/mycommitlog
 ```
 
-Or you can use "git commit -a", which will open an editor and let you write down
-the message when you commit your changes.
+<p>Or you can use "git commit -a", which will open an editor and let you write down
+the message when you commit your changes.</p>
 
 <h4>Pushing changes for review</h4>
 
@@ -175,12 +175,12 @@ the message when you commit your changes.
 git push origin HEAD:refs/for/master
 ```
 
-After your changes are complete, the push command will push your local tree to the remote Haiku repository.
+<p>After your changes are complete, the push command will push your local tree to the remote Haiku repository.
 The commits will be added to the review page and people will review them. You can them amend your commits
-and push them again, until they are reviewed and merged.
+and push them again, until they are reviewed and merged.</p>
 
-Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
-overview of the process.
+<p>Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
+overview of the process.</p>
 
 <h4>Example git workflow</h4>
 <img src='/files/gitProcess_0.png'>
