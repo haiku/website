@@ -17,13 +17,17 @@ Anonymous access will allow anyone to download Haiku's source code; However, the
 <a name="anon_access"></a>
 <h3>Git Access - Anonymous testers</h3>
 <h4>Build Tools:</h4>
+
 ```sh
 git clone https://review.haiku-os.org/buildtools
 ```
+
 <h4>Haiku:</h4>
+
 ```sh
 git clone https://review.haiku-os.org/haiku
 ```
+
 <p>If you don't care about the commit history and want to keep the download small, try using the parameter `--depth` when cloning. `--depth 10` limits the history to the last 10 commits, for example.</p>
 
 <a name="dev_access"></a>
@@ -34,24 +38,28 @@ git clone https://review.haiku-os.org/haiku
 
 <h4>Configure Git on your system:<a name="configure_env"></a></h4>
 <p>Before making your first commit on a new system, be <strong>sure</strong> to configure Git. These global settings are stored in your git configuration directory (~/.git/ or for Haiku: ~config/settings/git/) and will be appended to <strong>each</strong> commit as your personal information.</p>
+
 ```sh
 git config --global user.name "John Doe"
 git config --global user.email "john.doe@developers.com"
 ```
 
 On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:
+
 ```sh
 git config core.precomposeunicode true
 ```
 
 <h4>Build Tools:</h4>
 The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.
+
 ```sh
 git clone ssh://<login>@git.haiku-os.org/buildtools
 ```
 
 <h4>Haiku:</h4>
 The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.
+
 ```sh
 git clone ssh://<login>@git.haiku-os.org/haiku
 ```
@@ -131,6 +139,7 @@ separately (for example in git log -p or when looking at the commit directly in
 the web interface), so they are both important.
 
 Here is an example of a good commit message:
+
 ```
 kernel: Perform the usual early morning tasks
 
