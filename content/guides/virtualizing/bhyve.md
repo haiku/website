@@ -83,7 +83,7 @@ ifconfig bridge0 addm re0
 
 Lastly, you want to run the following:
 
-```
+```sh
 ifconfig bridge0 up
 ```
 
@@ -120,7 +120,7 @@ We will need the `haiku-release-anyboot.iso` file later, in order to virtualize 
 
 Now that you have made the required configurations, as well as the networking configurations, you may want to make a new folder in order to keep things clean, and then move your Haiku anyboot image there.
 
-```
+```sh
 mkdir haiku-vm
 mv haiku-release-anyboot.iso haiku-vm
 cd haiku-vm
