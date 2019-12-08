@@ -75,4 +75,4 @@ Before rebooting, you might want to remove the CD from the virtual drive - you c
 
 Congratulations! You now have a fully working Haiku VM. The best thing to do now would be to configure your OS, enabling SSH for better remote control is a good start. ESXi will give your machine an IP in the real network even if your server has only one network card, thus you can easily connect to your machine from other computers in your network.
 
-Changing any VM parameters can be done by shutting off the VM, and then entering the configuration via the ESXi web panel. Please note that ESXi won't be able to shrink the virtual hard drive 
+Changing any VM parameters can be done by shutting off the VM, and then entering the configuration via the ESXi web panel. Please note that ESXi won't be able to shrink the virtual hard drive.
