@@ -28,7 +28,7 @@ git clone https://review.haiku-os.org/buildtools
 git clone https://review.haiku-os.org/haiku
 ```
 
-<p>If you don't care about the commit history and want to keep the download small, try using the parameter `--depth` when cloning. `--depth 10` limits the history to the last 10 commits, for example.</p>
+If you don't care about the commit history and want to keep the download small, try using the parameter `--depth` when cloning. `--depth 10` limits the history to the last 10 commits, for example.
 
 <a name="dev_access"></a>
 <h3>Git Access - Contributors and patch submitters</h3>
@@ -37,37 +37,41 @@ git clone https://review.haiku-os.org/haiku
 <strong>Configure your git!</strong> Before making any commits to the Haiku repository (local even), be <strong>sure</strong> to <a href="#configure_env">configure</a> the git environment on your local system! Failure to configure git properly before a commit will result in incorrect naming in your commit, making it impossible to give you well-deserved credit for your work.</div>
 
 <h4>Configure Git on your system:<a name="configure_env"></a></h4>
-<p>Before making your first commit on a new system, be <strong>sure</strong> to configure Git. These global settings are stored in your git configuration directory (~/.git/ or for Haiku: ~config/settings/git/) and will be appended to <strong>each</strong> commit as your personal information.</p>
+
+Before making your first commit on a new system, be <strong>sure</strong> to configure Git. These global settings are stored in your git configuration directory (`~/.git/` or for Haiku: `~config/settings/git/`) and will be appended to <strong>each</strong> commit as your personal information.
 
 ```sh
 git config --global user.name "John Doe"
 git config --global user.email "john.doe@developers.com"
 ```
 
-<p>On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:</p>
+On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:
 
 ```sh
 git config core.precomposeunicode true
 ```
 
 <h4>Build Tools:</h4>
-<p>The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.</p>
+
+The `<login>@` is only needed if your currently logged in username doesn't match your `git.haiku-os.org` username.
 
 ```sh
 git clone ssh://<login>@git.haiku-os.org/buildtools
 ```
 
 <h4>Haiku:</h4>
-<p>The &lt;login&gt;@ is only needed if your currently logged in username doesn't match your git.haiku-os.org username.</p>
+
+The `<login>@` is only needed if your currently logged in username doesn't match your `git.haiku-os.org` username.
 
 ```sh
 git clone ssh://<login>@git.haiku-os.org/haiku
 ```
 
-<p>Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.</p>
+Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.
 
 <h4>Switching from anonymous to developer access</h4>
-<p>Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:</p>
+
+Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:
 
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
@@ -76,6 +80,7 @@ git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
 <h3>Some Notes</h3>
 
 <h4>Case Sensitive Filesystem</h4>
+
 <div class="alert alert-warning">
 Haiku's source code needs to reside on a case sensitive file system.
 </div>
@@ -83,29 +88,32 @@ In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" 
 
 <a name="proxy_access"></a>
 <h4>Getting the source code through an HTTP proxy</h4>
+
 <div class="alert alert-warning">
 Haiku's main Git repository does not allow HTTP access, which is a problem if you are accessing the Internet through a proxy server that only permits HTTP (port 80) traffic.
 </div>
-<p>Instead, use one of our mirror repositories at GitHub or Gitorious for anonymous HTTP access, they are both kept in sync with the main repository. First, set Git to connect through your proxy server:</p>
+
+Instead, use one of our mirror repositories at GitHub or Gitorious for anonymous HTTP access, they are both kept in sync with the main repository. First, set Git to connect through your proxy server:
 
 ```sh
 git config --global http.proxy http://proxyuser:proxypwd@proxy.server.com:8080
 ```
 
-<p>Then clone the repositories from GitHub:</p>
+Then clone the repositories from GitHub:
 
 ```sh
 git clone http://github.com/haiku/buildtools.git
 git clone http://github.com/haiku/haiku.git
 ```
 
-<p>Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.</p>
+Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
 
 <h3>Common tasks</h3>
 
 <h4>Updating the Sources</h4>
+
 <div class="alert alert-danger">
-Be sure to use the `--rebase` argument while doing a pull prior to a push to avoid confusing nonlinear histories! ("Merge 'master' on ssh://git.haiku-os.org/haiku" messages showing your name and others changes) Do <b>NOT</b> however use --rebase on branches you have shared with other people! (rebase re-writes the local history. If your local history doesn't match people who cloned off of you, and they want to push to you, they will have <b>major</b> problems.)
+Be sure to use the <span class="cli">--rebase</span> argument while doing a pull prior to a push to avoid confusing nonlinear histories! ("Merge 'master' on ssh://git.haiku-os.org/haiku" messages showing your name and others changes) Do <b>NOT</b> however use <span class="cli">--rebase</span> on branches you have shared with other people! (rebase re-writes the local history. If your local history doesn't match people who cloned off of you, and they want to push to you, they will have <b>major</b> problems.)
 </div>
 
 ```sh
@@ -113,7 +121,7 @@ cd /path/haiku/haiku
 git pull --rebase
 ```
 
-<p>Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.</p>
+Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
 
 ```sh
 git pull --rebase /path/haiku/haiku /path/haiku/buildtools
@@ -152,7 +160,8 @@ kernel: Perform the usual early morning tasks
 ```
 
 <h5>Short commit comment</h5>
-<p>If your commit is very short, you can include it directly on the Git command line:</p>
+
+If your commit is very short, you can include it directly on the Git command line:
 
 ```sh
 git commit -a -m "WebPositive: Style cleanup, no functional change"
@@ -160,14 +169,14 @@ git commit -a -m "WebPositive: Style cleanup, no functional change"
 
 <h5>Long commit comments</h5>
 
-<p>If your commit message is longer, you can put it in a file and use it this way:</p>
+If your commit message is longer, you can put it in a file and use it this way:
 
 ```sh
 git commit -a -F ~/mycommitlog
 ```
 
-<p>Or you can use "git commit -a", which will open an editor and let you write down
-the message when you commit your changes.</p>
+Or you can use "git commit -a", which will open an editor and let you write down
+the message when you commit your changes.
 
 <h4>Pushing changes for review</h4>
 
@@ -175,12 +184,12 @@ the message when you commit your changes.</p>
 git push origin HEAD:refs/for/master
 ```
 
-<p>After your changes are complete, the push command will push your local tree to the remote Haiku repository.
+After your changes are complete, the push command will push your local tree to the remote Haiku repository.
 The commits will be added to the review page and people will review them. You can them amend your commits
-and push them again, until they are reviewed and merged.</p>
+and push them again, until they are reviewed and merged.
 
-<p>Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
-overview of the process.</p>
+Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
+overview of the process.
 
 <h4>Example git workflow</h4>
 <img src='/files/gitProcess_0.png'>
