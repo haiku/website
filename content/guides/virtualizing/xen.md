@@ -7,7 +7,7 @@ tags = []
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers but want to become familiar with it.
 
-In this guide, the Haiku operating system is being run under virtual circumstances using Arch Linux, KVM, and Virt-Manager. but you can use any distribution of Linux that supports KVM.
+In this guide, the Haiku operating system is being run under virtual circumstances using Ubuntu Linux, Xen and Virt-Manager. but you can use any distribution of Linux that supports Xen.
 
 This tutorial, for demonstration purposes, uses an Anyboot image. It can be obtained [here](/get-haiku). Both the ISO and Anyboot images are available there. Verify the checksums to make sure the downloaded files are not corrupted.
 
@@ -105,15 +105,15 @@ First, create a new virtual machine.
 
 ![](/files/guides/virtualizing/xen/virt_manager.png)
 
-Then, choose the method of OS installation, which is **`Local install media`** in this case and click **`Forward`**.
+Then, choose the method of OS installation, which is **`Local install media`** in this case and click **`Forward`**
 
 ![](/files/guides/virtualizing/xen/create_machine.png)
 
-Choose `Use ISO image`, and browse to the image you downloaded. Then, click **`Forward`**.
+Choose `Use ISO image`, and browse to the image you downloaded. Then, click **`Forward`**
 
 ![](/files/guides/virtualizing/xen/select_media.png)
 
-Here is where you adjust the memory and CPU settings. It is best to assign more than 256M of RAM for smoother performance; too little may cause lag. After choosing the memory size and CPU, click **`Forward`**.
+Here is where you adjust the memory and CPU settings. It is best to assign more than 256M of RAM for smoother performance; too little may cause lag. After choosing the memory size and CPU, click **`Forward`**
 
 ![](/files/guides/virtualizing/xen/memory_cpu.png)
 
@@ -159,7 +159,7 @@ On the virt-manager window, right-click on the Haiku VM, and choose **`Open`**. 
 
 ![](/files/guides/virtualizing/xen/vm_settings.png)
 
-If there's no NIC hardware in the VM, click the **`Add Hardware`**, then choose **`Network`**.
+If there's no NIC hardware in the VM, click the **`Add Hardware`**, then choose **`Network`**
 
 After that, go to the **`NIC`** hardware on the VM, then choose the network source to be the virtual network.
 
@@ -171,7 +171,7 @@ Now the VM should have a network connection.
 
 ##### Unable to connect to libvirt.
 
-- Ensure that the libvirt daemon is running by issuing ```sudo systemctl enable --now libvirtd```.
+- Ensure that the libvirt daemon is running by issuing ```sudo systemctl enable --now libvirtd```
 - Make sure that you are a member of the `libvirtd` group by running ```sudo usermod -a -G libvirtd $(whoami)```
 
 ##### Unable to connect to libvirt xen:///.
