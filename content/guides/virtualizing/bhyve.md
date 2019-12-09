@@ -40,7 +40,7 @@ make install clean
 
 Now, follow through the process, and you will be able to fetch the image file securely.
 
-##### Networking & Kernel Preparations <a name="part_download"></a>
+##### Networking & Kernel Preparations
 
 Since `bhyve` consists of kernel modules that ship with FreeBSD by default, you do not need to install the core part of `bhyve`.
 
@@ -53,7 +53,7 @@ kldload if_bridge
 kldload if_tap
 ```
 
-However, the kernel modules will only remain loaded until you reboot your machine. In order to make the changes permanent, edit `/boot/loader.conf` by adding:
+The kernel modules will only remain loaded until you reboot your machine. In order to make the changes permanent, edit `/boot/loader.conf` by adding:
 
 ```sh
 # Kernel modules
@@ -97,7 +97,7 @@ sysctl net.inet.ip.forwarding=1
 
 ### Downloading the Haiku Anyboot image <a name="part_download">
 
-Now that you have made the necessary changes to your system, you can now obtain a Haiku anyboot image securely, which will be necessary for the creation of a Haiku virtual machine. You will need to install `wget`, in order to fetch the image file from the internet. Because of the fact that Haiku image files are packed alongside with a `ReadMe` file inside of a `.zip` archive, you will need the `unzip` package in order to extract the image file.
+Now that you have made the necessary changes to your system, you can securely obtain a Haiku anyboot image. You will need to install `wget` to download the image file and you will additionally need the `unzip` package to extract it, as the image file is packed in a `.zip` archive together with a `ReadMe` file.
 
 ```sh
 pkg install wget unzip
@@ -110,7 +110,7 @@ wget https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot
 unzip haiku-r1beta1-x86_64-anyboot.zip
 ```
 
-As mentioned earlier, following files will be extracted in your current working directory:
+As mentioned earlier, the following files will be extracted in your current working directory:
 - `haiku-release-anyboot.iso`
 - `ReadMe.md`
 
@@ -126,7 +126,7 @@ mv haiku-release-anyboot.iso haiku-vm
 cd haiku-vm
 ```
 
-Great! Now you have a dedicated directory to work on, create a virtual disk for your virtual machine.
+Great! Now that you have a dedicated directory to work on, create a virtual disk for your virtual machine.
 
 ```sh
 # feel free to adjust the number 16G according to your needs
@@ -140,19 +140,18 @@ cp /usr/share/examples/bhyve/vmrun.sh .
 sh vmrun.sh -c1 -E -i -I haiku-release-anyboot.iso haiku
 ```
 
-- `-c1` stands for the amount processor cores that will be allocated for the machine. In this scenario, we are using 1 core, which is a recommended option.
+- `-c1` stands for the number of processor cores that will be allocated for the machine. In this scenario, we are using 1 core, which is a recommended option.
 - `-E` boots the the machine in UEFI mode.
-- `-i` forces the boot of the a
-nyboot image.
-- `-I` specifies the location of the image file. In this case, since we have placed `haiku-release-anyboot.iso` in our current working directory, so this should suffice
+- `-i` forces the boot of the anyboot image.
+- `-I` specifies the location of the image file. In this case, since we have placed `haiku-release-anyboot.iso` in our current working directory, the file name should suffice.
 - `haiku` stands for the name of the virtual machine, which can be modified or changed.
 
 Some additional parameters which could prove to be useful are the following:
 
 - `-m` can change the allocated memory size, which is `512M` by default.
-- `-v` is an option that delays the boot, until you connect with a VNC client to the host machine. The default port of the VNC server is `5900`.
+- `-v` is an option that delays the boot until you connect with a VNC client to the host machine. The default port of the VNC server is `5900`.
 - `-P` allows you to change the port of the VNC server.
 
-You can also run use the `--help` parameter if you need more information. 
+Use the `--help` parameter if you need additional information.
 
 Other than that, congratulations! If everything went according to plan, you should now have an internet-connected Haiku virtual machine running on top of Bhyve!
