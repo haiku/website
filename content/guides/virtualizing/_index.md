@@ -33,4 +33,5 @@ With regard to performance, you should make sure that the virtualization options
 <h3>Native hypervisors</h3>
 <ul>
     <li><a href="/guides/virtualizing/hyper-v">Hyper-V</a></li>
+    <li><a href="/guides/virtualizing/bhyve">Bhyve</a></li>
 </ul>
