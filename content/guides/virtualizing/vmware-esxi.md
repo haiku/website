@@ -59,7 +59,7 @@ Before finally installing Haiku, you need to partition the virtual hard drive. O
 
 ![Haiku installer](/files/guides/virtualizing/vmware-esxi/haiku-installer.png)
 
-Firstly, init the hard drive with the Intel Partition map (otherwise known as MBR/dos).
+Firstly, init the hard drive with the Intel Partition map (otherwise known as MBR/dos). Remember to set the active flag, otherwise Haiku won't boot.
 
 ![Haiku partitioner - partition init](/files/guides/virtualizing/vmware-esxi/haiku-hd-init.png)
 
