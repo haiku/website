@@ -9,9 +9,7 @@ Virtualizing an operating system might be a good way to give it a test run, or t
 
 This guide assumes that you've already downloaded ESXi from VMWare's website and installed it on your machine. I take no responsibility for any data loss you might encounter during the process and/or the tutorial.
 
-## Installing Haiku from an Anyboot image
-
-1. Creating a virtual machine
+## Creating a virtual machine
 
 On the main ESXi screen, choose `Create/Register VM`, then choose `Create a new virtual machine` in the Select creation type window. In Select a name and guest OS, choose `Other` and `Other (64-bit)` as the Guest OS, the VM type can be left at default.
 
@@ -37,7 +35,7 @@ After completing the wizard, move to the Virtual Machines list. Your Haiku machi
 
 ![Fatal](/files/guides/virtualizing/vmware-esxi/fatal-hd.png)
 
-2. Installing VMRC
+## Installing VMRC
 
 If you finally see the desktop, but the mouse seems frozen, fear you not. For some reason, ESXi's web console fails to interface with Haiku's mouse, so to actually use Haiku, a standalone remote desktop application is needed. Download [VMWare Remote Console (VMRC)](https://my.vmware.com/web/vmware/details?downloadGroup=VMRC1100&productId=742&rct=j) from VMWare's website.
 
@@ -53,13 +51,13 @@ After installing VMRC, select the VM from the list, press the `Actions` button, 
 
 Right away, VMRC will complain about an invalid security certificate, but you can just ignore it and press `Connect Anyway`. If everything goes smoothly, the machine should be fully accessible.
 
-3. Installing Haiku
+## Installing Haiku
 
 Before finally installing Haiku, you need to partition the virtual hard drive. Open the Haiku Installer and click on `Set up partitions…`.
 
 ![Haiku installer](/files/guides/virtualizing/vmware-esxi/haiku-installer.png)
 
-Firstly, init the hard drive with the Intel Partition map (otherwise known as MBR/dos).
+Firstly, init the hard drive with the Intel Partition map (otherwise known as MBR/dos). Remember to set the active flag, otherwise Haiku won't boot.
 
 ![Haiku partitioner - partition init](/files/guides/virtualizing/vmware-esxi/haiku-hd-init.png)
 
