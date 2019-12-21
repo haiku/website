@@ -1,7 +1,7 @@
 +++
 type = "article"
 title = "Setting up Haiku in Vultr"
-date = ""
+date = "2019-12-21T19:04:00.000Z"
 tags = []
 +++
 
