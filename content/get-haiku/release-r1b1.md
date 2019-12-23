@@ -24,6 +24,8 @@ You can order the <i>32bit version</i> of Haiku as an installation DVD. Please r
 
 ### Download a Haiku Image
 
+Actually, you download a ZIP archive that you'll have to unpack to get a ReadMe text file and the Haiku image.
+
 These are `anyboot` images. They can be written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>, empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.<br />
 The images can be used "live" or used to install Haiku to another disk/partition of your choice.<br />
 They can also be used directly from QEMU or installed in a <a href="/guides/virtualizing">virtual machine</a>.
