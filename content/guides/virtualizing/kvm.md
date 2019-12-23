@@ -78,12 +78,10 @@ The VM will now start and boot the Haiku image. You can choose to install Haiku 
 
 ### Troubleshooting <a name="part_trouble"></a>
 
-##### Unable to complete install
-
 After finishing the installation of your VM, if you run into an error that says **``Unable to complete install: network default is not active``** or something along those lines, make sure that `libvirtd` is running by entering ``sudo systemctl start libvirtd`` in terminal.
 If the error still occurs do the following steps:
 
-1. Check if you have the network defined by running:
+##### Step 1. Check if you have the network defined by running:
 
 ```sh
 sudo virsh net-list --all
@@ -96,7 +94,7 @@ Name                 State      Autostart     Persistent
 ----------------------------------------------------------
 ```
 
-2. Create the ``'default'`` network by copy-pasting the following lines into a file called ``default.xml``, which can be found in the ``libvirt`` directory.
+##### Step 2. Create the ``'default'`` network by copy-pasting the following lines into a file called ``default.xml``, which can be found in the ``libvirt`` directory.
 
 ```sh
 <network>
@@ -119,7 +117,7 @@ Now, to add that network permanently to our KVM host, run the following:
 sudo virsh net-define --file default.xml
 ```
 
-3. To manually start the network, run:
+##### Step 3. To manually start the network, run:
 
 ```sh
 sudo virsh net-start default
