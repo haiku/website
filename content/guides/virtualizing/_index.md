@@ -37,5 +37,6 @@ With regard to performance, you should make sure that the virtualization options
 </ul>
 <h3>Cloud providers</h3>
 <ul>
+    <li><a href="/guides/virtualizing/digitalocean">DigitalOcean</a></li>
     <li><a href="/guides/virtualizing/vultr">Vultr</a></li>
 </ul>
