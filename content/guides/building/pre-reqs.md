@@ -40,12 +40,12 @@ Note that in addition to all the platform-specific packages, you will also need 
 | Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
 
 <a name="pkgman"></a>
-## ![pkgman](/files/os-icons/ubuntu-32.png) pkgman
+## ![pkgman](/files/os-icons/package-32.png) pkgman (Haiku package system)
 
 **Basic requirements:**
 
 ```sh
-pkgman install mtools python3
+pkgman install mtools python3 cmd:xorriso
 ```
 
 **Additional requirements for ARM:**
@@ -53,8 +53,6 @@ pkgman install mtools python3
 ```sh
 pkgman install dtc bc
 ```
-
-
 
 <a name="apt"></a>
 ## ![APT](/files/os-icons/ubuntu-32.png) APT (Linux distributions such as Debian, Ubuntu, Mint...)
