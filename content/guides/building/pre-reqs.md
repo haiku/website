@@ -187,7 +187,7 @@ a virtual machine and building from there.
 {{< alert-warning "Warning" "BeOS and Zeta are no longer maintained or supported.">}}
 
 <a name="solaris"></a>
-## ![cygwin](/files/os-icons/package-32.png) Solaris
+## ![solaris](/files/os-icons/package-32.png) Solaris
 
 {{< alert-warning "Warning" "Solaris is not maintained as a development environment. These instructions are dependent on community contributions.">}}
 
@@ -196,10 +196,9 @@ a virtual machine and building from there.
 # Linux remarks - xattr
 
 Building Haiku correctly currently requires proper xattr support on the file system you compile it with.
-Currently, your options are unfortunately rather limited, as for example, ext4 does not sufficiently support this feature.
-Recommended file systems to use under Linux are XFS, and ReiserFS at this time.
-
-There is a fallback mechanism that is used otherwise, but this is known to be problematic sometimes.
+Unfortunately, the ext4 filesystem often used with Linux does not provide sufficient support.
+It is recommended to use either XFS or btrfs for the partition where your generated directory is stored.
+There is a fallback mechanism that is used otherwise, but the build will be slower.
 
 In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : \--use-xattr](/guides/building/configure/use-xattr)
 
