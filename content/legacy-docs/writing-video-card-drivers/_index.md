@@ -22,9 +22,7 @@ part-time student<br />
             <li><a href="/legacy-docs/writing-video-card-drivers/01-introduction#1.4">About BeOS</a></li>
             <li><a href="/legacy-docs/writing-video-card-drivers/01-introduction#1.5">About Video Card Drivers</a></li>
         </ol>
-    </li><br />
-
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/02-beos-api">BeOS API Classes For Video Card Drivers</a></font>
         <ol>
             <li><a href="/legacy-docs/writing-video-card-drivers/02-beos-api#2.1">BScreen (Interface Kit)</a></li>
@@ -34,9 +32,7 @@ part-time student<br />
             <li><a href="/legacy-docs/writing-video-card-drivers/02-beos-api#2.5">Classes For Hardware Overlay: BView (Interface Kit)</a></li>
             <li><a href="/legacy-docs/writing-video-card-drivers/02-beos-api#2.6">Conclusion</a></li>
         </ol>
-    </li><br />
-
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver">Kernel Driver</a></font>
         <ol>
             <li><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1">Interface To The OS</a>
@@ -47,8 +43,7 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1.4">uninit_driver()</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.1.5">find_device()</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.2">Interface To The User</a>
                 <ol>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.2.1">open_hook()</a></font></li>
@@ -58,13 +53,10 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.2.5">read_hook()</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.2.6">write_hook()</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/03-kernel-driver#3.3">Conclusion</a></li>
         </ol>
-    </li><br />
-
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/04-accelerant">Accelerant</a></font>
         <ol>
             <li><a href="/legacy-docs/writing-video-card-drivers/04-accelerant#4.1">The Hooks Of The Accelerant</a>
@@ -87,13 +79,10 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/04-accelerant#4.1.15">2D Accelerant Functions</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/04-accelerant#4.1.16">Hardware Overlay Functions</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/04-accelerant#4.2">Conclusion</a></li>
         </ol>
-    </li><br />
-
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/05-flags">Flags</a></font>
         <ol>
             <li><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.1">Flags For User Overlay</a>
@@ -105,8 +94,7 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.1.5">B_OVERLAY_FILTER_HORIZONTAL</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.1.6">B_OVERLAY_FILTER_VERTICAL</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.2">Flags For Mode Setup: Mode Flags</a>
                 <ol>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.2.1">B_SUPPORTS_OVERLAYS</a></font></li>
@@ -117,8 +105,7 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.2.6">B_DPMS</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.2.7">B_SCROLL</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.3">Flags For Mode Setup: Mode Timing Flags</a>
                 <ol>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.3.1">B_BLANK_PEDESTAL</a></font></li>
@@ -127,13 +114,10 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.3.4">B_POSITIVE_HSYNC &amp; 
                                                                        B_POSITIVE_VSYNC</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/05-flags#5.4">Conclusion</a></li>
         </ol>
-    </li><br />
-
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver">Writing The Driver</a></font>
         <ol>
             <li><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.1">Action Plan</a>
@@ -168,21 +152,17 @@ part-time student<br />
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.1.15">Step 14: Cold Start Of The 
                                                                                      Video Card</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.2">Testing The Driver</a>
                 <ol>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.2.1">Kernel Driver</a></font></li>
                     <li><font size="-1"><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.2.2">Accelerant</a></font></li>
                 </ol>
-            </li><br />
-
+            </li>
             <li><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.3">Stability</a></li>
             <li><a href="/legacy-docs/writing-video-card-drivers/06-writing-the-driver#6.4">Conclusion</a></li>
         </ol>
-    </li><br />
-
-
+    </li>
     <li><font size="+1"><a href="/legacy-docs/writing-video-card-drivers/07-conclusion">Conclusion</a></font></li>
 </ol>
 </p>
