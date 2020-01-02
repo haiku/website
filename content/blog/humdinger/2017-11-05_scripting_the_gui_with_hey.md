@@ -155,8 +155,8 @@ But as you see, that only un-draws the checkmark - it doesn't actually run the c
 Sometimes that might be enough if you only want to take a screenshot of the window. But in this case, actually unselecting the checkbox should also disable the checkboxes below. And of course hide the clock in the Deskbar.
 
 We have to actually send the BMessage that will trigger all that. For this, we again need to look through the code.
-The BMessages for a view arrive at its MessageReceived() function, in our case in [ClockView.cpp](http://cgit.haiku-os.org/haiku/tree/src/preferences/time/ClockView.cpp#n151). We see the BMessage's 'what' field's matching constant 'kShowHideTime'. Now we just need to find the actual value of that constant and do so in [TimeMessages.h](http://xref.plausible.coop/source/xref/haiku/src/preferences/time/TimeMessages.h#53): 'ShTm'
-[OpenGrok](http://xref.plausible.coop/source/) is very useful for these things.
+The BMessages for a view arrive at its MessageReceived() function, in our case in [ClockView.cpp](http://cgit.haiku-os.org/haiku/tree/src/preferences/time/ClockView.cpp#n151). We see the BMessage's 'what' field's matching constant 'kShowHideTime'. Now we just need to find the actual value of that constant and do so in [TimeMessages.h](https://xref.landonf.org/source/xref/haiku/src/preferences/time/TimeMessages.h#53): 'ShTm'
+[OpenGrok](https://xref.landonf.org/source/) is very useful for these things.
 Now everything becomes even much easier:
 
     hey -o Time 'ShTm'
