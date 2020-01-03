@@ -85,7 +85,8 @@ sudo yum install ec2-ami-tools.noarch.rpm
 
 We're nearly done! All we need is to store our credentials in variables, since we will use them multiple times across the rest of the tutorial.
 
-For convenience, we will set our [AWS Security Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html) as two variables; `AWS_KEY` M
+For convenience, we will set our [AWS Security Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html) as two variables; `AWS_KEY`
+
 ```sh
 export AWS_KEY="<YOUR AWS KEY>"
 export AWS_SEC="<YOUR AWS SECRET>"
@@ -145,7 +146,7 @@ ec2-register \
    --architecture x86_64 \
    --root-device-name /dev/sda1 \
    --virtualization-type hvm \
-   --snapshot vol-XXXXXXXXXX
+   --snapshot snap-XXXXXXXXXX
 ```
 
 ### Deploying the AMI on the AWS platform <a name="part_deployment">
