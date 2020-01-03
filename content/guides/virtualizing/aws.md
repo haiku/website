@@ -123,7 +123,7 @@ Before proceeding any further, we will go over some of the parameters which you 
 
 ##### Creating the AMI
 
-Now that we have uploaded our image, we can now proceed with making a snapshot.
+Now that we have uploaded our image, we can now proceed with making a snapshot:
 
 ```sh
 ec2-create-snapshot \
@@ -149,6 +149,6 @@ ec2-register \
 
 ### Deploying the AMI on the AWS platform <a name="part_deployment">
 
-After creating the AMI, it will appear in the `AMIs` section of the AWS Explorer. We can now launch an instance of the AMI by clicking on the `My AMIs` tab and selecting your newly made Haiku AMI.
+Your new AMI should now appear in the `AMIs` section of the AWS Explorer. We can now launch an instance of the AMI by clicking on the `My AMIs` tab and selecting your newly made Haiku AMI.
 
 If it hasn't appeared yet, then you may have to wait for a bit longer or click `Refresh`.
