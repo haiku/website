@@ -15,7 +15,7 @@ Amazon Web Services (or, in short, AWS) is one of the most prominent cloud compu
 * [Preparing the AMI](#part_ami)
 * [Deploying the AMI on the AWS platform](#part_deployment)
 
-### Preparing for this tutorial <a name="part_prepare">
+### Preparing for this tutorial <a name="part_prepare"></a>
 
 Disk files represent physical devices but in the form of a file. During the preparation phase, we will need to download a Haiku image file from [here](https://www.haiku-os.org/get-haiku). Then, we will have to use [VirtualBox](https://www.virtualbox.org/) in order to create a disk image that can be later converted into an AMI image file.
 
@@ -23,7 +23,7 @@ If you're not familiar with this process, use the **[Virtualizing Haiku in Virtu
 
 From the perspective of the operating system, disk images can be compared to physical hard drives and other forms of storage. Therefore, it should be noted that while creating your virtual machine in VirtualBox, you should ensure that the disk space that was allocated to the drive does not cross your quota on the AWS platform in order to avoid any unnecessary charges.
 
-### Preparing the virtual disk image <a name="part_prepare">
+### Preparing the virtual disk image <a name="part_prepare"></a>
 
 ##### Spotting the virtual disk image
 
@@ -55,7 +55,7 @@ Replace `<YOUR USERNAME>` with your username.
 vboxmanage clonehd <source path of the .vdh file> <destination path of the .vhd file> --format VHD
 ```
 
-### Preparing the environment <a name="part_environment">
+### Preparing the environment <a name="part_environment"></a>
 
 Now that we have successfully extracted the `.vdi` file, we will need to convert it into an AMI image. Fortunately for us, Amazon provides tools that are designed for this operation.
 
@@ -94,7 +94,7 @@ export AWS_SEC="<YOUR AWS SECRET>"
 
 Make sure to replace `<YOUR AWS KEY>` and `<YOUR AWS SECRET>` with your actual AWS key and secret.
 
-### Preparing the AMI <a name="part_ami">
+### Preparing the AMI <a name="part_ami"></a>
 
 ##### Uploading the disk image
 
@@ -149,7 +149,7 @@ ec2-register \
    --snapshot snap-XXXXXXXXXX
 ```
 
-### Deploying the AMI on the AWS platform <a name="part_deployment">
+### Deploying the AMI on the AWS platform <a name="part_deployment"></a>
 
 Your new AMI should now appear in the `AMIs` section of the AWS Explorer. We can now launch an instance of the AMI by clicking on the `My AMIs` tab and selecting your newly made Haiku AMI.
 
