@@ -85,14 +85,13 @@ sudo yum install ec2-ami-tools.noarch.rpm
 
 We're nearly done! All we need is to store our credentials in variables, since we will use them multiple times across the rest of the tutorial.
 
-For convenience, we will set our [AWS Security Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html) as two variables; `AWS_KEY` and `AWS_SEC`.
-
+For convenience, we will set our [AWS Security Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html) as two variables; `AWS_KEY` M
 ```sh
 export AWS_KEY="<YOUR AWS KEY>"
 export AWS_SEC="<YOUR AWS SECRET>"
 ```
 
-Once again, make sure to replace the two placeholders in between of the `<>`'s with your credentials.
+Make sure to replace `<YOUR AWS KEY>` and `<YOUR AWS SECRET>` with your actual AWS key and secret.
 
 ### Preparing the AMI <a name="part_ami">
 
@@ -130,8 +129,10 @@ ec2-create-snapshot \
    --aws-access-key $AWS_KEY \
    --aws-secret-key $AWS_SEC \
    --region us-east-1 \
-   haiku-folder
+   vol-XXXXXXXXXX
 ```
+
+`vol-XXXXXXXXXX` stands for the volume that is going to be used for the snapshot. You can learn more about Amazon EBS Volumes [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volumes.html). 
 
 Snapshots are particularly useful in our case, because we can make an AMI out of it:
 
@@ -144,7 +145,7 @@ ec2-register \
    --architecture x86_64 \
    --root-device-name /dev/sda1 \
    --virtualization-type hvm \
-   --snapshot haiku
+   --snapshot vol-XXXXXXXXXX
 ```
 
 ### Deploying the AMI on the AWS platform <a name="part_deployment">
