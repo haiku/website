@@ -150,7 +150,7 @@ You should also change the screen resolution, but not larger than the host's, el
 ## Part 3. Known issues <a name = "part_issues"></a>
 ### 1. QEMU will not start after pressing the "Start machine" button
 This is a known issue in Windows 10, as mentioned above, it may be related to HAXM. Read more [here](https://gitlab.com/qtemu/gui/issues/28).
-### 2. Network does not start.
+### 2. Network does not start
 Try enabling User Mode Network Connection in Machine Preferences. If that does not work, re-installing Haiku may help.
 
 ![QtEmuIssueNetwork](/files/guides/virtualizing/qemu/18_QtEmu_issue_network.png)
