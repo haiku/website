@@ -91,7 +91,7 @@ The next thing to do is to set the amount of RAM allocated for your VM. The reco
 ![QtEmuNewRAM](/files/guides/virtualizing/qemu/08_QtEmu_new_RAM.png)
 
 #### 6. Machine virtual hard disk
-Finally, we need to allocate space for the virtual disk. Select "Create a new virtual hard disk, then press "Next".
+Finally, we need to allocate space for the virtual disk. Select "Create a new virtual hard disk", then press "Next".
 
 ![QtEmuNewDisk](/files/guides/virtualizing/qemu/09_QtEmu_new_disk.png)
 
