@@ -38,7 +38,7 @@ The "QEMU binaries path" is the folder where you installed QEMU, which is usuall
 
 The "QtEmu img path" is the path to `qemu-img.exe`, which is in the folder where you installed QEMU.
 
-"QEMU machines path" is the path where your virtual machines are stored. It is recommended that you should place this folder in a separate drive from your OS, so that QtEmu can create large disk images for your Virtual Machines.
+"QEMU machines path" is the path where your virtual machines are stored. It is recommended that you should place this folder on a separate drive from your OS, so that QtEmu can create large disk images for your Virtual Machines.
 
 ## Part 2: Installing and running Haiku from an ISO image <a name="part_iso"></a>
 ### Step 1. Creating a virtual machine
