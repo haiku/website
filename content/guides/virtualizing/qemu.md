@@ -49,7 +49,7 @@ Start QtEmu, then click on the "New Machine" icon (or go to `Machine -> New Mach
 ![QtEmuGUINewMachine](/files/guides/virtualizing/qemu/02_QtEmu_GUI_New_Machine.png)
 
 #### 1. Machine name and operating system
-In this dialog, we need to give our machine a name, as well as specify the operating system that we are going to install. This allow QEMU optimize its machine for some popular OSes, and also to distinguish from your other VMs. As Haiku is not included in the list, we will choose "Other". Once you've finished, click on "Next".
+In this dialog, we need to give our machine a name, as well as specify the operating system that we are going to install. This allows QEMU to optimize its machine for some popular OSes, and also to distinguish from your other VMs. As Haiku is not included in the list, we will choose "Other". Once you've finished, click on "Next".
 
 ![QtEmuNewOsType](/files/guides/virtualizing/qemu/03_QtEMU_new_os_type.png)
 
