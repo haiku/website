@@ -26,7 +26,7 @@ After downloading the latest version of QEMU from the link mentioned above, open
 ### Step 2. Installing QtEmu
 [QtEmu](https://gitlab.com/qtemu/gui) is an open source GUI front-end for QEMU.
 
-After downloading the installer from the link above, run the setup and follow the instructions. The setup normally finishes in 2 minutes.
+After downloading the installer from the link above, run the setup and follow the instructions. This normally takes around 2 minutes.
 
 The QtEmu icon should now appear on the Start Menu.
 ### Step 3. Configuring QtEmu for QEMU
