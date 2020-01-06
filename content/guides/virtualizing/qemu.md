@@ -1,7 +1,7 @@
 +++
 type = "article"
 title = "Virtualizing Haiku in QEMU "
-date = "2020-04-01T16:46:57.000Z"
+date = "2020-01-06T08:33:48.000Z"
 tags = []
 +++
 
@@ -18,8 +18,7 @@ In this guide, we will use [QtEmu](https://gitlab.com/qtemu/gui), an open source
 ##### Go to section:
 *	[Setting up QEMU and QtEmu](#part_setup)
 *   [Installing and running Haiku from an ISO image](#part_iso)
-*   [Additional Steps](#part_additional)
-*   [Troubleshooting](#part_trouble)
+*   [Troubleshooting](#part_issues)
 
 ## Part 1: Setting up QEMU and QtEmu <a name="part_setup"></a>
 ### Step 1. Installing QEMU
@@ -33,7 +32,7 @@ The QtEmu icon should now appear on the Start Menu.
 ### Step 3. Configuring QtEmu for QEMU
 During the first run of QtEmu, you will have to configure the paths to QtEmu in order for it to run properly.
 
-![QtEmuFirstRunDialog]()
+![QtEmuFirstRunDialog](/files/guides/virtualizing/qemu/01_QtEmu_first_run_dialog.png)
 
 The QEMU binaries path is the folder where you installed QEMU, which is usually `C:\Program Files\QEMU` or `C:\Program Files (x86)\QEMU`.
 
@@ -48,19 +47,19 @@ When the .ISO image is ready, we can begin to create a new virtual machine.
 
 Start QtEmu, then click on the "New Machine" icon (or go to `Machine -> New Machine`).
 
-![QtEmuGUINewMachine]()
+![QtEmuGUINewMachine](/files/guides/virtualizing/qemu/02_QtEmu_GUI_New_Machine.png)
 
 In this dialog, we need to give our machine a name, as well as specify the operating system that we are going to install. This allow QEMU optimize its machine for some popular OSes, and also to distinguish from your other VMs. As Haiku is not included in the list, we will choose "Other". Once you've finished, click on "Next".
 
-![QtEmuNewOsType]()
+![QtEmuNewOsType](/files/guides/virtualizing/qemu/03_QtEMU_new_os_type.png)
 
 You can choose your virtual PC type on this screen. If you don't know what to select, just stick to the default and click "Next".
 
-![QtEmuNewPcType]()
+![QtEmuNewPcType](/files/guides/virtualizing/qemu/04_QtEmu_new_pc_type.png)
 
 The next step is to configure the machine hardware:
 
-![QtEmuNewHardware]()
+![QtEmuNewHardware](/files/guides/virtualizing/qemu/05_QtEmu_new_hardware.png)
 
 The processors must be configured in order to let QEMU and Haiku run properly. Some virtual CPUs can work on some machines, but give errors on others. The recommended option here is "Intel Core 2 Duo".
 
@@ -74,25 +73,27 @@ When you're finished, press "Next".
 
 Then, choose your Machine Accelerator here. HAXM is enabled by default, as it makes virtualization faster. However, this cause [bugs](https://gitlab.com/qtemu/gui/issues/28#note_244603038) in many machines. If HAXM is installed in your PC, you can press "Next" and move on.
 
-![QtEmuNewAccelerator]()
+![QtEmuNewAccelerator](/files/guides/virtualizing/qemu/06_QtEmu_new_accelerator.png)
 
 But if it is not, or if you are unsure, uncheck the HAXM option, then move to the TCG tab, and enable TCG here.
 
-![QtEmuNewAcceleratorTCG]()
+![QtEmuNewAcceleratorTCG](/files/guides/virtualizing/qemu/07_QtEmu_new_accelerator_TCG.png)
 
 The next thing to do is to set the amount of RAM allocated for your VM. The recommended amount is 3GB (as WebPositive alone can take 1GB of memory), but not more than half of your available RAM.
 
-![QtEmuNewRAM]()
+![QtEmuNewRAM](/files/guides/virtualizing/qemu/08_QtEmu_new_RAM.png)
 
 Finally, we need to allocate space for the virtual disk. Select "Create a new virtual hard disk, then press "Next".
 
-![QtEmuNewDisk]()
+![QtEmuNewDisk](/files/guides/virtualizing/qemu/09_QtEmu_new_disk.png)
 
 8GB of disk space is recommended for Haiku. Also, for portability, you can select the raw image type or VMWare disk image type (.vmdk).
 
+![QtEmuNewDiskSize](/files/guides/virtualizing/qemu/10_QtEmu_new_disk_size.png)
+
 When you're done, your summary should look like this:
 
-![QtEmuNewSummary]()
+![QtEmuNewSummary](/files/guides/virtualizing/qemu/11_QtEmu_new_summary.png)
 
 Press Finish to finish setup.
 
@@ -100,22 +101,22 @@ Press Finish to finish setup.
 We're done with the hardware, but like in a real computer, you need to insert the Haiku setup CD to boot from the installation disk. Do this by clicking on the "Machine Settings" icon (or going to `Machine -> Machine Settings`)
 
 
-![QtEmuGUISettings]()
+![QtEmuGUISettings](/files/guides/virtualizing/qemu/12_QtEmu_GUI_settings.png)
 
 In the new dialog box, navigate to "Media", press on the "Add Optical Media" icon.
 
-![QtEmuSettingsMedia]()
+![QtEmuSettingsMedia](/files/guides/virtualizing/qemu/13_QtEmu_settings_media.png)
 
 Then, navigate to the .ISO image that you have downloaded.
 
-![QtEmuSettingsImage]()
+![QtEmuSettingsImage](/files/guides/virtualizing/qemu/14_QtEmu_settings_image.png)
 
 Press "Save" to finish configuring.
 
 ### Step 3. Installing Haiku
 Ok, our new machine is now ready to run! Press the "Start" icon to begin.
 
-![QtEmuGUIStart]()
+![QtEmuGUIStart](/files/guides/virtualizing/qemu/15_QtEmu_GUI_start.png)
 
 The VM should boot from the CD, and Haiku's installer should open.
 
@@ -123,7 +124,7 @@ Follow [this guide](https://www.haiku-os.org/get-haiku/installation-guide) if yo
 
 In the DriveSetup page, two volumes should appear. The drive at port 0 should be our virtual hard drive. Press `Disk -> Initialize` to initialize it. You can choose either "Intel Partition Map" or "GUID Partition Map", but the latter is better, and is supported by Haiku.
 
-![QtEmuDriveSetup]()
+![QtEmuDriveSetup](/files/guides/virtualizing/qemu/16_QtEmu_install_drivesetup.png)
 
 Once you have Initialized the disk, follow [the installation guide](https://www.haiku-os.org/get-haiku/installation-guide) to initialize the drive. After that, close the DriveSetup window to continue.
 
@@ -131,16 +132,16 @@ The installation should finish in less than 5 minutes. When you're done, click o
 
 Here is a screenshot of Haiku on QEMU:
 
-![QtEmuHaikuDesktop]()
+![QtEmuHaikuDesktop](/files/guides/virtualizing/qemu/17_QtEmu_Haiku_desktop.png)
 
 
 To let Haiku run fullscreen, press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F</kbd>.
 You should also change the screen resolution, but not larger than the host's, else QEMU will produce bugs.
 
-## Part 3. Known issues
+## Part 3. Known issues <a name = "part_issues"></a>
 ### 1. QEMU will not start after pressing the "Start machine" button
 This is a known issue in Windows 10, as mentioned above, it may be related to HAXM. Read more [here](https://gitlab.com/qtemu/gui/issues/28#note_244603038).
 ### 2. Network does not start.
 Try enabling User Mode Network Connection in Machine Preferences. If that does not work, re-installing Haiku may help.
 
-![QtEmuIssueNetwork]()
+![QtEmuIssueNetwork](/files/guides/virtualizing/qemu/18_QtEmu_issue_network.pngWW)
