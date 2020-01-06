@@ -86,7 +86,7 @@ But if it is not, or if you are unsure, uncheck the HAXM option, then move to th
 ![QtEmuNewAcceleratorTCG](/files/guides/virtualizing/qemu/07_QtEmu_new_accelerator_TCG.png)
 
 #### 5. Machine memory
-The next thing to do is to set the amount of RAM allocated for your VM. The recommended amount is 3GB (as WebPositive alone can take 1GB of memory), but not more than half of your available RAM.
+Next you set the amount of RAM allocated for your VM. The recommended amount is 3GB (as WebPositive alone can take 1GB of memory), but not more than half of your available RAM.
 
 ![QtEmuNewRAM](/files/guides/virtualizing/qemu/08_QtEmu_new_RAM.png)
 
