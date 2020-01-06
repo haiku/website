@@ -1,7 +1,7 @@
 +++
 type = "article"
 title = "Virtualizing Haiku in QEMU "
-date = "2020-01-06T10:55:48.000Z"
+date = "2020-01-06T21:49:28.000Z"
 tags = []
 +++
 
@@ -18,7 +18,7 @@ In this guide, we will use [QtEmu](https://gitlab.com/qtemu/gui), an open source
 ##### Go to section:
 *	[Setting up QEMU and QtEmu](#part_setup)
 *   [Installing and running Haiku from an ISO image](#part_iso)
-*   [Troubleshooting](#part_issues)
+*   [Known issues](#part_issues)
 
 ## Part 1: Setting up QEMU and QtEmu <a name="part_setup"></a>
 ### Step 1. Installing QEMU
