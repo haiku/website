@@ -104,7 +104,7 @@ When you're done, your summary should look like this:
 
 ![QtEmuNewSummary](/files/guides/virtualizing/qemu/11_QtEmu_new_summary.png)
 
-Press Finish to finish setup.
+Press "Finish" to finish setup.
 
 ### Step 2. Configuring Haiku boot image
 We're done with the hardware, but like in a real computer, you need to insert the Haiku setup CD to boot from the installation disk. Do this by clicking on the "Machine Settings" icon (or going to `Machine -> Machine Settings`)
