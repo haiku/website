@@ -5,7 +5,7 @@ date = "2019-12-21"
 tags = []
 +++
 
-For Google Code In 2017, Arnav Bhatt created a [video on how to install Haiku in KVM](http://haiku-files.org/files/media/GCI-2017_KVM_Arnav-Bhatt.mkv) [2 MiB].
+For Google Code In 2019, Vrondir created a [video on how to install Haiku in KVM](http://haiku-files.org/files/media/GCI-2019_KVM_Vrondir.mp4) [79 MiB].
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
