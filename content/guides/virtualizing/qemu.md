@@ -135,7 +135,7 @@ In the DriveSetup page, two volumes should appear. The drive at port 0 should be
 
 ![QtEmuDriveSetup](/files/guides/virtualizing/qemu/16_QtEmu_install_drivesetup.png)
 
-Once you have Initialized the disk, follow [the installation guide](https://www.haiku-os.org/get-haiku/installation-guide) to initialize the drive. After that, close the DriveSetup window to continue.
+Once you have initialized the disk, follow [the installation guide](https://www.haiku-os.org/get-haiku/installation-guide) to format the partition. After that, close the DriveSetup window to continue.
 
 The installation should finish in less than 5 minutes. When you're done, click on "Restart" to restart your VM.
 
