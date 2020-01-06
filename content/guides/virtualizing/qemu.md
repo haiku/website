@@ -81,7 +81,7 @@ Then, choose your Machine Accelerator here. HAXM is enabled by default, as speed
 
 ![QtEmuNewAccelerator](/files/guides/virtualizing/qemu/06_QtEmu_new_accelerator.png)
 
-But if it is not, or if you are unsure, uncheck the HAXM option, then move to the TCG tab, and enable TCG here.
+But if it is not, or if you are unsure, uncheck the HAXM option, then move to the TCG tab, and enable TCG.
 
 ![QtEmuNewAcceleratorTCG](/files/guides/virtualizing/qemu/07_QtEmu_new_accelerator_TCG.png)
 
