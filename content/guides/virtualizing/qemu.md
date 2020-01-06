@@ -7,7 +7,7 @@ tags = []
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-This How-To guide will describe the process of running Haiku on virtual machine (VM) using QEMU 4.1.0 and an .ISO image file, with a Windows 10 host.
+This How-To guide will describe the process of running Haiku in a virtual machine (VM) using QEMU 4.1.0 and an .ISO image file, with a Windows 10 host.
 
 The latest .ISO image can be obtained [here](https://www.haiku-os.org/get-haiku/).
 
