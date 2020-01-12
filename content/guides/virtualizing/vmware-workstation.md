@@ -5,7 +5,7 @@ date = "2016-12-22T18:11:53.000Z"
 tags = []
 +++
 
-For Google Code In 2019, Zotyamester created a [video on how to install Haiku in VMware Workstation](http://haiku-files.org/files/media/GCI-2019_VMware-Workstation_Zotyamester.mp4) [59 MiB]. From GCI 2017, there's a video by Max Levchuk for [VMware ESXi](http://haiku-files.org/files/media/GCI-2017_VmWare-esxi_Max-Levchuk.mkv) [5 MiB].
+For Google Code In 2019, Zotyamester created a [video on how to install Haiku in VMware Workstation](http://haiku-files.org/files/media/GCI-2019_VMware-Workstation_Zotyamester.mp4) [59 MiB].
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
