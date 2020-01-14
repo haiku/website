@@ -528,6 +528,8 @@ BView* view(NULL);
 
 While the following tools still miss some issues and sometimes report false positives, they are most of the time correct and help to spot the most common issues. Those are still in development and improvements are of course welcomed.
 
+*	[haiku-format](https://github.com/owenca/haiku-format) is a clang-format based automatic code formatter.
+
 *   checkstyle.py is a stand-alone python program (found in the Haiku source tree in src/tools/checkstyle/). It reports style problems on the standard output and also generates an easy to read highlighted html report. Example:
 
     <pre>python src/tools/checkstyle/checkstyle.py src/apps/deskcalc</pre>
