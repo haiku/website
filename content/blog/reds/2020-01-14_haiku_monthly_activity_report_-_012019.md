@@ -2,7 +2,7 @@
 type = "blog"
 title = "Haiku monthly activity report - 12/2019"
 author = "reds"
-date = "2020-01-15 20:17:00+00:00"
+date = "2020-01-16 22:10:00+00:00"
 tags = ["haiku", "software"]
 +++
 
@@ -13,24 +13,25 @@ On the non-coding side, GCI participants wrote new virtualization guides: always
 On the coding side, from around hrev53618 to hrev53714 Haiku had seen a lot of fixes and improvements, biggest of which are as always listed into arbitrary categories below...
 
 <h3>Terminal</h3>
-The Terminal app saw a lot of fixes during December. Jérôme Duval fixed the encoding problems with TermView scripting and Zoltán Szatmáry went on a coding spree - he fixed double freed memory while changing keymaps, a few window resize problems and a lot of other minor bugs.
+The Terminal app saw a lot of fixes during December. Jérôme Duval fixed the encoding problems with TermView scripting and Zoltán Szatmáry went on a coding spree - he fixed crashes caused by double freed memory in case of changing active keymaps, a few window resize problems and a few other minor issues.
 
 <h3>Interface</h3>
-The UI libraries saw a few fixes - X547 fixed focusing on windows with a special flag, flickering while drawing the background and transparency errors in the app_server.
+The UI libraries saw a few fixes - X547 fixed focusing on windows with a special flag, flickering while drawing the background caused by wrong window update order and transparency errors in the app_server.
 
-Kacper Kasper added new bitmap drawing routines.
+Kacper Kasper added new optimized bitmap drawing routines, which will be used in webkit for faster rendering of lines and tiled images.
 
 <h3>Game Kit</h3>
-Raheem Idowu rewrote the PushGameSound and WindowScreen headers, amongst other minor fixes.
+As a GCI task, R4H33M rewrote the PushGameSound and WindowScreen headers as they were copypasted from old BeOS code.
 
 <h3>Filesystem</h3>
-Pulkomandy fixed the resizefs command and added an allocation hint while moving inodes.
+Pulkomandy merged some code contributed by ahenriksson durign GSoC, which will one day allow for resizing BFS partitions.
 
 <h3>Various</h3>
 X547 fixed Haiku3D crashing on exit.
 
-Waddlesplash rewrote a part of math.h to use GCC built-in functions where possible, which in effect should make future application porting much easier.
+In an attempt to make Haiku's C library more modern, Waddlesplash rewrote a part of math.h to use GCC built-in functions.
 
-mmlr fixed FFmpeg's leaky input buffer.
+mmlr fixed FFmpeg's leaky input buffer if the file failed to load. This could've lead to leaking at least 32K of memory and potentially much more.
 
-<h3>are we in beta2 yet?</h3>
+<h3>Are we in beta2 yet?</h3>
+Not quite, but we're getting closer; A quick look on the <a href="https://dev.haiku-os.org/milestone/R1/beta2">bugtracker</a> reveals that there are at least 32 blocking issues left, and most of those are driver bugs. Probably the most nutorious one is the intel_extreme driver, which has problems on several machines with graphic chipsets ranging from the old GMA 9XX once popular in laptops and netbooks up to HD4400 from the Ivy Bridge generation of Intel CPUs. Other than that, there's a bug in XHCI preventing USB storage devices from being detected at boot time, which means that some motherboards are unable to boot Haiku from USB 3.0 onwards. Besides driver issues, net80211's code needs to be tidied up for better future compatibility with wpa_supplicant ported from FreeBSD. Lastly, all files that contain permission syscalls need to be audited, and new security checks need to be implemented.
