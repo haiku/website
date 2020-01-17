@@ -2,7 +2,7 @@
 type = "blog"
 title = "Haiku monthly activity report - 12/2019"
 author = "reds"
-date = "2020-01-16 22:10:00+00:00"
+date = "2020-01-17 13:00:00+00:00"
 tags = ["haiku", "software"]
 +++
 
@@ -34,4 +34,12 @@ In an attempt to make Haiku's C library more modern, Waddlesplash rewrote a part
 mmlr fixed FFmpeg's leaky input buffer in the case that the file failed to load. This could've lead to leaking at least 32K of memory and potentially much more, depending on how much FFmpeg has already allocated for that file. In a production environment, this could easily lead to memory exhaustion, which could lead to further system instability.
 
 <h3>Are we in beta2 yet?</h3>
-Not quite, but we're getting closer; A quick look on the <a href="https://dev.haiku-os.org/milestone/R1/beta2">bugtracker</a> reveals that there are at least 32 blocking issues left, and most of those are driver bugs. Probably the most nutorious one is the intel_extreme driver, which has problems on several machines with graphic chipsets ranging from the old GMA 9XX once popular in laptops and netbooks up to HD4400 from the Ivy Bridge generation of Intel CPUs. Other than that, there's a bug in XHCI preventing USB storage devices from being detected at boot time, which means that some motherboards are unable to boot Haiku from USB 3.0 onwards. Besides driver issues, net80211's code needs to be tidied up for better future compatibility with wpa_supplicant ported from FreeBSD. Lastly, all files that contain permission syscalls need to be audited, and new security checks need to be implemented.
+Not quite, but we're getting closer; A quick look on the <a href="https://dev.haiku-os.org/milestone/R1/beta2">bugtracker</a> reveals that there are at least 32 issues left with the beta2 tag, but only 3 of them are blocking issues.
+
+There's a bug in XHCI preventing USB storage devices from being detected at boot time, which means that some motherboards are unable to boot Haiku from USB 3.0 onwards.
+
+Besides that, net80211's code needs to be tidied up for better future compatibility with wpa_supplicant ported from FreeBSD.
+
+The last blocking issue is a regression in latest Haiku builds being unable to find its own partition on USB.
+
+From the non-blocking issues, the most notorious one is the intel_extreme driver, which has problems on several machines with graphics chipsets ranging from the old GMA 9XX once popular in laptops and netbooks up to HD4400 from the Ivy Bridge generation of Intel CPUs.  Lastly, all files that contain permission syscalls need to be audited, and new security checks need to be implemented.
