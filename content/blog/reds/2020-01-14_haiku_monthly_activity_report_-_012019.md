@@ -8,7 +8,7 @@ tags = ["haiku", "software"]
 
 Hello and welcome to the (almost) monthly activity report for December 2019! December wasn't the busiest for Haiku code-wise, but nonetheless we saw a lot of Google Code-In contributions. This year marks the 10th anniversary of GCI, in which Haiku has participated since the very beginning.
 
-On the non-coding side, GCI participants wrote new virtualization guides: alwayslivid wrote a guide on AWS and rewrote the old Xen one, trungnt2910 wrote a guide on qemu, and redsPL's (hey, that's me!) wrote guides on VMware ESXi and DigitalOcean. Other than that, Vrondir made a KVM tutorial video and Zotyamester made a VMware Workstation video.
+On the non-coding side, GCI participants wrote new virtualization guides: alwayslivid wrote a guide on AWS and rewrote the old Xen one, trungnt2910 wrote a guide on qemu, R4H33M wrote a guide on Vultr and redsPL's (hey, that's me!) wrote guides on VMware ESXi and DigitalOcean. Other than that, Vrondir made a KVM tutorial video and Zotyamester made a VMware Workstation video.
 
 On the coding side, from around hrev53618 to hrev53714 Haiku had seen a lot of fixes and improvements, biggest of which are as always listed into arbitrary categories below...
 
@@ -42,4 +42,6 @@ Besides that, net80211's code needs to be tidied up for better future compatibil
 
 The last blocking issue is a regression in latest Haiku builds being unable to find its own partition on USB.
 
-From the non-blocking issues, the most notorious one is the intel_extreme driver, which has problems on several machines with graphics chipsets ranging from the old GMA 9XX once popular in laptops and netbooks up to HD4400 from the Ivy Bridge generation of Intel CPUs.  Lastly, all files that contain permission syscalls need to be audited, and new security checks need to be implemented.
+From the non-blocking issues, the most notorious one is the intel_extreme driver, which has problems on several machines with graphics chipsets ranging from the old GMA 9XX once popular in laptops and netbooks up to HD4400 from the Ivy Bridge generation of Intel CPUs.
+
+Besides the driver, all files that contain permission syscalls need to be audited, and new security checks need to be implemented.
