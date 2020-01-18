@@ -28,7 +28,9 @@ git clone https://review.haiku-os.org/buildtools
 git clone https://review.haiku-os.org/haiku
 ```
 
-If you don't care about the commit history and want to keep the download small, try using the parameter `--depth` when cloning. `--depth 10` limits the history to the last 10 commits, for example.
+If you don't care about the commit history and want to keep the download small,
+try using the parameter `--depth` when cloning. `--depth 10` limits the history
+to the last 10 commits, for example.
 
 <a name="dev_access"></a>
 <h3>Git Access - Contributors and patch submitters</h3>
@@ -53,18 +55,18 @@ git config core.precomposeunicode true
 
 <h4>Build Tools:</h4>
 
-The `<login>@` is only needed if your currently logged in username doesn't match your `git.haiku-os.org` username.
+The `<login>@` is only needed if your currently logged in username doesn't match your `review.haiku-os.org` username.
 
 ```sh
-git clone ssh://<login>@git.haiku-os.org/buildtools
+git clone "ssh://<login>@git.haiku-os.org/buildtools" && scp -p <login>@git.haiku-os.org:hooks/commit-msg "buildtools/.git/hooks/"
 ```
 
 <h4>Haiku:</h4>
 
-The `<login>@` is only needed if your currently logged in username doesn't match your `git.haiku-os.org` username.
+The `<login>@` is only needed if your currently logged in username doesn't match your `review.haiku-os.org` username.
 
 ```sh
-git clone ssh://<login>@git.haiku-os.org/haiku
+git clone "ssh://<login>@git.haiku-os.org/haiku" && scp -p <login>@git.haiku-os.org:hooks/commit-msg "haiku/.git/hooks/"
 ```
 
 Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.
@@ -181,12 +183,15 @@ the message when you commit your changes.
 <h4>Pushing changes for review</h4>
 
 ```sh
-git push origin HEAD:refs/for/master
+git push origin HEAD:refs/for/master -o topic="something"
 ```
 
 After your changes are complete, the push command will push your local tree to the remote Haiku repository.
 The commits will be added to the review page and people will review them. You can them amend your commits
 and push them again, until they are reviewed and merged.
+
+It is recommended to set a topic, a single keyword that can easily be searched
+for in the web interface and help categorize commits.
 
 Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
 overview of the process.
