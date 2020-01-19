@@ -5,7 +5,9 @@ date = "2015-10-10T15:40:25.000Z"
 tags = ["compiling"]
 +++
 
-Building Haiku from sources is a surprisingly simple process which allows developers to get started quickly developing on Haiku and allowing end users to experiment with the latest Haiku sources.
+Building Haiku from sources is a surprisingly simple process which allows
+developers to get started quickly developing on Haiku and allowing end users to
+experiment with the latest Haiku sources.
 
 ## Basics
 
@@ -17,6 +19,7 @@ Building Haiku from sources is a surprisingly simple process which allows develo
   * [for x86_64](/guides/building/compiling-x86_64)
   * [for ARM](/guides/building/compiling-arm)
   * [for PowerPC](/guides/building/compiling-powerpc)
+  * [for sparc](/guides/building/compiling-sparc)
 
 ## Additional Resources
 
