@@ -16,7 +16,7 @@ On the coding side, from around hrev53618 to hrev53714 Haiku had seen a lot of f
 The Terminal app saw a lot of fixes during December. Jérôme Duval fixed the encoding problems with TermView scripting and Zoltán Szatmáry went on a coding spree - he fixed crashes caused by double freed memory in case of changing active keymaps, a few window resize problems and a few other minor issues.
 
 <h3>Interface</h3>
-The UI libraries saw a few fixes - X547 fixed focusing on windows with a special flag, flickering while drawing the background caused by wrong window update order and transparency errors in the app_server.
+The UI libraries saw a few fixes - X512 fixed focusing on windows with a special flag, flickering while drawing the background caused by wrong window update order and transparency errors in the app_server.
 
 Kacper Kasper added new optimized bitmap drawing routines, which will be used in webkit for faster rendering of lines and tiled images.
 
@@ -27,7 +27,7 @@ As a GCI task, R4H33M had rewritten the PushGameSound and WindowScreen headers a
 Pulkomandy merged some code contributed by ahenriksson durign GSoC, which will one day allow for resizing BFS partitions.
 
 <h3>Various</h3>
-X547 fixed Haiku3D crashing on exit by moving the cleanup code to another class.
+X512 fixed Haiku3D crashing on exit by moving the cleanup code to another class.
 
 In an attempt to make Haiku's C library more modern, Waddlesplash rewrote a part of math.h to use GCC built-in functions.
 
