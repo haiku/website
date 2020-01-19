@@ -29,13 +29,13 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       |                     |
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
-| macOS                              | [Homebrew](#osx)     | YES       |                     |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
 |[openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
-| Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
 | BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
+| macOS                              | [Homebrew](#osx)     | NO        | Need a working case sensitive filesystem |
+| Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
 | [Windows](http://microsoft.com)    | [see notes](#windows)| NO        |                     |
 | Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
 
