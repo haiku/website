@@ -81,20 +81,30 @@ The VM will now start and boot the Haiku image. You can choose to install Haiku 
 After finishing the installation of your VM, if you run into an error that says **``Unable to complete install: network default is not active``** or something along those lines, make sure that `libvirtd` is running by entering ``sudo systemctl start libvirtd`` in terminal.
 If the error still occurs do the following steps:
 
-##### Step 1. Check if you have the network defined by running:
+##### Step 1. Check if you have a defined network by running: <a name="part_trouble_1"></a>
 
 ```sh
 sudo virsh net-list --all
 ```
 
-If you got the following output then proceed to Step 2. If you don't and the ``'default'`` network exists, proceed to Step 3.
+* If you don't have a defined network, the output will look like this:
 
 ```sh
 Name                 State      Autostart     Persistent
 ----------------------------------------------------------
 ```
 
-##### Step 2. Create the ``'default'`` network by copy-pasting the following lines into a file called ``default.xml``, which can be found in the ``libvirt`` directory.
+* If you do have a defined network, the output will look like this:
+
+```sh
+ Name      State      Autostart   Persistent
+----------------------------------------------
+ default   inactive   no          yes
+```
+
+Skip to **[Step 3](#part_trouble_3)** if your output does look like this.
+
+##### Step 2. Define the ``'default'`` network by copy-pasting the following lines into a file called ``default.xml``: <a name="part_trouble_2"></a>
 
 ```sh
 <network>
@@ -111,20 +121,49 @@ Name                 State      Autostart     Persistent
 </network>
 ```
 
-Now, to add that network permanently to our KVM host, run the following:
+Now, in order to add that network permanently to the KVM host, run the following:
 
 ```sh
 sudo virsh net-define --file default.xml
 ```
 
-##### Step 3. To manually start the network, run:
+##### Step 3. To manually start the network, run: <a name="part_trouble_3"></a>
 
 ```sh
 sudo virsh net-start default
 ```
 
-To have the network automatically start up in future, run:
+####### Troubleshooting
+
+There's a chance that you may receive the following error when you run the aforementioned command:
+
+```sh
+$ sudo virsh net-start default
+error: Failed to start network default
+error: internal error: Failed to initialize a valid firewall backend
+```
+
+In order to fix that, you will need to install **`firewalld`**.
+
+After installing the package, run the following commands in order to enable the service and make networking work again:
+
+```
+sudo systemctl enable --now firewalld
+sudo systemctl restart libvirtd
+```
+
+####### Autostart
+
+If you want the network to start automatically in the future, run the following command:
 
 ```sh
 sudo virsh net-autostart --network default
+```
+
+Running **`sudo virsh net-list -all`** should now return the following:
+
+```sh
+ Name      State      Autostart   Persistent
+----------------------------------------------
+ default   inactive   yes         yes
 ```
