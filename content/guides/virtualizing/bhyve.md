@@ -9,7 +9,7 @@ Virtual instances of operating systems are perfect for all kinds of testing purp
 
 In this guide the Haiku operating system is being run under virtual circumstances using FreeBSD and Bhyve.
 
-In this guide, we will be using an Anyboot image - it can be obtained [here](/get-haiku).  Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
+Moreover, we will be using an Anyboot image, which can be obtained [here](/get-haiku). Both the ISO and anyboot images are available there, do select the closest mirror to enjoy higher transfer rates. Verify using the checksums to make sure that the downloaded files are not corrupted as they are big files.
 
 This guide assumes that you have installed FreeBSD on your device, you have made some basic configurations to your system and you are currently logged in as a user with root access. The Haiku virtual machine will be installed in UEFI mode.
 
