@@ -7,8 +7,7 @@ tags = ["compiling", "arm"]
 
 Haiku can be compiled for devices using the SPARC 64bit processor architecture.
 
-{{< alert-danger "Unstable" "The state of the SPARC port is early. Only the
-bootloader currently runs.">}}
+{{< alert-danger "Unstable" "The state of the SPARC port is early. Only the bootloader currently runs." >}}
 
 ## Create a compiler toolchain
 
@@ -24,9 +23,7 @@ Building the SPARC compiler toolchain is quite easy using Haiku's ```configure``
 
 Once you have a complete SPARC toolchain, you can build a Haiku filesystem image via ``jam -j2 -q @minimum-raw``
 
-{{< alert-warning "Post-processing" "The generated filesystem image is not sufficient for
-booting a SPARC machine. Work is ongoing to generate a bootable CD image in a suitable
-format.">}}
+{{< alert-warning "Post-processing" "The generated filesystem image is not sufficient for booting a SPARC machine. Work is ongoing to generate a bootable CD image in a suitable format.">}}
 
 ## Building the bootloader
 
