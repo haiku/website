@@ -1,15 +1,15 @@
 +++
 type = "blog"
-title = "No, I'm not Haiku lead developer"
+title = "No, I'm not Haiku's lead developer"
 author = "pulkomandy"
 date = "2020-01-21 12:14:07+02:00"
 tags = ["haiku", "organization", "community"]
 +++
 
 I have not used this blog in a while, except for the monthly activity report.
-But it's time for a clarificaiton.
+But it's time for a clarification.
 
-Lately, several people (some newcomers, some long time mebers of the community)
+Lately, several people (some newcomers, some long time members of the community)
 have started contacting me by private messages (either by e-mail or IRC chat).
 Sometimes it was the right thing to do, there are parts of the code for which
 I'm indeed the best person to ask, and sometimes things are not to be discussed
