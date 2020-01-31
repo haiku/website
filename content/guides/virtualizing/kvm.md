@@ -133,7 +133,7 @@ sudo virsh net-define --file default.xml
 sudo virsh net-start default
 ```
 
-####### Troubleshooting
+###### Troubleshooting
 
 There's a chance that you may receive the following error when you run the aforementioned command:
 
@@ -152,7 +152,7 @@ sudo systemctl enable --now firewalld
 sudo systemctl restart libvirtd
 ```
 
-####### Autostart
+###### Autostart
 
 If you want the network to start automatically in the future, run the following command:
 
