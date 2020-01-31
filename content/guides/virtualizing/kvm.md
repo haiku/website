@@ -147,7 +147,7 @@ In order to fix that, you will need to install **`firewalld`**.
 
 After installing the package, run the following commands in order to enable the service and make networking work again:
 
-```
+```sh
 sudo systemctl enable --now firewalld
 sudo systemctl restart libvirtd
 ```
