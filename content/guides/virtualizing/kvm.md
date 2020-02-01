@@ -133,7 +133,7 @@ sudo virsh net-define --file default.xml
 sudo virsh net-start default
 ```
 
-####### Troubleshooting
+###### Troubleshooting
 
 There's a chance that you may receive the following error when you run the aforementioned command:
 
@@ -147,12 +147,12 @@ In order to fix that, you will need to install **`firewalld`**.
 
 After installing the package, run the following commands in order to enable the service and make networking work again:
 
-```
+```sh
 sudo systemctl enable --now firewalld
 sudo systemctl restart libvirtd
 ```
 
-####### Autostart
+###### Autostart
 
 If you want the network to start automatically in the future, run the following command:
 
