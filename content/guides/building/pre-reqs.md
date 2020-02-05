@@ -45,7 +45,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 **Basic requirements:**
 
 ```sh
-pkgman install mtools python3 cmd:xorriso
+pkgman install mtools cmd:python3 cmd:xorriso
 ```
 
 **Additional requirements for ARM:**
