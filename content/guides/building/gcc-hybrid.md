@@ -38,17 +38,20 @@ Hybrids are built pretty much the same way as non-Hybrids. The only difference i
 <p>
 <h3>Setting up directories</h3>
 <p>Your working directory (also called a folder) may look like this:</p>
+
 ```
   sourcecode/haiku/buildtools/
   sourcecode/haiku/haiku/
   sourcecode/haiku/haiku/generated.x86gcc2
 ```
+
 <p>You have created <i>sourcecode/haiku/</i> and from there cloned the Haiku repo (which created the <i>haiku</i> subfolder). If you're not building under Haiku, you also cloned the Buildtools repo (which created the <i>buildtools</i> subfolder). Now create the folder <i>sourcecode/haiku/haiku/generated.x86gcc2</i>.</p>
 
 <h3>Configuring the directories</h3>
 <div class="alert alert-info">
 Be sure to consult the various <a href="/guides/building/configure">configure options</a>, such as `--use-gcc-pipe`, `--use-xattr-ref`, and `-j<N>`
 </div>
+
 <h4> ...within Haiku</h4>
 
 ```sh
@@ -67,6 +70,7 @@ Be sure to consult the various <a href="/guides/building/configure">configure op
 <div class="alert alert-info">
 Be sure to consult the various <a href="/guides/building/jam">jam options</a>.
 </div>
+
 ```sh
   cd generated.x86gcc2
   jam -q @nightly-raw
