@@ -112,7 +112,7 @@ Most of the Haiku code is released under the very liberal [MIT License](https://
 Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information, [see this page](https://www.haiku-inc.org)
 
 ### What platform(s) is Haiku targeted to run on?
-The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are ports to other platforms underway, such as PowerPC, MIPS, and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
+The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. There are [ports to other platforms underway](/guides/building/port_status), such as PowerPC, Sparc, and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will heavily depend on the availability of resources to support their development.
 
 ### Will there be a 64-bit version of Haiku?
 Yes. For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 64-bit x86_64. The 32-bit release is compatible with the BeOS at a binary and API level. The 64-bit release is _not_ binary compatible with BeOS, but still enjoys compatibility with the powerful BeOS API (while offering modern features). The 32-bit Haiku release can run most BeOS applications without modification or recompiling.
@@ -140,7 +140,7 @@ Yes! You'll find a package for Caya, the multi-protocol IM client. Several alter
 Yes! The OpenJDK virtual machine is available and enables you to run applications such as Netbeans, JDownloader, and much more.
 
 ### Is there Flash support?
-Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open-source operating system such as Haiku. However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for example).
+Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open-source operating system such as Haiku. However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for example). Besides, Adobe [deprecated Flash](https://theblog.adobe.com/adobe-flash-update/) anyway.
 
 ### Is there an office suite?
 There are several options:
