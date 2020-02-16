@@ -88,8 +88,8 @@ A team effort by GCI student allowed to rewrite some headers for the Game Kit
 that had been copypasted from BeOS in early days of Haiku. We only have two
 such headers left, which will hopefully soon be replaced as well.
 
-X512 fixed a command line handling problem in TextSearch which would make it
-impossible to search for some strings.
+phoudoin fixed a command line handling problem in TextSearch which would make it
+impossible to search for some strings. X512 helped integrate the patch.
 
 Cruxbox started early work on adding an xfs\_shell to Haiku, allowing to start
 work on adding support for the XFS filesystem.
