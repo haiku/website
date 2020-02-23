@@ -11,7 +11,7 @@ Haiku's source code is currently being hosted in a <a href="http://git-scm.com/"
 Anonymous access will allow anyone to download Haiku's source code; However, the authenticated (non-anonymous) method is required for submitting patches.
 
 <div class="alert alert-warning">
-<strong>The buildtools are not needed when building from within Haiku</strong>. Pre-built images of Haiku already come with the buildtools pre-installed.
+<strong>The buildtools are not needed when building from within 32-bit Haiku</strong>. Pre-built images of 32-bit Haiku already come with suitable buildtools pre-installed.
 </div>
 
 <a name="anon_access"></a>
