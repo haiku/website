@@ -16,6 +16,13 @@ Anonymous access will allow anyone to download Haiku's source code; However, the
 
 <a name="anon_access"></a>
 <h3>Git Access - Anonymous testers</h3>
+
+<div class="alert alert-warning">
+<strong>Anonymous access is read-only.</strong> If you want to submit changes to
+Haiku, you need to follow the instructions for patch submitters, in the next
+section.
+</div>
+
 <h4>Build Tools:</h4>
 
 ```sh
@@ -71,9 +78,9 @@ git clone "ssh://<login>@git.haiku-os.org/haiku" && scp -p <login>@git.haiku-os.
 
 Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.
 
-<h4>Switching from anonymous to developer access</h4>
+<h4>Switching from read-only to write access</h4>
 
-Just got commit access to Haiku? Congratulations! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:
+Want to submit your first patch? Thanks, that's great! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:
 
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
