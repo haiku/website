@@ -90,7 +90,7 @@ sudo pacman -S yaourt uboot-tools bc
 **Basic requirements:**
 
 ```sh
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686 python36
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
 ```
 
 **Additional requirements for ARM:**
