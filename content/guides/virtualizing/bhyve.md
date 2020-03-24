@@ -15,7 +15,7 @@ This guide assumes that you have installed FreeBSD on your device, you have made
 
 ##### Go to section
 
-* [Setting up FreeBSD & Bhyve](#part_bhyve)
+* [Preparing FreeBSD & Bhyve](#part_bhyve)
 * [Downloading Haiku](#part_download)
 * [Installing and running Haiku from an Anyboot image](#part_iso)
 
