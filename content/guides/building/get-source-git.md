@@ -60,6 +60,12 @@ On Mac OS X, you must set the following option in order to avoid problems with t
 git config core.precomposeunicode true
 ```
 
+<h4>Setup an account on Gerrit</h4>
+
+<p>Log in to <a href="https://review.haiku-os.org">Gerrit code review</a>. You currently need a <a href="https://github.com">Github</a> account for logging in.</p>
+<p>Upload your SSH public key in <a href="https://review.haiku-os.org/settings/#SSHKeys">Gerrit SSH keys settings</a> page. If you don't have a key yet, you can generate one using ssh-keygen.</p>
+<p>If the e-mail address used in your commits does not match the one in your github account, you will need to add and verify it in <a href="https://review.haiku-os.org/settings/#EmailAddresses">Gerrit E-Mail address settings</a>.</p>
+
 <h4>Build Tools:</h4>
 
 The `<login>@` is only needed if your currently logged in username doesn't match your `review.haiku-os.org` username.
@@ -76,14 +82,18 @@ The `<login>@` is only needed if your currently logged in username doesn't match
 git clone "ssh://<login>@git.haiku-os.org/haiku" && scp -p <login>@git.haiku-os.org:hooks/commit-msg "haiku/.git/hooks/"
 ```
 
-Finally, install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>.
-
 <h4>Switching from read-only to write access</h4>
 
 Want to submit your first patch? Thanks, that's great! You don't need to checkout the sources again. Instead you can update your existing copy of the source to use the commiter access. Just change the remote URL:
 
 ```sh
 git remote set-url origin ssh://<login>@git.haiku-os.org/haiku
+```
+
+You also should install the <a href="https://review.haiku-os.org/Documentation/user-changeid.html">Gerrit hooks to generate Change-Ids</a>:
+
+```sh
+scp -p <login>@git.haiku-os.org:hooks/commit-msg "haiku/.git/hooks/"
 ```
 
 <h3>Some Notes</h3>
@@ -128,6 +138,12 @@ Be sure to use the <span class="cli">--rebase</span> argument while doing a pull
 ```sh
 cd /path/haiku/haiku
 git pull --rebase
+```
+
+You can make git take care of this automatically for you, so that "git pull" does the right thing for Haiku:
+
+```sh
+cd haiku && git config pull.rebase true
 ```
 
 Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
