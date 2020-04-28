@@ -10,10 +10,10 @@ Welcome to the April 2020 activity report!
 
 <h3>Are we released yet?</h3>
 
-The big news first: a timeline has been set for Beta 2! If all goes well it will
-be released by the end of May. Of course this means everyone has been scrambling
+The big news first: a timeline has been set for Beta 2! If all goes well, it will
+be released by the end of May. Of course, this means everyone has been scrambling
 for last minute changes this month instead of stabilizing everything. We are now
-in "soft freeze", and the branch will be created on friday.
+in "soft freeze", and the branch will be created on Friday.
 
 Now is a good time to test nightly builds on all your machines, help with the
 translations, and make that bugreport you've been postponing for months.
@@ -25,7 +25,7 @@ next one!
 <h3>Outside the source tree</h3>
 
 To celebrate the new beta release, 3dEyes has been working on porting GTK
-to Haiku. While of course our main focus remain on native applications using the
+to Haiku. While of course our main focus remains on native applications using the
 BeAPI, it's still a great help for new users if they can find some of their well
 known apps at first. The port is nowhere near ready yet, but we've seen some
 screenshots already...
@@ -47,16 +47,16 @@ Waddlesplash tracked some disk corruption bugs in this new driver, which led
 to also identifying bugs and performance issues in other places in the storage
 management code. 
 
-<h3>clang support</h3>
+<h3>Clang support</h3>
 
-X512 fixed several problems which prevented building Haiku with clang, which
-raises some warnings where gcc doesn't see a problem, and probably fixing some
+X512 fixed several problems which prevented building Haiku with Clang, which
+raises some warnings where GCC doesn't see a problem, and probably fixing some
 bugs in the process.
 
-This also allowed experimenting with use of clang to build the ARM64 bootloader.
+This also allowed experimenting with the use of Clang to build the ARM64 bootloader.
 It showed that the current method to generate an EFI bootloader for ARM isn't
-quite correct, and that it's possible to get the bootloader to work a lot
-better when built using clang.
+quite correct and that it's possible to get the bootloader to work a lot
+better when built using Clang.
 
 <h3>Microcode updates</h3>
 
@@ -70,19 +70,19 @@ Korli worked on various low-level drivers: for PCI thermal sensors, for the I2C
 based SMBus on Intel chipsets, and a work in progress for I2C touchpads (not
 merged yet, because it requires refactoring of the Bluetooth and USB HID drivers
 to share the HID code). Experiments are in progress with keyboard and screen
-backlight control, as well.
+backlight control as well.
 
 <h3>Video cards</h3>
 
-Cleanup of the intel_extreme video driver continues, with some regressions fixed.
-The driver has been disabled for chipsets nezer than SandyBridge, and the focus
+Cleanup of the intel_extreme video driver continues with some regressions fixed.
+The driver has been disabled for chipsets newer than SandyBridge, and the focus
 currently is on getting more complete support for SandyBridge (the main reason
 being that it's my laptop's chipset).
 
 <h3>HaikuDepot</h3>
 
 Andrew Lindesay worked on various issues around HaikuDepot: better handling of
-read-only filesystems, various performance optimizations and improved error handling.
+read-only filesystems, various performance optimizations, and improved error handling.
 
 
 <h3>Network</h3>
@@ -90,46 +90,46 @@ read-only filesystems, various performance optimizations and improved error hand
 wpa_supplicant was updated to the latest version. Some problems in the FreeBSD
 compatibility layer to reuse FreeBSD network drivers were also fixed.
 
-We also updated from OpenSSL 1.0 to 1.1, as free support for 1.0 is no more
+We also updated from OpenSSL 1.0 to 1.1, as free support for 1.0 is no longer
 available.
 
 <h3>Documentation</h3>
 
-Nielx worked on completing some sections of the Haiku book. We now have documentation
+Nielx worked on completing some sections of the Haiku Book. We now have documentation
 for the new classes in the Layout API (allowing to easily code font-size-sensitive
 views and windows).
 
 <h3>Localization</h3>
 
-The keymap list in FirstBootPrompt and in Keymap preferences is now localized.
+The keymap lists in the FirstBootPrompt and Keymap preflets are now localized.
 Some messages from the Package Kit also are translated.
 
-Application and Preferences names are now localized by default, as a poll on
+Application and preflet names are now localized by default, as a poll on
 the forums showed that this was the preference of a large majority of users.
-And while talking about polls, we also asked about DeskBar settings, which
-shown that the current default settings are mostly fine, except we enabled
-"Tracker always first" by default.
+And while talking about polls, we also asked about Deskbar settings, which
+showed that the current default settings are mostly fine, except the
+"Tracker always first" option, which is now enabled by default.
 
 <h3>Unit Tests</h3>
 
 Kyle Ambroff-Kao continues his work on getting the unit tests to run, with
-fixes in the network and storage kit tests. These led to discovery of some
-edge cases where Haiku behavior was different from BeOS, in some, the new
+fixes in the Network and Storage Kit tests. These led to the discovery of some
+edge cases where Haiku behavior was different from BeOS. In some, the new
 behavior is obviously better (we don't aim for bug-to-bug compatibility with
-BeOS), but in other cases we decided to follow what BeOS did.
+BeOS), but in other cases, we decided to follow what BeOS did.
 
 <h3>Interface Kit</h3>
 
-Support for "transparent" views was added. This allow a view to let its parent
+Support for "transparent" views was added. This allows for a view to let its parent
 draw itself, allowing, as the name implies, for some transparency effects. This
-is used in various places (replicant handles, ...) to fix drwaing glitches.
+is used in various places (replicant handles, ...) to fix drawing glitches.
 
 We also now support more than 3 buttons on mice (the driver code was already
-merged, but not the interface kit part). Buttons 4 and 5 are used to quickly
+merged, but not the Interface Kit part). Buttons 4 and 5 are used to quickly
 switch tabs in BTabView, as a first step, but can be used for more later on.
 
 X512 also added multiple display support to the test_app_server, for experimenting
-with muiltiple display support. As work on the intel_extreme driver advances,
+with multiple display support. As work on the intel_extreme driver advances,
 we may soon have multi-monitor support again (it was implemented for old AGP-based
 Radeon, GeForce and Matrox video cards, but none of the more recent video drivers
 followed).
@@ -138,12 +138,12 @@ followed).
 
 nephele added new shortcuts to easily increase and decrease the font size.
 
-<h3>Time preferences</h3>
+<h3>Time preflet</h3>
 
-Mogul identified and fixed a bug in the Time preferences that made it impossible
+Mogul identified and fixed a bug in the Time preflet that made it impossible
 to select some timezones.
 
-<h3>Translators and image format</h3>
+<h3>Translators and image formats</h3>
 
 Haiku now ships the latest version of openexr and ilmbase, and switched from
 libjpeg to libjpeg-turbo.
@@ -152,4 +152,4 @@ libjpeg to libjpeg-turbo.
 
 Early work for support of UFS2 (by Suhel Mehta) and XFS (by cruxbox) was merged.
 While there is nothing usable yet, we hope to soon increase interoperability
-with Linux, *BSD and Solaris thanks to these.
+with Linux, *BSD, and Solaris thanks to these.
