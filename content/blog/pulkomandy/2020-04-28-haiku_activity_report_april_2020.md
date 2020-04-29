@@ -114,9 +114,9 @@ showed that the current default settings are mostly fine, except the
 
 Kyle Ambroff-Kao continues his work on getting the unit tests to run, with
 fixes in the Network and Storage Kit tests. These led to the discovery of some
-edge cases where Haiku behavior was different from BeOS. In some, the new
+edge cases where Haiku behavior was different from BeOS. In some cases, the new
 behavior is obviously better (we don't aim for bug-to-bug compatibility with
-BeOS), but in other cases, we decided to follow what BeOS did.
+BeOS), but in others, we decided to follow what BeOS did.
 
 <h3>Interface Kit</h3>
 
