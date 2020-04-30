@@ -5,11 +5,11 @@ date = "2019-12-7"
 tags = []
 +++
 
-Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers but want to become familiar with it.
+Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Therefore, installing Haiku in a virtual machine is an ideal solution for people who do not want to install it on their physical computers but want to become familiar with it.
 
-In this guide, the Haiku operating system is being run under virtual circumstances using Ubuntu Linux, Xen and Virt-Manager. but you can use any distribution of Linux that supports Xen.
+The guide was tested on an Ubuntu Linux installation, but it should work on any Linux distribution that supports Xen.
 
-This tutorial, for demonstration purposes, uses an Anyboot image. It can be obtained [here](/get-haiku). Both the ISO and Anyboot images are available there. Verify the checksums to make sure the downloaded files are not corrupted.
+This tutorial uses an Anyboot image for demonstration purposes. Both the ISO and the Anyboot image can be obtained [here](/get-haiku). Make sure to verify the checksums in order to make sure that your downloaded files are not corrupted.
 
 ##### Go to section
 
@@ -20,37 +20,37 @@ This tutorial, for demonstration purposes, uses an Anyboot image. It can be obta
 
 ### Installing Xen <a name="part_xen"></a>
 
-#### Ubuntu Linux
+#### Ubuntu Linux/Debian
 
-If you are using Ubuntu Linux (18.04 and below), you can enter the following commands in order to set up Xen and virt-manager:
-
-```sh
-sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install xen-hypervisor xen-utils virt-manager libvirt-bin bridge-utils
-```
-
-However, if you are using a more recent version of Ubuntu (18.10 or up), then you will have to use this command instead as `libvirt-bin` has been replaced:
+In recent releases of Ubuntu Linux and Debian, you will have to run the following commands:
 
 ```sh
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get xen-hypervisor xen-utils libvirt-daemon-system libvirt-clients virt-manager
 ```
 
+However, in older releases (Ubuntu 18.04, Debian Jessie or older), you will need to enter these commands instead:
+
+```sh
+sudo apt-get update && sudo apt-get upgrade
+sudo apt-get install xen-hypervisor xen-utils virt-manager libvirt-bin bridge-utils
+```
+
 Do not forget to enable the `libvirtd` daemon, as it is not enabled by default.
 
 ```sh
-sudo systemctl enable libvirtd
+sudo systemctl enable --now libvirtd
 ```
 
-Your machine should now boot into Xen by default. If it doesn't, reboot your machine and access GRUB. make sure to select the Xen kernel in your boot menu. To boot into Xen, choose `Ubuntu GNU/Linux, with Xen hypervisor`
+Your machine should now boot into Xen by default. If it doesn't, reboot your machine and access GRUB. make sure to select the Xen kernel in your boot menu. To boot into Xen, select `Ubuntu GNU/Linux, with Xen hypervisor`
 
-You can find more Ubuntu Linux-specific information regarding Xen in [Ubuntu's official documentation](https://help.ubuntu.com/community/Xen).
+You can find more Ubuntu Linux-specific information regarding Xen in [Ubuntu's official documentation](https://help.ubuntu.com/community/Xen). Alternatively, you could also check out [Debian's official documentation](https://wiki.debian.org/Xen) instead.
 
 #### Arch Linux
 
-As Xen is not currently officially available in the official repositories, you will have to use the [Arch User Repository (AUR)](https://aur.archlinux.org/) in order to install Xen.
+As Xen is not currently available in the official Arch Linux repositories, you will have to use the [Arch User Repository (AUR)](https://aur.archlinux.org/) in order to install Xen.
 
-Of course, you can use an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) in order to install the `xen` package. However, the most universal way of installing Xen in Arch Linux would be the following:
+Of course, you can use an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) of your choice in order to install the `xen` package more easily. However, the most universal way of installing Xen in Arch Linux would be the following:
 
 ```sh
 pacman -Syu
@@ -72,7 +72,7 @@ pacman -S ovmf
 Lastly, you will have to enable the `libvirtd` daemon, as it is not enabled by default.
 
 ```sh
-sudo systemctl enable libvirtd
+sudo systemctl enable --now libvirtd
 ```
 
 Reboot your machine and make sure to select the Xen kernel in your boot menu. To boot into Xen, choose `Arch Linux, with Xen hypervisor`.
@@ -91,7 +91,7 @@ yum install xen virt-manager
 Also, make sure to enable the `libvirtd` daemon, which is not enabled by default.
 
 ```sh
-sudo systemctl enable libvirtd
+sudo systemctl enable --now libvirtd
 ```
 
 To boot into Xen on Fedora's boot menu, choose `Fedora, with Xen hypervisor`. Consulting the [Xen wiki](https://wiki.xen.org/wiki/Fedora_Host_Installation) is generally a good idea.
@@ -137,11 +137,11 @@ First, on the virt-manager window, choose `Edit` > `Connection Details`. The Con
 
 ![](/files/guides/virtualizing/xen/virtual_network_1.png)
 
-Name the virtual network that will be created.
+Give your new virtual network a name!
 
 ![](/files/guides/virtualizing/xen/net_name.png)
 
-Here, you can customize the network address range. If you are fine with the default settings, simply click **`Forward`**
+Here, you can customize the network address range. The default settings should be alright, simply click **`Forward`**
 
 ![](/files/guides/virtualizing/xen/ip_range.png)
 
@@ -149,13 +149,13 @@ If you want to enable the IPv6 address range, you can customize it here. Otherwi
 
 ![](/files/guides/virtualizing/xen/ipv6.png)
 
-Here, you can forward the network packets of the VM to a physical network, or keep the virtual network isolated. If you need Internet connection on the VM, you should forward to a physical network connected to the Internet. When you are done, click **`Finish`**
+Here, you can forward the network packets of the virtual machine to a physical network, or keep the virtual network isolated. If you need an Internet connection on the virtual machine, you should forward to a physical network connected to the Internet. When you are done, click **`Finish`**
 
 ![](/files/guides/virtualizing/xen/connect_physical.png)
 
-The virtual network will then be created. Now, close the Connection Details window.
+The virtual network should be good to go. Now, close the Connection Details window.
 
-On the virt-manager window, right-click on the Haiku VM, and choose **`Open`**. Then, click on the button with the light-bulb icon to switch to the VM configuration tab.
+On the virt-manager window, right-click on the Haiku virtual machine and choose **`Open`**. Then, click on the button with the light-bulb icon to switch to the VM configuration tab.
 
 ![](/files/guides/virtualizing/xen/vm_settings.png)
 
@@ -171,9 +171,8 @@ Now the VM should have a network connection.
 
 ##### Unable to connect to libvirt.
 
-- Ensure that the libvirt daemon is running by issuing ```sudo systemctl enable --now libvirtd```
 - Make sure that you are a member of the `libvirtd` group by running ```sudo usermod -a -G libvirtd $(whoami)```
 
 ##### Unable to connect to libvirt xen:///.
 
-- Ensure that you are using a Xen host kernel. If you are using [GRUB](https://www.gnu.org/software/grub/) and the kernel does not appear, try running `update-grub` in your terminal.
+- Ensure that you are using a Xen host kernel. If you happen to be using [GRUB](https://www.gnu.org/software/grub/) and the kernel does not appear in your GRUB menu as previously described, try running `sudo update-grub` in your terminal.
