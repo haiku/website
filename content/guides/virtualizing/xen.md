@@ -69,7 +69,7 @@ pacman -S seabios
 pacman -S ovmf
 ```
 
-Lastly, you will have to enable the `libvirtd` daemon, as it is not enabled by default.
+Lastly, you will have to enable the `libvirtd` daemon, as it is not enabled by default:
 
 ```sh
 sudo systemctl enable --now libvirtd
@@ -121,11 +121,11 @@ Here, we can adjust the size of the disk image, or existing disk images. After m
 
 ![](/files/guides/virtualizing/xen/hard_disk.png)
 
-Name the virtual machine, verify the settings of the VM, then click **`Finish`**
+Name the virtual machine, verify the settings of the virtual machine, then click **`Finish`**
 
 ![](/files/guides/virtualizing/xen/confirm_create.png)
 
-After clicking **`Finish`**, the VM will boot to the Haiku image. You can choose to install Haiku or boot to the desktop. Follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku.
+After clicking **`Finish`**, the virtual machine will boot to the Haiku image. You can choose to install Haiku or boot to the desktop. Follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku.
 
 ### Additional steps <a name="part_additional"></a>
 
@@ -149,7 +149,7 @@ If you want to enable the IPv6 address range, you can customize it here. Otherwi
 
 ![](/files/guides/virtualizing/xen/ipv6.png)
 
-Here, you can forward the network packets of the virtual machine to a physical network, or keep the virtual network isolated. If you need an Internet connection on the virtual machine, you should forward to a physical network connected to the Internet. When you are done, click **`Finish`**
+Here, you can forward the network packets of the virtual machine to a physical network, or keep the virtual network isolated. If you need an internet connection on the virtual machine, you should forward to a physical network connected to the internet. When you are done, click **`Finish`**
 
 ![](/files/guides/virtualizing/xen/connect_physical.png)
 
