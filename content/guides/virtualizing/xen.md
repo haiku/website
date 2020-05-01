@@ -9,7 +9,7 @@ Virtual instances of operating systems are perfect for all kinds of testing purp
 
 The guide was tested on an Ubuntu Linux installation, but it should work on any Linux distribution that supports Xen.
 
-This tutorial uses an Anyboot image for demonstration purposes. Both the ISO and the Anyboot image can be obtained [here](/get-haiku). Make sure to verify the checksums in order to make sure that your downloaded files are not corrupted.
+This tutorial uses an Anyboot image for demonstration purposes. The Anyboot image can be obtained [here](/get-haiku). Make sure to verify the checksums in order to make sure that your downloaded files are not corrupted.
 
 ##### Go to section
 
@@ -36,15 +36,15 @@ sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install xen-hypervisor xen-utils virt-manager libvirt-bin bridge-utils
 ```
 
-Do not forget to enable the `libvirtd` daemon, as it is not enabled by default.
+Do not forget to enable the `libvirtd` daemon, as it is not enabled by default:
 
 ```sh
 sudo systemctl enable --now libvirtd
 ```
 
-Your machine should now boot into Xen by default. If it doesn't, reboot your machine and access GRUB. make sure to select the Xen kernel in your boot menu. To boot into Xen, select `Ubuntu GNU/Linux, with Xen hypervisor`
+Your machine should now boot into the Xen kernel. If it doesn't, reboot your machine and access GRUB. make sure to select the Xen kernel in your boot menu. To boot into Xen, select `Ubuntu GNU/Linux, with Xen hypervisor`.
 
-You can find more Ubuntu Linux-specific information regarding Xen in [Ubuntu's official documentation](https://help.ubuntu.com/community/Xen). Alternatively, you could also check out [Debian's official documentation](https://wiki.debian.org/Xen) instead.
+You can find more Ubuntu Linux-specific information regarding Xen in [Ubuntu's official documentation](https://help.ubuntu.com/community/Xen). It's worth checking out [Debian's official documentation](https://wiki.debian.org/Xen) as well.
 
 #### Arch Linux
 
@@ -59,7 +59,7 @@ makepkg -csi
 pacman -S bridge-utils
 ```
 
-Alternatively, you may want to [compile Xen from source.](https://wiki.xenproject.org/wiki/Compiling_Xen_From_Source)
+Alternatively, you may want to [compile Xen from source](https://wiki.xenproject.org/wiki/Compiling_Xen_From_Source) or [compile a custom Linux kernel](https://wiki.xenproject.org/wiki/Mainline_Linux_Kernel_Configs).
 
 Moreover, you will have to install either the `seabios` package and/or the `ovmf` package, depending on whether you want to boot your virtual machine in BIOS or UEFI mode respectively. It should be added that Haiku does [support UEFI booting](https://www.haiku-os.org/guides/uefi_booting/).
 
@@ -81,20 +81,20 @@ You may also want to consult Arch Linux's [wiki](https://wiki.archlinux.org/inde
 
 #### Fedora
 
-If you're using Fedora, the commands you will need to run the following commands:
+If you're using Fedora, you will need to run the following commands:
 
 ```sh
 yum update
 yum install xen virt-manager
 ```
 
-Also, make sure to enable the `libvirtd` daemon, which is not enabled by default.
+Don't forget to enable the `libvirtd` daemon, which is not enabled by default:
 
 ```sh
 sudo systemctl enable --now libvirtd
 ```
 
-To boot into Xen on Fedora's boot menu, choose `Fedora, with Xen hypervisor`. Consulting the [Xen wiki](https://wiki.xen.org/wiki/Fedora_Host_Installation) is generally a good idea.
+To boot into Xen on Fedora's boot menu, choose `Fedora, with Xen hypervisor`. Consulting the [Xen wiki's article on Fedora](https://wiki.xen.org/wiki/Fedora_Host_Installation) is generally a good idea.
 
 ### Installing and running Haiku from an Anyboot image <a name="part_iso"></a>
 
