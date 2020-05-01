@@ -51,7 +51,7 @@ If you are using Arch Linux, you should enter the following commands in the term
 sudo pacman -Syu qemu virt-manager
 ```
 
-Make sure to enable `libvirtd`, which is not enabled by default.
+Make sure to enable `libvirtd`, which is not enabled by default:
 
 ```sh
 sudo systemctl enable --now libvirtd
