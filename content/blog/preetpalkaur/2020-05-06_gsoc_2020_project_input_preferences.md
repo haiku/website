@@ -17,7 +17,7 @@ Previously, the input preferences contained the UI and the functionalities of mo
 # Project plan:
 
 In this project I will work on the below-mentioned things:
-* For powerful user and gammers
+* For power-users and gamers
 	* Add a facility where the user can configure a 6 button mouse.
 	* Add Joystick UI and its configuration.
 	* Add Wacom tablet UI and its configuration. 
