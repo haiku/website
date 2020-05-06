@@ -25,11 +25,13 @@ Haiku has support for a number of file system but it is completly missing suppor
 2) Identified superblock of UFS2.
 
 ## References
-* [Implemented in Solaris](http://ptgmedia.pearsoncmg.com/images/0131482092/samplechapter/mcdougall_ch15.pdf)
-* [Code implementation](https://elixir.bootlin.com/linux/v5.5.13/source/fs/ufs)
-* [FreeBSD Implementation](https://github.com/freebsd/freebsd/tree/master/sys/ufs/ufs)
-* [Information about file system](https://people.eecs.berkeley.edu/~brewer/cs262/FFS.pdf)
-* [General Content about file system](https://www.usenix.org/legacy/events/bsdcon03/tech/full_papers/mckusick/mckusick_html/)
+<ul>
+<li><a href="http://ptgmedia.pearsoncmg.com/images/0131482092/samplechapter/mcdougall_ch15.pdf">Implemented in Solaris</a></li>
+<li><a href="https://elixir.bootlin.com/linux/v5.5.13/source/fs/ufs2">Code implementation</a></li>
+<li><a href="https://github.com/freebsd/freebsd/tree/master/sys/ufs/ufs">FreeBSD Implementation</a></li>
+<li><a href="https://people.eecs.berkeley.edu/~brewer/cs262/FFS.pdf">Information about file system</a></li>
+<li><a href="https://www.usenix.org/legacy/events/bsdcon03/tech/full_papers/mckusick/mckusick_html/">General Content about file system</a></li>
+</ul>
 
 ## Conclusion
 Thank you to the Haiku community for selecting me this year. I will give my best to make this project successful. ;-)
