@@ -1,4 +1,4 @@
-<sub></sub>+++
++++
 type = "blog"
 title = "[GSoC 2018: XFS support] Week #3, #4 and #5"
 author = "abx1"
@@ -66,20 +66,20 @@ I had to revise the on-disk structure of XFS and read through the implementation
 
 #### Explanation for few are as follows
 * sb_magicnum - value = 0x58465342, identifies the filesystem
-* sb_blocksize - usually 4096 bytes 
+* sb_blocksize - usually 4096 bytes
 * sb_dblocks - no of blocks available for the data
-* sb_rblocks - no of blocks on real-time device 
+* sb_rblocks - no of blocks on real-time device
 * sb_uuid - Universal Unique ID for teh filesystem
 * sb_logstart - (internal log) first block number for journaling log
 * sb_rootino - 128 when using blocksize is 4096 bytes
-* sb_agblocks - size of allocation group (in blocks) 
+* sb_agblocks - size of allocation group (in blocks)
 * sb_agcount - count of AG
-* sb_sectsize - disk sector size in bytes 
+* sb_sectsize - disk sector size in bytes
 * sb_inodesize - size of inode in bytes
-* sb_inopblock - no of inodes in block 
+* sb_inopblock - no of inodes in block
 * sb_icount - count for no of inodes allocated on the filesystem(only in the first superblock)
 * sb_ifree - count of free inodes on the filesystem
 * sb_fdblocks - count of free data blocks on the filesystem
 
-Thanks 
+Thanks
 Abhinand
