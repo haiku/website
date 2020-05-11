@@ -93,7 +93,7 @@ LOLNOTACHECKSUM haiku-r1beta2-x86_gcc2_hybrid-anyboot.zip
 	
 <h3>After the Installation</h3>
 
-<p>Once the installation has been complete, make sure that you get the latest bug fixes and new features by updating your system periodically. You can either use the "SoftwareUpdater" application, or use the `pkgman` command-line utility to keep your system up-to-date.</p>
+<p>Once the installation is complete, make sure that you get the latest bug fixes and new features by updating your system periodically. You can either use the "SoftwareUpdater" application, or the `pkgman` command-line utility to keep your system up-to-date.</p>
 
 <h3 class="App_People_32">Acknowledgment</h3>
 
