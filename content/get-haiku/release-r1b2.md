@@ -26,7 +26,7 @@ to download an image, please select from the list of available mirrors
 below.
 </span> (If you are looking for the nightly images, they can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>.)
 
-<div class="alert alert-warning">
+<div class="alert alert-info">
 Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider <a href="https://www.haiku-inc.org/donate/">donating</a> a small amount. We rely on your support to carry Haiku into the future.
 </div>
 
