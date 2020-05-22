@@ -140,7 +140,7 @@ nephele added new shortcuts to easily increase and decrease the font size.
 
 <h3>Time preflet</h3>
 
-Mogul identified and fixed a bug in the Time preflet that made it impossible
+Morgul identified and fixed a bug in the Time preflet that made it impossible
 to select some timezones.
 
 <h3>Translators and image formats</h3>
