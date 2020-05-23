@@ -29,9 +29,10 @@ The initial implementation of a BFS FUSE module was added in
 
 <h3>Building the BFS FUSE module from source</h3>
 <pre class="terminal">cd /path/haiku/haiku/
-jam '<build>bfs_fuse'</pre>
+jam '&lt;build&gt;bfs_fuse'</pre>
 
 <h3>Mounting your BFS partition</h3>
+
 In this example, ```/dev/sdaX``` is the BFS partition you wish to mount.
 <pre class="terminal">
 mkdir /path/to/mountPoint
