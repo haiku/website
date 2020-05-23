@@ -12,7 +12,7 @@ userland progam. By providing this functionality outside of kernel space,
 adding support for a new filesystem is a simple matter of installing the 
 respective FUSE module. As a comparison, the typical paradigm involves 
 altering the operating system's kernel to support the filesystem. 
-For more information, visit the <a href="http://fuse.sourceforge.net/">FUSE project page</a>.
+For more information, visit the <a href="https://github.com/libfuse/libfuse">FUSE project page</a>.
 
 The initial implementation of a BFS FUSE module was added in 
 <a href="https://dev.haiku-os.org/changeset/31409">r31409</a>
@@ -21,28 +21,22 @@ The initial implementation of a BFS FUSE module was added in
 <a name="linux"></a>
 <a name="linux_apt"></a>
 <h4>APT-based GNU/Linux Distribution (Debian, Ubuntu...)</h4>
-```sh
-sudo apt-get install libfuse-dev
-```
+<pre class="terminal">sudo apt-get install libfuse-dev</pre>
 
 <a name="bsd"></a>
 <h4>BSD Based Distribution</h4>
-```sh
-sudo portinstall sysutils/fusefs-kmod sysutils/fusefs-libs
-```
+<pre class="terminal">sudo portinstall sysutils/fusefs-kmod sysutils/fusefs-libs</pre>
 
 <h3>Building the BFS FUSE module from source</h3>
-```sh
-cd /path/haiku/haiku/
-jam '<build>bfs_fuse'
-```
+<pre class="terminal">cd /path/haiku/haiku/
+jam '<build>bfs_fuse'</pre>
 
 <h3>Mounting your BFS partition</h3>
 In this example, ```/dev/sdaX``` is the BFS partition you wish to mount.
-```sh
+<pre class="terminal">
 mkdir /path/to/mountPoint
 /path/to/bfs_fuse /dev/sdaX /path/to/mountPoint
-```
+</pre>
 
 At this point, your BFS partition should be mounted at ```/path/to/mountPoint```.
 
