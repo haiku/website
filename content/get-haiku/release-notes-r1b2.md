@@ -258,7 +258,7 @@ There are almost  3200 open tickets on Haiku's bug tracker and over 12700 closed
 
 For information about major issues that have been fixed since the release, visit <https://dev.haiku-os.org/wiki/R1/Beta2/ReleaseAddendum>.
 
-For more help see the 'Welcome' link on the Haiku desktop, or visit the Haiku Project's website at <https://www.haiku-os.org>.
+For more help, take the 'Quick Tour' and read the 'Userguide', both linked on the Haiku desktop. WebPositive opens by default with our 'Welcome' page which provides useful information and many helpful links, as does the Haiku Project's website at <https://www.haiku-os.org>.
 
 ## Press contact
 
