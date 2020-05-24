@@ -250,7 +250,7 @@ Since the last release, Kyle Ambroff-Kao received commit access.
 
 ## Source code
 
-The source code of Haiku itself, the source code of the required build tools and the optional packages (except for closed source ones) is contained within the release images as the `_source` packages (except on the "CD" image, which it was left out of due to space constraints.)
+The source code of Haiku itself, the source code of the required build tools and the optional packages (except for closed source ones) is contained within the release images as the `_source` packages (except on the "CD" image, where it was left out due to space constraints.)
 
 ## Reporting issues
 
