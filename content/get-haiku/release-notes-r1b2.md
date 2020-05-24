@@ -6,7 +6,7 @@ date = "2020-05-24 11:43:16+01:00"
 draft = true
 +++
 
-The second beta for Haiku R1 marks twenty months of hard work to improve Haiku's hardware support and its overall stability. Since beta 1, there have been 101 code contributors with almost 2800 code commits. More than 900 bugs and enhancement tickets have been closed for this release. 
+The second beta for Haiku R1 marks twenty months of hard work to improve Haiku's hardware support and its overall stability. Since Beta 1, there have been 101 code contributors with almost 2800 code commits. More than 900 bugs and enhancement tickets have been closed for this release. 
 
 Please keep in mind that this is beta-quality software, which means it is feature complete but still contains known and unknown bugs. While we are mostly confident in its stability, we cannot provide assurances against data loss.
 
@@ -153,41 +153,41 @@ In beta 2, the Terminal will have functionality like macOS': It adds a configura
 **HaikuDepot**
  - [#10358](https://dev.haiku-os.org/ticket/10358) When a package is queued for download and installation, it will now have the status 'queued' in the interface.
  - [#11652](https://dev.haiku-os.org/ticket/11652) When showing all packages, the installed packages are part of the list by default. Before they were hidden by default. 
- - [#12198](https://dev.haiku-os.org/ticket/12198) HaikuDepot can now display multiple screenshots, when the package has multiple to show.
- - [#12428](https://dev.haiku-os.org/ticket/12428) It is possible to switch between a view with all tabs, and a view with featured packages, by using the tabs at the top of the window.
- - [#13806](https://dev.haiku-os.org/ticket/13806) The application will now clearly show when it is downloading screenshots for the packages you are looking at.
+ - [#12198](https://dev.haiku-os.org/ticket/12198) HaikuDepot can now display multiple screenshots of a package.
+ - [#12428](https://dev.haiku-os.org/ticket/12428) Switching between 'All packages' and 'Featured packages' is now done with tabs, not by ticking a checkbox.
+ - [#13806](https://dev.haiku-os.org/ticket/13806) The application will now clearly show when it is downloading screenshots for a package.
  - [#13808](https://dev.haiku-os.org/ticket/13808) Overall, it is more clear when HaikuDepot is contacting the web to retrieve information or updates.
 
 **Installer**
- - [#14310](https://dev.haiku-os.org/ticket/14310) The installer now supports the user showing and selecting optional packages, when they are available on the installation medium
+ - [#14310](https://dev.haiku-os.org/ticket/14310) The installer now supports showing and selecting optional packages, when available.
 
-**Launchbox**
- - [#11237](https://dev.haiku-os.org/ticket/11237) Launchbox will now start automatically at boot, when that has been configured in its settings.
- - [#13835](https://dev.haiku-os.org/ticket/13835) Icons of 96x96 and 128x128 pixels are now supported.
+**LaunchBox**
+ - [#11237](https://dev.haiku-os.org/ticket/11237) LaunchBox now has a setting to automatically launch at boot.
+ - [#13835](https://dev.haiku-os.org/ticket/13835) Support for 96x96 and 128x128 pixel icons.
 
 **MediaPlayer**
- - [#6628](https://dev.haiku-os.org/ticket/6628) When MediaPlayer is opened by opening a media file from Tracker, there will be a mark at the timestamp at the point where the user last stopped listening/viewing that file. 
+ - [#6628](https://dev.haiku-os.org/ticket/6628) Optionally, MediaPlayer will resume playback where it left off last time a file was played. 
 
 **People**
  - [#9397](https://dev.haiku-os.org/ticket/9397) It is possible to quickly create a new Person file from Tracker, with the 'Create new...' feature
 
-**SoftwareUpdate**
+**SoftwareUpdater**
  - [#14002](https://dev.haiku-os.org/ticket/14002) When updating the system packages itself, SoftwareUpdater will now display a 'Restart' button to inform the user that a restart is necessary.
 
 **Terminal**
  - [#15294](https://dev.haiku-os.org/ticket/15294) Support for an emulated Meta key
 
 **Tracker**
- - [#1264](https://dev.haiku-os.org/ticket/1264) multi-range selection in Tracker and list views
+ - [#1264](https://dev.haiku-os.org/ticket/1264) Multi-range selection in Tracker and list views
  - [#3011](https://dev.haiku-os.org/ticket/3011) Directories with a large number of files are now loaded quicker
  - [#5126](https://dev.haiku-os.org/ticket/5126) Improvements to the Tracker API
- - [#10529](https://dev.haiku-os.org/ticket/10529) For files that are part of a package, show information about that package in the info window.
+ - [#10529](https://dev.haiku-os.org/ticket/10529) The Info window now shows the originating package of a file (if applicable).
 
 **WebPositive**
  - [#14845](https://dev.haiku-os.org/ticket/14845) Allow selecting any font size (was previously limited to 18pt).
 
 **Command Line Utilities**
- - [#10288](https://dev.haiku-os.org/ticket/10288) `uname` now shows which specific Haiku nightly revision is built
+ - [#10288](https://dev.haiku-os.org/ticket/10288) `uname` now shows the specific revision of a Haiku nightly build.
  - [#12665](https://dev.haiku-os.org/ticket/12665) The builtiin `ftp` was replaced with [https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/net/tnftp/README.html tnftp].
 
 ### Drivers
