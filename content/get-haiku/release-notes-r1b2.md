@@ -192,7 +192,7 @@ In beta 2, the Terminal will have functionality like macOS': It adds a configura
 
 ### Drivers
 
- - The `hda` driver has had some improvements, that will allow it to work properly on more devices. If you had problem in R1/beta1, then it is worth a shot to try it again.
+ - The `hda` driver has had some improvements to work properly on more devices. If you had problem in Beta 1, it is worth a shot to try again.
  - [#9910](https://dev.haiku-os.org/ticket/9910) NVMe device support
  - [#5056](https://dev.haiku-os.org/ticket/5056) Intel Extreme: support X4500HD
  - [#12723](https://dev.haiku-os.org/ticket/12723) Intel Extreme: support hardware panel scaling for chipsets that support it
