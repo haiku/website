@@ -188,7 +188,7 @@ In beta 2, the Terminal will have functionality like macOS': It adds a configura
 
 **Command Line Utilities**
  - [#10288](https://dev.haiku-os.org/ticket/10288) `uname` now shows which specific Haiku nightly revision is built
- - [#12665](https://dev.haiku-os.org/ticket/12665) the built in `ftp` is now replaced with [https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/net/tnftp/README.html tnftp]
+ - [#12665](https://dev.haiku-os.org/ticket/12665) The builtiin `ftp` was replaced with [https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/net/tnftp/README.html tnftp].
 
 ### Drivers
 
