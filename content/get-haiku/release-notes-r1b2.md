@@ -56,30 +56,31 @@ There is an upgrade path available for users that are currently using Haiku R1 B
 
 ### Step 1: Getting the Latest Updates
 
-You need to make sure that you have all the package updates that are available for your current release. You can do this by running the following command in the terminal:
+You need to make sure that you have all the package updates that are available for your current release. You can do this by running the following command in Terminal:
 
 ```shell script
 pkgman update
 ```
 
 ### Step 2: Switch to the new repositories
-After this we will switch the package manager to point to the new repositories for beta 2. This will allow the package manager to find the new packages. Run the following commands in the Terminal.
+After this we will switch the package manager to point to the new repositories for Beta 2. This will allow the package manager to find the new packages. Run the following commands in Terminal.
 
 ```shell script
-pkgman drop Haiku; pkgman drop HaikuPorts;
+pkgman drop Haiku
+pkgman drop HaikuPorts
 pkgman add-repo https://eu.hpkg.haiku-os.org/haiku/r1beta2/$(getarch)/current
 pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/r1beta2/$(getarch)/current
 ```
 
 ### Step 3: Installing the new packages and reboot
 
-Now it is time to download and install the packages. You can do this by issuing the following command in the Terminal:
+Now it is time to download and install the packages. You can do this by issuing the following command in Terminal:
 
 ```shell script
 pkgman full-sync
 ```
 
-After that step has been successful, you should immediately reboot the system. You can do this from the Deskbar, or by running ```shutdown -r``` in the terminal.
+After that step has been successful, you should immediately reboot the system. You can do this from the Deskbar, or by running ```shutdown -r``` in Terminal.
 
 ## Beta 2 Highlights
 
@@ -87,10 +88,10 @@ This release contains 20 months worth of improvements. Below you find some highl
 
 ### New Input Preferences
 
-The Mouse, Keyboard, Touchpad and Joystick preferences have been consolidated into one Input Preferences.
+The Mouse, Keyboard, Touchpad and Joystick preferences have been consolidated into one Input preferences panel.
 
 <img src="/files/get-haiku/input_preferences.png"/><br>
-<small><i>The consolidated Input Preferences, including support for mice with 5 buttons.</i></small>
+<small><i>The consolidated Input preferences, including support for mice with 5 buttons.</i></small>
 
 Additionally, there is now support for mice with more than three buttons.
 
@@ -104,7 +105,7 @@ The Deskbar has had various improvements. It now has a mini-mode, where the icon
 Furthermore, there are more options for showing larger icons, which is especially useful on screens with a higher DPI.
 
 <img src="/files/get-haiku/deskbar_icon_sizes.png"/><br>
-<small><i>More size option for icons in DeskBar.</i></small>
+<small><i>A new slider to change the icon size in Deskbar</i></small>
 
 ### Hardware Support: xHCI, hda, intel_extreme and NVMe
 
@@ -114,20 +115,20 @@ Likewise, the Intel High Definition Audio (`hda`) driver has received some impro
 
 The driver for Intel graphics chipsets (`intel_extreme`) has had various improvements. It supports more chipsets, as well as blacklists chipsets that are known not to work. The advantage to the latter is that a user will no longer have to manually disable the driver in the boot menu when their system uses one of the blacklisted chipsets.
 
-Finally, initial support for NVMe storage devices have been implemented. This is a protocol for modern SSD drives, which takes advantage of the properties of this modern storage medium, to improve I/O performance over previous storage protocols. Reminder: Haiku is still in beta quality, and there may be bugs in these storage drivers that cold cause data loss. 
+Finally, initial support for NVMe storage devices has been implemented. This is a protocol for modern SSD drives, which takes advantage of the properties of this modern storage medium to improve I/O performance. Reminder: Haiku is still in beta quality, and there may be bugs in these storage drivers that could cause data loss. 
 
 ### Installation Improvements
 
-There are various improvements in the installation process. The first is that there is better support for EFI, though work remains to be done. Additionally, the Installer now supports optional packages that are included on the Installation medium. 
+There are various improvements in the installation process. The first is that there is better support for EFI, though work remains to be done. Additionally, the Installer now supports optional packages that are included on the installation medium. 
 
 DriveSetup will now display more information about the drives in your system. It will show the used space of existing partitions, and it is now also able to identify encrypted volumes.
 
-Finally, there is now also an upgrade path available from Haiku R1 beta 1 to beta 2.
+Finally, there is  an upgrade path available from Haiku R1 Beta 1 to Beta 2.
 
 <img src="/files/get-haiku/installer_optionalpackages.png"/><br>
 <small><i>Optional package selection in the Installer.</i></small>
 
-### The Terminal now has an emulated Meta-key
+### Emulated Meta-key in Terminal
 
 Certain early workstation keyboards included a key labeled "Meta" that functioned as an extra modifier key alongside Shift and Control. Its purpose was to give users an easy way of entering special characters: When held down it caused the eighth bit to be set on all characters read from the keyboard, allowing access to ​the "extended" portion of the ASCII character set (character codes above 127). 
 
@@ -136,16 +137,16 @@ Although the Meta key is absent from modern keyboards, two major pieces of UNIX 
 In beta 2, the Terminal will have functionality like macOS': It adds a configuration option to the "Settings..." dialog that, when enabled, causes the left Option key (only) to function as a Meta key. The right Option key retains its normal function, and can be used to enter special characters at the keyboard. 
 
 <img src="/files/get-haiku/terminal_metakey.png"/><br>
-<small><i>Enabling the meta key functionality in the settings.</i></small>
+<small><i>Enabling the Meta key functionality in the settings.</i></small>
 
 ## Other Enhancements
 
 ### Applications
 **Deskbar**
- - [#4971](https://dev.haiku-os.org/ticket/4971) Resize Deskbar from the Deskbar settings, our by using the CTRL-ALT-right click drag
+ - [#4971](https://dev.haiku-os.org/ticket/4971) Resize Deskbar by using  CTRL-ALT-right click drag
  - [#8537](https://dev.haiku-os.org/ticket/8537) In menus, the size of the icon will now always be the same size as your chosen font size
- - [#8691](https://dev.haiku-os.org/ticket/8691) The icons of replicants are running in the Deskbar, will scale according to the settings
- - [#13304](https://dev.haiku-os.org/ticket/13304) Auto-raised deskbar will now also auto-unraise
+ - [#8691](https://dev.haiku-os.org/ticket/8691) The icons of replicants running in Deskbar's tray now scale according to the font size
+ - [#13304](https://dev.haiku-os.org/ticket/13304) Auto-raised Deskbar will now also 'auto-unraise'
 
 **DriveSetup**
  - [#10098](https://dev.haiku-os.org/ticket/10098) Encrypted disks will actually display that they are encrypted instead of empty
