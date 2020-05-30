@@ -34,13 +34,16 @@ At this point, continue the installation as usual to the 'Haiku' filesystem.
 
 ### Installing the EFI Loader
 
-**Note:** Due to a [bug](https://dev.haiku-os.org/ticket/14539) in r1beta1, the UEFI loader isn't available during installation.
-You can grab the UEFI bootloader [here](https://ftp.osuosl.org/pub/haiku/r1beta1/haiku-r1beta1-x86_64-efiloader.zip).
+In r1beta2, the Installer does not automatically install the EFI loader, so it needs to be done manually.
 
 After the installation is successful (but before rebooting), return to the live desktop and mount the "EFIBOOT" partition from the desktop.
 
-The UEFI filesystem partition should be laid out as follows:
+The UEFI system partition should be laid out as follows:
 
   * EFI (directory)
     * BOOT (directory)
       * BOOTX64.EFI (our uefi loader)
+
+You can copy BOOTX64.EFI from the EFI partition of the install media to the EFI partition of the target drive.
+Installing it this way will make your system always boot into Haiku, if you want to use multiple operating systems
+it is recommended to install an EFI bootloader such as [rEFInd](https://www.rodsbooks.com/refind/).
