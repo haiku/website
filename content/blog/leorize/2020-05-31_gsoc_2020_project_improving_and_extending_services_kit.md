@@ -3,7 +3,7 @@ type = "blog"
 title = "GSoC 2020 Project: Improving and Extending Services Kit"
 author = "leorize"
 date = "2020-05-31 15:57:12-05:00"
-tags = ["haiku", "software"]
+tags = ["haiku", "software", "gsoc2020", "gsoc", "serviceskit", "network"]
 +++
 
 It's pretty long overdue for the post, but here I am.
