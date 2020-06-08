@@ -139,24 +139,26 @@ sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysuti
 <a name="osx"></a>
 ## ![osx](/files/os-icons/macosx-32.png) macOS
 
-A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ works fine.
+A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ and AFS work fine.
 
 First install Xcode via ```xcode-select --install``` and accept the license. ```xcodebuild -license```
 
 Once you have installed XCode and the command line tools as well as agreed to the end user license you can install the prerequisite software either by using MacPorts or by using Homebrew.
 
+With the release of MacOS Catalina, Apple no longer provides an installation of gcc. The command ```gcc``` is an alias for clang. When building Haiku you need to provide it with instructions to use gcc, which can be installed by both Homebrew and MacPorts. This process likely looks something like ```CC=/usr/local/bin/gcc-9 jam -q -j2 @nightly-anyboot```.
+
 **To install the prerequisite software using Homebrew:**
 
 1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools```
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools gcc```
 3. Force using the newer bison version. ```brew link bison --force```
 
 Note: You'll need to install gnu less from the dupes repository as macOS comes with BSD less while Haiku requires GNU less.
 
-**To install the prerequisite software using Macports do the following:**
+**To install the prerequisite software using MacPorts do the following:**
 
 1. Install <a href="http://www.macports.org/">MacPorts</a> (A standard Installer package is provided).
-2. Close your Terminal, open a new one and type ```sudo port install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools```
+2. Close your Terminal, open a new one and type ```sudo port install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools gcc-9```
 
 If you get an error “port: command not found”, the MacPorts shell configuration, stored in <code>~/.profile</code>, is probably not taken into account.
 If you’re using Bash, you probably have a <code>~/.bash_profile</code> or <code>~/.bash_login</code> file, preventing bash to read <code>~/.profile</code>.
