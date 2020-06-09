@@ -203,7 +203,7 @@ Below is a list of detailed API changes since Beta 1.
 ### Interface Kit
  - [Deskbar.h](https://git.haiku-os.org/haiku/commit/?h=hrev52499&id=efafab643ce980e3f3c916795ed302599f6b4f66) Add MaxItemWidth() and MaxItemHeight() as part of the work to support variable size icons for Deskbar replicants.
  - [View.h](https://git.haiku-os.org/haiku/commit/headers/os/interface/View.h?id=5bbf7f1be073d376e37da34681c8e6c7acfcf198) New `B_MOUSE_BUTTON` macro that helps you identify which mouse button was clicked on a mouse with more than three buttons.
- - [View.h](https://git.haiku-os.org/haiku/commit/headers/os/interface/View.h?id=47102c074278637c3b33935b451d53f7ad176658) Add a the new `B_TRANSPARENT_BACKGROUND`, to identify views that have a transparant background (i.e. the background will not be drawn for those views).
+ - [View.h](https://git.haiku-os.org/haiku/commit/headers/os/interface/View.h?id=47102c074278637c3b33935b451d53f7ad176658) Add a the new `B_TRANSPARENT_BACKGROUND`, to identify views that have a transparent background (i.e. the background will not be drawn for those views).
  - [View.h](https://git.haiku-os.org/haiku/commit/headers/os/interface/View.h?id=c67dde0f2ccb45d550af410cf6d73fee39d10504) Add Tiled Background methods to `BView` objects to asynchronously draw bitmaps as background tiles for the view, using the overloaded `DrawTiledBitmapAsync()` method.
 
 ### Locale Kit
