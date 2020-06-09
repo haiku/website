@@ -237,4 +237,4 @@ Press inquiries may be directed to:
  * pulkomandy (French)
  * humdingerb (German)
 
-All three contacts may be reached via `<nickname>@gmail`.
+All three contacts may be reached via `<nickname>@gmail.com>`.
