@@ -73,7 +73,12 @@ If you choose to download an image, please select from the list of available mir
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
     </tr>
-	<tr>
+    <tr>
+      <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+    </tr>
+    <tr>
       <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
