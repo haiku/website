@@ -1,18 +1,21 @@
 +++
 type = "article"
-title = "Get Haiku!"
+title = "Get Haiku: R1/beta1"
 date = "2018-09-28 20:38:42-04:00"
 tags = []
 +++
+
+<div class="alert alert-warning">
+This page is about a past release of Haiku. For information on more current releases, please visit <a href="/get-haiku/">Get Haiku</a>.
+</div>
 
 <div class="box-release-info-right">
 <p><strong>Current Official Version Information</strong></p>
 <ul>
 	<li><strong>Version:</strong> R1/beta1</li>
 	<li><strong>Release date:</strong> September 28th, 2018 </li>
-	<li><strong>Release notes:</strong> <a href="/get-haiku/release-notes/">Release notes.</a> </li>
+	<li><strong>Release notes:</strong> <a href="/get-haiku/r1beta1/release-notes/">Release notes.</a> </li>
 	<li><strong>Computer platform:</strong> x86, 32-bit and 64-bit</li>
-	<!--li><strong>Important:</strong> <a href="https://dev.haiku-os.org/wiki/R1/Beta1/ReleaseAddendum">Post Release Addendum</a></li-->
 </ul>
 </div>
 

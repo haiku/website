@@ -46,7 +46,7 @@ This means that the `/system/` hierarchy is now read-only, since it is merely an
 
 Since packages are merely "activated", not installed, this means that <a href="https://www.haiku-os.org/docs/userguide/en/bootloader.html">the bootloader</a> has been given some capacity to affect them: you can now boot into a previous package state (in case you took a bad update) or even blacklist individual files. (Blacklists can be made permanent through a <a href="https://www.haiku-os.org/guides/daily-tasks/blacklist-packages/">settings file</a>.)
 
-<img src="/files/get-haiku/bootloader_blacklist.png" alt="Blacklisting packages in the bootloader">
+<img src="/files/get-haiku/r1beta1/bootloader_blacklist.png" alt="Blacklisting packages in the bootloader">
 
 And of course, since the disk transactions for managing packages are limited to moving them between directories and in and out of the "activated packages" listing file, installations and uninstallations are practically instant. You can thus also manage the installed package set on a non-running Haiku system by mounting its boot disk and then manipulating the `/system/packages` directory and associated configuration files.
 
@@ -58,13 +58,13 @@ In addition to HaikuDepot, there is also `pkgman`, the command-line interface to
 
 Accompanying the package manager is a massively revamped <a href="https://github.com/haikuports/haikuports/">HaikuPorts</a>, which has moved from a organized array of build scripts to a well-oiled full-fledged ports tree, containing <a href="https://repology.org/repository/haikuports_master">a wide array</a> of both native and ported software for Haiku.
 
-<img src="/files/get-haiku/ported-software.png" alt="A variety of ported software running on Haiku">
+<img src="/files/get-haiku/r1beta1/ported-software.png" alt="A variety of ported software running on Haiku">
 
 ### WebPositive upgrades
 
 Thanks to the generous support of donors, Haiku, Inc. was able to employ a developer to work full-time on enhancing WebKit port and areas of the system relevant to it (which turned out to be nearly everything) for <a href="https://www.haiku-os.org/blog/pulkomandy/2013-09-27_webkit_weekly_report_1/">over</a> a <a href="https://www.haiku-os.org/blog/pulkomandy/2014-10-24_webkit_weekly_report_50_one_year_webkit/">year</a>. As a result, the system web browser is much more stable than before, with various under-the-hood changes and a number of notable user-visible ones, such as YouTube now functioning properly:
 
-<img src="/files/get-haiku/webkit.png" alt="WebPositive playing Rick Astley">
+<img src="/files/get-haiku/r1beta1/webkit.png" alt="WebPositive playing Rick Astley">
 
 WebKit is a pretty hefty piece of software, and as a result working on bringing it up to speed meant also fixing a large number of bugs in Haiku itself that it exposed, such as broken stack alignment, various kernel panics in the network stack, bad edge-case handling in `app_server`'s rendering core, missing support for extended transforms and gradients, broken picture-clipping support, missing POSIX functionality, media codec issues, GCC upgrades ... the list goes on.
 
@@ -82,14 +82,14 @@ In addition to the (now-streamlined) interface configuration screens, the prefle
 
 There were a lot of miscellaneous cleanups to various parts of the user interface since the last release.
 
-<img src="/files/get-haiku/mail_and_people.png"/><br>
+<img src="/files/get-haiku/r1beta1/mail_and_people.png"/><br>
 <small><i>Mail and Tracker, displaying some sample data.</i></small>
 
 Mail and Tracker both received significant internal cleanup of their UI code, and as a result now sport Haiku-style toolbars and font-size awareness, among other applications. This makes future work to add proper DPI scaling (or, even further, right-to-left layouts)
 
 In addition, the way most applications interact with system color settings has changed significantly. Instead of requesting a specific system color and then manipulating it, most applications now instruct their controls to adopt certain colors based on the system color set directly. This means that changing the colors in the Appearance preflet changes them across the system, live:
 
-<video src="/files/get-haiku/live_color.mp4" controls="controls"></video>
+<video src="/files/get-haiku/r1beta1/live_color.mp4" controls="controls"></video>
 
 ### Media subsystem improvements
 
@@ -105,7 +105,7 @@ Previously, the Media Kit assumed that all media files were seekable, which of c
 
 Significant improvements to the FFmpeg decoder plugin were made, initially as part of the DVB tuner rework as mentioned below, and later on as part of the streaming work and others. Rather than the ancient FFmpeg 0.10, the last version that GCC2 can compile, FFmpeg 4.0 is now used all-around (even on GCC2 builds, thanks to some clever ABI trickery.) This means a much widened support for audio and video formats, as well as significant performance improvements (at least for those on newer CPUs.)
 
-<img src="/files/get-haiku/mediaplayer_bbb.png"/><br>
+<img src="/files/get-haiku/r1beta1/mediaplayer_bbb.png"/><br>
 <small><i>MediaPlayer playing a short test clip of Big Buck Bunny.</i></small>
 
 #### HDA driver improvements
