@@ -89,7 +89,7 @@ Mail and Tracker both received significant internal cleanup of their UI code, an
 
 In addition, the way most applications interact with system color settings has changed significantly. Instead of requesting a specific system color and then manipulating it, most applications now instruct their controls to adopt certain colors based on the system color set directly. This means that changing the colors in the Appearance preflet changes them across the system, live:
 
-<video src="/files/get-haiku/live_color.mp4" controls="controls"/>
+<video src="/files/get-haiku/live_color.mp4" controls="controls"></video>
 
 ### Media subsystem improvements
 
