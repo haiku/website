@@ -36,8 +36,6 @@ SSE2 support is required to use the WebPositive web browser. On machines where t
 
 ## Highlights
 
-This release contains 20 months' worth of improvements. Below you find some of the highlights.
-
 ### Improved HiDPI support
 
 Begun but significantly incomplete at the time of Beta 1, this release sees a significant advancement in support for HiDPI monitors (and UI scaling in general.) Unlike other operating systems which largely enact a "device pixel ratio", that converts a number of "internal pixels" to "screen pixels", Haiku instead scales everything based on font size, and leaves pixels to mean "screen pixels" in isolation. This also means that one can effectively change the UI size and scale on any display by changing the system font size, and everything else should adjust to match it.
@@ -56,10 +54,7 @@ The Deskbar has had various improvements. It now has a mini-mode, where the icon
 <img src="/files/get-haiku/r1beta2/deskbar_minimode.png"/><br>
 <small><i>New mini-mode to put the Deskbar at the top of the screen.</i></small>
 
-Furthermore, there are more options for showing larger icons, which is especially useful on screens with a higher DPI.
-
-<img src="/files/get-haiku/r1beta2/deskbar_icon_sizes.png"/><br>
-<small><i>A new slider to change the icon size in Deskbar</i></small>
+Additionally, the "auto-raise" mode has been improved to automatically lower the Deskbar when the mouse leaves it.
 
 ### New Input preferences
 
@@ -74,9 +69,18 @@ Additionally, there is now support for mice with more than three buttons, includ
 
 Haiku's built-in web browser, WebPositive, now uses a newer version of WebKit. Additionally, it contains a number of fixes to the Haiku backend, most notably to reserve significantly less memory, and to fix WebSockets, as well as a variety of crashes.
 
+<img src="/files/get-haiku/r1beta2/webpositive.png"/><br>
+<small><i>WebPositive displaying a post on the Haiku forums.</i></small>
+
 ### More ported software
 
 Thanks to Haiku's relatively robust POSIX compliance, as well as ports of open source GUI toolkits, even more pieces of popular open source software have been ported to Haiku since Beta 1 and are available in the package repositories.
+
+<img src="/files/get-haiku/r1beta2/haikuports-apps.png"/><br>
+<small><i>Various applications, such as LibreOffice, Telegram, Okular, Krita, AQEMU, and more, running on Haiku.</i></small>
+
+<img src="/files/get-haiku/r1beta2/haikuports-games.png"/><br>
+<small><i>Various games, such as FreeCiv, DreamChess, Minetest, and more, running on Haiku.</i></small>
 
 ### Installation improvements
 

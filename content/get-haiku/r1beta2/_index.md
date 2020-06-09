@@ -65,13 +65,18 @@ If you choose to download an image, please select from the list of available mir
 <tbody>
     <tr>
       <td class="location"><b>Location:</b> East Coast, United States <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
     </tr>
     <tr>
-      <td class="location"><b>Location:</b> Amsterdam, Netherlands <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
+      <td class="location"><b>Location:</b> Amsterdam, The Netherlands <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+    </tr>
+	<tr>
+      <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
     </tr>
 </tbody>
 </table>
@@ -82,7 +87,7 @@ If you choose to download an image, please select from the list of available mir
 <p>In order to assist with distribution, we have also created .torrent files that can be used to download and seed the release files for others.<br/>
 <b>Please continue seeding the torrents if you can!</b></p>
 <ul>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2_hybrid-anyboot.zip.torrent">32-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip.torrent">32-bit</a></li>
  <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip.torrent">64-bit</a></li>
 </ul>
 
@@ -91,16 +96,15 @@ If you choose to download an image, please select from the list of available mir
 <p>To make sure that you have got the right file and that it has not been corrupted during file transfer, it is always wise to ensure the integrity of your download. To that end, you can use the SHA256 checksums shown below to verify that what you have is the correct file.</p>
 
 <pre>
-FIXME haiku-r1beta2-x86_64-anyboot.zip
-FIXME haiku-r1beta2-x86_gcc2_hybrid-anyboot.zip
+24ea1839930a48828387797a4f4b2a142bafd71da4d86788e2dbe51f4eb68aff haiku-r1beta2-x86_64-anyboot.zip
+450bcc612831715c4c2cc9a67cabafcb476e89a17f67ece40ad72b31ef3e93ac haiku-r1beta2-x86_gcc2h-anyboot.zip
 </pre>
 
 <p>
 	If you are in Haiku, macOS or Linux, you can use the <code>sha256sum</code>
 	command from the Terminal to generate a checksum for your downloaded
 	file and verify against those above. If you are in Windows, you can use
-	a tool such as hashtab to display checksums for files directly in explorer.
-	<a href="http://implbits.com/products/hashtab/" title="Download hashtab">download from here</a>.
+	a tool such as <a href="https://implbits.com/products/hashtab/" title="Download hashtab">hashtab</a> to display checksums for files directly in explorer.
 	</p>
 
 <h3 class="App_People_32">Acknowledgment</h3>
