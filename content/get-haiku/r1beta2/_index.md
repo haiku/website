@@ -46,7 +46,7 @@ After that step has completed succesfully, you should immediately reboot the sys
 
 The provided images are in our `anyboot` format. They can be written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>, an empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.<br />
 The images can be used "live" or used to install Haiku to another disk/partition of your choice.<br />
-They can also be used directly from QEMU or installed in other <a href="/guides/virtualizing">virtual machine</a>.
+They can also be used directly from QEMU or installed in other <a href="/guides/virtualizing">virtual machines</a>.
 
 ### Direct Download Locations
 
@@ -96,7 +96,7 @@ FIXME haiku-r1beta2-x86_gcc2_hybrid-anyboot.zip
 </pre>
 
 <p>
-	If you are in macOS or Linux, you can use the <code>sha256sum</code>
+	If you are in Haiku, macOS or Linux, you can use the <code>sha256sum</code>
 	command from the Terminal to generate a checksum for your downloaded
 	file and verify against those above. If you are in Windows, you can use
 	a tool such as hashtab to display checksums for files directly in explorer.

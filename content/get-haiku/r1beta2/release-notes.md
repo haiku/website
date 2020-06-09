@@ -51,7 +51,7 @@ There are still some bugs to be ironed out (such as scrollbars not drawing with 
 
 ### Deskbar improvements
 
-The Deskbar has had various improvements. It now has a mini-mode, where the icons on the shelf expand leftwards. You can activate it by dragging the shelf space by the right handle to the top of the screen.
+The Deskbar has had various improvements. It now has a mini-mode, where the icons on the shelf expand leftwards. You can activate it by dragging the shelf space by the right handle onto the blue leaf.
 
 <img src="/files/get-haiku/r1beta2/deskbar_minimode.png"/><br>
 <small><i>New mini-mode to put the Deskbar at the top of the screen.</i></small>
@@ -80,7 +80,7 @@ Thanks to Haiku's relatively robust POSIX compliance, as well as ports of open s
 
 ### Installation improvements
 
-Installer now supports excluding optional packages that are included on the installation medium from an actual installation.
+Installer now supports excluding optional packages that are included on the installation medium.
 
 DriveSetup will now display more information about the drives in your system. It will show the used space of existing partitions, and it is now also able to identify encrypted volumes.
 
