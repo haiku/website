@@ -40,7 +40,7 @@ If this is successful, you may then run a `full-sync` to perform the actual upgr
 pkgman full-sync
 ```
 
-After that step has completed succesfully, you should immediately reboot the system. You can do this from the Deskbar, or by running ```shutdown -r``` in Terminal.
+After that step has completed successfully, you should immediately reboot the system. You can do this from the Deskbar, or by running ```shutdown -r``` in Terminal.
 
 ### Download a Haiku Image
 
