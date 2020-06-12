@@ -187,7 +187,7 @@ Below is a list of detailed API changes since Beta 1.
 
 ### POSIX
 
- - [fcntl.h](https://git.haiku-os.org/haiku/commit?id=38ce902686b9b6d4d19bfde134b18f997192ba01) A non-functioning version of `posix_fadvice()` has been added, to make it easier to port software.
+ - [fcntl.h](https://git.haiku-os.org/haiku/commit?id=38ce902686b9b6d4d19bfde134b18f997192ba01) A non-functioning version of `posix_fadvise()` has been added, to make it easier to port software.
  - [net/if_tun.h](https://git.haiku-os.org/haiku/commit/headers/posix/net/if_tun.h?id=b110fce124c8603201228da1b67119b56e41cf7e) A public API for the tun/tap device compatible with the Linux API has been added.
  - [net/if_types.h](https://git.haiku-os.org/haiku/commit/?h=hrev53087) Add some constants for `IFT_LOCALTALK`, `IFT_TUN`, `IFT_L2VLAN` and `IFT_BRIDGE`
  - [pthread.h](https://git.haiku-os.org/haiku/commit/?h=hrev52972&id=901c3d44b047f83b914f7a3cd1f532964255771a) Implement `pthread_attr_[get|set]stack()`
