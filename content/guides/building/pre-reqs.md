@@ -36,7 +36,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 | BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
 | macOS                              | [Homebrew](#osx)     | NO        | Need a working case sensitive filesystem |
 | Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
-| [Windows](http://microsoft.com)    | [see notes](#windows)| NO        |                     |
+| [Windows](https://microsoft.com/)    | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
 | Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
 
 <a name="pkgman"></a>
@@ -180,8 +180,7 @@ You can now retry the <code>port install...</code> command in a new Terminal.
 
 It is possible to install Windows Subsystem for Linux and follow the instructions
 for the appropriate Linux distribution (for example, Ubuntu is available this way
-in the Windows store). However, this is currently slower than running Haiku in
-a virtual machine and building from there.
+in the Windows store).
 
 <a name="beos_zeta"></a>
 ## ![beos](/files/os-icons/beos-32.png) BeOS & Zeta
