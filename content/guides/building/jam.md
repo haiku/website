@@ -13,22 +13,6 @@ As of August 2019, this is the current version. If a different version is report
 jam -v
 Jam 2.5-haiku-20111222. OS=LINUX. Copyright 1993-2002 Christopher Seiwald.
 </pre>
-<a name="build_jam"></a>
-<h3><a href="#build_jam">Building Jam from Source</a></h3>
-Haiku's version of jam lives inside the <a href="https://cgit.haiku-os.org/buildtools/">buildtools repository</a>. If you need to, see this page on <a href="/guides/building/get-source-git">Getting Haiku Source Code</a>.
-<pre class="terminal">
-cd  /path/haiku/buildtools/jam/
-make
-&lt;jam-install-command&gt;
-</pre>
-<h4>&lt;jam-install-command&gt;</h4>
-To install jam you can use one of two commands:
-The first requires administrative privilege, as jam will be installed to '/usr/local/bin/'
-<ul>
-<li><span class="cli">sudo ./jam0 install</span></li>
-<li><span class="cli">./jam0 -sBINDIR=$HOME/bin install</span></li>
-</ul>
-Note, you may need to use `gmake` instead of `make`
 
 <a name="jam_options"></a>
 <h3><a href="#jam_options">Command Line Options</a></h3>

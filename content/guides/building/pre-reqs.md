@@ -13,6 +13,33 @@ So while Haiku is not the fastest, being able to immediately test the freshly co
 
 Haiku currently supports building itself, or having itself *cross compiled* on another platform.
 
+## Installing Jam
+
+<a name="build_jam"></a>
+
+Haiku uses a [custom version of Jam](/guides/building/jam) which needs to be built from sources.
+It is not possible to use the Jam version that may be packaged with Linux distributions, which
+is missing several features added by Haiku developers.
+
+Haiku's version of jam lives inside the <a href="https://cgit.haiku-os.org/buildtools/">buildtools repository</a>. If you need to, see this page on <a href="/guides/building/get-source-git">Getting Haiku Source Code</a>.
+
+<pre class="terminal">
+cd  /path/haiku/buildtools/jam/
+make
+&lt;jam-install-command&gt;
+</pre>
+
+Note, you may need to use `gmake` instead of `make` on BSD systems.
+
+<h4>&lt;jam-install-command&gt;</h4>
+
+To install jam you can use one of two commands:
+The first requires administrative privilege, as jam will be installed to '/usr/local/bin/'
+<ul>
+<li><span class="cli">sudo ./jam0 install</span></li>
+<li><span class="cli">./jam0 -sBINDIR=$HOME/bin install</span></li>
+</ul>
+
 ## Build platform support matrix
 
 Below are common build platforms and their statuses. This is not meant as a complete list, and the build specifics might change with new versions of those platforms. Further below you'll find more specific help on how to set up the build.
