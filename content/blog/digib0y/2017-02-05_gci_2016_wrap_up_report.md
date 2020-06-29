@@ -36,7 +36,7 @@ Raefaldhi Amartya Junior from Indonesia</li>
 <li>Winston Durand</li>
 </ul>
 
-<p>Congratulations finalists! Safe travels, grand winners!  We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/community/getting-involved/">contribute</a> even after the program. This year Jessica Hamilton will make the trip to meet the winners as they both picked her as the mentor they would like to meet.</p>
+<p>Congratulations finalists! Safe travels, grand winners!  We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/contribute/">contribute</a> even after the program. This year Jessica Hamilton will make the trip to meet the winners as they both picked her as the mentor they would like to meet.</p>
 
 <p>Haiku had an impressive growth in the number of students:</p>
 

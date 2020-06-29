@@ -38,7 +38,7 @@ tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In"
 <li>Mochammad Nur Afandi</li>
 </ul>
 
-<p>Congratulations everyone! Safe travels, grand prize winners! We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/community/getting-involved/">contribute</a> even after the program.</p>
+<p>Congratulations everyone! Safe travels, grand prize winners! We are thankful for your precious contributions and will be delighted see you continue to <a href="https://www.haiku-os.org/contribute/">contribute</a> even after the program.</p>
 
 <p>To list some of the students’ achievements:</p>
 
