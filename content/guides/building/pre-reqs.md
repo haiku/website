@@ -62,7 +62,7 @@ pkgman install dtc bc
 **Basic requirements:**
 
 ```sh
-sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool mtools gcc-multilib python3
+sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool mtools gcc-multilib python3 gcc-multilib
 ```
 
 **Additional requirements for ARM:**
