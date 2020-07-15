@@ -86,7 +86,7 @@ HDS provides a user-interface that is a curation system for this community-suppl
 
 ## Closing the Loop with the Identifiers
 
-HDS will periodically download the `repo.info` and `repo` file from the repository and parse them into its own database.  When it later provides the repository data to the HaikuDepot desktop application, HDS includes the `identifier` for each repository.  HaikuDepot is then able to correlate the `identifier` coming from HDS with the `identifer` available from its local cache of the `repo.info` file.  This way HaikuDepot is able to ascertain which repository or repositories to observe in HDS in relation to the locally configured repositories regardless of which mirror was used.
+HDS will periodically download the `repo.info` and `repo` file from the repository and parse them into its own database.  When it later provides the repository data to the HaikuDepot desktop application, HDS includes the `identifier` for each repository.  HaikuDepot is then able to correlate the `identifier` coming from HDS with the `identifier` available from its local cache of the `repo.info` file.  This way HaikuDepot is able to ascertain which repository or repositories to observe in HDS in relation to the locally configured repositories regardless of which mirror was used.
 
 HaikuDepot is able to show a list of packages from the locally configured repositories and is also able to enhance the available data locally with the packages' data stored in HDS.
 
@@ -94,7 +94,7 @@ HaikuDepot is able to show a list of packages from the locally configured reposi
 
 Sometimes it is necessary for an actual repository configured on a Haiku system to correlate with the "wrong" repository in HDS; in other words the `identifier` values do not match.
 
-An example is a beta release.  In this case, it is desirable for the beta release repository's `identifier` to be different to distinguish it, but at the same time, it is desirable that the packages' meta-data are blended with the regular repository in HDS.  In this case, HDS also supports a repository having some fake `identifer` values that HD will also honour.
+An example is a beta release.  In this case, it is desirable for the beta release repository's `identifier` to be different to distinguish it, but at the same time, it is desirable that the packages' meta-data are blended with the regular repository in HDS.  In this case, HDS also supports a repository having some fake `identifier` values that HD will also honour.
 
 ## Summary
 
