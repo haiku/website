@@ -12,6 +12,8 @@ This report covers hrev54370 through hrev54484.
 
 ## Applications
 
+KapiX added a "Set target to parent folder" option in the TextSearch application, making it easy to move one directory up.
+
 Humdinger fixed bug #16321 in the ShowImage application. The timer now responds properly to user input.
 
 Andrew Lindesay added support for HaikuDepot Server repo meta-data to be artificially matched against multiple repos. Improvements were also made in HaikuDepot's logging mechanism to de-clutter the code and enable better systematic logging.
@@ -20,16 +22,19 @@ pulkomandy fixed bug #8702, allowing the system to better distinguish video Ogg 
 
 ## app_server
 
-Extra Bview drawing modes required for WebKit canvas support were implemented by Kacper Kasper.
+Extra Bview drawing modes required for WebKit canvas support were implemented by KapiX.
 
 ## ARM and ARM64
 
-kallisti5 continued work on the ARM architectures and enabled building of the ARM64 EFI bootloader. EFI CPU code was refactored to be architecture-specific, allowing CPU init code to be properly called, further progressing the EFI bootloader.
+kallisti5 continued work on the ARM architecture, specifically the ARM64 EFI bootloader. EFI CPU code was refactored to be architecture-specific, allowing CPU init code to be properly called, further progressing the EFI bootloader, which is now building and running.
 
 ## Bootloader
 
 Kallisti5 added support for 32-bit kernels to the EFI bootloader. Heinrich Schuchardt made a debugging improvement to the EFI bootloader, allowing a efi.map file to be available when linking. 
 
+## Documentation
+
+Máximo Castañeda has greatly improved the JavaSript and CSS of the QuickTour. It's now possible to show it as a proper slide-show, as was intended with the original QuickTour package. The result is a much nicer experience of this piece of documentation that is directed especially at new users.
 
 ## Drivers
 
@@ -50,10 +55,6 @@ CruxBox added code allowing xfs to read short form directories and laid the grou
 Suhel Mehta implemented open\_dir and read\_dir functions for ufs2 and committed changes enabling DirectoryIterator to successfully read all directories.
 
 brjhaiku added partial support for btrfs\_write\_stat.
-
-## Kernel
-
-pulkomandy added space for AVX-512 registers in x86 arch_thread, which should resolve some KDLs when booting on certain Intel CPUs. mmlr contributed a number of improvements to the kernel, including implementing the MADV_FREE madvise() extension, which allows an application to signal that it no longer needs the data in a given address range so the underlying pages can be discarded and reused elsewhere.
 
 ## Networking
 
@@ -82,9 +83,9 @@ pulkomandy made improvements to the IPP code for handling URLs in a standard fas
 
 ## User Interface
 
-waddlesplashed made improvements to various UI components that improve the look on high-DPI systems:
+waddlesplash made improvements to various UI components that improve the look on high-DPI systems:
 
-* Alert icons (BAlert) on high resolution displays now use factional scaling
+* Alert icons (BAlert) on high resolution displays now use fractional scaling
 * Menus look better on font-scaled systems
 * Insets look better on high-DPI
 * Buttons are more proportional on high-DPI systems, though not yet perfect
