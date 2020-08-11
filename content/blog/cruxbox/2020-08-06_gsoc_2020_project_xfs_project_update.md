@@ -8,6 +8,7 @@ tags = ["haiku", "software", "gsoc", "gsoc2020", "file system"]
 
 Hello there!
 There is quite a lot to share about the work done this month.
+
 ---
 
 Work done so far:
