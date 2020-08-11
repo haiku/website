@@ -2,7 +2,7 @@
 type = "blog"
 title = "GSoC 2020 Project Update: XFS"
 author = "CruxBox"
-date = "2020-06-06 20:45:56+05:30"
+date = "2020-06-07 20:45:56+05:30"
 tags = ["haiku", "software", "gsoc", "gsoc2020", "file system"]
 +++
 
