@@ -12,7 +12,7 @@ It's been exactly a month since my last post. Sorry for not posting much!
 ---
 
 Work done so far:
-You can check for the patches here: https://review.haiku-os.org/q/owner:shubhambhagat111%2540yahoo.com
+You can check for the patches here: https://review.haiku-os.org/q/hashtag:gsoc2020+owner:shubhambhagat111%2540yahoo.com
 
 But in short this is what is done,
 
