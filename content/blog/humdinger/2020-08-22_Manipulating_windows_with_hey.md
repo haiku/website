@@ -9,11 +9,11 @@ tags = ["haiku", "scripting", "hey", "look"]
 I have an ActivityMonitor replicant showing network receive/send info on the Desktop. I'd also like to have something showing cpu usage. However, a combined cpu usage ActivityMonitor doesn't show individual core usage, and having a graph of all cpus often isn't that informative either, because the 8 doodling lines of my cores are easily confusing. ProcessController's bars are too narrow.   
 Here are both, showing their inadequacy:
 
-->![ProcessController to the left, ActivityMonitor to the right](https://www.haiku-os.org/files/blog/humdinger/ProcessController+ActivityMonitor.png)<-
+![ProcessController to the left, ActivityMonitor to the right](https://www.haiku-os.org/files/blog/humdinger/ProcessController+ActivityMonitor.png)
 
 Pulse (from the Demo folder) in mini-mode has everything I need: adjustable column width and colours. Only downside: The mini-mode isn't replicable, so it'll have to stay in its window. Far from ideal.
 
-##'hey' to the rescue!
+## 'hey' to the rescue!
 
 LaunchBox has settings that I need, that Pulse doesn't provide: "*Show on all workspaces*" and a deactivated "*Show window border*". Both settings are scriptable via the "*Workspaces*" and the "*Look*" flags.   
 How to get to the "magic" values to set those, though? By grabbing the values from an accordingly configured LaunchBox:
@@ -42,6 +42,6 @@ Then I added this to my `~/config/settings/boot/UserBootscript`:
 
 Here's the bottom right corner of my screen; Pulse to the left, ActivityMonitor to the right:
 
-->![Pulse to the left, ActivityMonitor to the right](https://www.haiku-os.org/files/blog/humdinger/Pulse+ActivityMonitor.png)<-
+![Pulse to the left, ActivityMonitor to the right](https://www.haiku-os.org/files/blog/humdinger/Pulse+ActivityMonitor.png)
 
 The nice thing with Pulse: I can still resize and position the window with {{< keyboard CTRL >}}+{{< keyboard ALT >}}+right/left click-drag.
