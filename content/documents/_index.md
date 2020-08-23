@@ -33,6 +33,7 @@ These are legacy BeOS documents released as reference material for those who wan
 
 * [The BeBook](/legacy-docs/bebook/index.html)
 * [The Be Newsletters](/legacy-docs/benewsletter/index.html)
+* [The OpenBeOS Newsletters](/legacy-docs/openbeosnewsletter/index.html)
 
 ### Other Resources
 
@@ -46,4 +47,3 @@ These are legacy BeOS documents released as reference material for those who wan
 ## Contributed Articles
 
 The Haiku community has contributed a large number of [detailed articles](/articles) over the years, be sure to check them out!.
-
