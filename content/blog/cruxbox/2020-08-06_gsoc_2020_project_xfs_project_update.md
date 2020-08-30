@@ -13,7 +13,7 @@ There is quite a lot to share about the work done this month.
 
 ## Work done so far:
 
-You can check for the patches here: https://review.haiku-os.org/q/owner:shubhambhagat111%2540yahoo.com
+You can check for the patches here: https://review.haiku-os.org/q/hashtag:gsoc2020+owner:shubhambhagat111%2540yahoo.com
 In short: All directory work is done. This includes ShortForm Directories, Block Directories, Leaf Directories, Node Directories and B+Tree based Directories.
 
 Detailed view at the work:  
