@@ -3,7 +3,7 @@ type = "blog"
 title = "GSoC 2020 Final Report: Improving and Extending Services Kit"
 author = "leorize"
 date = "2020-08-31 02:00:18-05:00"
-tags = ["haiku", "software"]
+tags = ["gsoc", "gsoc2020"]
 +++
 
 Hi all. This is my final report on my project aiming to improve Services Kit,
@@ -30,9 +30,7 @@ Here's the summary of some of the outstanding changes:
   access and store session data. What this will enable is the ability to
   reuse previously opened connections, which should reduce latency when
   requests are opened against previously connected hosts. This portion is still
-  a WIP. At the time of writing you might not find patches for this, and that's
-  because Gerrit appears to be unresponsive and my uploads are not going up. I'll
-  update this post once the patch went up.
+  a WIP.
 - A clean up and rearchitecture of HaikuWebKit (WebPositive's engine) networking
   was done which should improve reliablity. The rearchitecture also come with
   fixes for HTTP authentication and redirection, which should now function
