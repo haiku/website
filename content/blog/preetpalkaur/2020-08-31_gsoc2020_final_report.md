@@ -1,6 +1,6 @@
 +++
 type = "blog"
-title = "GSoC2020: Final Report"
+title = "GSoC2020 Final Report: Input Preferences"
 author = "PreetpalKaur"
 date = "2020-08-31 21:15:52+05:30"
 tags = ["haiku", "software", "gsoc2020"]
