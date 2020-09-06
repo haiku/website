@@ -54,8 +54,8 @@ John Scipione has re-implemented the old vertical Deskbar mini mode. This versio
 
 Michael Lotz continued working on audio drivers. Specifically:
 
-- ac94/es1370 audio driver
-- ac94/auich audio driver
+- ac97/es1370 audio driver
+- ac97/auich audio driver
 - multi_audio buffer keeping has been improved
 
 ## ffmpeg
