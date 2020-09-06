@@ -12,24 +12,7 @@ This month is not active as the last one, but we have exciting improvements in t
 
 ## Applications
 
-syedsouban, PulkoMandy, and bitigchi worked on adding search engine shortcuts to WebPositive. Now it is possible to use different search engines like DuckDuckGo, Ecosia, Bing etc.
-
-A list of supported search engines and the respective shortcuts can be found below:
-
-- Google (g)
-- Bing (b)
-- Wikipedia (w)
-- DuckDuckGo (d)
-- Baidu (a)
-- Yandex (y)
-- Ecosia (e)
-- Qwant (q)
-
-Example: To search on Ecosia, use: e <search_term>.
-
-bitigchi has committed a fix that allows rebooting immediately when clicked "Reboot" in SoftwareUpdater. Previously it displayed the regular system shutdown prompt, which was not ideal, UX-wise.
-
-Humdinger also improved accessibility on WebPositive by adding a missing tooltip on Settings window.
+Humdinger improved accessibility on WebPositive by adding a missing tooltip on Settings window.
 
 PulkoMandy and nielx worked on making the Installer more reliable by refining CopyEngine and post-install scripts.
 
