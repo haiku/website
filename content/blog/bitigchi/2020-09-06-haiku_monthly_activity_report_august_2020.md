@@ -4,6 +4,7 @@ title = "Haiku Activity Report - August 2020"
 author = "bitigchi"
 date = "2020-09-06 13:00:00+03:00"
 tags = ["monthly activity report"]
++++
 
 Welcome to the Haiku Monthly Activity Report for August 2020. This report covers revisions from hrev54480 to hrev54538.
 
