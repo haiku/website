@@ -3,7 +3,7 @@ type = "blog"
 title = "Haiku Activity Report - August 2020"
 author = "bitigchi"
 date = "2020-09-06 13:00:00+03:00"
-tags = ["haiku", "monthly activity report"]
+tags = ["monthly activity report"]
 +++
 
 Welcome to the Haiku Monthly Activity Report for August 2020. This report covers revisions from hrev 54480 to hrev54538.
@@ -33,7 +33,7 @@ Humdinger also improved accessibility on WebPositive by adding a missing tooltip
 
 PulkoMandy and nielx worked on making the Installer more reliable by refining CopyEngine and post-install scripts.
 
-PulkoMandy worked on fixing Pulse issues, now it is possible to resize the window without artifacts and CPU image rescale issues. PulkoMandy also improved battery detection for PowerStatus.
+PulkoMandy worked on fixing Pulse issues, now it is scales nicely on modern systems. Previosly, the CPU image was not readable due to bitmap issues. PulkoMandy also improved battery detection for PowerStatus.
 
 PulkoMandy also contributed some nice interface fixes to Icon-o-Matic, it uses more native Haiku widgets, and supports longer filenames.
 
@@ -64,12 +64,12 @@ PulkoMandy has improved ffmpeg support in Haiku, fixing multiple memory leaks, a
 
 ## GSOC 2020
 
-Following students continue to work on their respective areas:
+Following students wrapped up their work on their respective areas:
 
-- Preetpal Kaur, working on improving input devices support, including Joysticks, tablets, pens, and multiple mice
-- leorize, working on improving Haiku networking code, which will lead to faster page loads in WebPositive and better communication in other networking tasks
-- Cruxbox, working on adding XFS file system read support to Haiku
-- SuhelMehta, working on adding UFS2 file system read support to Haiku
+- Preetpal Kaur, worked on improving input devices support, including Joysticks, tablets, pens, and multiple mice
+- leorize, worked on improving Haiku networking code, which will lead to faster page loads in WebPositive and better communication in other networking tasks
+- Cruxbox, worked on adding XFS file system read support to Haiku
+- SuhelMehta, worked on adding UFS2 file system read support to Haiku
 
 ## Kernel
 
@@ -77,11 +77,11 @@ Michael Lotz continued improving the Haiku kernel, fixing exception handlings, s
 
 ## m68k
 
-Thanks to mmu_man's work, Haiku now supports m68k as a valid build platform, but the work is still at an early stage. This will allow Haiku booting on NeXT boxes.
+mmu_man improved m68k boot loader support, contributed some build fixes and refactoring, so that it can fit in a boot floppy.
 
 ## POSIX
 
-rofl0r has made the netdb code more in-line with FreeBSD and Linux.
+rofl0r has fixed the prototype of gethostbyaddr to be more in-line with FreeBSD and Linux.
 
 ## risc-V
 
@@ -89,7 +89,7 @@ kallisti5 continued working on the risc-V architecture. The initial work on an E
 
 ## System Kits
 
-PulkoMandy has contributed a fix that allows creating a strings catalog just with a MIME-type, there is no need for a separate entry_ref from now on.
+PulkoMandy has contributed a fix that allows creating a strings catalog just with a MIME-type, there is no need for a separate entry_ref from now on. This will allow localising strings that are not linked to an application or library.
 
 ## Tracker
 
