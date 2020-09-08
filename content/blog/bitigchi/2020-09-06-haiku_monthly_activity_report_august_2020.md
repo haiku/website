@@ -6,7 +6,7 @@ date = "2020-09-06 13:00:00+03:00"
 tags = ["monthly activity report"]
 +++
 
-Welcome to the Haiku Monthly Activity Report for August 2020. This report covers revisions from hrev 54480 to hrev54538.
+Welcome to the Haiku Monthly Activity Report for August 2020. This report covers revisions from hrev54480 to hrev54538.
 
 This month is not active as the last one, but we have exciting improvements in the pipeline, since GSOC 2020 is coming to an end, and our developers are working hard to review GSOC projects at a fast pace.
 
@@ -20,7 +20,7 @@ PulkoMandy worked on fixing Pulse issues, now it is scales nicely on modern syst
 
 PulkoMandy also contributed some nice interface fixes to Icon-o-Matic, it uses more native Haiku widgets, and supports longer filenames.
 
-## arm64
+## arm
 
 kallisti5 continued working on making Haiku working under arm architecture. Currently Haiku is crashing early in the boot process, and it is being investigated.
 
@@ -66,9 +66,9 @@ mmu_man improved m68k boot loader support, contributed some build fixes and refa
 
 rofl0r has fixed the prototype of gethostbyaddr to be more in-line with FreeBSD and Linux.
 
-## risc-V
+## RISC-V
 
-kallisti5 continued working on the risc-V architecture. The initial work on an EFI loader is complete, and u-boot is working.
+kallisti5 continued working on the RISC-V architecture. The initial work on an EFI loader is complete, and u-boot is working.
 
 ## System Kits
 
