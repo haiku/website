@@ -71,9 +71,18 @@ Be sure to consult the various <a href="/guides/building/configure">configure op
 Be sure to consult the various <a href="/guides/building/jam">jam options</a>.
 </div>
 
+In order to build a raw Haiku image, run the following:
+
 ```sh
   cd generated.x86gcc2
   jam -q @nightly-raw
+```
+
+Alternatively, you may be interested in building an anyboot image instead:
+
+```sh
+  cd generated.x86gcc2
+  jam -q @nightly-anyboot
 ```
 
 <p>
