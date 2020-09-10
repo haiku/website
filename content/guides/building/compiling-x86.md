@@ -36,21 +36,18 @@ script, see <a href='/guides/building/configure'>Haiku's Configure Options</a>
 ./configure --build-cross-tools x86_gcc2 ../buildtools --build-cross-tools x86
 ```
 
-<h3>Compiling a basic raw Haiku disk image</h3>
-
-<p>This is the most basic build, it generally is good for quickly testing the
-OS after making modifications as it doesn't contain a lot of extra applications.
-Be sure to modify -j2 with the number of cpu cores on your build system to
-ensure the fastest build times.</p>
-
-```sh
-jam -q -j2 @image
-```
-
 <h3>Compiling raw nightly disk images</h3>
 
 This is the default nightly image build target. This contains a complete system with an included compiler. Be sure to modify -j2 with the number of cpu cores on your build system to ensure the fastest build times.
 
 ```sh
 jam -q -j2 @nightly-raw
+```
+
+<h3>Compiling anyboot nightly disk images</h3>
+
+You can also choose to build an anyboot image (`*.img`) instead, which is generally more useful for virtualization software.
+
+```sh
+jam -q -j2 @nightly-anyboot
 ```
