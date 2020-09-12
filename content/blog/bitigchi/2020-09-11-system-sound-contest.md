@@ -49,7 +49,7 @@ In addition to these above, a nice soothing **startup chime**. :)
 - They should be non-intrusive. Distorted tunes are not welcome.
 - Expanding on "haiku" and related themes are encouraged.
 - Entries need to be in WAV format (44,100 Hz, 16 bits ps).
-- Entries should include a note that the work is licensed under MIT or a similar licence.
+- Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar licence.
 
 ## Deadline
 
