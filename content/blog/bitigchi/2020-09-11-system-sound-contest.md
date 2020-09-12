@@ -59,6 +59,6 @@ Currently Haiku does not support sound themes, but the idea is to use a couple o
 
 ## How to participate
 
-Join [this thread]() on Haiku Forums, and attach your work in a permanent link with the licence! Winner and 
+Join [this thread]() on Haiku Forums, and attach your work in a permanent link with the licence!
 
 Thanks for being a part of the Haiku universe!
