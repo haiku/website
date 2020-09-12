@@ -6,7 +6,7 @@ date = "2020-09-06 13:00:00+03:00"
 tags = ["sound", "contest"]
 +++
 
-It wouldn't be wrong to say that, Haiku is a unique operating system. It takes its roots from BeOS, the OS everyone envied back in the day, and Haiku follows its footsteps in the most loyal way possible. What could be better than complementing this unique operating system with a unique set of system sounds?
+It wouldn't be wrong to say that, Haiku is a unique operating system. It takes its roots from BeOS, the OS everyone envied back in the day, and Haiku continues to follow its footsteps to re-bring the experience as much as possible. What could be better than complementing this unique operating system with a unique set of system sounds?
 
 We are looking for contestants (amateur, professional, enthusiast) to produce system sound effects for Haiku. Specifically sounds for:
 
@@ -45,7 +45,7 @@ In addition to these above, a nice soothing **startup chime**. :)
 
 ## What to consider
 
-- All sound events except the startup chime should be around/between 1-2 seconds. It **should** not exceed 2 seconds. For startup chime, the limit is 5 seconds.
+- All sound events except the startup chime should be up to 1 second. If the situation calls for, it can be longer, but it **should** not exceed 2 seconds. For startup chime, the limit is 5 seconds.
 - They should be non-intrusive. Distorted tunes are not welcome.
 - Expanding on "haiku" and related themes are encouraged.
 - Entries need to be in WAV format (44,100 Hz, 16 bits ps).
