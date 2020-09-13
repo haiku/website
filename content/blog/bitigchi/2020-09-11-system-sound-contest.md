@@ -55,7 +55,7 @@ In addition to these above, a nice soothing **startup chime**. :)
 
 Deadline for the contest is February 2021; we would like to ship these with Beta3 for users to experience them and give feedback.
 
-Currently Haiku does not support sound themes, but the idea is to use a couple of entries as sound themes later on, contest winner being the default sound theme for Haiku.
+Currently Haiku does not support sound themes, but the idea is to use a couple of entries as sound themes later on, with the contest winner being the default sound theme.
 
 ## How to participate
 
