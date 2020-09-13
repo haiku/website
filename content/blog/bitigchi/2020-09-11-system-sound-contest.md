@@ -61,6 +61,6 @@ Currently Haiku does not support sound themes, but the idea is to use a couple o
 
 Send an e-mail to humdingerb (gmail) com and bitigchi (me) com with a link to your zipped up work. Entries and news regarding the contest will be published on [this Haiku Forums thread](). The thread will not be open for public posting, and will be used for publishing purposes only.
 
-Winner will be announced on the abovementioned thread and Haiku general mailing list. Modifications will be accepted until November 27th, 2020.
+The winner will be announced on the above-mentioned thread and the Haiku general mailing list. Modifications will be accepted until November 27th, 2020.
 
 Thanks for being a part of the Haiku universe!
