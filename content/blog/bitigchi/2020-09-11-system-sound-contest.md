@@ -53,12 +53,14 @@ In addition to these above, a nice soothing **startup chime**. :)
 
 ## Deadline
 
-Deadline for the contest is February 2021; we would like to ship these with Beta3 for users to experience them and give feedback.
+Deadline for the contest is December 1st, 2020; we would like to ship these with Beta3 for users to experience them and give feedback.
 
 Currently Haiku does not support sound themes, but the idea is to use a couple of entries as sound themes later on, with the contest winner being the default sound theme.
 
 ## How to participate
 
-Join [this thread]() on Haiku Forums, and attach your work in a permanent link with the licence!
+Send an e-mail to humdinger (gmail) com and bitigchi (me) com with your work attached through a permanent link. Entries and news regarding the contest will be published on [this Haiku Forums thread](). The thread will not be open for public posting, and will be used for publishing purposes only.
+
+Winner will be announced on the abovementioned thread and Haiku general mailing list. Modifications will be accepted until November 27th, 2020.
 
 Thanks for being a part of the Haiku universe!
