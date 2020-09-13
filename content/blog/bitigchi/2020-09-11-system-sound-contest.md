@@ -45,7 +45,7 @@ In addition to these above, a nice soothing **startup chime**. :)
 
 ## What to consider
 
-- All sound events except the startup chime should be up to 1 second. If the situation calls for, it can be longer, but it **should** not exceed 2 seconds. For startup chime, the limit is 5 seconds.
+- All sound events except the startup chime should be up to 1 second long. If the situation calls for, it can be longer, but it **should** not exceed 2 seconds. For startup chime, the limit is 5 seconds.
 - They should be non-intrusive. Distorted tunes are not welcome.
 - Expanding on "haiku" and related themes are encouraged.
 - Entries need to be in WAV format (44,100 Hz, 16 bits ps).
