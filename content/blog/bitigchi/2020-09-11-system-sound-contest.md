@@ -6,7 +6,7 @@ date = "2020-09-06 13:00:00+03:00"
 tags = ["sound", "contest"]
 +++
 
-It wouldn't be wrong to say that, Haiku is a unique operating system. It takes its roots from BeOS, the OS everyone envied back in the day, and Haiku continues to follow its footsteps to re-bring the experience as much as possible. What could be better than complementing this unique operating system with a unique set of system sounds?
+It wouldn't be wrong to say that, Haiku is a unique operating system. It takes its roots from BeOS, the OS everyone envied back in the day. Haiku continues to follow its footsteps, trying to deliver that same experience. What could be better than complementing this unique operating system with a set of unique system sounds?
 
 We are looking for contestants (amateur, professional, enthusiast) to produce system sound effects for Haiku. Specifically sounds for:
 
