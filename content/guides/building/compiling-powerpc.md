@@ -8,7 +8,7 @@ tags = ["PowerPC compiling"]
 <h3>PowerPC Compiler Toolset</h3>
 <p>Building the PowerPC compiler toolset is quite easy and involves generating gcc binaries for your platform. For a complete list of flags for the configure script, see <a href='/guides/building/configure'>Haiku's Configure Options</a></p>
 <p>From the haiku source directory, run the following. (be sure to adjust the options to match your build environment.)
-<pre class="terminal">./configure --build-cross-tools ppc ../buildtools</pre></p>
+<pre class="terminal">./configure --cross-tools-source ../buildtools --build-cross-tools ppc</pre></p>
 
 <p>If you want to run configure again to tweak some more options, you need to tell it to configure for PowerPC. This is done with the --cross-tools-prefix option:
 <pre class="terminal">../configure --use-gcc-pipe --cross-tools-prefix cross-tools/bin/ppc-unknown-haiku-

@@ -17,7 +17,7 @@ Building the ARM compiler toolchain is quite easy using Haiku's ```configure``` 
 
 1. Perform a git clone haiku and buildtools
 2. Within the haiku source directory, create your workspace for ARM via ```mkdir generated.arm; cd generated.arm```
-2. Leverage configure to build your ARM toolchain. ```../configure -j2 --build-cross-tools arm ../../buildtools```
+2. Leverage configure to build your ARM toolchain. ```../configure -j2 --cross-tools-source ../../buildtools --build-cross-tools arm```
 
 ## Building an MMC (SD Card) Image
 

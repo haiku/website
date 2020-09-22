@@ -63,7 +63,7 @@ Be sure to consult the various <a href="/guides/building/configure">configure op
 
 ```sh
   cd generated.x86gcc2
-  ../configure --build-cross-tools x86_gcc2 ../../buildtools/ --build-cross-tools x86
+  ../configure --cross-tools-source ../../buildtools/ --build-cross-tools x86_gcc2 --build-cross-tools x86
 ```
 
 <h3>Jamming inside one of the generated folders</h3>

@@ -17,7 +17,7 @@ Building the SPARC compiler toolchain is quite easy using Haiku's ```configure``
 
 1. Perform a git clone haiku and buildtools
 2. Within the haiku source directory, create your workspace for SPARC via ```mkdir generated.sparc; cd generated.sparc```
-2. Run configure to build your SPARC toolchain. ```../configure --use-gcc-pipe -j4 --build-cross-tools sparc ../../buildtools```
+2. Run configure to build your SPARC toolchain. ```../configure --use-gcc-pipe -j4 --cross-tools-source ../../buildtools --build-cross-tools sparc```
 
 ## Building a filesystem image
 

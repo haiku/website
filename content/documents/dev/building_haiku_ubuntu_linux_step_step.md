@@ -39,12 +39,12 @@ the build tools (be sure to adjust the options to match your build environment):
 **Working in a clean build directory:**
 ```sh
 mkdir generated.x86_64; cd generated.x86_64
-../configure --build-cross-tools x86_64 ../../buildtools
+../configure --cross-tools-source ../../buildtools --build-cross-tools x86_64
 ```
 
 **Working in the top level:**
 ```sh
-./configure --build-cross-tools x86_64 ../buildtools
+./configure --cross-tools-source ../buildtools --build-cross-tools x86_64
 ```
 
 x86_64 Haiku Builds
