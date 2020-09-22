@@ -129,6 +129,9 @@ Note however that these repositories do not contain any hrev tags, which are use
 
 <h3>Common tasks</h3>
 
+<h4>Example git workflow</h4>
+<img src='/files/gitProcess_0.png'>
+
 <h4>Updating the Sources</h4>
 
 <div class="alert alert-danger">
@@ -216,8 +219,94 @@ and push them again, until they are reviewed and merged.
 It is recommended to set a topic, a single keyword that can easily be searched
 for in the web interface and help categorize commits.
 
+<h4>Taking review comments into account and updating a commit</h4>
+
+Usually your changes will not be accepted on the first try. Other developers
+will review it, making sure they understand what you are doing, and maybe
+help you find better ways of doing it. They will also check that your code
+follows the coding guidelines, which are important to make sure the code is
+easy to read and uses the same conventions in all the codebase.
+
+<h5>Single-commit change</h5>
+
+To update an existing commit, you need to download it locally, modify it,
+and send it again. When your change consists of a single commit, you can
+cherry-pick it.
+
+First make sure you start from a clean working tree with the latest Haiku changes
+(note that this will remove all your work in progress commits from the working
+copy, make sure they are in a branch. Git will remind you about this if it's the
+case).
+
+```sh
+git fetch
+git checkout origin/master
+```
+
+Then you can download your commit from Gerrit. To do this, use the Gerrit
+web interface and the Download -&gt; Cherry Pick button, which allows you to
+copy the required git command. It looks like this, but it is different for
+each commit and each version of a commit so make sure to get the correct one
+from Gerrit:
+
+```sh
+git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/28/3228/4 && git cherry-pick FETCH_HEAD
+```
+
+You can now edit the files to make the needed changes. Once you are done, edit
+the commit to include your changes:
+
+```sh
+git add a/modified/file.cpp another/modified/file.h # you can use wildcards, or just 'git add .' to add everything modified
+git commit --amend # modify the commit
+```
+
+Make sure the commit message contains the change-id for the commit. If it doesn't,
+copy it from Gerrit and add it at the end of the commit message.
+
+Finally, send your work for review:
+
+```sh
+git push origin HEAD:refs/for/master
+```
+
+<h5>Multiple-commit change</h5>
+
+The process is similar when your change is split into multiple commits, but
+you can't as easily use cherry-pick since it would have to be done once per
+commit. So, a different process can be used instead.
+
+First of all make sure you have the latest version of Haiku:
+
+```sh
+git fetch
+```
+
+Then go to the latest commit of your change in progress and use the
+Download -&gt; Checkout menu to get all the changes at once. Again, note that
+the command changes for each commit, so be sure to get the correct one from
+Gerrit. The one below is only an example.
+
+```sh
+git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/99/1299/5 && git checkout FETCH_HEAD
+```
+
+You can then rebase your changes on the current version of Haiku:
+
+```sh
+git rebase origin/master
+```
+
+You can use git commit --amend to edit the latest commits and add more commits
+to the branch. To modify the previous commits, you need to use git interactive
+rebase (git rebase -i). See <pre>git help rebase</pre> for more help on rebasing.
+
+Once you are done, you can update your patches on Gerrit:
+
+```sh
+git push origin HEAD:refs/for/master
+```
+
 Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
 overview of the process.
 
-<h4>Example git workflow</h4>
-<img src='/files/gitProcess_0.png'>
