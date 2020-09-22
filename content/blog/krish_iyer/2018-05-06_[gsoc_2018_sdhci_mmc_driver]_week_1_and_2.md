@@ -22,7 +22,7 @@ Create a directory where you are going to save the build image and related files
 	mkdir generated.x86_64; cd generated.x86_64
 For compiling
 
-	../configure --build-cross-tools x86_64 ../../buildtools
+	../configure --cross-tools-source ../../buildtools --build-cross-tools x86_64
 
 ## Building Image
 Before building the image you need to install some dependencies

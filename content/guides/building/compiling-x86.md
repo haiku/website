@@ -33,7 +33,7 @@ binaries for your platform. For a complete list of flags for the configure
 script, see <a href='/guides/building/configure'>Haiku's Configure Options</a>
 
 ```sh
-./configure --build-cross-tools x86_gcc2 ../buildtools --build-cross-tools x86
+./configure --cross-tools-source ../buildtools --build-cross-tools x86_gcc2 --build-cross-tools x86
 ```
 
 <h3>Compiling raw nightly disk images</h3>

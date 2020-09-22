@@ -24,7 +24,7 @@ tags = []
 
 <pre class="terminal">
 cd /path/haiku/haiku/generated.x86_gcc2/
-../configure --build-cross-tools x86_gcc2 ../../buildtools
+../configure --cross-tools-source ../../buildtools --build-cross-tools x86_gcc2
 jam -q @alpha-raw
 </pre>
 

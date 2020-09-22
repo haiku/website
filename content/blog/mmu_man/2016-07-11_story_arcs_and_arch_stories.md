@@ -105,7 +105,7 @@ Buildtools still compile, here's what I use:
 <pre>
 mkdir generated-m68k-gcc4
 cd generated-m68k-gcc4
-../configure --build-cross-tools m68k ../../buildtools --use-xattr --use-gcc-pipe --distro-compatibility official --enable-multiuser --include-gpl-addons --include-patented-code --include-3rdparty --bootstrap ../../../haikuporter/haikuporter/haikuporter ../../../haikuports.cross/haikuports.cross ../../../haikuports/haikuports
+../configure --cross-tools-source ../../buildtools --build-cross-tools m68k --use-xattr --use-gcc-pipe --distro-compatibility official --enable-multiuser --include-gpl-addons --include-patented-code --include-3rdparty --bootstrap ../../../haikuporter/haikuporter/haikuporter ../../../haikuports.cross/haikuports.cross ../../../haikuports/haikuports
 </pre>
 
 I also built GDB from the 7.8 stock sources although I'm not sure I'll use it:
