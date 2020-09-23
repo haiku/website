@@ -60,6 +60,6 @@ Deadline for the contest is December 1st, 2020; we would like to ship the new de
 
 Send an e-mail to humdingerb (gmail) com and bitigchi (me) com with a link to your zipped up work. Entries and news regarding the contest will be added to this post.
 
-The winner will be announced on the website and the Haiku general mailing list. Modifications will be accepted until November 27th, 2020.
+The winner will be decided by a poll in the forums, and will be announced on the website and the Haiku general mailing list. Modifications will be accepted until November 27th, 2020.
 
 Thanks for being a part of the Haiku universe!
