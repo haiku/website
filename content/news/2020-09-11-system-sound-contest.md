@@ -46,7 +46,7 @@ As R1 steadily approaches, we are looking for contestants (amateur, professional
 - All sound effects except the startup chime should be up to 1 second long. If the situation calls for, it can be longer, but it **should** not exceed 2 seconds. For startup chime, the limit is 5 seconds.
 - All sound effects should be non-intrusive. Distorted tunes, high-pitched tunes will not be considered.
 - Expanding on "haiku" and related themes are encouraged.
-- Entries need to be in WAV format (44,100 Hz, 16 bits ps).
+- Entries need to be in uncompressed PCM format.
 - Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license.
 - Naming the sound files according to the theme is encouraged, but intended sound event should be noted appropriately.
 
