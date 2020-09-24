@@ -58,6 +58,6 @@ Deadline for the contest is November 25th, 2020; we would like to have the new d
 
 Send an e-mail to humdingerb (gmail) com and bitigchi (me) com with a link to your zipped up work. Entries and news regarding the contest will be added to this post.
 
-The winner will be decided by a poll in [Haiku forums](https://discuss.haiku-os.org), and will be announced on the website and the [Haiku general mailing list](https://www.freelists.org/list/haiku) on December 7th, 2020.
+The winner will be decided by a poll in [Haiku forums](https://discuss.haiku-os.org) starting December 1st, 2020, and will be announced on the website and the [Haiku general mailing list](https://www.freelists.org/list/haiku) on December 7th, 2020.
 
 Thanks for being a part of the Haiku universe!
