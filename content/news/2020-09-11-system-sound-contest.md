@@ -10,8 +10,6 @@ It wouldn't be wrong to say that, Haiku is a unique operating system. It takes i
 
 As R1 steadily approaches, we are looking for contestants (amateur, professional, enthusiast) to produce system sound effects for Haiku. Specifically sounds for:
 
-## Sound Events
-
 **Errors:**
 
 - Beep
@@ -54,12 +52,12 @@ As R1 steadily approaches, we are looking for contestants (amateur, professional
 
 ## Submission deadline
 
-Deadline for the contest is December 1st, 2020; we would like to ship the new default sound theme for Haiku with Beta3. We also plan to package and release qualifying submissions as separate packages available for download on the main Haiku software repository.
+Deadline for the contest is November 25th, 2020; we would like to have the new default sound theme ready in time around Haiku Beta3. We also plan to package and release qualifying submissions as separate packages available for download on the main Haiku software repository.
 
 ## How to participate
 
 Send an e-mail to humdingerb (gmail) com and bitigchi (me) com with a link to your zipped up work. Entries and news regarding the contest will be added to this post.
 
-The winner will be decided by a poll in the forums, and will be announced on the website and the Haiku general mailing list. Modifications will be accepted until November 27th, 2020.
+The winner will be decided by a poll in [Haiku forums](https://discuss.haiku-os.org), and will be announced on the website and the [Haiku general mailing list](https://www.freelists.org/list/haiku) on December 7th, 2020.
 
 Thanks for being a part of the Haiku universe!
