@@ -10,16 +10,17 @@ It wouldn't be wrong to say that, Haiku is a unique operating system. It takes i
 
 As R1 steadily approaches, we are looking for contestants (amateur, professional, enthusiast) to produce system sound effects for Haiku. Specifically sounds for:
 
-**Errors:**
+**General:**
 
 - Beep
-- Error notification
+- A nice and soothing startup chime
 
 **Notifications:**
 
-- Important notification
 - Information notification
-- Progress notification
+- Important notification
+- Error notification
+- Progress notification (= the percentage of the progress bar gets updated)
 
 **Key/mouse events:**
 
@@ -36,10 +37,8 @@ As R1 steadily approaches, we are looking for contestants (amateur, professional
 - Window close
 - Window minimised
 - Window open
-- Window restored
-- Window zoomed
-
-- In addition to these above, a nice soothing **startup chime**
+- Window restored (= gets 'unminimised')
+- Window zoomed (= when 'zoom' button (right widget in tab) is clicked)
 
 ## Contest guidelines
 
