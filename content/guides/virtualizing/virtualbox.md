@@ -9,7 +9,7 @@ For Google Code In 2017, Jakub Pajdowski created a [video on how to install Haik
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-This How-To guide will describe the process of running Haiku on virtual machine (VM) using VirtualBox 3.2 There are two ways it can be done– one is installing and running Haiku from CD-ROM image, which is similar to a physical instance. Ror convenience and time-saving purposes, the user may also use the already prepared VM hard disk image. The decision is left up to the user, although many people prefer VM image as it is easier to manage.
+This How-To guide will describe the process of running Haiku on virtual machine (VM) using VirtualBox 3.2 There are two ways it can be done– one is installing and running Haiku from CD-ROM image, which is similar to a physical instance. For convenience and time-saving purposes, the user may also use the already prepared VM hard disk image. The decision is left up to the user, although many people prefer VM image as it is easier to manage.
 
 For this tutorial we will be using an ISO image file - it can be obtained [here](/get-haiku). The VirtualBox virtualization software and installation manual can be downloaded from [here](http://www.virtualbox.org/wiki/Downloads).
 
@@ -40,7 +40,7 @@ The next step is to define how much of the host’s physical memory we want to a
 
 ![](/files/guides/virtualizing/virtualbox/vbox_3.png)
 
-After we have done that, we need to create a hard disk image, which is going to be stored on the physical drive, at the specified location. We choose *Create a virtual harddrive now* (if it is not selected already) and click **`Create`**:
+After we have done that, we need to create a hard disk image, which is going to be stored on the physical drive, at the specified location. We choose *Create a virtual hard disk now* (if it is not selected already) and click **`Create`**:
 
 ![](/files/guides/virtualizing/virtualbox/vbox_4.png)
 
@@ -78,7 +78,7 @@ Hopefully, at this point everything is properly configured and we can run the Ha
 
 The installation itself is quite simple and does not differ really from a physical one (follow the guides [on this page](/get-haiku/installation-guide) if you are not familiar with installing Haiku).
 
-DriveSetup should detect two devices, one is our CD-ROM (ISO) file and another is the “harddrive” we created earlier. All we need to do is select that drive, go to *Partitions -> Format*, click on *Be File System* and continue the initialization. Then you use Installer from the Deskbar's appliction menu to install from the CD image to the big virtual harddrive.
+DriveSetup should detect two devices, one is our CD-ROM (ISO) file and another is the “hard disk” we created earlier. All we need to do is select that drive, go to *Partitions -> Format*, click on *Be File System* and continue the initialization. Then you use Installer from the Deskbar's application menu to install from the CD image to the big virtual hard disk.
 
 ![](/files/guides/virtualizing/virtualbox/image11.png)
 
@@ -119,7 +119,7 @@ First solution is simply adjusting the screen resolution using tools built into 
 ![](/files/guides/virtualizing/virtualbox/image17.png)
 
 <a name="part_customVESA"></a>
-The other way is to resize the guest window through the host. While Virtual Guest Additions are available from HaikuDepot, there is no automatic window resizing support yet. However the user may use custom VESA resoultion as a workaround.
+The other way is to resize the guest window through the host. While Virtual Guest Additions are available from HaikuDepot, there is no automatic window resizing support yet. However the user may use custom VESA resolution as a workaround.
 
 For example, type this in your host system:
 ```sh
