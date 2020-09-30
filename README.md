@@ -43,3 +43,7 @@ This is because OS X/macOS and Linux use two different sets of tools. Linux uses
 Set your PATH to: ``PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"``
 
 Run ``which date``, it must show ``/usr/local/opt/coreutils/libexec/gnubin/date`` and not ``/bin/date``. Re-run the above command, it should work fine!
+
+
+
+I wanted to participate in https://hacktoberfest.digitalocean.com/ contest in which i should pull requests. So i request you to not dismiss this request!
