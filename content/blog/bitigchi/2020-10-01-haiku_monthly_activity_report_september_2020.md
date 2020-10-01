@@ -91,6 +91,6 @@ Gerasim Troeglazov fixed a crash that occurs while displaying `.icns` files.
 
 If you would like to try out these changes right away, grab a copy of the latest [nightlies](https://download.haiku-os.org) and give it a go!
 
-Haiku Project always welcomes new faces. If you are a developer, sysadmin, designer, or a writer, we will always appreciate your support. Come meet us at the [Freenode #haiku IRC channel](irc://chat.freenode.net/haiku),  [forums](https://discuss.haiku-os.org) or introduce yourself in the [Haiku mailing list](https://www.freelists.org/list/haiku).
+The Haiku Project always welcomes new faces. If you are a developer, sysadmin, designer, or a writer, we'd appreciate your support. Come meet us at the [Freenode #haiku IRC channel](irc://chat.freenode.net/haiku),  [forums](https://discuss.haiku-os.org) or introduce yourself on the [Haiku mailing list](https://www.freelists.org/list/haiku).
 
 See you next month!
