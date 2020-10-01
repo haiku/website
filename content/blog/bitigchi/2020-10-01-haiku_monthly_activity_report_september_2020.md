@@ -61,7 +61,7 @@ Andrew Lindesay fixed a crash in HaikuDepot whilst synchronising package metadat
 
 ## Preferences
 
-Preetpal Kaur's GSOC project work has been merged, and she continues to work on final polishes and bug fixes.
+Preetpal Kaur's GSOC project work has been merged, and she continues to work on final polishing and bug fixes.
 
 ## POSIX
 
