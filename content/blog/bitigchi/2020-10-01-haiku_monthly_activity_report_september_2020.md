@@ -22,7 +22,7 @@ bitigchi fixed the redundant reboot confirmation in SoftwareUpdater.
 
 Pascal Abresch made TeamMonitor and AboutSystem compliant to the system colours; previously the text colours would not react properly to dark system themes.
 
-PulkoMandy fixed various issues with MediaPlayer and ffmpeg implementation that caused seeking and cover art display problems.
+PulkoMandy fixed various issues with MediaPlayer and ffmpeg implementation that caused high CPU usage and problems with seeking audio files with cover art.
 
 Murai Takashi made some code cleanups in various system parts.
 
@@ -49,7 +49,7 @@ nielx implemented layout customisations for the Doxygen stylesheet.
 
 ## File Systems
 
-brjhaiku implemented the initial methods required for btrfs write support.
+brjhaiku implemented the initial methods required for btrfs write support. This was originally introduced during GSOC 2019 program, and still being merged gradually.
 
 ## Kernel
 
@@ -57,11 +57,13 @@ Jerome Duval implemented support for more CPU power modes and functions that all
 
 ## Package Management
 
-Andrew Lindesay fixed a crash in HaikuDepot whilst synchronising package metadata.
+Andrew Lindesay fixed a crash in HaikuDepot whilst synchronising package metadata, also greatly improved icon caching, therefore speeding up the sync process during application start and memory consumption.
 
 ## Preferences
 
-Preetpal Kaur's GSOC project work has been merged, and she continues to work on final polishing and bug fixes.
+Preetpal Kaur's GSOC project work on Input preferences panel has been merged, and she continues to work on final polishing and bug fixes. Thanks to her work, now it's possible to have different settings for each different mouse.
+
+Preetpal will be continuing working on Input preferences and other Haiku things during her industrial training for the next 3 months.
 
 ## POSIX
 
@@ -81,7 +83,7 @@ PulkoMandy implemented creating catalog files from external source files.
 
 ## System Servers
 
-PulkoMandy fixed a regression that reset brightness levels to 100% on all but the first workspace.
+PulkoMandy implemented support for saving brightness settings when rebooting the system, and polished the code for handling screen brightness.
 
 ## System Translators
 
