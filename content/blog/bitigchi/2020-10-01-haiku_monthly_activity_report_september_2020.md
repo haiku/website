@@ -81,7 +81,7 @@ PulkoMandy implemented creating catalog files from external source files.
 
 ## System Servers
 
-PulkoMandy fixed a regression that caused unpersistant brightness levels across different workspaces. This eventually led fixing a system crash as well.
+PulkoMandy fixed a regression that reset brightness levels to 100% on all but the first workspace.
 
 ## System Translators
 
