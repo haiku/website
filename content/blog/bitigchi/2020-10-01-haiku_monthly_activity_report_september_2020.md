@@ -79,7 +79,7 @@ John Scipione fixed a regression that prevented character drawing when a tab is 
 
 Pascal Abresch implemented enabling adding custom user TLS certificates.
 
-PulkoMandy implemented creating catalog files from external source files.
+PulkoMandy implemented creating catalog files from external source files. This will allow localising applications written using any interpreted language.
 
 ## System Servers
 
