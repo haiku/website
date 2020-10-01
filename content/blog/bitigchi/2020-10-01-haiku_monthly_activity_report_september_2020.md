@@ -53,7 +53,7 @@ brjhaiku implemented the initial methods required for btrfs write support.
 
 ## Kernel
 
-Jerome Duval implemented support for more CPU power modes and functions that allows system to use the CPU power more efficiently. This fixed an issue where on some hardware the system clock speed was stuck at 1.5 GHz, and improved performance on other systems.
+Jerome Duval implemented support for more CPU power modes and functions that allows the system to use the CPU power more efficiently. This fixed an issue where on some hardware the system clock speed was stuck at 1.5 GHz, and improved performance on other systems.
 
 ## Package Management
 
