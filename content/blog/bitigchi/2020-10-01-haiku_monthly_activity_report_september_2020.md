@@ -10,7 +10,7 @@ Welcome to the Haiku Monthly Activity Report for September 2020. This report cov
 
 ## System Sounds Contest
 
-We've started a contest for the system sounds, and currently it's ongoing. For more details, see the contest post.
+We've started a contest for the system sounds, and currently it's ongoing. For more details, see the [contest post](https://www.haiku-os.org/news/2020-09-11-system-sound-contest/).
 
 ## Applications
 
