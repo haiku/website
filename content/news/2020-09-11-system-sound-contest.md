@@ -6,10 +6,6 @@ date = "2020-09-06 13:00:00+03:00"
 tags = ["sound", "contest"]
 +++
 
-## Contest Entries
-
-- Daniel Diaz ([Download link](../../static/files/sound-contest/daniel_diaz.zip))
-
 It wouldn't be wrong to say that, Haiku is a unique operating system. It takes its roots from BeOS, the OS everyone envied back in the day. Haiku continues to follow its footsteps, trying to deliver that same experience. What could be better than complementing this unique operating system with a set of unique system sounds?
 
 As R1 steadily approaches, we are looking for contestants (amateur, professional, enthusiast) to produce system sound effects for Haiku. Specifically sounds for:
@@ -64,3 +60,7 @@ Send an e-mail to humdingerb (gmail) com and bitigchi (me) com with a link to yo
 The winner will be decided by a poll in [Haiku forums](https://discuss.haiku-os.org) starting December 1st, 2020, and will be announced on the website and the [Haiku general mailing list](https://www.freelists.org/list/haiku) on December 7th, 2020.
 
 Thanks for being a part of the Haiku universe!
+
+## Contest Entries (In-progress)
+
+- Daniel Diaz ([Download link](../../static/files/sound-contest/daniel_diaz.zip))
