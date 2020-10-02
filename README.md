@@ -1,4 +1,4 @@
-Haiku Project website
+Hakn-Amazing website
 ======================================
 This repository contains the source code for Haiku's main website.
 
