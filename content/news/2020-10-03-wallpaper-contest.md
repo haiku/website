@@ -6,7 +6,7 @@ date = "2020-10-03 13:00:00+03:00"
 tags = ["wallpapers", "contest"]
 +++
 
-One of the most common feedback that we receive is that the Haiku needs some nice colourful wallpapers shipping with Haiku releases. Suffice to say, that we agree with this completely. We definitely want to improve the current situation. And we need your help.
+One of the most common feedback that we receive is that Haiku needs some nice colourful wallpapers shipping with its releases. We definitely want to improve the current situation. And we need your help.
 
 Haiku currently ships with only one (1) wallpaper, and it's not a complete wallpaper per se, it's just the Haiku logo positioned on the screen on an appropriate position according to the screen resolution. To be fair, there is a reason we only use the Haiku logo as the default wallpaper; we want Haiku to be usable on systems that have memory as low as 256 MB, therefore each byte that we can spare counts.
 
@@ -17,10 +17,10 @@ We are looking for artists that can contribute to Haiku with some appealing wall
 
 ## Guidelines
 
-Artists are free to submit in any category they please. We hope below guidelines will help you in creating the new Haiku wallpapers:
+Artists are free to submit in any category they please. We hope the guidelines below will help:
 
 - Illustrations should be in at least landscape 5K size.
-- Vector illustrations should include a "lite" version, to be used as the default wallpaper (see the second paragraph). Color scheme of this lite variant should blend in with the standard system background colour.
+- Vector illustrations should include a "lite" version, to be used as the default wallpaper (see the second paragraph). The colour scheme of this lite variant should blend in with the standard system background colour.
 - We encourage painted illustrations to use subtle haiku themes, such as leaves, Far-Eastern typography, and literature. Anime-themed drawings are also welcome, but should there be human characters, they should not be the main focus.
 - For vector illustrations, use darker blue tones as the main colour. For painted illustrations, use warmer colours.
 - Doodle versions of the Haiku logo are welcome, in-fact we would love to have a coloured Haiku logo doodle for the default wallpaper image (see the part about the lite version).
