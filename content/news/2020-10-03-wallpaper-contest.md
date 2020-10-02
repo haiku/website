@@ -2,7 +2,7 @@
 type = "news"
 title = "Call for Wallpapers"
 author = "bitigchi"
-date = "2020-10-01 13:00:00+03:00"
+date = "2020-10-03 13:00:00+03:00"
 tags = ["wallpapers", "contest"]
 +++
 
@@ -26,9 +26,10 @@ Artists are free to submit in any category they please. We hope below guidelines
 - Doodle versions of the Haiku logo are welcome, in-fact we would love to have a coloured Haiku logo doodle for the default wallpaper image (see the part about the lite version).
 - Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license.
 - Artists are encouraged to name their work as they please, otherwise you would be leaving the naming part to the mercy of the Haiku developers.
+- Vector drawings should be in `*.svg` format, and drawings should be in either `*.kra` or `*.xcf` format.
 
 ## Submission deadline
 
-There is no strict deadline for the call, we would like you to take as much time as you need. We are planning to release Beta3 in the first quarter of 2021, we would love to include your work by then. Depending on the number of entries before the release date, a vote might be held at the Haiku forums in each respective category.
+There is no strict deadline for the call, we would like you to take as much time as you need. We ould love to include your work in the next beta release. Depending on the number of entries before the release date, a vote might be held at the Haiku forums in each respective category.
 
 Thank you very much for being a part of the Haiku universe!
