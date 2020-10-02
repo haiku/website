@@ -1,5 +1,5 @@
 +++
-type = "blog"
+type = "news"
 title = "Contest for System Sounds"
 author = "bitigchi"
 date = "2020-09-06 13:00:00+03:00"
