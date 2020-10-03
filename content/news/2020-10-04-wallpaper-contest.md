@@ -22,7 +22,7 @@ Artists are free to submit in any category they please. We hope the guidelines b
 - Illustrations should be positioned in landscape, and should be at least 5K in size (for bitmap submissions).
 - Logo variations are encouraged to preserve the current theme. Doodle versions are welcome.
 - Using subtle haiku themes, such as leaves, Far-Eastern typography, and literature are encouraged. Anime-themed drawings are also welcome, but should there be human characters, they should not be the main focus.
-    - If you want to go full 90's, and submit a version suitable for tiled backgrounds, just let us know :).
+- If you want to go full 90's, and submit a version suitable for tiled backgrounds, just let us know :).
 - Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license.
 - Artists are encouraged to name their work as they please, otherwise you would be leaving the naming part to the mercy of the Haiku developers.
 - Submitted work should be in `*.svg`, `*.kra` or `*.xcf` format.
