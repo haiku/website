@@ -14,6 +14,7 @@ We are looking for artists that can contribute to Haiku with some appealing wall
 
 1. Artistic variations of the Haiku logo, to be used as the default wallpaper
 2. Vector or bitmap illustrations, to be included in the release
+3. We are NOT looking for photographs of any kind, any submitted work should be an illustration of some kind.
 
 ## Guidelines
 
