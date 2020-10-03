@@ -7,7 +7,7 @@ To create a new blog for a new user, run `./scripts/newblog.sh`.
 
 To create a new blogpost, run `./scripts/newpost.sh`.
 
-Refer Troubleshooting section if you encounter any error.
+Refer Troubleshooting Section, if you encounter any error.
 
 ## Shortcodes
 Shortcodes introduce the ability to leverage special formatting
