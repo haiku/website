@@ -2,7 +2,7 @@
 type = "news"
 title = "Call for Wallpapers"
 author = "bitigchi"
-date = "2020-10-03 13:00:00+03:00"
+date = "2020-10-04 13:00:00+03:00"
 tags = ["wallpapers", "contest"]
 +++
 
@@ -12,21 +12,20 @@ Haiku currently ships with only one (1) wallpaper, and it's not a complete wallp
 
 We are looking for artists that can contribute to Haiku with some appealing wallpapers. To be more precise, we are looking for either:
 
-- Vector illustrations
-- Painted illustrations
+1. Artistic variations of the Haiku logo, to be used as the default wallpaper
+2. Vector or bitmap illustrations, to be included in the release
 
 ## Guidelines
 
 Artists are free to submit in any category they please. We hope the guidelines below will help:
 
-- Illustrations should be in at least landscape 5K size.
-- Vector illustrations should include a "lite" version, to be used as the default wallpaper (see the second paragraph). The colour scheme of this lite variant should blend in with the standard system background colour.
-- We encourage painted illustrations to use subtle haiku themes, such as leaves, Far-Eastern typography, and literature. Anime-themed drawings are also welcome, but should there be human characters, they should not be the main focus.
-- For vector illustrations, use darker blue tones as the main colour. For painted illustrations, use warmer colours.
-- Doodle versions of the Haiku logo are welcome, in-fact we would love to have a coloured Haiku logo doodle for the default wallpaper image (see the part about the lite version).
+- Illustrations should be positioned in landscape, and should be at least 5K in size (for bitmap submissions).
+- Logo variations are encouraged to preserve the current theme. Doodle versions are welcome.
+- Using subtle haiku themes, such as leaves, Far-Eastern typography, and literature are encouraged. Anime-themed drawings are also welcome, but should there be human characters, they should not be the main focus.
+    - If you want to go full 90's, and submit a version suitable for tiled backgrounds, just let us know :).
 - Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license.
 - Artists are encouraged to name their work as they please, otherwise you would be leaving the naming part to the mercy of the Haiku developers.
-- Vector drawings should be in `*.svg` format, and drawings should be in either `*.kra` or `*.xcf` format.
+- Submitted work should be in `*.svg`, `*.kra` or `*.xcf` format.
 
 ## Submission deadline
 
