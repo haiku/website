@@ -64,3 +64,4 @@ Thanks for being a part of the Haiku universe!
 ## Contest Entries (In-progress)
 
 - Daniel Diaz ([Download link](../../static/files/sound-contest/daniel_diaz.zip) - added 2020/10/03)
+- Jason Richardson ([Download link](../../static/files/sound-contest/jason_richardson.zip) - added 2020/10/04)
