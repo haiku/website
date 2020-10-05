@@ -2,7 +2,7 @@
 type = "blog"
 title = "Haiku Activity Report - September 2020"
 author = "bitigchi"
-date = "2020-10/01 13:00:00+03:00"
+date = "2020-10-01 13:00:00+03:00"
 tags = ["monthly activity report"]
 +++
 
