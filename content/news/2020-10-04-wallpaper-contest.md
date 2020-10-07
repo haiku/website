@@ -30,6 +30,6 @@ Artists are free to submit in any category they please. We hope the guidelines b
 
 ## Submission deadline
 
-There is no strict deadline for the call, we would like you to take as much time as you need. We ould love to include your work in the next beta release. Depending on the number of entries before the release date, a vote might be held at the Haiku forums in each respective category.
+There is no strict deadline for the call, we would like you to take as much time as you need. We would love to include your work in the next beta release. Depending on the number of entries before the release date, a vote might be held at the Haiku forums in each respective category.
 
 Thank you very much for being a part of the Haiku universe!
