@@ -68,3 +68,4 @@ Thanks for being a part of the Haiku universe!
 - Humdinger ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) - added 2020/10/09)
 - Jason Richardson ([Download link](/files/sound-contest/jason_richardson.zip) - added 2020/10/04)
 - Joshua Spann ([Download link](/files/sound-contest/joshua_spann.zip) - added 2020/10/10)
+- Parnikkapore ([Download link](/files/sound-contest/parnikkapore.zp) - added 2020/10/10)
