@@ -9,6 +9,7 @@ tags = ["wallpapers", "contest"]
 One of the most common feedback that we receive is that Haiku needs some nice colourful wallpapers shipping with its releases. We definitely want to improve the current situation. And we need your help.
 
 Haiku currently ships with only one (1) wallpaper, and it's not a complete wallpaper per se, it's just the Haiku logo positioned at fixed coordinates on the screen. To be fair, there is a reason we only use the Haiku logo as the default wallpaper; we want Haiku to be usable on systems that have memory as low as 256 MB, therefore each byte that we can spare counts.
+It's also works relatively well with different screen resolutions.
 
 We are looking for artists that can contribute to Haiku with some appealing wallpapers. To be more precise, we are looking for either:
 
