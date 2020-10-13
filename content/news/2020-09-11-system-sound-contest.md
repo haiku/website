@@ -64,8 +64,8 @@ Thanks for being a part of the Haiku universe!
 ## Contest Entries (In-progress)
 
 - Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) - added 2020/10/03)
-- Gareth White ([Download link](/files/sound-contest/gareth_white.zip) - added 2020/10/10)
-- Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) - updated 2020/10/10)
+- Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) - updated 2020/10/13)
 - Jason Richardson - Bassling ([Download link](/files/sound-contest/jason_richardson.zip) - added 2020/10/04)
-- Joshua Spann ([Download link](/files/sound-contest/joshua_spann.zip) - updated 2020/10/11)
-- Parnikkapore - Yanqim Sound Theme ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) - updated 2020/10/11)
+- Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) - updated 2020/10/13)
+- Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) - updated 2020/10/11)
+- Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) - added 2020/10/10)
