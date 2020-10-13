@@ -31,7 +31,7 @@ Artists are free to submit in any category they please. We hope the guidelines b
 
 ## Submission
 
-Send your work to `humdingerb (at) gmail` and `bitigchi (at) me`. A `.png` version will be appended to this post for showcasing.
+Send your work to `humdingerb (at) gmail` and `bitigchi (at) me`. A `.png` version will be appended to this post for showcasing. For your submission, please zip up your workfiles, a PNG preview, and a license file. If the resulting ZIP archive is larger than 5 MiB, please upload it somewhere and just mail the link to it.
 
 ## Submission deadline
 
