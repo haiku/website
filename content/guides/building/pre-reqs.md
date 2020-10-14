@@ -102,7 +102,7 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 **Basic requirements:**
 
 ```sh
-sudo pacman -S base-devel bison git texinfo nasm openssh unzip curl wget flex xorriso bc mtools python
+sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip curl wget flex xorriso bc mtools python lib32-glibc
 ```
 
 **Additional requirements for ARM:**
