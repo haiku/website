@@ -69,3 +69,4 @@ Thanks for being a part of the Haiku universe!
 - Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) - updated 2020/10/13)
 - Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) - updated 2020/10/11)
 - Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) - added 2020/10/10)
+- Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) - added 2020/10/17)
