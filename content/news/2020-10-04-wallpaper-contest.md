@@ -40,6 +40,6 @@ There is no strict deadline for the call, we would like you to take as much time
 ## Current Submissions
 
 - Julius Enriquez - [Linear Leaf](files/wallpaper-call/linear_leaf.zip) added 2020/10/16
-- Humdinger - [Tumble Leaves](files/wallpaper-call/tumble_leaves.zip) added 2020/10/16
+- Humdinger - [Tumble Leaves](files/wallpaper-call/tumble_leaves.png) added 2020/10/16
 
 Thank you very much for being a part of the Haiku universe!
