@@ -37,4 +37,9 @@ Send your work to `humdingerb (at) gmail` and `bitigchi (at) me`. A `.png` versi
 
 There is no strict deadline for the call, we would like you to take as much time as you need. We would love to include your work in the next beta release. Depending on the number of entries before the release date, a vote might be held at the Haiku forums in each respective category.
 
+## Current Submissions
+
+- Julius Enriquez - [Linear Leaf](files/wallpaper-call/linear_leaf.zip) added 2020/10/16
+- Humdinger - [Tumble Leaves](files/wallpaper-call/tumble_leaves.zip) added 2020/10/16
+
 Thank you very much for being a part of the Haiku universe!
