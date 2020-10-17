@@ -31,7 +31,7 @@ Artists are free to submit in any category they please. We hope the guidelines b
 
 ## Submission
 
-Send your work to `humdingerb (at) gmail` and `bitigchi (at) me`. A `.png` version will be appended to this post for showcasing. For your submission, please zip up your workfiles, a PNG preview, and a license file. If the resulting ZIP archive is larger than 5 MiB, please upload it somewhere and just mail the link to it.
+Send your work to `humdingerb (at) gmail` and `bitigchi (at) me`. A `.png` version will be appended to this post for showcasing. For your submission, please create an archive with your workfiles, a PNG preview, and a license file. If the resulting (zip, tar.gz, etc.) archive is larger than 5 MiB, please upload it somewhere and just mail the link to it.
 
 ## Submission deadline
 
@@ -41,10 +41,10 @@ There is no strict deadline for the call, we would like you to take as much time
 
 - Julius Enriquez - [Linear Leaf (whole pack)](files/wallpaper-call/linear_leaf.zip) (added 2020/10/16)
 
-<img src="files/wallpaper-call/linearleaf_bluish-preview.png" height="270" width="480 \>"
+<img src="/files/wallpaper-call/linearleaf_bluish-preview.png" height="270" width="480" />
 
 - Humdinger - Tumble Leaves (added 2020/10/16)
 
-<img src="files/wallpaper-call/tumble_leaves.png" height="270" width="480" \>
+<img src="/files/wallpaper-call/tumble_leaves.png" height="270" width="480" />
 
 Thank you very much for being a part of the Haiku universe!
