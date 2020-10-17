@@ -43,7 +43,7 @@ Cartoon Network Leaks (added 2020/10/17)
 
 <img src="/files/wallpaper-call/cartoon_network_leaks.png" height="270" width="480" />
 
-- Julius Enriquez - [Falling Leaf](whole pack)(files/wallpaper-call/falling_leaf.zip) (added 2020/10/17), [Linear Leaf (whole pack)](files/wallpaper-call/linear_leaf.zip) (added 2020/10/16)
+- Julius Enriquez - [Falling Leaf (whole pack)](/files/wallpaper-call/falling_leaf.zip) (added 2020/10/17), [Linear Leaf (whole pack)](/files/wallpaper-call/linear_leaf.zip) (added 2020/10/16)
 
 <img src="/files/wallpaper-call/fallingleaf_yellow-dark_outline-preview.png" height="270" width="480" />
 
