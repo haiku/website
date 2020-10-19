@@ -62,4 +62,16 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/tumble_leaves.png" height="270" width="480" />
 
+- Michele Frau afka zuMi - [Còciu (12 colour variations)](/files/wallpaper-call/Cociu-20201019T113659Z-001.zip) (added 2020/10/19):
+
+    <img src="/files/wallpaper-call/cociu-berry_preview.png" height="360" width="480" />
+
+- Michele Frau afka zuMi - [Obrexit (12 colour variations)](/files/wallpaper-call/Obrexit-20201019T113616Z-001.zip) (added 2020/10/19):
+
+    <img src="/files/wallpaper-call/obrexit-teal_preview.png" height="360" width="480" />
+
+- Michele Frau afka zuMi - [Scurigat (12 colour variations)](/files/wallpaper-call/Scurigat-20201019T113414Z-001.zip) (added 2020/10/19):
+
+    <img src="/files/wallpaper-call/scurigat-steel_preview.png" height="360" width="480" />
+
 Thank you very much for being a part of the Haiku universe!
