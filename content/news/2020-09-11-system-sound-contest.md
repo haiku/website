@@ -46,7 +46,14 @@ As R1 steadily approaches, we are looking for contestants (amateur, professional
 - All sound effects should be non-intrusive. Distorted tunes, high-pitched tunes will not be considered.
 - Expanding on "haiku" and related themes are encouraged.
 - Entries need to be in uncompressed PCM format.
-- Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license.
+- Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license. The license file should look something like this:  
+
+    Haiku System Sound Theme   
+    [Name-of-the-theme]    
+    Copyright 2020, [Name-of-the-artist] <emailaddress@something.net>   
+    Licensed under CC Attribution-ShareAlike 4.0 International.   
+    [Optional additional info]
+
 - Naming the sound files according to the theme is encouraged, but intended sound event should be noted appropriately.
 
 ## Submission deadline
