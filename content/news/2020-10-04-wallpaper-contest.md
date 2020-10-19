@@ -25,14 +25,14 @@ Artists are free to submit in any category they please. We hope the guidelines b
 - Logo variations are encouraged to preserve the current theme. Doodle versions are welcome.
 - Using subtle haiku themes, such as leaves, Far-Eastern typography, and literature are encouraged. Anime-themed drawings are also welcome, but should there be human characters, they should not be the main focus.
 - If you want to go full 90's, and submit a version suitable for tiled backgrounds, just let us know :).
-- Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license. The license file should look something like this:  
-
+- Entries should include a note that the work is licensed under [CC Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) or a similar license. The license file should look something like this:
+```
     Haiku Desktop Background   
     [Name-of-the-background]    
     Copyright 2020, [Name-of-the-artist] <emailaddress@something.net>   
     Licensed under CC Attribution-ShareAlike 4.0 International.   
     [Optional additional info]
-
+```
 - Artists are encouraged to name their work as they please, otherwise you would be leaving the naming part to the mercy of the Haiku developers.
 - Submitted work should be in `*.wonderbrush`, `*.svg`, `*.kra` or `*.xcf` format.
 
@@ -46,19 +46,19 @@ There is no strict deadline for the call, we would like you to take as much time
 
 ## Current Submissions
 
-- Cartoon Network Leaks (added 2020/10/17)
+- Cartoon Network Leaks (added 2020/10/17):
 
     <img src="/files/wallpaper-call/cartoon_network_leaks.png" height="270" width="480" />
 
-- Julius Enriquez - [Falling Leaf (whole pack)](/files/wallpaper-call/falling_leaf.zip) (added 2020/10/17)
+- Julius Enriquez - [Falling Leaf (whole pack)](/files/wallpaper-call/falling_leaf.zip) (added 2020/10/17):
 
     <img src="/files/wallpaper-call/fallingleaf_yellow-dark_outline-preview.png" height="270" width="480" />
 
-- Julius Enriquez - [Linear Leaf (whole pack)](/files/wallpaper-call/linear_leaf.zip) (added 2020/10/16)
+- Julius Enriquez - [Linear Leaf (whole pack)](/files/wallpaper-call/linear_leaf.zip) (added 2020/10/16):
 
     <img src="/files/wallpaper-call/linearleaf_bluish-preview.png" height="270" width="480" />
 
-- Humdinger - Tumble Leaves (added 2020/10/16)
+- Humdinger - Tumble Leaves (added 2020/10/16):
 
     <img src="/files/wallpaper-call/tumble_leaves.png" height="270" width="480" />
 
