@@ -74,4 +74,8 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/scurigat-steel_preview.png" height="360" width="480" />
 
+- Oto R aka Dendrobats - [Seasons (4 colour variations with/without the slogan)](/files/wallpaper-call/DropOfHaikuByDendrobats_v3.zip) (added 2020/10/23):
+
+    <img src="/files/wallpaper-call/DropOfHaikuByDendrobats_Autumn.png" height="270" width="480" />
+
 Thank you very much for being a part of the Haiku universe!
