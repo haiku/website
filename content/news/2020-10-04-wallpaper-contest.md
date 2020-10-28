@@ -46,15 +46,19 @@ There is no strict deadline for the call, we would like you to take as much time
 
 ## Current Submissions
 
+- Andrii Maykovskyi - [6 variations (whole pack)](/files/wallpaper-call/Andrii_Maykovskyi.zip) [16 MiB] (added 2020/10/28):
+
+    <img src="/files/wallpaper-call/mayk_accuracy.png" height="270" width="480" />
+
 - Cartoon Network Leaks (added 2020/10/17):
 
     <img src="/files/wallpaper-call/cartoon_network_leaks.png" height="270" width="480" />
 
-- Julius Enriquez - [Falling Leaf (whole pack)](/files/wallpaper-call/falling_leaf.zip) (added 2020/10/17):
+- Julius Enriquez - [Falling Leaf (whole pack)](/files/wallpaper-call/falling_leaf.zip) [13 MiB] (added 2020/10/17):
 
     <img src="/files/wallpaper-call/fallingleaf_yellow-dark_outline-preview.png" height="270" width="480" />
 
-- Julius Enriquez - [Linear Leaf (whole pack)](/files/wallpaper-call/linear_leaf.zip) (added 2020/10/16):
+- Julius Enriquez - [Linear Leaf (whole pack)](/files/wallpaper-call/linear_leaf.zip)  [399 KiB] (added 2020/10/16):
 
     <img src="/files/wallpaper-call/linearleaf_bluish-preview.png" height="270" width="480" />
 
@@ -62,19 +66,19 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/tumble_leaves.png" height="270" width="480" />
 
-- Michele Frau afka zuMi - [Còciu (12 colour variations)](/files/wallpaper-call/Cociu-20201019T113659Z-001.zip) (added 2020/10/19):
+- Michele Frau afka zuMi - [Còciu (12 colour variations)](/files/wallpaper-call/Cociu-20201019T113659Z-001.zip)  [6 MiB] (added 2020/10/19):
 
     <img src="/files/wallpaper-call/cociu-berry_preview.png" height="360" width="480" />
 
-- Michele Frau afka zuMi - [Obrexit (12 colour variations)](/files/wallpaper-call/Obrexit-20201019T113616Z-001.zip) (added 2020/10/19):
+- Michele Frau afka zuMi - [Obrexit (12 colour variations)](/files/wallpaper-call/Obrexit-20201019T113616Z-001.zip)  [15 MiB] (added 2020/10/19):
 
     <img src="/files/wallpaper-call/obrexit-teal_preview.png" height="360" width="480" />
 
-- Michele Frau afka zuMi - [Scurigat (12 colour variations)](/files/wallpaper-call/Scurigat-20201019T113414Z-001.zip) (added 2020/10/19):
+- Michele Frau afka zuMi - [Scurigat (12 colour variations)](/files/wallpaper-call/Scurigat-20201019T113414Z-001.zip)  [12 MiB] (added 2020/10/19):
 
     <img src="/files/wallpaper-call/scurigat-steel_preview.png" height="360" width="480" />
 
-- Oto R aka Dendrobats - [Seasons (4 colour variations with/without the slogan)](/files/wallpaper-call/DropOfHaikuByDendrobats_v3.zip) (added 2020/10/23):
+- Oto R aka Dendrobats - [Seasons (4 colour variations with/without the slogan)](/files/wallpaper-call/DropOfHaikuByDendrobats_v3.zip)  [157 KiB] (added 2020/10/23):
 
     <img src="/files/wallpaper-call/DropOfHaikuByDendrobats_Autumn.png" height="270" width="480" />
 
