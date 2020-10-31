@@ -82,4 +82,8 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/DropOfHaikuByDendrobats_Autumn.png" height="270" width="480" />
 
+- shainer - Autumn leaves (added 2020/10/31):
+
+    <img src="/files/wallpaper-call/shainer_Autumn_leaves_preview.png" height="300" width="480" />
+
 Thank you very much for being a part of the Haiku universe!
