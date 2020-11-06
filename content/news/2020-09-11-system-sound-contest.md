@@ -70,10 +70,11 @@ Thanks for being a part of the Haiku universe!
 
 ## Contest Entries (In-progress)
 
-- Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) - added 2020/10/03)
-- Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) - updated 2020/10/13)
-- Jason Richardson - Bassling ([Download link](/files/sound-contest/jason_richardson.zip) - added 2020/10/04)
-- Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) - updated 2020/10/13)
-- Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) - updated 2020/10/11)
-- Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) - added 2020/10/10)
-- Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) - added 2020/10/17)
+- Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) [4.4 MiB] - added 2020/10/03)
+- Denis Čumak - Clack ([Download link](/files/sound-contest/denis_cumak_Clack.zip) [5.7 MiB] - added 2020/11/06)
+- Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) [2.9 MiB] - updated 2020/10/13)
+- Jason Richardson - Bassling ([Download link](/files/sound-contest/jason_richardson.zip) [3.6 MiB] - added 2020/10/04)
+- Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) [1.6 MiB] - updated 2020/10/13)
+- Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) [2.5 MiB] - updated 2020/10/11)
+- Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) [3.4 MiB] - added 2020/10/10)
+- Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) [2.6 MiB] - added 2020/10/17)
