@@ -70,6 +70,7 @@ Thanks for being a part of the Haiku universe!
 
 ## Contest Entries (In-progress)
 
+- Benjamin Davis ([Download link](/files/sound-contest/benjamin_davis_Forest_Dreams.zip) [3.3 MiB] - added 2020/11/07)
 - Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) [4.4 MiB] - added 2020/10/03)
 - Denis Čumak - Clack ([Download link](/files/sound-contest/denis_cumak_Clack.zip) [5.7 MiB] - added 2020/11/06)
 - Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) [2.9 MiB] - updated 2020/10/13)
