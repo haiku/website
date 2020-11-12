@@ -12,7 +12,9 @@ We are planning to release Beta3 sometime next year, hopefully followed by the f
 
 Haiku project is by no means a small project, it is a full operating system nonetheless. Maintaining a full-stack operating system is a huge work, and needs more than a handful of developers. Recently, one of our core developers, waddlesplash has recently announced his leave from the project due to personal reasons. waddlesplash has contributed to Haiku Project close to a decade, and has been the top contributor for 2017, 2018, and 2019. He has contributed invaluable additions to the Haiku Project, like the NVME driver, and USB3 support, with countless bug fixes and improvements on numerous Haiku components.
 
-Currently with his departure, we do not have the enough developer power to release R1.
+**With this departure, currently we do not have the enough developer power to release R1. More beta releases are always possible, but without a stable release, Haiku will never have the chance to become a viable alternative for desktop users.**
+
+Making Haiku something more than an enthusiast operating system is not possible without your help.
 
 ## Call for Developers
 
@@ -29,13 +31,13 @@ If you are a C++ developer, we want you to help us in developing and maintaining
 - Haiku offers a unique solution for package management, which most Linux distributions seem to suffer from. All Haiku packages are mountable disk images, therefore they do not litter your system with copied files everywhere. Updating and recovering the system is as easy as replacing a single file.
 - You might find it surprising that we respect the "everything-is-a-file" concept more than other \*nixes.
 
-Andrew Greimann has written an excellent [article](https://osvoyager.wordpress.com/2018/11/30/what-makes-beos-and-haiku-unique/) on the unique points of BeOS and Haiku. [Haiku User Guide](https://www.haiku-os.org/docs/userguide/en/contents.html) is an excellent source on the Haiku system itself and its components. probono has written an excellent series of Haiku articles, which can be found [here](https://medium.com/@probonopd/my-first-day-with-haiku-shockingly-good-8930cad4bbb0) as well.
+If you are looking for more detailed content, Andrew Greimann has written an excellent [article](https://osvoyager.wordpress.com/2018/11/30/what-makes-beos-and-haiku-unique/) (2018) on the unique points of BeOS and Haiku. [Haiku User Guide](https://www.haiku-os.org/docs/userguide/en/contents.html) is an excellent source on the Haiku system itself and its components. probono has written an excellent series of Haiku articles (2019), which can be found [here](https://medium.com/@probonopd/my-first-day-with-haiku-shockingly-good-8930cad4bbb0) as well.
 
 ## Other Means of Support
 
 If you are not a developer, but still want to support Haiku, we appreciate any support offer. Haiku [needs](https://www.haiku-os.org/community/getting-involved/) QA people, designers, documenters... you name it.
 
-If you are able to support the project financially, please make a donation. We are looking for means to hire a full-time developer for an extended period of time, but we do not have the financial means yet to accomplish this goal. Any [donation](https://www.haiku-inc.org/donate/) you make to Haiku, Inc. will help us realize this goal.
+If you are able to support the project financially, please make a donation. We are looking for means to hire a full-time developer for an extended period of time, but we do not have the financial resources yet to accomplish this goal. Any [donation](https://www.haiku-inc.org/donate/) you make to Haiku, Inc. will help us realize this goal.
 
 You can also make recurring donations on PayPal and [LiberaPay](https://liberapay.com/haiku.inc/).
 
@@ -44,4 +46,3 @@ You can also make recurring donations on PayPal and [LiberaPay](https://liberapa
 If you would like to join us, introduce yourself on the [haiku-development](https://www.freelists.org/list/haiku-development) mailing list, [forums](https://discuss.haiku-os.org) or visit us on IRC [#haiku](irc://chat.freenode.net/haiku) channel. In the meantime, spin up a VM for Haiku, or install it on that spare laptop that has been collecting dust for years. See it for yourself.
 
 Let's make the first Haiku stable release a reality.
-
