@@ -27,7 +27,7 @@ If you are a C++ developer, we need you to help us in developing and maintaining
 - Haiku offers a POSIX compatible operating system designed from scratch, with a focus on a clean, readable, and reusable codebase.
 - The Haiku experience does not suffer from fragmentation. All Haiku components are maintained in a single codebase, without having to rely on other teams for core system components. No flame wars between Z12 and Roadcountry supporters, or Leprechauns and Krusaders. We don't curse on the mailing lists either.
 - Haiku is a GUI-first operating system, unlike most other FOSS systems. The Terminal is still a first-class citizen after booting the system, right there waiting for you.
-- Haiku is the only operating system that completely stays true to the [desktop metaphor](https://en.wikipedia.org/wiki/Desktop_metaphor). Tracker is the only remaining mainstream spatial desktop manager. If you are looking for an desktop experience close to the Classic Mac OS, Haiku is your guy.
+- Haiku is the only operating system that completely stays true to the [desktop metaphor](https://en.wikipedia.org/wiki/Desktop_metaphor). Tracker is the only remaining mainstream spatial desktop manager. If you are looking for a desktop experience close to the Classic Mac OS, Haiku is your guy.
 - Haiku offers a unique solution for package management, which doesn't have some of the problems most Linux distributions seem to suffer from: All Haiku packages are mountable disk images, therefore they do not litter your system with copied files everywhere. Updating and recovering the system is as easy as replacing a single file.
 - You might find it surprising that we respect the "everything is a file" concept more than other \*nixes.
 
