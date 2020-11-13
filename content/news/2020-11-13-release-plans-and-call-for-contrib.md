@@ -8,7 +8,7 @@ After nearly 20 years of development, Haiku is close to its first stable release
 
 ## Release Plans
 
-We are planning to release Beta3 sometime next year, hopefully followed by the stable release, R1. We currently have [31](https://dev.haiku-os.org/query?status=assigned&status=in-progress&status=reopened&status=new&group=status&milestone=R1%2Fbeta3) tickets left for Beta 3, and [688](https://dev.haiku-os.org/query?status=assigned&status=in-progress&status=reopened&status=new&group=status&milestone=R1) tickets waiting to be resolved. A big portion of these tickets are bug fixes that are aimed towards the general stability of the system.
+We are planning to release Beta 3 sometime next year, hopefully followed by the stable release, R1. We currently have [31](https://dev.haiku-os.org/query?status=assigned&status=in-progress&status=reopened&status=new&group=status&milestone=R1%2Fbeta3) tickets left for Beta 3, and [688](https://dev.haiku-os.org/query?status=assigned&status=in-progress&status=reopened&status=new&group=status&milestone=R1) tickets waiting to be resolved. A big portion of these tickets are bug fixes that are aimed towards the general stability of the system.
 
 Haiku project is by no means a small project, it is a full operating system nonetheless. Maintaining a full-stack operating system is a huge work, and needs more than a handful of developers. Recently, some of our core developers have announced that they will either limit their Haiku-time significantly due to other personal obligations or will take a break from the project. This jeopardizes the possibility of putting a stable release out in a viable timeframe.
 
