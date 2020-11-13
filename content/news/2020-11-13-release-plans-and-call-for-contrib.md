@@ -31,7 +31,7 @@ If you are a C++ developer, we need you to help us in developing and maintaining
 - Haiku offers a unique solution for package management, which doesn't have some of the problems most Linux distributions seem to suffer from: All Haiku packages are mountable disk images, therefore they do not litter your system with copied files everywhere. Updating and recovering the system is as easy as replacing a single file.
 - You might find it surprising that we respect the "everything is a file" concept more than other \*nixes.
 
-If you are looking for more detailed content, Andrew Greimann has written an excellent [article](https://osvoyager.wordpress.com/2018/11/30/what-makes-beos-and-haiku-unique/) (2018) on the unique points of BeOS and Haiku. [Haiku User Guide](https://www.haiku-os.org/docs/userguide/en/contents.html) is an excellent source on the Haiku system itself and its components. probono has written an excellent series of Haiku articles (2019), which can be found [here](https://medium.com/@probonopd/my-first-day-with-haiku-shockingly-good-8930cad4bbb0) as well.
+If you are looking for more detailed content, Andrew Greimann has written an excellent [article](https://osvoyager.wordpress.com/2018/11/30/what-makes-beos-and-haiku-unique/) (2018) on the unique points of BeOS and Haiku. The [Haiku User Guide](https://www.haiku-os.org/docs/userguide/en/contents.html) is an great source on the Haiku system itself and its components. probono has written a fantastic series of Haiku articles (2019), which can be found [here](https://medium.com/@probonopd/my-first-day-with-haiku-shockingly-good-8930cad4bbb0).
 
 ## Other Means of Support
 
