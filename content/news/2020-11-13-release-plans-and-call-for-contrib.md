@@ -12,7 +12,7 @@ We are planning to release Beta3 sometime next year, hopefully followed by the f
 
 Haiku project is by no means a small project, it is a full operating system nonetheless. Maintaining a full-stack operating system is a huge work, and needs more than a handful of developers. Recently, one of our core developers, waddlesplash has recently announced his leave from the project due to personal reasons. waddlesplash has contributed to Haiku Project close to a decade, and has been the top contributor for 2017, 2018, and 2019. He has contributed invaluable additions to the Haiku Project, like the NVME driver, and USB3 support, with countless bug fixes and improvements on numerous Haiku components.
 
-**With this departure, currently we do not have the enough developer power to release R1. More beta releases are always possible, but without a stable release, Haiku will never have the chance to become a viable alternative for desktop users.**
+**With this departure and the prolonged absence of the other core developers, currently we do not have the enough developer power to release R1. More beta releases are always possible, but without a stable release, Haiku will never have the chance to become a viable alternative for desktop users.**
 
 Making Haiku something more than an enthusiast operating system is not possible without your help.
 
@@ -35,7 +35,7 @@ If you are looking for more detailed content, Andrew Greimann has written an exc
 
 ## Other Means of Support
 
-If you are not a developer, but still want to support Haiku, we appreciate any support offer. Haiku [needs](https://www.haiku-os.org/community/getting-involved/) QA people, designers, documenters... you name it.
+If you are not a developer, but still want to support Haiku, we appreciate any support offer. Haiku [needs](https://www.haiku-os.org/community/getting-involved/) QA people, designers, documenters... you name it. Our website currently doesn't have a maintainer for instance.
 
 If you are able to support the project financially, please make a donation. We are looking for means to hire a full-time developer for an extended period of time, but we do not have the financial resources yet to accomplish this goal. Any [donation](https://www.haiku-inc.org/donate/) you make to Haiku, Inc. will help us realize this goal.
 
