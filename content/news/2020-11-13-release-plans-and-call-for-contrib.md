@@ -43,6 +43,6 @@ You can also make recurring donations on PayPal and [LiberaPay](https://liberapa
 
 ## Contact
 
-If you would like to join us, introduce yourself on the [haiku-development](https://www.freelists.org/list/haiku-development) mailing list, [forums](https://discuss.haiku-os.org) or visit us on IRC [#haiku](irc://chat.freenode.net/haiku) channel. In the meantime, download a [nightly](https://download.haiku-os.org), and spin up a VM, or install it on that spare laptop that has been collecting dust for years. See it for yourself.
+If you would like to join us, introduce yourself on the [haiku-development](https://www.freelists.org/list/haiku-development) mailing list, [forums](https://discuss.haiku-os.org) or visit us on IRC [#haiku](irc://chat.freenode.net/haiku) channel. In the meantime, download a [nightly](https://download.haiku-os.org), and spin up a VM, or install it on that spare laptop that has been collecting dust for years. Experience Haiku for yourself.
 
 Let's make the first Haiku stable release a reality.
