@@ -4,7 +4,7 @@ author = "bitigchi"
 date = "2020-11-13 13:00:00+03:00"
 tags = ["r1"]
 
-After nearly 20 years of development, Haiku is close to its first stable release, namely R1. We need your help to make it happen. Here's a status update for R1, and latest project news.
+After nearly 20 years of development, Haiku is close to its first stable release, namely R1. We need your help to make it happen. Here's a status update for R1 and the latest project news.
 
 ## Release Plans
 
