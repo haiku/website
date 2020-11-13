@@ -37,7 +37,7 @@ If you are looking for more detailed content, Andrew Greimann has written an exc
 
 If you are not a developer, but still want to support Haiku, we appreciate any support offer. Haiku [needs](https://www.haiku-os.org/community/getting-involved/) QA people, designers, documenters... you name it. Our website currently doesn't have a maintainer for instance.
 
-If you are able to support the project financially, please make a donation. We are looking for means to hire a full-time developer for an extended period of time, but we do not have the financial resources yet to accomplish this goal. Any [donation](https://www.haiku-inc.org/donate/) you make to Haiku, Inc. will help us realize this goal.
+If you are able to support the project financially, please make a donation. We are looking for means to hire a full-time developer for an extended period of time, but we do not have the financial resources yet to accomplish this. Any [donation](https://www.haiku-inc.org/donate/) you make to Haiku, Inc. will help us realize this goal.
 
 You can also make recurring donations on PayPal and [LiberaPay](https://liberapay.com/haiku.inc/).
 
