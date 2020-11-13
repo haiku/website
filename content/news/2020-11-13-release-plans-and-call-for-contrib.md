@@ -18,7 +18,7 @@ Making Haiku something more than an enthusiast operating system is not possible 
 
 ## Call for Developers
 
-If you are a C++ developer, we want you to help us in developing and maintaining Haiku. Our priority is to release R1, therefore we need urgent support in fixing R1 milestone bugs. Other than that, improvements on [these areas](https://www.haiku-os.org/community/getting-involved/developing) are necessary to provide a stable and usable user experience for Haiku users.
+If you are a C++ developer, we need you to help us in developing and maintaining Haiku. Our priority is to release R1, therefore we need urgent support in fixing R1 milestone bugs. Other than that, improvements in [these areas](https://www.haiku-os.org/community/getting-involved/developing) are necessary to provide a stable OS and a nice user experience for its users.
 
 ## Why should I contribute to Haiku?
 
