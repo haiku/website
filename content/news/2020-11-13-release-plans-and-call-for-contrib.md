@@ -14,7 +14,7 @@ The Haiku project is by no means a small project, it is a full operating system 
 
 **With such breaks and the prolonged absence of the other core developers, currently we do not have enough developer power to release R1. More beta releases are always possible, but without a stable release, Haiku will never have the chance to become a viable alternative for desktop users.**
 
-Making Haiku something more than an enthusiast operating system is not possible without your help.
+Achieving a stable release of Haiku is not possible without your help.
 
 ## Call for Developers
 
