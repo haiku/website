@@ -1,7 +1,7 @@
 type = "news"
 title = "R1 Status Update and Call for Contributors"
 author = "bitigchi"
-date = "2020-11-13 13:00:00+03:00"
+date = "2020-11-16 13:00:00+03:00"
 tags = ["r1"]
 
 After nearly 20 years of development, Haiku is close to its first stable release, namely R1. We need your help to make it happen. Here's a status update for R1 and the latest project news.
@@ -29,7 +29,6 @@ If you are a C++ developer, we need you to help us in developing and maintaining
 - Haiku is a GUI-first operating system, unlike most other FOSS systems. The Terminal is still a first-class citizen after booting the system, right there waiting for you.
 - Haiku is the only operating system that completely stays true to the [desktop metaphor](https://en.wikipedia.org/wiki/Desktop_metaphor). Tracker is the only remaining mainstream spatial desktop manager. If you are looking for a desktop experience close to the Classic Mac OS, Haiku is your guy.
 - Haiku offers a unique solution for package management, which doesn't have some of the problems most Linux distributions seem to suffer from: All Haiku packages are mountable disk images, therefore they do not litter your system with copied files everywhere. Updating and recovering the system is as easy as replacing a single file.
-- You might find it surprising that we respect the "everything is a file" concept more than other \*nixes.
 
 If you are looking for more detailed content, Andrew Greimann has written an excellent [article](https://osvoyager.wordpress.com/2018/11/30/what-makes-beos-and-haiku-unique/) (2018) on the unique points of BeOS and Haiku. The [Haiku User Guide](https://www.haiku-os.org/docs/userguide/en/contents.html) is an great source on the Haiku system itself and its components. probono has written a fantastic series of Haiku articles (2019), which can be found [here](https://medium.com/@probonopd/my-first-day-with-haiku-shockingly-good-8930cad4bbb0).
 
