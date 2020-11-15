@@ -12,7 +12,7 @@ We are planning to release Beta 3 sometime next year, hopefully followed by the 
 
 The Haiku project is by no means a small project, it is a full operating system after all. Maintaining a full-stack operating system is a huge amount of work, and needs more than a handful of developers. Recently, some of our core developers have announced that they will either limit their Haiku-time significantly due to other personal obligations or will take a break from the project. This jeopardizes the possibility of putting a stable release out in a viable timeframe.
 
-**With such breaks and the prolonged absence of the other core developers, currently we do not have the enough developer power to release R1. More beta releases are always possible, but without a stable release, Haiku will never have the chance to become a viable alternative for desktop users.**
+**With such breaks and the prolonged absence of the other core developers, currently we do not have enough developer power to release R1. More beta releases are always possible, but without a stable release, Haiku will never have the chance to become a viable alternative for desktop users.**
 
 Making Haiku something more than an enthusiast operating system is not possible without your help.
 
