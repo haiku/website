@@ -129,6 +129,9 @@ Note however that these repositories do not contain any hrev tags, which are use
 
 <h3>Common tasks</h3>
 
+If you are already familiar with the pull request workflow as used, for example, at GitHub, you
+can find an overview of the differences in <a href="https://gerrit-review.googlesource.com/Documentation/intro-gerrit-walkthrough-github.html">Gerrit user's manual</a>.
+
 <h4>Example git workflow</h4>
 <img src='/files/gitProcess_0.png'>
 
