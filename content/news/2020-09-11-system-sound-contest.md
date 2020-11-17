@@ -77,6 +77,7 @@ Thanks for being a part of the Haiku universe!
 - Jason Richardson - Bassling ([Download link](/files/sound-contest/jason_richardson.zip) [3.6 MiB] - added 2020/10/04)
 - Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) [1.6 MiB] - updated 2020/10/13)
 - Maksim Malerson - Basics ([Download link](/files/sound-contest/maksim_malerson_Basics.zip) [1 MiB] - added 2020/14/11)
+- Nomys Tempar - The Poet Operating System Theme ([Download link](/files/sound-contest/nomys_tempar.zip) [2.8 MiB] - added 2020/17/11)
 - Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) [2.5 MiB] - updated 2020/10/11)
 - Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) [3.4 MiB] - added 2020/10/10)
 - Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) [2.6 MiB] - added 2020/10/17)
