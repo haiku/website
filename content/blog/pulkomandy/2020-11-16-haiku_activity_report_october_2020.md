@@ -23,12 +23,12 @@ Korli has added support for detecting several CPU features (instruction set
 extensions) which were added by Intel and AMD over the last few years.
 
 Kallisti5 reworked the options to the configure script which were a bit confusing
-since the introducion of hybrid builds (yes, that was about 10 years ago). Now
+since the introduction of hybrid builds (yes, that was about 10 years ago). Now
 the path to the buildtools repo and the architectures to build for are specified
 in two different options instead of being somehow merged into one.
 
 mt has run the code through the clang static analyzing tools and is fixing many
-small issues in the code, such as unsecure printf format strings, dead assignments,
+small issues in the code, such as insecure printf format strings, dead assignments,
 and various other things. The code will be more safe and will have less warnings.
 
 Waddlesplash fixed the code to detect the gcc version to handle gcc 10 as a version
@@ -36,8 +36,8 @@ newer than 2 (it was only looking at the first character of the version and thin
 it was gcc1). He also fixed an issue in the stdbool.h implementation for gcc2, to
 make sure it can be built with modern compilers.
 
-Waddlesplash finished the wok to relicense ProcessController under the MIT license.
-All people whohad contributed to work on the tool agreed to relicense their work,
+Waddlesplash finished the work to relicense ProcessController under the MIT license.
+All people who had contributed to work on the tool agreed to relicense their work,
 except one. The remaining bit of GPL code (it was a trivial bugfix) has been
 removed then reimplemented independently under the new license.
 
@@ -66,14 +66,14 @@ Adam Fowler contributed some documentation for the accelerant interface.
 Nielx continues his work on filling in the haiku book, with documentation for
 BControl, hiding some private APIs that were not meant to be in the book (yet),
 and added doxygen files for generating the internal documentation (meant to be
-used as a reference by OS developers, but that would gotoo far into internal
+used as a reference by OS developers, but that would go too far into internal
 details for someone looking into just using the APIs to write an application).
 
 <h3>POSIX compatibility</h3>
 
 korli added the dprintf function, which allows to do formatted prints directly
 into a file opened with an unbuffered file descriptor (from open), similar to
-frpintf (which works with files opened with fopen instead).
+fprintf (which works with files opened with fopen instead).
 
 This had not been done before because the name of the function is conflicting with
 our kernel debug function (also named dprintf, but doing a different thing).
