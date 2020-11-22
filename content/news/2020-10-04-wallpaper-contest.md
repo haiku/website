@@ -46,6 +46,14 @@ There is no strict deadline for the call, we would like you to take as much time
 
 ## Current Submissions
 
+- Allan Nyholm Nielsen - Haiku Fragmented [21 KiB] (added 2020/11/22):
+
+    <img src="/files/wallpaper-call/allan_nyholm_nielsen_Haiku_Fragmented_preview.png" height="225" width="400" />
+
+- Allan Nyholm Nielsen - Haiku Slide [18 KiB] (added 2020/11/22):
+
+    <img src="/files/wallpaper-call/allan_nyholm_nielsen_Haiku_Slide_preview.png" height="225" width="400" />
+
 - Andrii Maykovskyi - [6 variations (whole pack)](/files/wallpaper-call/Andrii_Maykovskyi.zip) [16 MiB] (added 2020/10/28):
 
     <img src="/files/wallpaper-call/mayk_accuracy.png" height="270" width="480" />
@@ -53,6 +61,10 @@ There is no strict deadline for the call, we would like you to take as much time
 - Cartoon Network Leaks (added 2020/10/17):
 
     <img src="/files/wallpaper-call/cartoon_network_leaks.png" height="270" width="480" />
+
+- Dahyun Lee - tileable background [Momiji flow (whole pack)](/files/wallpaper-call/dahyun_lee_Momiji_flow.zip) [6 KiB] (added 2020/11/22):
+
+    <img src="/files/wallpaper-call/momiji_flow_preview.png" height="200" width="200" />
 
 - Julius Enriquez - [Falling Leaf (whole pack)](/files/wallpaper-call/falling_leaf.zip) [13 MiB] (added 2020/10/17):
 
