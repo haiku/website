@@ -33,9 +33,9 @@ As R1 steadily approaches, we are looking for contestants (amateur, professional
 
 **Window events:**
 
-- Window activated
+- Window activated (= gets focus)
 - Window close
-- Window minimised
+- Window minimised (= window tab gets double-clicked to hide the window)
 - Window open
 - Window restored (= gets 'unminimised')
 - Window zoomed (= when 'zoom' button (right widget in tab) is clicked)
@@ -74,6 +74,7 @@ Thanks for being a part of the Haiku universe!
 - Dahuyn Lee - Meditation Time ([Download link](/files/sound-contest/dahuyn_lee_Meditation_Time.zip) [4 MiB] - added 2020/11/19)
 - Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) [4.4 MiB] - added 2020/10/03)
 - Denis Čumak - Clack ([Download link](/files/sound-contest/denis_cumak_Clack.zip) [5.8 MiB] - added 2020/11/10)
+- Garrett Kabler - burg's-sparkly-tones ([Download link](/files/sound-contest/garrett_kabler_burgs-sparkly-tones.zip) [1.8 MiB] - added 2020/11/23)
 - Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) [2.9 MiB] - updated 2020/10/13)
 - Jason Richardson - Bassling ([Download link](/files/sound-contest/jason_richardson.zip) [3.6 MiB] - added 2020/10/04)
 - Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) [1.6 MiB] - updated 2020/10/13)
