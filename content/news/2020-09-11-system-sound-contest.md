@@ -84,3 +84,4 @@ Thanks for being a part of the Haiku universe!
 - Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) [3.4 MiB] - added 2020/10/10)
 - Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) [2.6 MiB] - added 2020/10/17)
 - Ward Bones - Zen Peace ([Download link](/files/sound-contest/ward_bones_Zen_Peace.zip) [3.2 MiB] - added 2020/11/19)
+- Olivier Coursière - Supposedly Not Too Annoying Theme ([Download Link](/files/sound-contest/Supposedly_not_too_annoying_theme.zip) - added 2020/11/25)
