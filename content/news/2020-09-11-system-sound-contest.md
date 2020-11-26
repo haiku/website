@@ -70,6 +70,7 @@ Thanks for being a part of the Haiku universe!
 
 ## Contest Entries (In-progress)
 
+- bearlyMatt - Komorebi ([Download link](files/sound-contest/bearlyMatt-Komorebi.zip) [3.1 MiB] - added 2020/11/25)
 - Benjamin Davis ([Download link](/files/sound-contest/benjamin_davis_Forest_Dreams.zip) [3.3 MiB] - added 2020/11/07)
 - Dahuyn Lee - Meditation Time ([Download link](/files/sound-contest/dahuyn_lee_Meditation_Time.zip) [4 MiB] - added 2020/11/19)
 - Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) [4.4 MiB] - added 2020/10/03)
