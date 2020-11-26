@@ -70,6 +70,7 @@ Thanks for being a part of the Haiku universe!
 
 ## Contest Entries (In-progress)
 
+- bearlyMatt - Komorebi ([Download link](files/sound-contest/bearlyMatt-Komorebi.zip) [3.1 MiB] - added 2020/11/25)
 - Benjamin Davis ([Download link](/files/sound-contest/benjamin_davis_Forest_Dreams.zip) [3.3 MiB] - added 2020/11/07)
 - Dahuyn Lee - Meditation Time ([Download link](/files/sound-contest/dahuyn_lee_Meditation_Time.zip) [4 MiB] - added 2020/11/19)
 - Daniel Diaz ([Download link](/files/sound-contest/daniel_diaz.zip) [4.4 MiB] - added 2020/10/03)
@@ -78,8 +79,10 @@ Thanks for being a part of the Haiku universe!
 - Humdinger - Low Modulorian ([Download link](/files/sound-contest/humdinger_Low_Modulorian.zip) [2.9 MiB] - updated 2020/10/13)
 - Jason Richardson - Bassling ([Download link](/files/sound-contest/jason_richardson.zip) [3.6 MiB] - added 2020/10/04)
 - Joshua Spann - Zen ([Download link](/files/sound-contest/joshua_spann.zip) [1.6 MiB] - updated 2020/10/13)
+- Luke Stegmayer - Nature ([Download link](/files/sound-contest/luke_stegmayer_Nature.zip) [2 MiB] - added 2020/11/26)
 - Maksim Malerson - Basics ([Download link](/files/sound-contest/maksim_malerson_Basics.zip) [723 KiB] - updated 2020/11/19)
 - Nomys Tempar - The Poet Operating System Theme ([Download link](/files/sound-contest/nomys_tempar.zip) [2.8 MiB] - added 2020/11/17)
+- Olivier Coursière - Supposedly Not Too Annoying Theme ([Download Link](/files/sound-contest/olivier-coursiere-supposedly-not-too-annoying-theme.zip) [4.9 MiB] - added 2020/11/25)
 - Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) [2.2 MiB] - updated 2020/11/25)
 - Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) [3.4 MiB] - added 2020/10/10)
 - Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) [2.6 MiB] - added 2020/10/17)
