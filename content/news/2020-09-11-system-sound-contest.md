@@ -83,8 +83,7 @@ Thanks for being a part of the Haiku universe!
 - Maksim Malerson - Basics ([Download link](/files/sound-contest/maksim_malerson_Basics.zip) [723 KiB] - updated 2020/11/19)
 - Nomys Tempar - The Poet Operating System Theme ([Download link](/files/sound-contest/nomys_tempar.zip) [2.8 MiB] - added 2020/11/17)
 - Olivier Coursière - Supposedly Not Too Annoying Theme ([Download Link](/files/sound-contest/olivier-coursiere-supposedly-not-too-annoying-theme.zip) [4.9 MiB] - added 2020/11/25)
-- Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) [2.1 MiB] - updated 2020/10/23)
+- Parnikkapore - Yanqim ([Download link](/files/sound-contest/parnikkapore-yanqim.zip) [2.2 MiB] - updated 2020/11/25)
 - Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white.zip) [3.4 MiB] - added 2020/10/10)
 - Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) [2.6 MiB] - added 2020/10/17)
 - Ward Bones - Zen Peace ([Download link](/files/sound-contest/ward_bones_Zen_Peace.zip) [3.2 MiB] - added 2020/11/19)
-
