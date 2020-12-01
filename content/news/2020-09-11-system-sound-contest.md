@@ -87,3 +87,5 @@ Thanks for being a part of the Haiku universe!
 - Gareth White - Straight Outta Cronton ([Download link](/files/sound-contest/gareth_white_straight_outta_cronton.zip) [3.4 MiB] - added 2020/10/10)
 - Tim Lyakhovetskiy - Leafy ([Download link](/files/sound-contest/tim_lyakhovetskiy_leafy.zip) [2.6 MiB] - added 2020/10/17)
 - Ward Bones - Zen Peace ([Download link](/files/sound-contest/ward_bones_Zen_Peace.zip) [3.2 MiB] - added 2020/11/19)
+
+You can download all entries in one [tar.gz archive](https://oshi.at/ATySSh) [52 MiB]. Unpack with Expander.
