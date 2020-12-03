@@ -41,7 +41,6 @@ There are a lot of ideas of what could be improved or set up, like:
 * [openQA](http://open.qa) testing
 * Single sign-on ("Haiku account")
 * Reworking the user guide translator to use a modern framework
-* Make Haikuporter compatible with Python 3
 
 These are nice to have, but with the current time budget we can't afford additional maintenance burden.
 
