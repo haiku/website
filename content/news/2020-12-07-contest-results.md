@@ -8,7 +8,7 @@ tags = ["sound", "contest"]
 
 Contest for Haiku System Sounds is finally over; and ladies and gentlemen, we have a winner!
 
-Before going into details, lots of thanks to all participants and voters are in order. Thanks to you, Haiku now has a cohesive high-quality sound set, that will hopefully make using Haiku much more pleasant and accessible.
+Before going into details, lots of thanks to all participants and voters are in order. Thanks to you, Haiku now has a cohesive high-quality sound set, that will hopefully make using Haiku even more pleasant and accessible.
 
 Without further ado, the winner is **Garrett Kabler**, with the sound theme "**burg's-sparkly-tones**"!
 
