@@ -32,7 +32,7 @@ For the evaluation, entries were ranked from one to five, each of them correspon
 4. 4th place: 2 points
 5. 5th place: 1 point
 
-According to votes, final score were calculated as below:
+According to votes, the final scores were calculated as below:
 
 | **Theme name**                    |**Points**|
 |:------n----------------------------------|--:|
