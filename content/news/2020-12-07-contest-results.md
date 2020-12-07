@@ -12,7 +12,7 @@ Before going into details, lots of thanks to all participants and voters are in 
 
 Without further ado, the winner is **Garrett Kabler**, with the sound theme "**burg's-sparkly-tones**"!
 
-Garrett's entry won the contest by a landslide, acquiring a whopping 249 points, whilst the runner up followed up with 50 points. This is very impressive, and gives an overall idea about the quality of the Garrett's sound set.
+Garrett's entry won the contest by a landslide, acquiring a whopping 249 points, whilst the runner up followed up with 50 points. This is very impressive, and gives an overall idea about the quality of Garrett's sound set.
 
 Top three are listed below:
 
