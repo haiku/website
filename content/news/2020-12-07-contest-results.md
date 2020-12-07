@@ -54,6 +54,6 @@ You can download the votes' breakdown table from [this link](/files/sound-contes
 
 ## What next?
 
-The winner entry will be used as the default sound theme in Haiku R1. Expect to see this theme in action in the upcoming development releases. You can still use any sound theme you please via setting them up manually in "Sounds" preferences. It will also be possible to install and use the other entries via HaikuDepot, once the underlying foundation for this feature is implemented.
+The winning sound theme will be included in Haiku R1. You can still use any sound theme you please via setting them up manually in "Sounds" preferences or install and use the other entries via HaikuDepot, once the underlying foundation for this feature is implemented.
 
 Thanks again to all participants and everyone who helped spread the word around.
