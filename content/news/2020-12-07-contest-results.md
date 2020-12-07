@@ -20,10 +20,6 @@ Top three are listed below:
 2. Matthew Harazim - [Komorebi](/files/sound-contest/bearlyMatt-Komorebi.zip)
 3. Maksim Malerson - [Basics](/files/sound-contest/maksim_malerson_Basics.zip)
 
-For the details about the voting and the final scores, see the "Statistics" section below.
-
-## Statistics
-
 For the evaluation, entries were ranked from one to five, each of them corresponding to below points:
 
 1. 1st place: 5 points
