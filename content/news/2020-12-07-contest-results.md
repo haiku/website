@@ -10,13 +10,13 @@ Contest for Haiku System Sounds is finally over; and ladies and gentlemen, we ha
 
 Before going into details, lots of thanks to all participants and voters are in order. Thanks to you, Haiku now has a cohesive high-quality sound set, that will hopefully make using Haiku even more pleasant and accessible.
 
-Without further ado, the winner is **Garrett Kabler**, with the sound theme "**burg's-sparkly-tones**"!
+Without further ado, the winner is **Garrett Kabler**, with the sound theme "**grubs-sparkly-tones**" (*previously named as "burgs-sparkly-tones", name changed by the author due to a possible identity mixup)!
 
 Garrett's entry won the contest by a landslide, acquiring a whopping 249 points, whilst the runner up followed up with 50 points. This is very impressive, and gives an overall idea about the quality of Garrett's sound set.
 
 Top three are listed below:
 
-1. Garrett Kabler - [burg's-sparkly-tones](/files/sound-contest/garrett_kabler_burgs-sparkly-tones.zip)
+1. Garrett Kabler - [grubs-sparkly-tones](/files/sound-contest/garrett_kabler_burgs-sparkly-tones.zip)
 2. Matthew Harazim - [Komorebi](/files/sound-contest/bearlyMatt-Komorebi.zip)
 3. Maksim Malerson - [Basics](/files/sound-contest/maksim_malerson_Basics.zip)
 
@@ -30,9 +30,9 @@ For the evaluation, entries were ranked from one to five, each of them correspon
 
 According to votes, the final scores were calculated as below:
 
-|**Theme name**                    |**Points**|
+|**Theme name**                     |**Points**|
 |:------n----------------------------------|--:|
-|**1.** burg's-sparkly-tones               |249|
+|**1.** grubs-sparkly-tones                |249|
 |**2.** Komorebi                           | 50|
 |**3.** Basics                             | 43|
 |**4.** Zen                                | 42|
