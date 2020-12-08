@@ -16,7 +16,7 @@ Garrett's entry won the contest by a landslide, acquiring a whopping 249 points,
 
 Top three are listed below:
 
-1. Garrett Kabler - [grubs-sparkly-tones](/files/sound-contestıgarrett_kabler_burgs-sparkly-tones.zip)
+1. Garrett Kabler - [grubs-sparkly-tones](/files/sound-contest/garrett_kabler_burgs-sparkly-tones.zip)
 2. Matthew Harazim - [Komorebi](/files/sound-contest/bearlyMatt-Komorebi.zip)
 3. Maksim Malerson - [Basics](/files/sound-contest/maksim_malerson_Basics.zip)
 
