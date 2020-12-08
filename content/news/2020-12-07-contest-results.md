@@ -2,7 +2,7 @@
 type = "news"
 title = "System Sounds Contest Wrap-up"
 author = "bitigchi"
-date = "2020-12-07 22:00:00+03:00"
+date = "2020-12-08 12:00:00+03:00"
 tags = ["sound", "contest"]
 +++
 
@@ -30,7 +30,7 @@ For the evaluation, entries were ranked from one to five, each of them correspon
 
 According to votes, the final scores were calculated as below:
 
-| **Theme name**                    |**Points**|
+|**Theme name**                    |**Points**|
 |:------n----------------------------------|--:|
 |**1.** burg's-sparkly-tones               |249|
 |**2.** Komorebi                           | 50|
