@@ -109,7 +109,7 @@ According to votes, the final scores were calculated as below:
     </tr>
 </table>
 
-You can download the votes' breakdown table from [this link](/files/sound-contest/sound_contest_cotes.ods) (.ods file, 20 KiB).
+You can download the votes' breakdown table from [this link](/files/sound-contest/sound_contest_votes.ods) (.ods file, 20 KiB).
 
 ## What next?
 
