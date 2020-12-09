@@ -150,17 +150,18 @@ sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-li
 sudo emerge -av u-boot-tools util-linux dtc bc
 ```
 
-<a name="bsd"></a>
-## ![freebsd](/files/os-icons/freebsd-32.png) BSD Based Distribution (FreeBSD)
+<a name="freebsd"></a>
+## ![freebsd](/files/os-icons/freebsd-32.png) FreeBSD
 
-**Package based:**
+**Basic requirements:**
+
 ```sh
-sudo pkg install bison git nasm gawk texinfo xorriso wget u-boot-tools mtools linuxfdisk curl python3 gcc gmake
+pkg install devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget sysutils/u-boot-tools emulators/mtools sysutils/linuxfdisk lang/python lang/gcc devel/gmake
 ```
 
-**Ports based:**
+The configure script has to be run with extra enviroment variables to tell it the location of gcc-ranlib and gcc-ar, for example:
 ```sh
-sudo portinstall devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget devel/u-boot-tools emulators/mtools sysutils/linuxfdisk lang/python devel/gcc devel/gmake
+$ NM=gcc-nm9 RANLIB=gcc-ranlib9 AR=gcc-ar9 ./configure --cross-tools-source ../buildtools/ --build-cross-tools x86_64
 ```
 
 <a name="osx"></a>
