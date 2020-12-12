@@ -98,6 +98,10 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/shainer_Autumn_leaves_preview.png" height="300" width="480" />
 
+- transformat - the teapot and a glitch (added 2020/12/12):
+
+    <img src="/files/wallpaper-call/teapot_and_a_glitch-preview.png" height="270" width="480" />
+
 - Ville Eriksen - SimpleWhite (added 2020/11/25):
 
     <img src="/files/wallpaper-call/ville_eriksen_SimpleWhite_preview.png" height="270" width="480" />
