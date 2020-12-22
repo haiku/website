@@ -114,7 +114,7 @@ which want to make sure they wrote exactly as many bytes as requested.
 Some changes to the XFS filesystem by CruxBox were merged, but a lot of the work is still waiting for review on Gerrit.
 This work was done during this summer as part of GSoC.
 
-PulkoMandy worked on the mmc/SD drivers, of which a part have been merged.
+PulkoMandy and Anarchos worked on the mmc/SD drivers, of which a part have been merged.
 The patches enabling read and write support are however still waiting for review.
 
 <h3>Sound and media</h3>
