@@ -106,7 +106,7 @@ kallisit5 also improved the services kit API for HTTP upload to allow for progre
 
 <h3>Mass storage</h3>
 
-korli changed IOCache to make sure the buffer and size passed to the lower layers
+mark_mcs changed IOCache to make sure the buffer and size passed to the lower layers
 exactly match. Before this change, it was possible to provide a buffer larger than
 the size, with the extra space being unused. But that would confuse some drivers,
 which want to make sure they wrote exactly as many bytes as requested.
