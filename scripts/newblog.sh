@@ -12,7 +12,7 @@ if [ ! -d content ]; then
 	echo "This script must be run from the root of the repository."
 	exit 1
 fi
-if [ $# -lt 1 ]; then
+if [ $# -ne 1 ]; then
 	echo "Usage: ./scripts/newblog.sh <name>"
 	echo "e.g.: ./scripts/newblog.sh PulkoMandy"
 	exit 1

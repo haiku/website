@@ -12,16 +12,22 @@ if [ ! -d content ]; then
 	echo "This script must be run from the root of the repository."
 	exit 1
 fi
-if [ $# -lt 2 ]; then
+if [ $# -ne 2 ]; then
 	echo "Usage: ./scripts/newpost.sh <title> <author>"
-	echo "e.g.: ./scripts/newblog.sh \"Website Rewrite Complete\" waddlesplash"
+	echo "e.g.: ./scripts/newpost.sh \"Website Rewrite Complete\" waddlesplash"
 	exit 1
 fi
 
-DIRNAME=`echo $2 | tr '[:upper:]' '[:lower:]'`
+DIRNAME=content/blog/`echo $2 | tr '[:upper:]' '[:lower:]'`
+
+if [ ! -d "$DIRNAME" ]; then
+	echo "Blog not found, please check author or run ./scripts/newblog.sh $2"
+	exit 1
+fi
+
 POSTFILE=`date --rfc-3339=date`_`echo $1 | tr '[:upper:]' '[:lower:]' | sed "s/ /_/g" | tr -cd '[[:alnum:]]_-'`.md
-cp ./scripts/blog_post.md content/blog/$DIRNAME/$POSTFILE
-sed -i "s/TITLE_GOES_HERE/$(echo $1 | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" content/blog/$DIRNAME/$POSTFILE
-sed -i "s/AUTHOR_GOES_HERE/$2/g" content/blog/$DIRNAME/$POSTFILE
-sed -i "s/DATE_GOES_HERE/$(date --rfc-3339=seconds)/g" content/blog/$DIRNAME/$POSTFILE
-echo "Done; post is at content/blog/$DIRNAME/$POSTFILE"
+cp ./scripts/blog_post.md $DIRNAME/$POSTFILE
+sed -i "s/TITLE_GOES_HERE/$(echo $1 | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" $DIRNAME/$POSTFILE
+sed -i "s/AUTHOR_GOES_HERE/$2/g" $DIRNAME/$POSTFILE
+sed -i "s/DATE_GOES_HERE/$(date --rfc-3339=seconds)/g" $DIRNAME/$POSTFILE
+echo "Done; post is at $DIRNAME/$POSTFILE"
