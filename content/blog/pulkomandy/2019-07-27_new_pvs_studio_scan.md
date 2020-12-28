@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "new PVS studio scan"
-author = "pulkomandy"
+author = "PulkoMandy"
 date = "2019-07-27 10:18:34+02:00"
 tags = ["haiku", "software"]
 +++

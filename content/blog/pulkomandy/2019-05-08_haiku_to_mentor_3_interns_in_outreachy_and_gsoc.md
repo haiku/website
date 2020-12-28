@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "Haiku to mentor 3 interns in Outreachy and GSoC"
-author = "pulkomandy"
+author = "PulkoMandy"
 date = "2019-05-08 10:20:35+02:00"
 tags = ["haiku", "software"]
 +++

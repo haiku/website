@@ -1,5 +1,5 @@
 +++
 type = "blog_index"
-author = "pawel_dziepak"
-title = "pawel_dziepak's blog"
+author = "paweł_dziepak"
+title = "Paweł Dziepak's blog"
 +++

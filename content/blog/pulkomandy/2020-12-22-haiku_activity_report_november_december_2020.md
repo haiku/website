@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "Haiku activity report - November and December 2020"
-author = "pulkomandy"
+author = "PulkoMandy"
 date = "2020-12-22 10:53:07+02:00"
 tags = []
 +++
