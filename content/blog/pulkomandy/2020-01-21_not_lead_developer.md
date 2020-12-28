@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "No, I'm not Haiku's lead developer"
-author = "pulkomandy"
+author = "PulkoMandy"
 date = "2020-01-21 12:14:07+02:00"
 tags = ["haiku", "organization", "community"]
 +++
