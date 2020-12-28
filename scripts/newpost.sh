@@ -25,9 +25,14 @@ if [ ! -d "$DIRNAME" ]; then
 	exit 1
 fi
 
+AUTHOR=$(sed -n 's/^\s*author\s*=\s*//p' $DIRNAME/_index.md)
+if [ -z "$AUTHOR" ]; then
+	AUTHOR=\"$2\"
+fi
+
 POSTFILE=`date --rfc-3339=date`_`echo $1 | tr '[:upper:]' '[:lower:]' | sed "s/ /_/g" | tr -cd '[[:alnum:]]_-'`.md
 cp ./scripts/blog_post.md $DIRNAME/$POSTFILE
 sed -i "s/TITLE_GOES_HERE/$(echo $1 | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" $DIRNAME/$POSTFILE
-sed -i "s/AUTHOR_GOES_HERE/$2/g" $DIRNAME/$POSTFILE
+sed -i "s/\"AUTHOR_GOES_HERE\"/$AUTHOR/g" $DIRNAME/$POSTFILE
 sed -i "s/DATE_GOES_HERE/$(date --rfc-3339=seconds)/g" $DIRNAME/$POSTFILE
 echo "Done; post is at $DIRNAME/$POSTFILE"
