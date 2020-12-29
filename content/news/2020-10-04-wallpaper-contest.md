@@ -98,9 +98,18 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/shainer_Autumn_leaves_preview.png" height="300" width="480" />
 
-- transformat - the teapot and a glitch (added 2020/12/12):
+- transformat - the teapot and a glitch [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/12):
 
     <img src="/files/wallpaper-call/teapot_and_a_glitch-preview.png" height="270" width="480" />
+
+- transformat - glitched beach [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/29):
+
+    <img src="/files/wallpaper-call/transformat_glitched_beach_haiku-preview.png" height="270" width="480" />
+
+- transformat - glitched scan grey leaves [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/29):
+
+    <img src="/files/wallpaper-call/transformat_glitched_scan_grey_leaves-preview.png" height="270" width="480" />
+
 
 - Ville Eriksen - SimpleWhite (added 2020/11/25):
 
