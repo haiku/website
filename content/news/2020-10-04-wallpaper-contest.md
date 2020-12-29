@@ -100,7 +100,7 @@ There is no strict deadline for the call, we would like you to take as much time
 
 - transformat - the teapot and a glitch [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/12):
 
-    <img src="/files/wallpaper-call/teapot_and_a_glitch-preview.png" height="270" width="480" />
+    <img src="/files/wallpaper-call/transformat_teapot_and_a_glitch-preview.png" height="270" width="480" />
 
 - transformat - glitched beach [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/29):
 
