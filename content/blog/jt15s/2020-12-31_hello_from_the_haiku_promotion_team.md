@@ -25,7 +25,7 @@ As the promotion team, we want to make sure people know about Haiku. One of the 
 How will we do this, you might ask? Well, there are a couple of aspects of our strategy. 
 
 ### The media and reviewers
-A database of all the reviews/mentions of Haiku is being compiled for easy reference and so we can contact a variety of media sources once we release Beta 3. Additionally, we are looking for additional technology-related channels who may have not mentioned or reviewed Haiku before and see if they are interested in having a look at the OS. 
+A database of all the reviews/mentions of Haiku is being compiled for easy reference and so we can contact a variety of media sources when we have a new release. Additionally, we are looking for more technology-related channels who may have not mentioned or reviewed Haiku before and see if they are interested in having a closer look at the OS. 
 
 In terms of the media in general, we are planning to prepare press releases for the media - a press release is simply a formal, properly formatted version of an announcement. By releasing press releases it makes it easier for other media organisations to find major Haiku announcements and run a story about Haiku. 
 
