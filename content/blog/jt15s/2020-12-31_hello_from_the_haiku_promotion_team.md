@@ -50,7 +50,7 @@ We are also planning to distribute more content via our often under-utilised soc
 
 Haikunauts also has several other ideas for promotional events, but we will share these with you later as we are still working out the details of these events.
 
-### Closing Words
+### In closing
 We are super excited to see how we can promote Haiku and help the project gain new members and volunteers. **Remember, if you’d like to join, don’t hesitate in sending me a private message on the forums!**
 
 I’d also like to take this opportunity to wish everyone a very Happy New Year - here’s to a more fruitful, happy and lucky new year!
