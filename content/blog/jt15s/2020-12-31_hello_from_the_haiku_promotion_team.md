@@ -18,7 +18,7 @@ Me, as well as scott_puopolo18 as of now. We are also working with Haikunauts an
 * Events Coordinator - it would be good to have someone search for events which Haiku could take part in (i.e. FOSS conferences) and help organise Haiku’s participation in these events.
 
 ## Our promotional strategy
-As the promotion team, we want to make sure people know about Haiku. One of the biggest problems facing the Project is that we are more obscure than other FOSS projects. This means it's harder to get new contributors, whether this is developers, documentation writers or just volunteers in general. Hence we aim to attract more attention towards Haiku, and in turn, new users and volunteers. 
+As the promotion team, we want to make sure people know about Haiku. One of the biggest problems facing the project is that we are more obscure than other FOSS projects. This means it's harder to get new contributors, whether this is developers, documentation writers or just volunteers in general. Hence we aim to attract more attention towards Haiku, and in turn, new users and volunteers. 
 
 **I would like to take this opportunity to urge you to help the project: you don't need to be a programmer to help out. [You can find ways to get involved here.](https://www.haiku-os.org/community/getting-involved/)**
 
