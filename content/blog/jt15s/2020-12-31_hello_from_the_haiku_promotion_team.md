@@ -46,7 +46,7 @@ I am thinking of running an advertisement in _Read the Doc_s, a documentation we
 
 scott_puopolo18 is working on a set of interview questions for our developers. By interviewing the developers we can give the public a glimpse into the world of Haiku development, as well as shining a light on the challenges and opportunities in an open-source project. The predetermined set of questions means that we don't have to write new questions for each developer: to save time, we can simply send them off and the developer can write their response.
 
-We are also planning to distribute more content via our often-underutilised social media platforms, as well as update them with current information (i.e. adding profile page art, applying for verification, updating or adding links etc.). Short-form posts on social media are what immediately comes to mind, although we are considering live-streams or videos if there is someone willing to help out.
+We are also planning to distribute more content via our often under-utilised social media platforms, as well as update them with current information (i.e. adding profile page art, applying for verification, updating or adding links etc.). Short-form posts on social media are what immediately comes to mind, although we are considering live-streams or videos if there is someone willing to help out.
 
 Haikunauts also has several other ideas for promotional events, but we will share these with you later as we are still working out the details of these events.
 
