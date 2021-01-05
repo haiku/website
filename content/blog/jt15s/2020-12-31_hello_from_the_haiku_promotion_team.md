@@ -18,7 +18,7 @@ The team currently consists of scott_puopolo18 and I. We are also working with H
 * Social Media Maintainer - our social media accounts need someone to post updates, maintain profile information and answer any queries and respond to any comments people post on any of our social media accounts. More than one person could take up this role (i.e. one person managing Haiku's account on one social media platform).
 
 ## Our promotional strategy
-As the promotion team, we want to make sure people know about Haiku. One of the biggest problems facing the project is that we are more obscure than other FOSS projects. This means it's harder to get new contributors, whether this is developers, documentation writers or just volunteers in general. Hence we aim to attract more attention towards Haiku, and in turn, new users and volunteers. 
+As the promotion team, we want to make sure people know about Haiku. One problem facing the project is that we may be more obscure than other FOSS projects. This would mean it's harder to get new contributors, whether this is developers, documentation writers or just volunteers in general. Hence we aim to attract more attention towards Haiku, and in turn, new users and volunteers. 
 
 **I would like to take this opportunity to urge you to help the project: you don't need to be a programmer to help out. [You can find ways to get involved here.](https://www.haiku-os.org/community/getting-involved/)**
 
