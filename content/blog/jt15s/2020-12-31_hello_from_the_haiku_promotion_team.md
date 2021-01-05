@@ -7,15 +7,15 @@ tags = ["haiku", "software"]
 +++
 Hi there, I'm jt15s, a new Haiku community member! I've been following the project for a few years now since I stumbled upon an article about Haiku. 
 
-If you read the title (which I'm assuming you did), you’re probably going, "wait, we have a promotion team now?" Well, yes, now we do. As an informal “team” of two (currently), we are super excited to share our plans to help promote Haiku and make more people aware of it.
+If you read the title (which I'm assuming you did), you’re probably going, "wait, we have a promotion team now?" Well, yes, now we do. As an informal “team” of two (currently), we are super excited to share our plans to help promote Haiku and make more people aware of it. In fact, this is the *second* iteration of a promotion team for Haiku. Until 2010, there was an active promotions team. Unfortunately, those who were involved on the team are not active in the Haiku community anymore and hence promotion efforts have mostly been dormant - until now.
 
-## Who's in it?
-Me, as well as scott_puopolo18 as of now. We are also working with Haikunauts and BeSly, two Haiku-related resources. However, anyone who wishes to help is more than welcome to! Reach out to me (jt15s) [on the forums](https://discuss.haiku-os.org) if you are interested. If you don't have a forum account yet, create one - a forum account is free! We are also looking for the following informal roles:
-* Video Editor - it would be good to have someone produce video content for Haiku. Videos wouldn’t need to be too complex: just something that looks simple yet professional and something less than 10 minutes long.
+## Who's on the team?
+The team currently consists of scott_puopolo18 and I. We are also working with Haikunauts and BeSly, two Haiku-related resources. However, anyone who wishes to help is more than welcome to! Reach out to me (jt15s) [on the forums](https://discuss.haiku-os.org/u/jt15s) if you are interested. We are also looking for the following informal roles:
+* Video Editor - we need someone to produce video content for Haiku. Videos wouldn’t need to be too complex: just something that looks simple yet professional and something less than 10 minutes long.
 * Presenter - we need someone who is a confident speaker and who can speak in front of a microphone/camera (preferably with a good mic/camera setup too) to be the voice (or maybe even face) of the Haiku videos we make, to give them a more “human touch”.
-* Graphic Designer - it would be nice if we had someone who was solely responsible for producing graphics for Haiku promotion. Graphics should be uploaded to both the website and Haiku Artwork repository using Github, but I’m more than happy to help teach people how to do that.
+* Graphic Designer - we'd like to have someone (preferably a professional or an artist who is willing to volunteer) who is solely responsible for producing graphics for Haiku promotion. Graphics should be uploaded to both the website and Haiku Artwork repository using Github, but I’m more than happy to help teach people how to do that.
 * Live Stream Technician - we are considering doing live streams, but we will need someone with technical knowledge of live-streaming who can help facilitate this.
-* Events Coordinator - it would be good to have someone search for events which Haiku could take part in (i.e. FOSS conferences) and help organise Haiku’s participation in these events.
+* Social Media Maintainer - our social media accounts need someone to post updates, maintain profile information and answer any queries and respond to any comments people post on any of our social media accounts. More than one person could take up this role (i.e. one person managing Haiku's account on one social media platform).
 
 ## Our promotional strategy
 As the promotion team, we want to make sure people know about Haiku. One of the biggest problems facing the project is that we are more obscure than other FOSS projects. This means it's harder to get new contributors, whether this is developers, documentation writers or just volunteers in general. Hence we aim to attract more attention towards Haiku, and in turn, new users and volunteers. 
@@ -30,6 +30,20 @@ A database of all the reviews/mentions of Haiku is being compiled for easy refer
 In terms of the media in general, we are planning to prepare press releases for the media - a press release is simply a formal, properly formatted version of an announcement. By releasing press releases it makes it easier for other media organisations to find major Haiku announcements and run a story about Haiku. 
 
 In terms of reviewers, as mentioned before we are planning to contact reviewers and media organisations once Beta 3 is released. We have also prepared a reviewer information sheet with tips for reviewers, which is in the draft stage. 
+
+### General Users
+We musn't forget about what is probably our main user group: general users. General users of Haiku are those who come to explore and try out the OS. Due to Haiku's slightly-buggy nature (we are in Beta after all), our general users are typically more understanding of the limitations and issues with the project. Attracting more general users and making sure our general userbase is content is very important.
+Strategies such as making sure user queries are answered as well as spreading the word about new apps and releases is a good first start, but we are considering various other methods too.
+
+### App Developers
+If you follow technology news, you might have seen a mention of Medo, the recently-released 4K editor clocking in at only 1.44MB! This number alone highlights one of Haiku's many development advantages: our apps are small and light - even if you have a project with lots of features crammed into it, on Haiku the file size will likely be very reasonable. Add that to the fact that we have HaikuPorts, an organised porting system, that we use C++, one of the most popular progamming languages in the world, and that we are compatible with frameworks like Qt, a popular UI frontend framework, and you get the development environment that is Haiku. We want to attract more app developers, whether that's developers who want to port their existing app over to Haiku, or new developers who wish to make an app in Haiku that they feel is needed.
+Additionally, we want to make any existing ports of FOSS projects to Haiku official platforms - this means having Haiku listed as an officially supported platform on the project's website. By getting Haiku listed on projects such as KDE, more people will be aware of Haiku and the fact that Haiku has a multitude of apps available to download.
+
+### Researchers
+Surprisingly, Haiku is also an excellent system for research purposes. Let me explain further. Researchers don't need the stability and reliability that businesses do, which means Haiku is a possible research system for them. Furthermore, it is possible to make invasive and diruptive changes to Haiku without having to dodge security restrictions imposed by the system, or having to "hack" their way into the system. In the past, Haiku has had successful collaboration with Auckland University, where a group working on UI/UX research experimented with Haiku. 
+They produced Stack&Tile as well as the Auckland Layout for laying out user interfaces using a constraint solver. The layout system in Apple's iOS today is based on this research work. Apart from the Auckland Layout, the group also had other projects which were not implemented into Haiku, such as a tool to auto-generate user documentation from user interface code as well as a way to dynamically modify the layout of a running window to optimise it for a specific workflow.
+
+Apart from Auckland University, mmu_man, a member of the Haiku Community, also published a research paper about the interoperability of filesystem attributes.
 
 ### Businesses
 Businesses can benefit from Haiku as an operating system, and personally, I see Haiku as a lightweight alternative to the proprietary desktop operating systems businesses currently use. 
@@ -51,6 +65,8 @@ We are also planning to distribute more content via our often under-utilised soc
 Haikunauts also has several other ideas for promotional events, but we will share these with you later as we are still working out the details of these events.
 
 ### In closing
-We are super excited to see how we can promote Haiku and help the project gain new members and volunteers. **Remember, if you’d like to join, don’t hesitate and send me a private message on the forums!**
+We are super excited to see how we can promote Haiku and help the project gain new members and volunteers. **[Remember, if you’d like to join, don’t hesitate and send me a private message on the forums!](https://discuss.haiku-os.org/u/jt15s)**
 
 I’d also like to take this opportunity to wish everyone a very Happy New Year - here’s to a more fruitful, happy and lucky new year!
+
+Finally, I'd like to thank pulkomany and waddlesplash who reviewed this post on Github and gave me plenty of constructive feedback on how I could improve this.
