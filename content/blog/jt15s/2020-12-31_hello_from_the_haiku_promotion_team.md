@@ -32,7 +32,7 @@ In terms of the media in general, we are planning to prepare press releases for 
 In terms of reviewers, as mentioned before we are planning to contact reviewers and media organisations once Beta 3 is released. We have also prepared a reviewer information sheet with tips for reviewers, which is in the draft stage. 
 
 ### General Users
-We musn't forget about what is probably our main user group: general users. General users of Haiku are those who come to explore and try out the OS. Due to Haiku's slightly-buggy nature (we are in Beta after all), our general users are typically more understanding of the limitations and issues with the project. Attracting more general users and making sure our general userbase is content is very important.
+We mustn't forget about what is probably our main user group: general users. General users of Haiku are those who come to explore and try out the OS. Due to Haiku's remaining rough edges and still lurking bugs (we are in Beta after all), our general users are typically more understanding of the limitations and issues with the project. Attracting more general users and making sure our general userbase is content is very important.
 Strategies such as making sure user queries are answered as well as spreading the word about new apps and releases is a good first start, but we are considering various other methods too.
 
 ### App Developers
