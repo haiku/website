@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "GSoC 2020 Project Update(UFS2): First Evaluation"
-author = "suhelmehta"
+author = "SuhelMehta"
 date = "2020-07-10 00:57:38+05:30"
 tags = ["haiku", "software", "gsoc", "gsoc2020", "file system"]
 +++

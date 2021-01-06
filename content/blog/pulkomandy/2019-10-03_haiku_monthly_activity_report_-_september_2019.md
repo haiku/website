@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "Haiku monthly activity report - September 2019"
-author = "pulkomandy"
+author = "PulkoMandy"
 date = "2019-10-03 13:14:07+02:00"
 tags = ["haiku", "software"]
 +++

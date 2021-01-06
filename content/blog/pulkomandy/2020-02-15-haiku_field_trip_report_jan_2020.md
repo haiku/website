@@ -1,7 +1,7 @@
 +++
 type = "blog"
 title = "Haiku field trip report - January 2020"
-author = "pulkomandy"
+author = "PulkoMandy"
 date = "2020-02-15 12:14:07+02:00"
 tags = []
 +++
