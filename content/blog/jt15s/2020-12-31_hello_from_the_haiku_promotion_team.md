@@ -53,12 +53,12 @@ Businesses can benefit from Haiku as an operating system, and personally, I see 
 An information sheet for businesses has been drafted, which gives businesses a rundown of Haiku and its advantages and disadvantages as a business-oriented operating system. However, to attract more businesses we must improve Haiku further, and hence we will delay marketing efforts for businesses until Haiku reaches a stable and mature stage. 
 
 ### Partnerships with other Haiku-related sources
-If you haven't heard of them already, BeSly and Haikunauts are the two major third party Haiku sources. BeSly is a wiki with tips and tricks on using Haiku, whilst Haikunauts is a blog aimed at promoting Haiku as an OS. As mentioned above, we will work in partnership with these two sources and see what we can do together to help spread the word about Haiku.
+If you haven't heard of them already, [BeSly](https://www.besly.de/index.php/de/) and [Haikunauts](https://haikunauts.home.blog/) are the two major third party Haiku sources. BeSly is a wiki with tips and tricks on using Haiku, whilst Haikunauts is a blog aimed at promoting Haiku as an OS. As mentioned above, we will work in partnership with these two sources and see what we can do together to help spread the word about Haiku.
 
 Additionally, we are also eager to work with any smaller blogs, websites or channels. If you run a blog, website, channel, or any other source, please contact me via the forums and let me know!
 
 ### General
-I am thinking of running an advertisement in _Read the Docs, a documentation website that serves a wide array of open-source projects. _Read the Docs_ allocates a portion of their advertising inventory to FOSS projects such as ourselves, hence this is a good opportunity to promote Haiku. What will go on the advertisement has not been decided as of now.
+I am thinking of running an advertisement in [Read the Docs](https://readthedocs.org/), a documentation website that serves a wide array of open-source projects. Read the Docs [allocates a portion of their advertising inventory to FOSS projects](https://docs.readthedocs.io/en/stable/advertising/ethical-advertising.html#community-ads) such as ourselves, hence this is a good opportunity to promote Haiku. What will go on the advertisement has not been decided as of now.
 
 scott_puopolo18 is working on a set of interview questions for our developers to give the public a glimpse into the world of Haiku development, as well as shining a light on the challenges and opportunities in an open-source project. The predetermined set of questions means that we don't have to write new questions for each developer. To save time, we can simply send them off and the developer can write their response.
 
