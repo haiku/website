@@ -58,7 +58,7 @@ If you haven't heard of them already, BeSly and Haikunauts are the two major thi
 Additionally, we are also eager to work with any smaller blogs, websites or channels. If you run a blog, website, channel, or any other source, please contact me via the forums and let me know!
 
 ### General
-I am thinking of running an advertisement in _Read the Doc_s, a documentation website that serves a wide array of open-source projects. _Read the Docs_ allocates a portion of their advertising inventory to FOSS projects such as ourselves, hence this is a good opportunity to promote Haiku. What will go on the advertisement has not been decided as of now.
+I am thinking of running an advertisement in _Read the Docs, a documentation website that serves a wide array of open-source projects. _Read the Docs_ allocates a portion of their advertising inventory to FOSS projects such as ourselves, hence this is a good opportunity to promote Haiku. What will go on the advertisement has not been decided as of now.
 
 scott_puopolo18 is working on a set of interview questions for our developers to give the public a glimpse into the world of Haiku development, as well as shining a light on the challenges and opportunities in an open-source project. The predetermined set of questions means that we don't have to write new questions for each developer. To save time, we can simply send them off and the developer can write their response.
 
