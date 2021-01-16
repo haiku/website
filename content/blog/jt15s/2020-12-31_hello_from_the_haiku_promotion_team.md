@@ -45,7 +45,7 @@ They produced Stack&Tile as well as the [Auckland Layout Engine (ALE)](https://w
 
 Apart from Auckland University, mmu_man, a member of the Haiku Community, also published a research paper about the interoperability of filesystem attributes.
 
-We aim to try to attract more research groups by promoting the uses of Haiku for research, and we also want to try to reach out to Auckland University and see if their UI research group is interested in coming back to Haiku to conduct any future research.
+We aim to attract more research groups by promoting the uses of Haiku for research, and we also want to reach out to Auckland University and see if their UI research group is interested in coming back to Haiku to conduct any future research.
 
 ### Businesses
 Businesses can benefit from Haiku as an operating system, and personally, I see Haiku as a lightweight alternative to the proprietary desktop operating systems businesses currently use. 
