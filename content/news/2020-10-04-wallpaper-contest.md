@@ -54,6 +54,10 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/allan_nyholm_nielsen_Haiku_Slide_preview.png" height="225" width="400" />
 
+- Andrea di Varmo - IQ (added 2021/01/20):
+
+    <img src="/files/wallpaper-call/Andrea_di_Varmo_IQ_preview.png" height="270" width="480" />
+
 - Andrii Maykovskyi - [6 variations (whole pack)](/files/wallpaper-call/Andrii_Maykovskyi.zip) [16 MiB] (added 2020/10/28):
 
     <img src="/files/wallpaper-call/mayk_accuracy.png" height="270" width="480" />
@@ -98,15 +102,15 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/shainer_Autumn_leaves_preview.png" height="300" width="480" />
 
-- transformat - the teapot and a glitch [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/12):
+- transformat - the teapot and a glitch [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz) (added 2020/12/12):
 
     <img src="/files/wallpaper-call/transformat_teapot_and_a_glitch-preview.png" height="270" width="480" />
 
-- transformat - glitched beach [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/29):
+- transformat - glitched beach [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz) (added 2020/12/29):
 
     <img src="/files/wallpaper-call/transformat_glitched_beach_haiku-preview.png" height="270" width="480" />
 
-- transformat - glitched scan grey leaves [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz)(added 2020/12/29):
+- transformat - glitched scan grey leaves [all 6 'glitched' images)](/files/wallpaper-call/transformat_glitched_wallpapers.tar.gz) (added 2020/12/29):
 
     <img src="/files/wallpaper-call/transformat_glitched_scan_grey_leaves-preview.png" height="270" width="480" />
 
