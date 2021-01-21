@@ -64,10 +64,6 @@ According to votes, the final scores were calculated as below:
     <td>23</td>
     </tr>
     <tr>
-    <td>7. Leafy</td>
-    <td>23</td>
-    </tr>
-    <tr>
     <td>8. Forest Dreams</td>
     <td>23</td>
     </tr>
