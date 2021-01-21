@@ -6,7 +6,7 @@ date = "2020-09-06 13:00:00+03:00"
 tags = ["sound", "contest"]
 +++
 
-**UPDATE (2020/12/08):** The contest has concluded. See [this blog post](/news/2020-12-07-contest-results.md) for the results.
+**UPDATE (2020/12/08):** The contest has concluded. See [this blog post](/news/2020-12-07-contest-results) for the results.
 
 It wouldn't be wrong to say that, Haiku is a unique operating system. It takes its roots from BeOS, the OS everyone envied back in the day. Haiku continues to follow its footsteps, trying to deliver that same experience. What could be better than complementing this unique operating system with a set of unique system sounds?
 
