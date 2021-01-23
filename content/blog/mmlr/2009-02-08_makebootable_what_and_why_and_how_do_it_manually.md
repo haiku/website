@@ -9,6 +9,13 @@ tags = ["makebootable"]
 			<p>
 				Usual question: "I've dd'ed the image to somewhere and now it doesn't boot". Usual advice: "You have to make it bootable by using makebootable". Usual reaction: "Ehm, ok how do I do that?". Since this type of question comes up quite frequently, let me try to explain a bit of background on that pseudo-mystical tool "makebootable", how you can get it and how you can manually make a partition bootable without even needing makebootable.
 			</p>
+
+<div class="alert alert-danger">
+This is an advanced guide with technical details about operations involving manual editing of disk
+sectors. Be sure that you know what you are trying to do. If you just want to install Haiku, you
+do not need this page, please refer to the <a href="/guides/booting">Booting Haiku</a> guide.
+</div>
+
 			<h3>The Stage 1 Bootloader</h3>
 			<p>
 				Ok, what we are really talking about here is the stage 1 bootloader. It is a tiny bit of software that is written to the start of a partition or disk. It is where either the BIOS or the boot manager will jump to to get the OS booted. In the case of Haiku this stage 1 bootloader loads a bit of the BFS partition the installation is on and locates /beos/system/zbeos. zbeos is the stage 2 bootloader, which provides the boot menu and loads the kernel. In the case of a missing makebootable we never get to that stage 2 bootloader.

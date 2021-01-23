@@ -11,7 +11,12 @@ There are a wide range of options and configurations available to boot Haiku, fr
 
 `makebootable` is a low-level Haiku tool to enable x86 MBR (legacy bios) systems to boot from the active Haiku partition.
 
-Makebootable is **not** needed when…
+<div class="alert alert-danger">
+It is extremely likely that you don't need makebootable. Please read this paragraph carefully
+to determine if you need it.
+</div>
+
+Makebootable is **not** needed when any of these is true:
 
   * Haiku’s EFI bootloader is in use
   * dd’ing to an entire disk device and not a partition
