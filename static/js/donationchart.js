@@ -88,6 +88,8 @@ function updateDonationMeter() {
 				var month = monthToName[updatedAt.getMonth()];
 				var updated = document.getElementById("fundraising-updated");
 				updated.innerText = month + " " + formatDay(updatedAt.getDate());
+				document.getElementById("fundraising-year").innerText =
+					updatedAt.getFullYear();
 
 				// 4. The EUR to USD rate
 				var eurToUsd = document.getElementById("fundraising-eur-to-usd");
