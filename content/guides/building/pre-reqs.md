@@ -72,13 +72,13 @@ Note that in addition to all the platform-specific packages, you will also need 
 **Basic requirements:**
 
 ```sh
-pkgman install mtools cmd:python3 cmd:xorriso
+pkgman install cmd:python3 cmd:xorriso
 ```
 
 **Additional requirements for ARM:**
 
 ```sh
-pkgman install dtc bc
+pkgman install dtc
 ```
 
 <a name="apt"></a>
@@ -87,13 +87,13 @@ pkgman install dtc bc
 **Basic requirements:**
 
 ```sh
-sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool mtools gcc-multilib python3
+sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool gcc-multilib python3
 ```
 
 **Additional requirements for ARM:**
 
 ```sh
-sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
+sudo apt-get install u-boot-tools util-linux device-tree-compiler
 ```
 
 <a name="pacman"></a>
@@ -102,13 +102,13 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler bc
 **Basic requirements:**
 
 ```sh
-sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip curl wget flex xorriso bc mtools python lib32-glibc
+sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip curl wget flex xorriso python lib32-glibc
 ```
 
 **Additional requirements for ARM:**
 
 ```sh
-sudo pacman -S yaourt uboot-tools bc
+sudo pacman -S yaourt uboot-tools
 ```
 
 <a name="yum"></a>
@@ -117,13 +117,13 @@ sudo pacman -S yaourt uboot-tools bc
 **Basic requirements:**
 
 ```sh
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static mtools glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
 ```
 
 **Additional requirements for ARM:**
 
 ```sh
-sudo yum install libfdt bc
+sudo yum install libfdt
 ```
 
 <a name="zypper"></a>
@@ -141,13 +141,13 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 **Basic requirements:**
 
 ```sh
-sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib libisoburn wget nasm net-misc/curl bc mtools
+sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib libisoburn wget nasm net-misc/curl
 ```
 
 **Additional requirements for ARM:**
 
 ```sh
-sudo emerge -av u-boot-tools util-linux dtc bc
+sudo emerge -av u-boot-tools util-linux dtc
 ```
 
 <a name="freebsd"></a>
@@ -156,7 +156,7 @@ sudo emerge -av u-boot-tools util-linux dtc bc
 **Basic requirements:**
 
 ```sh
-pkg install devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget sysutils/u-boot-tools emulators/mtools sysutils/linuxfdisk lang/python lang/gcc devel/gmake
+pkg install devel/bison devel/git devel/nasm lang/gawk print/texinfo sysutils/xorriso ftp/curl ftp/wget sysutils/u-boot-tools sysutils/linuxfdisk lang/python lang/gcc devel/gmake
 ```
 
 The configure script has to be run with extra enviroment variables to tell it the location of gcc-ranlib and gcc-ar, for example:
@@ -176,7 +176,7 @@ Once you have installed XCode and the command line tools as well as agreed to th
 **To install the prerequisite software using Homebrew:**
 
 1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools```
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison```
 3. Force using the newer bison version. ```brew link bison --force```
     - Note that Homebrew may refuse to shadow the built-in version of bison. If so, follow the instructions so that a new version of bison is in your $PATH
 
@@ -185,7 +185,7 @@ Note: You'll need to install gnu less from the dupes repository as macOS comes w
 **To install the prerequisite software using Macports do the following:**
 
 1. Install <a href="http://www.macports.org/">MacPorts</a> (A standard Installer package is provided).
-2. Close your Terminal, open a new one and type ```sudo port install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison mtools```
+2. Close your Terminal, open a new one and type ```sudo port install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison```
 
 If you get an error “port: command not found”, the MacPorts shell configuration, stored in <code>~/.profile</code>, is probably not taken into account.
 If you’re using Bash, you probably have a <code>~/.bash_profile</code> or <code>~/.bash_login</code> file, preventing bash to read <code>~/.profile</code>.
@@ -200,7 +200,7 @@ export INFOPATH=$INFOPATH:/opt/local/share/info
 If you are using another shell, take a look a the shell documentation to see which file is parsed at login, and add the required commands.
 You can now retry the <code>port install...</code> command in a new Terminal.
 
-<p>Note: the ARM port is not yet supported for OS X, MacPorts has mtools but is missing sfdisk at least.</p>
+<p>Note: the ARM port is not yet supported for OS X, MacPorts is missing sfdisk at least.</p>
 
 <a name="windows"></a>
 ## ![windows](/files/os-icons/package-32.png) Windows
