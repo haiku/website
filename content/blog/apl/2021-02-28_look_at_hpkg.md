@@ -14,7 +14,7 @@ To get a package installed on their Haiku computer, a user would download a pack
 
 At some later date, should the user no longer want the package installed, they would move it out of `/system/packages` and instantly the files of the package would vanish from the file system.  The user would typically use HaikuDepot or `pkgman` to uninstall the package, but it would work equally well to just use [Tracker](https://www.haiku-os.org/docs/userguide/en/tracker.html) to remove the HPKG because it is simply a file.
 
-The HPKG acts as an archive of the package's files but instead of the Haiku operating system unpacking the files into its own storage, it is instead mounting the HPKG file contents into its own file system.
+The HPKG acts as an archive of the package's files but instead of the Haiku operating system unpacking the files into its own storage, it is instead mounting the HPKG file contents into its own virtual file system.
 
 The HPKG file format is designed to facilitate this mode of use.
 
