@@ -14,7 +14,7 @@ To get a package installed on their Haiku computer, a user would download a pack
 
 At some later date, should the user no longer want the package installed, they would move it out of `/system/packages` and instantly the files of the package would vanish from the file system.  The user would typically use HaikuDepot or `pkgman` to uninstall the package, but it would work equally well to just use [Tracker](https://www.haiku-os.org/docs/userguide/en/tracker.html) to remove the HPKG because it is simply a file.
 
-The HPKG acts as an archive of the package's files but instead of the Haiku operating system unpacking the files into its own storage, it is instead mounting the HPKG file contents into its own virtual file system.
+The HPKG acts as an archive of the package's files but instead of the Haiku operating system unpacking the files into its own storage, it is instead mounting the HPKG file contents read-only into its own virtual file system.
 
 The HPKG file format is designed to facilitate this mode of use.
 
@@ -24,7 +24,7 @@ The HPKG file format is designed to facilitate this mode of use.
 
 ### The Outer Container
 
-The structure of the "outer container" of the HPKG file is shown in the following diagram.
+The structure of the HPKG file is shown in the following diagram together with how this relates to the uncompressed Heap data.
 
 ![Outer Container](/files/blog/apl/look_at_hpkg/outercontainer.png)
 
@@ -32,9 +32,18 @@ The "Magic" section is just a short four bytes that identify this file as being 
 
 The "Header" then contains a number of critical pieces of information about the file.  The information constitutes a set of numbers that represent quantities of elements in the file, offsets into data etc... all of which is required to be able to make sense of the rest of the file.
 
-The remainder of the file, shown as a grey box in the diagram above, is called "The Heap".  At an abstract level, the heap can be considered to be a large piece of uncompressed data.  When stored, the uncompressed data is broken into 64KB pieces.  Each 64KB piece is compressed and stored as a compressed Chunk in the HPKG one after the other.  At the end of the Chunks is an array of integers that contain the compressed lengths of the Chunks.
+The remainder of the file, shown as a grey box in the diagram above, is called "The Heap".  It contains a series of Chunks.  The Chunks are stored one after the other, each in a compressed format.  Except for the last chunk, each chunk when uncompressed is 64 KB in length.  At the end of the stored Chunks is an array of integers that contain the compressed lengths of the Chunks.
 
 Data in the Heap is later addressed with a simple uncompressed-data offset and length.  By knowing the uncompressed chunks are (excepting the last one) 64KB in size and that the lengths of the compressed Chunks are known, it is possible to randomly access data within the Heap.
+
+As an example, you want to get 32 bytes from offset 66580.  You would...
+
+* establish that the data you want is located in the second Chunk `(66580 / 65536)`.
+* use the compressed lengths to find that the compressed length of the preceeding one chunk was for example 48654.
+* seek to this offset in the stored heap.
+* use the compressed lengths to find the size of the second Chunk, extract the Chunk compressed data from the HPKG file and decompress it.
+* calculate the data you want is at offset 1144 `(66580 - (1 x 65536))` within the second Chunk.
+* 32 bytes lies entirely within the second Chunk so it can be extracted from the decompressed content data of the second Chunk.
 
 ### The Uncompressed Heap Structure
 
