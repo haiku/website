@@ -1,6 +1,6 @@
 +++
 type = "blog"
-title = "Haiku activity report - January 2021"
+title = "Haiku activity report - February 2021"
 author = "PulkoMandy"
 date = "2021-03-08 08:53:07+02:00"
 tags = []
@@ -14,7 +14,7 @@ Andrew Lindesay continues his work on cleaning HaikuDepot sources and removing
 a custom-made List class to use standard (BeAPI and C++ stl) containers. There
 were some regressions in the process, that were found and identified.
 
-He also fixde various other bugs.
+He also fixed various other bugs.
 
 <h3>non-x86 ports</h3>
 
