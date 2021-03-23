@@ -19,6 +19,7 @@ experiment with the latest Haiku sources.
   * [for x86_64](/guides/building/compiling-x86_64)
   * [for ARM](/guides/building/compiling-arm)
   * [for PowerPC](/guides/building/compiling-powerpc)
+  * [for RISCV64](/guides/building/compiling-riscv64)
   * [for sparc](/guides/building/compiling-sparc)
 
 ## Additional Resources
