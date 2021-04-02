@@ -25,7 +25,7 @@ The Kernel Debug Land is the debugger built into Haiku's kernel and represents a
 
 Non-fatal KDL exceptions can sometimes be worked around by typing `continue` into the KDL screen. This rarely works however as KDL exceptions are generally raised with good reason.
 
-If the source of the problem is identified in the KDL, the add-on or driver can be blacklisted using the `Blacklist entries` [bootloader menu.](/docs/userguide/en/bootloader.html)
+If the source of the problem is identified in the KDL, the add-on or driver can be disabled using the `Disable component` menu of the [bootloader ](/docs/userguide/en/bootloader.html).
 
 #### Known Issues and workarounds:
 
