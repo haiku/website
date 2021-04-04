@@ -78,6 +78,10 @@ Foo::Bar(const char* bar1, T bar2)
 {
 	...
 }
+
+//  Empty functions converted to single line functions
+
+Foo::~Foo() {}
 ```
 
 ```cpp
