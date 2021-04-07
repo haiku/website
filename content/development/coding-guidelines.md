@@ -79,7 +79,7 @@ Foo::Bar(const char* bar1, T bar2)
 	...
 }
 
-// Empty functions in class should be converted to inline functions
+// Empty functions in class definitions can be written on a single line
 
 class Example
 {
