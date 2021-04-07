@@ -83,7 +83,7 @@ Foo::Bar(const char* bar1, T bar2)
 
 class Example
 {
-    void FooFunction() {}
+		void			FooFunction() {}
 };
 
 // Empty functions defined outside class should not be converted to inline functions
