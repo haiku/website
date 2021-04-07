@@ -79,9 +79,19 @@ Foo::Bar(const char* bar1, T bar2)
 	...
 }
 
-//  Empty functions converted to single line functions
+// Empty functions in class should be converted to inline functions
 
-Foo::~Foo() {}
+class Example
+{
+    void FooFunction() {}
+};
+
+// Empty functions defined outside class should not be converted to inline functions
+
+void
+Foo::FooFunction()
+{
+}
 ```
 
 ```cpp
