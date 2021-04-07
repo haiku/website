@@ -86,7 +86,7 @@ class Example
 		void			FooFunction() {}
 };
 
-// Empty functions defined outside class should not be converted to inline functions
+// Empty functions defined outside class must be formatted the same as other functions
 
 void
 Foo::FooFunction()
