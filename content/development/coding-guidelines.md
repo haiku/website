@@ -78,6 +78,20 @@ Foo::Bar(const char* bar1, T bar2)
 {
 	...
 }
+
+// Empty functions in class definitions can be written on a single line
+
+class Example
+{
+		void			FooFunction() {}
+};
+
+// Empty functions defined outside class must be formatted the same as other functions
+
+void
+Foo::FooFunction()
+{
+}
 ```
 
 ```cpp
