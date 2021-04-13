@@ -60,6 +60,8 @@ We aim to attract more research groups by promoting the uses of Haiku for resear
 
 Additionally, we have participated in [Google Summer of Code](https://summerofcode.withgoogle.com/) and [Google Code-In](https://codein.withgoogle.com/) (when it was still operating), providing opportunities for students to contribute to our project and develop their coding skills. We also participated in the [Semester of Code](http://semesterofcode.com/) but unfortunately we didn't receive any student applications. 
 
+We aim to attract more research groups by promoting the uses of Haiku for research, and we also want to reach out to Auckland University and see if their UI research group is interested in coming back to Haiku to conduct any future research.
+
 ### Businesses
 Businesses can benefit from Haiku as an operating system, and personally, I see Haiku as a lightweight alternative to the proprietary desktop operating systems businesses currently use. 
 
