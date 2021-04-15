@@ -1,7 +1,8 @@
 ---
+type = "article"
 title: "Promotion"
 date: 2021-04-14T15:16:45+10:00
-draft: false
+tags = []
 ---
 Promotion is a crucial part of ensuring Haiku continues to grow. Without spreading the word, we cannot gain new users and volunteers. 
 
