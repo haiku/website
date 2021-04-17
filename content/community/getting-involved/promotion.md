@@ -1,7 +1,7 @@
 +++
 type = "article"
-title: "Promotion"
-date: 2021-04-14T15:16:45+10:00
+title = "Promotion"
+date = 2021-04-14T15:16:45+10:00
 tags = []
 +++
 
