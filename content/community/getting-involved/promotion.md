@@ -1,9 +1,9 @@
----
++++
 type = "article"
 title: "Promotion"
 date: 2021-04-14T15:16:45+10:00
 tags = []
----
++++
 Promotion is a crucial part of ensuring Haiku continues to grow. Without spreading the word, we cannot gain new users and volunteers. 
 
 ## The Haiku Promotion team
@@ -30,6 +30,7 @@ To help spread the word and let more people know about Haiku, and helping to imp
 
 ### Our Plans
 As the promotion team, we want to make sure people know about Haiku. One problem facing the project is that we may be more obscure than other FOSS projects. This would mean it's harder to get new contributors, whether this is developers, documentation writers or just volunteers in general. Hence we aim to attract more attention towards Haiku, and in turn, new users and volunteers. Our plan is divided into several groups of action: 
+
 #### General Users
 We mustn't forget about what is probably our main user group: general users. General users of Haiku are those who come to explore and try out the OS. Due to Haiku's remaining rough edges and still lurking bugs (we are in Beta after all), our general users are typically more understanding of the limitations and issues with the project. Attracting more general users and making sure our general userbase is content is very important.
 Strategies such as making sure user queries are answered as well as spreading the word about new apps and releases is a good first start, but other methods such as noting down user suggestions for QOL (quality-of-life) improvements should also be considered. Additionally, a request for a Haiku Limesurvey instance is being considered - Limesurvey is a FOSS survey tool and having a Haiku instance to use means the Team can conduct more surveys easily to gauge user feedback and thoughts.
@@ -37,6 +38,7 @@ Strategies such as making sure user queries are answered as well as spreading th
 #### App Developers
 You might know about Medo, the native, multilingual and fully-featured 4K video editor clocking in at only 1.27MB! This number alone highlights one of Haiku's many development advantages: our apps are small and light - even if you have a project with lots of features crammed into it, on Haiku the file size will likely be very reasonable. Add that to the fact that we have HaikuPorts, an organised porting system, that we use C++, one of the most popular progamming languages in the world, and that we have an amazing native API with some great features and you get the development environment that is Haiku. 
 For the technically-minded, here are the features of the Haiku API:
+
 * Ease of use with all the standard widgets
 * Embraces multi-threading to enable low-latency user feedback with heavier processing running in the background
 * Separation of UI and internal code
