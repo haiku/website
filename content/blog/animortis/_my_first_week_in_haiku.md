@@ -24,7 +24,7 @@ Haiku had all sorts of other programs available, too — everything from native,
 
 As for me, what I saw was enough to make me a believer: I decided to join the promotional team for Haiku. I wanted to bring this unique work of the technological arts to the world, to help people understand that they weren’t confined to using Linux all the time if they wanted free software. They could learn about something awesome, and even help turn it into the work of art it has the potential to be.
 
-Haiku can’t beat those mainstream behemoths without dedicated, passionate developers and volunteers. All operating systems start humbly and Haiku is no exception, even as it strives to become the first non-Unix open-source OS to hit version 1.0.
+Haiku can’t beat those mainstream behemoths without dedicated, passionate developers and volunteers. All operating systems start humbly and Haiku is no exception, even as it strives to become the best non-Unix open-source OS to hit version 1.0.
 
 Indeed, Unix and Windows dominate our computers today. Haiku instead offers users, volunteers and developers alike something rare, something valuable that they can’t find creating another Ubuntu spin or command-line tool: A fresh, raw and totally unique operating system that still has room for them to mold it into a true success story through their feedback, suggestions and contributions. A chance to leave their mark.
 
@@ -36,4 +36,4 @@ Download it [here](https://www.haiku-os.org/get-haiku/). It works really well in
 
 And [here’s a link](https://www.haiku-os.org/community/getting-involved/) to the volunteer opportunities we’re looking to fill. We could really use adventurous programmers and volunteers looking for a chance to stand out.
 
-Get in on the ground floor. Help Haiku become the first non-Unix, open-source OS to make it to 1.0 and beyond.
+Get in on the ground floor. Help Haiku become the best non-Unix, open-source OS to make it to 1.0 and beyond.
