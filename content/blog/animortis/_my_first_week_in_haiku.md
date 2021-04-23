@@ -32,8 +32,8 @@ With so much it can offer, Haiku needs all the help it can get from anyone with 
 
 Haiku is the OS that says, “We can have something different, something great.”
 
-Download it here. It works really well in Qemu and Bhyve if you want to try it out.
+Download it [here](https://www.haiku-os.org/get-haiku/). It works really well in Qemu and Bhyve if you want to try it out.
 
-And here’s a link to the volunteer opportunities we’re looking to fill. We could really use adventurous programmers and volunteers looking for a chance to stand out.
+And [here’s a link](https://www.haiku-os.org/community/getting-involved/) to the volunteer opportunities we’re looking to fill. We could really use adventurous programmers and volunteers looking for a chance to stand out.
 
 Get in on the ground floor. Help Haiku become the first non-Unix, open-source OS to make it to 1.0 and beyond.
