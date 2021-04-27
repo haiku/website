@@ -1,8 +1,8 @@
 +++
 type = "blog"
-title = "My First Week in Haiku"
+title = "My First Week with Haiku"
 author = "Animortis"
-date = "April 22, 2021"
+date = "2021-04-27 09:15:03+10:00"
 tags = ["haiku", "software"]
 +++
 
@@ -37,3 +37,4 @@ Download it [here](https://www.haiku-os.org/get-haiku/). It works really well in
 And [here’s a link](https://www.haiku-os.org/community/getting-involved/) to the volunteer opportunities we’re looking to fill. We could really use adventurous programmers and volunteers looking for a chance to stand out.
 
 Get in on the ground floor. Help Haiku become the best non-Unix, open-source OS to make it to 1.0 and beyond.
+
