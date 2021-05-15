@@ -88,7 +88,7 @@ class Example
 };
 
 
-// Empty functions defined outside class must be formatted the same as other functions
+// Empty functions defined outside a class must be formatted the same as other functions
 void
 Foo::FooFunction()
 {
