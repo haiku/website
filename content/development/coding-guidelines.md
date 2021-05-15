@@ -194,7 +194,7 @@ switch (condition) {
 
 ### Misc. formatting
 
-*   Put exactly two blank lines between functions, as well as between includes and defines blocks, and between defines and variable or function defitions.
+*   Put exactly two blank lines between functions, as well as between includes and defines blocks, and between defines and variable or function definitions.
 *   Include a newline at every file end.
 
 ### Identifiers
