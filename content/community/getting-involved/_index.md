@@ -7,6 +7,28 @@ tags = []
 
 **Anyone** can help Haiku. If you love what Haiku is all about, you can get involved. It's up to you what you want to do and how much time you contribute. If you are interested, sign up for the general [Haiku mailing list](https://www.freelists.org/list/haiku). People wanting to specifically write code for Haiku can go [here](/development/getting-started) for more information. Read more below for specifics.
 
+<table style="width: 100%;">
+<tbody style="border-top:0px !important;margin-top:10px;">
+<tr>
+<td style="width: 50%">
+<ul>
+<img src='/images/App_People_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/translating">Translating</a><br /><br />
+<img src='/images/ide_project_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/developing">Developing</a><br /><br />
+<img src='/images/System_Kernel_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/designing/">Designing</a><br /><br />
+<img src='/images/alert_idea_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/promotion/">Promotion</a><br /><br />
+</ul>
+</td>
+<td style="margin-top:10px;">
+<ul>
+<img src='/images/File_Text_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/documenting/">Documenting</a><br /><br />
+<img src='/images/Server_Syslog_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/testing/">Quality Testing</a><br /><br />
+<img src='/images/App_Finance_32.png' style='vertical-align: middle;'> <a href="/community/donating_to_haiku">Funding</a><br /><br />
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+
 ## Haiku's Manpower Needs
 
 Your skills, your interests, and the amount of time you wish to contribute all play a part in determining how you can best help the Haiku project. Below are examples of many of the project's needs and how an individual person (with or without C++ experience) can help.

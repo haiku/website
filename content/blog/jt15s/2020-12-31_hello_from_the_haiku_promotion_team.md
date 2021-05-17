@@ -3,7 +3,7 @@ type = "blog"
 title = "Hello from the Haiku Promotion 'Team'!"
 author = "jt15s"
 date = "2020-12-31 21:33:25+11:00"
-tags = ["haiku", "software"]
+tags = ["haiku", "software", "promotion"]
 +++
 Hi there, I'm jt15s, a new Haiku community member! I've been following the project for a few years now since I stumbled upon an article about Haiku. 
 

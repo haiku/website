@@ -2,7 +2,7 @@
 type = "article"
 title = "Social Media"
 date = "2015-01-13T08:34:10.000Z"
-tags = []
+tags = ["haiku", "social media"]
 +++
 
 <p>
@@ -25,3 +25,4 @@ There are a number of ways you can keep up with news about Haiku and social medi
 <p><b><a href="https://vk.com/haiku_os" target="_blank">Vk.com community</a></b></p>
 <p><b><a href="https://www.flickr.com/groups/haiku-os/" target="_blank">Flickr group</a></b></p>
 <p><b><a href="https://t.me/haiku_os" target="_blank">Telegram group</a></b></p>
+<p><b><a href="https://discord.com/invite/8KsjHbW" target="_blank">Discord server</a></b></p>
