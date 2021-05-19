@@ -10,7 +10,7 @@ After being present for more than 20 years on the [Freenode](https://freenode.ne
 
 To those not familiar what's happening, Freenode recently went through a major internal reorganization, which resulted in the overwhelming majority of well-established staff members either being forcefully removed or resigning from their roles as administrators of the network.
 
-The OFTC (Open and Free Technology Community) has been around since 2001 and is associated with the 501(c)(3)-registered non-profit organization "Software in the Public Interest, Inc.", which is based in New York. OFTC hosts discussion rooms for hundreds of popular and widely known open-source projects, such as [Debian](https://wiki.debian.org/IRC), [QEMU](https://www.qemu.org/contribute/), [LLVM](https://llvm.org/docs/#irc) and [musl libc](https://musl.libc.org/)!
+The OFTC (Open and Free Technology Community) has been around since 2001 and is associated with the 501(c)(3)-registered non-profit organization "Software in the Public Interest, Inc.", which is based in New York. OFTC hosts discussion rooms for hundreds of popular and widely known open-source projects, such as [Debian](https://wiki.debian.org/IRC), [QEMU](https://www.qemu.org/contribute/), and [LLVM](https://llvm.org/docs/#irc).
 
 We believe that this change will benefit the Haiku project in the long run. We hope that this change will allow us to continue helping and discussing with the community efficiently and reliably.
 
