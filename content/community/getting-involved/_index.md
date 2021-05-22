@@ -15,24 +15,24 @@ Your skills, your interests, and the amount of time you wish to contribute all p
 
 While we are all about Haiku as an operating system, the infrastructure around it is an entirely different beast in comparison. The infrastructure is currently maintained by a small group of people, and we can always use some help. If you would like to give us a hand setting up systems, managing spam, buildbots and other infrastructure related chores, contact us on the [haiku-sysadmin mailing list](https://www.freelists.org/list/haiku-sysadmin). Systems we are maintaining are listed below:
 
-Project | Technology | Link
---------|------------|----------
-Website | Web/Hugo   | https://haiku-os.org
-Gerrit  | Java       | https://review.haiku-os.org
-Discourse | Ruby     | https://discuss.haiku-os.org
-Buildbot | Python    | https://build.haiku-os.org/buildbot/
-Pootle  | Python     | https://i18n.haiku-os.org/pootle
-User guide translator | PHP | https://i18n.haiku-os.org/userguide
-Trac    | Python     | https://dev.haiku-os.org
-HaikuDepot Server | Java/Spring | https://depot.haiku-os.org
+Project               | Technology  | Link
+----------------------|-------------|----------
+Website               | Web/Hugo    | https://haiku-os.org
+Gerrit                | Java        | https://review.haiku-os.org
+Discourse             | Ruby        | https://discuss.haiku-os.org
+Concourse CI          | Go          | https://ci.haiku-os.org
+Pootle                | Python      | https://i18n.haiku-os.org/pootle
+User guide translator | PHP         | https://i18n.haiku-os.org/userguide
+Trac                  | Python      | https://dev.haiku-os.org
+HaikuDepot Server     | Java/Spring | https://depot.haiku-os.org
 
 There are also third-party systems used by the community:
 
-Project | Technology | Link
---------|------------|----------
-Haikuports | Shell   | https://github.com/haikuports
-Haikuporter/Buildmaster | Python | https://github.com/haikuports/haikuporter
-Polyglot | PHP/Laravel 5 | https://github.com/KapiX/Polyglot
+Project                 | Technology    | Link
+------------------------|---------------|----------
+Haikuports              | Bash + Python | https://github.com/haikuports
+Haikuporter/Buildmaster | Python        | https://github.com/haikuports/haikuporter
+Polyglot                | PHP/Laravel 5 | https://github.com/KapiX/Polyglot
 
 Most of our infrastructure is containerized using Docker, and the code can be found [on GitHub](https://github.com/haiku/infrastructure). Sources of homegrown systems are under our [GitHub organisation](https://github.com/haiku). Contributions to the main website like blog posts, articles, etc. should go as Pull Requests to the [website repository](https://github.com/haiku/website).
 
