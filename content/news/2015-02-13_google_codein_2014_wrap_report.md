@@ -1,6 +1,5 @@
 +++
-type = "blog"
-author = "scottmc"
+type = "news"
 title = "Google Code-In 2014 Wrap Up Report"
 date = "2015-02-13T08:53:54.000Z"
 tags = ["google", "GCI", "Code-In", "haiku"]
@@ -17,3 +16,8 @@ Notable tasks this year included HaikuWeather, SuperFreeCell, bookmarkconvert an
 Last year Google invited each org to send one of their mentors along to the awards trip in San Francisco.  I made the trip and got to meet up with Puck and Freeman.  This year we asked the two winning students which mentor they'd most like to see make the trip this year, and they both picked Adrien as their number one choice, and Adrien has agreed to go.  
 
 I'd like to thank the 17 Haiku mentors and all 149 students who completed at least one task for Haiku this year. Also a special thanks to those who were on irc to help handle the flood of students during the contest.  Also a shout out to Stephanie Taylor and the rest of the team at Google for having Google Code-In, and for picking Haiku to participate.
+
+<hr>
+
+This article was originally published on [scottmc's blog](https://www.haiku-os.org/blog/scottmc/) and moved to the News section for posterity.
+
