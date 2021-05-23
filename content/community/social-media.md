@@ -21,6 +21,7 @@ There are a number of ways you can keep up with news about Haiku and social medi
 <h2>Recognized Community Groups</h2>
 <p><b><a href="https://www.facebook.com/groups/haikuosgroup/" target="_blank">Facebook group</a></b></p>
 <p><b><a href="https://www.reddit.com/r/haikuOS/" target="_blank">r/haikuOS Subreddit</a></b></p>
+<p><b><a href="https://discord.com/invite/8KsjHbW" target="_blank">Discord Server</a></b></p>
 <p><b><a href="https://www.linkedin.com/groups?gid=165215" target="_blank">LinkedIn Community</a></b></p>
 <p><b><a href="https://vk.com/haiku_os" target="_blank">Vk.com Community</a></b></p>
 <p><b><a href="https://www.flickr.com/groups/haiku-os/" target="_blank">Flickr Group</a></b></p>
