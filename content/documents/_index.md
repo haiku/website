@@ -22,7 +22,7 @@ A large amount of detailed documentation is available for users and developers.
 * [Human Interface Guidelines](/docs/HIG/index.xml)
 * [Icon Guidelines](/development/icon-guidelines)
 
-### BeOS-Era Documentation
+### Legacy Documentation
 
 <img src="/files/images/access-be.png" align="right" /><h4>BeBook and Be Newsletters</h4>
 

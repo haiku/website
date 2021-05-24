@@ -16,7 +16,6 @@ There are a number of ways you can keep up with news about Haiku and social medi
 <p><b><a href="https://www.linkedin.com/company/haiku-inc-" target="_blank">Official LinkedIn Account</a></b></p>
 <p><b><a href="https://www.openhub.net/orgs/haiku/projects" target="_blank">Official OpenHub Account</a></b></p>
 <p><b><a href="https://keybase.io/team/haiku" target="_blank">Official Keybase Team</a></b></p>
-<p><b><a href="https://del.icio.us/haikuos" target="_blank">Official Delicious Account</a></b></p>
 
 <h2>Recognized Community Groups</h2>
 <p><b><a href="https://www.facebook.com/groups/haikuosgroup/" target="_blank">Facebook group</a></b></p>
