@@ -10,6 +10,9 @@ tags = []
 Haiku's source code is currently being hosted in a <a href="http://git-scm.com/" target="_blank">Git based repository</a> with <a href="https://gerritcodereview.com">Gerrit code review</a>.
 Anonymous access will allow anyone to download Haiku's source code; However, the authenticated (non-anonymous) method is required for submitting patches.
 
+Although most contributors tend to disclose their real names, we do not currently have a real name policy and
+a couple of contributors contribute to Haiku pseudonymously. That means that it's possible for anyone to contribute.
+
 <div class="alert alert-warning">
 <strong>The buildtools are not needed when building from within 32-bit Haiku</strong>. Pre-built images of 32-bit Haiku already come with suitable buildtools pre-installed.
 </div>
@@ -71,7 +74,8 @@ git config core.precomposeunicode true
 The `<login>@` is only needed if your currently logged in username doesn't match your `review.haiku-os.org` username.
 
 ```sh
-git clone "ssh://<login>@git.haiku-os.org/buildtools" && scp -p <login>@git.haiku-os.org:hooks/commit-msg "buildtools/.git/hooks/"
+git clone "ssh://<login>@git.haiku-os.org/buildtools"
+scp -p <login>@git.haiku-os.org:hooks/commit-msg "buildtools/.git/hooks/"
 ```
 
 <h4>Haiku:</h4>
@@ -79,7 +83,8 @@ git clone "ssh://<login>@git.haiku-os.org/buildtools" && scp -p <login>@git.haik
 The `<login>@` is only needed if your currently logged in username doesn't match your `review.haiku-os.org` username.
 
 ```sh
-git clone "ssh://<login>@git.haiku-os.org/haiku" && scp -p <login>@git.haiku-os.org:hooks/commit-msg "haiku/.git/hooks/"
+git clone "ssh://<login>@git.haiku-os.org/haiku"
+scp -p <login>@git.haiku-os.org:hooks/commit-msg "haiku/.git/hooks/"
 ```
 
 <h4>Switching from read-only to write access</h4>
@@ -125,7 +130,7 @@ git clone http://github.com/haiku/buildtools.git
 git clone http://github.com/haiku/haiku.git
 ```
 
-Note however that these repositories do not contain any hrev tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
+Please note that these repositories do not contain any `hrev` tags, which are used by the Haiku build system to determine the Haiku revision. To work around this limitation, use the <a href="https://cgit.haiku-os.org/haiku/tree/build/jam/UserBuildConfig.ReadMe" target="_blank">HAIKU_REVISION build variable</a> when building Haiku.
 
 <h3>Common tasks</h3>
 
@@ -161,15 +166,15 @@ git pull --rebase ./haiku ./buildtools
 
 <h4>Making local commits</h4>
 
-In git you make commits to your local tree, then push the final results to the
+In Git, you make commits to your local tree, then push the final results to the
 central remote Haiku repository. Split your work in not too large commits, but
 remember that each commit will be reviewed separately, so don't make them too
 small either.
 
 The commit message will also be reviewed, and should describe the change in
-as much detail as possible. You can refer to other commits by ehter their hrev
+as much detail as possible. You can refer to other commits by either their hrev
 tag or their SHA1 hash, and to bugs using the #number notation. Gerrit and cgit
-will then auomatically add an hyperlink to the relevant place.
+will then automatically add an hyperlink to the relevant place.
 
 The commit message should include a short description on the first line (ideally
 less than 64 characters), then a blank line, and a more detailed explanation.
@@ -207,8 +212,11 @@ If your commit message is longer, you can put it in a file and use it this way:
 git commit -a -F ~/mycommitlog
 ```
 
-Or you can use "git commit -a", which will open an editor and let you write down
-the message when you commit your changes.
+Alternatively, you can use "git commit -a", which will open a text editor and
+let you write down the message when you commit your changes.
+
+It may be a good idea to check <a href="https://review.haiku-os.org>Gerrit</a>
+as a point of reference when
 
 <h4>Pushing changes for review</h4>
 
@@ -217,10 +225,10 @@ git push origin HEAD:refs/for/master -o topic="something"
 ```
 
 After your changes are complete, the push command will push your local tree to the remote Haiku repository.
-The commits will be added to the review page and people will review them. You can them amend your commits
+The commits will be added to the review page and people will review them. You can then amend your commits
 and push them again, until they are reviewed and merged.
 
-It is recommended to set a topic, a single keyword that can easily be searched
+It is recommended to set a topic - a single keyword that can easily be searched
 for in the web interface and help categorize commits.
 
 <h4>Taking review comments into account and updating a commit</h4>
@@ -254,7 +262,8 @@ each commit and each version of a commit so make sure to get the correct one
 from Gerrit:
 
 ```sh
-git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/28/3228/4 && git cherry-pick FETCH_HEAD
+git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/28/3228/4
+git cherry-pick FETCH_HEAD
 ```
 
 You can now edit the files to make the needed changes. Once you are done, edit
@@ -274,13 +283,16 @@ Finally, send your work for review:
 git push origin HEAD:refs/for/master
 ```
 
+`HEAD:refs/for/master` means that your change was built on top of the master
+branch and that your changes are meant to be applied to the master branch.
+
 <h5>Multiple-commit change</h5>
 
 The process is similar when your change is split into multiple commits, but
 you can't as easily use cherry-pick since it would have to be done once per
 commit. So, a different process can be used instead.
 
-First of all make sure you have the latest version of Haiku:
+First of all make sure you have the latest version of the Haiku source code:
 
 ```sh
 git fetch
@@ -292,7 +304,8 @@ the command changes for each commit, so be sure to get the correct one from
 Gerrit. The one below is only an example.
 
 ```sh
-git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/99/1299/5 && git checkout FETCH_HEAD
+git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/99/1299/5
+git checkout FETCH_HEAD
 ```
 
 You can then rebase your changes on the current version of Haiku:
@@ -311,6 +324,6 @@ Once you are done, you can update your patches on Gerrit:
 git push origin HEAD:refs/for/master
 ```
 
-Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a> for a more detailed
-overview of the process.
+Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a>
+for a more detailed overview of the process.
 
