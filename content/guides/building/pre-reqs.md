@@ -7,11 +7,21 @@ tags = []
 
 The tools you need to compile software for Haiku, or to compile Haiku itself, depend on the platform that is used for building.
 
-Currently, Haiku is arguably the most convenient development environment. **A [nightly image](https://download.haiku-os.org) (or [stable release](/get-haiku)) of Haiku should contain all of the software needed to build its sources for x86.**  Note that a build of the entire operating system on an x86_64 Haiku host will require that the buildtools are also prepared and compiled.  Use the same instructions as a cross-compile in this case.  The reason for this is because some 32bit elements need to be built as well and the compiler supplied by default on an x86_64 environment is insufficient for building these elements.
+The Haiku operating system acts as a very convenient environment development, although not strictly necessary.
+It may also not be practical to use Haiku in some very special cases, such as when writing some drivers.
+**A [nightly image](https://download.haiku-os.org) (or [stable release](/get-haiku)) of Haiku should contain all
+of the software needed to build its sources for x86.** Note that a build of the entire operating system on an x86_64
+Haiku host will require that the buildtools are also prepared and compiled. Use the same instructions as a cross-compile
+in this case. The reason for this is because some 32bit elements need to be built as well and the compiler supplied by
+default on an x86_64 environment is insufficient for building these elements.
 
-So while Haiku is not the fastest, being able to immediately test the freshly compiled binaries and having the tool chain pre-installed certainly reduces the chances of headaches. On occasion, building Haiku on Haiku can be problematic if the host version is significantly out of date compared to the version being built. In this case, cross-compiling from another OS, or updating to a newer Haiku may be required to get things working again.
+So while Haiku is not necessarily the fastest, there's a huge advantage to being able to immediately test the freshly
+compiled binaries and having the tool chain pre-installed certainly reduces the chances of headaches. Occasionally, building
+Haiku withinin Haiku can be problematic if the host version is significantly out of date compared to the version being built.
+In this case, cross-compiling from another OS, or updating to a newer Haiku version may be required to get things working again.
 
-Haiku currently supports building itself, or having itself *cross compiled* on another platform.
+Haiku supports building itself, or having itself *cross compiled* on another platform. We have also compiled a table with
+a list of operating systems that have been tested and confirmed to work, as far as building Haiku is concerned.
 
 ## Installing Jam
 
@@ -40,7 +50,7 @@ The first requires administrative privilege, as jam will be installed to '/usr/l
 <li><span class="cli">./jam0 -sBINDIR=$HOME/bin install</span></li>
 </ul>
 
-## Build platform support matrix
+## Is my platform supported for building Haiku?
 
 Below are common build platforms and their statuses. This is not meant as a complete list, and the build specifics might change with new versions of those platforms. Further below you'll find more specific help on how to set up the build.
 
@@ -53,18 +63,18 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                     |
 | [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                     |
 | [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       |                     |
-| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       |                     |
+| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Weird issues with building have been reported before. |
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
 |[openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
-| BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
-| macOS                              | [Homebrew](#osx)     | NO        | Need a working case sensitive filesystem |
+| BeOS                               | [pkg](#beos_zeta)    | NO        | No longer supported |
+| macOS                              | [Homebrew](#macos)     | NO        | Need a working case sensitive filesystem |
 | Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
 | [Windows](https://microsoft.com/)    | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
-| Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time..  |
+| Zeta                               | [pkg](#beos_zeta)    | NO        | No longer supported |
 
 <a name="pkgman"></a>
 ## ![pkgman](/files/os-icons/package-32.png) pkgman (Haiku package system)
@@ -75,7 +85,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 pkgman install cmd:python3 cmd:xorriso
 ```
 
-**Additional requirements for ARM:**
+**Additional requirements for building ARM versions of Haiku:**
 
 ```sh
 pkgman install dtc
@@ -90,7 +100,7 @@ pkgman install dtc
 sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool gcc-multilib python3
 ```
 
-**Additional requirements for ARM:**
+**Additional requirements for building ARM versions of Haiku:**
 
 ```sh
 sudo apt-get install u-boot-tools util-linux device-tree-compiler
@@ -105,7 +115,7 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler
 sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip curl wget flex xorriso python lib32-glibc
 ```
 
-**Additional requirements for ARM:**
+**Additional requirements for building ARM versions of Haiku:**
 
 ```sh
 sudo pacman -S yaourt uboot-tools
@@ -120,7 +130,7 @@ sudo pacman -S yaourt uboot-tools
 sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
 ```
 
-**Additional requirements for ARM:**
+**Additional requirements for building ARM versions of Haiku:**
 
 ```sh
 sudo yum install libfdt
@@ -144,7 +154,7 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib libisoburn wget nasm net-misc/curl
 ```
 
-**Additional requirements for ARM:**
+**Additional requirements for building ARM versions of Haiku:**
 
 ```sh
 sudo emerge -av u-boot-tools util-linux dtc
@@ -164,8 +174,8 @@ The configure script has to be run with extra enviroment variables to tell it th
 $ NM=gcc-nm9 RANLIB=gcc-ranlib9 AR=gcc-ar9 ./configure --cross-tools-source ../buildtools/ --build-cross-tools x86_64
 ```
 
-<a name="osx"></a>
-## ![osx](/files/os-icons/macosx-32.png) macOS
+<a name="macos"></a>
+## ![macos](/files/os-icons/macmacos-32.png) macOS
 
 A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ works fine.
 
@@ -200,7 +210,7 @@ export INFOPATH=$INFOPATH:/opt/local/share/info
 If you are using another shell, take a look a the shell documentation to see which file is parsed at login, and add the required commands.
 You can now retry the <code>port install...</code> command in a new Terminal.
 
-<p>Note: the ARM port is not yet supported for OS X, MacPorts is missing sfdisk at least.</p>
+<p>Note: the ARM port is not yet supported for macOS, MacPorts is missing sfdisk at least.</p>
 
 <a name="windows"></a>
 ## ![windows](/files/os-icons/package-32.png) Windows
@@ -229,5 +239,4 @@ It is recommended to use either XFS or btrfs for the partition where your genera
 There is a fallback mechanism that is used otherwise, but the build will be slower.
 
 In order to use xattr support, some distributions may need "attr" and "attr-dev" installed. See [Configure Option : \--use-xattr](/guides/building/configure/use-xattr)
-
 
