@@ -142,20 +142,21 @@ Be sure to use the <span class="cli">--rebase</span> argument while doing a pull
 </div>
 
 ```sh
-cd /path/haiku/haiku
+cd haiku
 git pull --rebase
 ```
 
 You can make git take care of this automatically for you, so that "git pull" does the right thing for Haiku:
 
 ```sh
-cd haiku && git config pull.rebase true
+cd haiku
+git config pull.rebase true
 ```
 
 Alternatively, a single path or multiple paths can be given to <span class="cli">git pull</span>. This will allow you to run the following command from any directory. This becomes extremely useful if you use an <a href="/guides/building/configure/different-generated">external object directory</a> or if you wish to update both the buildtools and haiku directories at the same time.
 
 ```sh
-git pull --rebase /path/haiku/haiku /path/haiku/buildtools
+git pull --rebase ./haiku ./buildtools
 ```
 
 <h4>Making local commits</h4>
