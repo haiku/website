@@ -246,9 +246,9 @@ and send it again. When your change consists of a single commit, you can
 cherry-pick it.
 
 First make sure you start from a clean working tree with the latest Haiku changes
-(note that this will remove all your work in progress commits from the working
-copy, make sure they are in a branch. Git will remind you about this if it's the
-case).
+(note that this will remove all your *work-in-progress* commits from the working
+copy - make sure these commits are in a branch. Git will remind you about this
+if you haven't done so).
 
 ```sh
 git fetch
