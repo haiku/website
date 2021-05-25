@@ -46,7 +46,7 @@ to the last 10 commits, for example.
 <h3>Git Access - Contributors and patch submitters</h3>
 
 <div class="alert alert-danger">
-<strong>Configure your git!</strong> Before making any commits to the Haiku repository (local even), be <strong>sure</strong> to <a href="#configure_env">configure</a> the git environment on your local system! Failure to configure git properly before a commit will result in incorrect naming in your commit, making it impossible to give you well-deserved credit for your work.</div>
+<strong>Configure your git!</strong> Before making any commits to the Haiku repository (local even), be <strong>sure</strong> to <a href="#configure_env">configure</a> the Git environment on your local system! Failure to configure git properly before a commit will result in incorrect naming in your commit, making it impossible to give you well-deserved credit for your work.</div>
 
 <h4>Configure Git on your system:<a name="configure_env"></a></h4>
 

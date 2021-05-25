@@ -5,23 +5,49 @@ date = "2010-02-15T23:51:25.000Z"
 tags = []
 +++
 
-The tools you need to compile software for Haiku, or to compile Haiku itself, depend on the platform that is used for building.
+The tools you need to compile software for Haiku, or to compile Haiku itself, depend on the platform that you are using
+for building Haiku.
 
-The Haiku operating system acts as a very convenient environment development, although not strictly necessary.
-It may also not be practical to use Haiku in some very special cases, such as when writing some drivers.
-**A [nightly image](https://download.haiku-os.org) (or [stable release](/get-haiku)) of Haiku should contain all
-of the software needed to build its sources for x86.** Note that a build of the entire operating system on an x86_64
-Haiku host will require that the buildtools are also prepared and compiled. Use the same instructions as a cross-compile
-in this case. The reason for this is because some 32bit elements need to be built as well and the compiler supplied by
-default on an x86_64 environment is insufficient for building these elements.
+The Haiku operating system can be a very convenient development environment for working on Haiku, but using
+Haiku is not not strictly necessary. It may also not be practical to use Haiku in some very special cases, 
+such as when writing some drivers - using a virtual machine to test your changes may be much more practical.
+It may also be a bit slower as far as compilation times are concerned, but performance has massively
+improved over the years. Occasionally, building Haiku within Haiku can be problematic if the host
+is significantly out of date compared to the version being built. In this case, cross-compiling Haiku
+from another operating system, or updating Haiku to a newer version should fix that.
 
-So while Haiku is not necessarily the fastest, there's a huge advantage to being able to immediately test the freshly
-compiled binaries and having the tool chain pre-installed certainly reduces the chances of headaches. Occasionally, building
-Haiku withinin Haiku can be problematic if the host version is significantly out of date compared to the version being built.
-In this case, cross-compiling from another OS, or updating to a newer Haiku version may be required to get things working again.
+On the other hand, while Haiku may not necessarily the fastest, there's a huge advantage to being able to immediately
+test the freshly compiled programs. Working from a Haiku environment is paramount in many cases, such as
+when you're porting applications to Haiku or when you're working on desktop applications. Using the operating system
+that you're working on is also very useful, because some of the difficulties that you may come across while using
+the system, or just using the system without coming across any real problems, will lead to even more improvements
+that everyone will benefit from. Haiku's a pretty good development platform on its own: There are IDEs (Integrated
+Development Environments) that are exclusive to and deeply integrated with Haiku, such as **Pe**, **Koder**,
+**microbe** and **Paladin**, as well as IDEs that were ported to Haiku and work perfectly fine with it, such as
+**Qt Creator** and the **Arduino IDE**, all the way up to the world famous text-based editors, such as **vim**,
+**nano** and **emacs**.
 
-Haiku supports building itself, or having itself *cross compiled* on another platform. We have also compiled a table with
-a list of operating systems that have been tested and confirmed to work, as far as building Haiku is concerned.
+If you'd like to have the best of both worlds, you could also use Haiku in a virtual machine and use that as a
+development environment. If you are using text-based IDEs, you could also connect to your virtual machine running
+Haiku with [Secure Shell](https://www.haiku-os.org/guides/daily-tasks/netservices/) and integrate that in your workflow.
+This may be a particularly viable option when working with [HaikuPorts](https://github.com/haikuports/haikuports).
+
+**[Nightly images](https://download.haiku-os.org) (or [the latest stable release](/get-haiku)) of Haiku should contain all
+of the software needed to build Haiku in Haiku.** Note that building the entire operating system on an x86_64 Haiku host
+will require that the [`buildtools`](https://cgit.haiku-os.org/buildtools) for that architecture are also prepared and
+compiled. Use the same instructions as a cross-compile in this case. The reason for this is because some 32-bit objects
+need to be built as well and the compiler supplied by default on an x86_64 environment is insufficient for building
+these objects.
+
+In short, you are basically free to use whichever operating system suits you the most in order to develop with Haiku.
+We understand that you may not be able to switch operating systems on a whim, or that Haiku may not fulfill your needs
+as well as it does for other people. You're free to use whichever operating system you feel like.
+
+For your convenience, we have also compiled a table with a list of operating systems that have been tested and confirmed to work,
+as far as building Haiku is concerned. If your operating system exhibits weird building-related problems, we would
+appreciate that you report these issues - or better yet, deal with them yourself and send them in, since that
+would massively help us and other people interested in developing on that operating system. The latter also applies
+if your operating system cannot be currently used to build Haiku.
 
 ## Installing Jam
 
@@ -63,7 +89,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                     |
 | [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                     |
 | [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       |                     |
-| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Weird issues with building have been reported before. |
+| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Strange building issues have been reported before |
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
@@ -71,7 +97,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
 | BeOS                               | [pkg](#beos_zeta)    | NO        | No longer supported |
-| macOS                              | [Homebrew](#macos)     | NO        | Need a working case sensitive filesystem |
+| macOS                              | [Homebrew](#macos)     | MAYBE     | Need a working case sensitive filesystem |
 | Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
 | [Windows](https://microsoft.com/)    | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
 | Zeta                               | [pkg](#beos_zeta)    | NO        | No longer supported |
