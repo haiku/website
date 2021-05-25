@@ -139,7 +139,7 @@ Snapshots are particularly useful in our case, because we can make an AMI out of
 
 ```sh
 ec2-register \
-   --name "Haiku R1/beta1 AMI" \
+   --name "Haiku R1/beta2 AMI" \
    --aws-access-key $AWS_KEY \
    --aws-secret-key $AWS_SEC \
    --region us-east-1 \

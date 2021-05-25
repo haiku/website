@@ -103,11 +103,11 @@ Now that you have made the necessary changes to your system, you can securely ob
 pkg install wget unzip
 ```
 
-After installing the two packages, we will fetch the archive containing the anyboot image file and then unzip it. For the purposes of this tutorial, the download of the 64-bit `r1beta1` from a specific Haiku mirror located in *East Coast, Germany* will be demonstrated, but if you want to choose a different mirror or a different version, then please consult the website [here](https://www.haiku-os.org/get-haiku/) and replace the following link accordingly.
+After installing the two packages, we will fetch the archive containing the anyboot image file and then unzip it. For the purposes of this tutorial, the download of the 64-bit `r1beta2` from a specific Haiku mirror located in *East Coast, Germany* will be demonstrated, but if you want to choose a different mirror or a different version, then please consult the website [here](https://www.haiku-os.org/get-haiku/) and replace the following link accordingly.
 
 ```sh
-wget https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip 
-unzip haiku-r1beta1-x86_64-anyboot.zip
+wget https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip 
+unzip haiku-r1beta2-x86_64-anyboot.zip
 ```
 
 As mentioned earlier, the following files will be extracted in your current working directory:
