@@ -1,9 +1,11 @@
 +++
 type = "article"
-title = "Getting the source code"
+title = "Get the Haiku Source Code / Pushing Patches to Haiku 101"
 date = "2011-06-13T16:07:27.000Z"
 tags = []
 +++
+
+ <!-- NOTE: This article should be eventually split in two parts. -->
 
 <span class="right"><img src='/images/archive_64.png'></span>
 
