@@ -324,6 +324,7 @@ Once you are done, you can update your patches on Gerrit:
 git push origin HEAD:refs/for/master
 ```
 
-Read the <a href="https://review.haiku-os.org/Documentation/user-upload.html">Gerrit documentation</a>
-for a more detailed overview of the process.
+### Read more:
 
+- [dev.haiku-os.org - Submitting Patches](https://dev.haiku-os.org/wiki/CodingGuidelines/SubmittingPatches)
+- [Gerrit Code Review - Uploading Changes](https://review.haiku-os.org/Documentation/user-upload.html)
