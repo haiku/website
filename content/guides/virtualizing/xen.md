@@ -9,7 +9,7 @@ Virtual instances of operating systems are perfect for all kinds of testing purp
 
 The guide was tested on an Ubuntu Linux installation, but it should work on any Linux distribution that supports Xen.
 
-This tutorial uses an Anyboot image for demonstration purposes. The Anyboot image can be obtained [here](/get-haiku). Make sure to verify the checksums in order to make sure that your downloaded files are not corrupted.
+This tutorial uses an Anyboot image for demonstration purposes. The Anyboot image can be obtained [here](/get-haiku). Make sure to verify the checksums to make sure that your downloaded files are not corrupted.
 
 ##### Go to section
 
@@ -48,7 +48,7 @@ You can find more Ubuntu Linux-specific information regarding Xen in [Ubuntu's o
 
 #### Arch Linux
 
-As Xen is not currently available in the official Arch Linux repositories, you will have to use the [Arch User Repository (AUR)](https://aur.archlinux.org/) in order to install Xen.
+As Xen is not currently available in the official Arch Linux repositories, you will have to use the [Arch User Repository (AUR)](https://aur.archlinux.org/) to install Xen.
 
 Of course, you can use an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) of your choice in order to install the `xen` package more easily. However, the most universal way of installing Xen in Arch Linux would be the following:
 

@@ -23,7 +23,7 @@ This guide assumes that you have installed FreeBSD on your device, you have made
 
 *Considering that FreeBSD is an operating system that is primarily used in server-based applications that do not rely on a graphical environment, this section was added for beginners that are not used to Unix-like terminals. This process is not much different in FreeBSD than in Linux distributions, so feel free to skip this section if you believe that you are capable of managing the download process yourself.*
 
-Before proceeding with the tutorial, you will have to make a few system configurations in order to be able to move on in a smooth manner.
+Before proceeding with the tutorial, you will have to make a few system configurations.
 
 ##### CA Certificates
 
@@ -95,7 +95,7 @@ sysctl net.inet.ip.forwarding=1
 ```
 
 
-### Downloading the Haiku Anyboot image <a name="part_download">
+### Downloading the Haiku Anyboot image <a name="part_download"></a>
 
 Now that you have made the necessary changes to your system, you can securely obtain a Haiku anyboot image. You will need to install `wget` to download the image file and you will additionally need the `unzip` package to extract it, as the image file is packed in a `.zip` archive together with a `ReadMe` file.
 

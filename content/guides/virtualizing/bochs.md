@@ -1,6 +1,6 @@
 +++
 type = "article"
-title = "Virtualizing Haiku In Bochs"
+title = "Virtualizing Haiku in Bochs"
 date = "2013-01-03T06:28:59.000Z"
 tags = []
 +++
