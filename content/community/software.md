@@ -1,6 +1,6 @@
 +++
 type = "article"
-title = "Software Sites"
+title = "Software Repositories"
 date = "2017-01-08T09:28:40.000Z"
 tags = []
 +++
@@ -15,7 +15,9 @@ tags = []
 <li><a href="http://softwaredepot.altervista.org/">Software Depot</a>: A software archive of packaged Haiku software.</li>
 </ul>
 
-<h3>Tell us about your site!</h3>
+<p>You can find out how you can add these repositories <a href="/docs/userguide/en/preferences/repositories.html" target="_blank">in the User Guide</a></p>.
+
+<h3>Add yours!</h3>
 
 <p>If you have a community-based Haiku-related software site that you would like us to add to this page, <a href="/contact" title="Contact Haiku">contact us</a> with the following information:</p>
 
