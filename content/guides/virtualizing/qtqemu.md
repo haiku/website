@@ -1,13 +1,13 @@
 +++
 type = "article"
-title = "Virtualizing Haiku in QEMU"
+title = "Virtualizing Haiku in QtQEMU"
 date = "2020-01-06T21:49:28.000Z"
 tags = []
 +++
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-This How-To guide will describe the process of running Haiku in a virtual machine (VM) using QEMU 4.1.0 and an .ISO image file, with a Windows 10 host.
+This guide will describe the process of running Haiku in a virtual machine (VM) using QEMU 4.1.0 and an .ISO image file, with a Windows 10 host.
 
 The latest .ISO image can be obtained [here](https://www.haiku-os.org/get-haiku/).
 
@@ -16,20 +16,26 @@ You can find the latest version of QEMU for Windows, Linux, and MacOS [here](htt
 In this guide, we will use [QtEmu](https://gitlab.com/qtemu/gui), an open source GUI front-end to spare us from having to remember the complicated arguments for the command line QEMU. The installer for the latest version of QtEmu can be downloaded [here](https://www.carlavilla.es/qtemu/qtemu_setup_x86_64.exe).
 
 ##### Go to section:
-*	[Setting up QEMU and QtEmu](#part_setup)
-*   [Installing and running Haiku from an ISO image](#part_iso)
-*   [Known issues](#part_issues)
+* [Setting up QEMU and QtEmu](#part_setup)
+* [Installing and running Haiku from an ISO image](#part_iso)
+* [Known issues](#part_issues)
 
 ## Part 1: Setting up QEMU and QtEmu <a name="part_setup"></a>
+
 ### Step 1. Installing QEMU
+
 After downloading the latest version of QEMU from the link mentioned above, open the installer and follow the instructions. The setup normally finishes in a few minutes.
+
 ### Step 2. Installing QtEmu
+
 [QtEmu](https://gitlab.com/qtemu/gui) is an open source GUI front-end for QEMU.
 
 After downloading the installer from the link above, run the setup and follow the instructions. This normally takes around 2 minutes.
 
 The QtEmu icon should now appear on the Start Menu.
+
 ### Step 3. Configuring QtEmu for QEMU
+
 During the first run of QtEmu, you will have to configure the paths to QEMU in order for the program to run properly.
 
 ![QtEmuFirstRunDialog](/files/guides/virtualizing/qemu/01_QtEmu_first_run_dialog.png)
@@ -41,7 +47,9 @@ The "QtEmu img path" is the path to `qemu-img.exe`, which is in the folder where
 "QEMU machines path" is the path where your virtual machines are stored. It is recommended that you should place this folder on a separate drive from your OS, so that QtEmu can create large disk images for your Virtual Machines.
 
 ## Part 2: Installing and running Haiku from an ISO image <a name="part_iso"></a>
+
 ### Step 1. Creating a virtual machine
+
 When the .ISO image is ready, we can begin to create a new virtual machine (VM).
 
 Start QtEmu, then click on the "New Machine" icon (or go to `Machine -> New Machine`). A window should pop up, guiding you through the process of creating a new VM.
@@ -49,6 +57,7 @@ Start QtEmu, then click on the "New Machine" icon (or go to `Machine -> New Mach
 ![QtEmuGUINewMachine](/files/guides/virtualizing/qemu/02_QtEmu_GUI_New_Machine.png)
 
 #### 1. Machine name and operating system
+
 In this dialog, we need to give our machine a name, as well as specify the operating system that we are going to install. This allows QEMU to optimize its machine for some popular OSes, and also to distinguish from your other VMs. As Haiku is not included in the list, we will choose "Other". Once you've finished, click on "Next".
 
 ![QtEmuNewOsType](/files/guides/virtualizing/qemu/03_QtEMU_new_os_type.png)
