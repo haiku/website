@@ -95,6 +95,8 @@ Rudolfc is currently reworking the intel_extreme driver to finally support devic
 
 <h3>Wrap-up</h3>
 
+Last but not least, Máximo Castañeda (madmax) got commit access and officially joined the Haiku Developers Team. Welcome Máximo!
+
 This is it for May, folks. See you at the next report for June.
 
 To support Haiku, please consider donating through our <a href="https://www.haiku-inc.org/donate/">Submit A Donation</a> page, or check out our <a href="https://liberapay.com/haiku.inc/">Liberapay</a> page to make a recurring donation.
