@@ -8,7 +8,7 @@ tags = []
 
 Hello, it's time for the May activity report!
 
-Before starting the report, I would like to thank our donors for their donations. Your donations help us cover our expenses and help us reach our goal to hire people to work on Haiku full-time. I would also like to thank all the community for their countless hours of effort of implementing new features, triaging bugs, translating, supporting other users, and spreading the Haiku word all around.
+Before starting the report, we would like to thank our donors for their donations. Your donations help us cover our expenses and help us reach our goal to hire people to work on Haiku full-time. I would also like to thank all the community for their countless hours of effort of implementing new features, triaging bugs, translating, supporting other users, and spreading the Haiku word all around.
 
 This report covers revisions hrev55070-hrev55129.
 
@@ -73,7 +73,7 @@ AGMS and PulkoMandy moved some work done on first boot of Haiku to compile time.
 
 <h3>Other platforms ports</h3>
 
-X512 has made major support on RISC-V support, with Haiku fully running in TinyEMU (no actual RISC-V hardware is supported yet). This work is currently being submitted and revised on Gerrit, some of the first patches have already been merged.
+X512 has made major support on RISC-V support, with Haiku fully running in TinyEMU (no actual RISC-V hardware is supported yet). This work is currently being submitted and reviewed on Gerrit, some of the first patches have already been merged.
 
 This work resulted in cleanups in various places all around the system: removal of unneeded includes, conversion of code from C to C++, progress on virtio drivers which are heavily used by the emulator, etc.
 
