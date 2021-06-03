@@ -73,7 +73,7 @@ AGMS and PulkoMandy moved some work done on first boot of Haiku to compile time.
 
 <h3>Other platforms ports</h3>
 
-X512 has made major support on RISC-V support, with Haiku fully running in TinyEMU (no actual RISC-V hardware is supported yet). This work is currently being submitted and reviewed on Gerrit, some of the first patches have already been merged.
+X512 has made major progress on RISC-V support, with Haiku fully running in TinyEMU (no actual RISC-V hardware is supported yet). This work is currently being submitted and reviewed on Gerrit, some of the first patches have already been merged.
 
 This work resulted in cleanups in various places all around the system: removal of unneeded includes, conversion of code from C to C++, progress on virtio drivers which are heavily used by the emulator, etc.
 
