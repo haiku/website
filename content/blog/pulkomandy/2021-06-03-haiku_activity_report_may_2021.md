@@ -8,7 +8,7 @@ tags = []
 
 Hello, it's time for the May activity report!
 
-Before starting the report, we would like to thank our donors for their donations. Your donations help us cover our expenses and help us reach our goal to hire people to work on Haiku full-time. I would also like to thank all the community for their countless hours of effort of implementing new features, triaging bugs, translating, supporting other users, and spreading the Haiku word all around.
+Before starting the report, we would like to thank our donors for their donations. Your donations help us cover our expenses and help us reach our goal to hire people to work on Haiku full-time. We would also like to thank all the community for their countless hours of effort of implementing new features, triaging bugs, translating, supporting other users, and spreading the Haiku word all around.
 
 This report covers revisions hrev55070-hrev55129.
 
