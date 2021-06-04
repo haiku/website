@@ -59,7 +59,7 @@ git config --global user.name "John Doe"
 git config --global user.email "john.doe@developers.com"
 ```
 
-On Mac OS X, you must set the following option in order to avoid problems with the unicode representation of filenames:
+On macOS, you must set the following option in order to avoid problems with the unicode representation of filenames:
 
 ```sh
 git config core.precomposeunicode true
@@ -109,7 +109,7 @@ scp -p <login>@git.haiku-os.org:hooks/commit-msg "haiku/.git/hooks/"
 <div class="alert alert-warning">
 Haiku's source code needs to reside on a case sensitive file system.
 </div>
-In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" as two different files. Some file systems that are (or could be) case in-sensitive include, FAT32, NTFS, and HFS+. Mac OS X's HFS+ is case in-sensitive by default. For more information regarding how to create a case-sensitive HFS+ volume, see <a href="/documents/dev/how_build_haiku_mac_os_x#part_diskimage">this article</a>.
+In short, such a file system recognizes "ThisIsAFile.txt" and "THISISAFILE.txt" as two different files. Some file systems that are (or could be) case in-sensitive include, FAT32, NTFS, and HFS+. macOS's HFS+ is case in-sensitive by default. For more information regarding how to create a case-sensitive HFS+ volume, see <a href="/documents/dev/how_build_haiku_mac_os_x#part_diskimage">this article</a>.
 
 <a name="proxy_access"></a>
 <h4>Getting the source code through an HTTP proxy</h4>

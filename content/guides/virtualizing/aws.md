@@ -43,7 +43,7 @@ Replace `<YOUR USERNAME>` with your username.
 ~/VirtualBox VMs
 ```
 
-- In Mac OS X environments, the files can be found here instead:
+- In macOS environments, the files can be found here instead:
 
 ```
 ~/Library/VirtualBox

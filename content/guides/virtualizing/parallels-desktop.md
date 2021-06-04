@@ -99,7 +99,7 @@ To increase the amount of memory assigned to the virtual machine, click *Hardwar
 
 ![](/files/guides/virtualizing/parallels-desktop/config_ram.png)
 
-If you are running Parallels on MacOS 11, expand click *Advanced Settings* while still on *CPU & Memory*. For Hypervisor, choose *Parallels* instead of *Apple*. This will improve general performance in the Haiku virtual machine.
+If you are running Parallels on macOS 11, expand click *Advanced Settings* while still on *CPU & Memory*. For Hypervisor, choose *Parallels* instead of *Apple*. This will improve general performance in the Haiku virtual machine.
 
 ![](/files/guides/virtualizing/parallels-desktop/config_hypervisor.png)
 
