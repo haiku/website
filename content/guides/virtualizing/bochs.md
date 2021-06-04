@@ -56,8 +56,5 @@ If something isn't just working right or you want to try a pre-made config file 
 
 Right click it and go edit or just open it with your favourite text editor.
 
-You might have to change where the file looks for the raw and anyboot images' locations in the file if you are using Haiku after R1A4 however.
-<BR>
-<h3 id="part_trouble">Troubleshooting.</h3>
-<h5>Haiku hangs at the disk icon.</h5>
-You are using the ISO image which doesn't seem work with Bochs. Try the raw or anyboot images.
+You might have to change where the file looks for the raw and anyboot images' locations in the file if you are using Haiku after R1A4 however.<br>
+

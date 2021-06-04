@@ -12,7 +12,7 @@ tags = []
 Haiku's source code is currently being hosted in a <a href="http://git-scm.com/" target="_blank">Git based repository</a> with <a href="https://gerritcodereview.com">Gerrit code review</a>.
 Anonymous access will allow anyone to download Haiku's source code; However, the authenticated (non-anonymous) method is required for submitting patches.
 
-Although most contributors tend to disclose their real names, we do not currently have a real name policy and
+Although most contributors tend to disclose their real names, we do not have a real name policy and
 a couple of contributors contribute to Haiku pseudonymously. That means that it's possible for anyone to contribute.
 
 <div class="alert alert-warning">
@@ -76,8 +76,7 @@ git config core.precomposeunicode true
 The `<login>@` is only needed if your currently logged in username doesn't match your `review.haiku-os.org` username.
 
 ```sh
-git clone "ssh://<login>@git.haiku-os.org/buildtools"
-scp -p <login>@git.haiku-os.org:hooks/commit-msg "buildtools/.git/hooks/"
+git clone "ssh://<login>@git.haiku-os.org/buildtools" && scp -p <login>@git.haiku-os.org:hooks/commit-msg "buildtools/.git/hooks/"
 ```
 
 <h4>Haiku:</h4>
@@ -218,7 +217,8 @@ Alternatively, you can use "git commit -a", which will open a text editor and
 let you write down the message when you commit your changes.
 
 It may be a good idea to check <a href="https://review.haiku-os.org>Gerrit</a>
-as a point of reference when
+as a point of reference if you are not sure how you should format your
+commit message.
 
 <h4>Pushing changes for review</h4>
 
@@ -264,8 +264,7 @@ each commit and each version of a commit so make sure to get the correct one
 from Gerrit:
 
 ```sh
-git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/28/3228/4
-git cherry-pick FETCH_HEAD
+git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/28/3228/4 && git cherry-pick FETCH_HEAD
 ```
 
 You can now edit the files to make the needed changes. Once you are done, edit
@@ -306,8 +305,7 @@ the command changes for each commit, so be sure to get the correct one from
 Gerrit. The one below is only an example.
 
 ```sh
-git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/99/1299/5
-git checkout FETCH_HEAD
+git fetch "ssh://user@git.haiku-os.org/haiku" refs/changes/99/1299/5 && git checkout FETCH_HEAD
 ```
 
 You can then rebase your changes on the current version of Haiku:

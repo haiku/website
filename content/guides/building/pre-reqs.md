@@ -89,18 +89,18 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                     |
 | [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                     |
 | [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       |                     |
-| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Strange building issues have been reported before |
+| [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Not frequently tested |
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
 |[openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
-| BeOS                               | [pkg](#beos_zeta)    | NO        | No longer supported |
+| BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
 | macOS                              | [Homebrew](#macos)     | MAYBE     | Need a working case sensitive filesystem |
-| Solaris                            | [solaris](#solaris)  | NO        | No longer supported |
+| Solaris                            | [solaris](#solaris)  | NO        | Once upon a time... |
 | [Windows](https://microsoft.com/)    | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
-| Zeta                               | [pkg](#beos_zeta)    | NO        | No longer supported |
+| Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
 
 <a name="pkgman"></a>
 ## ![pkgman](/files/os-icons/package-32.png) pkgman (Haiku package system)
@@ -201,7 +201,7 @@ $ NM=gcc-nm9 RANLIB=gcc-ranlib9 AR=gcc-ar9 ./configure --cross-tools-source ../b
 ```
 
 <a name="macos"></a>
-## ![macos](/files/os-icons/macmacos-32.png) macOS
+## ![macos](/files/os-icons/macos-32.png) macOS
 
 A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ works fine.
 

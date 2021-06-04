@@ -22,7 +22,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [What license is Haiku released under?](#what-license-is-haiku-released-under)
     * [What is Haiku Inc.?](#what-is-haiku-inc)
     * [What platform(s) is Haiku targeted to run on?](#what-platform-s-is-haiku-targeted-to-run-on)
-    * [Will there be a 64-bit version of Haiku?](#will-there-be-a-64-bit-version-of-haiku)
+    * [Is there a 64-bit version of Haiku?](#will-there-be-a-64-bit-version-of-haiku)
   * Package Management
     * [Is there a package manager?](#is-there-a-package-manager)
     * [How do I update my installation of Haiku?](#how-do-i-update-my-installation-of-haiku)
@@ -33,7 +33,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Is there Flash support?](#is-there-flash-support)
     * [Is there an office suite?](#is-there-an-office-suite)
     * [Are there any games for Haiku?](#are-there-any-games-for-haiku)
-    * [Are Python, Ruby, Perl and Go available on Haiku?](#is-there-python-ruby-perl)
+    * [Are Python, Ruby, Perl and Rust available on Haiku?](#is-there-python-ruby-perl)
     * [Will GoBe Productive work in Haiku?](#will-gobe-productive-work-in-haiku)
   * Technical
     * [When is the next release?](#when-is-the-next-release)
@@ -110,12 +110,12 @@ is mostly compatible with the BeOS API. In other words, many applications that w
 Check out our [Haiku Slideshow](/slideshows/) and the [Haiku Movies](/about/movies) pages.
 
 ### Can I use Haiku as my primary Operating System?
-Yes! Although the OS is still considered "beta" and is under heavy development, it is reasonably stable and can be used to perform most daily tasks such as browsing the web
+Yes! Although the OS is still considered "beta", it is reasonably stable and can be used to perform most daily tasks such as browsing the web
  writing and reading e-mails, or listening to music and watching videos. We strongly recommend that you make backups of your personal files regularly.
 
 ### Can Haiku connect to the Internet?
-Yes! We reuse network drivers from FreeBSD, so most network cards will work on Haiku out of the box. Haiku includes an e-mail client and a
-web browser by default, and you can install other network-enabled applications.
+Yes! We reuse network drivers from FreeBSD, so most network adapters will work on Haiku out of the box. Haiku includes an e-mail client and a
+web browser, and you can install other network-enabled applications.
 
 ### What is the status of wireless internet connections?
 Wireless drivers are supported by our FreeBSD compatibility layer as well, and they should also work fine. You can connect to WEP, WPA, WPA2,
@@ -123,9 +123,9 @@ and open networks easily using the GUI.
 
 ### What license is Haiku released under?
 Most of the Haiku code is released under the very liberal [MIT License](https://opensource.org/licenses/mit-license.php). Some third party components
-(e.g.: some media codecs, libraries, etc.) may use other licenses. Our HVIF icons are also made available under the MIT License [and are using them
-will not result in a trademark claim by Haiku, Inc](http://www.haiku-inc.org/haiku-icons.html). Visit the [Haiku, Inc. website](https://haiku-inc.org/trademarks/)
-for more information regarding the Haiku trademarks and their usage requirements.
+(e.g.: some media codecs, libraries, etc.) use other licenses. Please note that the Haiku name and logo are trademarks of Haiku, Inc.
+
+Please visit the [Haiku, Inc. website](https://haiku-inc.org/trademarks/) for more information regarding the Haiku trademarks and their usage requirements.
 
 ### What is Haiku Inc.?
 Haiku Inc. is the non-profit organization based in the United States whose goal is to support the development and success of Haiku. For more information,
@@ -136,9 +136,8 @@ The main target for Haiku R1 is the x86 (Intel, AMD, and compatible) platform. T
 such as RISC-V, PowerPC, Sparc, and ARM. However, it is not clear whether these will be supported or not. What platforms we support in the future will
 heavily depend on the availability of resources to support their development.
 
-### Will there be a 64-bit version of Haiku?
-Yes. For R1 we are targeting two architectures, 32-bit x86 (i586 and newer) and 64-bit x86_64. The 32-bit release is compatible with the BeOS at
-a binary and API level. The 64-bit release is _not_ binary compatible with BeOS, but still enjoys compatibility with the powerful BeOS API
+### Is there a 64-bit version of Haiku?
+Yes. Please note that the 64-bit release does _not_ support BeOS binaries, but it is still compatible with the powerful BeOS API
 (while offering modern features). The 32-bit Haiku release can run most BeOS applications without modification or recompiling.
 
 ## Package Management
@@ -189,8 +188,8 @@ Yes! _HaikuDepot_ offers a selection of open source and freeware games. Most gam
 and you can use emulators, such as DOSBox, Dolphin, snes9x MAME and RetroArch, to run games originally written for
 other systems and consoles as well.
 
-### Are Python, Ruby, Perl and Go available on Haiku?
-Yes! Haiku includes these common scripting languages and many more.
+### Are Python, Ruby, Perl and Rust available on Haiku?
+Yes! Haiku supports these common languages and many more.
 
 ### Will GoBe Productive work in Haiku?
 Yes! Haiku's 32-bit installation is binary-compatible with BeOS R5, which means applications designed for BeOS R5 will run.
@@ -204,7 +203,7 @@ You can check the status of the releases at the [roadmap page](https://dev.haiku
 ## Technology
 ### I heard Haiku still uses gcc2, is that true?
 Our own internal fork of gcc2 is used to compile the x86 32-bit release to maintain BeOS binary compatibility. While gcc2 is the primary compiler
-for the x86 32-bit release, it also includes a newer version of gcc (`gcc8`) which can be leveraged to compile newer applications requiring it.
+for the x86 32-bit release, it also includes a modern version of gcc (`gcc8`) which can be leveraged to compile newer applications requiring it.
 
 Other architectures (including x86_64) don't leverage gcc2.
 
