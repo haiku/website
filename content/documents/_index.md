@@ -2,10 +2,7 @@
 type = "article"
 title = "Documents"
 date = "2009-09-11T23:47:51.000Z"
-tags = ["documentation","manual"]
 +++
-
-## Documentation
 
 A large amount of detailed documentation is available for users and developers.
 
