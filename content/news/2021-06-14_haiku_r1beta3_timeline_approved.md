@@ -7,7 +7,11 @@ tags = ["haiku", "software", "release", "beta3", "timeline", "schedule"]
 +++
 
 The release timeline for Haiku R1/Beta 3 has been approved after a 7 day RFC (Request for Comment) period on the mailing list.
-{{< alert-info "Release timeline" "[**Access the release timeline on the Trac wiki.**](https://dev.haiku-os.org/wiki/R1/Beta3/Timeline). Note that minor changes to the dates may occur.">}}
+
+<div class="alert alert-info">
+<a href="https://dev.haiku-os.org/wiki/R1/Beta3/Timeline" target="_blank"><b>Access the release timeline on the Trac wiki.</b></a> Note that minor changes to the dates may occur.
+</p>
+</div>
 
 If all goes to plan, Beta 3 will be released sometime after the 24th of July. Note that the release will only happen when everything is ready, so there are no final dates and the timeline may change to account for delays.
 
