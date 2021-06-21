@@ -17,11 +17,11 @@ Amazon Web Services (or, in short, AWS) is one of the most prominent cloud compu
 
 ### Preparing for this tutorial <a name="part_prepare"></a>
 
-Disk files represent physical devices but in the form of a file. During the preparation phase, we will need to download a Haiku image file from [here](https://www.haiku-os.org/get-haiku). Then, we will have to use [VirtualBox](https://www.virtualbox.org/) in order to create a disk image that can be later converted into an AMI image file.
+Disk files represent physical devices but in the form of a file. During the preparation phase, we will need to download a Haiku image file from [here](https://www.haiku-os.org/get-haiku). Then, we will have to use [VirtualBox](https://www.virtualbox.org/) to create a disk image that can be later converted into an AMI image file.
 
 If you're not familiar with this process, use the **[Virtualizing Haiku in VirtualBox](https://www.haiku-os.org/guides/virtualizing/virtualbox/)** tutorial as a reference.
 
-From the perspective of the operating system, disk images can be compared to physical hard drives and other forms of storage. Therefore, it should be noted that while creating your virtual machine in VirtualBox, you should ensure that the disk space that was allocated to the drive does not cross your quota on the AWS platform in order to avoid any unnecessary charges.
+From the perspective of the operating system, disk images can be compared to physical hard drives and other forms of storage. Therefore, it should be noted that while creating your virtual machine in VirtualBox, you should ensure that the disk space that was allocated to the drive does not cross your quota on the AWS platform to avoid any unnecessary charges.
 
 ### Preparing the virtual disk image <a name="part_prepare"></a>
 
@@ -43,13 +43,13 @@ Replace `<YOUR USERNAME>` with your username.
 ~/VirtualBox VMs
 ```
 
-- In Mac OS X environments, the files can be found here instead:
+- In macOS environments, the files can be found here instead:
 
 ```
 ~/Library/VirtualBox
 ```
 
- `.vdi` files are not supported by one of the tools that we will use later, we will have to convert our `.vdi` file to a `.vhd` file, which shares a lot of similarities and is also properly supported. In order to do that, we will quickly use a shell command that VirtualBox provides to us and wait for the process to finish:
+ `.vdi` files are not supported by one of the tools that we will use later, we will have to convert our `.vdi` file to a `.vhd` file, which shares a lot of similarities and is also properly supported. In order to do that, we will quickly use a shell command that VirtualBox provides us with and wait for the process to finish:
 
 ```sh
 vboxmanage clonehd <source path of the .vdh file> <destination path of the .vhd file> --format VHD

@@ -5,7 +5,7 @@ date = "2016-12-23T21:36:57.000Z"
 tags = []
 +++
 
-For Google Code In 2017, Villyam created a [video on how to install Haiku in Parallels Desktop](http://haiku-files.org/files/media/GCI-2017_Parallels-Desktop_Villyam.mkv) [10 MiB].
+For Google Code-In 2017, Villyam created a [video on how to install Haiku in Parallels Desktop](http://haiku-files.org/files/media/GCI-2017_Parallels-Desktop_Villyam.mkv) [10 MiB].
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
@@ -99,7 +99,7 @@ To increase the amount of memory assigned to the virtual machine, click *Hardwar
 
 ![](/files/guides/virtualizing/parallels-desktop/config_ram.png)
 
-If you are running Parallels on MacOS 11, expand click *Advanced Settings* while still on *CPU & Memory*. For Hypervisor, choose *Parallels* instead of *Apple*. This will improve general performance in the Haiku virtual machine.
+If you are running Parallels on macOS 11, expand click *Advanced Settings* while still on *CPU & Memory*. For Hypervisor, choose *Parallels* instead of *Apple*. This will improve general performance in the Haiku virtual machine.
 
 ![](/files/guides/virtualizing/parallels-desktop/config_hypervisor.png)
 
