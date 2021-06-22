@@ -7,7 +7,7 @@ tags = ["booting","uefi","efi"]
 
 ## UEFI Booting the anyboot image
 
-64-bit release images (such as Haiku R1/beta1) can be directly booted from UEFI when the system's hardware supports it.
+64-bit release images (such as Haiku R1/beta2) can be directly booted from UEFI when the system's hardware supports it.
 While Haiku's UEFI bootloader is at an early stage, it can be leveraged to boot a stable system.
 
 {{< alert-info "Limitations" "Haiku's UEFI loader is only functional when the anyboot ISO is written to a hard disk or USB Flash device. Booting from UEFI when the anyboot is written to optical media is not currently supported. (However, should work by R1)">}}

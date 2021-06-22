@@ -6,7 +6,7 @@ tags = []
 +++
 
 <div class="alert alert-warning">
-This page is about a past release of Haiku. For information on more current releases, please visit <a href="/get-haiku/">Get Haiku</a>.
+This page refers to an outdated release of Haiku. For information on more current releases, please visit <a href="/get-haiku/">Get Haiku</a>.
 </div>
 
 <div class="box-release-info-right">

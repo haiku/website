@@ -5,7 +5,7 @@ date = "2009-09-09T22:15:56.000Z"
 tags = []
 +++
 
-**Anyone** can help Haiku. If you love what Haiku is all about, you can get involved. It's up to you what you want to do and how much time you contribute. If you are interested, sign up for the general [Haiku mailing list](https://www.freelists.org/list/haiku). People wanting to specifically write code for Haiku can go [here](/development/getting-started) for more information. Read more below for specifics.
+**Anyone** can help Haiku. If you love what Haiku is all about, you can get involved. It's up to you what you want to do and how much time you contribute. If you are interested, sign up for the general [Haiku mailing list](https://www.freelists.org/list/haiku). If you're specifically interested in writing code for Haiku, you can get started [here](/development/getting-started), regardless of whether you have any experience or not. Read more below for specifics.
 
 <table style="width: 100%;">
 <tbody style="border-top:0px !important;margin-top:10px;">
@@ -31,30 +31,53 @@ tags = []
 
 ## Haiku's Manpower Needs
 
-Your skills, your interests, and the amount of time you wish to contribute all play a part in determining how you can best help the Haiku project. Below are examples of many of the project's needs and how an individual person (with or without C++ experience) can help.
+Your skills, your interests, and the amount of time you wish to contribute all play a part in determining how you can best help the Haiku project. We actually do a lot more than write code. Below are examples of many of the project's needs and how an individual person can help, regardless of whether they are a programmer.
+
+<table style="width: 100%;">
+<tbody style="border-top:0px !important;margin-top:10px;">
+<tr>
+<td style="width: 50%">
+<ul>
+<img src='/images/App_People_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/translating">Translating</a><br /><br />
+<img src='/images/ide_project_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/developing">Developing</a><br /><br />
+<img src='/images/System_Kernel_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/designing/">Designing</a><br /><br />
+<img src='/images/alert_idea_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/promotion/">Promotion</a><br /><br />
+</ul>
+</td>
+<td style="margin-top:10px;">
+<ul>
+<img src='/images/File_Text_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/documenting/">Documenting</a><br /><br />
+<img src='/images/Server_Syslog_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/testing/">Quality Testing</a><br /><br />
+<img src='/images/App_Finance_32.png' style='vertical-align: middle;'> <a href="/community/donating_to_haiku">Funding</a><br /><br />
+<img src='/images/App_People_32.png'  style='vertical-align: middle;'> Conferences: <a href="/conference">List</a> | <a href="/conference/map">Map</a> | <a href="/conference/calendar">Calendar</a>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 
 ### Infrastructure Maintenance
 
 While we are all about Haiku as an operating system, the infrastructure around it is an entirely different beast in comparison. The infrastructure is currently maintained by a small group of people, and we can always use some help. If you would like to give us a hand setting up systems, managing spam, buildbots and other infrastructure related chores, contact us on the [haiku-sysadmin mailing list](https://www.freelists.org/list/haiku-sysadmin). Systems we are maintaining are listed below:
 
-Project | Technology | Link
---------|------------|----------
-Website | Web/Hugo   | https://haiku-os.org
-Gerrit  | Java       | https://review.haiku-os.org
-Discourse | Ruby     | https://discuss.haiku-os.org
-Buildbot | Python    | https://build.haiku-os.org/buildbot/
-Pootle  | Python     | https://i18n.haiku-os.org/pootle
-User guide translator | PHP | https://i18n.haiku-os.org/userguide
-Trac    | Python     | https://dev.haiku-os.org
-HaikuDepot Server | Java/Spring | https://depot.haiku-os.org
+Project               | Technology  | Link
+----------------------|-------------|----------
+Website               | Web/Hugo    | https://haiku-os.org
+Gerrit                | Java        | https://review.haiku-os.org
+Discourse             | Ruby        | https://discuss.haiku-os.org
+Concourse CI          | Go          | https://ci.haiku-os.org
+Pootle                | Python      | https://i18n.haiku-os.org/pootle
+User guide translator | PHP         | https://i18n.haiku-os.org/userguide
+Trac                  | Python      | https://dev.haiku-os.org
+HaikuDepot Server     | Java/Spring | https://depot.haiku-os.org
 
 There are also third-party systems used by the community:
 
-Project | Technology | Link
---------|------------|----------
-Haikuports | Shell   | https://github.com/haikuports
-Haikuporter/Buildmaster | Python | https://github.com/haikuports/haikuporter
-Polyglot | PHP/Laravel 5 | https://github.com/KapiX/Polyglot
+Project                 | Technology    | Link
+------------------------|---------------|----------
+Haikuports              | Bash + Python | https://github.com/haikuports
+Haikuporter/Buildmaster | Python        | https://github.com/haikuports/haikuporter
+Polyglot                | PHP/Laravel 5 | https://github.com/KapiX/Polyglot
 
 Most of our infrastructure is containerized using Docker, and the code can be found [on GitHub](https://github.com/haiku/infrastructure). Sources of homegrown systems are under our [GitHub organisation](https://github.com/haiku). Contributions to the main website like blog posts, articles, etc. should go as Pull Requests to the [website repository](https://github.com/haiku/website).
 
@@ -74,10 +97,6 @@ Keeping the books is not a time-intensive job, but it does require some speciali
 
 Legal expertise is a great opportunity for someone to be a sizable help for Haiku without having to do much. On occasion, there are legal questions which are best answered by someone in the profession. For example, earlier this year there was discussion about handling the Haiku trademark. While the majority of the need is for U.S. law, having legal counsel for other countries would be quite helpful, particularly in Western Europe.
 
-### Graphic Design
-
-A person with experience in graphic design has potential to be a very great help in ensuring that Haiku looks good and presents itself well to the public. The actual need for a graphic artist is only occasional, such as new graphics for the Haiku website or T-shirt designs. Designs for the [Haiku store at CafePress](http://www.cafepress.com/haiku_os/) are always welcome. While many people can draw or do a passable job, there is a noticeable difference in quality when compared to a professional.
-
 ### Marketing Material
 
 New marketing material is always in short supply. One of the biggest challenges is to maintain a professional and serious image that is appealing to the general public and business community. The project can always use new and improved signs, posters, business cards or advertisements.
@@ -94,10 +113,6 @@ The forums on the main site are one of the first stops for people wanting to sub
 ### Testers
 
 Haiku cannot be a stable platform without people trying to find bugs in it and telling the developers. Testing is a very important job. Luckily, testers do not need specialized skills, such as the ability to write code, but they do come in handy. All that is needed is sufficient familiarity with computers to be able to install Haiku. The job merely entails seeing what works and what doesn’t under Haiku, particularly with existing BeOS applications. Once again, as a tester,  you can devote as much or as little time as you desire.
-
-### Developers
-
-Last, but certainly not least, developers are the driving force behind Haiku, and without them, we would not be where we are today. Conversely, this job can have the largest time investment. Even so, it’s hard to put into words the pleasure of seeing something you’ve built help many other people. Coders for Haiku need to know C++ and a willingness to learn the BeOS API if they don’t already know it. If you are more into application development, check out [HaikuArchives](https://github.com/HaikuArchives).
 
 ## Other ways to help
 

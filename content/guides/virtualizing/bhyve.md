@@ -23,7 +23,7 @@ This guide assumes that you have installed FreeBSD on your device, you have made
 
 *Considering that FreeBSD is an operating system that is primarily used in server-based applications that do not rely on a graphical environment, this section was added for beginners that are not used to Unix-like terminals. This process is not much different in FreeBSD than in Linux distributions, so feel free to skip this section if you believe that you are capable of managing the download process yourself.*
 
-Before proceeding with the tutorial, you will have to make a few system configurations in order to be able to move on in a smooth manner.
+Before proceeding with the tutorial, you will have to make a few system configurations.
 
 ##### CA Certificates
 
@@ -95,7 +95,7 @@ sysctl net.inet.ip.forwarding=1
 ```
 
 
-### Downloading the Haiku Anyboot image <a name="part_download">
+### Downloading the Haiku Anyboot image <a name="part_download"></a>
 
 Now that you have made the necessary changes to your system, you can securely obtain a Haiku anyboot image. You will need to install `wget` to download the image file and you will additionally need the `unzip` package to extract it, as the image file is packed in a `.zip` archive together with a `ReadMe` file.
 
@@ -103,11 +103,11 @@ Now that you have made the necessary changes to your system, you can securely ob
 pkg install wget unzip
 ```
 
-After installing the two packages, we will fetch the archive containing the anyboot image file and then unzip it. For the purposes of this tutorial, the download of the 64-bit `r1beta1` from a specific Haiku mirror located in *East Coast, Germany* will be demonstrated, but if you want to choose a different mirror or a different version, then please consult the website [here](https://www.haiku-os.org/get-haiku/) and replace the following link accordingly.
+After installing the two packages, we will fetch the archive containing the anyboot image file and then unzip it. For the purposes of this tutorial, the download of the 64-bit `r1beta2` from a specific Haiku mirror located in *East Coast, Germany* will be demonstrated, but if you want to choose a different mirror or a different version, then please consult the website [here](https://www.haiku-os.org/get-haiku/) and replace the following link accordingly.
 
 ```sh
-wget https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip 
-unzip haiku-r1beta1-x86_64-anyboot.zip
+wget https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip 
+unzip haiku-r1beta2-x86_64-anyboot.zip
 ```
 
 As mentioned earlier, the following files will be extracted in your current working directory:

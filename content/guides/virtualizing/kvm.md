@@ -5,13 +5,13 @@ date = "2019-12-21"
 tags = []
 +++
 
-For Google Code In 2019, Vrondir created a [video on how to install Haiku in KVM](http://haiku-files.org/files/media/GCI-2019_KVM_Vrondir.mp4) [79 MiB].
+For Google Code-In 2019, Vrondir created a [video on how to install Haiku in KVM](http://haiku-files.org/files/media/GCI-2019_KVM_Vrondir.mp4) [79 MiB].
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Therefore, installing Haiku in a virtual machine is an ideal solution for people who do not want to install it on their physical computers but want to become familiar with it.
 
 This guide was tested extensively in a [Manjaro Linux](https://manjaro.org/) installation, but it should work on any distribution of Linux that can run KVM.
 
-In this guide, we will be using a **nightly** ``anyboot`` image because nightlies contain the latest Haiku changes - it can be obtained [here](https://download.haiku-os.org/). However, in order to ensure the stability of your system, the [official release of Haiku](https://www.haiku-os.org/get-haiku) is recommended.
+In this guide, we will be using a **nightly** ``anyboot`` image because nightlies contain the latest Haiku changes - it can be obtained [here](https://download.haiku-os.org/). We recommend using the [official release of Haiku](https://www.haiku-os.org/get-haiku) for stability.
 
 ##### Go to section
 
@@ -133,7 +133,7 @@ Skip to **[Step 3](#part_trouble_3)** if your output does look like this.
 </network>
 ```
 
-Now, in order to add that network permanently to the KVM host, run the following:
+Run the following to add that network permanently to the KVM host:
 
 ```sh
 sudo virsh net-define --file default.xml
@@ -155,9 +155,9 @@ error: Failed to start network default
 error: internal error: Failed to initialize a valid firewall backend
 ```
 
-In order to fix that, you will need to install **`firewalld`**.
+To fix that, you will need to install **`firewalld`**.
 
-After installing the package, run the following commands in order to enable the service and make networking work again:
+After installing the package, run the following commands to enable the service and make networking work again:
 
 ```sh
 sudo systemctl enable --now firewalld
