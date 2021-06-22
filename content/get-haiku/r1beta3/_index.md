@@ -7,8 +7,8 @@ draft = "true"
 +++
 **WIP Draft - this has not been finalised!**
 
-<div class="alert alert-info">
-<a href="https://www.haiku-inc.org/donate/">Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider donating a small amount. We rely on your support to continue the development of Haiku into the future.</a> 
+{{< alert-info "Haiku is free, open-source software developed by people like you." "<a href="https://www.haiku-inc.org/donate/">Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider donating a small amount. We rely on your support to continue the development of Haiku into the future.</a> ">}}
+
 </div>
 
 <div class="box-release-info-right">
@@ -21,7 +21,7 @@ draft = "true"
 </ul>
 </div>
 
-{{< alert-info "Looking for the Nightly Images?" "They can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>. **Nightly Images are unstable and untested - use at your own risk!**>}}
+{{< alert-info "Looking for the Nightly Images?" "They can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>. **Nightly Images are unstable and untested - use at your own risk!**">}}
 
 
 ## Download a Haiku Image
@@ -33,7 +33,7 @@ They can also be used in <a href="/guides/virtualizing">virtual machines</a> suc
 ### Direct Download Locations
 
 If you choose to download an image, please select from the list of available mirrors below. Mirrors are in no specific order.
-{{<"Not all mirrors may be online." "Please choose another mirror if you encounter a failure. It is recommended you choose the mirror closest to your geographical location.">}}
+{{< alert-info "Not all mirrors may be online" "Please choose another mirror if you encounter a failure. It is recommended you choose the mirror closest to your geographical location.">}}
 
 <div class="nolinks">
 <table id="mirrors" class="table thead-dark table-hover">
