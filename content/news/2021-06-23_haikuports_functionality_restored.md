@@ -16,4 +16,4 @@ A new set of package tools for the HaikuPorts buildmaster has been compiled and 
 
 {{< alert-info "Re-adding the HaikuPorts repository may be required for the repository to work." "Run `pkgman drop-repo HaikuPorts` and then `pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/master/$(getarch)/current`">}}
 
-We apologise for any inconvenience experienced whilst HaikuPorts was non-functional. 
+We apologise for any inconvenience caused whilst HaikuPorts was non-functional and thank everyone for their patience whilst the issue was rectified.
