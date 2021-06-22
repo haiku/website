@@ -20,9 +20,9 @@ draft = "true"
 	<li><strong>Supported platforms:</strong> x86, 32-bit and 64-bit</li>
 </ul>
 </div>
-<div class="alert alert-info">
-Looking for the Nightly Images? They can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>. <strong>Nightly Images are unstable and untested - use at your own risk!</strong>
-</div>
+
+{{< alert-info "Looking for the Nightly Images?" "They can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>. **Nightly Images are unstable and untested - use at your own risk!**>}}
+
 
 ## Download a Haiku Image
 
@@ -33,9 +33,7 @@ They can also be used in <a href="/guides/virtualizing">virtual machines</a> suc
 ### Direct Download Locations
 
 If you choose to download an image, please select from the list of available mirrors below. Mirrors are in no specific order.
-<div class="alert alert-info">
-Not all mirrors may be online. Please choose another mirror if you encounter a failure. It is recommended you choose the mirror closest to your geographical location.
-</div>
+{{<"Not all mirrors may be online." "Please choose another mirror if you encounter a failure. It is recommended you choose the mirror closest to your geographical location.">}}
 
 <div class="nolinks">
 <table id="mirrors" class="table thead-dark table-hover">
@@ -105,7 +103,7 @@ Not all mirrors may be online. Please choose another mirror if you encounter a f
 
 There is an upgrade path available for users that are currently using Haiku R1/beta2. If you want to do this upgrade, you will have to use the Terminal (not SoftwareUpdater!) to issue some commmands. To do so, 
 
-*Warning: only upgrading from Beta 2 is supported. It may be possible to upgrade from prior development images, but this is untested and you may run into unknown problems.*
+{{< alert-warning "Warning: only upgrading from Beta 2 is supported!" "It may be possible to upgrade from prior development images, but this is untested and you may run into unknown problems." >}}
 
 The following commands will replace your existing "Haiku" and "HaikuPorts" repositories with their R1/beta3 equivalents:
 
