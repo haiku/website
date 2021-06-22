@@ -7,14 +7,17 @@ draft = "true"
 +++
 **WIP Draft - this has not been finalised! Statistics etc. still need to be updated.**
 
-The third beta for Haiku R1 marks twenty months of hard work to improve Haiku's hardware support and its overall stability. Since Beta 2, there have been 101 contributors with over 2800 code commits in total. More than 900 bugs and enhancement tickets have been resolved for this release.
+**Todo: Update statistics**
+The third beta for Haiku R1 marks twenty months of hard work to improve Haiku's hardware support and its overall stability. Since Beta 2, there have been X contributors with over X code commits in total. More than X bugs and enhancement tickets have been resolved for this release.
 
 Please keep in mind that this is beta-quality software, which means it is feature complete but still contains known and unknown bugs. While we are mostly confident in its stability, we cannot provide assurances against data loss.
 
 *To download Haiku or learn how to upgrade from R1/beta2, see "[Get Haiku!](/get-haiku/)". For press inquiries, see "[Press contact](#press-contact)".*
 
 ## System requirements
-This release is available on the x86 32-bit platform, as well as the x86_64 platform. Note that BeOS R5 compatibility is only provided on the 32-bit images.
+This release is available on the x86 32-bit platform, as well as the x86_64 platform. 
+
+{{< alert-info "BeOS R5 Compatibility" "Note that BeOS R5 compatibility is only provided on the 32-bit images." >}}
 
 <table><tr><td>
 <h4>MINIMUM (32-bit)</h4>
@@ -34,10 +37,9 @@ This release is available on the x86 32-bit platform, as well as the x86_64 plat
 </ul>
 </td></tr></table>
 
-<div class="alert alert-info">
-SSE2 support is required to use the WebPositive web browser. On machines where this is not available, it is recommended to install the NetSurf browser instead.
-</div>
+{{< alert-info "SSE2 support" "SSE2 support is required to use the WebPositive web browser. On machines where this is not available, it is recommended to install the NetSurf browser instead." >}}
 
+**Todo: Add release highlights and changenotes**
 ## Highlights
 
 ## More Changes of Note
@@ -49,8 +51,8 @@ SSE2 support is required to use the WebPositive web browser. On machines where t
 The source code of Haiku itself can be accessed from GitHub at <https://github.com/haiku/haiku> or via Haiku's Git instance at <https://git.haiku-os.org>.
 
 ## Reporting issues
-
-There are almost 3500 open tickets on Haiku's bug tracker and over 13300 closed items.  If you find what you believe to be an issue, please search the bug tracker to see if it has already been reported, and if not, file a new ticket at <https://dev.haiku-os.org/>.
+**Todo: Update stats**
+There are almost X open tickets on Haiku's bug tracker and over X closed items.  If you find what you believe to be an issue, please search the bug tracker to see if it has already been reported, and if not, file a new ticket at <https://dev.haiku-os.org/>.
 
 For information about major issues that have been fixed since the release, visit <https://dev.haiku-os.org/wiki/R1/Beta3/ReleaseAddendum>.
 
@@ -61,6 +63,4 @@ For support and/or help with anything related to Haiku, feel free to post on our
 ## Press contact
 
 Press inquiries may be directed to:
- * waddlesplash (English) - waddlesplash (at) gmail.com
- * pulkomandy (French) - pulkomandy (at) gmail.com
- * humdingerb (German) - humdingerb (at) gmail.com
+**Todo: Add press contact details**
