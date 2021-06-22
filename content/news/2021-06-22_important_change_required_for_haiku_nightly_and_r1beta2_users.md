@@ -17,19 +17,19 @@ Check your current repositories:
 Nightly users will need to "re-add" both their Haiku and HaikuPorts release repositories to be able to update to hrev55184 and beyond.
 ### Re-add HaikuPorts repository
 
-`pkgman drop-repo HaikuPorts
-pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/master/$(getarch)/current`
+`pkgman drop-repo HaikuPorts`
+`pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/master/$(getarch)/current`
 
 ### Re-add Haiku repository
 
-`pkgman drop-repo Haiku
-pkgman add-repo https://eu.hpkg.haiku-os.org/haiku/master/$(getarch)/current`
+`pkgman drop-repo Haiku`
+`pkgman add-repo https://eu.hpkg.haiku-os.org/haiku/master/$(getarch)/current`
 
 ## R1/Beta2 users
 Beta2 users will need to "re-add" their HaikuPorts release repository to be able to continue installing and updating apps from HaikuPorts.
 ### Re-add HaikuPorts repository
-`pkgman drop-repo HaikuPorts
-pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/master/$(getarch)/current`
+`pkgman drop-repo HaikuPorts`
+`pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/master/$(getarch)/current`
 
 {{< alert-info "R1/Beta3 users" "This change will not be required for r1/Beta3 users as the changes will be built into the Beta3 release." >}}
 
