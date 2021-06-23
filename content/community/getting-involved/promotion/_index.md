@@ -6,12 +6,12 @@ tags = ["haiku", "promotion", "getting involved", "volunteering"]
 +++
 Promotion is a crucial part of ensuring Haiku continues to grow. Without spreading the word, we cannot gain new users and volunteers. 
 
-Whilst Haiku *does* have a [Promotion Team, which you can read more about here](/community/getting-involved/promotion/promotion-team/), you don't need to join the Team to promote the Project, as you will see below.
+Whilst Haiku *does* have a [**Promotion Team, which you are more than welcome to join and can read more about here**](/community/getting-involved/promotion/promotion-team/), here are some things you can do on your own as well.
 
 ## What can I do to promote Haiku?
-Letting people know that you use Haiku can help more people discover the Project and decide whether they want to try the OS out. You might want to also mention that our ISOs allow for people to try out the OS without installing it onto a hard disk. You could consider burning the [latest release of Haiku](/get-haiku/) to a USB or CD (make sure the medium is virus-free though) - and pass it around to those around you who may be interested.
+Letting people know that you use Haiku can help more people discover the Project and decide whether they want to try the OS out. You might want to also mention that our ISOs allow for people to try out the OS without installing it onto a hard disk. You could burn the [latest release of Haiku](/get-haiku/) onto a USB or CD - and pass it around to those around you who may be interested.
 
-Talking about Haiku online, can really help as well. You could, for instance, retweet the [official Haiku Twitter](https://twitter.com/haikuOS) account posts. You could post screenshots/photos of your Haiku setup, or show the world what new creation you've been working on in Haiku - all these and more help spread the word.
+Talking about Haiku online can really help as well. You could, for instance, retweet what we post on [our official Twitter account](https://twitter.com/haikuOS). You could post screenshots/photos of your Haiku setup, or show the world what new creation you've been working on in Haiku - all these and more help spread the word.
 
 Additionally, if you watch any technology reviewers who review operating systems or software and think they might be interested in reviewing Haiku, you might want to suggest they do a review of Haiku.
 
