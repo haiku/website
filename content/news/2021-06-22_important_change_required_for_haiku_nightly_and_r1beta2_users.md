@@ -6,6 +6,8 @@ date = "2021-06-22 09:55:21+10:00"
 tags = ["haiku", "software", "repo", "nightly", "beta2"]
 +++
 
+{{< alert-info "HaikuPorts functionality restored" "Due to the [important change to repository identifiers announced earlier](https://www.haiku-os.org/news/2021-06-22_important_change_required_for_haiku_nightly_and_r1beta2_users/), the HaikuPorts repository was presenting users with an error reading `unarchiving the repo`. This issue has now been fixed and users may need to re-add the HaikuPorts repository again." >}}
+
 Nightly and Beta2 users will need to “re-add” their release repositories to update to newer versions of Haiku and beyond. This change is part of a long-term improvement of our Haiku/HaikuPorts repository identifiers.
 
 These commands need to be run in the terminal.
