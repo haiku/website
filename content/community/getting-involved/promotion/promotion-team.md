@@ -15,6 +15,7 @@ The Haiku Promotion Team, in its second iteration (there used to be a Promotion 
 * tthoms
 * fox14
 * animortis
+* AlwaysLivid
 
 ## Quick Links
 * [Kanban](https://stoltenhoff.sandcats.io/shared/54D5fg2wyv1Z3b0UZgkQp3GOZrVBtno-OyCOyqb1gmm/b/sandstorm/libreboard)
