@@ -5,7 +5,7 @@ date = "2013-01-07T17:06:04.000Z"
 tags = []
 +++
 
-Haiku is a complete operating system, but you don't need to format your hard drive in order to use it. Haiku can be run inside a virtual machine. Using virtualization software, such as the programs listed below on this page, your computer can simulate a virtual computer that runs Haiku on top of your current operating system. This process is called virtualization. Virtualization is a fun and easy way to try out different operating systems without risking erasing your whole hard drive. Here's how to do it.
+Haiku is a complete operating system, but you don't need to format your hard drive to use it. Haiku can be run inside a virtual machine. Using virtualization software, such as the programs listed below on this page, your computer can simulate a virtual computer that runs Haiku on top of your current operating system. This process is called virtualization. Virtualization is a fun and easy way to try out different operating systems without risking erasing your whole hard drive. Here's how to do it.
 
 <!--more-->
 
@@ -29,7 +29,7 @@ With regard to performance, you should make sure that the virtualization options
     <li><a href="/guides/virtualizing/KVM">KVM</a></li>
     <li><a href="/guides/virtualizing/simnow">SimNow</a></li>
     <li><a href="/guides/virtualizing/bochs">Bochs</a></li>
-	<li><a href="/guides/virtualizing/qemu">QEMU</a></li>
+    <li><a href="/guides/virtualizing/qemu">QEMU</a></li>
 </ul>
 <h3>Native hypervisors</h3>
 <ul>
