@@ -1,7 +1,6 @@
 +++
-type = "blog"
+type = "news"
 title = "GCI 2017 Wrap Up Report"
-author = "digib0y"
 date = "2018-02-02 00:13:41+05:30"
 tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In","GCI2016"]
 +++
@@ -54,3 +53,8 @@ tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In"
 </ul>
 
 <p>So congratulations and thanks to all our hardworking students and their mentors, and especially Scott McCreary who once again shouldered the responsibility of administrating Haiku’s GCI participation.</p>
+
+<hr>
+
+This article was originally published on [digib0y's blog](https://www.haiku-os.org/blog/digib0y/) and moved to the News section for posterity.
+
