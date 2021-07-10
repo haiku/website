@@ -70,7 +70,7 @@ I'm omitting it here since we all know Haiku is amazing/great :-)<br/><br/>
 
 I've chosen the more interesting comments to include here (for better or worse)
 
-### If one sentence could summarize the biggest reason you don't use Haiku dailt, what would it be?
+### If one sentence could summarize the biggest reason you don't use Haiku daily, what would it be?
 
 * "I want to use a large external display with my laptop but it doesn't work"
 * "Lack of security: no disk encryption, no network security, no error-proof file system (all equal order of importance)."
