@@ -3,7 +3,7 @@ type = "blog"
 title = "Haiku activity report - June 2021"
 author = "PulkoMandy"
 date = "2021-07-10 08:53:07+02:00"
-tags = []
+tags = ["haiku", "software", "activity report", "June"]
 +++
 
 Hello, it's time for the June activity report! (yes, not much innovation in the
@@ -12,11 +12,11 @@ tagline for these reports lately. I'm out of ideas, or maybe just lazy to find n
 Before we dig into the report, two important announcements (in case you are not
 following the other news on the website, since both were already announced separately).
 
-The beta 3 release process is going well, and there are some "testing candidate"
-images available for testing. If you have some time to install one of these and
-see if everything is running fine on your hardware, that would be great!
+The beta 3 release process is going well, and there are some <a href="https://discuss.haiku-os.org/t/haiku-r1-beta3-test-candidate-2-availability/10980/26"> testing candidate images available for testing. If you have some time to install one of these and
+see if everything is running fine on your hardware, that would be great!</a>
 
-The second announcement is that Haiku inc recently funded RISC-V hardware for
+
+The second announcement is that Haiku Inc. recently funded RISC-V hardware for
 two Haiku developers, X512 and kallisti5. They have both been working on the
 RISC-V port and X512 got it booting to the desktop on virtual machines. The
 next step is getting it to run on real hardware, and, as expected (if you already
@@ -33,7 +33,7 @@ If you are a Haiku developer or contributor, you can contact <a href="https://ha
 funding requests, it can be for buying some specific hardware, or negociating a
 paid contract if that allows you to spend more time working on Haiku or related
 things. You can also join our <a href="https://liberapay.org/Haiku">Liberapay team</a>
-to collect a part of the donations sent to the team, and make your Lierapay profile
+to collect a part of the donations sent to the team, and make your Liberapay profile
 more visible to donators if they want to target you directly. You need an invitation
 to join the team, please contact one of the existing team members so they can invite you.
 
