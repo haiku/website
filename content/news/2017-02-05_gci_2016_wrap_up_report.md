@@ -1,7 +1,6 @@
 +++
-type = "blog"
+type = "news"
 title = "GCI 2016 Wrap Up Report"
-author = "digib0y"
 date = "2017-02-05 12:44:02+05:30"
 tags = ["haiku", "software","GCI","Google","students","Code-In","Google Code-In","GCI2016"]
 +++
@@ -63,3 +62,7 @@ Raefaldhi Amartya Junior from Indonesia</li>
 <p>I hope that despite probably being the best of their age in their field, the winning students will stay humble, and hunger for new knowledge.</p>
 
 <p>So congratulations and thanks to all our hardworking students and their mentors, and especially Scott McCreary who once again shouldered the responsibility of administrating Haiku’s GCI participation.</p>
+
+<hr>
+
+This article was originally published on [digib0y's blog](https://www.haiku-os.org/blog/digib0y/) and moved to the News section for posterity.
