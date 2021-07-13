@@ -7,7 +7,7 @@ draft = "true"
 +++
 **WIP Draft - this has not been finalised!**
 
-{{< alert-info "Haiku is free, open-source software developed by people like you." "<a href="https://www.haiku-inc.org/donate/">Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider donating a small amount. We rely on your support to continue the development of Haiku into the future.</a> ">}}
+{{< alert-info "Haiku is free, open-source software developed by people like you" " [Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider donating a small amount. We rely on your support to continue the development of Haiku into the future.](https://www.haiku-inc.org/donate/)" >}}
 
 </div>
 
@@ -21,7 +21,8 @@ draft = "true"
 </ul>
 </div>
 
-{{< alert-info "Looking for the Nightly Images?" "They can be found at <a href="https://download.haiku-os.org">download.haiku-os.org</a>. **Nightly Images are unstable and untested - use at your own risk!**">}}
+<div class="alert-info"> Looking for the Nightly Images? They can be found at <a href="https://download.haiku-os.org" target="_blank">download.haiku-os.org.</a> **Nightly Images are unstable and untested - use at your own risk!**
+</div>
 
 
 ## Download a Haiku Image
@@ -45,30 +46,30 @@ If you choose to download an image, please select from the list of available mir
 </tr>
 </thead>
 <tbody>
-    <tr>
+    <tr class="link">
       <td class="location"><b>Location:</b> East Coast, United States <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
     </tr>
-    <tr>
+    <tr class="link">
       <td class="location"><b>Location:</b> Amsterdam, The Netherlands <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
     </tr>
-    <tr>
+    <tr class="link">
       <td class="location"><b>Location:</b> New York, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.rit.edu" title="RIT">Rochester Institute of Technology</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
+      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
     </tr>
-    <tr>
+    <tr class="link">
       <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
-      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
     </tr>
-    <tr>
+    <tr class="link">
       <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
-      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
     </tr>
 </tbody>
 </table>
@@ -79,8 +80,8 @@ If you choose to download an image, please select from the list of available mir
 <p>In order to assist with distribution, we have also created .torrent files that can be used to download and seed the release files for others.<br/>
 <b>Please continue seeding the torrents if you can!</b></p>
 <ul>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.zip.torrent">32-bit</a></li>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.zip.torrent">64-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso.torrent">32-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso.torrent">64-bit</a></li>
 </ul>
 
 <h3>Checksums</h3>
@@ -88,8 +89,8 @@ If you choose to download an image, please select from the list of available mir
 <p>To make sure that you have got the right file and that it has not been corrupted during file transfer, it is always wise to ensure the integrity of your download. To that end, you can use the SHA256 checksums shown below to verify that what you have is the correct file.</p>
 
 <pre>
-[checksum] haiku-r1beta3-x86_64-anyboot.zip
-[checksum] haiku-r1beta3-x86_gcc2h-anyboot.zip
+[checksum] haiku-r1beta3-x86_64-anyboot.iso
+[checksum] haiku-r1beta3-x86_gcc2h-anyboot.iso
 </pre>
 
 <p>
