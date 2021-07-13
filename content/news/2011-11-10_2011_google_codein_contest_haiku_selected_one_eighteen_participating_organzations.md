@@ -1,6 +1,5 @@
 +++
-type = "blog"
-author = "scottmc"
+type = "news"
 title = "2011 Google Code-In Contest, Haiku Selected as One of Eighteen Participating Organzations"
 date = "2011-11-10T04:18:44.000Z"
 tags = ["Code-In", "google"]
@@ -38,3 +37,8 @@ For official contest rules, see the Google Code-In page. [4]
 [2] http://www.google-melange.com/gci/homepage/google/gci2011
 [3] https://dev.haiku-os.org/wiki/GoogleCodeInIdeas2011
 [4] http://www.google-melange.com/gci/document/show/gci_program/google/gci2011/rules
+
+<hr>
+
+This article was originally published on [scottmc's blog](https://www.haiku-os.org/blog/scottmc/) and moved to the News section for posterity.
+
