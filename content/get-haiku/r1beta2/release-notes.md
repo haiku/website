@@ -14,23 +14,15 @@ Please keep in mind that this is beta-quality software, which means it is featur
 ## System requirements
 This release is available on the x86 32-bit platform, as well as the x86_64 platform. Note that BeOS R5 compatibility is only provided on the 32-bit images.
 
-<table><tr><td>
-<h4>MINIMUM (32-bit)</h4>
-<ul>
-<li><strong>Processor</strong>: Intel Pentium II; AMD Athlon</li>
-<li><strong>Memory:</strong> 256MB</li>
-<li><strong>Monitor:</strong> 800x600</li>
-<li><strong>Storage:</strong> 3GB</li>
-</ul>
-</td><td>
-<h4>RECOMMENDED (64-bit)</h4>
-<ul>
-<li><strong>Processor</strong>: Intel Core i3; AMD Phenom II</li>
-<li><strong>Memory:</strong> 2GB</li>
-<li><strong>Monitor:</strong> 1366x768</li>
-<li><strong>Storage:</strong> 16GB</li>
-</ul>
-</td></tr></table>
+<table class="table thead-dark">
+<thead style="font-weight: bold; color:black; background-color:#ddd;">
+<tr><td></td><td>Minimum (32-bit)</td><td>Recommended (64-bit)</td></tr>
+</thead>
+<tr class="hover"><td>Processor</td><td>Intel Pentium II; AMD Athlon</td><td>Intel Core i3; AMD Phenom II</td></tr>
+<tr class="hover"><td>RAM</td><td>256MB</td><td>2GB</td></tr>
+<tr class="hover"><td>Display</td><td>800x600</td><td>1366x768</td></tr>
+<tr class="hover"><td>Storage</td><td>3GB</td><td>16GB</td></tr>
+</table>
 
 SSE2 support is required to use the WebPositive web browser. On machines where this is not available, it is recommended to install the NetSurf browser instead.
 
