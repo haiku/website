@@ -20,6 +20,6 @@ Given the amazing progress made by developers working on WebKit and
 WebPositive in the last week, the release has been pushed back by a week
 to give them additional time to fix the issue.
 
-It is possible for Haiku WebKit updates to be issued post-release, however it is a priority of the Haiku Project to ensure that the browsing experience in Haiku is as best as it can be, especially considering that the web browsers are an important part of any operating system and that WebPositive is a major focus point for reviewers.
+It is possible for Haiku WebKit updates to be issued post-release, however it is a priority of the Haiku Project to ensure that the browsing experience in Haiku is as best as it can be, especially considering that web browsers are an important part of any operating system and that WebPositive is a major focus point for reviewers.
 
 We thank you for your understanding and your patience.

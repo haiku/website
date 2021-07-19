@@ -14,7 +14,7 @@ Haiku is developed by a small group of volunteers. To help with development and 
 <ul>
 	<li><strong>Version:</strong> R1/beta2</li>
 	<li><strong>Release date:</strong> June 9th, 2020 </li>
-	<li><strong><a href="/get-haiku/r1beta2/release-notes/">Release notes.</a></strong></li>
+	<li><strong><a href="/get-haiku/r1beta2/release-notes/">Release notes</a></strong></li>
 	<li><strong>Computer platform:</strong> x86, 32-bit and 64-bit</li>
 </ul>
 </div>
@@ -55,7 +55,7 @@ If you choose to download an image, please select from the list of available mir
 
 <div class="nolinks">
 <table id="mirrors" class="table thead-dark">
-<thead style="font-weight: bold; color:black;">
+<thead style="font-weight: bold; color:black; background-color:#ddd;">
 <tr>
 <td>Mirror</td>
 <td title="BeOS API + binary compatible">32-bit</td>
@@ -63,30 +63,30 @@ If you choose to download an image, please select from the list of available mir
 </tr>
 </thead>
 <tbody>
-    <tr class="link">
+    <tr class="hover">
       <td class="location"><b>Location:</b> East Coast, United States <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip"><img src="/images/download_32.png"></a></td>
+      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip"><img src="/images/download_32.png"></a></td>
     </tr>
-    <tr class="link">
+    <tr class="hover">
       <td class="location"><b>Location:</b> Amsterdam, The Netherlands <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip"><img src="/images/download_32.png"></a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip"><img src="/images/download_32.png"></a></td>
     </tr>
-    <tr class="link">
+    <tr class="hover">
       <td class="location"><b>Location:</b> New York, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.rit.edu" title="RIT">Rochester Institute of Technology</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip"><img src="/images/download_32.png"></a></td>
+      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta2/haiku-r1beta2-x86_64-anyboot.zip"><img src="/images/download_32.png"></a></td>
     </tr>
-    <tr class="link">
+    <tr class="hover">
       <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
-      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip"><img src="/images/download_32.png"></a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta2/haiku-r1beta2-x86_64-anyboot.zip"><img src="/images/download_32.png"></a></td>
     </tr>
-    <tr class="link">
+    <tr class="hover">
       <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
-      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip">zip</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_gcc2h-anyboot.zip"><img src="/images/download_32.png"></a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta2/haiku-r1beta2-x86_64-anyboot.zip"><img src="/images/download_32.png"></a></td>
     </tr>
 </tbody>
 </table>

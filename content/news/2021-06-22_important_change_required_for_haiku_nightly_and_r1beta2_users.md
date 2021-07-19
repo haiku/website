@@ -10,7 +10,7 @@ tags = ["haiku", "software", "repo", "nightly", "beta2"]
     <p>
     <strong>HaikuPorts functionality restored</strong>
     <br>
-    Due to the <a href="https://www.haiku-os.org/news/2021-06-22_important_change_required_for_haiku_nightly_and_r1beta2_users/">important change to repository identifiers announced earlier</a>, the HaikuPorts repository was presenting users with an error reading <code>unarchiving the repo</code>. This issue has now been fixed and users may need to re-add the HaikuPorts repository again.
+    Due to the important change to repository identifiers announced earlier, the HaikuPorts repository was presenting users with an error reading <code>unarchiving the repo</code>. This issue has now been fixed and users may need to re-add the HaikuPorts repository again.
     </p>
 </div>
 
