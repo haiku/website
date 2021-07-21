@@ -3,7 +3,7 @@ type = "blog"
 title = "My First Week with Haiku"
 author = "Animortis"
 date = "2021-04-27 09:15:03+10:00"
-tags = ["haiku", "software"]
+tags = ["haiku", "software", "promotion"]
 +++
 
 As you boot your first non-Windows, non-Unix system, you may have a moment when you wonder if this thing is going to work. It’s not from the same family of systems you’re used to: It’s Haiku, and it’s totally different and unique. The great part, though, is when it works better than you could’ve possibly imagined.

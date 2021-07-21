@@ -9,6 +9,8 @@ To create a new blogpost, run `./scripts/newpost.sh`.
 
 Refer Troubleshooting section if you encounter any error.
 
+If you are using Windows, it is recommended you install [Git for Windows](https://git-scm.com/download/win) and use Git Bash to run the abovementioned scripts - the scripts cannot run in Command Prompt or Powershell!
+
 ## Shortcodes
 Shortcodes introduce the ability to leverage special formatting
 in markdown documents. All available shortcodes are in layouts/shortcodes.

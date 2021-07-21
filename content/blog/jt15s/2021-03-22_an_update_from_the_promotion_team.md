@@ -3,7 +3,7 @@ type = "blog"
 title = "An Update from the Promotion Team"
 author = "jt15s"
 date = "2021-03-22 16:08:47+11:00"
-tags = ["haiku", "software"]
+tags = ["haiku", "software", "promotion"]
 +++
 
 It's been almost three months since I posted about the Haiku Promotion Team, and the response to my initial post has been amazing and exceeded my expectations!
