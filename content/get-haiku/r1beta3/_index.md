@@ -7,9 +7,7 @@ draft = "true"
 +++
 **WIP Draft - this has not been finalised!**
 
-{{< alert-info "Haiku is free, open-source software developed by people like you" " [Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider donating a small amount. We rely on your support to continue the development of Haiku into the future.](https://www.haiku-inc.org/donate/)" >}}
-
-</div>
+{{< alert-donate >}}
 
 <div class="box-release-info-right">
 <p><strong>Current Version Information</strong></p>
@@ -21,9 +19,7 @@ draft = "true"
 </ul>
 </div>
 
-<div class="alert-info"> Looking for the Nightly Images? They can be found at <a href="https://download.haiku-os.org" target="_blank">download.haiku-os.org.</a> **Nightly Images are unstable and untested - use at your own risk!**
-</div>
-
+{{< alert-info "Nightly Images" "Looking for the Nightly Images? They can be found at download.haiku-os.org.">}}
 
 ## Download a Haiku Image
 
@@ -34,10 +30,11 @@ They can also be used in <a href="/guides/virtualizing">virtual machines</a> suc
 ### Direct Download Locations
 
 If you choose to download an image, please select from the list of available mirrors below. Mirrors are in no specific order.
+
 {{< alert-info "Not all mirrors may be online" "Please choose another mirror if you encounter a failure. It is recommended you choose the mirror closest to your geographical location.">}}
 
 <div class="nolinks">
-<table id="mirrors" class="table thead-dark table-hover">
+<table id="mirrors" class="table table-hover">
 <thead style="font-weight: bold;">
 <tr>
 <td>Mirror</td>
@@ -47,29 +44,29 @@ If you choose to download an image, please select from the list of available mir
 </thead>
 <tbody>
     <tr class="link">
-      <td class="location"><b>Location:</b> East Coast, United States <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
-      <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
-    </tr>
-    <tr class="link">
       <td class="location"><b>Location:</b> Amsterdam, The Netherlands <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
     <tr class="link">
       <td class="location"><b>Location:</b> New York, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.rit.edu" title="RIT">Rochester Institute of Technology</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
+      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
     <tr class="link">
       <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
-      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
-      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
     <tr class="link">
       <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
-      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">zip</a></td>
-      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">zip</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
+    </tr>
+    <tr class="link">
+      <td class="location"><b>Location:</b> Kemerovo Oblast, Russia <br/>Provided by: <a target="_blank" class="ext" href="http://www.truenetwork.ru" title="truenetwork.ru">truenetwork.ru</a></td>
+      <td><a class="track" href="https://mirror.truenetwork.ru/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://mirror.truenetwork.ru/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
 </tbody>
 </table>
