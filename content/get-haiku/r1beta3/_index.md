@@ -19,13 +19,18 @@ draft = "true"
 </ul>
 </div>
 
+<!--
+Disabled until we move away from R1/Beta3
 {{< alert-info "Nightly Images" "Looking for the Nightly Images? They can be found at download.haiku-os.org.">}}
+-->
 
 ## Download a Haiku Image
 
-The provided images can be written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>, an empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.<br /> You can boot directly from your chosen physical media and try out Haiku without needing to install it.
+<p>The provided images can be written directly to a <a href="/guides/installing/making_haiku_usb_stick">USB flash drive</a>, an empty disk, or <a href="/get-haiku/burn-cd">written to DVD</a> media.<br /> You can boot directly from your chosen physical media and try out Haiku without needing to install it.</p>
 The images can be used "live" or used to install Haiku to another disk/partition of your choice.<br />
+<p>
 They can also be used in <a href="/guides/virtualizing">virtual machines</a> such as QEMU, VMWare or VirtualBox.
+</p>
 
 ### Direct Download Locations
 
