@@ -91,7 +91,7 @@ If you choose to download an image, please select from the list of available mir
  <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.torrent">64-bit</a></li>
 </ul>
 
-<h3>Checksums</h3>
+### Checksums
 
 <p>To make sure that you have got the right file and that it has not been corrupted during file transfer, it is always wise to ensure the integrity of your download. To that end, you can use the SHA256 checksums shown below to verify that what you have is the correct file.</p>
 
@@ -106,6 +106,24 @@ If you choose to download an image, please select from the list of available mir
 	file and verify against those above. If you are in Windows, you can use
 	a tool such as <a href="https://implbits.com/products/hashtab/" title="Download hashtab">hashtab</a> to display checksums for files directly in explorer.
 </p>
+
+### Cryptographic Signatures
+
+<p>
+To further validate releases, you can also check the cryptographic signature of the release media against our public key using <a href="https://jedisct1.github.io/minisign/">Minisign</a>, available for Haiku, Windows, Linux, BSD, and OS X. The matching .minisig file needs to be next to the iso file on your filesystem.
+</p>
+
+{{< alert-info "Haiku signing key" "Haiku's public signing key is also available at /boot/system/data/trust_db/haiku-2019.pub under recent versions of Haiku." >}}
+
+```shell script
+$ ls
+haiku-r1beta3-x86_64-anyboot.iso
+haiku-r1beta3-x86_64-anyboot.iso.minisig
+
+$ minisign -Vm haiku-r1beta3-x86_64-anyboot.iso -P RWTPfbfFRi5b+T02aw733p5dp/UI/1Z946YWBInmkPmBlx2Zy1Vyw9kP
+Signature and comment signature verified
+Trusted comment: timestamp:1626959832	file:haiku-r1beta3-x86_64-anyboot.iso
+```
 
 ## Upgrading from R1/beta2
 
@@ -132,6 +150,6 @@ After that step has completed successfully, you should immediately reboot the sy
 <h3 class="App_People_32">Acknowledgments</h3>
 
 <p style="padding-right:50px;">
-	We thank all the individuals, organizations and companies who generously provide the server space
-	and bandwidth to mirror our releases - your help is very much appreciated! If you are interested in mirroring our releases, Nightly builds or HaikuDepot packages, please don't hesitate to drop us a line on the <a href="https://discuss.haiku-os.org>forums</a>, or through our <a href="https://www.freelists.org/list/haiku">mailing list.</a>
+	<p>We thank all the individuals, organizations and companies who generously provide the server space and bandwidth to mirror our releases - your help is very much appreciated!</p>
+        <p>If you are interested in mirroring our releases, Nightly builds or HaikuDepot packages, please don't hesitate to drop us a line on the <a href="https://discuss.haiku-os.org">forums</a>, or through our <a href="https://www.freelists.org/list/haiku">mailing list.</a></p>
 </p>
