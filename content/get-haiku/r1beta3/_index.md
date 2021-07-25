@@ -1,11 +1,10 @@
 +++
 type = "article"
 title = "Get Haiku!"
-date = "2021-06-09 00:00:00Z"
-tags = []
+date = "2021-07-25 00:00:00Z"
+tags = ["r1beta3", "get-haiku"]
 draft = "true"
 +++
-**WIP Draft - this has not been finalised!**
 
 {{< alert-donate >}}
 
@@ -87,8 +86,8 @@ If you choose to download an image, please select from the list of available mir
 <p>In order to assist with distribution, we have also created .torrent files that can be used to download and seed the release files for others.<br/>
 <b>Please continue seeding the torrents if you can!</b></p>
 <ul>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.torrent">32-bit</a></li>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.torrent">64-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.torrent">32-bit Torrent</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.torrent">64-bit Torrent</a></li>
 </ul>
 
 ### Checksums
@@ -110,8 +109,13 @@ If you choose to download an image, please select from the list of available mir
 ### Cryptographic Signatures
 
 <p>
-To further validate releases, you can also check the cryptographic signature of the release media against our public key using <a href="https://jedisct1.github.io/minisign/">Minisign</a>, available for Haiku, Windows, Linux, BSD, and OS X. The matching .minisig file needs to be next to the iso file on your filesystem.
+To further validate releases, you can also check the cryptographic signature of the release media against our public key using <a href="https://jedisct1.github.io/minisign/">Minisign</a> (available for Haiku, Windows, Linux, BSD, and OS X). The matching .minisig file needs to be placed next to the iso file on your filesystem.
 </p>
+
+<ul>
+  <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso.minisig">32-bit minisig</a></li>
+  <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso.minisig">64-bit minisig</a></li>
+</ul>
 
 {{< alert-info "Haiku signing key" "Haiku's public signing key is also available at /boot/system/data/trust_db/haiku-2019.pub under recent versions of Haiku." >}}
 
