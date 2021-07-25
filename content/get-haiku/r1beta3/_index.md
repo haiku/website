@@ -68,6 +68,11 @@ If you choose to download an image, please select from the list of available mir
       <td><a class="track" href="https://mirror.truenetwork.ru/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://mirror.truenetwork.ru/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
+    <tr class="link">
+      <td class="location"><b>Location:</b> Chicago, United States (IPFS) <br/>Provided by: <a target="_blank" class="ext" href="http://www.cloudflare-ipfs.com" title="cloudflare-ipfs.com">cloudflare-ipfs.com</a></td>
+      <td><a class="track" href="https://cloudflare-ipfs.com/ipns/hpkg.haiku-os.org/release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://cloudflare-ipfs.com/ipns/hpkg.haiku-os.org/release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
+    </tr>
 </tbody>
 </table>
 </div>
@@ -77,8 +82,8 @@ If you choose to download an image, please select from the list of available mir
 <p>In order to assist with distribution, we have also created .torrent files that can be used to download and seed the release files for others.<br/>
 <b>Please continue seeding the torrents if you can!</b></p>
 <ul>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso.torrent">32-bit</a></li>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso.torrent">64-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.torrent">32-bit</a></li>
+ <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.torrent">64-bit</a></li>
 </ul>
 
 <h3>Checksums</h3>
@@ -86,8 +91,8 @@ If you choose to download an image, please select from the list of available mir
 <p>To make sure that you have got the right file and that it has not been corrupted during file transfer, it is always wise to ensure the integrity of your download. To that end, you can use the SHA256 checksums shown below to verify that what you have is the correct file.</p>
 
 <pre>
-[checksum] haiku-r1beta3-x86_64-anyboot.iso
-[checksum] haiku-r1beta3-x86_gcc2h-anyboot.iso
+33c8b58c4bd3d6479554afbd3a9b08709c8f8086e98ad339b866722e9bb1e820 haiku-r1beta3-x86_64-anyboot.iso
+596ac2fb89d66c18d654b33f95cb440c0de2237941933ab893a09412e641c498 haiku-r1beta3-x86_gcc2h-anyboot.iso
 </pre>
 
 <p>
@@ -95,7 +100,7 @@ If you choose to download an image, please select from the list of available mir
 	command from the Terminal to generate a checksum for your downloaded
 	file and verify against those above. If you are in Windows, you can use
 	a tool such as <a href="https://implbits.com/products/hashtab/" title="Download hashtab">hashtab</a> to display checksums for files directly in explorer.
-	</p>
+</p>
 
 ## Upgrading from R1/beta2
 
@@ -107,7 +112,7 @@ The following commands will replace your existing "Haiku" and "HaikuPorts" repos
 
 ```shell script
 pkgman add-repo https://eu.hpkg.haiku-os.org/haiku/r1beta3/$(getarch)/current
-pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/r1beta3/$(getarch)/current
+pkgman add-repo https://eu.hpkg.haiku-os.org/haikuports/master/$(getarch)/current
 ```
 
 If this is successful, you may then run a `full-sync` to perform the actual upgrade:
