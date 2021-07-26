@@ -2,7 +2,7 @@
 type = "article"
 title = "Get Haiku!"
 date = "2021-07-25 00:00:00Z"
-tags = ["r1beta3", "get-haiku"]
+tags = []
 draft = "true"
 +++
 
