@@ -71,7 +71,7 @@ For media enquiries, please contact:
 contact@haiku-os.org  
 
 <a href="https://www.haiku-os.org/get-haiku/"><img src="/images/GET_HAIKU.png"></a>
-<a href="/files/R1_Beta3_Press_Kit.zip"><img src="/images/download_32.png"/>**Download press kit here**</a>
+<a href="/files/R1_Beta3_Press_Kit.zip"><img src="/images/download_32.png"/>**Download press kit here**</img></a>
 
 ## NOTES TO EDITORS
 Note that screenshots, logos and other resources are included in the press kit for this
