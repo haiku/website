@@ -5,13 +5,12 @@ author = "jt15s"
 date = "2021-07-26 12:59:08+10:00"
 tags = ["haiku", "software", "beta3", "r1/beta3", "media release"]
 +++
-<a href="https://www.haiku-os.org/get-haiku/"><img src="/images/GET_HAIKU.png></a>
-<a href="/files/R1_Beta3_Press Kit.zip><img src="/images/download_32.png"/>**Download press kit here**</a>
 
 <p align="left">FOR IMMEDIATE RELEASE</p>
 <p align="left">July 25, 2021</p>
 
 # THE HAIKU PROJECT CELEBRATES THE RELEASE OF BETA 3
+
 Poetry is in motion. The Haiku Project, its developers and team members announced the
 Haiku operating system released its third beta release, version R1/Beta3, July 25th, 2021.
 Version R1B3 continues the trend of more frequent releases to provide users and
@@ -70,6 +69,9 @@ For more information, to download or to volunteer, visit [https://haiku-os.org] 
 
 For media enquiries, please contact:
 contact@haiku-os.org  
+
+<a href="https://www.haiku-os.org/get-haiku/"><img src="/images/GET_HAIKU.png"></a>
+<a href="/files/R1_Beta3_Press_Kit.zip"><img src="/images/download_32.png"/>**Download press kit here**</a>
 
 ## NOTES TO EDITORS
 Note that screenshots, logos and other resources are included in the press kit for this
