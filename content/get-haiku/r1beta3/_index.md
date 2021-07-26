@@ -3,7 +3,7 @@ type = "article"
 title = "Get Haiku!"
 date = "2021-07-25 00:00:00Z"
 tags = []
-draft = "true"
+draft = "false"
 +++
 
 {{< alert-donate >}}
@@ -12,7 +12,7 @@ draft = "true"
 <p><strong>Current Version Information</strong></p>
 <ul>
 	<li><strong>Version:</strong> R1/beta3</li>
-	<li><strong>Release date:</strong> TBA </li>
+	<li><strong>Release date:</strong> July 25th, 2021</li>
 	<li><strong><a href="/get-haiku/r1beta3/release-notes/">Release notes.</a></strong></li>
 	<li><strong>Supported platforms:</strong> x86, 32-bit and 64-bit</li>
 </ul>
@@ -62,11 +62,14 @@ If you choose to download an image, please select from the list of available mir
       <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://ftp.osuosl.org/pub/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
+    <!--
+    Not synced yet July 25th, 2021 9:23pm CDT
     <tr class="link">
       <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
+    -->
     <tr class="link">
       <td class="location"><b>Location:</b> Kemerovo Oblast, Russia <br/>Provided by: <a target="_blank" class="ext" href="http://www.truenetwork.ru" title="truenetwork.ru">truenetwork.ru</a></td>
       <td><a class="track" href="https://mirror.truenetwork.ru/haiku/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
