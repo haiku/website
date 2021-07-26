@@ -62,7 +62,7 @@ Haiku is a free and open-source operating system for personal computing - the do
 provided as an ISO file which can be burned to physical media to be installed onto physical
 hardware, or used in a virtual machine.  
 
-For more information, to download or to volunteer, visit [https://haiku-os.org] or
+For more information, to download or to volunteer, visit [https://haiku-os.org](https://haiku-os.org) or
 [https://haiku-os.org/community/getting-involved/](https://haiku-os.org/community/getting-involved/).  
 
 **ENDS**  
