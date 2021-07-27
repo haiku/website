@@ -8,7 +8,7 @@ tags = ["haiku", "software", "gsoc 2021", "clang-format", "gsoc", "haiku-format"
 
 This blog will contain all the information about what I have done till now.
 
-I started with the input directory and started solving the issues according to  haiku guidelines.
+I started with the input preferences directory and started solving the issues according to  haiku guidelines.
 
 A few changes have been made to clang-format. This work takes a lot of time because it needs a complete understanding of how the llvm code works. As there was number of files, it was difficult to figure out which file should contain the solution of the problem but PulkoMandy really helps me alot.
 While working on this project I learn new things which were really good!
