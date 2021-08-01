@@ -37,16 +37,15 @@ DISCLAIMER: telnet traffic is unencrypted.
 <h3>sshd - Secure shell daemon</h3>
 SSH is a network protocol that allows for data to be exchanged using a secure channel between two networked devices. The most common use is shell access.
 
-Starting the SSH server daemon in Haiku is easy:
+The SSH server daemon in Haiku is already started on a deafult install, but it does not allow connections until configured.
 <ol>
-<li>Add the SSH server user: <pre class="terminal">useradd sshd</pre></li>
-<li>Edit /system/settings/ssh/sshd_config and add the following option: <pre class="terminal">PermitRootLogin yes</pre></li>
-<li>Start the SSH server daemon: <pre class="terminal">/boot/system/bin/sshd</pre></li>
+<li>Edit /system/settings/ssh/sshd_config, uncomment the following option, and set the value to yes: <pre class="terminal">PermitRootLogin yes</pre></li>
+<li>Restart Haiku or kill the existing sshd process.</li>
 </ol>
 
-After starting sshd, we should now be able to verify that the daemon is indeed running:
+We should now be able to verify that the daemon is indeed running:
 <pre class="terminal">ps | grep sshd | grep -v grep
-/boot/system/bin/sshd          237     1     0     0</pre>
+/bin/sshd          237     1     0     0</pre>
 
 In the example above, sshd has the process id of 237 and is running. We can now connect to Haiku with the username of 'user' and the password which you set at the beginning of this article:
 <pre class="terminal">alex@leenux-desktop:~$ ssh user@192.168.1.200
@@ -55,9 +54,5 @@ user@192.168.1.200's password:
 Welcome to the Haiku shell.
 
 ~> uname -a
-Haiku shredder 1 r36769 May  8 2010 20:58:31 BePC Haiku
-~> gcc -v
-using priority 5
-Reading specs from /packages/gcc-2.95.3_2013_08_15-2/.self/develop/tools/lib/gcc-lib/i586-pc-haiku/2.95.3-haiku-2013_08_15/specs
-gcc version 2.95.3-haiku-2013_08_15
+Haiku shredder 1 hrev55181+52 Jul 27 2021 08:11: x86_64 x86_64 Haiku
 ~> </pre>
