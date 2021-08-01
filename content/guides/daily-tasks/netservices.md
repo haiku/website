@@ -22,12 +22,14 @@ You can change the hostname by editing /system/settings/network/hostname.</div>
 
 <h3>ftpd - FTP server daemon</h3>
 Haiku can easily be made to listen for incoming FTP connections to serve its files.
+
 DISCLAIMER: ftpd does not support SFTP or FTPS so network traffic is unencrypted.
 
 <p>To start the FTP server open the Network preferences, select **`FTP server`**  from its list of services and click **`Enable`**.</p>
 <br>
 <h3>telnetd - Telnet server daemon</h3>
 Haiku can easily be made to listen for incoming telnet connections.
+
 DISCLAIMER: telnet traffic is unencrypted.
 
 <p>To start the Telnet server open the Network preferences, select **`Telnet server`**  from its list of services and click **`Enable`**.</p>
