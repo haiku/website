@@ -37,7 +37,7 @@ DISCLAIMER: telnet traffic is unencrypted.
 <h3>sshd - Secure shell daemon</h3>
 SSH is a network protocol that allows for data to be exchanged using a secure channel between two networked devices. The most common use is shell access.
 
-The SSH server daemon in Haiku is already started on a deafult install, but it does not allow connections until configured.
+The SSH server daemon is set to start automatically on a default Haiku install, but it does not allow connections until configured.
 <ol>
 <li>Edit /system/settings/ssh/sshd_config, uncomment the following option, and set the value to yes: <pre class="terminal">PermitRootLogin yes</pre></li>
 <li>Restart Haiku or kill the existing sshd process.</li>
