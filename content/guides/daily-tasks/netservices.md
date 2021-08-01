@@ -23,7 +23,7 @@ You can change the hostname by editing /system/settings/network/hostname.</div>
 <h3>ftpd - FTP server daemon</h3>
 Haiku can easily be made to listen for incoming FTP connections to serve its files.
 
-<p>To start the FTP server select the Deskbar (the blue feather icon), Preferences, Network.  Select FTP Server and enable.</p>
+<p>To start the FTP server open the Network preferences, select **`FTP server`**  from its list of services and click **`Enable`**.</p>
 <br>
 <h3>telnetd - Telnet server daemon</h3>
 Haiku can easily be made to listen for incoming telnet connections.
