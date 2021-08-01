@@ -5,7 +5,7 @@ date = "2010-05-11T15:29:32.000Z"
 tags = []
 +++
 
-The basic installation of Haiku contains several standard system network services including a FTP, Telnet, and SSH Server.
+The basic installation of Haiku contains several standard system network services including a FTP, Telnet, and SSH server.
 
 <h3>Setting your user password</h3>
 <p>A good first step is to set the password for your user account (default name is 'user'), in order to secure your system before opening it to the world.
