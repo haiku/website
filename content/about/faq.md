@@ -235,10 +235,10 @@ The SysRq key is usually the same as "print screen", but may need to press an ex
 
 ## Hardware
 ### What are the minimum hardware requirements to run Haiku?
-The x86 32-bit release of Haiku will run on a Pentium or better CPU with 256 MiB of RAM (as long as virtual memory is activated),
-1,5 GiB of storage space and a VESA compliant video card.
+The x86 32-bit release of Haiku will run on a Pentium or better CPU with 384 MiB of RAM (as long as virtual memory is activated),
+1.5 GiB of storage space and a VESA compliant video card.
 
-However, for a satisfactory user experience, we recommend **at least** a Pentium4 with 512 MiB of RAM and 2 GiB of storage space.
+However, for a satisfactory user experience, we recommend **at least** a Pentium4 with 512 MiB of RAM and 3 GiB of storage space.
 For compiling Haiku within itself, we recommend using at least 2 GiB of RAM.
 
 ### Why doesn't Haiku let me use my monitor's resolution?
