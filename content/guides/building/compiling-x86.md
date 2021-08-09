@@ -17,7 +17,9 @@ features available in newer gcc versions.</p>
 <h3>Building Haiku from Haiku</h3>
 
 <p>When building from Haiku, all the required tools are already installed in
-the release image, therefore you can run configure without any arguments:</p>
+the release image, therefore you can run configure without any arguments:
+
+(Note: Currently as of Aug-09-2021 the package "xorriso" must be installed from HaikuDepot before compiling.)</p>
 
 ```sh
 ./configure
