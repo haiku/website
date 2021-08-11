@@ -18,7 +18,7 @@ WebPositive, sometimes called “Web+,” uses the WebKit1 engine. This engine w
 
 “Few other browser engines have such portability and utility,” PulkoMandy said.  
 
-Haiku developer Ryan Leavengood started efforts to port the engine to create WebPositive in 2008. In 2009, WebPositive won a slot as part of the Google Summer of Code, and student developer Maxine Simon was able to get the browser in a “mostly usable” state while developer stippi built the browser framework itself.   
+Haiku developer Ryan Leavengood started efforts to port the engine to create WebPositive in 2008. In 2009, WebPositive won a slot as part of the Google Summer of Code, and student developer Maxime Simon was able to get the browser in a “mostly usable” state while developer Stephan Aßmus (stippi) built the browser framework itself.   
 
 When PulkoMandy was hired, first as a paid developer before switching over as a volunteer to work on the WebKit port under WebPositive, there wasn’t a ton of new development going on with the software.  
 
