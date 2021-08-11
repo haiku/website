@@ -22,7 +22,7 @@ Haiku developer Ryan Leavengood started efforts to port the engine to create Web
 
 When PulkoMandy was hired, first as a paid developer before switching over as a volunteer to work on the WebKit port under WebPositive, there wasn’t a ton of new development going on with the software.  
 
-WebPositive wasn’t the only browser for Haiku. But with the additional portability and power of the WebKit1 engine as it existed at the time, the team decided to build it into  WebPositive and make it the official browser for the OS.  
+WebPositive wasn’t the only browser for Haiku, but with the additional portability and power of the WebKit1 engine as it existed at the time, the team decided to build it into  WebPositive and make it the official browser for the OS.  
 
 “Right as I started my contract, Google announced that they would be forking the WebKit project and created Blink, the engine now used in their Chrome browser,” PulkoMandy said in an email interview. “After studying the state of our port, we decided that it made more sense for us to remain with the original WebKit which was closer to what we wanted to do.”  
 
