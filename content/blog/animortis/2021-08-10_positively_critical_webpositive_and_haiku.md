@@ -48,4 +48,6 @@ WebKit2 would significantly improve stability, for example. Though this presents
 
 WebPositive currently matches Haiku’s version, and the latest stable version was released with Beta 3 on the 25th of July, 2021.  
 
+Contributors are always welcome to help not only tackle many of the problems facing WebPositive today, but to expand it into the future as the primary browser of Haiku. Goals include further stability and rendering improvements, JavaScript compatability improvements, plus a plug-in and add-on system.  
+
 For those who wish to contribute, visit the forums or the “Get Involved” page at [https://www.haiku-os.org/community/getting-involved/](https://www.haiku-os.org/community/getting-involved/).
