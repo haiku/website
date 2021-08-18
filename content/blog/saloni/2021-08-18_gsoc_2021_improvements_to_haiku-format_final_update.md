@@ -14,7 +14,7 @@ It has rightly been said - “All good things come to an end”. Google Summer o
 
 Haiku has its own coding standards which describe how the code should be formatted. [Haiku-format](https://github.com/viveris/llvm-project) is a tool that reformats code according to Haiku coding style but it is not giving desired results. So, we need to format the code such that when this code is run on [Haiku](https://git.haiku-os.org/haiku/tree/) the coding style of code gets updated according to haiku guidelines, but it has to be compiled on the developer machine and then run manually.
 
-The tool ' haiku-format ' is work in progress which can be used to check the format according to guidelines which will be integrated with concourse to automate the process of checking coding style.
+The tool ' haiku-format ' can be used to check the format according to guidelines which will be integrated with concourse to automate the process of checking coding style.
 
 ## What we achieved?
 
