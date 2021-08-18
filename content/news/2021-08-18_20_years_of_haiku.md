@@ -14,10 +14,17 @@ Since then, Haiku has seen four release candidate alpha releases and another thr
 
 Haiku remains one of the few remaining non-Unix open-source operating systems available today. It has gone beyond just maintaining binary compatibility with old BeOS code to becoming a powerful, workable operating system of its own.  
 
+It wouldn't be possible to get to where we are today without the generous contributions of those who have donated over the years, as well as the hard work and dedication the contributors, developers and volunteers have put into the Project over the last two decades.
+
 So say a verse celebrating Haiku! And to the next 20 years!  
 
 We’d like to announce that Haiku merchandise will be available sometime in September, with special-edition 20th Anniversary merchandise available for purchase for a limited time when ordering goes online. More details will be announced on the website, so stay tuned.  
 
 Contributors are always welcome. For more information, visit [https://www.haiku-os.org/community/getting-involved/](https://www.haiku-os.org/community/getting-involved/).
 
-[For the curious, you can have a look through some of the important milestones in the Project's history here.](https://www.haiku-os.org/about/history)
+[For the curious, you can have a look through some of the important milestones in the Project's history here.](https://www.haiku-os.org/about/history)  
+
+We'll end with a visual juxtaposition to show just how far we've come; on the left is a very early picture of the OpenBeOS shell, on the right is a more recent image of Haiku with a few apps running.  
+
+<img src="/files/images/OpenBeOS shell.png" width="50%" align="left">
+<img src="/files/slideshow/apps-1.png" width="50%" align="right"> 
