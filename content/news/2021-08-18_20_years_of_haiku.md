@@ -26,5 +26,5 @@ Contributors are always welcome. For more information, visit [https://www.haiku-
 
 We'll end with a visual juxtaposition to show just how far we've come; on the left is a very early picture of the OpenBeOS shell, on the right is a more recent image of Haiku with a few apps running.  
 
-<img src="/files/images/OpenBeOS shell.png" width="50%" align="left">
+<img src="/files/images/OpenBeOS shell.jpeg" width="50%" align="left">
 <img src="/files/slideshow/apps-1.png" width="50%" align="right"> 
