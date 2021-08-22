@@ -25,7 +25,7 @@ Remove the HDD, CD-ROM and both SCSI and SATA controllers, then re-add the HDD a
 
 ![Cutomize settings](/files/guides/virtualizing/vmware-esxi/customize-settings.png)
 
-In this guide, I'll set the machine up with recommended amount of HDD space and RAM [according to the release notes](https://www.haiku-os.org/get-haiku/release-notes/#system-requirements) - that's 16GB of HDD space and 2GB of RAM. The minimal requirements are 3GB of HDD space and 256MB of RAM, but for most uses you'll need more. Remember to leave at least 700MB of free space outside the virtual HDD for the installation ISO.
+In this guide, I'll set the machine up with recommended amount of HDD space and RAM [according to the release notes](https://www.haiku-os.org/get-haiku/release-notes/#system-requirements) - that's 16GB of HDD space and 2GB of RAM. The minimal requirements are 3GB of HDD space and 384MB of RAM, but for most uses you'll need more. Remember to leave at least 700MB of free space outside the virtual HDD for the installation ISO.
 
 ![Choose the CD-ROM iso](/files/guides/virtualizing/vmware-esxi/datastore-iso.png)
 

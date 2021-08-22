@@ -73,7 +73,7 @@ Find the **``anyboot``** image you have decompressed and select the operating sy
 
 ![step_two](/files/guides/virtualizing/kvm/step_two.png)
 
-You can now choose the memory and CPU settings. What you should select here, depends on the system you have. It is better to assign more than 256MiB of RAM for smooth running; too much, on the other hand, may cause a lag for the host. Once again, after choosing your desired memory size and CPU, click **`Forward`**
+You can now choose the memory and CPU settings. What you should select here, depends on the system you have. It is better to assign more than 384 MiB of RAM for smooth running; too much, on the other hand, may cause a lag for the host. Once again, after choosing your desired memory size and CPU, click **`Forward`**
 
 ![step_three](/files/guides/virtualizing/kvm/step_three.png)
 

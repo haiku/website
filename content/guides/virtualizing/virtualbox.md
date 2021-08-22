@@ -9,7 +9,7 @@ For Google Code-In 2017, Jakub Pajdowski created a [video on how to install Haik
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
-This How-To guide will describe the process of running Haiku on virtual machine (VM) using VirtualBox 3.2 There are two ways it can be done– one is installing and running Haiku from CD-ROM image, which is similar to a physical instance. For convenience and time-saving purposes, the user may also use the already prepared VM hard disk image. The decision is left up to the user, although many people prefer VM image as it is easier to manage.
+This How-To guide will describe the process of running Haiku on virtual machine (VM) using VirtualBox 3.2 (newer versions also work). There are two ways it can be done– one is installing and running Haiku from CD-ROM image, which is similar to a physical instance. For convenience and time-saving purposes, the user may also use the already prepared VM hard disk image. The decision is left up to the user, although many people prefer VM image as it is easier to manage.
 
 For this tutorial we will be using an ISO image file - it can be obtained [here](/get-haiku). The VirtualBox virtualization software and installation manual can be downloaded from [here](http://www.virtualbox.org/wiki/Downloads).
 
@@ -36,7 +36,7 @@ We need to specify what kind of guest operating system we are going to install. 
 
 ![](/files/guides/virtualizing/virtualbox/vbox_2.png)
 
-The next step is to define how much of the host’s physical memory we want to allocate for our virtual machine. This decision should be based on the amount of RAM the host has, but it is recommended to spend a minimum of 256MB of RAM to make it run smoothly. More memory can increase the performance of the VM, but too much can slow down the host, so there needs to be a balance between the VM and host machine resources:
+The next step is to define how much of the host’s physical memory we want to allocate for our virtual machine. This decision should be based on the amount of RAM the host has, but it is recommended to spend a minimum of 384MB of RAM to make it run smoothly. More memory can increase the performance of the VM, but too much can slow down the host, so there needs to be a balance between the VM and host machine resources:
 
 ![](/files/guides/virtualizing/virtualbox/vbox_3.png)
 
