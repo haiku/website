@@ -13,7 +13,7 @@ evaluations are being filled in as I write this), and also news from the promoti
 re-launched a few months ago and is working on various things (read their own report for more details).
 
 What's nice for me is that this was all already covered by various articles, which means I can focus
-on what I know best, and take a look at what's happening in the got repository with the code.
+on what I know best, and take a look at what's happening in the git repository with the code.
 
 This report covers hrev55224-55342.
 
@@ -66,7 +66,7 @@ This also led to identifying that Haiku FTPD server was a very old fork of the o
 it has now been synchronized with the current FreeBSD implementation.
 
 PulkoMandy fixed the handling of HTTP errors in the package kit when a download fails because of an
-error on the server's end. This could result in corrupt file being sotred on disk, and then reused
+error on the server's end. This could result in corrupt file being stored on disk, and then reused
 in the next run to attempt to resume the download, resulting in quite confusing behavior.
 
 AlwaysLivid removed unused copies of libunwind and libcxxrt that were present in Haiku git repository,
@@ -99,7 +99,7 @@ AlwaysLivid improved some text in FirstBootPrompt when build without the Haiku b
 Jessicah made sure that Installer works when using a fresh (never booted) disk image as an
 installation source, as it would result in some missing directories in the installed system.
 
-<h3>Kernel and Drivers<h3>
+<h3>Kernel and Drivers</h3>
 
 David Sebek debugged and finalized the implementation of fstrim, the tool used to free unused sectors
 on SSDs and improve performances. The tool previously was available only for RAM disks and SD cards,
