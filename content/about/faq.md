@@ -10,7 +10,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
 
   * Common Questions
     * [What is Haiku?](#what-is-haiku)
-    * [Why isn't it called HaikuOS?](#why-isn-t-it-called-haikuos)
+    * [Why isn't it called HaikuOS?](#why-isnt-it-called-haikuos)
     * [Where does the name Haiku come from?](#where-does-the-name-haiku-come-from)
     * [Is Haiku based on Linux?](#is-haiku-based-on-linux)
     * [Why not Linux?](#why-not-linux)
