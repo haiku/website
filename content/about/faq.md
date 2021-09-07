@@ -107,7 +107,7 @@ into the Haiku code base. The rest is either homebuilt code or derivatives of ex
 is mostly compatible with the BeOS API. In other words, many applications that were initially developed for BeOS work flawlessly on Haiku.
 
 ### I've never seen Haiku. What does it look like?
-Check out our [Haiku Slideshow](/slideshows/) and the [Haiku Movies](/about/movies) pages.
+Check out our [Haiku Slideshow](/slideshows/haiku-1/) and the [Haiku Movies](/about/movies) pages.
 
 ### Can I use Haiku as my primary Operating System?
 Yes! Although the OS is still considered "beta", it is reasonably stable and can be used to perform most daily tasks such as browsing the web
