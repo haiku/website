@@ -12,17 +12,17 @@ tags = []
 <tr>
 <td style="width: 50%">
 <ul>
-<img src='/images/App_People_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/translating">Translating</a><br /><br />
-<img src='/images/ide_project_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/developing">Developing</a><br /><br />
+<img src='/images/App_People.svg' style='vertical-align: middle; width:32px; height:32px;'> <a href="/community/getting-involved/translating">Translating</a><br /><br />
+<img src='/images/File_IDE_Project.svg' style='vertical-align: middle; width:32px; height:32px;'> <a href="/community/getting-involved/developing">Developing</a><br /><br />
 <img src='/images/System_Kernel_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/designing/">Designing</a><br /><br />
-<img src='/images/alert_idea_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/promotion/">Promotion</a><br /><br />
+<img src='/images/Alert_Idea.svg' style='vertical-align: middle; width:32px; height:32px;'> <a href="/community/getting-involved/promotion/">Promotion</a><br /><br />
 </ul>
 </td>
 <td style="margin-top:10px;">
 <ul>
-<img src='/images/File_Text_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/documenting/">Documenting</a><br /><br />
-<img src='/images/Server_Syslog_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/testing/">Quality Testing</a><br /><br />
-<img src='/images/App_Finance_32.png' style='vertical-align: middle;'> <a href="/community/donating_to_haiku">Funding</a><br /><br />
+<img src='/images/File_Text.svg' style='vertical-align: middle; width:32px; height:32px;'> <a href="/community/getting-involved/documenting/">Documenting</a><br /><br />
+<img src='/images/Server_Syslog.svg' style='vertical-align: middle; width:32px; height:32px;'> <a href="/community/getting-involved/testing/">Quality Testing</a><br /><br />
+<img src='/images/App_Finance.svg' style='vertical-align: middle; width:32px; height:32px;'> <a href="/community/donating_to_haiku">Funding</a><br /><br />
 </ul>
 </td>
 </tr>
@@ -32,29 +32,6 @@ tags = []
 ## Haiku's Manpower Needs
 
 Your skills, your interests, and the amount of time you wish to contribute all play a part in determining how you can best help the Haiku project. We actually do a lot more than write code. Below are examples of many of the project's needs and how an individual person can help, regardless of whether they are a programmer.
-
-<table style="width: 100%;">
-<tbody style="border-top:0px !important;margin-top:10px;">
-<tr>
-<td style="width: 50%">
-<ul>
-<img src='/images/App_People_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/translating">Translating</a><br /><br />
-<img src='/images/ide_project_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/developing">Developing</a><br /><br />
-<img src='/images/System_Kernel_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/designing/">Designing</a><br /><br />
-<img src='/images/alert_idea_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/promotion/">Promotion</a><br /><br />
-</ul>
-</td>
-<td style="margin-top:10px;">
-<ul>
-<img src='/images/File_Text_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/documenting/">Documenting</a><br /><br />
-<img src='/images/Server_Syslog_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/testing/">Quality Testing</a><br /><br />
-<img src='/images/App_Finance_32.png' style='vertical-align: middle;'> <a href="/community/donating_to_haiku">Funding</a><br /><br />
-<img src='/images/App_People_32.png'  style='vertical-align: middle;'> Conferences: <a href="/conference">List</a> | <a href="/conference/map">Map</a> | <a href="/conference/calendar">Calendar</a>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 
 ### Infrastructure Maintenance
 
