@@ -7,7 +7,7 @@ tags = []
 
 Troubleshooting operating system problems can be difficult.
 
-To give us the best assistance resolving bugs within Haiku, please be sure to add details to existing bug reports, or create a new bug report with as much information as possible.  More information on reporting bugs can be found [here](https://dev.haiku-os.org/wiki/ReportingBugs)
+To give us the best assistance resolving bugs within Haiku, please be sure to add details to existing bug reports, or create a new bug report with as much information as possible.  More information on reporting bugs can be found [here](https://dev.haiku-os.org/wiki/ReportingBugs).
 
 # Boot Problems
 
@@ -25,7 +25,7 @@ The Kernel Debug Land is the debugger built into Haiku's kernel and represents a
 
 Non-fatal KDL exceptions can sometimes be worked around by typing `continue` into the KDL screen. This rarely works however as KDL exceptions are generally raised with good reason.
 
-If the source of the problem is identified in the KDL, the add-on or driver can be disabled using the `Disable component` menu of the [bootloader ](/docs/userguide/en/bootloader.html).
+If the source of the problem is identified in the KDL, the add-on or driver can be disabled using the `Disable component` menu of the [bootloader](/docs/userguide/en/bootloader.html).
 
 #### Known Issues and workarounds:
 
@@ -38,8 +38,8 @@ KDL exceptions should always be reported to the Haiku bug tracker (either by sea
 
 Since obtaining the data in a KDL can be challenging at times, the following steps are generally used to report KDL exceptions to the Haiku developers:
 
-  1. `bt` is run to ensure a detailed backtrace is shown on screen.
-  2. A picture is taken of all text on the screen ensuring the text is as clear as possible.
+  1. `bt` is run to ensure a detailed backtrace is shown on screen
+  2. A picture is taken of all text on the screen ensuring the text is as clear as possible
   3. The picture is provided to existing or new bug reports with the architecture and build (hrevXXXXXX)
 
 ## Blank or corrupted screen after booting
@@ -57,11 +57,11 @@ The easiest approach to resolving a black/blank/corrupted screen at boot is to l
 Reporting detailed information from computers experiencing black/blank/corrupted screens can be difficult given their nature. Sometimes the host is responsive, however the end user is unable to determine the state of the machine.
 
   1. [Serial Debugging](troubleshooting/serial) is the fastest and most accurate way to obtain debug data from a uncooperative system. This method however requires a built-in serial port and specialized hardware and cables.
-  2. Obtaining system logs is possible in some circumstances.
-     - Boot the system until the black screen is encountered and wait 30 seconds.
+  2. Obtaining system logs is possible in some circumstances
+     - Boot the system until the black screen is encountered and wait 30 seconds
 	 - Hold {{< keyboard CTL >}} + {{< keyboard ALT >}} + {{< keyboard DEL >}} for 5 seconds (or until system reboots)
-	 - Boot the system, leverage the `Use fail-safe video mode` [boot option](/docs/userguide/en/bootloader.html).
-	 - Make a copy all files in /var/log/syslog* and provide to Haiku via an existing or new bug report.
+	 - Boot the system, leverage the `Use fail-safe video mode` [boot option](/docs/userguide/en/bootloader.html)
+	 - Make a copy all files in /var/log/syslog* and provide to Haiku via an existing or new bug report
 
 ## Instant Reboot
 

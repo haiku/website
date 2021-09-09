@@ -23,7 +23,6 @@ Typically jam will attempt to build all targets, even if an error is encountered
 </li>
 <li><h4>-j#</h4>
 Where # represents the number of threads to use. This is useful when building on SMP or multi-core machines.
-<div class="alert alert-warning">Jam suffers from a <a href="https://dev.haiku-os.org/ticket/4091">bug</a> that might make your build fail when using this option.</div> 
 </li>
 <li><h4>-a</h4>
 Build all targets, even if they are current. Normally, this is not necessary.
@@ -121,9 +120,6 @@ jam &lt;options&gt; &lt;target&gt;
 
 <h3>Miscellaneous Links</h3>
 <ul>
-<li class="icon-document">
-<a href="http://www.perforce.com/jam/jam.html">Jam's Perforce Homepage</a>
-</li>
 <li class="icon-document">
 <a href="https://cgit.haiku-os.org/buildtools/plain/jam/Jam.html">The Jam Executable</a>
 </li>
