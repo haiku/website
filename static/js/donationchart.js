@@ -55,7 +55,7 @@ function formatDay(day) {
 	}
 }
 
-var yearlyGoal = 10000;
+var yearlyGoal = 20000;
 var donationBarHeight = 128;
 
 function updateDonationMeter() {
