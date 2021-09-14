@@ -8,7 +8,7 @@ tags = ["security", "archival", "backups"]
 # Source Code Archival
 
 Haiku's source code represents hundreds of thousands of hours of work by individuals across the globe.
-To protect their investment, Haiku reguraly ensures multiple copies of these critical source code
+To protect their investment, Haiku regularly ensures multiple copies of these critical source code
 repositories exist in multiple locations at all times.
 
 ## Hot Repositories
