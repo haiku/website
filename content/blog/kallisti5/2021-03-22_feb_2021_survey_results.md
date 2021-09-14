@@ -6,7 +6,8 @@ date = "2021-03-22 17:37:59-05:00"
 tags = ["haiku", "software", "survey"]
 +++
 
-Earlier this month, I created a quick survey to gauge what topics are most important to the Haiku community.
+Back in February, I created a quick survey to gauge what topics are most important to the Haiku community.
+This blog post got held up a bit in review but better late than never...<br/>
 We had 387 responses, resulting in a substantial amount of data which helps us keep focus on the most important todo items.<br/><br/>
 Thanks to everyone who filled out this survey!<br/>
 I'll be going over the results and adding a little commentary along the way. Let's go!
