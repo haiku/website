@@ -21,15 +21,8 @@ Anyone can participate, and there is **no obligation on how much time you put in
 
 ## What about new contributors?
 This is also a good chance for new contributors to get started too! Just to ensure you're ready for the sprint, it's a good idea to first check out our [page on how you can get started on development](https://www.haiku-os.org/community/getting-involved/developing), with ideas on what you might like to work on. You might also want to:
-* [Read the development FAQ](https://www.haiku-os.org/development/faq)
-* [Read the Step by Step Guide for new contributors](https://www.haiku-os.org/development/getting-started)
-* [Take a look at our coding guidelines](https://www.haiku-os.org/development/coding-guidelines)
-* [Read the Programming with Haiku series of lessons](https://www.haiku-os.org/development/programming_with_haiku)
-* [Join the development mailing list to stay up to date with the latest formal discussions ](https://www.freelists.org/list/haiku-development)
-* [Have a look around and join the forums](https://discuss.haiku-os.org) - [there's a topic on the coding sprint](https://discuss.haiku-os.org/t/haiku-coding-sprint-2021/11327) where you can post what you plan to work on.
-* Join the Haiku IRC/Matrix channel at `#haiku` (IRC) or `#haiku:matrix.org` (Matrix) where you can talk with other developers and Haiku enthusiasts, ask questions, get feedback and advice. Here, a response to any query is never too far away! Feel free to say hello and don't be afraid to ask if you have any questions.  
 
-We can guarantee you'll definitely find something to work on. Still have no idea what to do? Just ask on the forums or IRC/Matrix channel and we'll work together to find something you can work on.
+We can guarantee you'll definitely find something to work on. Still have no idea what to do? Just ask on the [forums](https://discuss.haiku-os.org) or [our chatroom](https://www.haiku-os.org/community/irc/) and we'll work together to find something you can work on.
 
 If you're not much of a developer, it's a good time too to get stuck into some non-coding work for Haiku. If you're stuck on ideas, you might like to:
 * [Help with translations](https://www.haiku-os.org/community/getting-involved/translating)
