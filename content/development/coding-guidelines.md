@@ -27,12 +27,11 @@ Make your code not stick out — make it consistent with the rest of the code yo
 ### Indenting and whitespace
 
 *   **Set your editor to 4 spaces per tab.** (_This is the standard used for the line-limit and for alignment [e.g. in class definitions], but if you aren't doing either of these things you can set your editor to whatever you want._)
-*   A line must not have more than 80 columns; when wrapping a line, you usually indent one extra tab, but that can get more depending on the contents.
-*   Always separate operators with a space on both sides, and use a space after comma.
 *   Use tabs to indent blocks.
-*   Lines that need broken up due to length need to have one additional indention.
+*   A line must not have more than 100 columns.
+*   When wrapping a too long line, add at least one tab to the wrapped parts, and one extra tab per expression levels (for example in a complex condition with parentheses, each parenthese level is indented one tab further).
 *   Functions/classes in namespaces are not indented.
-*   In general you use one tab per expression level, see the examples below.
+*   Always separate operators with a space on both sides, and use a space after comma.
 
 First, let's use some examples to illustrate the main formatting conventions:
 
