@@ -62,6 +62,18 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/mayk_accuracy.png" height="270" width="480" />
 
+- Braelin Michelus - [2 variations (bright and dark)](/files/wallpaper-call/braelin_michelus-shining_harmony.zip) [4.6 MiB] (added 2021/09/28):
+
+    <img src="/files/wallpaper-call/braelin_michelus_shining_harmony.png" height="270" width="480" />
+
+- Braelin Michelus - [8 variations (whole pack)](/files/wallpaper-call/braelin_michelus-beauty_in_simplicity.zip) [9.6 MiB] (added 2021/09/28):
+
+    <img src="/files/wallpaper-call/braelin_michelus_beauty_in_simplicity.jpg" height="270" width="480" />
+
+- Braelin Michelus - [3 variations (whole pack)](/files/wallpaper-call/braelin_michelus-yesterdays_future.zip) [2.9 MiB] (added 2021/09/28):
+
+    <img src="/files/wallpaper-call/braelin_michelus-yesterdays_future.jpg" height="270" width="480" />
+
 - Cartoon Network Leaks (added 2020/10/17):
 
     <img src="/files/wallpaper-call/cartoon_network_leaks.png" height="270" width="480" />
