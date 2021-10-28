@@ -123,7 +123,7 @@ pkgman install dtc
 **Basic requirements:**
 
 ```sh
-sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev xorriso libtool gcc-multilib python3
+sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libzstd-dev xorriso libtool gcc-multilib python3
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
@@ -138,7 +138,7 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler
 **Basic requirements:**
 
 ```sh
-sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip curl wget flex xorriso python lib32-glibc
+sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip zstd curl wget flex xorriso python lib32-glibc
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
@@ -153,7 +153,7 @@ sudo pacman -S yaourt uboot-tools
 **Basic requirements:**
 
 ```sh
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel zstd-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
@@ -168,7 +168,7 @@ sudo yum install libfdt
 **Basic requirements:**
 
 ```sh
-sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel curl-devel xorriso python3
+sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make glibc-devel zlib-devel zstd-devel curl-devel xorriso python3
 ```
 
 <a name="gentoo"></a>
@@ -177,7 +177,7 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 **Basic requirements:**
 
 ```sh
-sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib libisoburn wget nasm net-misc/curl
+sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-libs/zlib app-arch/zstd libisoburn wget nasm net-misc/curl
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
@@ -212,7 +212,7 @@ Once you have installed XCode and the command line tools as well as agreed to th
 **To install the prerequisite software using Homebrew:**
 
 1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison```
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf zstd xorriso gawk wget nasm less mpfr gmp libmpc bison```
 3. Force using the newer bison version. ```brew link bison --force```
     - Note that Homebrew may refuse to shadow the built-in version of bison. If so, follow the instructions so that a new version of bison is in your $PATH
 
@@ -221,7 +221,7 @@ Note: You'll need to install gnu less from the dupes repository as macOS comes w
 **To install the prerequisite software using Macports do the following:**
 
 1. Install <a href="http://www.macports.org/">MacPorts</a> (A standard Installer package is provided).
-2. Close your Terminal, open a new one and type ```sudo port install autoconf xorriso gawk wget nasm less mpfr gmp libmpc bison```
+2. Close your Terminal, open a new one and type ```sudo port install autoconf zstd xorriso gawk wget nasm less mpfr gmp libmpc bison```
 
 If you get an error “port: command not found”, the MacPorts shell configuration, stored in <code>~/.profile</code>, is probably not taken into account.
 If you’re using Bash, you probably have a <code>~/.bash_profile</code> or <code>~/.bash_login</code> file, preventing bash to read <code>~/.profile</code>.
