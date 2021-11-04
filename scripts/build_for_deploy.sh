@@ -2,7 +2,7 @@
 
 set -e
 
-pip3 install sphinx
+pip install sphinx
 
 HUGO=hugo
 for cmd in "mv rm wget unzip sed pip $HUGO"; do
