@@ -1,6 +1,9 @@
 #!/bin/bash
 
 set -e
+
+pip install sphinx
+
 HUGO=hugo
 for cmd in "mv rm wget unzip sed pip $HUGO"; do
 	command -v $cmd >/dev/null 2>&1 || { echo -e >&2 "$cmd is not installed, please install it."; exit 1; }
@@ -26,7 +29,6 @@ pushd haiku
 		rm -rf doxygen-*/
 		rm doxygen.tar.gz
 		popd
-		pip install sphinx
 	fi
 	gitout=$(git pull --ff-only)
 	if [[ $gitout != *"Already up-to-date"* ]] || [ ! -d "generated/doxygen/html" ]; then
