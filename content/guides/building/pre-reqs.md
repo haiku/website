@@ -9,7 +9,7 @@ The tools you need to compile software for Haiku, or to compile Haiku itself, de
 for building Haiku.
 
 The Haiku operating system can be a very convenient development environment for working on Haiku, but using
-Haiku is not not strictly necessary. It may also not be practical to use Haiku in some very special cases, 
+Haiku is not strictly necessary. It may also not be practical to use Haiku in some very special cases, 
 such as when writing some drivers - using a virtual machine to test your changes may be much more practical.
 It may also be a bit slower as far as compilation times are concerned, but performance has massively
 improved over the years. Occasionally, building Haiku within Haiku can be problematic if the host
