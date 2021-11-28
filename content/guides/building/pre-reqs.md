@@ -108,7 +108,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 **Basic requirements:**
 
 ```sh
-pkgman install cmd:python3 cmd:xorriso zstd_devel
+pkgman install cmd:python3 cmd:xorriso devel:libzstd
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
