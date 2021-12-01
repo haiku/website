@@ -24,7 +24,7 @@ Haiku developers are continuing to work on ARM and ARM64 ports of Haiku, RISC-V 
 
 ![RISCV64 in qemu](/files/screenshots/riscv64-qemu.png "RISCV64 in qemu")
 
-{{< alert-info "Beware bugs" "There are multiple lingering bugs (#17379,#17380) in RISCV64 Haiku running under qemu. If you don't make it to the desktop, try again.">}}
+{{< alert-info "Beware of bugs" "There are multiple lingering bugs ([#17379](https://dev.haiku-os.org/ticket/17379), [#17380](https://dev.haiku-os.org/ticket/17380)) in RISCV64 Haiku running under QEMU. If you don't make it to the desktop, try again.">}}
 
 To boot Haiku in qemu (qemu-system-riscv64), you'll need the following:
 
