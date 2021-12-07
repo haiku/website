@@ -14,6 +14,11 @@ as gcc8 binaries. More information on this can be found on the <a href='/guides/
 applications as well as modern one using the recent programming language
 features available in newer gcc versions.</p>
 
+<p>Please ensure that you have obtained a copy of Haiku's source code as
+described in
+<a href="https://www.haiku-os.org/guides/building/get-source-git">Get the Haiku Source Code</a> 
+if you have not already done so.</p>
+
 <h3>Building Haiku from Haiku</h3>
 
 <p>When building from Haiku, all the required tools are already installed in

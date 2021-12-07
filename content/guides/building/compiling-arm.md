@@ -7,6 +7,10 @@ tags = ["compiling", "arm"]
 
 Haiku can be compiled for devices leveraging the ARMv7 or later processor architecture.
 
+Please ensure that you have obtained a copy of Haiku's source code as described in
+[Get the Haiku Source Code](https://www.haiku-os.org/guides/building/get-source-git) 
+if you have not already done so.
+
 {{< alert-danger "Unstable" "The state of the ARM port is extremely early. Roll up your sleeves and help out!">}}
 
 ## Create a Compiler Toolchain

@@ -7,6 +7,10 @@ tags = ["compiling", "riscv64"]
 
 Haiku can be compiled for devices using the RISC-V 64bit processor architecture. (RV64GC)
 
+Please ensure that you have obtained a copy of Haiku's source code as described in
+[Get the Haiku Source Code](https://www.haiku-os.org/guides/building/get-source-git) 
+if you have not already done so.
+
 {{< alert-danger "Unstable" "The state of the RISC-V port is early. Only the bootloader currently runs." >}}
 
 ## Create a compiler toolchain
