@@ -32,12 +32,12 @@ development environment. If you are using text-based IDEs, you could also connec
 Haiku with [Secure Shell](https://www.haiku-os.org/guides/daily-tasks/netservices/) and integrate that in your workflow.
 This may be a particularly viable option when working with [HaikuPorts](https://github.com/haikuports/haikuports).
 
-**[Nightly images](https://download.haiku-os.org) (or [the latest stable release](/get-haiku)) of Haiku should contain all
-of the software needed to build Haiku in Haiku.** Note that building the entire operating system on an x86_64 Haiku host
-will require that the [`buildtools`](https://cgit.haiku-os.org/buildtools) for that architecture are also prepared and
-compiled. Use the same instructions as a cross-compile in this case. The reason for this is because some 32-bit objects
-need to be built as well and the compiler supplied by default on an x86_64 environment is insufficient for building
-these objects.
+**[Nightly images](https://download.haiku-os.org) (or [the latest stable release](/get-haiku)) of Haiku should contain most
+of the software needed to build Haiku in Haiku. Please see below for the requirements not included.** Note that building
+the entire operating system on an x86_64 Haiku host will require that the [`buildtools`](https://cgit.haiku-os.org/buildtools)
+for that architecture are also prepared and compiled. Use the same instructions as a cross-compile in this case. The reason 
+for this is because some 32-bit objects need to be built as well and the compiler supplied by default on an x86_64 environment
+is insufficient for building these objects.
 
 In short, you are basically free to use whichever operating system suits you the most in order to develop with Haiku.
 We understand that you may not be able to switch operating systems on a whim, or that Haiku may not fulfill your needs
@@ -123,7 +123,7 @@ pkgman install dtc
 **Basic requirements:**
 
 ```sh
-sudo apt install git nasm autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libzstd-dev xorriso libtool gcc-multilib python3
+sudo apt install git nasm bc autoconf automake texinfo flex bison gawk build-essential unzip wget zip less zlib1g-dev libzstd-dev xorriso libtool gcc-multilib python3
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
