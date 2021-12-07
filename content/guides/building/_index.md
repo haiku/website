@@ -9,6 +9,10 @@ Building Haiku from sources is a surprisingly simple process which allows
 developers to get started quickly developing on Haiku and allowing end users to
 experiment with the latest Haiku sources.
 
+Please ensure that you have obtained a copy of Haiku's source code as described in
+[Get the Haiku Source Code](https://www.haiku-os.org/guides/building/get-source-git)
+if you have not already done so.
+
 ## Basics
 
 * [Port Status](/guides/building/port_status) - An overview of the platforms Haiku is designed to run on
