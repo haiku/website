@@ -80,7 +80,7 @@ One feature Haiku inherited from BeOS was that areas can be cloned, whether to o
 
 Haiku developed facilities to prevent kernel areas from being accessed by userland years ago, but userland's areas were left unprotected. Some years ago I extended that protection to userland, but by default, this was disabled so that we could update the various applications that needed to be adjusted for this change.
 
-Most of them have now been fixed, so now by default, we can block areas from being cloned that do not have the `B_CLONEABLE_AREA` permissions flag set. In the future we should of course extend these permissions checks even further, but while Haiku is a largely multi-user system, this is "good enough" for now.
+Most of them have now been fixed, so now by default, we can block areas from being cloned that do not have the `B_CLONEABLE_AREA` permissions flag set. In the future we should of course extend these permissions checks even further, but while Haiku is largely a single-user system, this is "good enough" for now.
 
 ### Miscellaneous cleanups...
 
