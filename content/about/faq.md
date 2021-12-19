@@ -161,9 +161,9 @@ There are also some [alternative repositories](https://www.haiku-os.org/communit
 
 ### Is there an instant messenger client?
 Yes! There are actually multiple messaging applications available for Haiku for various protocols, such as IRC (Vision, Quassel, WeeChat, irrsi),
-Matrix (Quaternion, nheko) and XMPP (Renga, Caya, Vacuum).
+Matrix (Quaternion, nheko) and XMPP (Renga, Chat-O-Matic, Vacuum).
 
-**Vision**, **Renga** and **Caya** were speciically developed for the Haiku operating system. They are being maintained by members of our community.
+**Vision**, **Renga** and **Chat-O-Matic** were speciically developed for the Haiku operating system. They are being maintained by members of our community.
 
 ### Is there Java support?
 Yes! The OpenJDK virtual machine is available and enables you to run applications such as Netbeans, JDownloader, and much more.
