@@ -93,8 +93,9 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
-|[openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
+| [openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
+| [Rocky Linux](https://rockylinux.org)   | [rpm/yum](#yum)      | YES       |                     |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
 | BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
 | macOS                              | [Homebrew](#macos)     | MAYBE     | Need a working case sensitive filesystem |
