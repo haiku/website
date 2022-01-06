@@ -43,7 +43,7 @@ implementation of interrupt handling for the newer generations of devices. This 
 modern Intel chipsets and various output types (DVI, DisplayPort, and eDP all require some specific
 handling in the driver and it is not all in place yet).
 
-Kallisit5 (also with some help from Korli) made some updates to the AMD Radeon graphics driver, with
+Kallisti5 (also with some help from Korli) made some updates to the AMD Radeon graphics driver, with
 various fixes for newer hardware and implementation of some missing parts. Anarchos and Nephele
 added support for screen brightness configuration on Radeon based laptops.
 
