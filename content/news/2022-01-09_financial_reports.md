@@ -10,7 +10,7 @@ The Haiku, Inc. financial reports for [2020](https://www.haiku-inc.org/docs/haik
 [2021](https://www.haiku-inc.org/docs/haiku_inc-financial-report-2021.pdf) are now available on the
 [Haiku, Inc. Documents page](https://www.haiku-inc.org/documents/).
 
-There is also a [forum post with a bit more details](https://discuss.haiku-os.org/t/haiku-inc-financial-reports/11785/2),
+There is also a [forum post with a bit more details](https://discuss.haiku-os.org/t/haiku-inc-financial-reports/11785/),
 which also explains why the 2020 report was so late and the 2021 report was so early.
 
 Our donations for 2022 are off to a great start with over $2,000 donated so far, and we are not even
