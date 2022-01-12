@@ -45,12 +45,14 @@ qemu-system-riscv64 -M virt -m 1G -device ati-vga -kernel u-boot.bin \
 
 ## Running nightly RISCV64 images on the SiFive Unmatched
 
+{{< alert-info "Update: Working versions" "riscv64 was broken after our merge of GCC 11. hrev55697 is currently the last image to boot to a desktop until this regression is repaired." >}}
+
 To boot Haiku on the SiFive unmatched, you will need the following:
 
 * [SiFive Unmatched board](https://www.sifive.com/boards/hifive-unmatched)
 * A Radeon HD graphics card which works with our radeon_hd driver
 * [SD Card prepared as a "u-boot uefi bios"](https://git.haiku-os.org/haiku/tree/3rdparty/kallisti5/unmatched-uboot.sh)
-* [Nightly riscv64 Haiku image](https://download.haiku-os.org/nightly-images/riscv64/) (hrev55624 or later) written to a USB Flash drive
+* [Nightly riscv64 Haiku image](https://download.haiku-os.org/nightly-images/riscv64/) (between hrev55624 and hrev55697) written to a USB Flash drive
   * ```dd if=haiku-mmc.image of=/dev/sdXX bs=4M```
 
 {{< alert-info "Serial Debugging" "In the event of trouble, attaching a Micro-USB cable to the Unmatched allows you to see serial output during startup.  (minicom, 115200 8N1, no flow control)" >}}
