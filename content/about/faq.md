@@ -15,14 +15,14 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Is Haiku based on Linux?](#is-haiku-based-on-linux)
     * [Why not Linux?](#why-not-linux)
     * [Is Haiku then based on BeOS?](#is-haiku-then-based-on-beos)
-    * [I've never seen Haiku. What does it look like?](#i-ve-never-seen-haiku-what-does-it-look-like)
+    * [I've never seen Haiku. What does it look like?](#ive-never-seen-haiku-what-does-it-look-like)
     * [Can I use Haiku as my primary Operating System?](#can-i-use-haiku-as-my-primary-operating-system)
     * [Can Haiku connect to the Internet?](#can-haiku-connect-to-the-internet)
     * [What is the status of wireless internet connections?](#what-is-the-status-of-wireless-internet-connections)
     * [What license is Haiku released under?](#what-license-is-haiku-released-under)
     * [What is Haiku Inc.?](#what-is-haiku-inc)
-    * [What platform(s) is Haiku targeted to run on?](#what-platform-s-is-haiku-targeted-to-run-on)
-    * [Is there a 64-bit version of Haiku?](#will-there-be-a-64-bit-version-of-haiku)
+    * [What platform(s) is Haiku targeted to run on?](#what-platforms-is-haiku-targeted-to-run-on)
+    * [Is there a 64-bit version of Haiku?](#is-there-a-64-bit-version-of-haiku)
   * Package Management
     * [Is there a package manager?](#is-there-a-package-manager)
     * [How do I update my installation of Haiku?](#how-do-i-update-my-installation-of-haiku)
@@ -33,7 +33,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Is there Flash support?](#is-there-flash-support)
     * [Is there an office suite?](#is-there-an-office-suite)
     * [Are there any games for Haiku?](#are-there-any-games-for-haiku)
-    * [Are Python, Ruby, Perl and Rust available on Haiku?](#is-there-python-ruby-perl)
+    * [Are Python, Ruby, Perl and Rust available on Haiku?](#are-python-ruby-perl-and-rust-available-on-haiku)
     * [Will GoBe Productive work in Haiku?](#will-gobe-productive-work-in-haiku)
   * Technical
     * [When is the next release?](#when-is-the-next-release)
@@ -44,7 +44,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [This sounds cool. How do I enter Kernel Debugging Land?](#this-sounds-cool-how-do-i-enter-kernel-debugging-land)
   * Hardware
     * [What are the minimum hardware requirements to run Haiku?](#what-are-the-minimum-hardware-requirements-to-run-haiku)
-    * [Why doesn't Haiku let me use my monitor's resolution?](#why-doesn-t-haiku-let-me-use-my-monitor-s-resolution)
+    * [Why doesn't Haiku let me use my monitor's resolution?](#why-doesnt-haiku-let-me-use-my-monitors-resolution)
     * [How can I check which graphics driver is being used?](#how-can-i-check-which-graphics-driver-is-being-used)
     * [Haiku seems to be using VESA, what am I missing?](#haiku-seems-to-be-using-vesa-what-am-i-missing)
     * [What graphic cards are supported?](#what-graphic-cards-are-supported)
@@ -60,7 +60,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Now that I have Haiku on a USB stick, how do I install Haiku to my system?](#now-that-i-have-haiku-on-a-usb-stick-how-do-i-install-haiku-to-my-system)
     * [I have VirtualBox. Which image should I use?](#i-have-virtualbox-which-image-should-i-use)
   * Using
-    * [Why doesn't the tilde key work properly?](#why-doesn-t-the-tilde-key-work-properly)
+    * [Why doesn't the tilde key work properly?](#why-doesnt-the-tilde-key-work-properly)
     * [How do I change my keyboard layout?](#how-do-i-change-my-keyboard-layout)
     * [Is there some kind of failsafe mode I can boot into? How do I get to it?](#is-there-some-kind-of-failsafe-mode-i-can-boot-into-how-do-i-get-to-it)
 
