@@ -2,7 +2,7 @@
 type = "article"
 title = "Compiling Haiku for PowerPC"
 date = "2013-01-25T02:45:55.000Z"
-tags = ["PowerPC compiling"]
+tags = ["compiling", "powerpc"]
 +++
 
 <h3>PowerPC Compiler Toolset</h3>

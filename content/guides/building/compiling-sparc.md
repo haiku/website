@@ -2,7 +2,7 @@
 type = "article"
 title = "Compiling Haiku for SPARC"
 date = "2020-01-19T10:18:09.000Z"
-tags = ["compiling", "arm"]
+tags = ["compiling", "sparc"]
 +++
 
 Haiku can be compiled for devices using the SPARC 64bit processor architecture.
