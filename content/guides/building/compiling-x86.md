@@ -2,7 +2,7 @@
 type = "article"
 title = "Compiling Haiku for x86"
 date = "2012-09-09T15:36:52.000Z"
-tags = ["compiling. x86"]
+tags = ["compiling", "x86"]
 +++
 
 <h3>gcc2h / gcc8 hybrid builds</h3>
