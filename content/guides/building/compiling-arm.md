@@ -47,6 +47,17 @@ jam -j2 -q @minimum.raw esp.image haiku-minimum.image
 
 The ARM images can be emulated in QEMU with an EFI firmware like TianoCore or U-Boot.
 
+It is recommended to use u-boot binaries available from Haiku firmware repository in [u-boot/arm/qemu](https://github.com/haiku/firmware/tree/master/u-boot/arm/qemu) folder.
+
+Emulating Haiku with U-Boot firmware, using the unified ``haiku-mmc.image`` image file:
+
+```sh
+qemu-system-arm -bios u-boot.bin -M virt -cpu cortex-a15 -m 2048 \
+    -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
+    -drive file="haiku-mmc.image",if=none,format=raw,id=x0 \
+    -device ramfb -usb -device qemu-xhci,id=xhci -device usb-mouse -device usb-kbd -serial stdio
+```
+
 The location of the ARM TianoCore firmware will vary based on platform. This example is for Fedora, with raw images ``esp.image`` and ``haiku-minimum.image``:
 
 ```sh
@@ -56,15 +67,6 @@ qemu-system-arm -bios /usr/share/edk2/arm/QEMU_EFI-pflash.raw \
     -device virtio-blk-device,drive=x1,bus=virtio-mmio-bus.1 \
     -drive file="esp.image",if=none,format=raw,id=x0 \
     -drive file="haiku-minimum.image",if=none,format=raw,id=x1 \
-    -device ramfb -usb -device qemu-xhci,id=xhci -device usb-mouse -device usb-kbd -serial stdio
-```
-
-Emulating Haiku with U-Boot firmware, using the unified ``haiku-mmc.image`` image file:
-
-```sh
-qemu-system-arm -bios u-boot.bin -M virt -cpu cortex-a15 -m 2048 \
-    -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
-    -drive file="haiku-mmc.image",if=none,format=raw,id=x0 \
     -device ramfb -usb -device qemu-xhci,id=xhci -device usb-mouse -device usb-kbd -serial stdio
 ```
 
