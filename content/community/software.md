@@ -12,7 +12,6 @@ tags = []
 <li><a href="https://www.software.besly.de/">BeSly Software Repo</a>: A repository for Haiku software.</li>
 <li><a href="https://fatelk.com/">Fat Elk Software</a>: A repository Fat Elk's own and other 3rd party software.</li>
 <li><a href="https://pulkomandy.tk/~beosarchive/about.html">PulkoMandy's BeOS software archive</a>: A software archive of old BeOS software, with and without source code.</li>
-<li><a href="http://softwaredepot.altervista.org/">Software Depot</a>: A software archive of packaged Haiku software.</li>
 </ul>
 
 <p>You can find out how you can add these repositories <a href="/docs/userguide/en/preferences/repositories.html" target="_blank">in the User Guide</a></p>.
