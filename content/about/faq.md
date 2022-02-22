@@ -287,7 +287,7 @@ Fortunately, VirtualBox provides several alternatives, which work much better. T
 your machine to use one of those, see the guide [Emulating Haiku in VirtualBox](/guides/virtualizing/virtualbox)
 
 ### Is there a list of working hardware?
-You can find a list of drivers in the [development wiki](https://dev.haiku-os.org/wiki/HardwareInfo).
+You can find a list of drivers in the [development wiki](https://dev.haiku-os.org/wiki/HardwareInfo). A user-reported list is maintained at [BeSly's Hardware Database](https://hardware.besly.de/).
 
 ## Installing
 ### Where can I get Haiku from?
