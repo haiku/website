@@ -110,6 +110,14 @@ There is no strict deadline for the call, we would like you to take as much time
 
     <img src="/files/wallpaper-call/DropOfHaikuByDendrobats_Autumn.png" height="270" width="480" />
 
+- Roly - BlueHaiku (added 2022/02/26):
+
+    <img src="/files/wallpaper-call/HaikuBlue.png" height="270" width="480" />
+
+- Roly - HaikuBlue-Colorful.png (added 2022/02/26):
+
+    <img src="/files/wallpaper-call/HaikuBlue-Colorful.png" height="270" width="480" />
+
 - shainer - Autumn leaves (added 2020/10/31):
 
     <img src="/files/wallpaper-call/shainer_Autumn_leaves_preview.png" height="300" width="480" />
