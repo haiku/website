@@ -1,3 +1,4 @@
+
 +++
 type = "blog"
 title = "Haiku Activity & Contract Report: February 2022"
@@ -6,7 +7,7 @@ date = "2022-03-07 15:00:00-04:00"
 tags = ["contractor"]
 +++
 
-Just like last moth, the usual Activity Report is hereby combined with my Contract Report.
+Just like last month, the usual Activity Report is hereby combined with my Contract Report.
 
 This report covers hrev55836 to hrev55916.
 
@@ -56,7 +57,7 @@ korli added more methods for the PCI bus manager to find the ACPI root pointer o
 
 ### Interface Kit
 
-madmax updated the list of "ignorable code points," which fixes some Unicode text rendering gliches that could be seen in WebKit on occasion.
+madmax updated the list of "ignorable code points," which fixes some Unicode text rendering glitches that could be seen in WebKit on occasion.
 
 ### libroot & kernel
 
