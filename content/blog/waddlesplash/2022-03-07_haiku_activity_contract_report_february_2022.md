@@ -1,4 +1,3 @@
-
 +++
 type = "blog"
 title = "Haiku Activity & Contract Report: February 2022"
