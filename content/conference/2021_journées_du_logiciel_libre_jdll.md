@@ -32,4 +32,4 @@ France
 
 ## Event report:
 
-TODO
+The event was cancelled due to the onging pandemic.
