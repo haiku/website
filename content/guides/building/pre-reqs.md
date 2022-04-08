@@ -145,7 +145,7 @@ sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip zs
 **Additional requirements for building ARM versions of Haiku:**
 
 ```sh
-sudo pacman -S yaourt uboot-tools
+sudo pacman -S paru uboot-tools
 ```
 
 <a name="yum"></a>
