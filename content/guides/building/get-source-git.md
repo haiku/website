@@ -216,7 +216,7 @@ git commit -a -F ~/mycommitlog
 Alternatively, you can use "git commit -a", which will open a text editor and
 let you write down the message when you commit your changes.
 
-It may be a good idea to check <a href="https://review.haiku-os.org>Gerrit</a>
+It may be a good idea to check <a href="https://review.haiku-os.org">Gerrit</a>
 as a point of reference if you are not sure how you should format your
 commit message.
 
