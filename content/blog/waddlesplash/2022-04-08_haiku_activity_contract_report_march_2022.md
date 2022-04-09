@@ -14,7 +14,7 @@ This report covers hrev55917 to hrev55991.
 
 ### Applications
 
-Dale Cieslak fixed a rather old bug related to new games in Pairs.
+Dale Cieslak fixed a rather old bug related to starting a new game in Pairs.
 
 Humdinger cleaned up menu text in a few places for consistency with our style guides.
 
@@ -22,15 +22,15 @@ apl added support in HaikuDepot for displaying the size of local package files (
 
 PulkoMandy removed a spurious assert from Tracker that triggered on debug builds.
 
-waddlesplash fixed most of the "HaikuDepot crashs on exit" regressions from the past few months (but it seems one or two may still lurk.)
+waddlesplash fixed most of the "HaikuDepot crashes on exit" regressions from the past few months (but it seems one or two may still lurk.)
 
 Jim906 adjusted the layout of the FileTypes' "Application" window, making resizing it more useful.
 
 ### Drivers
 
-waddlesplash reduced one of the GCC 11 related optimization-disabling options, which was added to the WiFi stack's build, to a single file instead of the entire module, improving performance and reducing CPU usage.
+waddlesplash reduced one of the GCC 11 related optimization-disabling options, which was added to the WiFi stack's build, to only affect a single file instead of the entire module, improving performance and reducing CPU usage.
 
-PulkoMandy's work on VESA BIOS live-patching (supporting more resolutions than a VESA BIOS was designed to without having to write per-hardware drivers) was merged. It only works reliably on Intel hardware, and there are a few regressions related to it, but it should improve Haiku's usability on pre-EFI machines when it stabilizes a bit more.
+PulkoMandy's work on VESA BIOS live-patching (supporting more resolutions than a VESA BIOS was designed to, without having to write per-hardware drivers) was merged. It only works reliably on Intel hardware, and there are a few regressions related to it, but it should improve Haiku's usability on pre-EFI machines when it stabilizes a bit more.
 
 waddlesplash fixed some problems in the newly-introduced USB support in the FreeBSD compatibility layer that could cause whole-system hangs in some cases.
 
@@ -56,7 +56,7 @@ waddlesplash added some support for "Broadwell" devices to the Intel graphics dr
 
 ### Interface Kit
 
-Jim906 fixed an issue in the layout system where "cumulative minimums" where improperly computed, leading to cut-off controls in some applications like FileTypes.
+Jim906 fixed an issue in the layout system where "cumulative minimums" were improperly computed, leading to cut-off controls in some applications like FileTypes.
 
 ### Command Line Tools
 
@@ -88,17 +88,17 @@ waddlesplash improved some asserts in the FreeBSD compatibility layer's taskqueu
 
 waddlesplash declared some internal kernel functions static, to stop them from being exported and prevent confusion.
 
-waddlesplash cleaned up the low resource manager to better accomodate being actively notified of low resource states (e.g. low memory, out of address space, etc.), instead of just detecting them itself. Previously when it was notified of a low resource state, it would ignore whatever it was told and just trigger a re-scan of resources to see which were low; which meant that some not-so-detectable resources (like address space usage) would never trigger a low-memory notice to be issued. Now, these are handled, albeit not perfectly.
+waddlesplash cleaned up the low resource manager to better accommodate being actively notified of low resource states (e.g. low memory, out of address space, etc.), instead of just detecting them itself. Previously when it was notified of a low resource state, it would ignore whatever it was told and just trigger a re-scan of resources to see which were low; which meant that some not-so-detectable resources (like address space usage) would never trigger a low-memory notice to be issued. Now, these are handled, albeit not perfectly.
 
 waddlesplash made the VFS layer allocate "vnode" objects from a dedicated pool ("object_cache"). This should increase performance a bit, but it will also allow one to check via the kernel debugger exactly how many vnodes are globally in use at any given time.
 
 waddlesplash cleaned up the CPU information syscall to better use kernel/user memory operations, and also reworked the ELF loading code to use Deleter objects in order to remove all of its gotos.
 
-waddlesplash removed a confusing requirement on "published" condition variables that they not be removed simultaneously with a notify/wait request, which was not observed in some parts of the network stack and lead to KDLs on rare occasions. He also fixed a deadlock situation in the network stack related to autoconfiguration, which was observed in the same environment as the just-mentioned KDL.
+waddlesplash removed a confusing requirement on "published" condition variables that they not be removed simultaneously with a notify/wait request, which was not observed in some parts of the network stack and led to KDLs on rare occasions. He also fixed a deadlock situation in the network stack related to autoconfiguration, which was observed in the same environment as the just-mentioned KDL.
 
-waddlesplash fixed an incorrect virtual memory object type check, which lead to mmap'ed memory being "lost" in some cases (notably in WINE; which was observed by X512 and a minimal testcase for the problem was submitted. Thanks!)
+waddlesplash fixed an incorrect virtual memory object type check, which led to mmap'ed memory being "lost" in some cases (notably in WINE, which was observed by X512 and a minimal testcase for the problem was submitted. Thanks!)
 
-waddlesplash cleaned up some memory-protection related code in the VM and made some minor optimizations to it, while investigating QtWebEngine crashes.
+waddlesplash cleaned up some memory-protection-related code in the VM and made some minor optimizations to it, while investigating QtWebEngine crashes.
 
 korli fixed a syscall misalignment problem on x86_64 that was causing KDLs in `strace`.
 
@@ -108,17 +108,17 @@ waddlesplash completely reworked the `mlock()` implementation in the kernel. The
 
 X512 fixed thread-local storage on riscv64; this allows userland to fully initialize once again. He also adjusted how runtime_loader is linked more generally.
 
-X512 removed a lot of unused linked scripts, some of which had been in the source tree since the very first commit two decades ago (!).
+X512 removed a lot of unused linker scripts, some of which had been in the source tree since the very first commit two decades ago (!).
 
 ### ARM!
 
 davidkaroly's work to get the ARM port to enter userspace from the kernel was merged.
 
-PulkoMandy made some intial changes to the EFI bootloader to support "Allwinner A10" devices.
+PulkoMandy made some initial changes to the EFI bootloader to support "Allwinner A10" devices.
 
 urnenfeld reworked exception-level handling on the EFI loader for ARM64.
 
-davidkaroly reworked "address-cells" and "size-cells" FDT handling in the EFI loader. He also added support for another UART, implemented privilege-level transitions, and some other work towards running on bare metal.
+davidkaroly reworked "address-cells" and "size-cells" FDT handling in the EFI loader. He also added support for another UART, implemented privilege-level transitions, and did some other work towards running on bare metal.
 
 ### HaikuPorts
 
@@ -130,7 +130,7 @@ What's next? Well, more work toward the next release of course!
 
 I did spend some time trying to investigate the all-too-frequent QtWebEngine crashes, especially after the success I had with resolving the VM-related problems WINE uncovered, but was unfortunately unsuccessful there. I added a number of hacks to the kernel to work around some of the crashes, but other crashes always happened in their place, so something seems more generally broken on that front. I have more or less stopped investigating that for the time being.
 
-A number of the tracked regressions since the last release have been resolved (and plenty of unrelated issues besides, as you can see), so that should hopefully continue. PulkoMandy's new laptop has a WiFi card which is supported by OpenBSD but not FreeBSD, which is a general trend (there are some drivers we have which are much more feature-rich on OpenBSD), and so I may see if we can use the OpenBSD WiFi stack and some drivers without giving up our FreeBSD ones entirely (as there are some drivers, the Atheros one especially, that support tons more hardware on FreeBSD and thus Haiku than OpenBSD.)
+A number of the tracked regressions since the last release have been resolved (and plenty of unrelated issues besides, as you can see), so that should hopefully continue. PulkoMandy's new laptop has a WiFi card which is supported by OpenBSD but not FreeBSD, which is a general trend (there are some drivers we have which are much more feature-rich on OpenBSD), and so I may see if we can use the OpenBSD WiFi stack and some drivers without giving up our FreeBSD ones entirely (as there are some drivers, the Atheros one especially, that support tons more hardware on FreeBSD, and thus Haiku, than OpenBSD.)
 
 Aside from that, there are some UI-related issues; but I expect that this month will be on the lighter side for me with the various holidays, so we will have to see about that.
 
