@@ -48,14 +48,14 @@ If you choose to download an image, please select from the list of available mir
 </thead>
 <tbody>
     <tr class="link">
-      <td class="location"><b>Location:</b> Amsterdam, The Netherlands <br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
-    </tr>
-    <tr class="link">
       <td class="location"><b>Location:</b> New York, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.rit.edu" title="RIT">Rochester Institute of Technology</a></td>
       <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
+    </tr>
+    <tr class="link">
+      <td class="location"><b>Location:</b> North Virginia, United States<br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
+      <td><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
     <tr class="link">
       <td class="location"><b>Location:</b> Oregon, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.osuosl.org" title="OSUOSL">Oregon State University</a></td>
@@ -91,8 +91,8 @@ If you choose to download an image, please select from the list of available mir
 <p>In order to assist with distribution, we have also created .torrent files that can be used to download and seed the release files for others.<br/>
 <b>Please continue seeding the torrents if you can!</b></p>
 <ul>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.torrent">32-bit Torrent</a></li>
- <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.torrent">64-bit Torrent</a></li>
+ <li><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.torrent">32-bit Torrent</a></li>
+ <li><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.torrent">64-bit Torrent</a></li>
 </ul>
 
 ### Checksums
@@ -118,8 +118,8 @@ To further validate releases, you can also check the cryptographic signature of 
 </p>
 
 <ul>
-  <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso.minisig">32-bit minisig</a></li>
-  <li><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso.minisig">64-bit minisig</a></li>
+  <li><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso.minisig">32-bit minisig</a></li>
+  <li><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta3/haiku-r1beta3-x86_64-anyboot.iso.minisig">64-bit minisig</a></li>
 </ul>
 
 {{< alert-info "Haiku signing key" "Haiku's public signing key is also available at /boot/system/data/trust_db/haiku-2019.pub under recent versions of Haiku." >}}

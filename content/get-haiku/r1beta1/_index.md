@@ -54,11 +54,6 @@ If you choose to download an image, please select from the list of available mir
       <td><a class="track" href="https://s3.wasabisys.com/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
     </tr>
     <tr>
-      <td class="location"><b>Location:</b> Gunzenhausen, Germany <br/>Provided by: <a target="_blank" class="ext" href="http://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
-      <td><a class="track" href="https://cdn.haiku-os.org/haiku-release/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
-    </tr>
-    <tr>
       <td class="location"><b>Location:</b> Paris, France<br/>Provided by: <a target="_blank" class="ext" href="http://www.lip6.fr/" title="LIP6">Laboratoire d'Informatique de Paris 6</a></td>
       <td><a class="track" href="https://ftp.lip6.fr/pub/haiku/releases/r1beta1/haiku-r1beta1-x86_gcc2_hybrid-anyboot.zip">zip</a></td>
       <td><a class="track" href="https://ftp.lip6.fr/pub/haiku/releases/r1beta1/haiku-r1beta1-x86_64-anyboot.zip">zip</a></td>
