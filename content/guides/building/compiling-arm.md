@@ -40,7 +40,7 @@ The image ``haiku-minimum.image`` contains the BFS file system with Haiku kernel
 when running Haiku in an emulated environment.
 
 ```sh
-jam -j2 -q @minimum.raw esp.image haiku-minimum.image
+jam -j2 -q @minimum-raw esp.image haiku-minimum.image
 ```
 
 ## Emulating Haiku
