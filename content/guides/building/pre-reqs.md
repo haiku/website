@@ -139,7 +139,7 @@ sudo apt-get install u-boot-tools util-linux device-tree-compiler
 **Basic requirements:**
 
 ```sh
-sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip zstd curl wget flex xorriso python lib32-glibc
+sudo pacman -S base-devel multilib-devel bison git texinfo nasm openssh unzip zstd curl wget flex xorriso python lib32-glibc bc
 ```
 
 **Additional requirements for building ARM versions of Haiku:**
