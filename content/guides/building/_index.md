@@ -22,6 +22,7 @@ if you have not already done so.
   * [for x86](/guides/building/compiling-x86)
   * [for x86_64](/guides/building/compiling-x86_64)
   * [for ARM](/guides/building/compiling-arm)
+  * [for ARM64](/guides/building/compiling-arm64)
   * [for PowerPC](/guides/building/compiling-powerpc)
   * [for RISCV64](/guides/building/compiling-riscv64)
   * [for sparc](/guides/building/compiling-sparc)
