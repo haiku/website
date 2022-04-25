@@ -59,7 +59,7 @@ var yearlyGoal = 20000;
 var donationBarHeight = 128;
 
 function updateDonationMeter() {
-	getURL("https://cdn.haiku-os.org/haiku-inc/donations.json", function(data) {
+	getURL("https://s3.us-west-1.wasabisys.com/haiku-inc/donations.json", function(data) {
 		try {
 			var json = JSON.parse(data);
 			if (json) {
