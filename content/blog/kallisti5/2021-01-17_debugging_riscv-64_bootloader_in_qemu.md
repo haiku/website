@@ -55,9 +55,8 @@ Now we have all the componenents needed to begin debugging Haiku's bootloader.
 ### Boot u-boot + Haiku in qemu-system-riscv64
 
 ```bash
-qemu-system-riscv64 -bios /tmp/riscv64-build/u-boot.bin \
-  -M virt -m 4G \
-  -drive file=haiku-mmc.image,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
+qemu-system-riscv64 -kernel /tmp/riscv64-build/u-boot.bin -M virt -m 4G \
+  -drive file=haiku-mmc.image,format=raw,id=hd0 -device virtio-blk-pci,drive=hd0 \
   -s -S
 ```
 
