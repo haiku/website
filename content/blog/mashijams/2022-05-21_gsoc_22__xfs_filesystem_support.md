@@ -44,7 +44,7 @@ After this I believe we should be able to detect valid super block for both xfs 
 
 I will be very active on this [Forum](https://discuss.haiku-os.org/t/gsoc-22-xfs-project-progress/12205) Thread where I will post small updates about my project and take help from mentors.
 
-I will also make blogs frequently to update the community about my progress and upcoming plans for the xfs project.
+I will also make blog posts frequently to update the community about my progress and upcoming plans for the xfs project.
 
 It will be an amazing learning experience for me so thanks for selecting me as mentee.
 
