@@ -68,6 +68,10 @@ git config core.precomposeunicode true
 <h4>Setup an account on Gerrit</h4>
 
 <p>Log in to <a href="https://review.haiku-os.org">Gerrit code review</a>. You currently need a <a href="https://github.com">Github</a> account for logging in.</p>
+
+<div class="alert alert-warning">
+Make sure your ssh key is generated with ed25519. RSA keys will not work with Gerrit.
+</div>
 <p>Upload your SSH public key in <a href="https://review.haiku-os.org/settings/#SSHKeys">Gerrit SSH keys settings</a> page. If you don't have a key yet, you can generate one using ssh-keygen.</p>
 <p>If the e-mail address used in your commits does not match the one in your github account, you will need to add and verify it in <a href="https://review.haiku-os.org/settings/#EmailAddresses">Gerrit E-Mail address settings</a>.</p>
 
