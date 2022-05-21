@@ -26,7 +26,7 @@ I also did some testing for xfs during my application period, details for which 
 
 # Project Plan : 
 
-I will begin my project by adding xfs version 5 read support, Its long time since version 5 support is available on linux so it will be good if we have same for Haiku as well.
+I will begin my project by adding xfs version 5 read support. Linux has had it for a long time, so Haiku needs to support it, too.
 
 Then I will start working on Extended Attributes, Symbolic Links and write support for xfs.
 
