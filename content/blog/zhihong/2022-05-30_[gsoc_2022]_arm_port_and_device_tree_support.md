@@ -19,11 +19,13 @@ Here is the link to my [proposal](https://github.com/MRNIU/gsoc2022_haiku).
 
 # Project
 
-The project actually has three goals: run Haiku on ARM, device tree support and mass storage device driver based on device tree.
+The project actually has three goals: run Haiku on ARM(qemu-system-arm), device tree support and mass storage device driver based on device tree.
 
 - ARM port
 
     This work will be done soon, I just need to do some testing and fix bugs along the way.
+
+    Hardware testing will begin after all work is done.
 
 - Device tree support
 
