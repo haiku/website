@@ -40,6 +40,8 @@ kallisti5 adjusted the FreeBSD compatibility layer to support some more socket `
 
 PulkoMandy wrote a new driver for RNDIS USB ethernet. This is the protocol most Android phones use when sharing their internet connection using "USB tethering", so you can get Haiku online this way on supported devices now. (It was only tested on a few devices though, more testing welcome!)
 
+waddlesplash fixed an inconsistency related to transfer ring handling in the XHCI (USB3) driver. It might have led to errors seen in a few tickets.
+
 waddlesplash made a number of changes to the FreeBSD compatibility layer discovered and then "back-ported" from his branched work on porting OpenBSD WiFi drivers, including invoking Haiku's PCI code instead of recreating equivalent functionality, removing unused features that FreeBSD also dropped, and more.
 
 waddlesplash overhauled MTU ("maximum transmission unit") and also receive size handling in the network stack and the FreeBSD compatibility layer. Previously, we always stayed at the default ethernet MTU of 1500, which was fine but suboptimal (as ethernet can usually support jumbo frames up to size 9000 or so), but more problematic was that we could not handle receiving anything larger than this, as it would trigger errors in the ethernet handler related to scattered I/O operations. This required a number of changes: first to the stack itself and to the IPv4 & IPv6 handlers to check the correct MTU value, then to the `ethernet` module to use larger buffers if necessary when reading or writing data, and finally to the FreeBSD compatibility layer to activate the larger MTUs. These changes had a side effect of fixing "high packet loss" on some devices (or at least PulkoMandy's very recent Intel ethernet device, anyway.)
