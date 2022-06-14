@@ -27,7 +27,7 @@ After that I quickly moved to implementing xfs V5 superblock fields, Macros, fun
 
 Soon I hit a bug in superblock CRC verification and it took me quite some time to get it all fixed, shoutout to PulkoMandy for helping me get all things right in crc verification for superblock and answering lots of my queries.
 
-In the meantime I made trac tickets for xfs features which need to be implemented, it will be very helpful, as we can now see what more needs to be done/fixed for xfs driver. You can see all the tickets [here](https://dev.haiku-os.org/query?component=File+Systems%2FXFS&order=priority&group=component&col=id&col=summary&col=component&col=type&col=status&col=priority&col=milestone)
+In the meantime I made Trac tickets for xfs features which need to be implemented, it will be very helpful, as we can now see what more needs to be done/fixed for xfs driver. You can see all the tickets [here](https://dev.haiku-os.org/query?component=File+Systems%2FXFS)
 
 ## Work Done
 
