@@ -20,7 +20,6 @@ The following will show how to compile haiku on osx and run it on qemu (my versi
 
 ## Preparation
 
-在开始前，由于 osx 默认的 apfs 文件系统不区分大小小写，所以首先得新建一块大小写敏感的 volume。
 Before starting, since the default file system(APFS) is not case-sensitive, you must first create a case-sensitive volume.
 
 1. Open Disk Utility.app and press partition
