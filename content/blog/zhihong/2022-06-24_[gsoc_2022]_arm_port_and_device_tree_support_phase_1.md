@@ -309,4 +309,4 @@ FAR: 80df4051, isWrite: 1, thread: main2
 
 Solution: use qemu 6.0.0.
 
-DFSR: 0x600001d3 (b0110...1 1101 0011) when `Exception: Data Abort` occurs, which means an Access flag fault error occurred while reading. See: [armv7-dfsr](https://developer.arm.com/documentation/ddi0211/k/system-control-coprocessor/system-control-coprocessor-register-descriptions/c5--data-fault-status-register --dfsr).
+DFSR: 0x600001d3 (b0110...1 1101 0011) when `Exception: Data Abort` occurs, which means an Access flag fault error occurred while reading. See: [armv7-dfsr](https://developer.arm.com/documentation/ddi0211/k/system-control-coprocessor/system-control-coprocessor-register-descriptions/c5--data-fault-status-register--dfsr).
