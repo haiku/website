@@ -96,6 +96,14 @@ madmax also contributed a patch to the ARM build system logic.
 
 milek7 added userspace entry wiring, UART mapping, ACPI, the architectural timer, and more for ARM64.
 
+### HaikuPorts
+
+waddlesplash added support to Xlibe to specify "XSettings" values. This allows applications which check XSettings, like GTK, to use the system-default fonts and HiDPI scaling. As a result, all GTK applications in HaikuPorts should now automatically respect whatever the default system font is, and at least attempt to scale corresponding to the way other Haiku applications do. Some other coordinate and event handling bugs were fixed around the same time as a result of testing other applications.
+
+Begasus added a port of Geany, a GTK-based IDE, and added or bumped the versions of various other GTK-based software.
+
+3dEyes added a port of Ladybird, the lightweight web browser that originated on SerenityOS.
+
 ### That's all, folks!
 
 A bit of a quieter month in general (I didn't work as many hours last month as the month before.) But I did see we have more recurring donors on GitHub Sponsors.
