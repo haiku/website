@@ -19,7 +19,7 @@ Future releases of Haiku should have this process more refined.
 
 ### Partition Layout
 
-During the installation, you will need to do some planning to properly leverage the Haiku UEFI bootloader.  
+During the installation, you will need to do some planning to properly leverage the Haiku UEFI bootloader.
 Note: If you have an existing UEFI partition, you can skip this step and go directly to the Advanced Install section at the bottom of this page.
 
   * Choose a GPT disk system on the target device.
@@ -35,9 +35,9 @@ At this point, continue the installation as usual to the 'Haiku' filesystem.
 
 In R1/beta3, the Installer does not yet automatically install the EFI loader, so it needs to be done manually.
 
-After the installation is successful (but before rebooting), return to the live desktop and mount the "EFIBOOT" partition (or the existing UEFI partition on your system) from the desktop. 
+After the installation is successful (but before rebooting), return to the live desktop and mount the "EFIBOOT" partition (or the existing UEFI partition on your system) from the desktop.
 
-{{< alert-info "Haiku Platform Loaders" "As of R1/beta3, all of the available bootloaders can be found in (/boot)/system/data/platform_loaders" on the disk where you installed Haiku (not on the Live disk/USB).>}}
+{{< alert-info "Haiku Platform Loaders" "As of R1/beta3, all of the available bootloaders can be found in (/boot)/system/data/platform_loaders on the disk where you installed Haiku (not on the Live disk/USB).">}}
 
 Copy the Haiku UEFI bootloader from the platform_loaders directory to your system's UEFI partition as shown below. For the Advanced install, you will need to create a directory for Haiku in the UEFI partition. Take note of the tree structure shown below.
 
