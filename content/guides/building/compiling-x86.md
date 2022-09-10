@@ -5,10 +5,10 @@ date = "2012-09-09T15:36:52.000Z"
 tags = ["compiling", "x86"]
 +++
 
-<h3>gcc2h / gcc8 hybrid builds</h3>
+<h3>gcc2h / gcc11 hybrid builds</h3>
 
 <p>Haiku can be build as a hybrid image meaning that it contains gcc2 as well
-as gcc8 binaries. More information on this can be found on the <a href='/guides/building/gcc-hybrid'>gcc-hybrid</a> page.</p>
+as gcc11 binaries. More information on this can be found on the <a href='/guides/building/gcc-hybrid'>gcc-hybrid</a> page.</p>
 
 <p>This configuration is the default and is required to run both BeOS legacy
 applications as well as modern one using the recent programming language
@@ -39,6 +39,16 @@ to compile the buildtools as well during the configure stage.</p>
 binaries for your platform. For a complete list of flags for the configure
 script, see <a href='/guides/building/configure'>Haiku's Configure Options</a>
 
+From the Haiku source directory, run the following to compile
+the build tools (be sure to adjust the options to match your build environment):
+
+**Working in a clean build directory:**
+```sh
+mkdir generated.x86; cd generated.x86
+../configure --cross-tools-source ../../buildtools --build-cross-tools x86_gcc2 --build-cross-tools x86
+```
+
+**Working in the top level:**
 ```sh
 ./configure --cross-tools-source ../buildtools --build-cross-tools x86_gcc2 --build-cross-tools x86
 ```
