@@ -44,6 +44,8 @@ apl fixed a crash in HaikuDepot when images cannot be loaded.
 
 waddlesplash fixed the (extremely annoying) long-standing performance issue in Debugger where changing functions in the stack trace freezes the whole application for multiple seconds.
 
+waddlesplash changed all the views in Debugger that display addresses to use a monospace font instead of the default display font.
+
 ### Drivers
 
 korli improved the intel_extreme modesetting driver on some Gen-12 models.
@@ -76,11 +78,7 @@ waddlesplash adjusted the entry-caching system (part of the kernel's filesystem 
 
 waddlesplash fixed a race condition in the core thread scheduling logic which was causing deadlocks on some systems or under some settings. This bug was exposed by the change a few months ago which fixed the thread profiler; it seems to have existed all the way back to the import of the new scheduler in 2013 or so. In addition to fixing full-system hangs, this also was observed to give a 10% performance improvement (!) in some workloads.
 
-korli fixed the kernel implementation of the `set_memory_protection` syscall to validate the passed flags correctly.
-
-korli made `putenv` catch more invalid strings as errors.
-
-korli added some more checks to the userland-to-kernel `iovec`-copying utility routines introduced recently.
+korli fixed the kernel implementation of the `set_memory_protection` syscall to validate the passed flags correctly. He also made `putenv` catch more invalid strings as errors, and added some more checks to the userland-to-kernel `iovec`-copying utility routines introduced recently.
 
 waddlesplash fixed a KDL in the VFS that occurred when using FIFOs in some rare scenarios. He also added some more information to assertion `panic`s in the VFS layer to help with debugging.
 
