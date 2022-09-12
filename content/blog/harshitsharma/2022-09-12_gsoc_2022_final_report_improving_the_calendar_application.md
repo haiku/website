@@ -20,6 +20,8 @@ Hence, I ended up implementing the **Filters** and **Reminders**
 
 My fork: https://github.com/harshit-sharma-gits/Calendar
 
+Tag to my last commit under GSoC: https://github.com/harshit-sharma-gits/Calendar/releases/tag/gsoc22
+
 # Work Done
 
 ## Filter Utility
@@ -31,6 +33,12 @@ PR: https://github.com/HaikuArchives/Calendar/pull/121
 In this PR, we implemented the Filter Feature. It's UI and working can be seen [here.](https://drive.google.com/file/d/1DIrfn43473RxbImjlKKm0K4hkmvPBYTp/view?usp=sharing)
 
 So, now we can filter out the events as per the keywords entered.
+
+### How to test?
+
+I also have created a bash script to add demo events on any certain day, so that we can test out the filtering. Here is a link to it: https://github.com/harshit-sharma-gits/Bash-Scripts/tree/main/Calendar
+
+Just place the `addEvents.sh` in the events directory (`~/config/settings/Calendar/events`) and open the terminal there. Then run `./addEvents.sh` in the terminal you opened.
 
 ## Reminders
 
@@ -63,7 +71,10 @@ Here are the PRs:
 ## What's next?
 
 The work for Daemon is (almost) complete.
-What remains is: Automatically starting the CalendarDaemon with the help of `launch_daemon`. I would definitely complete this.
+The daemon can start as a background application, fetches the events' list from the DBManager and monitors the events directory (`~/config/settings/Calendar/events`). It can also send the Alert for reminding for the event at the pre-specified time. 
+What remains is: Automatically starting the CalendarDaemon with the help of `launch_daemon`.
+The issue for this: https://github.com/HaikuArchives/Calendar/issues/130
+I would definitely complete this.
 
 I've decided to continue to contribute to open source in my spare time. And I'll continue to engage with the Haiku community as well. Projects here are really interesting!
 
@@ -71,9 +82,21 @@ I've decided to continue to contribute to open source in my spare time. And I'll
 
 # Final Words
 
-I had a great and very productive time working on this project. Thanks to this project, I have learnt many things about Haiku, git, and even C++!
+I had a great and very productive time working on this project. Thanks to this project, I have learnt many things about Haiku, git, Bash Scripting and even C++!
 
-A special thanks to my mentors [Niels Sascha Reedijk](https://discuss.haiku-os.org/u/nielx) and [Humdinger](https://discuss.haiku-os.org/u/humdinger). They mentored me really well and were always ready to help me out. Thanks for being patient with me and clarifying my doubts.
+First of all about the Haiku API. I started as a noob in the Haiku API (everyone does :P). My first project was the Filter Utility, in which I used some C++ functions to implement the searching and the Haiku API for UI changes. The Be Book helped me a lot in this. You can also check it out here: https://www.haiku-os.org/legacy-docs/bebook/index.html
+I also got to know about some C++ Standard Library Functions, which I used to implement the filtering internally.
+
+Now it came down to testing the filtering, and obviously we needed many events to filter them out! But creating events manually through the Calendar app was quite a drag. So I wrote a script which can add some events to the specified day.
+
+For the next project, I needed to create a separate Daemon! Let me be honest, it was quite a task for a beginner! `:)
+But yes, we pulled this off. Again, the Haiku API along with the legacy docs helped a lot.
+
+How did I created an appication with no previous knowledge at all?
+Here lessons from DarkWyrm were much useful (You can find them [here](https://www.haiku-os.org/legacy-docs/bebook/index.html))
+They really do contain a step by step explaination of how to create an application from scratch in Haiku. Recommended to every beginner contributer out there!
+
+All these things, would not been completed if constant guidance from my mentors wasn't there. So, a special thanks to my mentors [Niels Sascha Reedijk](https://discuss.haiku-os.org/u/nielx) and [Humdinger](https://discuss.haiku-os.org/u/humdinger). They mentored me really well and were always ready to help me out. Thanks for being patient with me and clarifying my doubts.
 
 Finally, I would like to thank this amazing community!
 
