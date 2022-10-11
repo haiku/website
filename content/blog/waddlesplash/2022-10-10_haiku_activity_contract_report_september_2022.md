@@ -16,7 +16,7 @@ This report covers hrev56400 to hrev56504.
 
 jscipione fixed Deskbar to compute the clock margin based on the font size instead of hard-coding it.
 
-humdinger made sure all strings in HaikuDepot are properly translateable (some were previously not.)
+humdinger made sure all strings in HaikuDepot are properly translatable (some were previously not.)
 
 OscarL fixed some usability issues in the Sounds preflet, and debug builds of Tracker.
 
@@ -130,10 +130,11 @@ davidkaroly adjusted ARM exception handling, user memory flags, fixed some threa
 
 Two blocking issues were resolved last month. The only ones that remain are "tasks" (i.e. not true issues, but things which must be changed before the next release, and should not be hard to do at all.)
 
-Thus it is my plan to start the release process imminently: hurrah! This should have happened months ago, but things were delated as usual.
+Thus it is my plan to start the release process imminently: hurrah! This should have happened months ago, but things were delayed as usual.
 
 ### That's all, folks!
 
 Last month was on the shorter side: due to a variety of things outside of Haiku, I wound up logging only about a weeks' hours. Still, quite a lot happened in that time, as you can see!
 
 Thanks once again to all the donors who make my contract possible!
+
