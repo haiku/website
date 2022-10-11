@@ -2,7 +2,7 @@
 type = "blog"
 title = "Haiku Activity & Contract Report, September 2022"
 author = "waddlesplash"
-date = "2022-09-10 23:50:00-04:00"
+date = "2022-10-10 23:50:00-04:00"
 tags = ["contractor"]
 +++
 
