@@ -17,6 +17,7 @@ fi
 
 if [ ! -d haiku ]; then
 	git clone https://github.com/haiku/haiku/ --depth=5
+	git clone https://github.com/haiku/userguide/ --depth=2
 fi
 pushd haiku
 	if [ ! -d generated ]; then
@@ -50,8 +51,8 @@ $HUGO --minify
 sed -i "s/BuildTypeIsDeploy = true/BuildTypeIsDeploy = false/g" config.toml
 
 mkdir public/docs/
-cp -R haiku/docs/userguide/ public/docs/
-cp -R haiku/docs/welcome/ public/docs/
+cp -R userguide/userguide/ public/docs/
+cp -R userguide/welcome/ public/docs/
 cp -R haiku/docs/interface_guidelines/ public/docs/
 cp -R haiku/generated/doxygen/html/ public/docs/
 cp -R haiku/docs/develop/generated/html public/docs/develop
