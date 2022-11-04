@@ -28,12 +28,10 @@ Otherwise, it's time to register your nickname. That isn't mandatory, but if you
 
 `/msg Nickserv register` *SuperSecretPassword YourEmailAddress*
 
-
 From now on it's simply following the instructions in the Nickserv output:
 
-* Go to https://services.oftc.net/ and log in with your nickname and password.
-* Go to your *Account* page and *Verify* your account by doing the captcha there.
-* Back in Vision, do a `/msg Nickserv identify SuperSecretPassword` to authenticate yourself and follow it with `/msg Nickserv checkverify` to make sure all went OK.
+* Follow the link to verify your nickname and password. (If you miss verification time window, do a `/msg NickServ reverify` to get a new verification link.)
+* Back in Vision, do a `/msg Nickserv identify SuperSecretPassword` to authenticate yourself and follow it with `/msg Nickserv status <InsertYourNickname>` to make sure all went OK.
 
 ### Identify yourself on every connect
 
