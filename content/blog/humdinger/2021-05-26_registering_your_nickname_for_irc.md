@@ -33,8 +33,8 @@ From now on it's simply following the instructions in the Nickserv output:
 
 * Go to https://services.oftc.net/ and log in with your nickname and password.
 * Go to your *Account* page and *Verify* your account by doing the captcha there.
-* Back in Vision, do a `/msg Nickserv indentify SuperSecretPassword` to authenticate yourself and follow it with `/msg Nickserv checkverify` to make sure all went OK.
+* Back in Vision, do a `/msg Nickserv identify SuperSecretPassword` to authenticate yourself and follow it with `/msg Nickserv checkverify` to make sure all went OK.
 
 ### Identify yourself on every connect
 
-To automatically identify yourself every time you connect to the OFTC network, put a `/msg Nickserv indentify SuperSecretPassword` into the *Automatically execute* text box under *Network setup*. Best before joining your regular IRC channels (see first screenshot in this post).
+To automatically identify yourself every time you connect to the OFTC network, put a `/msg Nickserv identify SuperSecretPassword` into the *Automatically execute* text box under *Network setup*. Best before joining your regular IRC channels (see first screenshot in this post).
