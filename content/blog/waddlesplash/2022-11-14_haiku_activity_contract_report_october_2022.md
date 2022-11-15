@@ -1,3 +1,4 @@
+
 +++
 type = "blog"
 title = "Haiku Activity & Contract Report, October 2022"
@@ -94,7 +95,7 @@ nielx merged the `netservices2` kit into the main tree. This is a massively re-w
 
 korli made the kernel verify that drivers can be reloaded if necessary (i.e. we already have mounted the boot device) before unloading them. This may fix a few rather rate boot-failure issues.
 
-davidkarloy made changes to embed the hrev number in the bootloaders, so they can be clearly seen and when or what version a bootloader is from immediately apparent. This is especially relevant to the EFI loader which is not updated with the rest of the OS.
+davidkaroly made changes to embed the hrev number in the bootloaders, so they can be clearly seen and when or what version a bootloader is from immediately apparent. This is especially relevant to the EFI loader which is not updated with the rest of the OS.
 
 davidkaroly added the x86 32-bit EFI loader to the default builds. It should now be possible to boot regular 32-bit anyboot images via EFI.
 
@@ -106,7 +107,7 @@ korli implemented some hooks to fetch the driver associated with a specific devi
 
 pengphei contributed an implementation of `pthread_getname_np` and `pthread_setname_np`. These functions (found in the BSDs) rename the specified thread, which Haiku threads natively supported but was not exposed in a cross-platform way before now.
 
-davidkarloy adjusted how the bootloader stores its logs to use a proper "ring buffer", which can be handed off directly to the kernel for capturing more of the early-boot phase in debug logs.
+davidkaroly adjusted how the bootloader stores its logs to use a proper "ring buffer", which can be handed off directly to the kernel for capturing more of the early-boot phase in debug logs.
 
 One of the Emacs developers reported an oversight which prevented Emacs from using `posix_spawn` on Haiku, which was corrected by waddlesplash.
 
