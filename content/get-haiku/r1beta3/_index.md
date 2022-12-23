@@ -1,15 +1,16 @@
 +++
 type = "article"
-title = "Get Haiku!"
+title = "Get Haiku: R1/beta3"
 date = "2021-07-25 00:00:00Z"
 tags = []
 draft = "false"
 +++
 
-{{< alert-donate >}}
+<div class="alert alert-warning">
+This page refers to an outdated release of Haiku. For information on more current releases, please visit <a href="/get-haiku/">Get Haiku</a>.
+</div>
 
 <div class="box-release-info-right">
-<p><strong>Current Version Information</strong></p>
 <ul>
 	<li><strong>Version:</strong> R1/beta3</li>
 	<li><strong>Release date:</strong> July 25th, 2021</li>
@@ -136,7 +137,7 @@ Trusted comment: timestamp:1626959832	file:haiku-r1beta3-x86_64-anyboot.iso
 
 ## Upgrading from R1/beta2
 
-There is an upgrade path available for users that are currently using Haiku R1/beta2. If you want to do this upgrade, you will have to use the Terminal (not SoftwareUpdater!) to issue some commmands. To do so, 
+There is an upgrade path available for users that are currently using Haiku R1/beta2. If you want to do this upgrade, you will have to use the Terminal (not SoftwareUpdater!) to issue some commmands. To do so,
 
 {{< alert-warning "Warning: only upgrading from Beta 2 is supported!" "It may be possible to upgrade from prior development images, but this is untested and you may run into unknown problems." >}}
 
