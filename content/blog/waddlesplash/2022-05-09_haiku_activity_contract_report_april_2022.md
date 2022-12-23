@@ -3,7 +3,7 @@ type = "blog"
 title = "Haiku Activity & Contract Report: April 2022"
 author = "waddlesplash"
 date = "2022-05-09 13:30:00-04:00"
-tags = ["contractor"]
+tags = ["contractor", "activity report"]
 +++
 
 As has been the case recently, the Activity Report is hereby combined with my Contract Report.

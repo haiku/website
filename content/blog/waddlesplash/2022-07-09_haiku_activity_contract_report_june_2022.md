@@ -3,7 +3,7 @@ type = "blog"
 title = "Haiku Activity & Contract Report, June 2022: 802.11ac WiFi"
 author = "waddlesplash"
 date = "2022-07-09 15:30:00-04:00"
-tags = ["contractor"]
+tags = ["contractor", "activity report"]
 +++
 
 As is the usual way of things, the monthly Activity Report is hereby combined with my Contract Report. Since there is just so much to report this month, instead of the usual chronological order by section, instead things will be loosely sorted by "size".
