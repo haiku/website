@@ -5,6 +5,6 @@ date = "2006-12-18T21:07:21.000Z"
 tags = []
 +++
 
-## The Glass Elevator project lasted up until 2017
+## Glass Elevator was a project for discussing and documenting ideas for future Haiku versions, R2 and beyond.
 
 - *The Results:* [Request for Comments Index](rfc/)
