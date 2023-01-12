@@ -111,7 +111,7 @@ c184e609a6c0021f9acd2df9fc111c2e12d01107d01f943fbea66c936b063f88  haiku-r1beta4-
 	If you are in Haiku, macOS or Linux, you can use the <code>sha256sum</code>
 	command from the Terminal to generate a checksum for your downloaded
 	file and verify against those above. If you are in Windows, you can use
-	a tool such as <a href="https://implbits.com/products/hashtab/" title="Download hashtab">hashtab</a> to display checksums for files directly in explorer.
+	the shell command <code>certutil -hashfile</code> on the ISO file.
 </p>
 
 ### Cryptographic Signatures
