@@ -39,7 +39,7 @@ pushd haiku
 	fi
 	if [[ $gitout != *"Already up-to-date"* ]] || [ ! -d "docs/develop/generated/html" ]; then
 		pushd docs/develop/
-			make html
+			#make html
 		popd
 	fi
 popd
