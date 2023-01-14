@@ -2,7 +2,7 @@
 
 set -e
 
-pip install sphinx
+pip install sphinx==6.0.0
 
 HUGO=hugo
 for cmd in "mv rm wget unzip sed pip $HUGO"; do
@@ -39,7 +39,7 @@ pushd haiku
 	fi
 	if [[ $gitout != *"Already up-to-date"* ]] || [ ! -d "docs/develop/generated/html" ]; then
 		pushd docs/develop/
-			#make html
+			make html
 		popd
 	fi
 popd
