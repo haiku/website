@@ -2,7 +2,11 @@ Haiku Project website
 ======================================
 This repository contains the source code for Haiku's main website.
 
+This website is generated using [Hugo](https://gohugo.io).
+
 ## Blogging
+To test local changes, use `hugo server`.
+
 To create a new blog for a new user, run `./scripts/newblog.sh`.
 
 To create a new blogpost, run `./scripts/newpost.sh`.
