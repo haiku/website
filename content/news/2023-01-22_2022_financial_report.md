@@ -20,4 +20,4 @@ appreciates every donation we get. A lot got done in 2022 and 2023 should be ano
 great year for Haiku. I won't make any predictions as far as releases are concerned
 (I've learned not to do that anymore), but I know Haiku will continue to improve
 and become a better system for daily use every month. Much of this is due to the
-support of our donors and that we can pay someone to work on Haiku.
+support of our donors which allows us to pay someone to work on Haiku.
