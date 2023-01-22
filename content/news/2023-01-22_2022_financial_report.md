@@ -13,7 +13,7 @@ Our donations for 2022 were almost as high as 2021, which was our record year so
 far.
 
 In 2022 our contractor waddlesplash worked the whole year, and we got a Beta 4
-release near Christmas due to his work as well as great work from many other contributors.
+release near Christmas due to his efforts as well as from our many other contributors.
 
 I want to extend a huge thanks to all our donors, everyone in the project really
 appreciates every donation we get. A lot got done in 2022 and 2023 should be another
