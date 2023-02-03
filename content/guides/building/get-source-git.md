@@ -101,7 +101,7 @@ git config --global user.email "john.doe@example.com"
 
 Although most contributors tend to disclose their real names, we do not have
 a real name policy and plenty of contributors contribute to Haiku using a pseudonym.
-That means that it is possible for anyone to contribute.
+You are not required to use your "real" name, a pseudonym is fine and several Haiku contributors chose to do that. However, make sure the e-mail address is correct and working, it is what we will use if we need to contact you later.
 
 On macOS, you must set the following option in order to avoid problems with the
 unicode representation of filenames:
