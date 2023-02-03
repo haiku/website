@@ -27,7 +27,7 @@ Haiku, you need to follow the instructions for patch submitters in the next
 section.
 </div>
 
-<div class="alert alert-warning">
+<div class="alert alert-info">
 <strong>The buildtools repository is not needed when building from within 32-bit Haiku</strong>.
 In that version, the tools required to build Haiku are included by default.
 </div>
