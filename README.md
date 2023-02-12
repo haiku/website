@@ -4,6 +4,12 @@ This repository contains the source code for Haiku's main website.
 
 This website is generated using [Hugo](https://gohugo.io).
 
+## Issue Tracker
+We track all issues on our own instance of [Trac](https://dev.haiku-os.org).
+
+To view all the tickets that involve this repository, just
+[click here](https://dev.haiku-os.org/query?component=%5EWebsite%2Fwww.haiku-os.org&order=priority).
+
 ## Blogging
 To test local changes, use `hugo server`.
 
