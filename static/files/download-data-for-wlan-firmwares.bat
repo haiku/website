@@ -20,21 +20,28 @@ if /i {%a4%}=={y} goto :yes
 if /i {%a4%}=={yes} goto :yes
 set HAIKU_TEMP=system\data\firmware
 :yes
-set baseURL=http://cgit.haiku-os.org/haiku/plain/src/system/libroot/posix
+set baseURL=https://raw.githubusercontent.com/haiku/firmware/master/wifi
+set haikuPortsURL=https://eu.hpkg.haiku-os.org/haikuports/master/x86_64/current/packages
 
 rem Make the temp directories to store files
-mkdir wifi-firmware\%HAIKU_TEMP%\broadcom43xx\b43-fwcutter\bits
+mkdir wifi-firmware\%HAIKU_TEMP%\iprowifi2100
+mkdir wifi-firmware\%HAIKU_TEMP%\iprowifi2200
+mkdir wifi-firmware\%HAIKU_TEMP%\broadcom43xx\b43-fwcutter
 mkdir wifi-firmware\%HAIKU_TEMP%\marvell88w8335
 
+cd wifi-firmware\%HAIKU_TEMP%\iprowifi2100
+wget %baseURL%/intel/ipw2100-fw-1.3.tgz
+
+cd wifi-firmware\%HAIKU_TEMP%\iprowifi2200
+wget %baseURL%/intel/ipw2200-fw-3.1.tgz
+
 cd wifi-firmware\%HAIKU_TEMP%\broadcom43xx
-wget http://downloads.openwrt.org/sources/wl_apsta-3.130.20.0
+wget %baseURL%/b43/wl_apsta-3.130.20.0
 cd b43-fwcutter
-wget http://bues.ch/b43/fwcutter/b43-fwcutter-019.tar.bz2
-wget %baseURL%/glibc/string/byteswap.h
-cd bits
-wget %baseURL%/glibc/include/arch/x86/bits/byteswap.h
+wget %haikuPortsURL%/packages/b43_fwcutter-019-2-x86_64.hpkg
+
 cd %SCRIPT_TOP%\wifi-firmware\%HAIKU_TEMP%\marvell88w8335
-wget http://weongyo.org/project/malo/malo-firmware-1.4.tar.gz
+wget %baseURL%/marvell/malo-firmware-1.4.tgz
 
 cd %SCRIPT_TOP%\wifi-firmware
 
