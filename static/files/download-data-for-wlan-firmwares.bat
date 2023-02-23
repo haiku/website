@@ -21,7 +21,7 @@ if /i {%a4%}=={yes} goto :yes
 set HAIKU_TEMP=system\data\firmware
 :yes
 set baseURL=https://raw.githubusercontent.com/haiku/firmware/master/wifi
-set haikuPortsURL=https://eu.hpkg.haiku-os.org/haikuports/master/x86_64/current/packages
+set haikuPortsURL=https://eu.hpkg.haiku-os.org/haikuports/master
 
 rem Make the temp directories to store files
 mkdir wifi-firmware\%HAIKU_TEMP%\iprowifi2100
@@ -38,7 +38,8 @@ wget %baseURL%/intel/ipw2200-fw-3.1.tgz
 cd wifi-firmware\%HAIKU_TEMP%\broadcom43xx
 wget %baseURL%/b43/wl_apsta-3.130.20.0
 cd b43-fwcutter
-wget %haikuPortsURL%/packages/b43_fwcutter-019-2-x86_64.hpkg
+wget %haikuPortsURL%/x86_gcc2/current/packages/packages/b43_fwcutter-019-2-x86_gcc2.hpkg
+wget %haikuPortsURL%/x86_64/current/packages/packages/b43_fwcutter-019-2-x86_64.hpkg
 
 cd %SCRIPT_TOP%\wifi-firmware\%HAIKU_TEMP%\marvell88w8335
 wget %baseURL%/marvell/malo-firmware-1.4.tgz
