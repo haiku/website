@@ -112,12 +112,6 @@ Note that in addition to all the platform-specific packages, you will also need 
 pkgman install cmd:python3 cmd:xorriso devel:libzstd
 ```
 
-**Additional requirements for building ARM versions of Haiku:**
-
-```sh
-pkgman install dtc
-```
-
 <a name="apt"></a>
 ## ![APT](/files/os-icons/ubuntu-32.png) APT (Linux distributions such as Debian, Ubuntu, Mint...)
 
@@ -130,7 +124,7 @@ sudo apt install git nasm bc autoconf automake texinfo flex bison gawk build-ess
 **Additional requirements for building ARM versions of Haiku:**
 
 ```sh
-sudo apt-get install u-boot-tools util-linux device-tree-compiler
+sudo apt-get install u-boot-tools util-linux
 ```
 
 <a name="pacman"></a>
@@ -157,12 +151,6 @@ sudo pacman -S paru uboot-tools
 sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel zstd-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
 ```
 
-**Additional requirements for building ARM versions of Haiku:**
-
-```sh
-sudo yum install libfdt
-```
-
 <a name="zypper"></a>
 ## ![zypper](/files/os-icons/suse-32.png) RPM-based GNU/Linux Distribution using zypper (openSUSE, SLES)
 
@@ -184,7 +172,7 @@ sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-li
 **Additional requirements for building ARM versions of Haiku:**
 
 ```sh
-sudo emerge -av u-boot-tools util-linux dtc
+sudo emerge -av u-boot-tools util-linux
 ```
 
 <a name="freebsd"></a>
