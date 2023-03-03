@@ -28,3 +28,17 @@ Building the RISCV64 compiler toolchain is quite easy using Haiku's ```configure
 Once you have a complete RISCV64 toolchain, you can build a Haiku filesystem image via ``jam -j2 -q @minimum-mmc``
 
 {{< alert-info "UEFI Bios" "The generated filesystem image can be booted under a RISCV64 UEFI BIOS">}}
+
+## Emulating Haiku
+
+The RISCV64 images can be emulated in QEMU with an EFI firmware like U-Boot.
+
+Emulating Haiku with U-Boot firmware, using the unified ``haiku-mmc.image`` image file:
+
+```sh
+qemu-system-riscv64 -kernel u-boot.bin -M virt -m 2048 \
+	-device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
+	-drive file=haiku-mmc.image,if=none,format=raw,id=x0 \
+	-device usb-ehci,id=ehci -device usb-tablet -device usb-kbd \
+	-device ati-vga -serial stdio
+```
