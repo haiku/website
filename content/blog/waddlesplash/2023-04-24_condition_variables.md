@@ -189,7 +189,7 @@ Finally, we have `fWaitStatus`. This value is either positive (if the `Entry` ha
 #### `Add`ing `Entry` to a `Variable`
 
 This is the most straightforward action of all: the `Variable`’s `fLock` is acquired, and then the following actions are taken inside the `Entry`:
-```
+```cpp
 inline void
 ConditionVariableEntry::_AddToLockedVariable(ConditionVariable* variable)
 {
