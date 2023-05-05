@@ -10,7 +10,7 @@ offers paid mentorship to people willing to work full time on Haiku for a few mo
 handles the payments, while mentors from our developer team handle the onboarding of the new
 contributors and guide them through the project.</p>
 
-<p><a href="/community/gsoc/2023">Read more</a> about Google Summer of Code 2021.</p>
+<p><a href="/community/gsoc/2023">Read more</a> about Google Summer of Code 2023.</p>
 
 <p>This year, 3 developers were selected.</p>
 
