@@ -44,4 +44,4 @@ I plan on working on bugs approximately in order of importance. This means bugs 
 
 ## Conclusion
 
-A big thank you to Google for hosting GSoC and all the work they put into it. Were it not for them, I would not be here today. I would also like to thank my mentors, PulkoMandy and Humdinger. You have been doing a great job so far!
+A big thank you to Google for hosting GSoC and all the work they put into it. Were it not for them, I would not be here today. I would also like to thank my mentors, PulkoMandy and Humdinger. Looking forward to working with you!
