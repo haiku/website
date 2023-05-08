@@ -36,7 +36,7 @@ Currently, `BReferenceable` is used directly. This has the potential to lead to 
 
 ### Get code out of the Icon library
 
-Currently, icon-o-matic's source is split across two directories: src/apps/icon-o-matic and src/libs/icon. The latter is the icons library. It is, however, littered with `#ifdef ICON_O_MATIC`'s, which isn't very appropriate for a library to do!
+Currently, Icon-O-Matic's source is split across two directories: src/apps/icon-o-matic and src/libs/icon. The latter is the icons library. It is, however, littered with `#ifdef ICON_O_MATIC`'s, which isn't very appropriate for a library to do!
 
 ### Bugfixes
 
