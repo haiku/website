@@ -9,6 +9,8 @@ tags = ["haiku", "software"]
 ## About Me
 Hello everyone! My name is Sean Brady, and I am currently in my Sophmore year at Oregon State University studying Computer Science. In early January of this year, I decided to become a contributor for a Google Summer of Code (GSoC) project focused on operating systems where I researched Haiku OS and its projects which interested me and the VPN Support Project in particular. From what I can tell, interest in bringing a VPN to Haiku has been in the work since the BeOS days and more recently the `tun.cpp` file about 4 years ago.
 
+For reference, I aslo go by Swangeon on [Github](https://github.com/Swangeon).
+
 ## Current Goals
 Here are the plans I have to achieve certain goals that I have for the project. As this is just the start of everything, they are subject to change as I go forward with the project.
 
