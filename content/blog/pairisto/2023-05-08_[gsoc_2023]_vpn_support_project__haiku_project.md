@@ -1,3 +1,11 @@
++++
+type = "blog"
+title = "[GSoC 2023] VPN Support Project | Haiku Project"
+author = "Pairisto"
+date = "2023-05-08 21:32:20-05:00"
+tags = ["haiku", "software"]
++++
+
 ## About Me
 Hello everyone! My name is Sean Brady, and I am currently in my Sophomore year at Oregon State University studying Computer Science. In early January of this year, I decided to become a contributor for a Google Summer of Code (GSoC) project focused on operating systems where I researched Haiku and its projects which interested me and the VPN Support Project in particular. From what I can tell, interest in bringing a VPN to Haiku has been in the works since the BeOS days and more recently the `tun.cpp` file about 4 years ago.
 
