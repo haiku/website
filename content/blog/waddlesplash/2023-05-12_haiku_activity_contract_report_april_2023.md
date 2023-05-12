@@ -110,7 +110,7 @@ X512 contributed a change to the "framebuffer" driver to fix framebuffer address
 
 ### HaikuPorts
 
-Begasus also wrote up a [quarterly report](https://discuss.haiku-os.org/t/haikuporter-haikuports-quarterly-report/13303) for HaikuPorts and HaikuPorter on the forums.
+Begasus also wrote up a [monthly report](https://discuss.haiku-os.org/t/haikuports-report-april-2023/13443/9) for HaikuPorts and HaikuPorter on the forums.
 
 ### Website
 
