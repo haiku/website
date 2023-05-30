@@ -14,7 +14,7 @@ const DISPLAY_ITEMS_COUNT = 7;
 
 var tabs = document.querySelectorAll("#activity-tabs li");
 for (var i = 0; i < tabs.length; i++) {
-	tabs[i].addEventListener('click', function (e) {
+	tabs[i].addEventListener('click', (e) => {
 		e.preventDefault();
 		var n;
 		if (n = document.querySelector("#activity-tabs li.active"))
@@ -26,27 +26,27 @@ for (var i = 0; i < tabs.length; i++) {
 		tab.classList.add("active");
 		if (tab.children[0].classList.contains("loader")) {
 			// Tab hasn't yet been loaded
-			if (tab.id == "tickets")
+			if (tab.id === "tickets")
 				LoadTicketsTab(tab);
-			else if (tab.id == "ml")
+			else if (tab.id === "ml")
 				LoadMailingListTab(tab);
-			else if (tab.id == "pkgs")
+			else if (tab.id === "pkgs")
 				LoadPackagesTab(tab);
 		}
 	});
 }
 
-var getURL = function (url, successHandler, errorHandler) {
+var getURL = (url, successHandler, errorHandler) => {
 	var xhr = typeof XMLHttpRequest != 'undefined' ?
 		new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 	xhr.open('get', url, true);
-	xhr.onreadystatechange = function() {
+	xhr.onreadystatechange = () => {
 		var status;
 		var data;
 		// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-readystate
-		if (xhr.readyState == 4) { // `DONE`
+		if (xhr.readyState === 4) { // `DONE`
 			status = xhr.status;
-			if (status == 200) {
+			if (status === 200) {
 				data = xhr.responseText;
 				successHandler && successHandler(data);
 			} else {
@@ -65,13 +65,13 @@ function timeToNow(b) {
 	var a = new Date();
 	var diff = parseInt((a - b) / 1000),
 		day_diff = Math.floor(diff / 86400);
-	return day_diff == 0 && (
+	return day_diff === 0 && (
 			diff < 60 && "just now" ||
 			diff < 120 && "1 minute ago" ||
 			diff < 3600 && Math.floor(diff / 60) + " minutes ago" ||
 			diff < 7200 && "1 hour ago" ||
 			diff < 86400 && Math.floor(diff / 3600) + " hours ago") ||
-		day_diff == 1 && "yesterday" ||
+		day_diff === 1 && "yesterday" ||
 		day_diff < 7 && day_diff + " days ago" ||
 		day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
 }
@@ -88,7 +88,7 @@ function InnerXML(xml) {
 }
 
 var tabSrc = document.querySelector("#activity-tabs #source");
-getURL("https://api.github.com/repos/haiku/haiku/commits", function(data) {
+getURL("https://api.github.com/repos/haiku/haiku/commits", (data) => {
 	var json = JSON.parse(data);
 	var html = "<ul>";
 	for (var i = 0; i < DISPLAY_ITEMS_COUNT; i++) {
@@ -115,7 +115,7 @@ function LoadTicketsTab(tab) {
 	});
 }
 function LoadMailingListTab(tab) {
-	getURL("/exapi/freelists/haiku-development", function (res) {
+	getURL("/exapi/freelists/haiku-development", (res) => {
 		var doc = new DOMParser().parseFromString(res, "text/xml");
 		var html = "<ul>";
 		var items = doc.querySelectorAll("item");
@@ -130,7 +130,7 @@ function LoadMailingListTab(tab) {
 	});
 }
 function LoadPackagesTab(tab) {
-	getURL("/exapi/packages?natlangcode=en&limit=10&types=CREATEDPKGVERSION", function (res) {
+	getURL("/exapi/packages?natlangcode=en&limit=10&types=CREATEDPKGVERSION", (res) => {
 		var doc = new DOMParser().parseFromString(res, "text/xml");
 		var html = "<ul>";
 		var items = doc.querySelectorAll("entry");
