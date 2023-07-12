@@ -6,7 +6,7 @@ date = "2023-07-12 16:00:13+02:00"
 tags = ["haiku", "software"]
 +++
 
-Argument handeling on Haiku.
+Argument handling on Haiku
 
 Hi, I'm Nephele. I've not made a blog post before, but this seemed like a good oportunity.
 
