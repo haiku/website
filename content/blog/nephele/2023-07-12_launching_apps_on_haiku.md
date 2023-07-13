@@ -25,11 +25,11 @@ Now, there are some flags that alter the behaviour of an application when it's l
 These are set in the resources of the application, which is embedded in their ELF file directly, not their attributes.
 
 These are:
-* B_SINGLE_LAUNCH
---- This will make the registrar ensure only one app with this app signature is running at any given time.
 * B_EXCLUSIVE_LAUNCH
---- The same as B_SINGLE_LAUNCH, with the exception that it is per signature AND file location,
---- moving the file to a second location therefore allows the application to be started a secoind time.
+--- This will make the registrar ensure only one app with this app signature is running at any given time.
+* B_SINGLE_LAUNCH
+--- Similar to EXCLUSIVE_LAUNCH, with the exception that it is per file location,
+--- moving the file to a second location therefore allows the application to be started a second time.
 *  B_MULTIPLE_LAUNCH
 --- There are no restrictions on how many times this app can be opened.
 * B_BACKGROUND_APP
