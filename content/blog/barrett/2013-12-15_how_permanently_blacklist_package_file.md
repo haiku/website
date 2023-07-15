@@ -6,7 +6,13 @@ date = "2013-12-15T19:17:40.000Z"
 tags = ["remove driver", "hpkg", "blacklist", "packagefs", "packages"]
 +++
 
-With the advent of package management and hrev46391, it has become possible to prevent a package from being extracted at boot time.From a suggestion of Matt, and with the contribution of Luroh (thanks!), i would like to explain you how to blacklist a package file in Haiku.
+{{< alert-info "This is a blog post preserved for historical purposes"
+    "This blog post is presented as it was written by the original author, and may not include
+    updates following changes in Haiku later versions. Up to date information is maintained in
+    the ['daily tasks' guide](/guides/daily-tasks/disable-package-entries)" >}}
+
+With the advent of package management and hrev46391, it has become possible to prevent a package from being extracted at boot time.
+From a suggestion of Matt, and with the contribution of Luroh (thanks!), i would like to explain you how to blacklist a package file in Haiku.
 
 In Haiku's <a href="/docs/userguide/en/bootloader.html"> boot menu </a>, there is a 'Blacklist entries' option available. This method will only let you disable system packages, and only until the next time you reboot.
 
