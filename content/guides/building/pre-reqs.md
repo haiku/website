@@ -82,26 +82,27 @@ Below are common build platforms and their statuses. This is not meant as a comp
 
 Note that in addition to all the platform-specific packages, you will also need to [install Haiku's custom version of Jam](/guides/building/jam).
 
-| Platform                           | Package Manager      | Supported | Notes               |
-|------------------------------------|----------------------|-----------|---------------------|
-| [Haiku](https://www.haiku-os.org)  | [pkgman](#pkgman)    | YES       | Easiest             |
-| [ArchLinux](https://archlinux.org) | [pacman](#pacman)    | YES       |                     |
-| [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                     |
-| [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                     |
-| [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       |                     |
+| Platform                           | Package Manager      | Supported | Notes                 |
+|------------------------------------|----------------------|-----------|-----------------------|
+| [Haiku](https://www.haiku-os.org)  | [pkgman](#pkgman)    | YES       | Easiest               |
+| [ArchLinux](https://archlinux.org) | [pacman](#pacman)    | YES       |                       |
+| [CentOS](http://centos.org)        | [rpm/yum](#yum)      | YES       |                       |
+| [Debian](http://debian.org)        | [deb/apt](#apt)      | YES       |                       |
+| [Fedora](https://fedoraproject.org)| [rpm/dnf](#yum)      | YES       |                       |
 | [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Not frequently tested |
-| [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                     |
-| [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                     |
-| [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.           |
-| [openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES       |                     |
-| [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                     |
-| [Rocky Linux](https://rockylinux.org)   | [rpm/yum](#yum)      | YES       |                     |
-| [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                     |
-| BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
-| macOS                              | [Homebrew](#macos)     | MAYBE     | Need a working case sensitive filesystem |
-| Solaris                            | [solaris](#solaris)  | NO        | Once upon a time... |
-| [Windows](https://microsoft.com/)    | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
-| Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time... |
+| [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                       |
+| [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                       |
+| [Nix OS](https://nixos.org/)       | [Nix](#nix)          | YES       |                       |
+| [openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES      |                       |
+| [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                       |
+| [Rocky Linux](https://rockylinux.org)   | [rpm/yum](#yum) | YES       |                       |
+| [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                       |
+| macOS                              | [Homebrew](#macos)   | MAYBE     | Need a working case sensitive filesystem |
+| [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.             |
+| [Windows](https://microsoft.com/)  | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
+| BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time…     |
+| Solaris                            | [solaris](#solaris)  | NO        | Once upon a time…     |
+| Zeta                               | [pkg](#beos_zeta)    | NO        | Once upon a time…     |
 
 <a name="pkgman"></a>
 ## ![pkgman](/files/os-icons/package-32.png) pkgman (Haiku package system)
@@ -161,7 +162,7 @@ sudo zypper install git nasm autoconf automake texinfo flex bison gcc-c++ make g
 ```
 
 <a name="gentoo"></a>
-## ![gentoo](/files/screenshots/gentoo-32_0_0.png) Portage based GNU/Linux Distribution (Gentoo)
+## ![gentoo](/files/os-icons/gentoo-32.png) Portage based GNU/Linux Distribution (Gentoo)
 
 **Basic requirements:**
 
@@ -174,6 +175,40 @@ sudo emerge -av dev-vcs/git autoconf automake texinfo flex bison gawk tar sys-li
 ```sh
 sudo emerge -av u-boot-tools util-linux
 ```
+
+<a name="nix"></a>
+## ![nix](/files/os-icons/nixos-32.png) NixOS
+
+You can use nix-shell to create a suitable build environment using this configuration:
+
+```nix
+with import <nixpkgs> {}; {
+  qpidEnv = stdenvNoCC.mkDerivation {
+    name = "my-buildhaiku-environment";
+    hardeningDisable = [ "format" ]; # Nix's gcc treats some warnings as errors by default, making the build fail
+    buildInputs = [
+        autoconf #autoheader
+        automake
+        bison
+        bc
+        flex
+        gawk
+        gcc11 # version chosen without good reason
+        mtools
+        nasm
+        python3
+        texinfo #makeinfo
+        unzip
+        wget
+        xorriso
+        zip
+        zlib
+        zstd # for when running jam
+    ];
+  };
+}
+```
+
 
 <a name="freebsd"></a>
 ## ![freebsd](/files/os-icons/freebsd-32.png) FreeBSD
@@ -190,7 +225,7 @@ $ NM=gcc-nm9 RANLIB=gcc-ranlib9 AR=gcc-ar9 ./configure --cross-tools-source ../b
 ```
 
 <a name="macos"></a>
-## ![macos](/files/os-icons/macos-32.png) macOS
+## ![macos](/files/os-icons/macosx-32.png) macOS
 
 A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ works fine.
 
