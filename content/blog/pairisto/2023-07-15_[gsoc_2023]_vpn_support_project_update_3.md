@@ -24,7 +24,6 @@ Looking at the decompiled code (the decompile wasn't perfect but, I managed) I n
 Now one question that you might have that I had was "Why does it fail with UDP and not ICMP when I ran the ping reply program???". Couldn't tell yeah -\_- Anyway, after switching that up I was able to get all tests working fairly smoothly so thumbs up I guess?
 
 ## Looking Forward
-<<<<<<< HEAD
 While the driver is working, it is far from done as things like how ioctl is not operational yet. Though there are 3 main problems still at play here:
 1. When the interface goes up, a packet from [here](https://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/network/stack/device_interfaces.cpp#n70) gets received and I am not quite sure how that is supposed to be handled as I don't see it happening with ethernet.cpp?
 2. The driver can kind of handle more than two sources sending packets from the interface for one or two seconds but then the application can crash hard but I think a fixed for this might be having a write semaphore like a [RNDIS device](https://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/drivers/network/ether/usb_rndis/RNDISDevice.cpp#n99) or comes from a solution to the next problem.
@@ -36,7 +35,6 @@ While the driver is working, it is far from done as things like how `ioctl` is n
 2. The driver can kind of handle more than two sources sending packets from the interface for one or two seconds but then the application can crash hard but I think a fixed for this might be having a write semaphore like a [RNDIS device](https://cgit.haiku-os.org/haiku/tree/src/add-ons/kernel/drivers/network/ether/usb_rndis/RNDISDevice.cpp#n99) or comes from a solution to the next problem.
 3. Every time the driver is opened, any first read call will always send some form of invalid data and skip the read semaphore which the application side can't use to write it back.
 These are problems but for now, I can continue with the project as a whole and try to get OpenVPN to start working with the TUN driver. The commit [here](https://review.haiku-os.org/c/haiku/+/6608) has the full code that works now.
->>>>>>> 4080616f45fa17ce3e707396896de680057cb654
 
 I hope you all enjoyed reading this VERY long overdue update that I hope was comprehensible but I thank everyone for all the support I've gotten on the project!
 
