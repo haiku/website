@@ -43,6 +43,9 @@ pushd haiku
 		popd
 	fi
 popd
+pushd userguide
+	gitout=$(git pull --ff-only)
+popd
 
 rm -rf public/docs/
 
