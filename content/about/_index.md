@@ -29,6 +29,6 @@ The [Be Operating System](https://en.wikipedia.org/wiki/BeOS) introduced progres
 
 Haiku is developed by a growing community of volunteer developers from all around the world. Additionally, Haiku also exists thanks to the dedicated support of a fervent and friendly community, and that of [Haiku, Inc.](https://haiku-inc.org), a non-profit organization founded by former project leader Michael Phipps.
 
-  * [Find out more about how The Haiku Project and Haiku, Inc. works.](/organization)
+  * [Find out more about how The Haiku Project and Haiku, Inc. works.](/community/organization)
   * [Discover the Haiku Community.](/community)
   * [Check out Haiku Contributors on GitHub.](https://github.com/haiku/haiku/graphs/contributors)
