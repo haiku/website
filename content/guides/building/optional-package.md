@@ -58,7 +58,7 @@ Create your archive as you typically would. HaikuPorts has a wiki page describin
 <b>&lt;softwareName&gt;-&lt;softwareVersion&gt;-&lt;platform&gt;-&lt;buildDate&gt;.zip</b>
 
 Notes:
-<ul><li>when &lt;platform&gt; is x86, differentiate between x86_gcc2 and x86_gcc11</li>
+<ul><li>when &lt;platform&gt; is x86, differentiate between x86_gcc2 and x86_gcc13</li>
 <li>&lt;buildDate&gt; is YYYY-MM-DD format, also known as <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a></li>
 </ul>
 </p>
