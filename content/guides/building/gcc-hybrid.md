@@ -7,7 +7,7 @@ tags = []
 
 <h3>What is a Haiku Hybrid?</h3>
 <p>
-Haiku hybrid images are Haiku releases which can compile and execute programs built for incompatible ABIs. This may mean different architectures like x86-64 and x86, or different, incompatible compilers like gcc2.95 and gcc11.x for x86. Currently only the latter case is supported. gcc2.95 gives Haiku binary compatibility with native legacy applications written for the BeOS.
+Haiku hybrid images are Haiku releases which can compile and execute programs built for incompatible ABIs. This may mean different architectures like x86-64 and x86, or different, incompatible compilers like gcc2.95 and gcc13.x for x86. Currently only the latter case is supported. gcc2.95 gives Haiku binary compatibility with native legacy applications written for the BeOS.
 </p>
 
 <p>
@@ -15,7 +15,7 @@ In a Haiku Hybrid, there is the primary GCC or architecture and the secondary GC
 </p>
 
 <p>
-The architecture name used in the build system and in Haiku for x86 gcc2 is "x86_gcc2" and for x86 gcc11 "x86". In a Haiku Hybrid one can find subdirectories named like the secondary architecture in */lib/, */bin/, and other directories. They contain files specific to the secondary architecture portion of the Hybrid.
+The architecture name used in the build system and in Haiku for x86 gcc2 is "x86_gcc2" and for x86 gcc13 "x86". In a Haiku Hybrid one can find subdirectories named like the secondary architecture in */lib/, */bin/, and other directories. They contain files specific to the secondary architecture portion of the Hybrid.
 </p>
 
 <p>
@@ -24,12 +24,12 @@ Since x86 is the only platform for which BeOS R5 binary compatibility is possibl
 
 <h3>Which GCC should I use?</h3>
 <p>
-In short, a gcc2 Hybrid. For R1 and earlier releases, gcc2 Hybrid is the official release style. As such you can expect the least amount of issues on it. Later we will likely switch to gcc11 Hybrids and eventually phase out the gcc2 part completely.
+In short, a gcc2 Hybrid. For R1 and earlier releases, gcc2 Hybrid is the official release style. As such you can expect the least amount of issues on it. Later we will likely switch to gcc13 Hybrids and eventually phase out the gcc2 part completely.
 </p>
 
-<h3>Why not gcc11?</h3>
+<h3>Why not gcc13?</h3>
 <p>
-For R1 and earlier releases, only the gcc2 ABI can be considered stable and future proof. Once R1 is released, binaries built with gcc11 will need to be recompiled (and more than likely have their sources updated for new API).
+For R1 and earlier releases, only the gcc2 ABI can be considered stable and future proof. Once R1 is released, binaries built with gcc13 will need to be recompiled (and more than likely have their sources updated for new API).
 </p>
 
 <h3>How are GCC Hybrids built?</h3>
