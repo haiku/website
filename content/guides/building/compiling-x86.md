@@ -5,10 +5,10 @@ date = "2012-09-09T15:36:52.000Z"
 tags = ["compiling", "x86"]
 +++
 
-<h3>gcc2h / gcc11 hybrid builds</h3>
+<h3>gcc2h / gcc13 hybrid builds</h3>
 
 <p>Haiku can be build as a hybrid image meaning that it contains gcc2 as well
-as gcc11 binaries. More information on this can be found on the <a href='/guides/building/gcc-hybrid'>gcc-hybrid</a> page.</p>
+as gcc13 binaries. More information on this can be found on the <a href='/guides/building/gcc-hybrid'>gcc-hybrid</a> page.</p>
 
 <p>This configuration is the default and is required to run both BeOS legacy
 applications as well as modern one using the recent programming language
