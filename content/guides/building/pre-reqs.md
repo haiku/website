@@ -193,7 +193,7 @@ with import <nixpkgs> {}; {
         bc
         flex
         gawk
-        gcc11 # version chosen without good reason
+        gcc13 # version chosen without good reason
         mtools
         nasm
         python3
