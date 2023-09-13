@@ -114,6 +114,10 @@ nielx updated the developer (internals) documentation on generating the package 
 
 davidkaroly updated the "bootstrap" package versions (which refer to those in `HaikuPortsCross`) for `arm`, `arm64`, `riscv`, and even `x86_64`.
 
+### HaikuPorts
+
+waddlesplash implemented `GraphicsExpose` in `Xlibe`, which fixes all scrolling in FLTK applications (previously it would just hang the entire application forever.)
+
 ### Website
 
 There are GSoC final reports out now, from [Zardshard](https://www.haiku-os.org/blog/zardshard/) on Icon-O-Matic, and [trungnt2910](https://www.haiku-os.org/blog/trungnt2910/) on porting .NET.
