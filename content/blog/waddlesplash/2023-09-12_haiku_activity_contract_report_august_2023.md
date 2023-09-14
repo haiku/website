@@ -72,7 +72,7 @@ trungnt2910 fixed the "connected" status reporting of UNIX domain sockets so tha
 
 waddlesplash removed and refactored some functions in kernel utility headers introduced in the lead-up to the `event_queue` implementation which turned out to not be needed after all, and ported some assertions and fault-tolerance between `DoublyLinkedList` and `DoublyLinkedQueue`.
 
-waddlesplash fixed some issues uncovered or introduced with the `event_queue`/`kqueue` changes the previous month, including incorrect locking around deselect operations in the kernel VFS layer, incorrect atomic flag modifications in the event-queue system itself, potential (or actual) use-afrer-frees in the older select code, and more.
+waddlesplash fixed some issues uncovered or introduced with the `event_queue`/`kqueue` changes the previous month, including incorrect locking around deselect operations in the kernel VFS layer, incorrect atomic flag modifications in the event-queue system itself, potential (or actual) use-after-frees in the older select code, and more.
 
 waddlesplash adjusted the return values of `ConditionVariable::Notify{All}` and `ConditionVariableEntry::Wait` to guarantee that the number returned by `Notify` is the actual number of `ConditionVariableEntry::Wait`s that returned with the passed status. (This is needed to avoid races into deadlocks in the user-mutex system.)
 
