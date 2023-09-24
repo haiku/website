@@ -320,7 +320,7 @@ const uint32 kOpenFile = 'open';
 
 ```cpp
 /*
- * Copyright 2004-2007 Haiku, Inc. All rights reserved.
+ * Copyright 2004-2007, Haiku, Inc. All rights reserved.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
@@ -348,8 +348,48 @@ const uint32 kOpenFile = 'open';
 ```
 
 *   In some cases you might have to extend the copyright list of an existing file. Instead of using the alternative scheme like in the latter example the **preferred** method is to add a copyright line for "Haiku, Inc." and then list authors like in the first example.
-*   In header files, there is no blank line between the license text and the header guard.
-*   After the copyright header (including the header guard in header files), there are exactly two blank lines before the rest contents.
+*   In header files, there is no blank line between the license text and the header guard but following that should be two blank lines. There should also be two blank lines before the close of the header guard as shown below;
+
+```cpp
+/*
+ * Copyright 2004-2007, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT License.
+ *
+ * Authors:
+ *		Jonathan Smith, optional@email
+ *		Developer Name, optional@email
+ */
+#ifndef THIS_CLASS_H
+#define THIS_CLASS_H
+
+
+#include <Message.h>
+
+
+class ThisClass {
+// ...
+};
+
+
+#endif	// THIS_CLASS_H
+```
+
+*   After the copyright header (including the header guard in header files), there are exactly two blank lines before the rest contents as shown below;
+
+```cpp
+/*
+ * Copyright 2004-2007, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT License.
+ *
+ * Authors:
+ *		Jonathan Smith, optional@email
+ *		Developer Name, optional@email
+ */
+ 
+ 
+#include "ThisClass.h"
+// ...
+```
 
 ### Dead code and Debugging code
 
@@ -482,6 +522,16 @@ bool doThings = value;
 *   While the header that belongs to a source file should be included first to ensure self containment, all other headers are specified from most general (POSIX) to most specific (local directory). In order to alphabetize them, please group them by API origin, like (but without the comments, of course):
 
 ```cpp
+/*
+ * Copyright 2004-2007, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT License.
+ *
+ * Authors:
+ *		Jonathan Smith, optional@email
+ *		Developer Name, optional@email
+ */
+ 
+ 
 #include "ThisClass.h"
 
 // POSIX API headers
@@ -495,6 +545,22 @@ bool doThings = value;
 #include <privateheader.h>
 
 #include "OtherLocalHeaders.h"
+
+
+void
+ThisClass::SomeMethod()
+{
+  // ...
+}
+
+
+int32
+ThisClass::SomeOtherMethod()
+{
+  // ...
+}
+
+// ...
 ```
 
 *   Don't use `<pathname/include.h>` if they aren't necessary; (like for `<sys/stat.h>`).
