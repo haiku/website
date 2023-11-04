@@ -6,7 +6,7 @@ date = "2023-10-28 10:35:19+01:00"
 tags = ["haiku", "software"]
 +++
 
-This article lists some of the recent updates for developer tools that are available in the HaikuPorts applications. Many of these can be installed the HaikuDepot.
+This article lists some of the recent updates for developer tools that are available in the HaikuPorts repository. Many of these can be installed from HaikuDepot.
 
 This is the first article on this topic, but it may become a regular (quarterly?) series. Let me know in the comments what you find of these notes, and what else you think should be covered.
 
