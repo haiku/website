@@ -68,7 +68,7 @@ Check out the packages on **HaikuDepot**:
 
 ## Qt Creator 11.0.3
 
-This IDE from the makers of Qt supports full-fledged C++ development, including code completion using `clangd` (part of the LLVM package). See what's new in [version 11](https://www.qt.io/blog/qt-creator-11-released) . Previous release on Haiku was 6.0.1.
+This IDE from the makers of Qt supports full-fledged C++ development, including code completion using `clangd` (part of the LLVM package). See what's new in [version 11](https://www.qt.io/blog/qt-creator-11-released). Previous release on Haiku was 6.0.1.
 
 Check out the package on **HaikuDepot**: [64 bit](https://depot.haiku-os.org/#!/pkg/qt_creator/haikuports/haikuports_x86_64/11/0/3/-/2/x86_64) | [32 bit](https://depot.haiku-os.org/#!/pkg/qt_creator_x86/haikuports/haikuports_x86_gcc2/11/0/3/-/2/x86_gcc2)
 
