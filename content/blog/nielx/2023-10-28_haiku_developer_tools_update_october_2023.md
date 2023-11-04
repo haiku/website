@@ -74,7 +74,7 @@ Check out the package on **HaikuDepot**: [64 bit](https://depot.haiku-os.org/#!/
 
 ## CudaText 1.200.0.0
 
-This modern text editor for developers is written in Object Pascal, is fast, and has a lot of features that are available as plugins, including code completion using `clangd`(part of the LLVM package). See the [change log](https://github.com/Alexey-T/CudaText/blob/1.200.0/app/readme/history.txt) to see what's new.
+This modern text editor for developers is written in Object Pascal, is fast, and has a lot of features that are available as plugins, including code completion using `clangd` (part of the LLVM package). See the [change log](https://github.com/Alexey-T/CudaText/blob/1.200.0/app/readme/history.txt) to see what's new.
 
 Check out the package on **HaikuDepot**: [64 bit](https://depot.haiku-os.org/#!/pkg/cudatext/haikuports/haikuports_x86_64/1/200/0.0/-/1/x86_64?bcguid=bc2503-PXKT) | [32 bit](https://depot.haiku-os.org/#!/pkg/cudatext_x86/haikuports/haikuports_x86_gcc2/1/200/0.0/-/1/x86_gcc2)
 
