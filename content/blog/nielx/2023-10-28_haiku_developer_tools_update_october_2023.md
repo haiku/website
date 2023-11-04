@@ -14,7 +14,7 @@ This is the first article on this topic, but it may become a regular (quarterly?
 
 ## GCC 13.2.0
 
-The Haiku nightlies are now built with GCC 13.2.0 as the primary compiler and it is available for software developers. It can also be used on a Haiku R1 beta 4 system. The previous version was GCC 11.3.0. The packages support **C, C++, and Fortran.**
+The Haiku nightlies are now built with GCC 13.2.0 as the primary compiler (the previous version was GCC 11.3.0) and it is available for software developers. It can also be used on a Haiku R1 beta 4 system. The packages support **C, C++, and Fortran.**
 
 The updated version includes all improvements in the [GCC 12](https://gcc.gnu.org/gcc-12/changes.html) and [GCC 13](https://gcc.gnu.org/gcc-13/changes.html) builds. Since Haiku's primary language is C++, it is particularly notable that there is now improved support for C++20 features, as well as some more early support for C++23.
 
