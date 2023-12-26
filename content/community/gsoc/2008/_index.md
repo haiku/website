@@ -13,7 +13,7 @@ tags = []
 
 <h3>Current status of the program</h3>
 
-<p>The Haiku developers have come up with a <a href="/community/gsoc2008/ideas">list of ideas</a> for students to choose from or to base their proposals on. The candidate students have already finished submitting their applications, and the Haiku mentors are currently in the process of reviewing and ranking them. All student proposals will be matched with a mentor by April 18, and the final list of accepted students and their projects will be announced on April 21 (12 noon US PDT).
+<p>The Haiku developers have come up with a <a href="/community/gsoc/2008/ideas">list of ideas</a> for students to choose from or to base their proposals on. The candidate students have already finished submitting their applications, and the Haiku mentors are currently in the process of reviewing and ranking them. All student proposals will be matched with a mentor by April 18, and the final list of accepted students and their projects will be announced on April 21 (12 noon US PDT).
 
 <ul>
 <li class="icon-html"><a href="http://code.google.com/opensource/gsoc/2008/faqs.html#0.1_timeline">Timeline of GSoC 2008</a></li>
