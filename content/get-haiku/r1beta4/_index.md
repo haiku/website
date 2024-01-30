@@ -63,13 +63,11 @@ If you choose to download an image, please select from the list of available mir
       <td><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta4/haiku-r1beta4-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta4/haiku-r1beta4-x86_64-anyboot.iso">iso</a></td>
     </tr>
-<!--
     <tr class="link">
       <td class="location"><b>Location:</b> Stockholm, Sweden <br/>Provided by: <a target="_blank" class="ext" href="http://www.tnonline.net" title="tnonline.net">tnonline.net</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta4/haiku-r1beta4-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta4/haiku-r1beta4-x86_64-anyboot.iso">iso</a></td>
     </tr>
--->
     <tr class="link">
       <td class="location"><b>Location:</b> Chicago, United States (IPFS) <br/>Provided by: <a target="_blank" class="ext" href="http://www.cloudflare-ipfs.com" title="cloudflare-ipfs.com">cloudflare-ipfs.com</a></td>
       <td><a class="track" href="https://cloudflare-ipfs.com/ipns/hpkg.haiku-os.org/release/r1beta4/haiku-r1beta4-x86_gcc2h-anyboot.iso">iso</a></td>
