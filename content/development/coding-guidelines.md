@@ -31,7 +31,8 @@ Make your code not stick out — make it consistent with the rest of the code yo
 *   A line must not have more than 100 columns.
 *   When wrapping a too long line, add at least one tab to the wrapped parts, and one extra tab per expression levels (for example in a complex condition with parentheses, each parenthese level is indented one tab further).
 *   Functions/classes in namespaces are not indented.
-*   Always separate operators with a space on both sides, and use a space after comma.
+*   Always separate operators with a space on both sides, except after C-style cast operator.
+*   Always use a space after comma.
 
 First, let's use some examples to illustrate the main formatting conventions:
 
@@ -385,8 +386,8 @@ class ThisClass {
  *		Jonathan Smith, optional@email
  *		Developer Name, optional@email
  */
- 
- 
+
+
 #include "ThisClass.h"
 // ...
 ```
@@ -399,6 +400,14 @@ class ThisClass {
 ### Miscellaneous
 
 *   Use C++ casts (`dynamic_cast`, `static_cast`, `const_cast`, `reinterpret_cast`) over C casts.
+
+```cpp
+	// C++ style cast is preferred
+	WirelessNetworkMenuItem* wirelessItem = dynamic_cast<WirelessNetworkMenuItem*>(menuItem);
+	// example C-style cast, note that there is _no_ whitespace after the cast operator
+	int count = avcodec_count_frames((const uint8_t *)buffer, bufferSize);
+```
+
 *   Use `const` properly.
 *   Prefer stack-allocated objects over heap-allocated ones whenever possible.
 *   Use `AutoLock`, etc. for all locking and other resource acquisition, don't use `Lock()` and `Unlock()` on a `BLocker` directly. Don't use `BAutolock`, use the `AutoLock` template instead.
@@ -530,8 +539,8 @@ bool doThings = value;
  *		Jonathan Smith, optional@email
  *		Developer Name, optional@email
  */
- 
- 
+
+
 #include "ThisClass.h"
 
 // POSIX API headers
