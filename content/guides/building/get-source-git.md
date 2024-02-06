@@ -149,7 +149,7 @@ Before making a commit, install a Git hook that will automatically
 for you:
 
 ```sh
-curl -Lo "haiku/.git/hooks/commit-msg" https://git.haiku-os.org/tools/hooks/commit-msg
+curl -Lo "haiku/.git/hooks/commit-msg" https://review.haiku-os.org/tools/hooks/commit-msg
 ```
 
 If a maintainer asks you to correct something later on, Gerrit will use that
