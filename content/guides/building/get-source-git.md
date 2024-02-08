@@ -133,13 +133,13 @@ You may need to replace the <code class="varname">$USER</code> parameter in the 
 <h4>Build Tools:</h4>
 
 ```sh
-git clone "ssh://$USER@git.haiku-os.org/buildtools" && curl -Lo "buildtools/.git/hooks/commit-msg" https://git.haiku-os.org/tools/hooks/commit-msg
+git clone "ssh://$USER@git.haiku-os.org/buildtools" && curl -Lo "buildtools/.git/hooks/commit-msg" https://review.haiku-os.org/tools/hooks/commit-msg
 ```
 
 <h4>Haiku:</h4>
 
 ```sh
-git clone "ssh://$USER@git.haiku-os.org/haiku" && curl -Lo "haiku/.git/hooks/commit-msg" https://git.haiku-os.org/tools/hooks/commit-msg
+git clone "ssh://$USER@git.haiku-os.org/haiku" && curl -Lo "haiku/.git/hooks/commit-msg" https://review.haiku-os.org/tools/hooks/commit-msg
 ```
 
 <h4>Preparing your first patch</h4>
