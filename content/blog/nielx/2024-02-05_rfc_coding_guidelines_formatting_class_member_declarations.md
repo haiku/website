@@ -7,11 +7,21 @@ tags = ["haiku", "rfc", "development", "coding-guidelines"]
 +++
 
 
-This RFC proposes to change the Haiku [coding guidelines](https://www.haiku-os.org/development/coding-guidelines) to change the formatting of class and struct member declarations in class and struct definitions from a **Table Class Member Declaration Style**, to a **Normalized Class Member Declaration Style.** The arguments are that (1) the current format has severe limitations which limits the aesthetic value of the current formatting, especially when modern C++ language features are used, and (2) it is not a good use of the time of Haiku's contributors to modify and maintain custom logic in the `haiku-format` tool (derived from `clang-format`). If the proposal is adopted, any new code contributions will have to use the new formatting style, and contributors are required to reformat any struct and class definitions that they modify. There will be an exception for shared headers.
+This RFC proposes to change the Haiku [coding guidelines](https://www.haiku-os.org/development/coding-guidelines) to change the formatting of variable and member declarations from a **Table Class Member Declaration Style**, to a **Normalized Declaration Style** or a **Aligned Declaration Style**. The arguments are that (1) the current format has severe limitations which limits the aesthetic value of the current formatting, especially when modern C++ language features are used, and (2) it is not a good use of the time of Haiku's contributors to modify and maintain custom logic in the `haiku-format` tool (derived from `clang-format`). If the proposal is adopted, any new code contributions will have to use the new formatting style, and contributors are required to reformat any declarations that they modify.
 
 <!--more-->
 
 Haiku currently does not have a formal RFC process. Please see the end of this document about the proposed procedure.
+
+## Change Log
+
+The [initial version](https://github.com/haiku/website/blob/53e092e580ee12c06a3d20ce608e4b55e49c420a/content/blog/nielx/2024-02-05_rfc_coding_guidelines_formatting_class_member_declarations.md) of this article was published on 5 February 2024. After consulting with the community on the forum, the article was updated into the version you are currently reading.
+
+Note the following changes:
+
+- The proposal now covers all function and variable declarations, so including the ones outside of the class definition. This is both for pragmatic reasons (changing `haiku-format` would automatically apply to non-class members) as well as the finding that currently this is also not consistent.
+- In course of the community discussion, there was a desire to see if there was an alternative that kept the spirit of the aligned declarations. This proposal therefore gives two options, namely the **Normalized Declaration Style** and the **Aligned Declaration Style**. Both can be implemented with `haiku-format` as it currently is.
+- The discussion also reviewed the implementation process. My takeaway was that there is a strong preference for a single style (and to not have a legacy option), so the implementation kill the exception for the legacy style. There was no consensus on whether a big one time reformat was in order, so this proposal punts on that point and only applies to new code.
 
 ## Background: Coding Guidelines
 
@@ -87,23 +97,23 @@ Admittedly, when a class or a struct can be implemented in such a way that it do
 
 #### Column Length Violations
 
-The first group of inconsistencies are when the code leads to column length violations. The first type of violation is when the qualifier is oversized.  According to the rule, tabs 2 and 3 are for leading qualifiers and specifiers. In order for content to fit in nicely, this means 2*4-1 = 7 characters. The example from the code guidelines already shows this breaks:
+The first group of inconsistencies are when the code leads to column length violations. The first type of violation is when the qualifier is oversized.  According to the rule, tabs 2 and 3 are for leading qualifiers and specifiers. In order for content to fit in nicely, this means 2*4-1 = 7 characters. The following examples show how this breaks:
 
 ```c++
-class LeadingQualifierSpecifierExample
-{
+class LeadingQualifierSpecifierExample {
 	// 'good' example
 			int32				fData1;
 	// volatile makes the return type unaligned.
 	volatile int32				fData2;
+	// so does [[nodiscard]]
+	[[nodiscard]] int32			fData3;
 };
 ```
 
 Tabs 4 through 7 are for the return value in case of a member function, or a type in case of member data. This means 5*4-1 = 19 characters. If the return value is a `const`, that reduces the space down to 13 characters. In the worst case, the return type is an r-value, so the appended `&&` reduces the space to 11 characters. This limitation currently is not too bad in existing Haiku code, but I expect that future APIs may make more use of language features like `std::expected<>` (15 characters, and then it still needs two type parameters) or  `std::shared_ptr<>` (17 characters without the type).
 
 ```c++
-class LongReturnTypeExample
-{
+class LongReturnTypeExample {
 public:
 	// uncomplicated return value
 			BKey				Key();
@@ -121,8 +131,7 @@ public:
 The second group of issues with the current style is that it emphasizes the qualifiers and specifiers at the beginning of the declaration, but it de-emphasizes the parts after the parameter list. See the following list for a collection of important specifiers and qualifiers, and see how visually they are second order of importance.
 
 ```c++
-class MoreAtTheEndExample
-{
+class MoreAtTheEndExample {
 public:
 	// emphasis in this line is on the return type and the name of the member function
 	virtual BKey				Key(const BString& key, bool searchWell, int32 offset);
@@ -176,42 +185,20 @@ Furthermore, if you accept point 3 about the importance of code style, it must t
 
 It is for those reasons that I consider us spending time adding support for our particular formatting of class member declarations, is uneconomic: it is not where individual contributors to Haiku will get their pleasure, nor will it be where Haiku delivers value to the larger community.
 
-## Example of the Normalized Class Member Declaration Style
+## Two proposals for a new style
 
-As part of this proposal, I will demonstrate `haiku-format`'s current formatting for class member declarations. I will call this style the **Normalized Class Member Declaration Style**. The example shows the existing formatting of a simplified `BHandler` declaration:
+This section introduces two options for a new style, both of which can be configured with the current version of `haiku-format`. The **Normalized Declaration Style** is actually the current style of `haiku-format`. It does away with any form of table formatting, and is the simplest form when writing code. The second style is the **Aligned Declaration Style**, which retains some form of vertical alignment to enhance reading code, though it will require developers to do (re-)alignment of code when they make changes. This, of course, can be done with `haiku-format`.
 
-```c++
-class BHandler : public BArchivable {
-public:
-							BHandler(const char* name = NULL);
-	virtual					~BHandler();
+Note that both styles will apply beyond member declarations of classes and structs, as they will apply to any function or variable declaration anywhere in the source code!
 
-	// BHandler guts.
-	virtual	void			MessageReceived(BMessage* message);
-			BLooper*		Looper() const;
-			const char*		Name() const;
+### Option 1: Normalized Declaration Style
 
-	// Fictional very long member function declaration
-			status_t		Launch(const entry_ref* ref,
-								const BMessage* initialMessage = NULL,
-								team_id* _appTeam = NULL) const volatile noexcept;
-
-private:
-	typedef BArchivable		_inherited;
-	friend inline int32		_get_object_token_(const BHandler* );
-	friend class BLooper;
-
-			int32			fToken;
-			char*			fName;
-};
-
-```
+As part of this proposal, I will demonstrate `haiku-format`'s current formatting for function and variable declarations. I will call this style the **Normalized Declaration Style**. The example shows the existing formatting of a simplified `BHandler` declaration and some function declarations:
 
 After applying `haiku-format`:
 
 ```c++
-class BHandler : public BArchivable
-{
+class BHandler : public BArchivable {
 public:
 	BHandler(const char* name = NULL);
 	virtual ~BHandler();
@@ -221,44 +208,107 @@ public:
 	BLooper* Looper() const;
 	const char* Name() const;
 
-	// Fictional very long member function declaration
+	// Long declaration, split over multiple lines
 	status_t Launch(const entry_ref* ref, const BMessage* initialMessage = NULL,
 		team_id* _appTeam = NULL) const volatile noexcept;
 
 private:
 	typedef BArchivable _inherited;
-	friend inline int32 _get_object_token_(const BHandler*);
 	friend class BLooper;
 
-	int32 fToken;
+	friend inline int32 _get_object_token_(const BHandler*);
+	std::list<int32> fTokens;
 	char* fName;
 };
+
+extern DIR* fs_open_index_dir(dev_t device);
+extern int fs_close_index_dir(DIR* indexDirectory);
+extern struct dirent* fs_read_index_dir(DIR* indexDirectory);
+extern void fs_rewind_index_dir(DIR* indexDirectory);
+
+BLooper*
+BLooper::Looper() const
+{
+	// example of the existing style of declarations inside functions
+	int count;
+	const char* name;
+	int32 index = 0;
+}
+
 ```
 
-The example above is generated by `haiku-format` as it is right now: it does not require any additional configuration or changes.
+The example above is generated by `haiku-format` as it is right now: it does not require any additional configuration or changes. The coding guidelines would be amended as follows.
 
-## Proposal: Update Class Definitions Rules with Legacy Shared Header Exception
+**Declarations**
+- _Declarations_ of types, variables, functions, methods, aliases, friends, etcetera are on a single line, with each token in the declaration separated spaces according to the rules in the 'Indenting and Whitespace' section.
 
-Given the arguments above, I propose changing the rule to use the **Normalized Class Member Declaration Style** that is currently implemented in the `clang-format` (and by extension `haiku-format`) rule set to format the member declarations of classes and structs. This means no longer trying to align the modifiers, return types and member names in a table format, but instead using spaces as a separator without requiring specifiers/qualifiers, return types and names to be aligned.
+### Option 2: Aligned Declaration Style
 
-In order not to force a rewrite of the entire code base, the rule only applies to new contributions. Furthermore, I propose making an opt-in exception for shared headers, so that we do not have to reformat public (and semi-public) headers, and keep those consistent.
+Additionally, `haiku-format` can be configured to support an alternative style. I will call this style the **Aligned Declaration Style**. The example shows the existing formatting of a simplified `BHandler` declaration and some function declarations:
 
-I propose the following rules:
+```c++
+class BHandler : public BArchivable {
+public:
+	BHandler(const char* name = NULL);
+	virtual ~BHandler();
 
-- **By default**, any new code must use the formatting of class and struct members as `haiku-format` and the (updated) Haiku code style guidelines.
+	// BHandler guts.
+	virtual void MessageReceived(BMessage* message);
+	BLooper*     Looper() const;
+	const char*  Name() const;
 
-- **Exception**: any existing shared header, which is defined as any header in the haiku repository under `headers`, is allowed to continue to use the legacy class member formatting style, given that they [explicitly mark the class as opting out](https://clang.llvm.org/docs/ClangFormatStyleOptions.html#disabling-formatting-on-a-piece-of-code) of `clang-format`.
+	// Long declaration, split over multiple lines
+	status_t Launch(const entry_ref* ref, const BMessage* initialMessage = NULL,
+		team_id* _appTeam = NULL) const volatile noexcept;
 
-In practical terms, I do not suggest going through the entire code base at this time and reformatting all class and struct declarations, however if contributors are introducing changes to the code, they will share the responsibility to reformat any existing declarations (or add in the exception markers if they opt into the legacy format). This means:
+private:
+	typedef BArchivable _inherited;
+	friend class BLooper;
 
-- If a contributor makes a change that touches on a struct or class declaration in a source code file or in a header file that is not shared, then reformatting that struct or class is a requirement of the change being accepted.
+	friend inline int32 _get_object_token_(const BHandler*);
+	std::list<int32>    fTokens;
+	char*               fName;
+};
 
-- Likewise, if a contributor makes a change in a shared header and they choose to put that header under the legacy rules, they must add the appropriate markers around the class as part of their change, in order to prevent clang-format/haiku-format from touching it.
+extern DIR*           fs_open_index_dir(dev_t device);
+extern int            fs_close_index_dir(DIR* indexDirectory);
+extern struct dirent* fs_read_index_dir(DIR* indexDirectory);
+extern void           fs_rewind_index_dir(DIR* indexDirectory);
 
-- If someone previously has made a choice whether to use legacy or modern formatting, then that practise must be continued.
+BLooper*
+BLooper::Looper() const
+{
+	// aligned declarations inside functions as well!
+	int         count;
+	const char* name;
+	int32       index = 0;
+}
+```
 
+The example above is generated by `haiku-format` as it is right now: it does not require any additional configuration or changes. The coding guidelines would be amended as follows.
+
+**Indention and whitespace** (amendment)
+- Use spaces to align tokens within a line (such as aligned function declarations).
+
+**Declarations**
+- _Declarations_ of variables and functions are on a single line.
+- When two or more declarations are consequitive they form a block. Within a block, the identifiers of the variable or function are vertically aligned. The point of alignment is based on the identifier that is positioned at the rightmost position in the line.
+- Constructors and destructors are not aligned (even when the destructor is `virtual`).
+- A block ends when there is a comment, or a statement that is not a variable or function declaration. In a class, a block is also ends when an access modifier (public, protected, private) is found. Empty lines do _not_ break a block, so that they can be used to further group declarations within a block.
+- Other types of declarations (such as types and aliases) are on a single line, with each token in the declaration separated spaces according to the rules in the 'Indenting and Whitespace' section.
+
+## Proposal & Implementation of the New Rules
+
+Given the arguments above, I propose changing the rule to use one of the two styles described above, which both are currently implemented in the `clang-format` (and by extension `haiku-format`) rules.
+
+When adopting either of these proposals, the existing formatting becomes obsolete. In order not to force a rewrite of the entire code base, the rule only applies to new contributions.
+
+Therefore, **any new code must use the formatting of class and struct members as `haiku-format` and the (updated) Haiku code style guidelines**.
+
+The implementation of this proposal does _not_ require going through the  entire code base at this time and reformatting all declarations, however if contributors are introducing changes to the code, they will share the responsibility to reformat any existing declarations. This means:
+
+- If a contributor makes a change that touches on a struct or class declaration in a source code file or in a header file that is not shared, then reformatting that struct or class is a requirement of the change being accepted. Likewise, if their contribution changes a declaration outside a class that is part of a block of declarations, the entire block must be reformatted.
 - This may mean that in some cases, it might be beneficial for a contributor to break up their change into two commits, a reformat commit and a commit with the actual changes, to help code review.
-
 - Likewise, if a contributor is making a series of changes in a particular module in the code, it might be more efficient if they introduce an overall reformatting change touching all files for that module, in order to make reviews of subsequent changes easier.
 
 ## Out of Scope
@@ -268,6 +318,8 @@ This RFC is limited to changing the formatting guidelines for member declaration
 Out of scope for this RFC are:
 
 - The discussion of whether any of the language features used as examples above must be added to the style guide.
+
+- Doing a one-time reformat of (parts) of the codebase.
 
 - Any proposal about the further use of the Haiku Format Bot.
 
