@@ -2,11 +2,13 @@
 type = "blog"
 title = "So you want to help with WebKit?"
 author = "PulkoMandy"
-date = "2024-02-28 08:34:45-05:00"
+date = "2024-03-01 12:00:00-05:00"
 tags = ["WebKit", "webpositive"]
 +++
 
-{{< alert-info This blog post is copied from [a forum post](https://discuss.haiku-os.org/t/my-progress-on-webkit2-port/11653/64) PulkoMandy made. It is reproduced here on the website to make it easier to find and reference. >}}
+<div class="alert alert-info">
+This blog post was originally <a href="https://discuss.haiku-os.org/t/my-progress-on-webkit2-port/11653/64">a forum post</a>. It is reproduced here on the website to make it easier to find and reference.
+</div>
 
 I heard that some more people may be interesting in helping with WebKit. So here is a summary of the current state, the things I think need work, or the possible future paths to explore.
 
