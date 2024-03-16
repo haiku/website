@@ -13,6 +13,9 @@ This RFC proposes to change the Haiku [coding guidelines](https://www.haiku-os.o
 
 Haiku currently does not have a formal RFC process. Please see the end of this document about the proposed procedure.
 
+{{< alert-warning "Proposal Withdrawn" "The proposal to change the formatting style of function and variable declarations has been withdrawn by the author on 16 March 2024.">}}
+
+
 ## Change Log
 
 The [initial version](https://github.com/haiku/website/blob/53e092e580ee12c06a3d20ce608e4b55e49c420a/content/blog/nielx/2024-02-05_rfc_coding_guidelines_formatting_class_member_declarations.md) of this article was published on 5 February 2024. After consulting with the community on the forum, the article was updated into the version you are currently reading.
