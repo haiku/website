@@ -23,3 +23,7 @@ While Haiku is under heavy development, we still desire to create a secure opera
 ## Haikuports (ported software)
 
 Any serious vulnerabilities should be reported to the [Haikuports issue tracker](https://github.com/haikuports/haikuports/issues)
+
+## Disclosure
+
+Any critical vulnerabilities with a CVE attached impacting Haiku will be disclosed on our [website](/security), and via our [haiku-security mailing list](/community/ml).
