@@ -137,7 +137,7 @@ In order to simplify the process, we will use `vmrun.sh`, an example script whic
 
 ```sh
 cp /usr/share/examples/bhyve/vmrun.sh .
-sh vmrun.sh -c1 -E -i -I haiku-release-anyboot.iso haiku
+sh vmrun.sh -c1 -E -i -I haiku-release-anyboot.iso -d haiku-guest.img haiku
 ```
 
 - `-c1` stands for the number of processor cores that will be allocated for the machine. In this scenario, we are using 1 core, which is a recommended option.
@@ -151,6 +151,7 @@ Some additional parameters which could prove to be useful are the following:
 - `-m` can change the allocated memory size, which is `512M` by default.
 - `-v` is an option that delays the boot until you connect with a VNC client to the host machine. The default port of the VNC server is `5900`.
 - `-P` allows you to change the port of the VNC server.
+- `-T` enables tablet device (for UEFI GOP) in case your mouse does not work
 
 Use the `--help` parameter if you need additional information.
 
