@@ -21,6 +21,7 @@ A large amount of detailed documentation is available for users and developers.
 * [Haiku Book](/docs/api/)
 * [Human Interface Guidelines](/docs/HIG/index.xml)
 * [Icon Guidelines](/development/icon-guidelines)
+* [Haiku internals' documentation](/docs/develop/)
 
 ### Legacy Documentation
 
