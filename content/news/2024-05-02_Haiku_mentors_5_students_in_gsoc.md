@@ -1,7 +1,7 @@
 +++
 type = "news"
 title = "Haiku to mentor 5 students in Google Summer of Code 2024"
-date = "2024-05-02T08:00:00.000Z"
+date = "2024-05-02 08:00:00.000Z"
 tags = ["gsoc", "gsoc2024"]
 +++
 
