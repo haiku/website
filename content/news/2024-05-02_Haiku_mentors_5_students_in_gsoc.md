@@ -19,7 +19,7 @@ contributors and guide them through the project.</p>
 <li>Daniel Martin, mentored by Scottmc and Waddlesplash, will work on accelerated virtualization for QEMU using NVMM.</li>
 <li>Diego Roux, mentored by Korli, will work on a virtio audio driver, for use when Haiku is used inside a virtual machine.</li>
 <li>Trungnt2910 (who worked on C# in GSoC 2023), will be mentored by Waddlesplash to work on improving Debugger and making GDB or LLDB usable for debugging Haiku applications.</li>
-<li>Zardsahrd (who worked on Icon-O-Matic in GSoC 2023), will be mentored by PulkoMandy to work on the WebKit2 port to Haiku.</li>
+<li>Zardshard (who worked on Icon-O-Matic in GSoC 2023), will be mentored by PulkoMandy to work on the WebKit2 port to Haiku.</li>
 
 <p>Please welcome them to the community! You may have already met them on the forums and IRC.
 We're looking forward to a very productive summer and a lot of progress on these important topics!</p>
