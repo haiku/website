@@ -38,7 +38,7 @@ In further enriching the Find Panel’s functionality, the project includes the 
 
 ## Tracking Progress of This Project
 
-Right now, my mentor Neils and I are figuring out the best way to keep track of the changes I make to the code. Since the project involves a lot of reworking and adding new features, it’s important to have a plan for how these changes will fit into the Haiku software smoothly. As soon as we come to a good workflow, it will be uploaded on this blog-post. Stay tuned for updates!
+Right now, my mentor Niels and I are figuring out the best way to keep track of the changes I make to the code. Since the project involves a lot of reworking and adding new features, it’s important to have a plan for how these changes will fit into the Haiku software smoothly. As soon as we come to a good workflow, it will be uploaded on this blog-post. Stay tuned for updates!
 
 # Final Remarks
 
