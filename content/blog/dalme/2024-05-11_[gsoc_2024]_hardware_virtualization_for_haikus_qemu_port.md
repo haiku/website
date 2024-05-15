@@ -3,7 +3,7 @@ type = "blog"
 title = "[GSoC 2024] Hardware virtualization for Haiku’s QEMU port"
 author = "dalme"
 date = "2024-05-11 19:08:35+02:00"
-tags = ["haiku", "software", "gsoc", "gsoc2024", "qemu", "nvmm"]
+tags = ["gsoc", "gsoc2024", "qemu", "nvmm"]
 +++
 
 # Introduction
@@ -26,7 +26,7 @@ since they could effectively run applications that are not yet available on Haik
 
 Other operating systems achieve native virtualization by using a driver that turns the OS
 into a hypervisor: Linux uses their own KVM (which has been ported to FreeBSD and Illumos),
-FreeBSD has bhyve (this actually implements the hole virtual machine, not only the virtualization
+FreeBSD has bhyve (this actually implements the whole virtual machine, not only the virtualization
 layer. It was developed a few years after their KVM port), NetBSD and DragonFlyBSD use
 NVMM and Intel released one called HAXM (although this one has been abandoned by Intel and
 only supports their machines anyway).
