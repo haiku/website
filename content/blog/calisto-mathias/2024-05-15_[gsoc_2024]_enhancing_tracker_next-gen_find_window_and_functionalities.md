@@ -10,7 +10,7 @@ tags = ["haiku", "software","gsoc","gsoc24","user interface"]
 
 Hey There!
 
-My name is Calisto Abel Mathias, and I am excited to introduce myself as a first-year undergraduate student at the National University of Technology in Karnataka, India. I am honored to have been accepted into the Google Summer of Code (GSoC) program for 2024 under the mentorship of the Haiku project. A huge thanks to my two mentors - Neils and Humdinger for embarking on this journey with me.
+My name is Calisto Abel Mathias, and I am excited to introduce myself as a first-year undergraduate student at the National University of Technology in Karnataka, India. I am honored to have been accepted into the Google Summer of Code (GSoC) program for 2024 under the mentorship of the Haiku project. A huge thanks to my two mentors - Niels and Humdinger for embarking on this journey with me.
 
 This summer, I will focus on enhancing the Tracker application’s Find Panel in Haiku. The Find Panel is essential for efficient file searches and management. Although new to Haiku, I am eager to learn and contribute to this vibrant open-source community.
 
