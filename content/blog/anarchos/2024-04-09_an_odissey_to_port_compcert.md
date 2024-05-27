@@ -92,4 +92,4 @@ It seems BeBuild.h restricts the usable compilers to gcc or tinyc :
 
 ### Conclusion
 Now that i have a proof of concept, i try to do all the necessary pull requests to OCaml, dune, Compcert to get the tools compile on Haiku. Next step is to do the necessary housework to let Haiku uses Compcert (so tweak BeBuild and surely many other develop headers).
-What a journey !
+What a journey!
