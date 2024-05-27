@@ -57,11 +57,12 @@ When i am able to have a working `dune`, i can compile Coq : <img src="/files/bl
 
 ### Ulysses goes home
 with coq available, i was able to compile `ccomp`, the CompCert certified compiler.
-First test : `
+First test:
+```
 [Rocker] ~/OCAML/Compcert> ccomp
 ccomp: error: no input file
 1 error detected.
-`
+```
 At last, the binary runs.
 
 Next test : compile "int main(int argc, char**argv) {return 0;}" and runs `./a.out;echo $?` --> 0
