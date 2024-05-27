@@ -29,7 +29,7 @@ Don't forget to add some platform detection in `config.guess`, and some librarie
 ### The easy part
 
 Compile `opam`.
-This one runs smoothly as soon as you have a working Ocaml compiler : ` configure; make;make install` does the trick.
+This one runs smoothly as soon as you have a working Ocaml compiler : ` configure; make; make install` does the trick.
 Don't forget to add the ususal ` --prefix ~/config/non-packaged` to avoid installing in `/usr/...`.
 
 ### The normal part
