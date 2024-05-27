@@ -71,7 +71,8 @@ To be sure : compile "int main(int argc, char**argv) {return 1;}" and runs `./a.
 Success !
 
 Now i try to use standard headers (an include to <stdio.h>:
-` ccomp test.c 
+```
+ccomp test.c 
 In file included from /boot/system/develop/headers/posix/sys/types.h:11,
                  from /boot/system/develop/headers/posix/stdio.h:9,
                  from /boot/system/develop/headers/bsd/stdio.h:9,
@@ -80,7 +81,7 @@ In file included from /boot/system/develop/headers/posix/sys/types.h:11,
    59 | #       error Unsupported compiler!
       |         ^~~~~
 ccomp: error: preprocessor command failed with exit code 1 (use -v to see invocation)
-`
+```
 It seems BeBuild.h restricts the usable compilers to gcc or tinyc :
 `#if __GNUC__ == 2
 #       define B_HAIKU_ABI                                      B_HAIKU_ABI_GCC_2_HAIKU
