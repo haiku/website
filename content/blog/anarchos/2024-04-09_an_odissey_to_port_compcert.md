@@ -9,7 +9,7 @@ tags = ["haiku", "software"]
 
 ### The goal 
 My goal is to be able to use [CompCert](https://compcert.org), a certified compiler.
-It is a compiler whose all passes are formally verified to not introduce change in the semantics from the `C` code to its translation in `asm`.
+It is a compiler whose passes are formally verified to not introduce change in the semantics from the `C` code to its translation in `asm`.
 
 ### The installation goals
 
