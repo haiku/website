@@ -21,7 +21,7 @@ It is a compiler whose passes are formally verified to not introduce change in t
 ### The easiest part
 
 Porting OCaml was not too hard: copying most of Linux configuration in the `configure{.ac}` files work as is. 
-Don't forget to add some platform detection in `config.guess`, and some libraries tweaking :
+Don't forget to add some platform detection in `config.guess`, and some libraries tweaking:
 - -lm is not necessary
 - -lbsd is mandatory to use `getentropy`
 - -lnetwork to use... well networks :)
