@@ -53,7 +53,7 @@ the `opam install` command uses the _Ocaml_ *dune* build system. But in some cas
 At first, i thought it was because of the spawn submodule of dune. So i tried for months to do a pull request (PR) on Haiku, to kill other threads and do a fork() from another thread of the team than the main thread. I could never finish that because the main thread is very special, so you can't easily do a `fork()` from a non-main thread. But indeed it was in a file which calls execve (which is incompatible with `fork()` on Haiku if the team has more than one thread. So i disabled the call to execve(), as for the Win32 platform.
 
 ### Finally, land is in sight
-When i am able to have a working `dune`, i can compile Coq : <img src="static/files/blog/anarchos/coqide.png"/>
+When i am able to have a working `dune`, i can compile Coq : <img src="/files/blog/anarchos/coqide.png"/>
 
 ### Ulysses goes home
 with coq available, i was able to compile `ccomp`, the CompCert certified compiler.
