@@ -1,6 +1,6 @@
 +++
 type = "blog"
-title = "An odissey to port compcert"
+title = "An odyssey to port compcert"
 author = "Anarchos"
 date = "2024-04-09 09:44:28+00:00"
 tags = ["haiku", "software"]
