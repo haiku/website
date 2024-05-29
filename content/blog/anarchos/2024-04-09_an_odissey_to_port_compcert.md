@@ -15,7 +15,7 @@ It is a compiler whose passes are formally verified to not introduce change in t
 
 - `Compcert` is installed from its `Coq` sources. So i need `Coq`.
 - `Coq` is installed from sources or as an OPAM package. OPAM being the *Ocaml PAckage Manager*.
-- `opam` needs *OCaml* anyway. So i need *OCaml*.
+- `opam` needs *OCaml* anyway. So I need *OCaml*.
 - `OCaml` is installable through *OPAM* or from sources.
 
 ### The easiest part
