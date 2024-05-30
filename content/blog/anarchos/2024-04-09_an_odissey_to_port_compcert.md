@@ -56,7 +56,7 @@ At first, I thought it was because of the spawn submodule of dune. So I tried fo
 When I am able to have a working `dune`, I can compile Coq : <img src="/files/blog/anarchos/coqide.png"/>
 
 ### Ulysses goes home
-with coq available, i was able to compile `ccomp`, the CompCert certified compiler.
+with coq available, I was able to compile `ccomp`, the CompCert certified compiler.
 First test:
 ```
 [Rocker] ~/OCAML/Compcert> ccomp
