@@ -70,7 +70,7 @@ To be sure : compile "int main(int argc, char**argv) {return 1;}" and runs `./a.
 
 Success !
 
-Now i try to use standard headers (an include to <stdio.h>:
+Now I try to use standard headers (an include to <stdio.h>:
 ```
 ccomp test.c 
 In file included from /boot/system/develop/headers/posix/sys/types.h:11,
