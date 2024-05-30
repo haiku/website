@@ -43,7 +43,7 @@ For months or even more than a year, i could not get past this lablgtk3 package,
 So i tried to trick lablgtk3 to compile with gtksourceview-3 files symlinked to gtksourceview-4 files, and a bit of renaming 3 <-> 4 here and there. 
 It worked but `coqide` crashed pretty soon when used due to this poor setup.
 
-So i decided to take the other way: port `gtksourceview3` properly.
+So I decided to take the other way: port `gtksourceview3` properly.
 I achieved that last month, the PR is in phase of polishing, but was enough for me to carry on the work further.
 
 ### The journey continues
