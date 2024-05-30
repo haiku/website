@@ -83,13 +83,15 @@ In file included from /boot/system/develop/headers/posix/sys/types.h:11,
 ccomp: error: preprocessor command failed with exit code 1 (use -v to see invocation)
 ```
 It seems BeBuild.h restricts the usable compilers to gcc or tinyc :
-`#if __GNUC__ == 2
+```
+#if __GNUC__ == 2
 #       define B_HAIKU_ABI                                      B_HAIKU_ABI_GCC_2_HAIKU
 #elif (__GNUC__ >= 4 && __GNUC__ <= 14) || defined(__TINYC__)
 #       define B_HAIKU_ABI                                      B_HAIKU_ABI_GCC_4
 #else
 #       error Unsupported compiler!
-#endif`
+#endif
+```
 
 ### Conclusion
 Now that i have a proof of concept, i try to do all the necessary pull requests to OCaml, dune, Compcert to get the tools compile on Haiku. Next step is to do the necessary housework to let Haiku uses Compcert (so tweak BeBuild and surely many other develop headers).
