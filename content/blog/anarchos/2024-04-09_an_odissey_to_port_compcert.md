@@ -50,7 +50,7 @@ I achieved that last month, the PR is in phase of polishing, but was enough for 
 During my tasks, i encounter some annoying behabviour by `opam`:
 the `opam install` command uses the _Ocaml_ *dune* build system. But in some cases *dune* fails with a rather cryptic (at this time for me, not for more experienced Haiku developers than me) message:
 `execve() : Operation not supported`.
-At first, i thought it was because of the spawn submodule of dune. So I tried for months to do a pull request (PR) on Haiku, to kill other threads and do a fork() from another thread of the team than the main thread. I could never finish that because the main thread is very special, so you can't easily do a `fork()` from a non-main thread. But indeed it was in a file which calls execve (which is incompatible with `fork()` on Haiku if the team has more than one thread. So I disabled the call to execve(), as for the Win32 platform.
+At first, I thought it was because of the spawn submodule of dune. So I tried for months to do a pull request (PR) on Haiku, to kill other threads and do a fork() from another thread of the team than the main thread. I could never finish that because the main thread is very special, so you can't easily do a `fork()` from a non-main thread. But indeed it was in a file which calls execve (which is incompatible with `fork()` on Haiku if the team has more than one thread. So I disabled the call to execve(), as for the Win32 platform.
 
 ### Finally, land is in sight
 When i am able to have a working `dune`, I can compile Coq : <img src="/files/blog/anarchos/coqide.png"/>
