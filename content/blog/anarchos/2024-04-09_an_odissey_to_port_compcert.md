@@ -39,8 +39,8 @@ Try to install `Coq` :
 The critical component used there is `gtksourceview3`, used to render Coq source files with syntax coloring. 
 
 ### The journey begins...
-For months or even more than a year, i could not get past this lablgtk3 package, cause *Haiku* only gets `gtksourceview-4` in `haikuports/x11-libs/gtksourceview`.
-So i tried to trick lablgtk3 to compile with gtksourceview-3 files symlinked to gtksourceview-4 files, and a bit of renaming 3 <-> 4 here and there. 
+For months or even more than a year, I could not get past this lablgtk3 package, cause *Haiku* only gets `gtksourceview-4` in `haikuports/x11-libs/gtksourceview`.
+So I tried to trick lablgtk3 to compile with gtksourceview-3 files symlinked to gtksourceview-4 files, and a bit of renaming 3 <-> 4 here and there. 
 It worked but `coqide` crashed pretty soon when used due to this poor setup.
 
 So I decided to take the other way: port `gtksourceview3` properly.
