@@ -82,8 +82,8 @@ Foo::Bar(const char* bar1, T bar2)
 
 
 // Empty functions in class definitions can be written on a single line
-class Example
-{
+class Example {
+public:
 		void			FooFunction() {}
 };
 
