@@ -55,7 +55,11 @@ The history menu offers users a convenient way to view their history in an organ
 <br><br>
 <img src="/files/blog/calisto-mathias/new_save_panel_unsaved_history.png">
 <br><br>
+The Temporary Queries Sub-Menu segregates the temporary queries that have been searched previously but were not saved.
+<br><br>
 <img src="/files/blog/calisto-mathias/new_save_panel_saved_history.png">
+<br><br>
+The Saved Queries Sub-Menu segregates the saved queries that have been searched previously. This will be the only menu remaining by the end of this project.
 <br><br>
 ### Options Menu
 <img src="/files/blog/calisto-mathias/new_save_panel_options_menu.png">
@@ -97,12 +101,5 @@ It is not something that is applied to a query; rather, it is a property of the 
 ### When Will The Folder Filtering of Queries be Available?
 
 I think I am very close to finishing up this feature and it should be available before the mid-term evaluation of the GSoC period gets over. 
-
-### Relevant Code Sections That Will Be Modified in Upcoming MRs through Gerrit:
-
-1. **PoseView.cpp:**
-   - I am looking into adding a BObjectList to the PoseView file which can be used for storing filters. These filters could then be applied while loading the pose using the `GetNextDirents` function.
-2. **FindPanel.cpp:**
-   - Since directories will be considered properties of a query file, they will be stored as attributes within this file. When the tracker loads the file, it will read these attributes and apply the filters accordingly. We believe these enhancements will greatly improve the usability and flexibility of the Find Panel, offering a more intuitive and powerful search experience. We invite all users to explore these new features and provide feedback to help us keep enhancing Haiku OS.
 
 I hope these enhancements improve the usability of the Find Panel, providing a more intuitive and powerful search experience. I encourage all users to explore these new features and provide feedback to help me continue improving Haiku OS.
