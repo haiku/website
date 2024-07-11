@@ -14,7 +14,7 @@ Key progress includes achieving playback on the device.
 
 # Getting the buffers ready.
 We need to tell hmulti_audio where it should expect to write and read the audio
-frames, to do that we need to fill out a strucutre called `multi_buffer_list`:
+frames, to do that we need to fill out a structure called `multi_buffer_list`:
 ```
 struct multi_buffer_list {
     // [...]
