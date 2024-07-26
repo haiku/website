@@ -107,10 +107,16 @@ Note that in addition to all the platform-specific packages, you will also need 
 <a name="pkgman"></a>
 ## ![pkgman](/files/os-icons/package-32.png) pkgman (Haiku package system)
 
-**Basic requirements:**
+**Basic requirements (all except x86-hybrid):**
 
 ```sh
 pkgman install cmd:python3 cmd:xorriso devel:libzstd
+```
+
+**Basic requirements (x86-hybrid):**
+
+```sh
+pkgman install cmd:python3 cmd:xorriso devel:libzstd_x86
 ```
 
 <a name="apt"></a>
