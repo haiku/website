@@ -43,8 +43,6 @@ We currently specify 2 playback buffers, 1024 frames per buffer, to handle
 audio streams. The number of channels is specified in the chmap_query or
 defaulting to stereo if no channel maps are given by the device.
 
-Certainly! Let's structure the explanation of the playback section with a blog post style, focusing on the `multi_buffer_info` structure and how it facilitates audio playback interaction with the Virtio Sound device:
-
 ```
 struct multi_buffer_info {
     // [...]
