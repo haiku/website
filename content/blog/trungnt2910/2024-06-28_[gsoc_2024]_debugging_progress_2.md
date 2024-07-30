@@ -2,7 +2,7 @@
 type = "blog"
 title = "[GSoC 2024] Improving the Userland Debugging Experience - Progress Report #2"
 author = "trungnt2910"
-date = "2024-06-28"
+date = "2024-07-29"
 tags = ["haiku", "software", "gsoc", "gsoc2024", "gdb", "gdbserver"]
 +++
 
