@@ -1,6 +1,7 @@
 +++
 type = "blog"
 title = "[GSoC 2024] Virtio Sound: Recording Achieved and more"
+author = "diegoroux"
 date = "2024-07-27 00:41:37-06:00"
 tags = ["gsoc", "gsoc2024", "virtio", "sound"]
 +++
