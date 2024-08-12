@@ -2,7 +2,7 @@
 type = "blog"
 title = "[GSoC 2024] Improving the Userland Debugging Experience - Progress Report #2"
 author = "trungnt2910"
-date = "2024-07-29"
+date = "2024-07-28"
 tags = ["haiku", "software", "gsoc", "gsoc2024", "gdb", "gdbserver"]
 +++
 
@@ -480,4 +480,4 @@ As usual, this is an overview of code submitted during this phase.
 #### Pending
 
 ##### [haikuports/haikuports](https://github.com/haikuports/haikuports)
-- [gdb: Add recipe for GDB 15.1](https://github.com/haikuports/haikuports/pull/10727)
+- [gdb: Add recipe for GDB 15.1 (#10727)](https://github.com/haikuports/haikuports/pull/10727)
