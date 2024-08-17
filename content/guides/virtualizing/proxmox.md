@@ -49,7 +49,7 @@ After completing the wizard, move to the Virtual Machines list. Your Haiku machi
 
 Before finally installing Haiku, you need to partition the virtual hard drive. Open the Haiku Installer and click on `Set up partitions…` end.
 
-![](/files/guides/virtualizing/Proxmox/Installer1.png}
+![](/files/guides/virtualizing/Proxmox/Installer1.png)
 ![](/files/guides/virtualizing/Proxmox/Installer2.png}
 
 Select the disk we added earlier where Haiku should be installed ('QEMU QEMU HARDDISK' in my case).  Right-click, Format, and choose 'Be File System'.
