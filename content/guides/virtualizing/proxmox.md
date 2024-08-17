@@ -1,6 +1,6 @@
 +++
 type = "article"
-title = "Emulating Haiku In Proxmox"
+title = "Emulating Haiku in Proxmox"
 date = "2024-08-16T20:20:00.000Z"
 tags = []
 +++
