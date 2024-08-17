@@ -43,7 +43,7 @@ Click Next to the Confirm tab.  Review the configuration and select Finish to co
 ![](/files/guides/virtualizing/Proxmox/CreateVM-Confirm.png)
 
 After completing the wizard, move to the Virtual Machines list. Your Haiku machine should now be listed. Select it and press `Start`, then click 'Console' button to bring up a window to your VM. If you see the Haiku boot screen, then you configured everything correctly.  You can now proceed to install Haiku or try out the live environment.
-![](/files/guides/virtualizing/Proxmox/StartVM.png}
+![](/files/guides/virtualizing/Proxmox/StartVM.png)
 
 ## Installing Haiku
 
