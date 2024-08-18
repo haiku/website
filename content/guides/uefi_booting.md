@@ -42,7 +42,7 @@ The following steps assume a fresh installation where the local disk will be use
 
 ### Advanced Install
 
-To have Haiku on a system shared with multiple EFI operating systems, you can use the more advanced layout of the `EFIBOOT` partition;
+To have Haiku on a system shared with multiple EFI operating systems, you can use this more advanced layout on the `EFIBOOT` partition:
 
   * **EFI** (directory)
     * **HAIKU** (directory)
