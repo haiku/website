@@ -7,7 +7,7 @@ tags = ["booting","uefi","efi"]
 
 ## UEFI Booting the Anyboot Image
 
-Traditionally Haiku has supported boot using a [BIOS](https://en.wikipedia.org/wiki/BIOS) boot system. See the [regular install instructions](/get-haiku/installation-guide/) if your hardware requires a BIOS boot process. Use the instructions on this page should your hardware require a UEFI boot process. The instructions are somewhat manual at the present time (R1/beta5), but should be enhanced with a more guided process in the future.
+Haiku also supports booting via the traditional [BIOS](https://en.wikipedia.org/wiki/BIOS) boot system. See the [regular install instructions](/get-haiku/installation-guide/) if your hardware requires a BIOS boot process. Use the instructions on this page should your hardware require a UEFI boot process. The instructions are somewhat manual at the present time (R1/beta5), but should be enhanced with a more guided process in the future.
 
 ### Install Steps
 
