@@ -1,59 +1,48 @@
 +++
 type = "article"
 title = "UEFI Booting Haiku"
-date = "2018-09-18T00:00:00.000Z"
+date = "2024-08-18T00:00:00.000Z"
 tags = ["booting","uefi","efi"]
 +++
 
-## UEFI Booting the anyboot image
+## UEFI Booting the Anyboot Image
 
-64-bit release images (such as Haiku R1/beta3) can be directly booted from UEFI when the system's hardware supports it.
-While Haiku's UEFI bootloader is at an early stage, it can be leveraged to boot a stable system.
+Haiku also supports booting via the traditional [BIOS](https://en.wikipedia.org/wiki/BIOS) boot system. See the [regular install instructions](/get-haiku/installation-guide/) if your hardware requires a BIOS boot process. Use the instructions on this page should your hardware require a UEFI boot process. The instructions are somewhat manual at the present time (R1/beta5), but should be enhanced with a more guided process in the future.
 
-## Installing UEFI to disk
+### Install Steps
 
-Haiku *can* be installed to a system with an UEFI bootloader, however it is a manual process as of R1/beta3.
-If you boot the anyboot media from UEFI (and install as usual) your system will boot via the legacy BIOS loader.
+The following steps assume a fresh installation where the local disk will be used in its entirety for Haiku. The process below will completely wipe the target disk! Back up any data you still need.
 
-Future releases of Haiku should have this process more refined.
-
-### Partition Layout
-
-During the installation, you will need to do some planning to properly leverage the Haiku UEFI bootloader.
-Note: If you have an existing UEFI partition, you can skip this step and go directly to the Advanced Install section at the bottom of this page.
-
-  * Choose a GPT disk system on the target device.
-  * Create a small (64 MiB is generally enough) partition at the start of the disk.
-    * "EFI system data" type.
-    * Format as FAT32, label "EFIBOOT"
-  * Create a Haiku partition (generally > 8 GiB is a good size)
-    * Format as BeFS, label "Haiku"
-
-At this point, continue the installation as usual to the 'Haiku' filesystem.
-
-## Installing the EFI Loader
-
-In R1/beta3, the Installer does not yet automatically install the EFI loader, so it needs to be done manually.
-
-After the installation is successful (but before rebooting), return to the live desktop and mount the "EFIBOOT" partition (or the existing UEFI partition on your system) from the desktop.
-
-{{< alert-info "Haiku Platform Loaders" "As of R1/beta3, all of the available bootloaders can be found in (/boot)/system/data/platform_loaders on the disk where you installed Haiku (not on the Live disk/USB).">}}
-
-Copy the Haiku UEFI bootloader from the platform_loaders directory to your system's UEFI partition as shown below. For the Advanced install, you will need to create a directory for Haiku in the UEFI partition. Take note of the tree structure shown below.
-
-### Basic Install
-
-To have Haiku the default (and only) EFI operating system, these basic steps will get you setup.
-
-The EFI system data partition should be laid out as follows:
-
-  * **EFI** (directory)
-    * **BOOT** (directory)
-      * **BOOTX64.EFI** (Haiku's UEFI loader, aka haiku_loader.efi)
+1. Follow the instructions of the [installation guide](/get-haiku/installation-guide/) and instead of opting to begin the install, choose _Try Haiku_ and proceed with the instructions below.
+2. Once the system has booted from the install media, open the [Drive Setup](/docs/userguide/en/applications/drivesetup.html) application.
+3. Use the <span class="menu">Disk</span> > <span class="menu">Initialize</span> > <span class="menu">GUID Partition Map...</span> option to initialize the disk.
+4. Create a UEFI boot partition
+   1. Create a 64 MiB partition of type _EFI system data_ with name `EFIBOOT` by choosing the _Empty space_ associated with the disk and choosing <span class="menu">Partition</span> > <span class="menu">Create...</span>
+   2. Format the partition as _FAT32 File System_ with a label `EFIBOOT` by choosing the partition and choosing <span class="menu">Partition</span> > <span class="menu">Format</span> > <span class="menu">FAT32 File System</span>.
+5. Create a Haiku partition
+   1. Create a large partition (> 8 GiB suggested) of type _Be File System_ with a name of your choice.
+   2. Format the partition as _Be File System_ with a label of your choice.
+7. Copy the boot software into the `EFIBOOT` partition.
+   1. In the DriveSetup application, select the `EFIBOOT` partition and mount it by choosing <span class="menu">Partition</span> > <span class="menu">Mount</span>.
+   2. Open the [Terminal](/docs/userguide/en/applications/terminal.html) application.
+   3. Execute the commands;
+      ```sh
+      mkdir -p "/efiboot/EFI/BOOT"
+      cp "/system/data/platform_loaders/haiku_loader.efi" "/efiboot/EFI/BOOT/BOOTX64.EFI"
+      ```
+   4. Press <span class="key">CTRL</span>-<span class="key">D</span> to close the terminal.
+8. Install Haiku onto the system
+   1. Open the [Installer](/docs/userguide/en/applications/installer.html) application.
+   2. Select your Be File System setup earlier as the _Onto_ field
+   3. Choose <span class="button">Begin</span>
+   4. Once the installation is complete, choose <span class="button">Quit</span> to close the Installer.
+9. Shutdown the system.
+10. Remove the boot media; for example the USB key.
+11. Restart the system.
 
 ### Advanced Install
 
-To have Haiku on a system shared with multiple EFI operating systems, you can use the more advanced layout.
+To have Haiku on a system shared with multiple EFI operating systems, you can use this more advanced layout on the `EFIBOOT` partition:
 
   * **EFI** (directory)
     * **HAIKU** (directory)
