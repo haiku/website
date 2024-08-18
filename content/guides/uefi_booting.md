@@ -30,7 +30,7 @@ The following steps assume a fresh installation where the local disk will be use
       mkdir -p "/efiboot/EFI/BOOT"
       cp "/system/data/platform_loaders/haiku_loader.efi" "/efiboot/EFI/BOOT/BOOTX64.EFI"
       ```
-   4. Enter `CTRL`-`D` to close the terminal.
+   4. Press `CTRL`-`D` to close the terminal.
 8. Install Haiku onto the system
    1. Open the [Installer](/docs/userguide/en/applications/installer.html) application.
    2. Select your Be File System setup earlier as the _Onto_ field
