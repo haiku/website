@@ -23,7 +23,7 @@ The following steps assume a fresh installation where the local disk will be use
    1. Create a large partition (> 8 GiB suggested) of type _Be File System_ with a name of your choice.
    2. Format the partition as _Be File System_ with a label of your choice.
 7. Copy the boot software into the `EFIBOOT` partition.
-   1. In the Drive Setup application, select the `EFIBOOT` partition and mount it by choosing _Partition_ > _Mount_.
+   1. In the DriveSetup application, select the `EFIBOOT` partition and mount it by choosing _Partition_ > _Mount_.
    2. Open the [Terminal](/docs/userguide/en/applications/terminal.html) application.
    3. Execute the commands;
       ```sh
