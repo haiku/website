@@ -11,7 +11,7 @@ Haiku also supports booting via the traditional [BIOS](https://en.wikipedia.org/
 
 ### Install Steps
 
-The following steps assume a fresh installation where the local disk will be used in its entirety for Haiku. The process below will cause complete data loss on the target disk.
+The following steps assume a fresh installation where the local disk will be used in its entirety for Haiku. The process below will completely wipe the target disk! Back up any data you still need.
 
 1. Follow the instructions on the [installation guide](/get-haiku/installation-guide/) and instead of opting to begin the install, choose "Try Haiku" and proceed with the instructions below instead.
 2. Once the system has booted from the install media, open the [Drive Setup](/docs/userguide/en/applications/drivesetup.html) application.
