@@ -20,7 +20,7 @@ The following steps assume a fresh installation where the local disk will be use
    1. Create a 64 MiB partition of type _EFI system data_ with name `EFIBOOT` by choosing the _Empty space_ associated with the disk and choosing _Partition_ > _Create..._
    2. Format the partition as _FAT32 File System_ with a label `EFIBOOT` by choosing the partition and choosing _Partition_ > _Format_ > _FAT32 File System_.
 5. Create a Haiku partition
-   1. Create a large partition (> 8GB suggested) of type _BE File System_ with a name of your choice.
+   1. Create a large partition (> 8 GiB suggested) of type _Be File System_ with a name of your choice.
    2. Format the partition as _Be File System_ with a label of your choice.
 7. Copy the boot software into the `EFIBOOT` partition.
    1. In the Drive Setup application, select the `EFIBOOT` partition and mount it by choosing _Partition_ > _Mount_.
