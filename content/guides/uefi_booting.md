@@ -17,7 +17,7 @@ The following steps assume a fresh installation where the local disk will be use
 2. Once the system has booted from the install media, open the [Drive Setup](/docs/userguide/en/applications/drivesetup.html) application.
 3. Use the _Disk_ > _Initialize_ > _GUID Partition Map..._ option to initialize the disk.
 4. Create a UEFI boot partition
-   1. Create a 64MB partition of type _EFI system data_ with name `EFIBOOT` by choosing the _Empty Space_ associated with the disk and choosing _Partition_ > _Create..._
+   1. Create a 64 MiB partition of type _EFI system data_ with name `EFIBOOT` by choosing the _Empty space_ associated with the disk and choosing _Partition_ > _Create..._
    2. Format the partition as _FAT32 File System_ with a label `EFIBOOT` by choosing the partition and choosing _Partition_ > _Format_ > _FAT32 File System_.
 5. Create a Haiku partition
    1. Create a large partition (> 8GB suggested) of type _BE File System_ with a name of your choice.
