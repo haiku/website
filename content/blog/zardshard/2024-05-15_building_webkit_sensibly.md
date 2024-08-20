@@ -36,7 +36,7 @@ This code won't run unless the build is a debug build. Make sure you pass the `-
 
 ### Debugging information
 
-A quick test suggests that debugging information can double the size of the build! It makes sense, then, to only include debugging information for the folders you care about. So, start off by disabling debugging information everywhere by adding the following to Source/cmake/OptionsHaiku.cmake:
+A quick test suggests that debugging information can double the size of the build! Also, debugging information can take a lot of memory for Debugger to load. I'm guessing that if debugging information is enabled everywhere, it could take at least 24 GB memory before Debugger has loaded all of the information! It makes sense, then, to only include debugging information for the folders you care about. So, start off by disabling debugging information everywhere by adding the following to Source/cmake/OptionsHaiku.cmake:
 
 ```cmake
 string(REPLACE "-g" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
