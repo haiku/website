@@ -17,7 +17,7 @@ showing you that playback actually works.
 So you don't have to go and compile it, just to see it on 
 action.
 
-[![Video](./playback_showcase.jpg)](./playback_showcase.mov)
+[![Video](../playback_showcase.jpg)](../playback_showcase.mov)
 
 # outro
 Main functionality is here! So, I believe that it may be
