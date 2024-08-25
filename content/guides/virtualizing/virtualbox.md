@@ -5,7 +5,7 @@ date = "2011-03-12T16:46:57.000Z"
 tags = []
 +++
 
-For Google Code-In 2017, Jakub Pajdowski created a [video on how to install Haiku in VirtualBox](http://haiku-files.org/files/media/GCI-2017_VirtualBox_Jakub-Pajdowski.mp4) [6 MiB].
+For Google Code-In 2017, Jakub Pajdowski created a [video on how to install Haiku in VirtualBox](/files/media/GCI-2017_VirtualBox_Jakub-Pajdowski.mp4) [6 MiB].
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 
