@@ -7,7 +7,7 @@ tags = ["gsoc", "gsoc2024", "virtio", "sound", "video"]
 +++
 
 # Gerrit Submission.
-[8141](https://review.haiku-os.org/c/haiku/+/8141)
+Check out my final Pull Request here: [8141](https://review.haiku-os.org/c/haiku/+/8141)
 
 # Overview
 During this GSoC period, I focused on developing the virtio sound driver for Haiku,
