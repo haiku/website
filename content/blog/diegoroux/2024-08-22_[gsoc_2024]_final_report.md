@@ -6,6 +6,9 @@ date = "2024-08-22 18:39:13-06:00"
 tags = ["gsoc", "gsoc2024", "virtio", "sound", "video"]
 +++
 
+# Gerrit Submission.
+[8141](https://review.haiku-os.org/c/haiku/+/8141)
+
 # Overview
 During this GSoC period, I focused on developing the virtio sound driver for Haiku,
 aiming to enhance its performance as a guest OS in virtualized environments.
