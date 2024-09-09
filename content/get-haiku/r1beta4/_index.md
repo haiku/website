@@ -17,8 +17,9 @@ tags = []
 </ul>
 </div>
 
-{{< alert-warning "R1/beta4 repositories on hold"
-"We're currently in the process of releasing Haiku R1/beta5. While this is going on, the R1/beta4 repositories are not available; you can't install or update software from them. If you cannot wait for the R1/beta5 release (which will be Really Soon Now™) you can <a href="https://download.haiku-os.org">install</a> or <a href="/guides/daily-tasks/updating-system.html">update</a> to a Nightly Image. All the usual warnings about non-beta releases apply.">}}
+<div class="alert alert-warning"><p><strong>R1/beta4 repositories on hold</strong><br />
+We're currently in the process of releasing Haiku R1/beta5. While this is going on, the R1/beta4 repositories are not available; you can't install or update software from them. If you cannot wait for the R1/beta5 release (which will be Really Soon Now™) you can <a href="https://download.haiku-os.org">install</a> or <a href="/guides/daily-tasks/updating-system.html">update</a> to a Nightly Image. All the usual warnings about non-beta releases apply.</p>
+</div>
 
 <!--
 Disabled until we move away from R1/beta4
