@@ -8,9 +8,8 @@ tags = []
 <p>
 Qualifying students can apply for a Haiku project (see the list of <i>suggested</i> projects below) between March 26th and April 6th, 2012. For details about how to apply, please check out <a href="http://www.haiku-os.org/community/gsoc/2012/students">Students: How to Apply for a Haiku Idea</a>.</p>
 
-<div class="alert alert-info">
-<p>According to other mentor organizations, the most successful <i>Google Summer of Code</i> projects are the ones proposed by the students themselves. The following list represents our ideas and wishes of our project. However, suggesting your own idea is encouraged!</p>
-</div>
+{{< alert-info ""
+"According to other mentor organizations, the most successful _Google Summer of Code_ projects are the ones proposed by the students themselves. The following list represents our ideas and wishes of our project. However, suggesting your own idea is encouraged!">}}
 
 <p>If you find an idea marked as "big" interesting but feel you cannot completed in time, feel free to suggest splitting it into smaller parts in your proposal. Also, many of these ideas are not sufficient as stand-alone projects and would need to be combined with others on this list or of your own suggestion.</p>
 

@@ -8,9 +8,8 @@ tags = ["WebKit"]
 
 WebKit builds can take a lot of space and time to build on Haiku.
 
-<div class="alert alert-info">
-To those working on WebKit, welcome! This blog post is primarily for those working on HaikuWebKit, Haiku's fork of WebKit, but it may also be useful for you.
-</div>
+{{< alert-info ""
+"To those working on WebKit, welcome! This blog post is primarily for those working on HaikuWebKit, Haiku's fork of WebKit, but it may also be useful for you.">}}
 
 I will be covering some techniques that are useful to reduce the size of build files without significant disadvantages. I'll also cover how to speed up linking.
 
@@ -30,9 +29,8 @@ To use the `-Og` optimization level add the following to Source/cmake/OptionsHai
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -Og")
 ```
 
-<div class="alert alert-warning">
-This code won't run unless the build is a debug build. Make sure you pass the `--debug` option to build-webkit.
-</div>
+{{< alert-warning ""
+"This code won't run unless the build is a debug build. Make sure you pass the `--debug` option to build-webkit.">}}
 
 ### Debugging information
 

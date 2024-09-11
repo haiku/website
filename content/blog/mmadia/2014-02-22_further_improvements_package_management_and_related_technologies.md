@@ -36,13 +36,12 @@ It can now install Gobe Productive 2.0 (Trial) and reports from IRC mention many
 Another factor that prevented older software from installing and running were changes to the directory layout.
 The directory /boot/common was removed, or more correctly it has been merged into /boot/system [<a href="https://dev.haiku-os.org/wiki/PackageManagement/DirectoryStructure">1</a>].
 </p>
-<div class="alert alert-info">
-This directory was physically added in Haiku (in BeOS, it existed only as the B_COMMON_*_DIRECTORY file mappings).
+{{< alert-info ""
+`This directory was physically added in Haiku (in BeOS, it existed only as the B_COMMON_*_DIRECTORY file mappings).
 It was originally planned to help ensure /boot/system (B_SYSTEM_DIRECTORY) would only contain the essentials needed by Haiku.
 Everything else would be in /boot/common (B_COMMON_DIRECTORY) or in /boot/home (B_USER_DIRECTORY).
 Unfortunately this never worked out as planned.
-One of the contributing factors was that more and more software moved out of Haiku's repository and become 3rd party packages.
-</div>
+One of the contributing factors was that more and more software moved out of Haiku's repository and become 3rd party packages.`>}}
 <p>
 Removing /boot/common simplified some things, such as package dependencies between software provided by Haiku (e.g., git)
 and user-installed pacakges (e.g., git_svn). [<a href="https://www.freelists.org/post/haiku-development/Removing-bootcommon">1</a>]

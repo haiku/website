@@ -80,9 +80,8 @@ The problem was a certain function needed to be implemented. So I had to make a 
 
 My [blog post](https://www.haiku-os.org/blog/zardshard/2024-05-28_gsoc_2024_fixing_the_crashing) on this topic and its associated discussion goes deeper into the problem and my philosophy in trying to figure out how to solve it.
 
-<div class="alert alert-info">
-A lot of my PRs included cleanup commits with them. I've given those commits their own section, so they won't be listed here.
-</div>
+{{< alert-info ""
+"A lot of my PRs included cleanup commits with them. I've given those commits their own section, so they won't be listed here.">}}
 
 PR: [Enable coordinated graphics](https://github.com/haiku/haikuwebkit/pull/39)  
 Commits: [Enable coordinated graphics](https://github.com/haiku/haikuwebkit/commit/e611ac85a6e0c36d4ed24368ada983103ff0a616), [Switch method of uniquely identifying BBitmaps](https://github.com/haiku/haikuwebkit/commit/6eb9661091e840ebe5112706a8a0fd0ce9d5a550)

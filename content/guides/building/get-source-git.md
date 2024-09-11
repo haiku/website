@@ -21,16 +21,12 @@ the authenticated (non-anonymous) method is required for submitting patches.
 <a name="anon_access"></a>
 <h3>Git Access - Anonymous testers</h3>
 
-<div class="alert alert-warning">
-<strong>Anonymous access is read-only.</strong> If you want to submit changes to
-Haiku, you need to follow the instructions for patch submitters in the next
-section.
-</div>
+{{< alert-warning "Anonymous access is read-only."
+`If you want to submit changes to Haiku, you need to follow the instructions for patch submitters
+in the next section.`>}}
 
-<div class="alert alert-info">
-<strong>The buildtools repository is not needed when building from within 32-bit Haiku</strong>.
-In that version, the tools required to build Haiku are included by default.
-</div>
+{{< alert-info "The buildtools repository is not needed when building from within 32-bit Haiku."
+"In that version, the tools required to build Haiku are included by default.">}}
 
 <h4>Build Tools:</h4>
 
@@ -89,8 +85,8 @@ is not the case, you can skip some of the sections.
 
 <h4>Configuring Git locally<a name="configure_env"></a></h4>
 
-<div class="alert alert-danger">
-<strong>This section is important!</strong> Failing to configure Git properly before a commit will result in an incorrect name being used in your commit, making it impossible to give you well-deserved credit for your work.</div>
+{{< alert-danger "This section is important!"
+"Failing to configure Git properly before a commit will result in an incorrect name being used in your commit, making it impossible to give you well-deserved credit for your work.">}}
 
 A global Git configuration is stored in Git configuration directory (`~/.git/` or for Haiku: `~/config/settings/git/`) and will be included in <strong>every</strong> commit.
 
@@ -114,9 +110,8 @@ git config core.precomposeunicode true
 
 <p>Log in to <a href="https://review.haiku-os.org" target="_blank">Gerrit code review</a>. For the time being, using a <a href="https://github.com">GitHub account</a> is necessary.</p>
 
-<div class="alert alert-warning">
-Make sure your SSH key is generated using <code class="code">ed25519</code>. RSA keys will <strong>not</strong> work with Gerrit.
-</div>
+{{< alert-warning ""
+"Make sure your SSH key is generated using `ed25519`. RSA keys will **not** work with Gerrit.">}}
 
 <p>Upload your SSH public key in the <a href="https://review.haiku-os.org/settings/#SSHKeys" target="_blank">Gerrit SSH Keys settings</a> page. If you don't have a key yet, you can generate one using ssh-keygen.</p>
 
@@ -124,9 +119,9 @@ Make sure your SSH key is generated using <code class="code">ed25519</code>. RSA
 
 <p>If the email address used in your commits does not match the one in your Github account, you will need to add and verify it in <a href="https://review.haiku-os.org/settings/#EmailAddresses" target="_blank">Gerrit email address settings</a>.</p>
 
-<div class="alert alert-warning">
-You may need to replace the <code class="varname">$USER</code> parameter in the following commands.
-</div>
+{{< alert-warning ""
+"You may need to replace the `$USER` parameter in the following commands.">}}
+
 <p>This can happen if the username on your Gerrit account does not match the username that you use to log in to your computer. This would be the case in Haiku itself, as the default username is <code class="code">user</code>.</p>
 <p><code class="varname">$USER</code> is an environment variable that is specific to Unix-like operating systems (e.g. Haiku, Linux, FreeBSD, etc.). If your system does not fall under that category, you will probably have to replace it.</p>
 
@@ -157,20 +152,17 @@ chmod +x haiku/.git/hooks/commit-msg
 If a maintainer asks you to correct something later on, Gerrit will use that
 Change-Id to keep track of your newest changes.
 
-<div class="alert alert-warning">
-You should review our
-<a href="https://www.haiku-os.org/development/coding-guidelines/" target="_blank">Coding Guidelines</a>
-before making a commit and submitting a change.
-</div>
+{{< alert-warning ""
+`You should review our [Coding Guidelines](/development/coding-guidelines/)
+before making a commit and submitting a change.`>}}
 
 If you wish to change something in your commit, you can amend it in retrospect
 making them using <span class="cli">git add .</span> and <span class="cli">git commit --amend</span>.
 
 <h4>Case Sensitive Filesystems</h4>
 
-<div class="alert alert-warning">
-Haiku's source code needs to reside on a case sensitive file system.
-</div>
+{{< alert-warning ""
+"Haiku's source code needs to reside on a case sensitive file system.">}}
 
 In short, such a file system recognizes ThisIsAFile.txt and THISISAFILE.txt as
 two different files. Some file systems that are (or could be) case insensitive
@@ -249,18 +241,17 @@ using <span class="cli">git commit --amend</span>.
 This section assumes that you are actively working on new commits and need to
 test them on a newer revision of the source code.
 
-<div class="alert alert-danger">
-When using <span class="cli">git pull</span>, use the
+{{< alert-danger ""
+`When using <span class="cli">git pull</span>, use the
 <span class="cli">--rebase</span> argument while doing a pull prior to a push
 to avoid confusing non-linear histories! (<span class=cli>"Merge 'master' on
 ssh://git.haiku-os.org/haiku"</span> messages showing your name and changes
 that are not related to yours)
 
-Do <strong>NOT</strong> use <span class="cli">--rebase</span> on branches you
+Do **NOT** use <span class="cli">--rebase</span> on branches you
 have shared with other people! (rebase re-writes the local history. If your
 local history doesn't match people who cloned off of you, and they want to push
-to you, they will have <strong>major</strong> problems.)
-</div>
+to you, they will have **major** problems.)`>}}
 
 You can make Git take care of this automatically for you, so that
 <span class="cli">git pull</span> does the right thing for Haiku:
@@ -302,11 +293,9 @@ for in the web interface and help categorize commits.
 
 <h5>GitHub</h5>
 
-<div class="alert alert-danger">
-<strong>Do not send pull requests using GitHub!</strong> Pull requests for the
-Haiku operating system using GitHub cannot be accepted for technical reasons.
-However, this may not be the case with some other repositories.
-</div>
+{{< alert-danger "Do not send pull requests using GitHub!"
+`Pull requests for the Haiku operating system using GitHub cannot be accepted for technical reasons.
+However, this may not be the case with some other repositories.`>}}
 
 To submit a patch, you can change the remote URL of the Haiku repository to
 Gerrit using this command:

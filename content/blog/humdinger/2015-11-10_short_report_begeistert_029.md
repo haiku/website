@@ -37,4 +37,4 @@ Also, thanks to Andrew Hudson, who has donated generously once more to the bever
 
 See you all again next year in Düsseldorf!
 
-<div class="alert alert-info">I replaced the video of Axel's talk (<a href="https://youtu.be/Mu6KPyGy5NM">new URL</a>) after mmlr notified me that the last few minutes had audio problems. Thanks Michael!</div>
+{{< alert-info "" "I replaced the video of Axel's talk ([new URL](https://youtu.be/Mu6KPyGy5NM)) after mmlr notified me that the last few minutes had audio problems. Thanks Michael!">}}

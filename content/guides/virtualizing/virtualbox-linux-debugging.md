@@ -30,12 +30,11 @@ First, we will create a serial port in VirtualBox and redirect its output to fil
  <li>Click OK.</li>
 </ol>
 
-<div class="alert alert-info">There is also the possibility to redirect output to a physical port:
-<ul>
- <li>Choose the <em>Host Device</em> option in the <em>Port Mode</em> menu</li>
- <li>Change <em>Port/File Path</em> values to port file path (for example <em>/dev/ttyS0</em> on Linux, <em>COM1</em> on Windows).</li>
-</ul>
-</div>
+{{< alert-info ""
+`There is also the possibility to redirect output to a physical port:
+- Choose the *Host Device* option in the *Port Mode* menu
+- Change *Port/File Path* values to port file path (for example */dev/ttyS0* on Linux, *COM1* on Windows).
+`>}}
 
 <img alt="Configuration example" width="660" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-linux-debugging/image2.png" />
 
@@ -61,4 +60,4 @@ to
 Possible "<em>speed</em>" values are: 9600, 19200, 38400, 57600, 115200.
 
 <h3 id="part_finish">The End</h3>
-<div class="alert alert-warning">Don't forget to delete or move the output file! VirtualBox won't do it automatically and it can grow to immense sizes.</div>
+{{< alert-warning "" "Don't forget to delete or move the output file! VirtualBox won't do it automatically and it can grow to immense sizes.">}}

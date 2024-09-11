@@ -11,10 +11,9 @@ There are a wide range of options and configurations available to boot Haiku, fr
 
 `makebootable` is a low-level Haiku tool to enable x86 MBR (legacy bios) systems to boot from the active Haiku partition.
 
-<div class="alert alert-danger">
-It is extremely likely that you don't need makebootable. Please read this paragraph carefully
-to determine if you need it.
-</div>
+{{< alert-danger ""
+`It is extremely likely that you don't need makebootable. Please read this paragraph carefully
+to determine if you need it.`>}}
 
 Makebootable is **not** needed when any of these is true:
 
@@ -83,9 +82,9 @@ menuentry "Haiku" {
 
 Of course, the partition in the entries needs to point to the one where you actually installed Haiku. On Linux you can get the `UUID` values of all the partitions and disks in use by using the `sudo blkid` and `sudo fdisk -l` commands.
 
-<div class="alert alert-info">The EFI entry above assumes you've created the `EFIBOOT` partition and put the boot loader inside it as explained <a href="https://www.haiku-os.org/guides/uefi_booting">in the official guide</a>. If you didn't, you need to check the path of the `chainloader` directive and fix accordingly.</div>
+{{< alert-info "" "The EFI entry above assumes you've created the `EFIBOOT` partition and put the boot loader inside it as explained [in the official guide](/guides/uefi_booting). If you didn't, you need to check the path of the `chainloader` directive and fix accordingly.">}}
 
-<div class="alert alert-info">The EFI entry above assumes that your disk is partitioned using the intel/mbr partitioning system. For systems using GPT partitioning, replace the line `insmod part_msdos` with `insmod part_gpt`.</div>
+{{< alert-info "" "The EFI entry above assumes that your disk is partitioned using the intel/mbr partitioning system. For systems using GPT partitioning, replace the line `insmod part_msdos` with `insmod part_gpt`.">}}
 
 On Ubuntu (and other Linux flavors), you can eventually customize the GRUB setup further in a GUI environment using __Grub Customizer__ and following this [getting started tutorial](http://tipsonubuntu.com/2018/03/11/install-grub-customizer-ubuntu-18-04-lts/).
 

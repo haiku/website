@@ -5,7 +5,9 @@ date = "2011-02-22T22:40:07.000Z"
 tags = ["ubuntu", "ppa", "grub"]
 +++
 
-<div class="alert alert-info">This article was written when Ubuntu 10.10 was the latest version. Starting with Ubuntu 11.04 (Natty Narwhal), Haiku should be recognized out of the box. Just run <span class="cli">sudo update-grub</span> to add it to the GRUB menu.</div><p>When I switched from Windows to Ubuntu, not only did I wonder why <a href="/articles/2011-01-26_getting_recognition_linux_part_one_recognizing_be_file_system">it wouldn't recognize the BFS file systems</a>, but also why Windows would automatically get added to the GRUB menu, but Haiku wouldn't.</p>
+{{< alert-info "" `This article was written when Ubuntu 10.10 was the latest version. Starting with Ubuntu 11.04 (Natty Narwhal), Haiku should be recognized out of the box. Just run <span class="cli">sudo update-grub</span> to add it to the GRUB menu.`>}}
+
+<p>When I switched from Windows to Ubuntu, not only did I wonder why <a href="/articles/2011-01-26_getting_recognition_linux_part_one_recognizing_be_file_system">it wouldn't recognize the BFS file systems</a>, but also why Windows would automatically get added to the GRUB menu, but Haiku wouldn't.</p>
 
 <!--more-->
 

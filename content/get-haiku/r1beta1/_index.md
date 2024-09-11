@@ -5,9 +5,8 @@ date = "2018-09-28 20:38:42-04:00"
 tags = []
 +++
 
-<div class="alert alert-warning">
-This page refers to an outdated release of Haiku. For information on more current releases, please visit <a href="/get-haiku/">Get Haiku</a>.
-</div>
+{{< alert-warning ""
+"This page refers to an outdated release of Haiku. For information on more current releases, please visit [Get Haiku](/get-haiku/).">}}
 
 <div class="box-release-info-right">
 <p><strong>Current Official Version Information</strong></p>
