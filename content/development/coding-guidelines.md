@@ -14,7 +14,7 @@ div.content {
 
 The document below outlines our code style guidelines. If you have suggestions for things that should be clarified better, etc. please [let us know](/contact "contact form"). Please _don't_ send us suggestions of the kind "I like this indenting style better, could we switch?".
 
-<div class="alert alert-warning">The information in the document below is <b>extremely</b> important. If you will be contributing code or patches to Haiku, you will need to strictly follow the code style guidelines. Code which doesn't follow the guidelines below will <b>not</b> be accepted.</div>
+{{< alert-warning "" "The information in the document below is **extremely** important. If you will be contributing code or patches to Haiku, you will need to strictly follow the code style guidelines. Code which doesn't follow the guidelines below will **not** be accepted.">}}
 
 Some code doesn't match our guidelines in some places, this is mostly due to it being written before the guidelines were defined. Assistance with cleaning up incorrect code is very welcome as long as you notate in the commit that there are "no functional changes" in this patch (don't bury code changes in style fixes).
 

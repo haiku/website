@@ -26,4 +26,4 @@ tags = []
  <li>Project brief description (25 words at most)</li>
 </ul>
 
-<div class="alert alert-info">Only community-based projects related to Haiku or the Haiku platform will be listed. We reserve the right to edit the provided information, and accept or refuse any request for listing at our own discretion.</div>
+{{< alert-info "" "Only community-based projects related to Haiku or the Haiku platform will be listed. We reserve the right to edit the provided information, and accept or refuse any request for listing at our own discretion.">}}

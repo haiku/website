@@ -5,7 +5,9 @@ date = "2011-01-26T12:11:48.000Z"
 tags = ["ubuntu", "bfs", "ppa"]
 +++
 
-<div class="alert alert-info">This article was written when Ubuntu 10.10 was the latest version. Starting with Ubuntu 11.10 (Oneiric Ocelot), BFS file systems should be recognized out of the box.</div><p><a href="/files/1-menu-before.png"><img src="/files/1-menu-before-small.png" alt="places menu" align="right" width="54" height="64"></a>Late 2009 I made the switch from Windows to Ubuntu as my primary operating system. During the first weeks of using it, I began to wonder why it would recognize my old Windows file system on the hard disk but not the BFS file systems. The partitions were correctly recognized as BeOS BFS (0xEB) and I could mount them from the command-line with <span class="cli">mount -t befs /dev/sda5 /media/Haiku</span>, but they didn't show up in the Places menu or elsewhere in the system.</p>
+{{< alert-info "" "This article was written when Ubuntu 10.10 was the latest version. Starting with Ubuntu 11.10 (Oneiric Ocelot), BFS file systems should be recognized out of the box.">}}
+
+<p><a href="/files/1-menu-before.png"><img src="/files/1-menu-before-small.png" alt="places menu" align="right" width="54" height="64"></a>Late 2009 I made the switch from Windows to Ubuntu as my primary operating system. During the first weeks of using it, I began to wonder why it would recognize my old Windows file system on the hard disk but not the BFS file systems. The partitions were correctly recognized as BeOS BFS (0xEB) and I could mount them from the command-line with <span class="cli">mount -t befs /dev/sda5 /media/Haiku</span>, but they didn't show up in the Places menu or elsewhere in the system.</p>
 
 <!--more-->
 

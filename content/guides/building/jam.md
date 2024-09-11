@@ -86,7 +86,7 @@ The BFS image is simply concatenated at the end. Inside the MBR is a partition t
 <a name="sudo_jam"></a>
 <li><h4><a href="#sudo_jam">sudo jam &lt;options&gt;</a></h4>
 <p>
-<div class="alert alert-warning">You should not be using the sudo command when running jam.</div> 
+{{< alert-warning "" "You should not be using the sudo command when running jam.">}}
 First of all, any and all files in $(HAIKU_OUTPUT_DIR)--typically /path/haiku/haiku/generated/ will only be accessible to root. To fix this, it is necessary to run <span class="cli">chown -R &lt;user&gt;:&lt;group&gt; &lt;path&gt;</span>. Secondly, user errors become much more damaging when `sudo jam` is used, as you could easily overwrite the wrong partition.</p>
 <p>The preferred method is to apply permissions to your device first.</p>
 <pre class="terminal">

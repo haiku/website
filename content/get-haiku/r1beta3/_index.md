@@ -6,9 +6,8 @@ tags = []
 draft = "false"
 +++
 
-<div class="alert alert-warning">
-This page refers to an outdated release of Haiku. For information on more current releases, please visit <a href="/get-haiku/">Get Haiku</a>.
-</div>
+{{< alert-warning ""
+"This page refers to an outdated release of Haiku. For information on more current releases, please visit [Get Haiku](/get-haiku/).">}}
 
 <div class="box-release-info-right">
 <ul>

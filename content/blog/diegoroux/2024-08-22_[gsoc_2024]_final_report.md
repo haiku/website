@@ -63,18 +63,16 @@ hmulti_audio communicates with drivers primarily through ioctl calls (using code
 look like: `B_MULTI_...`). All valid ioctl codes (as well as the structs used for them) can
 be found in [headers/private/audio/hmulti_audio.h](https://github.com/haiku/haiku/blob/master/headers/private/audio/hmulti_audio.h) under the first enum.
 
-<div class="alert alert-info">
-For this point on, we'll treat sending an specific code through ioctl as calling a function.
-</div>
+{{< alert-info ""
+"For this point on, we'll treat sending an specific code through ioctl as calling a function.">}}
 
 The init procedure hmulti_audio goes through for a device can be read [here](https://github.com/haiku/haiku/blob/master/src/add-ons/media/media-add-ons/multi_audio/MultiAudioDevice.cpp#L118). 
 To start, hmulti_audio retrieves the device information, such as supported formats, bitrates,
 input/output channels, and the channel maps through `B_MULTI_GET_DESCRIPTION`.
 
-<div class="alert alert-info">
-bus_channels, can generate a bit of a confusion, at first glance, but they do not represent an
-extra channel but rather the physical input/output.
-</div>
+{{< alert-info ""
+`bus_channels, can generate a bit of a confusion, at first glance, but they do not represent an
+extra channel but rather the physical input/output.`>}}
 
 Secondly, hmulti_audio will try to get and set enabled channels through `B_MULTI_GET_ENABLED_CHANNELS`
 and `B_MULTI_GET_ENABLED_CHANNELS`, respectively. Even if you can't disable/enable channels on your
@@ -112,16 +110,14 @@ although it is possible no actual audio data is sent at this stage. If the user
 changes preferences (such as the bitrate), hmulti_audio will cycle through calling
 `B_MULTI_SET_GLOBAL_FORMAT` and `B_MULTI_GET_BUFFERS` again. 
 
-<div class="alert alert-info">
-B_MULTI_BUFFER_FORCE_STOP is never called, one should never assume that
-playback/recording will be explicitly stopped.
-</div>
+{{< alert-info ""
+`B_MULTI_BUFFER_FORCE_STOP is never called, one should never assume that
+playback/recording will be explicitly stopped.`>}}
 
 All the other ioctl codes, may remain unimplemented at your discretion.
 
-<div class="alert alert-info">
-Remember all structs given, live in userspace. Act accordingly.
-</div>
+{{< alert-info ""
+"Remember all structs given, live in userspace. Act accordingly.">}}
 
 # So, what did you do this summer?
 I focused on implementing the VirtIO sound specification and

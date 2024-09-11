@@ -5,14 +5,13 @@ date = "2009-05-10T01:23:57.000Z"
 tags = []
 +++
 
-<div class="alert alert-warning">
-With the introduction of package management, optional packages - and therefore this page - became obsolete.
-</div>
+{{< alert-warning ""
+"With the introduction of package management, optional packages - and therefore this page - became obsolete.">}}
 <p>
 This page details the steps in creating an OptionalPackage. In addition to being a regular binary distribution archive, an OptionPackage includes a plain text file called <code>.OptionalPackageDescription</code> and possibly the license file.
 </p>
 
-<div class="alert alert-info">NOTE: With the recent incorporation of package management, OptionalPackages are obsolete. Haiku package files (HPKG) replace them. See <a href="https://github.com/haiku/haiku/blob/master/docs/develop/packages/BuildingPackages.rst">PackageManagement/BuildingPackages</a> and <a href="https://github.com/haikuports/haikuports/wiki/HaikuPorter-BuildRecipes">HaikuPorter / BuildRecipes</a> for instructions on creating HPKG's.</div>
+{{< alert-info "" "NOTE: With the recent incorporation of package management, OptionalPackages are obsolete. Haiku package files (HPKG) replace them. See [PackageManagement/BuildingPackages](https://github.com/haiku/haiku/blob/master/docs/develop/packages/BuildingPackages.rst) and [HaikuPorter / BuildRecipes](https://github.com/haikuports/haikuports/wiki/HaikuPorter-BuildRecipes) for instructions on creating HPKG's.">}}
 
 <h3 class="icon-document-medium">.OptionalPackageDescription</h3>
 <p>In <a href="https://dev.haiku-os.org/changeset/25050">changeset 25050</a>, support for these files was introduced. The contents of <code>.OptionalPackageDescription</code> is appended to AboutSystem's "COPYRIGHTS" attribute, which will cause the respective info to be shown in the about view.</p>

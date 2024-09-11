@@ -10,11 +10,10 @@ tags = ["makebootable"]
 				Usual question: "I've dd'ed the image to somewhere and now it doesn't boot". Usual advice: "You have to make it bootable by using makebootable". Usual reaction: "Ehm, ok how do I do that?". Since this type of question comes up quite frequently, let me try to explain a bit of background on that pseudo-mystical tool "makebootable", how you can get it and how you can manually make a partition bootable without even needing makebootable.
 			</p>
 
-<div class="alert alert-danger">
-This is an advanced guide with technical details about operations involving manual editing of disk
+{{< alert-danger ""
+`This is an advanced guide with technical details about operations involving manual editing of disk
 sectors. Be sure that you know what you are trying to do. If you just want to install Haiku, you
-do not need this page, please refer to the <a href="/guides/booting">Booting Haiku</a> guide.
-</div>
+do not need this page, please refer to the [Booting Haiku](/guides/booting) guide.`>}}
 
 			<h3>The Stage 1 Bootloader</h3>
 			<p>

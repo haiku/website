@@ -5,9 +5,8 @@ date = "2020-06-09 00:00:00Z"
 tags = []
 +++
 
-<div class="alert alert-info">
-Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider <a href="https://www.haiku-inc.org/donate/">donating</a> a small amount. We rely on your support to carry Haiku into the future.
-</div>
+{{< alert-info ""
+"Haiku is developed by a small group of volunteers. To help with development and bandwidth costs, please consider [donating](https://www.haiku-inc.org/donate/) a small amount. We rely on your support to carry Haiku into the future.">}}
 
 <div class="box-release-info-right">
 <p><strong>Current Official Version Information</strong></p>
