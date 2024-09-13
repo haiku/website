@@ -70,13 +70,11 @@ If you choose to download an image, please select from the list of available mir
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta5/haiku-r1beta5-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://mirrors.tnonline.net/haiku/haiku-release/r1beta5/haiku-r1beta5-x86_64-anyboot.iso">iso</a></td>
     </tr>
-<!--
     <tr class="link">
       <td class="location"><b>Location:</b> Australia <br/>Provided by: <a target="_blank" class="ext" href="AARNet" title="https://aarnet.edu.au">aarnet.edu.au</a></td>
       <td><a class="track" href="https://mirror.aarnet.edu.au/pub/haiku/r1beta5/haiku-r1beta5-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://mirror.aarnet.edu.au/pub/haiku/r1beta5/haiku-r1beta5-x86_64-anyboot.iso">iso</a></td>
     </tr>
--->
     <tr class="link">
       <td class="location"><b>Location:</b> Kemerovo Oblast, Russia <br/>Provided by: <a target="_blank" class="ext" href="http://www.truenetwork.ru" title="truenetwork.ru">truenetwork.ru</a></td>
       <td><a class="track" href="https://mirror.truenetwork.ru/haiku/release/r1beta5/haiku-r1beta5-x86_gcc2h-anyboot.iso">iso</a></td>
