@@ -27,8 +27,8 @@ The following steps assume a fresh installation where the local disk will be use
    2. Open the [Terminal](/docs/userguide/en/applications/terminal.html) application.
    3. Execute the commands;
       ```sh
-      mkdir -p "/efiboot/EFI/BOOT"
-      cp "/system/data/platform_loaders/haiku_loader.efi" "/efiboot/EFI/BOOT/BOOTX64.EFI"
+      mkdir -p /EFIBOOT/EFI/BOOT
+      cp /system/data/platform_loaders/haiku_loader.efi /EFIBOOT/EFI/BOOT/BOOTX64.EFI
       ```
    4. Press <span class="key">CTRL</span>-<span class="key">D</span> to close the terminal.
 8. Install Haiku onto the system
