@@ -14,7 +14,7 @@ WebArchive has a copy of [a wiki page](http://web.archive.org/web/20131016171054
 
 > It is a lightweight version of Open Office (it was before LibreOffice fork). At that time, it was better to start with that as some dependencies not available under Haiku were already removed, like Java
 
-oco didn't [get very far](http://lists.ports.haiku-files.org/pipermail/haikuports-devs-ports.haiku-files.org/2014-July/003636.html) in terms of usability: he had everything compiling, with VCL (LibreOffice's GUI toolkit) being just an empty shell. However, looking at these instructions and considering this was before Haiku had a package manager, I'm guessing a lot of work and figuring things out were needed to get to that point. That being said, I ended up starting from scratch.
+oco didn't [get very far](http://lists.ports.files.haiku-os.org/pipermail/haikuports-devs-ports.haiku-files.org/2014-July/003636.html) in terms of usability: he had everything compiling, with VCL (LibreOffice's GUI toolkit) being just an empty shell. However, looking at these instructions and considering this was before Haiku had a package manager, I'm guessing a lot of work and figuring things out were needed to get to that point. That being said, I ended up starting from scratch.
 
 ## Package management
 
@@ -24,7 +24,7 @@ I do remember problems with libraries being put in the wrong place, though. Thes
 
 Fortunately, my fears were not realized: package management was already merged; it was (and still is) so much cleaner and a pleasure to work with. I have started creating recipes for missing libraries LO's configure was complaining about. Not long after I got commit access to HaikuPorts.
 
-Some recipes were easy; thanks to Haiku's POSIX compatibility and autotools portability[^2], most of them worked out of the box. [Document Liberation Project's](https://www.documentliberation.org/) libraries fall into that category and they were ~50% of the dependencies. Some not so much: I got stuck on NSPR and NSS and asked for [help on haikuports' ML](http://lists.ports.haiku-files.org/pipermail/haikuports-devs-ports.haiku-files.org/2014-July/003626.html).
+Some recipes were easy; thanks to Haiku's POSIX compatibility and autotools portability[^2], most of them worked out of the box. [Document Liberation Project's](https://www.documentliberation.org/) libraries fall into that category and they were ~50% of the dependencies. Some not so much: I got stuck on NSPR and NSS and asked for [help on haikuports' ML](http://lists.ports.files.haiku-os.org/pipermail/haikuports-devs-ports.haiku-files.org/2014-July/003626.html).
 
 That wasn't a blocker though: I could bypass the requirements by building each module by hand. It was tedious but I worked like that for some time. I managed to go as far as oco did; I could experiment with building VCL and writing Haiku backend for it.
 

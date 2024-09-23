@@ -5,7 +5,7 @@ date = "2016-12-23T21:36:57.000Z"
 tags = []
 +++
 
-For Google Code-In 2017, Villyam created a [video on how to install Haiku in Parallels Desktop](http://haiku-files.org/files/media/GCI-2017_Parallels-Desktop_Villyam.mkv) [10 MiB].
+For Google Code-In 2017, Villyam created a [video on how to install Haiku in Parallels Desktop](http://files.haiku-os.org/files/media/GCI-2017_Parallels-Desktop_Villyam.mkv) [10 MiB].
 
 Virtual instances of operating systems are perfect for all kinds of testing purposes that need to be done in a safe and isolated environment. Installing Haiku in a virtual machine is a solution for people who do not want to install it on their physical computers, but wish to become familiar with it.
 

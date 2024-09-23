@@ -6,7 +6,7 @@ date = "2009-04-30T05:20:19.000Z"
 tags = ["VMWare", "haiku-files.org", "gcc4", "images"]
 +++
 
-Just thought we'd let you know that, <a href="http://haiku-files.org" target="_blank">Haiku-Files</a> is now hosting GCC4 builds of Haiku in both RAW and VM image formats.
+Just thought we'd let you know that, <a href="http://files.haiku-os.org" target="_blank">Haiku-Files</a> is now hosting GCC4 builds of Haiku in both RAW and VM image formats.
 
 You can obtain these builds in the usual directories and we've updated the RSS feeds as well.
 

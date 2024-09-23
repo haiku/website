@@ -5,7 +5,7 @@ date = "2019-12-08T20:10:00.000Z"
 tags = []
 +++
 
-In 2017, Max Levchuk created a tutorial video for [VMware ESXi](http://haiku-files.org/files/media/GCI-2017_VmWare-esxi_Max-Levchuk.mkv) [5 MiB].
+In 2017, Max Levchuk created a tutorial video for [VMware ESXi](http://files.haiku-os.org/files/media/GCI-2017_VmWare-esxi_Max-Levchuk.mkv) [5 MiB].
 
 Virtualizing an operating system might be a good way to give it a test run, or to use it alongside your main OS. ESXi is a platform that allows easy deployment of virtual machines on baremetal servers, and setting up a Haiku ESXi VM might be a good idea if you intend to develop Haiku or applications for it.
 

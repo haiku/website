@@ -53,7 +53,7 @@ Raefaldhi Amartya Junior from Indonesia</li>
 <li>Addition of missing email provider information.</li>
 <li>Addition of Pthreads barriers implementation to Haiku.</li>
 <li>Articles converted to markdown for the new Haiku website.</li>
-<li>Video <a href="http://haiku-files.org/files/media/">tutorials</a> were prepared.</li>
+<li>Video <a href="http://files.haiku-os.org/files/media/">tutorials</a> were prepared.</li>
 <li>Presenting Haiku at their schools or other local groups.</li>
 <li>Supplying icons, screenshots, and categories for packages in HaikuDepot.</li>
 <li>and much more!</li>

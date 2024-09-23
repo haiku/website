@@ -28,8 +28,8 @@ Version:	0.9.8k
 Copyright:	1995-1998 Eric Young , 1998-2008 The OpenSSL Project.
 License:	OpenSSL
 URL:		http://www.openssl.org/
-SourceURL:	Instructions &lt;http://ports.haiku-files.org/wiki/dev-libs/openssl/0.9.8k/1&gt;
-SourceURL:	Download &lt;http://www.haiku-files.org/files/optional-packages-sources/openssl&gt;
+SourceURL:	Instructions &lt;http://ports.files.haiku-os.org/wiki/dev-libs/openssl/0.9.8k/1&gt;
+SourceURL:	Download &lt;http://files.haiku-os.org/files/optional-packages-sources/openssl&gt;
 &lt;end with a blank line&gt;
 </pre>
 
@@ -53,7 +53,7 @@ It is necessary to rename that particular license file to the name of the softwa
 
 <h3 class="icon-archive-medium">Packaging Archive</h3>
 <p>
-Create your archive as you typically would. HaikuPorts has a wiki page describing some <a href="http://ports.haiku-files.org/wiki/PortingTips#Preparingfordistribution">methods for creating an archive from ported software</a>. Include <code>.OptionalPackageDescription</code> in the top-most directory of the  binary distribution archive. If the license file declares that a copy must accompany binary distributions, be certain to include the renamed license as noted above. It is preferable to use the following naming scheme for the archive:
+Create your archive as you typically would. HaikuPorts has a wiki page describing some <a href="http://ports.files.haiku-os.org/wiki/PortingTips#Preparingfordistribution">methods for creating an archive from ported software</a>. Include <code>.OptionalPackageDescription</code> in the top-most directory of the  binary distribution archive. If the license file declares that a copy must accompany binary distributions, be certain to include the renamed license as noted above. It is preferable to use the following naming scheme for the archive:
 <b>&lt;softwareName&gt;-&lt;softwareVersion&gt;-&lt;platform&gt;-&lt;buildDate&gt;.zip</b>
 
 Notes:

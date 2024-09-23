@@ -17,7 +17,7 @@ There've been a few talks in this casual atmosphere, starting with Colin Günthe
 
 After that all attending Haiku developers had a chance to report on the progress made since R1/alpha1.
 The biggest alpha2-blocker seems to be the missing IRQ routing which can lead to particularly WLAN drivers freezing the system. One idea that was briefly discussed, was to prevent these devices to share IRQs at all. (Looks like Michael Lotz started work on that during the Code Sprint, see <a href="https://dev.haiku-os.org/changeset/36225">r36225</a>.)
-Stephan's success with the WebKit and WebPositive is plain to see for everone with a current <a href="http://haiku-files.org/">Haiku</a> and <a href="http://mmlr.dyndns.org/chrome/site/nightlies/index.html">Web+</a> build.
+Stephan's success with the WebKit and WebPositive is plain to see for everone with a current <a href="http://files.haiku-os.org/">Haiku</a> and <a href="http://mmlr.dyndns.org/chrome/site/nightlies/index.html">Web+</a> build.
 Ingo worked mostly on the kernel to remove locks that slowed Haiku down unnecessarily and on the vm caching. While Haiku and its BFS filesystem are still behind the highly optimized Linux components, the improvements have been quite substantial. Sponsored by the Haiku Code Drive he'll soon embark on extending Haiku's POSIX compatibility and, if it falls in that timeframe, coordinate the R1/alpha2 release.
 Besides other smaller things, Oliver looked into POSIX integration of ICU with regard future localization efforts.
 Michael implemented the idea of "anyboot", which simplifies installation by providing a single image that can be burned on CD or written to a USB stick.

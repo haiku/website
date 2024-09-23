@@ -5,7 +5,7 @@ date = "2016-12-23T06:09:57.000Z"
 tags = []
 +++
 
-For Google Code-In 2017, Arnav Bhatt created a [video on how to install Haiku in SimNow](http://haiku-files.org/files/media/GCI-2017_SimNow_Arnav-Bhatt.mp4) [8 MiB].
+For Google Code-In 2017, Arnav Bhatt created a [video on how to install Haiku in SimNow](http://files.haiku-os.org/files/media/GCI-2017_SimNow_Arnav-Bhatt.mp4) [8 MiB].
 
 This article is aimed at developers, as AMD SimNow is both a Virtual machine and an AMD hardware emulator. If you just want to try Haiku out, you might want to use another VM that is more aimed at end users.
 

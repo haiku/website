@@ -26,6 +26,6 @@ tags = ["package management", "contract work"]
 <ul>
 
 <li><p><a href="http://github.com/olta/">Oliver's</a> and <a href="http://github.com/weinhold">my</a> GitHub repositories. The "Haiku" repository has a "pm-flat" branch (will probably be renamed eventually) which contains the latest PM version of Haiku. There are also the "buildtools" with a "package-management" branch matching the PM Haiku. The "libsolv" repository is a Haiku port of libsolv, the dependency solving library.</p></li>
-<li><p><a href="http://ports.haiku-files.org/browser?order=name">The HaikuPorts repository</a> has modules "haikuporter" (the tool) and "haikuports" (the build recipes and patches), both featuring a "package-management" branch which reflects the current state of our work on those.</p></li>
+<li><p>The HaikuPorts repository has modules "haikuporter" (the tool) and "haikuports" (the build recipes and patches), both featuring a "package-management" branch which reflects the current state of our work on those.</p></li>
 <li><p><a href="https://dev.haiku-os.org/wiki/PackageManagement">The Haiku Trac Wiki</a> sports several PM related pages which we'll try to keep up-to-date and extend.</p></li>
 </ul>
