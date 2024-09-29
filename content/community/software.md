@@ -9,7 +9,7 @@ tags = []
 
 <ul>
 <li><a href="https://www.be.wildman-productions.org/">BeBytes - The BeOS Software Archive</a>: A software archive like the old BeBits in BeOS times.</li>
-<li><a href="https://www.software.besly.de/">BeSly Software Repo</a>: A repository for Haiku software.</li>
+<li><a href="https://software.besly.de/">BeSly Software Repo</a>: A repository for Haiku software.</li>
 <li><a href="https://fatelk.com/">Fat Elk Software</a>: A repository Fat Elk's own and other 3rd party software.</li>
 <li><a href="https://pulkomandy.tk/~beosarchive/about.html">PulkoMandy's BeOS software archive</a>: A software archive of old BeOS software, with and without source code.</li>
 </ul>
