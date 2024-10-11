@@ -18,7 +18,7 @@ While waiting for beta5-related rebuilds and other work to be completed last mon
 
 (Also while working on packagefs, I noticed our default string hashing routine was a somewhat outdated one; I replaced it with the now-common `hashdjb2` not just for packagefs but for most of the kernel, and then all of userspace as well.)
 
-The final result...
+The final result is savings of somewhere around (or possibly more than) 20% of total packagefs memory usage, excluding file data caches, which amounts to at least 15 MB on my system.
 
 Now, on to the rest of the report.
 
