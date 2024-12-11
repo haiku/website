@@ -112,10 +112,6 @@ PulkoMandy added mkostemp (specified in POSIX-2024.)
 
 PulkoMandy added documentation for some of the implementation details of `ioctl` and `posix_devctl` on Haiku.
 
-### Build system
-
-### ARM
-
 ### That's all, folks!
 
 Thanks again to all who contribute to Haiku, and especially those donors who make my contract possible.
