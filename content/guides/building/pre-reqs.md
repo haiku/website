@@ -97,6 +97,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                       |
 | [Rocky Linux](https://rockylinux.org)   | [rpm/yum](#yum) | YES       |                       |
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                       |
+| [Void Linux](https://voidlinux.org/) | [xbps](#xbps)      | YES       |                       |
 | macOS                              | [Homebrew](#macos)   | MAYBE     | Need a working case sensitive filesystem |
 | [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.             |
 | [Windows](https://microsoft.com/)  | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
@@ -213,6 +214,22 @@ with import <nixpkgs> {}; {
     ];
   };
 }
+```
+
+
+<a name="xbps"></a>
+## ![xbps](/files/os-icons/void-32.png) xbps-based Linux Distribution (Void Linux)
+
+**Basic requirements:**
+
+```sh
+sudo xbps-install base-devel git nasm openssh zlib-devel libzstd-devel libcurl-devel wget xorriso python attr-progs
+```
+
+**Additional requirements for building ARM versions of Haiku:**
+
+```sh
+sudo xbps-install u-boot-tools util-linux
 ```
 
 
