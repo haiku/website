@@ -130,8 +130,7 @@ It was a pleasure meeting you all and a big thanks to the organizers of the even
 
 ---
 
-<img width="33%" hspace="20" vspace="0" align="right"src="/files/blog/humdinger/BeGeistert_031/Blue_Leaf_Sticker.jpg" title="XYZ's leafy sticker" alt="XYZ's leafy sticker" />
-
+<img width="33%" hspace="20" vspace="0" align="right" src="/files/blog/humdinger/BeGeistert_031/Blue_Leaf_Sticker.jpg" title="Roi Red's leafy sticker" alt="Roi Red's leafy sticker" />
 Before everyone left, they got some nice blue leaf stickers that Roi Red has sent over all the way from Spain. Thanks very much, Roi! Here is Kacper's - slightly blurry - notebook where it fits in nicely.
 
 All around a very nice BeGeistert, thanks to Christian and Lorenz and their smooth organizing. Let's hope we'll meet again in Hamburg or elsewhere, ideally with some more attendees!
