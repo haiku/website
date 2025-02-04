@@ -2,20 +2,338 @@
 type = "article"
 title = "Hello kernel? You have a syscall from userland!"
 date = "2002-07-14T04:00:00.000Z"
-tags = ["kernel", "sycall", "userland"]
+tags = ["kernel", "syscall", "userland"]
 +++
 
 
     <div class="field field-type-text field-field-body">
     <div class="field-items">
             <div class="field-item odd">
-                    <p><strong>Note:</strong> this article was written by Daniel Reinhold. <br /></p><p>One of the features of modern operating systems is the ability to separate application code from the critical code that implements the core of the system. Regular applications run in user mode (often referred to as userland) which means that they cannot directly manipulate the vital system data structures. This makes everything much more stable -- buggy apps may crash and burn themselves, but they can&#39;t bring down the rest of the system. </p><p> The flipside to this protection is that userland code is walled off from the kernel code. This means, for example, that your application cannot directly call a kernel function. But the kernel implements many useful services that most apps would like to take advantage of. Indeed, that is one of the main purposes of the kernel -- to abstract all those icky underlying hardware details and provide a clean, consistent interface for applications. So how does all this useful interface ever get called and used? </p>
+                    <p><strong>Note:</strong> this article was written by Daniel Reinhold. <br /></p>
+                    <p>One of the features of modern operating systems is the ability to separate application code from the critical code that implements the core of the system. Regular applications run in user mode (often referred to as userland) which means that they cannot directly manipulate the vital system data structures. This makes everything much more stable -- buggy apps may crash and burn themselves, but they can&#39;t bring down the rest of the system. </p>
+                    <p> The flipside to this protection is that userland code is walled off from the kernel code. This means, for example, that your application cannot directly call a kernel function. But the kernel implements many useful services that most apps would like to take advantage of. Indeed, that is one of the main purposes of the kernel -- to abstract all those icky underlying hardware details and provide a clean, consistent interface for applications. So how does all this useful interface ever get called and used? </p>
 
 
 <!--more-->
 
 
-<p> Well, I&#39;m glad that you asked (ok, you didn&#39;t... I&#39;ll just pretend that you did), since that&#39;s the topic of this article. There is a mechanism that the kernel provides so that user apps may tap into the system&#39;s coffers. This is the system call interface -- aka &quot;syscalls&quot; (surprise! I guess the title of the article gave it away). </p><p> Syscalls are the mechanism by which requests from userland code are converted into function calls within the kernel. This involves two context switches: first, switching from user to kernel mode in order to run the system service, then from kernel back to user mode to return to the caller. Additionally, any data passed must be copied in both directions (from user to kernel and back again). This means that syscalls are not exactly cheap -- they incur far more overhead than a simple procedure call. But the cost of the service is balanced by the safety of maintaining system integrity. </p><p><br /> <strong>Caveats</strong> </p><p> This article will delve into the details of how syscalls are implemented in the Haiku kernel, but there are a couple of caveats that I must lay out from the start:  </p><ol> <li>Only the Intel x86 architecture is covered here. While the overall design of the syscalls mechanism is the same on any platform, the specific details of how it is implemented is highly dependent on the machine architecture. </li><li>As I write this, the kernel source code is a moving target. It has already deviated somewhat from the original version forked from NewOS. And it will continue to evolve in the months ahead. I don&#39;t think that the basic mechanism for handling syscalls will change (altho you never know), but some of the specific file names and/or code snippets referenced below may become obsolete over time. </li><li>I am still learning and studying the syscalls mechanism myself. I believe that all the information presented here is correct, but, in the end, the ultimate reference is the kernel source code itself. Believe what it says first, and take what I&#39;ve said here as supplemental. </li></ol> <p><br /> <strong>The system interface</strong> </p><p> Consider your average C program with calls to fopen(), fread(), fclose(), etc. These functions are part of the standard C library and are platform independent -- i.e. they provide the same functionality regardless of what operating system is being run. But how are those calls actually implemented? As system calls in the native OS, of course: </p><ul>  <li>sys_open() </li><li>sys_read() </li><li>sys_write() </li><li>sys_lseek() </li><li>sys_close() </li><li>. . . </li></ul> These file operations are so common and so fundamental that is makes sense to offer them as system services. But file operations are not the only services that the kernel provides. There are also operations available for manipulating threads, semaphores, ports, and other low-level goodies. Here&#39;s a partial list of some other syscalls defined in Haiku: <ul> <li>sys_system_time() </li><li>sys_snooze() </li><li>kern_create_sem() </li><li>kern_delete_sem() </li><li>kern_acquire_sem() </li><li>kern_release_sem() </li><li>kern_release_sem_etc() </li><li>kern_spawn_thread()  </li><li>kern_kill_thread() </li><li>kern_suspend_thread() </li><li>kern_resume_thread() </li><li>sys_port_create() </li><li>sys_port_close() </li><li>sys_port_delete() </li><li>sys_port_find() </li><li>sys_port_get_info() </li><li>sys_exit() </li><li>. . . </li></ul> These syscalls provide a good representation what the kernel is capable of doing and how its operation can be controlled. It is the kernel equivalent of an API, only it&#39;s really an SPI (System Programming Interface). So far, as of this writing, there are 78 syscalls defined for the kernel. This number is very likely to increase over time. As a point of reference, this <a href="http://www.lxhp.in-berlin.de/lhpsysc0.html" target="_blank">Linux syscalls index</a> lists a total of 237 syscalls currently defined for that platform. <p> How many syscalls should an OS have then? Well, as many as it needs, I guess. It&#39;s a judgement call: more system services mean more power for userland (and possibly finer grained control), but too many complicate the interface to the kernel. The best motto would be &quot;keep it as simple as possible, but no simpler&quot;.  </p><p><br /> <strong>Peeking with strace</strong> </p><p> In order to get a better appreciation of the role of syscalls within user applications, you can run a program called strace. This is one of the standard /bin apps included with the BeOS. This very useful command will run a user program while printing out all syscalls as they are invoked. As an example, consider the following command: </p><pre>strace ls /boot/beos<br /></pre> This will run the command &#39;ls /boot/beos&#39; while displaying the syscalls encountered during exectution. Here is a sample of the output: <pre>user_create_sem(0x0, 0xec09cd6e &quot;addon lock&quot;) = 0x10537  (42 us)<br />_user_get_next_image_info(0x0, 0xfd001788, 0xfd00178c, 0x434) = 0x0  (145 us)<br />_user_get_next_image_info(0x0, 0xfd000330, 0xfd000334, 0x434) = 0x0  (146 us)<br />. . .<br />area_for(0xfd00028c) = 0x2b36  (51 us)<br />_user_get_area_info(0x2b36, 0xfd00028c, 0x48) = 0x0  (61 us)<br />user_find_thread(0x0) = 0x908  (16 us)<br />user_create_sem(0x0, 0xec09cd3d &quot;gen_malloc&quot;) = 0x1053a  (58 us)<br />. . .<br /></pre>  This is only a fraction of the output... run it yourself to see the full glory (heck, it&#39;s even color-coded!) Each line in the output is formatted as: <p> syscall_function(arg1, arg2, ... argN) = return_code </p><p> If the argument is a string literal, its string value is displayed immediately following the address that was passed. If the return code is a standard error code, its textual tag will be displayed immediately following its integral value. </p><p> For example, from the first line of output, we can surmise that something like the following was present in the &#39;ls&#39; source code: </p><pre>sem = user_create_sem(0, &quot;addon lock&quot;);<br />// at run time:<br />//    sem was set to 0x10537<br />//    user_create_sem() took 42 microseconds to execute<br /></pre> Running strace is a wonderful way to get a handle on how syscalls are being used by applications. You might even find it useful to run your own programs with strace to see how your application interfaces with the kernel.  <p><br /> <strong>Connecting thru software interrupts</strong> </p><p> Alright, the kernel offers all these wonderful services as syscalls. But how do user apps actually invoke the syscalls? Thru software interrupts. </p><p> Most of you are probably familiar with the concept of hardware interrupts. For example, you press a key and the keyboard generates a hardware interrupt, which, in turn, notifies the keyboard driver to process the input. However, interrupts are just as commonly generated by software events. </p><p> The mechanism for generating software interrupts is the INT instruction. This is an Intel x86 opcode that interrupts the current program execution, saves the system registers, and then jumps to a specific interrupt handler. After the handler has finished, the system registers are restored and the execution with the calling program is resumed (well, usually). </p><p> The INT instruction thus acts as (sort of) an alternative calling technique. Unlike ordinary procedure calls, which pass their args on the stack, interrupts store any needed args in registers. For example, a normal function call such as: </p><p> foo(a, b, c); </p><p> would be translated by the compiler into something like: </p><pre>push c push b push a call foo </pre> An interrupt however, must have any needed arguments loaded into general registers first. The register assignments for the syscall handlers are as follows: <ul> <li>eax -- syscall # </li><li>ecx -- number of args (0-16) </li><li>edx -- pointer to buffer containing args from first to last </li></ul> After these registers have been set, interrupt 99 is called. What is the significance of the value 99? None really -- this is simply the interrupt number selected by the kernel for handling syscalls. More on this later. <p><br /> <strong>Mapping the syscalls</strong> </p><p> Each syscall has an entry point defined by a small assembly language function. Therefore, the syscall interface is an assembly file (called syscalls.S) containing a long list of functions, one for each syscall that has been defined. This file should look like this: </p> <pre>.globl sys_null<br />.type sys_null,@function<br />.align 8<br />sys_null:<br />	movl  $0, %eax        ; syscall #0<br />	movl  $0, %ecx        ; no args<br />	lea   4(%esp), %edx   ; pointer to arg list<br />	int   $99             ; invoke syscall handler<br />	ret                   ; return<br />.globl sys_mount<br />.type sys_mount,@function<br />.align 8<br />sys_mount:<br />	movl  $1, %eax        ; syscall #1<br />	movl  $4, %ecx        ; mount takes 4 args<br />	lea   4(%esp), %edx   ; pointer to arg list<br />	int   $99             ; invoke syscall handler<br />	ret                   ; return<br />. . .<br /></pre>Or rather, it would be like the listing above, except that the code is so boiler plate, that, in fact, the syscall functions appear in the source code as a collection of #define macros. <p> The assignment of system services to syscall numbers is arbitrary. That is, it doesn&#39;t really matter which function is syscall #0, syscall #1, syscall #2, etc. so long as everyone is in agreement about the mapping. This mapping is defined in the syscalls.S assembly listing above, and much be matched item-for-item in the C interface header file. For our kernel, the C header is ksyscalls.h which uses an enum to define tags for each syscall: </p><pre>enum {<br />    SYSCALL_NULL = 0,<br />    SYSCALL_MOUNT,<br />    SYSCALL_UNMOUNT,<br />    SYSCALL_SYNC,<br />    SYSCALL_OPEN,<br />    . . .<br />};<br /></pre>  <p><br /> <strong>Interrupt Descriptor Table (IDT)</strong> </p><p> The code above sets us up for the interrupt call. But what happens when the int $99 instruction is invoked? Quite literally, the exception handler whose address is stored at IDT[99] is called. </p><p> The software interrupts rely on the presence of a system structure called the Interrupt Descriptor Table (IDT). This is a memory area allocated and initialized at boot time that holds a table of exception handlers. The table contains exactly 256 entries. </p><p> There is an internal x86 register, IDTR, that holds the address of this table. You cannot use this register directly -- it can only be accessed thru instructions such as the lidt (load IDT) instruction. During the stage2 bootstrap, the kernel calls lidt and sets it to the virtual address of the idt descriptor. This descriptor points to a memory area that is initialized with a vector (array) of exception handlers, one for each interrupt number (0 thru 255).  </p><p> The kernel has some leeway in assigning these handlers. However, certain interrupt numbers have standard, predesignated purposes or are reserved. The table below lists the interrupt numbers and their associated actions that should be implemented by the handlers: </p><p> <strong>Intel x86 interrupt numbers:</strong> </p><hr /> <table border="0" cellspacing="0" cellpadding="0"> <tbody><tr><td><strong>Number    </strong></td><td><strong>Description</strong></td><td><strong>Type</strong></td></tr> <tr><td>0</td><td>Divide-by-zero</td><td>fault</td></tr> <tr><td>1</td><td>Debug exception</td><td>trap or fault</td></tr>  <tr><td>2</td><td>Non-Maskable Interrupt (NMI)</td><td>trap</td></tr> <tr><td>3</td><td>Breakpoint (INT 3)</td><td>trap</td></tr> <tr><td>4</td><td>Overflow (INTO with EFlags[OF] set)</td><td>trap</td></tr> <tr><td>5</td><td>Bound exception (an out-of-bounds access)</td><td>trap</td></tr> <tr><td>6</td><td>Invalid Opcode</td><td>trap</td></tr>  <tr><td>7</td><td>FPU not available</td><td>trap</td></tr> <tr><td>8*</td><td>Double Fault</td><td>abort</td></tr> <tr><td>9</td><td>Coprocessor Segment Overrun</td><td>abort</td></tr> <tr><td>10*</td><td>Invalid TSS</td><td>fault</td></tr>  <tr><td>11*</td><td>Segment not present</td><td>fault</td></tr>  <tr><td>12*</td><td>Stack exception</td><td>fault</td></tr> <tr><td>13*</td><td>General Protection</td><td>fault or trap</td></tr> <tr><td>14*</td><td>Page fault</td><td>fault</td></tr>  <tr><td>15</td><td>Reserved</td><td><strong>. . .</strong></td></tr> <tr><td>16</td><td>Floating-point error</td><td>fault</td></tr>  <tr><td>17</td><td>Alignment Check</td><td>fault</td></tr> <tr><td>18</td><td>Machine Check</td><td>abort</td></tr> <tr><td>19-31</td><td>Reserved By Intel</td><td><strong>. . .</strong></td></tr> <tr><td>32-255</td><td>Available for software and hardware interrupts   </td><td><strong>. . .</strong></td></tr> </tbody></table>  <p> *These exceptions have an associated error code. </p><p> <em>Exception Types</em>: </p><ul> <li><strong>fault</strong> - the return address points to the instruction that caused the exception.  The exception handler may fix the problem and then restart the program, making it look like nothing has happened. </li><li><strong>trap</strong> - the return address points to the instruction after the one that has just completed.  </li><li><strong>abort</strong> - the return address is not always reliably supplied.   A program which causes an abort is never meant to be continued. </li></ul> <p><br />  <strong>The exception handlers</strong> </p><p> The 256 exception handlers that are loaded into the IDT are almost identical. After pushing the specific interrupt number, they all implement the same code sequence: </p><ol> <li>save all registers (including system registers) </li><li>call  i386_handle_trap </li><li>restore all registers previously saved </li><li>return </li></ol> Because of this, the assembly file that defines these handlers, arch_interrupts.S, is also written largely as a collection of #define macros.  <p> The function i386_handle_trap() serves as the master exception handler. As such, it handles all system interrupts, not just syscalls. However, we&#39;re interested specifically in the section that deals with interrupt 99, the syscalls handler. </p><p> Here&#39;s a snippet of the i386_handle_trap() source code: </p><pre>void<br />i386_handle_trap(struct int_frame frame)<br />{<br />    int ret = INT_NO_RESCHEDULE;<br />    switch(frame.vector) {<br />    case 8:<br />        ret = i386_double_fault(frame.error_code);<br />        break;<br />    case 13:<br />        ret = i386_general_protection_fault(frame.error_code);<br />        break;<br />    . . .<br />    case 99: {<br />        uint64 retcode;<br />        unsigned int args[MAX_ARGS];<br />        int rc;<br />        thread_atkernel_entry();<br />        if(frame.ecx &lt;= MAX_ARGS) {<br />            if((addr)frame.edx &gt;= KERNEL_BASE &amp;&amp;<br />               (addr)frame.edx &lt;= KERNEL_TOP) {<br />                retcode =  ERR_VM_BAD_USER_MEMORY;<br />            } else {<br />                rc = user_memcpy(args,<br />                                (void *)frame.edx,<br />                                frame.ecx * sizeof(unsigned int));<br />                if(rc &lt; 0)<br />                    retcode = ERR_VM_BAD_USER_MEMORY;<br />                else<br />                    ret = syscall_dispatcher(frame.eax,<br />                                             (void *)args,<br />                                             &amp;retcode);<br />            }<br />        }<br />        frame.eax = retcode &amp; 0xffffffff;<br />        frame.edx = retcode &gt;&gt; 32;<br />        break;<br />        }<br />	<br />    . . .<br />	<br />    if(frame.cs == USER_CODE_SEG || frame.vector == 99) {<br />        thread_atkernel_exit();<br />    }<br />}<br /><br /></pre> The syscalls are handled in the case of the interrupt number 99. Again, there&#39;s no particular significance to the number 99. The Intel documentation allows for interrupt numbers 32-255 to be used freely by the OS for whatever purpose. Travis Geiselbrecht, the original author of this interrupt handling technique, probably decided that 99 was easy to remember. <p> The highlights of the code are: </p><ol> <li>thread_atkernel_entry() is called upon entering kernel mode </li><li>the number of args (in ecx) and the argv address (in edx) are checked for validity (e.g. a kernel address is bad since syscalls are only intended for user apps) </li><li>user_memcpy is called to copy the args from the user stack to kernel memory </li><li>if all went well, the syscall dispatcher is called, passing the syscall # (stored in eax) </li><li>a 64-bit error code in returned in the [eax,edx] pair </li><li>thread_atkernel_exit() is called as kernel mode is exited  </li></ol> <p><br /> <strong>The dispatcher</strong> </p><p> The routine syscall_dispatcher() is a core kernel function that finally binds the syscall numbers to their corresponding internal implementations. Here is a snippet of the syscalls.c file that contains the dispatcher: </p><pre>int<br />syscall_dispatcher(unsigned long call_num, void *arg_buffer, uint64 *call_ret)<br />{<br />    switch(call_num) {<br />        case SYSCALL_NULL:<br />            *call_ret = 0;<br />            break;<br />        case SYSCALL_MOUNT:<br />            *call_ret = user_mount((const char *)arg0, (const char *)arg1,<br />                                   (const char *)arg2, (void *)arg3);<br />            break;<br />        case SYSCALL_UNMOUNT:<br />            *call_ret = user_unmount((const char *)arg0);<br />            break;<br />        case SYSCALL_SYNC:<br />            *call_ret = user_sync();<br />            break;<br />		<br />        . . .<br />		<br />    }<br />    return INT_RESCHEDULE;<br />}<br /></pre> <p><br /> <strong>Naming conventions</strong>  </p><p> The &quot;user_&quot; prefix on the dispatched functions is not a requirement, but a common convention in the kernel code. These functions do not generally contain the main implementation, but perform any fixups needed and call the true workhorse routine. There are often analogous &quot;sys_&quot; prefixed functions that do the same thing -- i.e. provide a wrapper for the real implementation. </p><p> For example, the user_mount() function is found in the vfs.c file since the mount service is part of the virtual filesystem layer. This function, in turn, calls vfs_mount() which actually performs the mount. Likewise, there is a corresponding sys_mount() function in vfs.c that also calls vfs_mount(). This sys_mount() is a kernel mode version of the (userland) sys_mount assembly function found in  syscalls.S. </p><p> Altho this could be a point of confusion, the idea behind it is reasonable: whether the calling code is user or kernel mode, the same style of interface is used. The userland mount() function will invoke the syscall and eventually result in the user_mount() dispatch function being called. Kernel mode programs (drivers, addons, etc.) call the sys_mount() function directly and don&#39;t use the syscall mechanism. Either point of entry results in the underlying vfs_mount() function being called. </p><p><br />  <strong>Example run-thru</strong> </p><p> Ok, we&#39;ve coverd a lot of ground in this article. The mechanism for generating and acting upon syscalls is anything but straightforward. But it can be followed and understood. Let&#39;s take a look at an example call. </p><p> You have a (userland) program with the following line: </p><p> int fd = open (&quot;/some/file&quot;, O_RDONLY); </p><p> This will get translated into a syscall and the &#39;open&#39; performed within a kernel mode function. <br /> Here are the steps: </p><ul> <li>The definition of open() is found within the libc library. In the sources for libc, you will find the  open.c file (in the unistd folder) that translates this into a call to sys_open(). Basically, the call has now become: <p> fd = sys_open (&quot;/some/file&quot;, O_RDONLY); </p></li><li>The sys_open() function is defined as the assembly routine within the syscalls.S file. Thus, your app needs to be linked against libc.so to resolve this symbol. This will be true for any syscall, regardless of whether the functionality is part of &quot;standard C library&quot; or not. It may seem strange to be linking to libc in order to resolve a call to kern_create_sem(), for example, but the syscalls interface has to be accessible from some library, and libc, for historical reasons, makes as much sense as any other.  </li><li>The sys_open() assembly routine loads 4 into eax (the syscall # for sys_open), loads 2 into ecx (the number of args), loads the address of the first arg on the user stack into edx, then invokes the instruction int $99 </li><li>The exception handler that receives the interrupt pushes the value 99 on the stack, pushes the contents of all the registers on the stack, and then calls i386_handle_trap(). </li><li>Inside i386_handle_trap(), the args are copied to a local (kernel space) buffer and then passed to syscall_dispatcher(). </li><li>The dispatcher has a large switch statement that farms the requests out to different kernel functions based on the syscall #. In this case, the syscall # is 4, which results in a call to user_open(). The original call has now become:  <p> *retcode = user_open (&quot;/some/file&quot;, O_RDONLY); </p><p> The retcode is a pointer to a 64-bit value back in the i386_handle_trap() function that is used to hold error values. </p></li><li>The user_open() function is compiled into the kernel (called kernel.x86 for the Intel build). The source is found within the vfs.c file since &#39;open&#39; is a file operation handled the the virtual file system layer. The user_open() function creates a local copy of the file path arg and passes this on to  vfs_open(), which is also defined in vfs.c. </li><li>The vfs_open() function finally performs the open command on the file... or does it? Actually, the VFS layer acts as an abstraction for handling file operations across all filesystems. So, in truth, vfs_open() simply calls the open function within the filesystem driver for the filesystem that &quot;/some/file&quot; is mounted on. But that process is a whole other topic... </li><li>Assuming that the file exists, resides on a valid, mounted volume, and there are no other problems, the file may then be actually opened. Now aint that something! </li></ul> Well, as you can see, the entire process of executing a syscall is not exactly simplicity itself. It is definitely a layered, delegated process. But the layers are there for a reason -- to provide memory protection and to abstract the system services. Hey, if kernel programming was easy, your grandma would be doing it! <p> Hopefully this article has cleared up the process somewhat. Go back and peruse the sources and see if it all makes more sense now.</p>        </div>
+<p> Well, I&#39;m glad that you asked (ok, you didn&#39;t... I&#39;ll just pretend that you did), since that&#39;s the topic of this article. There is a mechanism that the kernel provides so that user apps may tap into the system&#39;s coffers. This is the system call interface -- aka &quot;syscalls&quot; (surprise! I guess the title of the article gave it away). </p>
+<p> Syscalls are the mechanism by which requests from userland code are converted into function calls within the kernel. This involves two context switches: first, switching from user to kernel mode in order to run the system service, then from kernel back to user mode to return to the caller. Additionally, any data passed must be copied in both directions (from user to kernel and back again). This means that syscalls are not exactly cheap -- they incur far more overhead than a simple procedure call. But the cost of the service is balanced by the safety of maintaining system integrity. </p>
+
+<p><br /> <strong>Caveats</strong> </p>
+
+<p> This article will delve into the details of how syscalls are implemented in the Haiku kernel, but there are a couple of caveats that I must lay out from the start:  </p>
+
+<ol>
+    <li>Only the Intel x86 architecture is covered here. While the overall design of the syscalls mechanism is the same on any platform, the specific details of how it is implemented is highly dependent on the machine architecture. </li>
+    <li>As I write this, the kernel source code is a moving target. It has already deviated somewhat from the original version forked from NewOS. And it will continue to evolve in the months ahead. I don&#39;t think that the basic mechanism for handling syscalls will change (altho you never know), but some of the specific file names and/or code snippets referenced below may become obsolete over time. </li>
+    <li>I am still learning and studying the syscalls mechanism myself. I believe that all the information presented here is correct, but, in the end, the ultimate reference is the kernel source code itself. Believe what it says first, and take what I&#39;ve said here as supplemental. </li>
+</ol>
+
+<p><br /> <strong>The system interface</strong> </p>
+
+<p> Consider your average C program with calls to fopen(), fread(), fclose(), etc. These functions are part of the standard C library and are platform independent -- i.e. they provide the same functionality regardless of what operating system is being run. But how are those calls actually implemented? As system calls in the native OS, of course: </p>
+
+<ul>
+    <li>sys_open() </li>
+    <li>sys_read() </li>
+    <li>sys_write() </li>
+    <li>sys_lseek() </li>
+    <li>sys_close() </li>
+    <li>. . . </li>
+</ul>
+
+These file operations are so common and so fundamental that is makes sense to offer them as system services. But file operations are not the only services that the kernel provides. There are also operations available for manipulating threads, semaphores, ports, and other low-level goodies. Here&#39;s a partial list of some other syscalls defined in Haiku:
+
+<ul>
+    <li>sys_system_time() </li>
+    <li>sys_snooze() </li>
+    <li>kern_create_sem() </li>
+    <li>kern_delete_sem() </li>
+    <li>kern_acquire_sem() </li>
+    <li>kern_release_sem() </li>
+    <li>kern_release_sem_etc() </li>
+    <li>kern_spawn_thread()  </li>
+    <li>kern_kill_thread() </li>
+    <li>kern_suspend_thread() </li>
+    <li>kern_resume_thread() </li>
+    <li>sys_port_create() </li>
+    <li>sys_port_close() </li>
+    <li>sys_port_delete() </li>
+    <li>sys_port_find() </li>
+    <li>sys_port_get_info() </li>
+    <li>sys_exit() </li>
+    <li>. . . </li>
+</ul>
+
+These syscalls provide a good representation what the kernel is capable of doing and how its operation can be controlled. It is the kernel equivalent of an API, only it&#39;s really an SPI (System Programming Interface). So far, as of this writing, there are 78 syscalls defined for the kernel. This number is very likely to increase over time. As a point of reference, this <a href="http://www.lxhp.in-berlin.de/lhpsysc0.html" target="_blank">Linux syscalls index</a> lists a total of 237 syscalls currently defined for that platform.
+
+<p> How many syscalls should an OS have then? Well, as many as it needs, I guess. It&#39;s a judgement call: more system services mean more power for userland (and possibly finer grained control), but too many complicate the interface to the kernel. The best motto would be &quot;keep it as simple as possible, but no simpler&quot;.  </p>
+
+<p><br /> <strong>Peeking with strace</strong> </p>
+
+<p> In order to get a better appreciation of the role of syscalls within user applications, you can run a program called strace. This is one of the standard /bin apps included with the BeOS. This very useful command will run a user program while printing out all syscalls as they are invoked. As an example, consider the following command: </p>
+
+<pre>strace ls /boot/beos<br /></pre>
+
+This will run the command &#39;ls /boot/beos&#39; while displaying the syscalls encountered during exectution. Here is a sample of the output:
+
+<pre>
+user_create_sem(0x0, 0xec09cd6e &quot;addon lock&quot;) = 0x10537  (42 us)<br />
+_user_get_next_image_info(0x0, 0xfd001788, 0xfd00178c, 0x434) = 0x0  (145 us)<br />
+_user_get_next_image_info(0x0, 0xfd000330, 0xfd000334, 0x434) = 0x0  (146 us)<br />
+. . .<br />
+area_for(0xfd00028c) = 0x2b36  (51 us)<br />
+_user_get_area_info(0x2b36, 0xfd00028c, 0x48) = 0x0  (61 us)<br />
+user_find_thread(0x0) = 0x908  (16 us)<br />
+user_create_sem(0x0, 0xec09cd3d &quot;gen_malloc&quot;) = 0x1053a  (58 us)<br />
+. . .<br />
+</pre>
+
+This is only a fraction of the output... run it yourself to see the full glory (heck, it&#39;s even color-coded!) Each line in the output is formatted as:
+<p> syscall_function(arg1, arg2, ... argN) = return_code </p>
+
+<p> If the argument is a string literal, its string value is displayed immediately following the address that was passed. If the return code is a standard error code, its textual tag will be displayed immediately following its integral value. </p>
+<p> For example, from the first line of output, we can surmise that something like the following was present in the &#39;ls&#39; source code: </p>
+<pre>
+sem = user_create_sem(0, &quot;addon lock&quot;);<br />
+// at run time:<br />
+//    sem was set to 0x10537<br />
+//    user_create_sem() took 42 microseconds to execute<br />
+</pre>
+
+Running strace is a wonderful way to get a handle on how syscalls are being used by applications. You might even find it useful to run your own programs with strace to see how your application interfaces with the kernel.  
+
+<p><br /> <strong>Connecting thru software interrupts</strong> </p>
+
+<p> Alright, the kernel offers all these wonderful services as syscalls. But how do user apps actually invoke the syscalls? Thru software interrupts. </p>
+<p> Most of you are probably familiar with the concept of hardware interrupts. For example, you press a key and the keyboard generates a hardware interrupt, which, in turn, notifies the keyboard driver to process the input. However, interrupts are just as commonly generated by software events. </p>
+<p> The mechanism for generating software interrupts is the INT instruction. This is an Intel x86 opcode that interrupts the current program execution, saves the system registers, and then jumps to a specific interrupt handler. After the handler has finished, the system registers are restored and the execution with the calling program is resumed (well, usually). </p>
+<p> The INT instruction thus acts as (sort of) an alternative calling technique. Unlike ordinary procedure calls, which pass their args on the stack, interrupts store any needed args in registers. For example, a normal function call such as: </p>
+<p> foo(a, b, c); </p>
+<p> would be translated by the compiler into something like: </p>
+
+<pre>push c push b push a call foo </pre>
+
+An interrupt however, must have any needed arguments loaded into general registers first. The register assignments for the syscall handlers are as follows:
+
+<ul>
+    <li>eax -- syscall # </li>
+    <li>ecx -- number of args (0-16) </li>
+    <li>edx -- pointer to buffer containing args from first to last </li>
+</ul>
+
+After these registers have been set, interrupt 99 is called. What is the significance of the value 99? None really -- this is simply the interrupt number selected by the kernel for handling syscalls. More on this later. 
+
+<p><br /> <strong>Mapping the syscalls</strong> </p>
+
+<p> Each syscall has an entry point defined by a small assembly language function. Therefore, the syscall interface is an assembly file (called syscalls.S) containing a long list of functions, one for each syscall that has been defined. This file should look like this: </p>
+
+<pre>
+.globl sys_null<br />
+.type sys_null,@function<br />
+.align 8<br />
+sys_null:<br />
+    movl  $0, %eax        ; syscall #0<br />
+    movl  $0, %ecx        ; no args<br />
+    lea   4(%esp), %edx   ; pointer to arg list<br />
+    int   $99             ; invoke syscall handler<br />
+    ret                   ; return<br />
+.globl sys_mount<br />
+.type sys_mount,@function<br />
+.align 8<br />
+sys_mount:<br />
+    movl  $1, %eax        ; syscall #1<br />
+    movl  $4, %ecx        ; mount takes 4 args<br />
+    lea   4(%esp), %edx   ; pointer to arg list<br />
+    int   $99             ; invoke syscall handler<br />
+    ret                   ; return<br />
+. . .<br />
+</pre>
+
+Or rather, it would be like the listing above, except that the code is so boiler plate, that, in fact, the syscall functions appear in the source code as a collection of #define macros. <p> The assignment of system services to syscall numbers is arbitrary. That is, it doesn&#39;t really matter which function is syscall #0, syscall #1, syscall #2, etc. so long as everyone is in agreement about the mapping. This mapping is defined in the syscalls.S assembly listing above, and much be matched item-for-item in the C interface header file. For our kernel, the C header is ksyscalls.h which uses an enum to define tags for each syscall: </p>
+
+<pre>
+enum {<br />
+    SYSCALL_NULL = 0,<br />
+    SYSCALL_MOUNT,<br />
+    SYSCALL_UNMOUNT,<br />
+    SYSCALL_SYNC,<br />
+    SYSCALL_OPEN,<br />
+    . . .<br />
+};<br />
+</pre>  
+
+<p><br /> <strong>Interrupt Descriptor Table (IDT)</strong> </p>
+<p> The code above sets us up for the interrupt call. But what happens when the int $99 instruction is invoked? Quite literally, the exception handler whose address is stored at IDT[99] is called. </p>
+<p> The software interrupts rely on the presence of a system structure called the Interrupt Descriptor Table (IDT). This is a memory area allocated and initialized at boot time that holds a table of exception handlers. The table contains exactly 256 entries. </p><p> There is an internal x86 register, IDTR, that holds the address of this table. You cannot use this register directly -- it can only be accessed thru instructions such as the lidt (load IDT) instruction. During the stage2 bootstrap, the kernel calls lidt and sets it to the virtual address of the idt descriptor. This descriptor points to a memory area that is initialized with a vector (array) of exception handlers, one for each interrupt number (0 thru 255).  </p><p> The kernel has some leeway in assigning these handlers. However, certain interrupt numbers have standard, predesignated purposes or are reserved. The table below lists the interrupt numbers and their associated actions that should be implemented by the handlers: </p>
+
+<p> <strong>Intel x86 interrupt numbers:</strong> </p>
+<hr /> 
+
+<table border="0" cellspacing="0" cellpadding="0"> <tbody>
+        <tr><td><strong>Number    </strong></td><td><strong>Description</strong></td><td><strong>Type</strong></td></tr> 
+        <tr><td>0</td><td>Divide-by-zero</td><td>fault</td></tr> <tr><td>1</td><td>Debug exception</td><td>trap or fault</td></tr>  
+        <tr><td>2</td><td>Non-Maskable Interrupt (NMI)</td><td>trap</td></tr> 
+        <tr><td>3</td><td>Breakpoint (INT 3)</td><td>trap</td></tr> 
+        <tr><td>4</td><td>Overflow (INTO with EFlags[OF] set)</td><td>trap</td></tr> 
+        <tr><td>5</td><td>Bound exception (an out-of-bounds access)</td><td>trap</td></tr> 
+        <tr><td>6</td><td>Invalid Opcode</td><td>trap</td></tr>  
+        <tr><td>7</td><td>FPU not available</td><td>trap</td></tr> 
+        <tr><td>8*</td><td>Double Fault</td><td>abort</td></tr> 
+        <tr><td>9</td><td>Coprocessor Segment Overrun</td><td>abort</td></tr> 
+        <tr><td>10*</td><td>Invalid TSS</td><td>fault</td></tr>  
+        <tr><td>11*</td><td>Segment not present</td><td>fault</td></tr>  
+        <tr><td>12*</td><td>Stack exception</td><td>fault</td></tr> 
+        <tr><td>13*</td><td>General Protection</td><td>fault or trap</td></tr> 
+        <tr><td>14*</td><td>Page fault</td><td>fault</td></tr>  
+        <tr><td>15</td><td>Reserved</td><td><strong>. . .</strong></td></tr> 
+        <tr><td>16</td><td>Floating-point error</td><td>fault</td></tr>  
+        <tr><td>17</td><td>Alignment Check</td><td>fault</td></tr> 
+        <tr><td>18</td><td>Machine Check</td><td>abort</td></tr> 
+        <tr><td>19-31</td><td>Reserved By Intel</td><td><strong>. . .</strong></td></tr> 
+        <tr><td>32-255</td><td>Available for software and hardware interrupts   </td><td><strong>. . .</strong></td></tr> 
+</tbody></table>  
+
+<p> *These exceptions have an associated error code. </p>
+<p> <em>Exception Types</em>: </p>
+
+<ul>
+    <li><strong>fault</strong> - the return address points to the instruction that caused the exception.  The exception handler may fix the problem and then restart the program, making it look like nothing has happened. </li>
+    <li><strong>trap</strong> - the return address points to the instruction after the one that has just completed.  </li>
+    <li><strong>abort</strong> - the return address is not always reliably supplied.   A program which causes an abort is never meant to be continued. </li>
+</ul>
+
+<p><br />  <strong>The exception handlers</strong> </p>
+
+<p> The 256 exception handlers that are loaded into the IDT are almost identical. After pushing the specific interrupt number, they all implement the same code sequence: </p>
+
+<ol>
+    <li>save all registers (including system registers) </li>
+    <li>call  i386_handle_trap </li>
+    <li>restore all registers previously saved </li>
+    <li>return </li>
+</ol>
+
+Because of this, the assembly file that defines these handlers, arch_interrupts.S, is also written largely as a collection of #define macros.  
+<p> The function i386_handle_trap() serves as the master exception handler. As such, it handles all system interrupts, not just syscalls. However, we&#39;re interested specifically in the section that deals with interrupt 99, the syscalls handler. </p>
+<p> Here&#39;s a snippet of the i386_handle_trap() source code: </p>
+<pre>
+void<br />
+i386_handle_trap(struct int_frame frame)<br />
+{<br />
+    int ret = INT_NO_RESCHEDULE;<br />
+    switch(frame.vector) {<br />
+        case 8:<br />
+            ret = i386_double_fault(frame.error_code);<br />
+            break;<br />
+        case 13:<br />
+            ret = i386_general_protection_fault(frame.error_code);<br />
+            break;<br />
+        . . .<br />
+        case 99: {<br />
+            uint64 retcode;<br />
+            unsigned int args[MAX_ARGS];<br />
+            int rc;<br />
+            thread_atkernel_entry();<br />
+            if(frame.ecx &lt;= MAX_ARGS) {<br />
+                if((addr)frame.edx &gt;= KERNEL_BASE &amp;&amp;<br />
+                        (addr)frame.edx &lt;= KERNEL_TOP) {<br />
+                    retcode =  ERR_VM_BAD_USER_MEMORY;<br />
+                } else {<br />
+                    rc = user_memcpy(args,<br />
+                        (void *)frame.edx,<br />
+                        frame.ecx * sizeof(unsigned int));<br />
+                    if(rc &lt; 0)<br />
+                        retcode = ERR_VM_BAD_USER_MEMORY;<br />
+                    else<br />
+                        ret = syscall_dispatcher(frame.eax,<br />
+                            (void *)args,<br />
+                            &amp;retcode);<br />
+                }<br />
+            }<br />
+            frame.eax = retcode &amp; 0xffffffff;<br />
+            frame.edx = retcode &gt;&gt; 32;<br />
+            break;<br />
+        }<br />
+<br />
+        . . .<br />
+<br />
+        if(frame.cs == USER_CODE_SEG || frame.vector == 99) {<br />
+        thread_atkernel_exit();<br />
+    }<br />
+}<br />
+<br />
+</pre>
+
+The syscalls are handled in the case of the interrupt number 99. Again, there&#39;s no particular significance to the number 99. The Intel documentation allows for interrupt numbers 32-255 to be used freely by the OS for whatever purpose. Travis Geiselbrecht, the original author of this interrupt handling technique, probably decided that 99 was easy to remember.
+
+<p> The highlights of the code are: </p>
+
+<ol> 
+    <li>thread_atkernel_entry() is called upon entering kernel mode </li>
+    <li>the number of args (in ecx) and the argv address (in edx) are checked for validity (e.g. a kernel address is bad since syscalls are only intended for user apps) </li>
+    <li>user_memcpy is called to copy the args from the user stack to kernel memory </li>
+    <li>if all went well, the syscall dispatcher is called, passing the syscall # (stored in eax) </li>
+    <li>a 64-bit error code in returned in the [eax,edx] pair </li><li>thread_atkernel_exit() is called as kernel mode is exited  </li>
+</ol>
+
+<p><br /> <strong>The dispatcher</strong> </p>
+
+<p> The routine syscall_dispatcher() is a core kernel function that finally binds the syscall numbers to their corresponding internal implementations. Here is a snippet of the syscalls.c file that contains the dispatcher: </p>
+
+<pre>int<br />
+syscall_dispatcher(unsigned long call_num, void *arg_buffer, uint64 *call_ret)<br />
+{<br />
+    switch(call_num) {<br />
+        case SYSCALL_NULL:<br />
+            *call_ret = 0;<br />
+            break;<br />
+        case SYSCALL_MOUNT:<br />
+            *call_ret = user_mount((const char *)arg0, (const char *)arg1,<br />
+            (const char *)arg2, (void *)arg3);<br />
+            break;<br />
+        case SYSCALL_UNMOUNT:<br />
+            *call_ret = user_unmount((const char *)arg0);<br />
+            break;<br />
+        case SYSCALL_SYNC:<br />
+            *call_ret = user_sync();<br />
+            break;<br />
+        <br />
+        . . .<br />
+        <br />
+    }<br />
+    return INT_RESCHEDULE;<br />
+}<br />
+</pre> 
+
+<p><br /> <strong>Naming conventions</strong>  </p>
+
+<p> The &quot;user_&quot; prefix on the dispatched functions is not a requirement, but a common convention in the kernel code. These functions do not generally contain the main implementation, but perform any fixups needed and call the true workhorse routine. There are often analogous &quot;sys_&quot; prefixed functions that do the same thing -- i.e. provide a wrapper for the real implementation. </p>
+<p> For example, the user_mount() function is found in the vfs.c file since the mount service is part of the virtual filesystem layer. This function, in turn, calls vfs_mount() which actually performs the mount. Likewise, there is a corresponding sys_mount() function in vfs.c that also calls vfs_mount(). This sys_mount() is a kernel mode version of the (userland) sys_mount assembly function found in  syscalls.S. </p>
+<p> Altho this could be a point of confusion, the idea behind it is reasonable: whether the calling code is user or kernel mode, the same style of interface is used. The userland mount() function will invoke the syscall and eventually result in the user_mount() dispatch function being called. Kernel mode programs (drivers, addons, etc.) call the sys_mount() function directly and don&#39;t use the syscall mechanism. Either point of entry results in the underlying vfs_mount() function being called. </p>
+
+<p><br />  <strong>Example run-thru</strong> </p>
+
+<p> Ok, we&#39;ve covered a lot of ground in this article. The mechanism for generating and acting upon syscalls is anything but straightforward. But it can be followed and understood. Let&#39;s take a look at an example call. </p><p> You have a (userland) program with the following line: </p>
+<p> int fd = open (&quot;/some/file&quot;, O_RDONLY); </p>
+<p> This will get translated into a syscall and the &#39;open&#39; performed within a kernel mode function.
+<br /> Here are the steps: </p>
+
+<ul> 
+    <li>The definition of open() is found within the libc library. In the sources for libc, you will find the  open.c file (in the unistd folder) that translates this into a call to sys_open(). Basically, the call has now become:
+        <p> fd = sys_open (&quot;/some/file&quot;, O_RDONLY); </p></li>
+    <li>The sys_open() function is defined as the assembly routine within the syscalls.S file. Thus, your app needs to be linked against libc.so to resolve this symbol. This will be true for any syscall, regardless of whether the functionality is part of &quot;standard C library&quot; or not. It may seem strange to be linking to libc in order to resolve a call to kern_create_sem(), for example, but the syscalls interface has to be accessible from some library, and libc, for historical reasons, makes as much sense as any other.  </li>
+    <li>The sys_open() assembly routine loads 4 into eax (the syscall # for sys_open), loads 2 into ecx (the number of args), loads the address of the first arg on the user stack into edx, then invokes the instruction int $99 </li><li>The exception handler that receives the interrupt pushes the value 99 on the stack, pushes the contents of all the registers on the stack, and then calls i386_handle_trap(). </li>
+    <li>Inside i386_handle_trap(), the args are copied to a local (kernel space) buffer and then passed to syscall_dispatcher(). </li>
+    <li>The dispatcher has a large switch statement that farms the requests out to different kernel functions based on the syscall #. In this case, the syscall # is 4, which results in a call to user_open(). The original call has now become:  <p> *retcode = user_open (&quot;/some/file&quot;, O_RDONLY); </p><p> The retcode is a pointer to a 64-bit value back in the i386_handle_trap() function that is used to hold error values. </p></li><li>The user_open() function is compiled into the kernel (called kernel.x86 for the Intel build). The source is found within the vfs.c file since &#39;open&#39; is a file operation handled the the virtual file system layer. The user_open() function creates a local copy of the file path arg and passes this on to  vfs_open(), which is also defined in vfs.c. </li>
+    <li>The vfs_open() function finally performs the open command on the file... or does it? Actually, the VFS layer acts as an abstraction for handling file operations across all filesystems. So, in truth, vfs_open() simply calls the open function within the filesystem driver for the filesystem that &quot;/some/file&quot; is mounted on. But that process is a whole other topic... </li>
+    <li>Assuming that the file exists, resides on a valid, mounted volume, and there are no other problems, the file may then be actually opened. Now aint that something! </li>
+</ul> 
+
+Well, as you can see, the entire process of executing a syscall is not exactly simplicity itself. It is definitely a layered, delegated process. But the layers are there for a reason -- to provide memory protection and to abstract the system services. Hey, if kernel programming was easy, your grandma would be doing it! 
+<p> Hopefully this article has cleared up the process somewhat. Go back and peruse the sources and see if it all makes more sense now.</p>        
+            </div>
         </div>
 </div>
   
