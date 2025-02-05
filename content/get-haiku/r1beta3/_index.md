@@ -49,8 +49,8 @@ If you choose to download an image, please select from the list of available mir
 <tbody>
     <tr class="link">
       <td class="location"><b>Location:</b> New York, United States <br/>Provided by: <a target="_blank" class="ext" href="http://www.rit.edu" title="RIT">Rochester Institute of Technology</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
-      <td><a class="track" href="http://mirror.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://mirrors.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_gcc2h-anyboot.iso">iso</a></td>
+      <td><a class="track" href="https://mirrors.rit.edu/haiku/r1beta3/haiku-r1beta3-x86_64-anyboot.iso">iso</a></td>
     </tr>
     <tr class="link">
       <td class="location"><b>Location:</b> North Virginia, United States<br/>Provided by: <a target="_blank" class="ext" href="https://haiku-inc.org" title="Haiku, Inc.">Haiku, Inc.</a></td>
