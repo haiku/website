@@ -1,11 +1,11 @@
 +++
 type = "article"
 title = "Setting up Haiku on Google Compute Engine"
-date = "2019-12-21T19:04:00.000Z"
+date = "2024-10-24T19:04:00.000Z"
 tags = []
 +++
 
-Pre-created Haiku r1/beta4 images are available on Google Cloud Platform's Compute Engine.
+Pre-created Haiku r1/beta5 images are available on Google Cloud Platform's Compute Engine.
 To deploy a Haiku VM to Google Compute Engine, all you need is the gcloud CLI tool.
 
 ## Preparing gcloud cli
@@ -20,13 +20,14 @@ To deploy a Haiku VM, you simply need to leverage the official Haiku, Inc. image
 > before deploying systems.
 
 ```
-cloud compute instances create haiku-test \
+gcloud compute instances create haiku-test \
   --zone=us-central1-a \
   --machine-type=e2-micro \
   --network "default" \
   --maintenance-policy "MIGRATE" \
-  --image-family "haiku-r1beta4-x64" \
+  --image-family "haiku-r1beta5-x64" \
   --image-project=haiku-inc \
+  --enable-display-device \
   --boot-disk-size "10" --boot-disk-type "pd-balanced" \
   --metadata=ssh-keys="user:ssh-ed25519 AAAACRANDOMSTRING alex@haiku-inc.org"
 ```
