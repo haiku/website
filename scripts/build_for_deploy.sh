@@ -2,7 +2,10 @@
 
 set -e
 
-pip install sphinx==6.0.0
+if [ ! -d content ]; then
+	echo "This script must be run from the root of the repository."
+	exit 1
+fi
 
 HUGO=hugo
 for cmd in "mv rm wget unzip sed pip $HUGO"; do
@@ -10,10 +13,8 @@ for cmd in "mv rm wget unzip sed pip $HUGO"; do
 done
 echo "Using Hugo $HUGO"
 
-if [ ! -d content ]; then
-	echo "This script must be run from the root of the repository."
-	exit 1
-fi
+pip install --user sphinx==6.0.0
+find ~ -name sphinx-build
 
 if [ ! -d haiku ]; then
 	git clone https://github.com/haiku/haiku/ --depth=5
