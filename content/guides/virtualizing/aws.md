@@ -1,7 +1,7 @@
 +++
 type = "article"
 title = "Emulating Haiku on Amazon Web Services"
-date = "2020-3-2T01:50:00.000Z"
+date = "2020-03-02T01:50:00.000Z"
 tags = []
 +++
 

@@ -1,7 +1,7 @@
 +++
 type = "article"
 title = "Emulating Haiku in Bhyve"
-date = "2019-12-8"
+date = "2019-12-08"
 tags = []
 +++
 

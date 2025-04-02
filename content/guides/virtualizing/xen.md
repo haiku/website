@@ -1,7 +1,7 @@
 +++
 type = "article"
 title = "Emulating Haiku in Xen"
-date = "2019-12-7"
+date = "2019-12-07"
 tags = []
 +++
 
