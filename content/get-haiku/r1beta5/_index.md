@@ -17,12 +17,7 @@ tags = []
 </ul>
 </div>
 
-<!--
-Disabled until we move away from R1/beta5
-{{< alert-info "Nightly Images" "Looking for the Nightly Images? They can be found at download.haiku-os.org.">}}
--->
-
-## Download a Haiku Image
+## Download Haiku
 
 <i>If you have an earlier version of Haiku installed, [see upgrade instructions below](#upgrading-from-r1beta4).</i>
 
@@ -32,16 +27,16 @@ The images can be used "live" or used to install Haiku to another disk/partition
 They can also be used in <a href="/guides/virtualizing">virtual machines</a> such as QEMU, VMWare or VirtualBox.
 </p>
 
-### Direct Download Locations
+### Direct Downloads
 
-If you choose to download an image, please select from the list of available mirrors below. Mirrors are in no specific order.
+Haiku releases are distributed through a global network of generously donated mirrors (in no specific order).
 
-{{< alert-info "Not all mirrors may be online" "Please choose another mirror if you encounter a failure. It is recommended you choose the mirror closest to your geographical location.">}}
+{{< alert-warning "Not all mirrors may be online" "Please choose another mirror if you encounter a failure.">}}
 
 <div class="nolinks">
 <table id="mirrors" class="table table-hover">
 <thead style="font-weight: bold;">
-<tr>
+<tr style="background-color: light-dark(#dddddd, #222222);">
 <td>Mirror</td>
 <td>32-bit</td>
 <td>64-bit</td>
@@ -93,7 +88,7 @@ If you choose to download an image, please select from the list of available mir
  <li><a class="track" href="https://s3.us-east-1.wasabisys.com/haiku-release/r1beta5/haiku-r1beta5-x86_64.torrent">haiku-r1beta5-x86_64.torrent</a></li>
 </ul>
 
-### Checksums
+## Checksum Verification
 
 <p>To make sure that you have got the right file and that it has not been corrupted during file transfer, it is always wise to ensure the integrity of your download. To that end, you can use the SHA256 checksums shown below to verify that what you have is the correct file.</p>
 
@@ -110,7 +105,7 @@ bd6d5015ce1d94ab2c3fa2f4f685491249938bde9acc55345f76098eb2ea424f  haiku-r1beta5-
 	the shell command <code>certutil -hashfile (ISOFILE) SHA256</code>.
 </p>
 
-### Cryptographic Signatures
+## Cryptographic Signature Verification
 
 <p>
 To further validate releases, you can also check the cryptographic signature of the release media against our public key using <a href="https://jedisct1.github.io/minisign/">Minisign</a> (available for Haiku, Windows, Linux, BSD, and OS X). The matching .minisig file needs to be placed next to the iso file on your filesystem.
@@ -133,11 +128,13 @@ Signature and comment signature verified
 Trusted comment: timestamp:1726198843	file:haiku-r1beta5-x86_64-anyboot.iso	hashed
 ```
 
+`Signature and comment signature verified` confirms the integrity of the obtained images, and they
+have not been tampered with since being signed by Haiku, Inc. at release.
+
 ## Upgrading from R1/beta4
 
-There is an upgrade path available for users that are currently using Haiku R1/beta4. If you want to do this upgrade, you will have to use the Terminal to issue some commands. To do so,
-
 {{< alert-warning "Warning: only upgrading from Beta 4 is supported!" "It may be possible to upgrade from prior development images, but this is untested and you may run into unknown problems." >}}
+There is an upgrade path available for users that are currently using Haiku R1/beta4. If you want to do this upgrade, you will have to use the Terminal to issue some commands.
 
 The following commands will replace your existing "Haiku" and "HaikuPorts" repositories with their R1/beta5 equivalents:
 
