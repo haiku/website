@@ -7,7 +7,7 @@ tags = []
 
  <!-- NOTE: This article should be eventually split in two parts. -->
 
-<span class="right"><img src='/images/archive_64.png'></span>
+<span class="right"><img src="/images/File_Archive.svg" width="64" height="64" alt=""></span>
 
 Haiku's source code is currently being hosted on a
 <a href="http://git-scm.com/" target="_blank">Git-based repository</a> using <a href="https://gerritcodereview.com" target="_blank">Gerrit</a>.

@@ -7,7 +7,7 @@ tags = ["booting","grub","disk server"]
 
 There are a wide range of options and configurations available to boot Haiku, from from modifying the boot sector, to configuring (and possibly installing) a boot manager. For an overview of the various booting options available to Haiku, please check out [this page of the Haiku User Guide](/docs/userguide/en/bootloader.html)
 
-## ![folder](/images/folder_config_32.png) Using Makebootable
+## <img src="/images/Folder_config.svg" width="32" height="32" alt="folder"> Using Makebootable
 
 `makebootable` is a low-level Haiku tool to enable x86 MBR (legacy bios) systems to boot from the active Haiku partition.
 
@@ -43,7 +43,7 @@ Makebootable is included with Haiku. However, it can also be accessed from syste
 
 <pre class="terminal">makebootable /dev/disk/...</pre>
 
-## ![harddisk](/images/harddisk_32.png) Configuring GRUB boot manager
+## <img src="/images/Device_Harddisk.svg" width="32" height="32" alt="harddisk"> Configuring GRUB boot manager
 
 GRUB is a common boot manager used on other open-source operating systems. (Including Linux)
 
