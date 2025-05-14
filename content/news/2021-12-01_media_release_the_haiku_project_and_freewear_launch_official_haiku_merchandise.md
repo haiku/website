@@ -20,4 +20,4 @@ For media enquiries, please contact:
 contact(@)haiku-os.org (The Haiku Project)   
 admin(@)freewear.org (FreeWear)  
 
-<a href="/files/Haiku and Freewear Press Kit.zip"><img src="/images/download_32.png"/>**Download press kit here**</a> 
+<a href="/files/Haiku and Freewear Press Kit.zip"><img src="/images/download.svg" width="32" height="32" alt="">**Download press kit here**</a> 
