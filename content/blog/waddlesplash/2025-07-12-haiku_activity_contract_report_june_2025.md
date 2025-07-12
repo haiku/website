@@ -2,7 +2,7 @@
 type = "blog"
 title = "Haiku Activity & Contract Report, June 2025"
 author = "waddlesplash"
-date = "2025-07-12 19:00:00-04:00"
+date = "2025-07-12 17:00:00-04:00"
 tags = ["contractor", "activity report"]
 +++
 
