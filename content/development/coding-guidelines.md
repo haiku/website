@@ -392,6 +392,22 @@ class ThisClass {
 // ...
 ```
 
+### AI-Generated or Assisted Development
+
+While Haiku strongly discourages the extensive use of AI-generated code, we as a project also acknowledge it may be useful or beneficial in some limited cases to aid in rapid prototyping.
+
+The following guidelines should be followed to ensure transparency:
+
+* Obeying all of our standard development best practices, code must functional and useful.
+  * Any non-functional, useless, or largely incomplete changes will be rejected.
+  * The developper submitting the change is expected to have the knowledge and ability
+    to address all code review comments and fix the code as needed.
+* Developers should cite any used AI and language models within commit messages.
+  * Example: "* Prototype assisted by Ollama + Llama 3.3 LLM"
+* Developers using AI tooling, take personal responsibility to ensure the source
+  language models do not contain copyrighted or trademarked code infringing on the
+  rights of others.
+
 ### Dead code and Debugging code
 
 *   Do not leave dead, commented, or `#if 0`'ed code behind just because you are not sure about your contribution. Your change should be top quality to begin with, improving the code you are replacing. Should there be a reason to back your change out or used for a reference, this can be done using the source control tools.
