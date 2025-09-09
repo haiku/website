@@ -3,10 +3,10 @@ type = "blog"
 author = "PulkoMandy"
 title = "On spatial mode and the document-centered interface"
 date = "2011-07-27T19:37:27.000Z"
-tags = ["GUI tracker spatial"]
+tags = ["GUI", "tracker", "spatial"]
 +++
 
-Once ag<h1>ain, the idea that tracker should use single-window mode was raised as a trac ticket. This discussion was made multiple times on the mailing list, and each time the answer from the developper was no. However, users still seem to prefer the single window mode, and other OS are switching to it. Maybe we just need to explain how to efficiently use this mode, and why we think it's better. I'll try to do that in this blogpost, with my own point of view on it.
+Once again, the idea that tracker should use single-window mode was raised as a trac ticket. This discussion was made multiple times on the mailing list, and each time the answer from the developper was no. However, users still seem to prefer the single window mode, and other OS are switching to it. Maybe we just need to explain how to efficiently use this mode, and why we think it's better. I'll try to do that in this blogpost, with my own point of view on it.
 
 <h1>A bit of history</h1>
 
@@ -51,6 +51,7 @@ Working the document-centered way takes some learning, but it's reallyworth it. 
 <li>Icon showing open/closed state : this is something that was available in Mac OS since the very beginning. An open folder is grayed out, or shown with an "open" icon. So you know it's already somewhere. The same applies for other documents.</li>
 <li>Document-centered deskbar : currently the deskbar groups things together by application. This makes it hard to see the document nature of things. Grouping the documents could be done by projects, or S&T groups instead. This would help making the grouping more visible.</li>
 <li>S&T groups persistence : I already said tracker windows keep their position and size. All windows should also keep their S&T grouping state accross reboots. Even better, this state could be stored as  a "project" and reopened later, as needed, restoring the windows as they were. Projects could be mapped to folders, and show all the documents inside the folder. Or they could be an independant stuff on another layer. Projects would be the grouping criterion in Deskbar, so the deskbar menu for a project would allow to save it, besides closing and hiding it.</li>
+</ul>
 
 <h1>Single window mode has some points</h1>
 
