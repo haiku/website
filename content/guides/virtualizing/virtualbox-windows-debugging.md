@@ -14,7 +14,7 @@ With <em>Raw File Mode</em>, you can easily and quickly save the debugged onto a
 Select Serial ports. Tick the tickbox "Enable Serial port". Change <em>Port Mode</em> to "Raw File".
 
 Then set the name and directory of the file to be saved in <em>File Path</em>.
-<br /><img style="padding:12px" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-windows-debugging/image1.png" /><br />
+<br /><img style="padding:12px" src="/files/guides/virtualizing/virtualbox/vbox-win-debug-image1.png" /><br />
 And click start (virtual machine) or double click your Haiku image.
 
 2. Once you open the file on the designated path, you can make sure it has been debugged.
@@ -23,9 +23,9 @@ And click start (virtual machine) or double click your Haiku image.
 
 <h4>HyperTerminal and VMWareGateway Method</h4>
 
-1. First of all, you need vmwaregateway.exe (you can find that <a href="http://l4ka.sourceforge.net/download/vmwaregateway.exe">here</a>) Move the downloaded file to the directory you want.
+1. First of all, you need vmwaregateway.exe (you can find that <a href="https://www.l4ka.org/159.php">here</a>). Move the downloaded file to the directory you want.
 
-2. Start Command Prompt by pressing <span class="button">Win</span>+<span class="button">R</span> and enter "cmd". Then drag and drop vmwaregateway.exe onto cmd with the mouse. Then add "/t" before pushing the <span class="button">Enter</span> button on your keyboard.
+2. Start Command Prompt by pressing <span class="button">Win</span>+<span class="button">R</span> and enter "cmd". Then drag and drop vmwaregateway.exe onto cmd with the mouse. Then add "/t" before pushing the <span class="button">Enter</span> button on your keyboard.
 
 <pre class="terminal">C:\Documents and Settings\me>"C:\where\vmware\gateway\is\vmwaregateway.exe" /t
 
@@ -33,11 +33,11 @@ test mode - press <span class="button">Ctrl</span>+<span class="button">c</span>
 
 3. Run HyperTerminal. If your OS is Windows XP, you can find it here: Start>Programs>Accessories>Communications>HyperTerminal
 
-However if you are running Windows vista, Windows 7, and Windows 8, then sadly HyperTerminal is not included as a bundled application like XP had. These later versions of windows do have software we can use, but it is not at all user friendly, rather you should just download HyperTerminal from <a href="http://digitizor.com/2009/08/29/install-winxp-hyperterminal-client-on-windows-vista-or-windows-7-free/">here</a> and follow the directions given. If you run HyperTerminal, it will ask you to create a new connection, pick a name and icon. Click <span class="button">OK</span>.
+However if you are running Windows vista, Windows 7, and Windows 8, then sadly HyperTerminal is not included as a bundled application like XP had. These later versions of windows do have software we can use, but it is not at all user friendly, rather you should just download HyperTerminal from <a href="https://digitizor.com/install-winxp-hyperterminal-client-on-windows-vista-or-windows-7-free/">here</a> and follow the directions given. If you run HyperTerminal, it will ask you to create a new connection, pick a name and icon. Click <span class="button">OK</span>.
 
 After it will ask you what you are connecting with, change it to "<em>TCP/IP(winsock)</em>"
 Change the host address to "localhost" and change the port number to "<em>567</em>", click <span class="button">OK</span> again.
-<br /><img style="padding:12px" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-windows-debugging/image2.png" /><br />
+<br /><img style="padding:12px" src="/files/guides/virtualizing/virtualbox/vbox-win-debug-image2.png" /><br />
 If it can't connect, vmwaregateway.exe isn't running in Command Prompt properly.
 
 Command Prompt should now read:
@@ -52,15 +52,15 @@ test mode - press <span class="button">Ctrl</span>+<span class="button">c</span>
 Select <strong>Serial ports</strong>. Tick the tickbox "<em>Enable Serial port</em>" and for <strong>Port Number</strong> tick "<em>COM1</em>"(Because Haiku by default writes debug information to the COM1 port)
 
 Change Port mode to "<em>host pipe</em>" and change the port path to: \\.\pipe\vmwaredebug and click <span class="button">OK</span>
-<br /><img style="padding:12px" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-windows-debugging/image3.png" /><br />
+<br /><img style="padding:12px" src="/files/guides/virtualizing/virtualbox/vbox-win-debug-image3.png" /><br />
 When you start your VM, it will now be debugging onto HyperTerminal.
-<br /><img style="padding:12px" width="660" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-windows-debugging/image4.png" /><br />
+<br /><img style="padding:12px" width="660" src="/files/guides/virtualizing/virtualbox/vbox-win-debug-image4.png" /><br />
 
 <h4>PuTTY Method</h4>
 
-A simpler way is to use PuTTY Telnet, which can read VirtualBox's fake serial port pipe directly without the need for vmwaregateway.exe. You can get Putty from the author's site at http://www.chiark.greenend.org.uk/~sgtatham/putty/
+A simpler way is to use PuTTY Telnet, which can read VirtualBox's fake serial port pipe directly without the need for vmwaregateway.exe. You can get Putty from the author's site at https://www.chiark.greenend.org.uk/~sgtatham/putty/
 
-<br /><img style="padding:12px" src="/files/PuttySerialPipeSettings.png" alt="[PuTTY Settings for displaying a Pipe as a Serial Port]"><br />
+<br /><img style="padding:12px" src="/files/guides/virtualizing/virtualbox/vbox-win-debug-PuttySerialPipeSettings.png" alt="[PuTTY Settings for displaying a Pipe as a Serial Port]"><br />
 
 The trick is to use Serial mode, and replace the COM1 with \\.\pipe\vmwaredebug or whatever you called the pipe in the VirtualBox serial settings.  There are additional serial settings near the end of the preferences where you can set the baud rate to 115200, turn off handshaking and use 8N1 bits.
 
