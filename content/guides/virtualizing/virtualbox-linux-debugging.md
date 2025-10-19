@@ -16,7 +16,7 @@ This tutorial is based on following tools:
 
 It should also work on platforms other than Linux.
 
-<img alt="Result" width="660" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-linux-debugging/image1.png" />
+<img alt="Result" width="660" src="/files/guides/virtualizing/virtualbox/vbox-linux-debug-image1.png" />
 
 <h3 id="part_vm">Step 1: Configure the virtual machine</h3>
 First, we will create a serial port in VirtualBox and redirect its output to file:
@@ -36,7 +36,7 @@ First, we will create a serial port in VirtualBox and redirect its output to fil
 - Change *Port/File Path* values to port file path (for example */dev/ttyS0* on Linux, *COM1* on Windows).
 `>}}
 
-<img alt="Configuration example" width="660" src="https://sites.google.com/site/nyhusr/Home/haiku-os-files/haikuarticles/virtualbox-linux-debugging/image2.png" />
+<img alt="Configuration example" width="660" src="/files/guides/virtualizing/virtualbox/vbox-linux-debug-image2.png" />
 
 <h3 id="part_haiku">Step 2: Configure Haiku</h3>
 This step allows you to adjust output port and speed. If you have chosen COM1 as your virtual port and you don't want to change the default speed (115200 bps), there is no need to do anything.

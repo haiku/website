@@ -26,17 +26,17 @@ You might of seen a folder called <em>dlxlinux</em> with files in it, we are goi
 You should have had a link to Bochs installed in Program files under the start menu. Now Launch bochs by clicking on it there.
 <BR>
 <h5 id="part_configuringr">Step 3. Configuring Bochs.</h5>
-<img alt="File system" src="/files/Image2_0.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
+<img alt="File system" src="/files/guides/virtualizing/bochs/Image2_0.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
 A start menu will pop up where you can configure Bochs. So select <strong>Disk & Boot</strong> and then push <span class="button">Edit</span>.
 <BR>
-<img alt="File system" src="/files/Image3_0.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
-<img alt="File association" src="/files/Image3new_0.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
+<img alt="File system" src="/files/guides/virtualizing/bochs/Image3_0.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
+<img alt="File association" src="/files/guides/virtualizing/bochs/Image3new_0.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
 This will bring up the Bochs Disk Menu where you need to click on the <strong>ATA channel 0</strong> tab followed by the <strong>First HD/CD on channel 0</strong> tab. Here you will need to tick "<em>enable this device</em>" and select <strong>disk</strong> for the <em>Type of ATA device</em>. Under <strong>Path or physical device name</strong>, click browse; then in the window so opened; <strong> change file type to ALL FILES from .img </strong> and select the Haiku .image file which you downloaded and moved to the <em>haiku</em> folder under Bochs.
 
 Move down to where it says <em>Type of disk image</em> and make sure it says <strong>flat</strong>.
 Further you will then need to enter <strong>1219</strong> into where it says <em>Cylinders</em>, then <strong>16</strong> into <strong>Heads </strong> and lastly <strong>63</strong> into where it says <em>Sectors per track</em>.
 <BR>
-<img alt="File system" src="/files/Image4.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
+<img alt="File system" src="/files/guides/virtualizing/bochs/Image4.png"/><P STYLE="margin-bottom: 0in; page-break-before: always"><BR></P>
 You will also need to change to the Boot Options tab, where you will need to make sure <em>Boot drive #1</em> is selected to <strong>disk</strong>.
 
 
@@ -52,7 +52,7 @@ If You want you can enter that folder and create a link for the bochsrc.bxrc fil
 Now all you have to do double click on the link you created and you should be running Haiku!
 
 <h5>Editing the .bxrc file</h5>
-If something isn't just working right or you want to try a pre-made config file then you can download one for Haiku R1A4 <a href="/files/haiku.bxrc_.zip">here</a>.
+If something isn't just working right or you want to try a pre-made config file then you can download one for Haiku R1A4 <a href="/files/guides/virtualizing/bochs/haiku.bxrc_.zip">here</a>.
 
 Right click it and go edit or just open it with your favourite text editor.
 
