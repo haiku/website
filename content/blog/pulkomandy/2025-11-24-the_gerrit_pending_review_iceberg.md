@@ -2,7 +2,7 @@
 type = "blog"
 title = "The Gerrit code review iceberg"
 author = "PulkoMandy"
-date = "2025-11-24 12:00:00-05:00"
+date = "2025-11-24 13:45:00+0100"
 tags = []
 +++
 
