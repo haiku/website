@@ -10,7 +10,7 @@ Recently some discussions on the forum led to asking about the status of our Ger
 There are a lot of changes there that have been inactive for several years, with no apparent
 interest from anyone. To be precise, there are currently 358 commits waiting for review (note that
 Gerrit, unlike Github and other popular code review tools, works on a commit-by-commit basis, so
-each commit from a multiple-commit change is counted separately). The oldes tone has not seen any
+each commit from a multiple-commit change is counted separately). The oldest one has not seen any
 comments since 2018.
 
 Today, let's have a look at some of these changes and see why they are stalled. Hopefully it will
