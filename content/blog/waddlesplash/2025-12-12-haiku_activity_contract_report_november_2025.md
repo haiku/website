@@ -82,7 +82,7 @@ madmax fixed the normalized name generation in usb_disk to remove spaces at the 
 
 ### File systems
 
-OscarL made userlandfs propagate the "read-only" flag from the FUSE filesystem stat into the Haiku filesystem stat, allowing Tracker to use proper backgrounds and other such details for read-only volumes mounted via FUSE.
+OscarL added another stub function to userlandfs' FUSE implementation in order to get `squashfs-fuse` to work on Haiku (which it now does). He also made userlandfs propagate the "read-only" flag from the FUSE filesystem stat into the Haiku filesystem stat, allowing Tracker to use proper backgrounds and other such details for read-only volumes mounted via FUSE.
 
 ### libroot & kernel
 
