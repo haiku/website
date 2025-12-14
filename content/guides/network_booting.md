@@ -53,9 +53,10 @@ Booting methods vary from architecture to architecture. Generally the platform�
 
 {{< alert-info "YMMV" "The completeness of remote disk booting may vary based on architecture. The architectures below are known working at the time of this guides writing, your mileage may vary.">}}
 
-**x86, x86_64**
+**PXE (x86, x86_64)**
 
-The x86 version of the Haiku boot loader can be booted via a PXE server.
+The x86 version of the Haiku boot loader can be booted via a PXE server. This uses a special build
+of the bootloader, which is not the same as the traditional BIOS loader.
 
 Generate the x86 PXE bootloader via…
 
@@ -68,7 +69,7 @@ This will generate a boot image in tar.gz format and a pxe loader for it:
 
 The image generated can be booted via a DHCP by placing both files generated above on a TFTP server and pointing to the loader via the DHCP ‘next-server/filename’ options.
 
-**PowerPC**
+**Open Firmware (PowerPC, sparc)**
 
 The PowerPC version of Haiku can be started headless via TFTP or CD.
 
@@ -77,3 +78,25 @@ The PowerPC version of Haiku can be started headless via TFTP or CD.
     * Replace TFTP_SERVER_IP with the IP of the tftp server.
     * Optionally, the remote disk server can be specified by replacing DISK_SERVER_IP
 
+**EFI (ARM, x86_64, RISC-V, other EFI compatible platforms)**
+
+The EFI bootloader supports network booting. The system IP address must be set using the LoadOptions
+as DHCP is not yet implemented.
+
+Copy haiku_loader.efi to your build system's TFTP share.
+
+Example configuration when using U-Boot as an EFI bootloader:
+
+    setenv autload no              # Do not try to get TFTP parameters from DHCP
+    dhcp                           # Get an IP address. This sets the $ipaddr variable.
+    setenv serverip TFTP_SERVER_IP # Replace TFTP_SERVER_IP with the IP of the TFTP server
+    tftp haiku_loader.efi          # Load the bootloader from the network
+    setenv bootargs "ip=$ipaddr"   # Forward the IP address obtained by DHCP to haiku_loader
+    bootefi $loadaddr              # Start haiku_loader
+
+In EFI case, the bootloader may be loaded from local disks and still instructed to boot from the
+network (if you set the ip= parameter). Or the loader may be loaded from the network but still
+search for a kernel in local storage.
+
+The disk server IP will be autodetected by sending a broadcast IP packet, there is currently no
+way to configure its address manually.
