@@ -92,6 +92,7 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [FreeBSD](http://freebsd.org)      | [packages](#bsd)     | YES       | Not frequently tested |
 | [Gentoo](http://gentoo.org)        | [Portage](#gentoo)   | YES       |                       |
 | [Linux Mint](http://linuxmint.com) | [deb/apt](#apt)      | YES       |                       |
+| [NetBSD](http://netbsd.org)        | [packages](#bsd)     | YES       | Not frequently tested |
 | [Nix OS](https://nixos.org/)       | [Nix](#nix)          | YES       |                       |
 | [openSUSE](https://www.opensuse.org)| [rpm/zypper](#zypper)| YES      |                       |
 | [RedHat Linux](http://redhat.com)  | [rpm/yum](#yum)      | YES       |                       |
@@ -99,7 +100,6 @@ Note that in addition to all the platform-specific packages, you will also need 
 | [Ubuntu](http://ubuntu.com)        | [deb/apt](#apt)      | YES       |                       |
 | [Void Linux](https://voidlinux.org/) | [xbps](#xbps)      | YES       |                       |
 | macOS                              | [Homebrew](#macos)   | MAYBE     | Need a working case sensitive filesystem |
-| [NetBSD](http://netbsd.org)        | [packages](#bsd)     | MAYBE?    | Untested.             |
 | [Windows](https://microsoft.com/)  | [see notes](#windows)| USING WSL | [Using Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) |
 | BeOS                               | [pkg](#beos_zeta)    | NO        | Once upon a time…     |
 | Solaris                            | [solaris](#solaris)  | NO        | Once upon a time…     |
