@@ -20,7 +20,7 @@ Your skills, your interests, and the amount of time you wish to contribute all p
 <img src='/images/ide_project_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/developing">Developing</a><br /><br />
 <img src='/images/System_Kernel_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/designing/">Designing</a><br /><br />
 <img src='/images/alert_idea_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/promotion/">Promotion</a>
-</ul>
+</div>
 </td>
 <td>
 <div style="margin:1rem">
@@ -28,7 +28,7 @@ Your skills, your interests, and the amount of time you wish to contribute all p
 <img src='/images/Server_Syslog_32.png' style='vertical-align: middle;'> <a href="/community/getting-involved/testing/">Quality Testing</a><br /><br />
 <img src='/images/App_Finance_32.png' style='vertical-align: middle;'> <a href="/community/donating_to_haiku">Funding</a><br /><br />
 <img src='/images/App_People_32.png'  style='vertical-align: middle;'> Conferences: <a href="/conference">List</a> | <a href="/conference/map">Map</a> | <a href="/conference/calendar">Calendar</a>
-</ul>
+</div>
 </td>
 </tr>
 </tbody>
