@@ -92,7 +92,7 @@ getURL("https://api.github.com/repos/haiku/haiku/commits", function(data) {
 	var json = JSON.parse(data);
 	var html = "<ul>";
 	for (var i = 0; i < DISPLAY_ITEMS_COUNT; i++) {
-		html += MakeListItem('https://cgit.haiku-os.org/haiku.git/commit/?id=' + json[i].sha,
+		html += MakeListItem('https://git.haiku-os.org/haiku.git/commit/?id=' + json[i].sha,
 			json[i].commit.message.split("\n")[0], new Date(json[i].commit.committer.date));
 	}
 	html += "</ul>";
