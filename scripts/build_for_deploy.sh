@@ -54,6 +54,8 @@ sed -i "s/BuildTypeIsDeploy = false/BuildTypeIsDeploy = true/g" config.toml
 $HUGO --minify
 sed -i "s/BuildTypeIsDeploy = true/BuildTypeIsDeploy = false/g" config.toml
 
+curl -L https://github.com/ai-robots-txt/ai.robots.txt/raw/aa8519ec107d7cfa29b03005c9176708e1269965/robots.txt >public/robots.txt
+
 mkdir public/docs/
 cp -R userguide/userguide/ public/docs/
 cp -R userguide/welcome/ public/docs/
