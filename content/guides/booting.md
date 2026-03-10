@@ -108,6 +108,8 @@ Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.
 
 ### Adding Haiku to the Windows bootloader using EasyBCD
 
+**Note:** Multiboot works only on BIOS systems. EFI systems do not support it. On Windows PCs booting in EFI mode, Microsoft blocks loading legacy or non-Windows operating systems from the BCD menu.
+
 * First get EasyBCD from [this site](https://neosmart.net/EasyBCD/)
 * Install it as you would install any windows software
 * When you launch it you'll see 2 panels
