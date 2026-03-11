@@ -250,20 +250,16 @@ $ NM=gcc-nm9 RANLIB=gcc-ranlib9 AR=gcc-ar9 ./configure --cross-tools-source ../b
 <a name="macos"></a>
 ## ![macos](/files/os-icons/macosx-32.png) macOS
 
-A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive disk image and store the Haiku source tree on that. Case-sensitive HFS+ works fine.
+A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive APFS volume on an existing container.
 
 First install Xcode via ```xcode-select --install``` and accept the license. ```xcodebuild -license```
 
-Once you have installed XCode and the command line tools as well as agreed to the end user license you can install the prerequisite software either by using MacPorts or by using Homebrew.
+Once you have installed Xcode and the command line tools as well as agreed to the end user license you can install the prerequisite software either by using MacPorts or by using Homebrew.
 
 **To install the prerequisite software using Homebrew:**
 
-1. Install <a href="http://brew.sh/">Homebrew</a> using the ruby command line installer provided on the linked page.
-2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf zstd xorriso gawk wget nasm less mpfr gmp libmpc bison```
-3. Force using the newer bison version. ```brew link bison --force```
-    - Note that Homebrew may refuse to shadow the built-in version of bison. If so, follow the instructions so that a new version of bison is in your $PATH
-
-Note: You'll need to install gnu less from the dupes repository as macOS comes with BSD less while Haiku requires GNU less.
+1. Install <a href="http://brew.sh/">Homebrew</a> using the command line installer provided on the linked page.
+2. Next install the prerequisite software to build Haiku using the following command via ```brew install autoconf zstd xorriso gawk wget nasm less mpfr gmp libmpc```
 
 **To install the prerequisite software using Macports do the following:**
 
