@@ -137,7 +137,7 @@ In order to simplify the process, we will use `vmrun.sh`, an example script whic
 
 ```sh
 cp /usr/share/examples/bhyve/vmrun.sh .
-sh vmrun.sh -c1 -E -i -I haiku-release-anyboot.iso -d haiku-guest.img haiku
+sh vmrun.sh -c1 -T -E -i -I haiku-release-anyboot.iso -d haiku-guest.img haiku
 ```
 
 - `-c1` stands for the number of processor cores that will be allocated for the machine. In this scenario, we are using 1 core, which is a recommended option.
