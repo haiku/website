@@ -86,7 +86,7 @@ When you're finished, press "Next".
 
 #### 4. Machine accelerator
 
-Here you choose your Machine Accelerator. HAXM is enabled by default, as it speeds up virtualization. However, this causes [bugs](https://gitlab.com/qtemu/gui/issues/28#note_244603038) in many machines. If HAXM is installed on your PC, you can press "Next" and move on.
+Here you choose your Machine Accelerator. HAXM is enabled by default (deprecated since 2023), as it speeds up virtualization. However, this causes [bugs](https://gitlab.com/qtemu/gui/issues/28#note_244603038) in many machines. If HAXM is installed on your PC, you can press "Next" and move on.
 
 ![QtEmuNewAccelerator](/files/guides/virtualizing/qemu/06_QtEmu_new_accelerator.png)
 
