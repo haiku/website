@@ -13,7 +13,7 @@ The latest .ISO image can be obtained [here](https://www.haiku-os.org/get-haiku/
 
 You can find the latest version of QEMU for Windows, Linux, and MacOS [here](https://www.qemu.org/download/).
 
-In this guide, we will use [QtEmu](https://gitlab.com/qtemu/gui), an open source GUI front-end to spare us from having to remember the complicated arguments for the command line QEMU. The installer for the latest version of QtEmu can be downloaded [here](https://www.carlavilla.es/qtemu/qtemu_setup_x86_64.exe).
+In this guide, we will use [QtEmu](https://gitlab.com/qtemu/gui), an open source GUI front-end to spare us from having to remember the complicated arguments for the command line QEMU. The installer for the latest version of QtEmu can be downloaded [here](https://gitlab.com/qtemu/releases).
 
 ##### Go to section:
 * [Setting up QEMU and QtEmu](#part_setup)
