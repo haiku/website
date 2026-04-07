@@ -15,6 +15,7 @@ Here are some Frequently Asked Questions about Haiku. For development related to
     * [Is Haiku based on Linux?](#is-haiku-based-on-linux)
     * [Why not Linux?](#why-not-linux)
     * [Is Haiku then based on BeOS?](#is-haiku-then-based-on-beos)
+    * [Are there other projects based on or inspired by BeOS?](#are-there-other-projects-based-on-or-inspired-by-beos)
     * [I've never seen Haiku. What does it look like?](#ive-never-seen-haiku-what-does-it-look-like)
     * [Can I use Haiku as my primary Operating System?](#can-i-use-haiku-as-my-primary-operating-system)
     * [Can Haiku connect to the Internet?](#can-haiku-connect-to-the-internet)
@@ -87,7 +88,7 @@ OpenBeOS was eventually renamed to Haiku to avoid trademark conflicts. The name 
 candidates were: Auros, Begin, Dysis, Firebox, Firefly, Forge, Indigo, Infinity, Jaffa, Mantis, Menlo, Nemo, Nova, Terra.
 
 ### Is Haiku based on Linux?
-Haiku is not a Linux distribution, nor does it use the Linux kernel. Haiku is the spiritual successor to [BeOS](https://en.wikipedia.org/wiki/BeOS)
+Haiku is not a Linux distribution, nor does it use the Linux kernel. Haiku is a spiritual successor to [BeOS](https://en.wikipedia.org/wiki/BeOS)
 and it is derived from the [NewOS](https://newos.org/) kernel, which was authored by Travis Geiselbrecht (`geist`), who was formerly employed by
 [Be Inc.](https://en.wikipedia.org/wiki/Be_Inc.) — the developers of BeOS.
 
@@ -105,6 +106,14 @@ The only BeOS code that has made it into Haiku are Tracker and the Deskbar (the 
 These were open sourced by Be Inc. back in 2001, later forked under the [OpenTracker project](http://www.opentracker.be/main.html), and eventually merged
 into the Haiku code base. The rest is either homebuilt code or derivatives of existing open source software. Despite that, the [Haiku API](https://www.haiku-os.org/docs/api/)
 is mostly compatible with the BeOS API. In other words, many applications that were initially developed for BeOS work flawlessly on Haiku.
+
+### Are there other projects based on or inspired by BeOS?
+
+BeOS inspired many other projects, here are some notable ones:
+
+  * [Vitruvian](https://v-os.dev/) is an Operating System based on Linux that reuses parts of the Haiku code and the GNU ecosystem to provide a BeOS like experience based on different goals than Haiku.
+  * [Cosmoe](https://www.cosmoe.org/) is a port of Haiku's user interface libraries to GNU/Linux, Mac OS and Windows. It allows to write cross platform applications using the Be API.
+  * [HyClone](https://github.com/trungnt2910/hyclone) is a runtime environmet to execute command-line Haiku binaries on Linux and other systems.
 
 ### I've never seen Haiku. What does it look like?
 Check out our [Haiku Slideshow](/slideshows/haiku-tour/) and the [Haiku Movies](/about/movies) pages.
