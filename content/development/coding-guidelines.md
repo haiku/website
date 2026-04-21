@@ -196,9 +196,11 @@ switch (condition) {
 
 *   Put exactly two blank lines between functions, as well as between includes and defines blocks, and between defines and variable or function definitions.
 *   Include a newline at every file end.
+*   Clean up trailing whitespace (tabs or spaces at the end of lines with nothing after it).
 
 ### Identifiers
 
+*   All identifiers, names and comments are in US English (for example, "color" rather than "colour").
 *   Use self-describing well chosen identifiers whenever possible. Avoid identifiers such as `r` (hard to search for), `aMessage`, `theView`, `MyDraw` (who's draw?). Avoid identifier pairs such as `ProcessMessage` and `DoProcessMessage`, `AddTasks` and `AddTasks1`. Use names such as `rect`, `message`, `invokeMessage`, `view`, `targetView`, `DrawBorder`, `ProcessMessage`, and `ProcessMessageInternals` or `ProcessMessageDetails`, etc.
 *   Classes, structs, type names, namespaces and function names start with uppercase letters and use InterCapsFormatting (no underlines).
 *   Variables start with lowercase letters and use interCapsFormatting.
