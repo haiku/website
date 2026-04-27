@@ -200,7 +200,7 @@ switch (condition) {
 
 ### Identifiers
 
-*   All identifiers, names and comments are in US English (for example, "color" rather than "colour").
+*   All identifiers, names and comments should be in US English (for example, "color" rather than "colour").
 *   Use self-describing well chosen identifiers whenever possible. Avoid identifiers such as `r` (hard to search for), `aMessage`, `theView`, `MyDraw` (who's draw?). Avoid identifier pairs such as `ProcessMessage` and `DoProcessMessage`, `AddTasks` and `AddTasks1`. Use names such as `rect`, `message`, `invokeMessage`, `view`, `targetView`, `DrawBorder`, `ProcessMessage`, and `ProcessMessageInternals` or `ProcessMessageDetails`, etc.
 *   Classes, structs, type names, namespaces and function names start with uppercase letters and use InterCapsFormatting (no underlines).
 *   Variables start with lowercase letters and use interCapsFormatting.
