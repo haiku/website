@@ -2,7 +2,7 @@
 type = "news"
 title = "Haiku to mentor 3 students in Google Summer of Code 2026"
 date = "2026-05-01 08:00:00.000Z"
-tags = ["gsoc", "gsoc2024"]
+tags = ["gsoc", "gsoc2026"]
 +++
 
 <p>For many years now, Haiku is a regular participant in the Google Summer of Code program, which
