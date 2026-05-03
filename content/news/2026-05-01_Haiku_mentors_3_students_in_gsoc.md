@@ -2,7 +2,7 @@
 type = "news"
 title = "Haiku to mentor 3 students in Google Summer of Code 2026"
 date = "2026-05-01 08:00:00.000Z"
-tags = ["gsoc", "gsoc2024"]
+tags = ["gsoc", "gsoc2026"]
 +++
 
 <p>For many years now, Haiku is a regular participant in the Google Summer of Code program, which
@@ -15,7 +15,7 @@ contributors and guide them through the project.</p>
 <p>We received several great applications this year, and 3 developers were selected!</p>
 
 <ul>
-<li>Aquamatic, mentored by KapiX and Kori, will work on expanding the Devices application and making it more useful.</li>
+<li>Aquamatic, mentored by KapiX and Korli, will work on expanding the Devices application and making it more useful.</li>
 <li>Mohammed R. Attia and Vighnesh Sawant, mentored by Waddlesplash, Scottmc and PulkoMandy, will work together on improving Bluetooth support. Mohammed will focus on HID devices (mouses and keyboards) while Vighnesh will work on HFP and audio support.</li>
 
 <p>Please welcome them to the community! You may have already met them on the forums and IRC.
