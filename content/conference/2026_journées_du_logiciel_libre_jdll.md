@@ -17,7 +17,7 @@ French speaking event.
 ---
 
 * Event Dates: 2026-05-30 - 2026-05-31
-* Event Homepage: [http://www.jdll.org/](http://www.jdll.org/)
+* Event Homepage: [https://www.jdll.org/](https://www.jdll.org/)
 * Activities:
   * Haiku booth.
   * A talk by mmu_man & PulkoMandy about "What's new in Haiku?" (news from the last year in Haiku development).
