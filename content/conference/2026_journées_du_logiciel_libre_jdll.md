@@ -6,7 +6,7 @@ tags = []
 [event]
 start = "2026-05-30"
 end = "2026-05-31"
-homepage = "http://www.jdll.org/"
+homepage = "https://www.jdll.org/"
 country = "France"
 +++
 
