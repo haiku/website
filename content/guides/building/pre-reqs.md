@@ -156,7 +156,7 @@ sudo pacman -S paru uboot-tools
 **Basic requirements:**
 
 ```sh
-sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel zstd-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
+sudo yum install git nasm autoconf automake texinfo flex bison gcc gcc-c++ make glibc-devel zlib-devel libzstd-devel xorriso curl-devel byacc libstdc++-static glibc-devel.i686 libstdc++-devel.i686 libstdc++-devel python36
 ```
 
 <a name="zypper"></a>
