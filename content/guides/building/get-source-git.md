@@ -44,11 +44,11 @@ If you don't care about the commit history and want to limit the download size,
 use the parameter `--depth` when cloning. For example, `--depth 10` limits the
 history to the last 10 commits.
 
-<h4>GitHub</h4>
+<h4>GitHub And Codeberg</h4>
 
 If your Internet provider limits the websites you are allowed to use, you can use
 our mirror repositories <a href="https://github.com/haiku/haiku" target="_blank">on GitHub</a>
-instead.
+or <a href="https://codeberg.org/haiku/haiku" target="_blank">on Codeberg</a> instead.
 
 They are kept in sync with our main repository, however, these repositories do
 not have any Git tags, which the compiler uses to determine the revision of

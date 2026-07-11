@@ -46,6 +46,80 @@ Enabling debugging information for a subdirectory should then be as simple as ad
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -gdwarf-4")
 ```
 
+**Update:**
+
+In case it's useful, here is an example diff file based off of my diffs:
+
+<p>
+<details>
+<summary>Example</summary>
+
+```diff
+diff --git a/Source/cmake/OptionsHaiku.cmake b/Source/cmake/OptionsHaiku.cmake
+index 48159cca4b1..f2ea791a524 100644
+--- a/Source/cmake/OptionsHaiku.cmake
++++ b/Source/cmake/OptionsHaiku.cmake
+@@ -25,6 +25,13 @@ set(ENABLE_WEBKIT_LEGACY OFF)
+ 
+ set(USE_ANGLE_EGL OFF)
+ 
++# Debugging information can be huge. Disable it.
++string(REPLACE "-g" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
++
++# -Og decreases build size without affecting build time or debbugability
++# significantly.
++string(APPEND CMAKE_CXX_FLAGS_DEBUG " -Og")
++
+ # To get assertions in release mode, we replace all -DNDEBUG with -UNDEBUG
+ # (they are automatically added by CMake and there is no "release with asserts"
+ # build available in WebKit)
+diff --git a/Source/WTF/wtf/CMakeLists.txt b/Source/WTF/wtf/CMakeLists.txt
+index 79a9e8fa538..feee25763de 100644
+--- a/Source/WTF/wtf/CMakeLists.txt
++++ b/Source/WTF/wtf/CMakeLists.txt
+@@ -1,3 +1,5 @@
++string(APPEND CMAKE_CXX_FLAGS_DEBUG " -gdwarf-4")
++
+ if (ENABLE_MALLOC_HEAP_BREAKDOWN AND NOT APPLE)
+     include(MallocHeapBreakdown.cmake)
+ endif ()
+diff --git a/Source/WebCore/PlatformHaiku.cmake b/Source/WebCore/PlatformHaiku.cmake
+index 06e1aa6cbe1..ae1d11e83a9 100644
+--- a/Source/WebCore/PlatformHaiku.cmake
++++ b/Source/WebCore/PlatformHaiku.cmake
+@@ -1,3 +1,6 @@
++# Only include minimal debugging information
++string(APPEND CMAKE_CXX_FLAGS_DEBUG " -gdwarf-4 -g1")
++#string(APPEND CMAKE_CXX_FLAGS_DEBUG " -g -g1")
++
+ include(platform/Haiku.cmake)
+ include(platform/ImageDecoders.cmake)
+ include(platform/OpenSSL.cmake)
+diff --git a/Source/WebKit/CMakeLists.txt b/Source/WebKit/CMakeLists.txt
+index 19d9eaff829..8151ecd9914 100644
+--- a/Source/WebKit/CMakeLists.txt
++++ b/Source/WebKit/CMakeLists.txt
+@@ -1,3 +1,5 @@
++string(APPEND CMAKE_CXX_FLAGS_DEBUG " -gdwarf-4")
++
+ set_property(DIRECTORY . PROPERTY FOLDER "WebKit")
+ 
+ set(WebKit_PRIVATE_INCLUDE_DIRECTORIES
+diff --git a/Tools/MiniBrowser/haiku/CMakeLists.txt b/Tools/MiniBrowser/haiku/CMakeLists.txt
+index 926d539edc7..b34022105bd 100644
+--- a/Tools/MiniBrowser/haiku/CMakeLists.txt
++++ b/Tools/MiniBrowser/haiku/CMakeLists.txt
+@@ -1,3 +1,5 @@
++string(APPEND CMAKE_CXX_FLAGS_DEBUG " -gdwarf-4")
++
+ set(MiniBrowser_SOURCES
+     ${TOOLS_DIR}/MiniBrowser/haiku/BrowserApp.cpp
+     ${TOOLS_DIR}/MiniBrowser/haiku/BrowserWindow.cpp
+```
+
+</details>
+</p>
+
 ## Linking
 
 By default, debug builds, and maybe release builds, attempt to use lld when possible. So, simply installing lld should suffice. Note that cmake must be rerun in order for the build system to recognize its existence and start using it. My tests show that this reduces recompilation times from 30 minutes to 1 minute for a small change.
