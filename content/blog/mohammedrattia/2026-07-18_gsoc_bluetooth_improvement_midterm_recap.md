@@ -1,9 +1,9 @@
 +++
-type = “blog”
-title = “GSoC Bluetooth Improvement Midterm Recap”
-author = “mohammedrattia”
-date = “2026-07-18 02:06:42+03:00”
-tags = [“haiku”, “bluetooth”, “gsoc”, “gsoc2026”, “software”]
+type = "blog"
+title = "GSoC Bluetooth Improvement Midterm Recap"
+author = "mohammedrattia"
+date = "2026-07-18 02:06:42+03:00"
+tags = ["haiku", "bluetooth", "gsoc", "gsoc2026", "software"]
 +++
 
 Hello! The GSoC's midterm (at least for me) has just passed, so I thought of making a recap post about the improvements I've made so far. I’ll try to keep the post brief to make it easier for readers (foreshadowing: I realized that’s impossible :P). I’ve already posted an introduction about me and the project. You can read it [here](https://www.haiku-os.org/blog/mohammedrattia/2026-05-03_gsoc_2026_bluetooth_hci_improvements__hid_profile__haiku_project) if you haven’t already.
