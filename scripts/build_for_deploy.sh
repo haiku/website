@@ -24,7 +24,7 @@ pushd haiku
 	if [ ! -d generated ]; then
 		mkdir generated
 		pushd generated
-		wget https://nchc.dl.sourceforge.net/project/doxygen/rel-1.9.6/doxygen-1.9.6.linux.bin.tar.gz -O doxygen.tar.gz -nv
+		wget https://sourceforge.net/projects/doxygen/files/rel-1.9.6/doxygen-1.9.6.linux.bin.tar.gz/download -O doxygen.tar.gz -nv
 		tar -xvf doxygen.tar.gz doxygen-1.9.6/bin/
 		mkdir doxybin
 		mv doxygen-*/bin/* doxybin/

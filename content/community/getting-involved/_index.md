@@ -5,7 +5,7 @@ date = "2009-09-09T22:15:56.000Z"
 tags = []
 +++
 
-**Anyone** can help Haiku. If you love what Haiku is all about, you can get involved. It's up to you what you want to do and how much time you contribute. If you are interested, sign up for the general [Haiku mailing list](https://www.freelists.org/list/haiku). If you're specifically interested in writing code for Haiku, you can get started [here](/development/getting-started), regardless of whether you have any experience or not. Read more below for specifics.
+**Anyone** can help Haiku. If you love what Haiku is all about, you can get involved. It's up to you what you want to do and how much time you contribute. If you are interested, sign up for the [community forums](https://discuss.haiku-os.org/). If you're specifically interested in writing code for Haiku, you can get started [here](/development/getting-started), regardless of whether you have any experience or not. Read more below for specifics.
 
 ## Haiku's Manpower Needs
 
@@ -67,6 +67,22 @@ There are a lot of ideas of what could be improved or set up, like:
 
 These are nice to have, but with the current time budget we can't afford additional maintenance burden.
 
+### Testers
+
+Haiku cannot be a stable platform without people trying to find bugs in it and telling the developers. Testing is a very important job. Luckily, testers do not need specialized skills, such as the ability to write code, but they do come in handy. All that is needed is sufficient familiarity with computers to be able to install Haiku. The job merely entails seeing what works and what doesn’t under Haiku. As a tester, you can devote as much or as little time as you desire.
+
+### Marketing Material
+
+New marketing material is always in short supply. One of the biggest challenges is to maintain a professional and serious image that is appealing to the general public and business community. The project can always use new and improved signs, posters, business cards or advertisements.
+
+### Technical Writer
+
+The reason why most people don't read software manuals is because they aren't very good. Haiku needs people with good English skills who can write reference material for people who don't know much about Haiku. This includes both basic usage and tips and tricks. This can involve significant amounts of time or just a few hours here and there.
+
+### Forum Support
+
+The forums on the main site are one of the first stops for people wanting to submit ideas and to ask for help about various Haiku-related problems. This does not necessarily involve lots of time, but people with skills and a desire to help others are desirable in this line of work.
+
 ### Accountant
 
 Keeping the books is not a time-intensive job, but it does require some specialized knowledge, namely, accounting. Someone who wanted to help Haiku with the books would need to keep records and prepare an annual report. It’s not a big job, but it would be a great help because it is a specialized job.
@@ -75,31 +91,14 @@ Keeping the books is not a time-intensive job, but it does require some speciali
 
 Legal expertise is a great opportunity for someone to be a sizable help for Haiku without having to do much. On occasion, there are legal questions which are best answered by someone in the profession. For example, earlier this year there was discussion about handling the Haiku trademark. While the majority of the need is for U.S. law, having legal counsel for other countries would be quite helpful, particularly in Western Europe.
 
-### Marketing Material
-
-New marketing material is always in short supply. One of the biggest challenges is to maintain a professional and serious image that is appealing to the general public and business community. The project can always use new and improved signs, posters, business cards or advertisements.
-
-
-### Technical Writer
-
-The reason why most people don't read software manuals is because they stink. Haiku needs people with good English skills who can write reference material for people who don't know much about Haiku. This includes both basic usage and tips and tricks. This can involve significant amounts of time or just a few hours here and there.
-
-### Forum Moderator / Forum Support
-
-The forums on the main site are one of the first stops for people wanting to submit ideas and to ask for help about various Haiku-related problems. This does not necessarily involve lots of time, but people with skills and a desire to help others are desirable in this line of work.
-
-### Testers
-
-Haiku cannot be a stable platform without people trying to find bugs in it and telling the developers. Testing is a very important job. Luckily, testers do not need specialized skills, such as the ability to write code, but they do come in handy. All that is needed is sufficient familiarity with computers to be able to install Haiku. The job merely entails seeing what works and what doesn’t under Haiku, particularly with existing BeOS applications. Once again, as a tester,  you can devote as much or as little time as you desire.
-
 ## Other ways to help
 
 ### Individuals
 
-Andrew Jackson once said, “One man with courage makes majority.” In other words, a sufficiently motivated person can make a marked difference in the state of things. This is how the whole project began and how it continues.
+“One man with courage makes majority.” In other words, a sufficiently motivated person can make a marked difference in the state of things. This is how the whole project began and how it continues.
 
 * Financial Donations - People can donate money. This kind of contribution helps Haiku pay for operations and other goods such as hardware for developers. U.S. residents get a tax deduction for this.
-* Hardware - Spare parts, in good shape, can be a help when someone wants to donate without having much in their wallet. Working hardware components are necessary to write drivers. Sometimes Haiku developers need replacement components for a development machine. Sending an e-mail to the [Haiku mailing list](https://www.freelists.org/list/haiku), or posting a message in the forums are two good ways to let the community know you have something to donate.
+* Hardware - Spare parts, in good shape, can be a help when someone wants to donate without having much in their wallet. Working hardware components are necessary to write drivers. Sometimes Haiku developers need replacement components for a development machine. Posting a message in the forums is a good way to let the community know you have something to donate.
 * Time - A person’s time has the potential to be just as valuable as a financial donation. Reliable, hardworking people who have time to contribute are in short supply on the Haiku project.
 * Connections – Who you know can be just as valuable as money in the bank or even more so. In some cases, Haiku may have a need that you can fill because of someone you know.
 * Create Awareness – Haiku is at the stage where it is growing rapidly and creating awareness is the best way to entice new people to get involved and contribute to the project. This can be as simple as just spreading the word or as involved as helping out at an event.
