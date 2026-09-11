@@ -168,11 +168,9 @@ In short, such a file system recognizes ThisIsAFile.txt and THISISAFILE.txt as
 two different files. Some file systems that are (or could be) case insensitive
 include FAT32, NTFS, and HFS+.
 
-macOS's HFS+ is also case insensitive by
-default, but that can be changed: See
-<a href="/documents/dev/how_build_haiku_mac_os_x#part_diskimage" target="_blank">this article</a>
-for more information.
-
+macOS's APFS is also case insensitive by default, but it supports creating
+a case-sensitive volume within your existing APFS container.
+See <a href="/guides/building/pre-reqs#macos-fs">macOS prerequisites</a> for more information.
 
 <h3>Commit Message Standards</h3>
 

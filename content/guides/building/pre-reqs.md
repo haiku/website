@@ -250,7 +250,29 @@ $ NM=gcc-nm9 RANLIB=gcc-ranlib9 AR=gcc-ar9 ./configure --cross-tools-source ../b
 <a name="macos"></a>
 ## ![macos](/files/os-icons/macosx-32.png) macOS
 
+<a name="macos-fs"></a>
+### Setting up case-sensitive file system
+
 A case-sensitive file system is required to build Haiku. You can use Disk Utility to create a case-sensitive APFS volume on an existing container.
+
+<figure role="group">
+	<img src="/files/guides/pre-reqs/apfs_1.png" width="800" alt="Disk Utility with an APFS container selected" />
+<figcaption><p class="step">1</p><p class="caption">Select an existing APFS volume in the container you want to use. In the default configuration, the internal drive holds a volume group &ldquo;Macintosh&nbsp;HD&rdquo; containing two volumes &ndash; selecting the group or any of its volumes works. Then press the <span class="button">+</span> button below the <span class="button">Volume</span> label.</p>
+</figcaption></figure>
+
+<figure role="group">
+	<img src="/files/guides/pre-reqs/apfs_2.png" width="800" alt="The &ldquo;Add APFS Volume&rdquo; sheet in Disk Utility" />
+<figcaption><p class="step">2</p><p class="caption">Enter any name and select <code>APFS (Case-sensitive)</code> as the format.</p>
+</figcaption></figure>
+
+<figure role="group">
+	<img src="/files/guides/pre-reqs/apfs_3.png" width="800" alt="Disk Utility showing the newly created case-sensitive volume" />
+<figcaption><p class="step">3</p><p class="caption">The new volume is created and ready to use.</p>
+</figcaption></figure>
+
+The volume will get mounted automatically under `/Volumes/<name>`, and will appear in Finder. This is where you should clone Git repositories and build the system. As volumes within one container share disk space, you don't have to worry about allocating space to this new volume.
+
+### Prerequisite software
 
 First install Xcode via ```xcode-select --install``` and accept the license. ```xcodebuild -license```
 
