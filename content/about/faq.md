@@ -31,7 +31,6 @@ Here are some Frequently Asked Questions about Haiku. For development related to
   * Applications
     * [Is there an instant messenger client?](#is-there-an-instant-messenger-client)
     * [Is there Java support?](#is-there-java-support)
-   
     * [Is there an office suite?](#is-there-an-office-suite)
     * [Are there any games for Haiku?](#are-there-any-games-for-haiku)
     * [Are Python, Ruby, Perl and Rust available on Haiku?](#are-python-ruby-perl-and-rust-available-on-haiku)
