@@ -31,7 +31,6 @@ Here are some Frequently Asked Questions about Haiku. For development related to
   * Applications
     * [Is there an instant messenger client?](#is-there-an-instant-messenger-client)
     * [Is there Java support?](#is-there-java-support)
-    * [Is there Flash support?](#is-there-flash-support)
     * [Is there an office suite?](#is-there-an-office-suite)
     * [Are there any games for Haiku?](#are-there-any-games-for-haiku)
     * [Are Python, Ruby, Perl and Rust available on Haiku?](#are-python-ruby-perl-and-rust-available-on-haiku)
@@ -176,11 +175,6 @@ Matrix (Quaternion, nheko) and XMPP (Renga, Chat-O-Matic, Vacuum).
 
 ### Is there Java support?
 Yes! The OpenJDK virtual machine is available and enables you to run applications such as Netbeans, JDownloader, and much more.
-
-### Is there Flash support?
-Not at the moment. Flash is proprietary technology from Adobe, making it difficult to support for a small open-source operating system such as Haiku.
-However, there are ways to enjoy the web without Flash, such as using HTML5 compatible versions of webpages (youtube and grooveshark support this for
-example). Besides, Adobe [deprecated Flash](https://theblog.adobe.com/adobe-flash-update/) anyway.
 
 ### Is there an office suite?
 There are several options:
