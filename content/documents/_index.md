@@ -38,7 +38,7 @@ These are legacy BeOS documents released as reference material for those who wan
 * [Practical File System Design with the Be File System](/legacy-docs/practical-file-system-design.pdf), by [Dominic Giampaolo](http://www.nobius.org/~dbg/)
 * [Programming the Be Operating System](/legacy-docs/programming_the_be_operating_system.pdf), by [Dan Parks Sydow](/legacy-docs/programming_the_be_operating_system.pdf) (written against the older BeOS API circa R3/R4)
 * [The Art of BeOS Programming](/legacy-docs/ArtOfBeOSProgramming/), by Shin-ya Koga (in Japanese)
-* [BeOS: Porting UNIX Applications](http://mcslp.wordpress.com/2012/12/27/beos-porting-unix-applications-73266/), by MC Brown
+* [BeOS: Porting UNIX Applications](https://archive.org/details/BeOSPortingUNIXApplications), by MC Brown
 * [Writing Video Card Drivers in BeOS](/legacy-docs/writing-video-card-drivers), by Rudolf Cornelissen
 * [Master thesis on the WLAN stack](/files/Masterarbeit.pdf), by [Colin Günter](https://github.com/coguhn) (plus a diagram of [Haiku's network init](/files/Network-init.pdf))
 
