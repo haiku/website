@@ -44,7 +44,7 @@ phoudoin changed Expander's Password prompt to use the layout API.
 
 ### Command line tools
 
-diffieTheFox (a new contributor!) fixed the `acpi_call` tool's parsing of command line arguments.
+diffie (a new contributor!) fixed the `acpi_call` tool's parsing of command line arguments.
 
 korli fixed the "left/right" parameters behavior of `Workspaces`' command-line interface.
 
