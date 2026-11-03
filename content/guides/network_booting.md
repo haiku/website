@@ -87,12 +87,18 @@ Copy haiku_loader.efi to your build system's TFTP share.
 
 Example configuration when using U-Boot as an EFI bootloader:
 
-    setenv autload no              # Do not try to get TFTP parameters from DHCP
+    setenv autoload no             # Do not try to get TFTP parameters from DHCP
     dhcp                           # Get an IP address. This sets the $ipaddr variable.
     setenv serverip TFTP_SERVER_IP # Replace TFTP_SERVER_IP with the IP of the TFTP server
     tftp haiku_loader.efi          # Load the bootloader from the network
     setenv bootargs "ip=$ipaddr"   # Forward the IP address obtained by DHCP to haiku_loader
     bootefi $loadaddr              # Start haiku_loader
+
+You can also set this up as a single command to use as your bootcommand, so that this happens
+automatically:
+
+    setenv haiku 'setenv autoload no; dhcp;setenv serverip TFTP_SERVER_IP;tftp haiku_loader.efi;setenv bootargs "ip=$ipaddr";bootefi $loadaddr'
+    setenv bootcmd 'run haiku'
 
 In EFI case, the bootloader may be loaded from local disks and still instructed to boot from the
 network (if you set the ip= parameter). Or the loader may be loaded from the network but still
