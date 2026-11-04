@@ -94,6 +94,14 @@ Example configuration when using U-Boot as an EFI bootloader:
     setenv bootargs "ip=$ipaddr"   # Forward the IP address obtained by DHCP to haiku_loader
     bootefi $loadaddr              # Start haiku_loader
 
+When using EFI Shell, loader must be already present on the boot partition, then you can run:
+
+    haiku_loader.efi ip=$ipaddr
+
+or add a GRUB entry:
+
+    chainloader ($root)/EFI/haiku_loader.efi ip=$ipaddr
+
 You can also set this up as a single command to use as your bootcommand, so that this happens
 automatically:
 
