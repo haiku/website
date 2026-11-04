@@ -68,6 +68,12 @@ Haiku releases are distributed through a global network of generously donated mi
       <td><a class="track" href="https://mirror.aarnet.edu.au/pub/haiku/r1beta6/haiku-r1beta6-x86_gcc2h-anyboot.iso">iso</a></td>
       <td><a class="track" href="https://mirror.aarnet.edu.au/pub/haiku/r1beta6/haiku-r1beta6-x86_64-anyboot.iso">iso</a></td>
     </tr>
+    <tr class="link">
+        <td class="location"><b>Location:</b> São Paulo, Brazil <br/>Provided by: <a target="_blank" class="ext" href="https://orange8.net" title="Orange8">Orange8</a></td>
+        <td><a class="track" href="https://mirror.orange8.net/haiku/r1beta6/haiku-r1beta6-x86_gcc2h-anyboot.iso">iso</a></td>
+        <td><a class="track" href="https://mirror.orange8.net/haiku/r1beta6/haiku-r1beta6-x86_64-anyboot.iso">iso</a></td>
+    </tr>
+	
 <!--
     <tr class="link">
       <td class="location"><b>Location:</b> Kemerovo Oblast, Russia <br/>Provided by: <a target="_blank" class="ext" href="http://www.truenetwork.ru" title="truenetwork.ru">truenetwork.ru</a></td>
