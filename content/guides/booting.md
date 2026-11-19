@@ -1,53 +1,91 @@
 +++
 type = "article"
 title = "Booting Haiku"
-date = "2010-02-15T22:50:50.000Z"
+date = "2026-11-19T14:50:50.000Z"
 tags = ["booting","grub","disk server"]
 +++
 
-There are a wide range of options and configurations available to boot Haiku, from from modifying the boot sector, to configuring (and possibly installing) a boot manager. For an overview of the various booting options available to Haiku, please check out [this page of the Haiku User Guide](/docs/userguide/en/bootloader.html)
+There are a wide range of options and configurations available to boot Haiku, from from modifying the boot sector, to configuring (and possibly installing) a boot manager.
 
-## ![folder](/images/folder_config_32.png) Using Makebootable
+This page is about setting up some of these options. Once set up, the bootloader provides a menu allowing to control the next steps of the boot proces. For an overview of these booting options, please check out [this page of the Haiku User Guide](/docs/userguide/en/bootloader.html)
 
-`makebootable` is a low-level Haiku tool to enable x86 MBR (legacy bios) systems to boot from the active Haiku partition.
+## Configuring a computer for running Haiku only
 
-{{< alert-danger ""
-`It is extremely likely that you don't need makebootable. Please read this paragraph carefully
-to determine if you need it.`>}}
+The boot process for computers is quite complex and not fully in the control of Haiku developers.
+There are also many possible ways to set up Haiku, depending on what the machine supports and if
+other operating systems should also be installed. As a result, this process requires some manual
+steps and the errors can be difficult to identify.
 
-Makebootable is **not** needed when any of these is true:
+### BIOS systems
 
-  * Haiku’s EFI bootloader is in use
-  * dd’ing to an entire disk device and not a partition
-  * using Haiku’s Installer program, as it is done automatically
-  * using the build system to install directly to a partition from source, as it is done automatically
+On BIOS systems, the boot process starts with a piece of code called the Master Boot Record (MBR),
+which is stored in the first sector of the hard disk. This piece of code should select the partition
+to boot and hand control over to the bootloader found in that specific partition. Unfortunately, that
+handover process is not fully standardized, and the existing MBR code on your disk can be incompatible
+with Haiku. To avoid this problem, the following procedure recreates the partition table and writes
+Haiku's version of the MBR code on the disk.
 
-Makebootable **is** needed when...
+  * Open the DriveSetup application
+  * Select the disk you want to install Haiku on
+  * In the menu select Disk -> Initialize -> Intel partition map (this will delete all existing partitions, make sure the disk does not contain any important data)
+  * Select the newly created "empty space" for the disk
+  * Select Partition -> Create
+  * Create a primary partition of type "Be filesystem" and activate it
+  * If you want to split your disk into several partitions, you can do that now
+  * Select Partition -> Initialize -> Be File System
+  * Keep "query support" enabled for your boot partition
 
-  * x86 legacy BIOS booting is used
-  * dd’ing to a partition
-  * manually installing using Tracker
-  * installing using BeOS/Zeta’s Installer program
+Once the partition is created and initialized, you can proceed to install Haiku on it.
 
-### Makebootable Usage
+### EFI systems
 
-`makebootable` should be run against a partition containing Haiku
+EFI systems use a more elaborate firmware, which can load the bootloader from a file in a dedicated
+boot partition. This still requires a specific partition layout to be followed closely.
 
-**Running from build system**
+  * Open the DriveSetup application
+  * Select the disk you want to install Haiku on
+  * In the menu select Disk -> Initialize -> GPT (this will delete all existing partitions, make sure the disk does not contain any important data)
+  * Select the newly created "empty space" for the disk
+  * Select Partition -> Create
+  * Create a partition of type "EFI system partition". Make it small, around 100MB should be enough if you don't plan to install many operating systems.
+  * Select the partition then Partition -> Initialize -> FAT. This will be your EFI system partition
+  * Create another partition of type "BeOS", using the remaining space on the drive
+  * You can make this partition smaller if you want to spare some space for other partitions or other operating systems
+  * Select Partition -> Initialize -> Be File System
+  * Keep "query support" enabled for your boot partition
 
-Makebootable is included with Haiku. However, it can also be accessed from systems compiling Haiku.
+Once the partitions are created and initialized, you can proceed to install Haiku.
 
-<pre class="terminal">jam run "<build>makebootable" /dev/...</pre>
+From the Installer application, use the menu to copy the EFI bootloader into the EFI system partition after completing your installation.
 
-**Running under Haiku**
+## Configuring a boot manager for multiple systems booting
 
-<pre class="terminal">makebootable /dev/disk/...</pre>
+Haiku is often installed alongside other operating systems. In this case, it can be added to an
+existing boot manager setup following the instructions below.
 
-## ![harddisk](/images/harddisk_32.png) Configuring GRUB boot manager
+### ![harddisk](/images/harddisk_32.png) Configuring rEFInd (EFI only)
+
+For EFI systems, rEFInd provides a graphical boot screen allowing to run several operating systems.
+
+  * Install rEFInd by following the official installation instructions
+  * Copy haiku_loader.efi from your Haiku installation to a Haiku subdirectory in your EFI partition
+  * rEFInd should detect Haiku automatically and offer it as a boot option
+
+### ![harddisk](/images/harddisk_32.png) Configuring Bootman (BIOS only)
+
+Bootman is Haiku's own boot manager. It provides a simple text based menu allowing to boot several
+partitions. Bootman only supports chainloading: it can load Haiku and Windows installations, but it
+cannot load Linux directy. If you want to use bootman with Linux, you will have to arrange your
+Linux install so that GRUB is installed in one of the partitions, and not at the start of the disk
+as is the case by default.
+
+Bootman installation is available from the Installer application menu. A "wizard" type application
+will guide you through the configuration steps: choosing the disk you want to configure, and
+selecting which partitions should be listed as boot options.
+
+### ![harddisk](/images/harddisk_32.png) Configuring GRUB boot manager
 
 GRUB is a common boot manager used on other open-source operating systems. (Including Linux)
-
-### GRUB 2 (version 1.96 and higher)
 
 In the example below we will have the following setup:
 
@@ -90,22 +128,6 @@ On Ubuntu (and other Linux flavors), you can eventually customize the GRUB setup
 
 Finally, you can regenerate the boot menu configuration by issuing `sudo update-grub` and reboot.
 
-### GRUB Legacy (version 0.97 and earlier)
-
-GRUB Legacy differs in the numbering of the partitions compared to GRUB 2, starting at 0 instead of 1\. The example below shows the naming scheme for GRUB Legacy:
-
-  * hd0 – first hard drive
-  * hd0,0 – first partition of first drive (sda1) Ubuntu Linux /
-  * hd0,1 – second partition of first drive (sda2) Ubuntu Linux Swap
-  * hd0,2 – third partition of first drive (sda3) Haiku partition
-
-Adding Haiku to your [GRUB Legacy](http://www.gnu.org/software/grub/grub-legacy.en.html) boot loader is as simple as adding a new section to your GRUB menu configuration. After installing Haiku, you will need to boot into your Linux operating system and add the following block of code to your /boot/grub/menu.lst (your mileage may vary, this is the default location however).
-
-    # for Haiku
-    title Haiku
-    root (hd0,2)
-    chainloader +1
-
 ### Adding Haiku to the Windows bootloader using EasyBCD
 
 **Note:** Multiboot works only on BIOS systems. EFI systems do not support it. On Windows PCs booting in EFI mode, Microsoft blocks loading legacy or non-Windows operating systems from the BCD menu.
@@ -134,4 +156,40 @@ You can make one of them the default by checking its checkbox
 
 * Below you have the timer radio button, either check the "wait for user selection" one, so that the bootloader will wait until you make a choice and hit enter, or choose the amount of seconds the bootloader should wait before launching the default OS.
 
+
+## ![folder](/images/folder_config_32.png) Using Makebootable
+
+`makebootable` is a low-level Haiku tool to enable x86 MBR (legacy bios) systems to boot from the active Haiku partition.
+
+{{< alert-danger ""
+`It is extremely likely that you don't need makebootable. Please read this paragraph carefully
+to determine if you need it.`>}}
+
+Makebootable is **not** needed when any of these is true:
+
+  * Haiku’s EFI bootloader is in use
+  * dd’ing to an entire disk device and not a partition
+  * using Haiku’s Installer program, as it is done automatically
+  * using the build system to install directly to a partition from source, as it is done automatically
+
+Makebootable **is** needed when...
+
+  * x86 legacy BIOS booting is used
+  * dd’ing to a partition
+  * manually installing using Tracker
+  * installing using BeOS/Zeta’s Installer program
+
+### Makebootable Usage
+
+`makebootable` should be run against a partition containing Haiku
+
+**Running from build system**
+
+Makebootable is included with Haiku. However, it can also be accessed from systems compiling Haiku.
+
+<pre class="terminal">jam run "<build>makebootable" /dev/...</pre>
+
+**Running under Haiku**
+
+<pre class="terminal">makebootable /dev/disk/...</pre>
 
